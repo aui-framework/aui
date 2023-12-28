@@ -67,12 +67,18 @@ void AScheduler::loop() {
     }
 }
 
-void AScheduler::removeTimer(TimerHandle t) {
+void AScheduler::removeTimer(const TimerHandle& t) {
     std::unique_lock lock(mSync);
+    auto timer = t.lock();
+    if (!timer) {
+        return;
+    }
 
     mTasks.erase(std::remove_if(mTasks.begin(), mTasks.end(), [&](const Task& rhs) {
-        return rhs.timer == &*t;
+        return rhs.timer.lock() == timer;
     }), mTasks.end());
-    mTimers.erase(t);
+    if (auto it = std::find(mTimers.begin(), mTimers.end(), timer); it != mTimers.end()) {
+        mTimers.erase(it);
+    }
     mCV.notify_all();
 }
