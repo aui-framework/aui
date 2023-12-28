@@ -295,7 +295,7 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .vertex = iTransformedPos + glm::ivec2{x, y},
+                .vertex = glm::ivec4(iTransformedPos + glm::ivec2{x, y}, 0, 1),
             }, uniform).albedo;
 
             /*
@@ -333,7 +333,7 @@ void SoftwareRenderer::drawBoxShadowInner(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .vertex = transformedPos + glm::vec2{x, y},
+                .vertex = glm::vec4(transformedPos + glm::vec2{x, y}, 0.f, 1.f),
             }, uniform).albedo;
 
             /*
@@ -555,7 +555,7 @@ void SoftwareRenderer::setWindow(ABaseWindow* window) {
     }
 }
 
-void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
+void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width) {
     // TODO
     if (p1.x == p2.x || p1.y == p2.y) {
         auto begin = glm::min(p1, p2);
@@ -564,21 +564,21 @@ void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2)
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
+void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() == 0) {
         return;
     }
 
     auto prevPoint = points[0];
     for (auto point : points | ranges::view::drop(1)) {
-        drawLine(brush, prevPoint, point);
+        drawLine(brush, prevPoint, point, style, width);
         prevPoint = point;
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
+void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) {
     for (auto[p1, p2] : points) {
-        drawLine(brush, p1, p2);
+        drawLine(brush, p1, p2, style, width);
     }
 }
 
