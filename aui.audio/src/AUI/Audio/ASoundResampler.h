@@ -24,6 +24,7 @@ class IAudioPlayer;
 namespace aui::audio::impl {
     class ResamplerBase {
     public:
+        virtual ~ResamplerBase() = default;
         virtual size_t resample(std::span<std::byte>, IAudioPlayer::VolumeLevel volume) = 0;
     };
 }

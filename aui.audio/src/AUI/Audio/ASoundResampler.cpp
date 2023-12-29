@@ -9,6 +9,8 @@ namespace aui::audio::impl {
         explicit Resampler(_<ISoundInputStream> source) : mResampler(std::move(source)) {
         }
 
+        ~Resampler() override = default;
+
         size_t resample(std::span<std::byte> dst, IAudioPlayer::VolumeLevel volume) override {
             if (volume != IAudioPlayer::VolumeLevel::MAX) {
                 mResampler.setVolume(volume);
