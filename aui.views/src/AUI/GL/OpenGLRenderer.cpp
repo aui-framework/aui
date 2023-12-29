@@ -886,6 +886,12 @@ void OpenGLRenderer::drawSquareSector(const ABrush& brush,
                                       const glm::vec2& size,
                                       AAngleRadians begin,
                                       AAngleRadians end) {
+    std::visit(aui::lambda_overloaded {
+            UnsupportedBrushHelper<ALinearGradientBrush>(),
+            UnsupportedBrushHelper<ATexturedBrush>(),
+            SolidShaderHelper(*mSquareSectorShader),
+            CustomShaderHelper{},
+    }, brush);
     uploadToShaderCommon();
 
 
