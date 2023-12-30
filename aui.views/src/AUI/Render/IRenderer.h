@@ -144,6 +144,11 @@ enum class Blending {
 /**
  * @brief Base class for rendering (for drawing use ARender facade instead).
  * @ingroup views
+ * @details
+ * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
+ * specific routines.
+ *
+ * @sa IRenderingContext
  */
 class IRenderer {
 public:

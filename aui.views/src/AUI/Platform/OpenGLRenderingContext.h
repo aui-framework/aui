@@ -42,7 +42,9 @@ public:
 
 private:
     ARenderingContextOptions::OpenGL mConfig;
+    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
     _<OpenGLRenderer> mRenderer;
+    glm::uvec2 mViewportSize;
 
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
@@ -53,6 +55,11 @@ private:
         g = temp;
         return temp;
     }
+
+    void tryEnableFramebuffer(glm::uvec2 windowSize);
+    void beginFramebuffer(glm::uvec2 windowSize);
+    void endFramebuffer();
+    void bindViewport();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;
