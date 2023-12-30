@@ -40,6 +40,19 @@ public:
     void beginResize(ABaseWindow& window) override;
     void endResize(ABaseWindow& window) override;
 
+    [[nodiscard]]
+    uint32_t getDefaultFb() const noexcept;
+
+    void bindViewport();
+
+    [[nodiscard]]
+    glm::uvec2 viewportSize() const noexcept {
+        return mViewportSize;
+    }
+
+    [[nodiscard]]
+    uint32_t getSupersamplingRatio() const noexcept;
+
 private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
@@ -59,7 +72,6 @@ private:
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     void beginFramebuffer(glm::uvec2 windowSize);
     void endFramebuffer();
-    void bindViewport();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

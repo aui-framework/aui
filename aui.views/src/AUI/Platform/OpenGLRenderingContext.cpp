@@ -80,3 +80,17 @@ void OpenGLRenderingContext::endFramebuffer() {
 void OpenGLRenderingContext::bindViewport() {
     glViewport(0, 0, mViewportSize.x, mViewportSize.y);
 }
+
+uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        return fb->getHandle();
+    }
+    return 0;
+}
+
+uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        return fb->supersamlingRatio();
+    }
+    return 1;
+}

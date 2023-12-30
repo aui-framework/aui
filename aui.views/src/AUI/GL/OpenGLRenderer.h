@@ -153,9 +153,6 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
-
-    [[nodiscard]]
-    uint32_t getSupersamplingRatio() const noexcept;
 };
 
 
