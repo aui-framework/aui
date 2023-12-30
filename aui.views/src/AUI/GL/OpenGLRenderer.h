@@ -55,10 +55,6 @@ private:
     gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;
 
-    glm::uvec2 mViewportSize;
-
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
-
 
     struct CharacterData {
         glm::vec4 uv;
@@ -156,16 +152,7 @@ public:
     void endPaint();
     
     uint32_t getDefaultFb() const noexcept;
-    void bindViewport() const noexcept;
     void bindTemporaryVao() const noexcept;
-
-    [[nodiscard]]
-    uint32_t getSupersamplingRatio() const noexcept;
-
-    [[nodiscard]]
-    glm::uvec2 viewportSize() const noexcept {
-        return mViewportSize;
-    }
 };
 
 

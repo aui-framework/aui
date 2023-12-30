@@ -912,49 +912,8 @@ void OpenGLRenderer::drawSquareSector(const ABrush& brush,
     drawRectImpl(position, size);
 }
 
-void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
-#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
-    if (glewIsSupported("ARB_sample_shading")) {
-        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: ARB_sample_shading is not present";
-        mFramebuffer = Failed{};
-        return;
-    }
-#endif
-    try {
-        gl::Framebuffer framebuffer;
-        framebuffer.setSupersamplingRatio(2);
-        framebuffer.resize(windowSize);
-        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-        framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        if constexpr (true) {
-            auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
-        } else {
-            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
-        }
-        mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
-    } catch (const AException& e) {
-        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
-        mFramebuffer = Failed{};
-    }
-}
 
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
-    if (std::get_if<NotTried>(&mFramebuffer)) {
-        tryEnableFramebuffer(windowSize);
-    }
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        if (fb->size() != windowSize) {
-            fb->resize(windowSize);
-        }
-        fb->bind();
-        mViewportSize = fb->supersampledSize();
-        glViewport(0, 0, mViewportSize.x, mViewportSize.y);
-    } else {
-        mViewportSize = windowSize;
-        glViewport(0, 0, windowSize.x, windowSize.y);
-    }
     gl::State::activeTexture(0);
     gl::State::bindTexture(GL_TEXTURE_2D, 0);
     gl::State::bindVertexArray(0);
@@ -979,36 +938,9 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderer::endPaint() {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        fb->bindForRead();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-        glBlitFramebuffer(0, 0,                       // src pos
-                          fb->supersampledSize().x, fb->supersampledSize().y, // src size
-                          0, 0,                       // dst pos
-                          fb->size().x, fb->size().y, // dst size
-                          GL_COLOR_BUFFER_BIT,        // mask
-                          GL_LINEAR);                // filter
-        gl::Framebuffer::unbind();
-    }
+
 }
 
-uint32_t OpenGLRenderer::getDefaultFb() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->getHandle();
-    }
-    return 0;
-}
-
-uint32_t OpenGLRenderer::getSupersamplingRatio() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->supersamlingRatio();
-    }
-    return 1;
-}
-
-void OpenGLRenderer::bindViewport() const noexcept {
-    glViewport(0, 0, mViewportSize.x, mViewportSize.y);
-}
 
 void OpenGLRenderer::bindTemporaryVao() const noexcept {
     if (!isVaoAvailable()) {

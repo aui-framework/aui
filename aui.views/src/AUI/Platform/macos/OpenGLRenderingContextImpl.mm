@@ -109,6 +109,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     //bool ok = wglMakeCurrent(mPainterDC, ourHrc);
     //assert(ok);
 
+    beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
@@ -124,6 +125,7 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    endFramebuffer();
     mRenderer->endPaint();
     //SwapBuffers(mPainterDC);
     //wglMakeCurrent(mWindowDC, ourHrc);
