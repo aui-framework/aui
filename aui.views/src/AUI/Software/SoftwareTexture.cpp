@@ -20,6 +20,6 @@
 
 #include "SoftwareTexture.h"
 
-void SoftwareTexture::setImage(const _<AImage>& image) {
-    mImage = image;
+void SoftwareTexture::setImage(AImageView image) {
+    mImage = AImage(image);
 }

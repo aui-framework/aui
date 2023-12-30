@@ -54,7 +54,7 @@ struct BrushHelper {
         if (!textureHelper) {
             auto tex = dynamic_cast<SoftwareTexture*>(brush.texture.get());
             textureHelper = {
-                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != glm::ivec2(tex->getImage()->size()),
+                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != glm::ivec2(tex->getImage().size()),
                 tex
             };
         }
@@ -65,17 +65,17 @@ struct BrushHelper {
             auto uv1 = brush.uv1.valueOr(glm::ivec2{0, 0});
             auto uv2 = brush.uv2.valueOr(glm::ivec2{0, 0});
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
-            auto& image = textureHelper->texture->getImage();
-            auto imagePixelCoords = glm::ivec2{glm::vec2(image->size()) * uv};
+            const auto& image = textureHelper->texture->getImage();
+            auto imagePixelCoords = glm::ivec2{glm::vec2(image.size()) * uv};
             if (glm::any(glm::lessThan(imagePixelCoords, glm::ivec2(0)))) {
                 return;
             }
 
-            auto color = image->get({imagePixelCoords.x, imagePixelCoords.y});
+            auto color = image.get({imagePixelCoords.x, imagePixelCoords.y});
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
-            auto color = textureHelper->texture->getImage()->get(glm::uvec2{ x, y } - glm::uvec2(position));
+            auto color = textureHelper->texture->getImage().get(glm::uvec2{ x, y } - glm::uvec2(position));
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         }
     }

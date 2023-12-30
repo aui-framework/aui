@@ -67,8 +67,8 @@ private:
     gl::Texture2D mTexture;
 
 public:
-    void setImage(const _<AImage>& image) override {
-        mTexture.tex2D(*image);
+    void setImage(AImageView image) override {
+        mTexture.tex2D(image);
     }
 
     void bind() {

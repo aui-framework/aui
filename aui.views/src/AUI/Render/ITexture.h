@@ -19,8 +19,14 @@
 #include <AUI/Image/AImage.h>
 
 
+/**
+ * @brief Renderer-friendly image representation.
+ */
 class ITexture {
 public:
-    virtual void setImage(const _<AImage>& image) = 0;
+    /**
+     * @brief Copies image to the texture image representation (i.e. to GPU memory).
+     */
+    virtual void setImage(AImageView image) = 0;
     virtual ~ITexture() = default;
 };
