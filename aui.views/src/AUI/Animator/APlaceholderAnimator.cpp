@@ -21,7 +21,7 @@
 #include "APlaceholderAnimator.h"
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 
 APlaceholderAnimator::APlaceholderAnimator() {
 
@@ -42,7 +42,8 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
     const float WIDTH = 200;
     float posX = theta * (view->getWidth() + WIDTH * 2.f) - WIDTH;
 
-    Render::rect(
+    /*
+    ARender::rect(
             ALinearGradientBrush{
                     0x00ffffff_argb, BRIGHT_COLOR,
                     0x00ffffff_argb, BRIGHT_COLOR
@@ -50,11 +51,11 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
             {posX, 0},
             {WIDTH / 2, view->getHeight()});
 
-    Render::rect(
+    ARender::rect(
             ALinearGradientBrush{
                     BRIGHT_COLOR, 0x00ffffff_argb,
                     BRIGHT_COLOR, 0x00ffffff_argb
             },
             {posX + WIDTH / 2, 0},
-            {WIDTH / 2, view->getHeight()});
+            {WIDTH / 2, view->getHeight()});*/
 }

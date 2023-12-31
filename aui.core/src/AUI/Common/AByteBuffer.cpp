@@ -25,7 +25,6 @@
 #include "AUI/IO/AIOException.h"
 
 AByteBuffer::AByteBuffer() {
-    reserve(64);
 }
 AByteBuffer::AByteBuffer(size_t initialCapacity) {
     reserve(initialCapacity);

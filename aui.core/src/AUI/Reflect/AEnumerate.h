@@ -48,7 +48,7 @@ public:
 
     template<enum_t value>
     static AString valueName() {
-#ifdef _MSC_VER
+#if AUI_COMPILER_MSVC
         AString s = __FUNCSIG__;
         AString::iterator end = s.begin() + s.rfind('>');
         AString::iterator begin = (std::find_if(std::make_reverse_iterator(end), s.rend(), [](wchar_t c) {
@@ -58,7 +58,11 @@ public:
         AString result(begin, end);
 #else
         AString s = __PRETTY_FUNCTION__;
+#if AUI_COMPILER_CLANG
+        auto end = s.rfind(']');
+#else
         auto end = s.rfind(';');
+#endif
         size_t begin;
         begin = s.rfind("value =", end);
         if (begin == AString::NPOS) {

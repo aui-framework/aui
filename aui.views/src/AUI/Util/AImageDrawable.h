@@ -24,16 +24,15 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 
 class AImageDrawable: public IDrawable {
 private:
-    Render::Texture mTexture;
     glm::ivec2 mSize;
-    _<AImage> mImage;
+    std::variant<ARender::Texture, _<AImage>> mStorage;
 
 public:
-    explicit AImageDrawable(const _<AImage> image);
+    explicit AImageDrawable(_<AImage> image);
     virtual ~AImageDrawable();
 
     void draw(const Params& params) override;

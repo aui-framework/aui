@@ -74,8 +74,10 @@ namespace gl {
 
         void draw(GLenum primitiveType) {
             bind();
+            drawWithoutBind(primitiveType);
+        }
+        void drawWithoutBind(GLenum primitiveType) {
             glDrawElements(primitiveType, GLsizei(mIndicesCount), GL_UNSIGNED_INT, nullptr);
-            glGetError();
         }
 
         [[nodiscard]]

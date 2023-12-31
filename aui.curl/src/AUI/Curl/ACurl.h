@@ -21,13 +21,16 @@
 
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
+#include "AFormMultipart.h"
 #include <AUI/IO/APipe.h>
 #include <AUI/Common/AByteBufferView.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Reflect/AEnumerate.h>
+#include <AUI/Thread/AFuture.h>
 
 class AString;
+class ACurlMulti;
 
 /**
  * @brief Easy curl instance.
@@ -104,6 +107,20 @@ public:
         /* don't forget to update AUI_ENUM_VALUES at the bottom */
     };
 
+    enum class Method {
+        GET,
+        POST,
+    };
+
+    /**
+     * @brief Response struct for Builder::runBlocking() and Builder::runAsync()
+     */
+    struct Response {
+        ResponseCode code;
+        AString contentType;
+        AByteBuffer body;
+    };
+
 
     struct ErrorDescription {
         int curlStatus;
@@ -166,24 +183,99 @@ public:
         HeaderCallback mHeaderCallback;
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
-        AString mUrl;
+        AString mUrl, mParams;
+        Method mMethod = Method::GET;
+        std::function<void(ACurl&)> mOnSuccess;
 
     public:
         explicit Builder(AString url);
         Builder(const Builder&) = delete;
         ~Builder();
 
+        /**
+         * @brief Called on server -> client data received (download).
+         * @param callback callback to call.
+         * @return this
+         * @see withDestinationBuffer
+         */
         Builder& withWriteCallback(WriteCallback callback) {
             assert(("write callback already set" && mWriteCallback == nullptr));
             mWriteCallback = std::move(callback);
             return *this;
         }
-        Builder& withReadCallback(ReadCallback callback) {
+
+        /**
+         * @brief Add multipart data.
+         * @details
+         * This function implies adding Content-Type: multipart and it's boundaries, setting withBody with multipart
+         * data.
+         */
+         Builder& withMultipart(const AFormMultipart& multipart) {
+            withInputStream(multipart.makeInputStream());
+            mHeaders.push_back("Content-Type: multipart/form-data; boundary={}"_format(multipart.boundary()));
+            return *this;
+         }
+
+        /**
+         * @brief Called on client -> server data requested (upload).
+         * @param callback callback to call.
+         * @return this
+         */
+        Builder& withBody(ReadCallback callback) {
             assert(("write callback already set" && mReadCallback == nullptr));
             mReadCallback = std::move(callback);
             return *this;
         }
 
+        /**
+         * @brief Called on client -> server data requested (upload).
+         * @param callback callback to call.
+         * @return this
+         */
+        Builder& withInputStream(_<IInputStream> inputStream) {
+            withBody([inputStream = std::move(inputStream)](char* dst, std::size_t length) {
+                auto v = inputStream->read(dst, length);
+                if (v == 0) {
+                    throw AEOFException();
+                }
+                return v;
+            });
+            return *this;
+        }
+
+        /**
+         * @brief Like withBody with callback, but wrapped with string.
+         */
+        Builder& withBody(std::string contents) {
+            assert(("write callback already set" && mReadCallback == nullptr));
+
+            struct Body {
+                explicit Body(std::string b) : contents(std::move(b)), i(contents.begin()) {}
+
+                std::string contents;
+                std::string::iterator i;
+            };
+            auto b = _new<Body>(std::move(contents));
+
+            mReadCallback = [body = std::move(b)](char* dst, std::size_t length) mutable {
+                if (body->i == body->contents.end()) {
+                    throw AEOFException();
+                }
+                std::size_t remaining = std::distance(body->i, body->contents.end());
+                length = glm::min(length, remaining);
+                std::memcpy(dst, &*body->i, length);
+                body->i += length;
+                return length;
+            };
+
+            return *this;
+        }
+
+        /**
+         * @brief Called on header received.
+         * @param headerCallback callback to call.
+         * @return this
+         */
         Builder& withHeaderCallback(HeaderCallback headerCallback) {
             mHeaderCallback = std::move(headerCallback);
             return *this;
@@ -198,7 +290,7 @@ public:
             return *this;
         }
 
-        Builder& withDestinationBuffer(aui::promise::no_copy<AByteBuffer> dst) {
+        Builder& withDestinationBuffer(aui::constraint::avoid_copy<AByteBuffer> dst) {
             return withWriteCallback([dst](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();
@@ -229,12 +321,51 @@ public:
         Builder& withHttpVersion(Http version);
         Builder& withUpload(bool upload);
         Builder& withCustomRequest(const AString& v);
+        Builder& withOnSuccess(std::function<void(ACurl&)> onSuccess) {
+            mOnSuccess = std::move(onSuccess);
+            return *this;
+        }
+
+        template<aui::invocable OnSuccess>
+        Builder& withOnSuccess(OnSuccess&& onSuccess) {
+            mOnSuccess = [onSuccess = std::forward<OnSuccess>(onSuccess)](ACurl&) {
+                onSuccess();
+            };
+            return *this;
+        }
+
+        /**
+         * @brief Sets HTTP method to the query.
+         * @details
+         * GET is by default.
+         */
+        Builder& withMethod(Method method) noexcept {
+            mMethod = method;
+            return *this;
+        };
 
 
         /**
-         * @brief Appends HTTP GET params to the url.
+         * @brief Sets HTTP params to the query.
+         * @param params params map in key,value pairs.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
          */
-        Builder& withParams(const AVector<std::pair<AString, AString>>& params);
+        Builder& withParams(const AVector<std::pair<AString /* key */, AString /* value */>>& params);
+
+        /**
+         * @brief Sets HTTP params to the query.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
+         */
+        Builder& withParams(AString params) noexcept {
+            mParams = std::move(params);
+            return *this;
+        };
 
         Builder& withHeaders(AVector<AString> headers) {
             mHeaders = std::move(headers);
@@ -242,7 +373,7 @@ public:
         }
 
         /**
-         * Makes input stream from curl builder.
+         * @brief Makes input stream from curl builder.
          * @note creates async task where curl's loop lives in.
          * @throws AIOException
          * @return input stream
@@ -250,10 +381,24 @@ public:
         _<IInputStream> toInputStream();
 
         /**
-         * Makes bytebuffer from curl builder.
+         * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if
+         * possible.
+         *
          * @throws AIOException
          */
-         AByteBuffer toByteBuffer();
+        Response runBlocking();
+
+         /**
+          * @brief Constructs ACurl object and performs curl request in global ACurlMulti.
+          * @return Response future.
+          */
+         AFuture<Response> runAsync();
+
+        /**
+         * @brief Constructs ACurl object and performs curl request in specified ACurlMulti.
+         * @return Response future.
+         */
+         AFuture<Response> runAsync(ACurlMulti& curlMulti);
     };
 
 	explicit ACurl(Builder& builder):
@@ -274,6 +419,7 @@ public:
     ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
+	AString getContentType() const;
 
     void run();
 
@@ -311,6 +457,7 @@ private:
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
     bool mCloseRequested = false;
+    std::string mPostFieldsStorage;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
     static size_t readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;

@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -54,8 +54,11 @@ inline bool Result::operator==(const Result& rhs) const
 {
 	return memcmp(this, &rhs, sizeof(rhs)) == 0;
 }
-
-Result recognize(const AImage& image)
+void gl::Texture2D::framebufferTex2D(glm::u32vec2 size, gl::Type type) {
+    bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, static_cast<GLenum>(type), nullptr);
+}
+static Result recognize(AImageView image)
 {
 	Result res;
 	switch (image.format() & APixelFormat::COMPONENT_BITS)
@@ -114,11 +117,14 @@ Result recognize(const AImage& image)
 	return res;
 }
 
-void gl::Texture2D::tex2D(const AImage& image) {
+void gl::Texture2D::tex2D(AImageView image) {
 	bind();
 	Result types = recognize(image);
 
-	glGetError();
-	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
-	assert(glGetError() == 0);
+	if (mSize == image.size() && mSize != glm::u32vec2(0)) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), types.format, types.type, image.buffer().data());
+	} else {
+		mSize = image.size();
+		glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
+	}
 }

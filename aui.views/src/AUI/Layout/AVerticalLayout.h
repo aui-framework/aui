@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ALayout.h"
+#include "ALinearLayout.h"
 #include <AUI/Util/ALayoutDirection.h>
 
 /**
@@ -42,7 +42,7 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  */
-class API_AUI_VIEWS AVerticalLayout : public ALayout
+class API_AUI_VIEWS AVerticalLayout : public ALinearLayout<>
 {
 private:
 	int mSpacing = 0;
@@ -64,6 +64,9 @@ public:
 	int getMinimumHeight() override;
 
 
+    /**
+     * @see @ref ass::LayoutSpacing "LayoutSpacing"
+     */
 	void setSpacing(int spacing) override;
 
     ALayoutDirection getLayoutDirection() override;

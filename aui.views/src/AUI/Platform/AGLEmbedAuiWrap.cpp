@@ -22,7 +22,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/GL/OpenGLRenderer.h"
 
-void AGLEmbedAuiWrap::render() {
+void AGLEmbedAuiWrap::render(ClipOptimizationContext context) {
     windowMakeCurrent();
     AThread::processMessages();
 
@@ -37,11 +37,11 @@ void AGLEmbedAuiWrap::render() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Render::setColorForced(1.f);
-    Render::setTransformForced(glm::ortho(0.f,
-                                          static_cast<float>(mSize.x),
-                                          static_cast<float>(mSize.y),
-                                          0.f));
+    ARender::setColorForced(1.f);
+    ARender::setTransformForced(glm::ortho(0.f,
+                                           static_cast<float>(mSize.x),
+                                           static_cast<float>(mSize.y),
+                                           0.f));
     windowRender();
 
     resetGLState();
@@ -60,5 +60,5 @@ AGLEmbedAuiWrap::AGLEmbedAuiWrap() {
     auto r = glewInit();
     assert(r == 0);
 #endif
-    Render::setRenderer(std::make_unique<OpenGLRenderer>());
+    ARender::setRenderer(std::make_unique<OpenGLRenderer>());
 }

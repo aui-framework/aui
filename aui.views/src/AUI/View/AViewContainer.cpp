@@ -16,36 +16,54 @@
 
 #include "AViewContainer.h"
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
+#include "AUI/Logging/ALogger.h"
+#include "glm/gtc/quaternion.hpp"
 #include <AUI/Traits/iterators.h>
 
 
-void AViewContainer::drawView(const _<AView>& view) {
-    if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
-        const auto prevStencilLevel = Render::getRenderer()->getStencilDepth();
+static constexpr auto LOG_TAG = "AViewContainer";
 
-        RenderHints::PushState s;
-        glm::mat4 t(1.f);
-        view->getTransform(t);
-        Render::setColor(AColor(1, 1, 1, view->getOpacity()));
-        Render::setTransform(t);
-
-        try {
-            view->render();
-        }
-        catch (...) {}
-        try {
-            view->postRender();
-        }
-        catch (...) {}
-
-        assert(Render::getRenderer()->getStencilDepth() == prevStencilLevel);
+void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
+    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) {
+        return;
     }
+
+    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
+    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) {
+        return;
+    }
+
+    auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
+    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) {
+        return;
+    }
+
+    const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
+
+    RenderHints::PushState s;
+    glm::mat4 t(1.f);
+    view->getTransform(t);
+    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
+    ARender::setTransform(t);
+
+    try {
+        view->render(contextOfTheView);
+        view->postRender();
+    }
+    catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Unable to render view: " << e;
+        ARender::getRenderer()->setStencilDepth(prevStencilLevel);
+        return;
+    }
+
+    auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
+    assert(currentStencilLevel == prevStencilLevel);
 }
 
 
@@ -63,8 +81,8 @@ AViewContainer::~AViewContainer() {
 void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
-        AUI_NULLSAFE(mLayout)->addView(-1, view);
-        emit view->addedToContainer();
+        AUI_NULLSAFE(mLayout)->addView(view);
+        view->onViewGraphSubtreeChanged();
     }
 
     if (mViews.empty()) {
@@ -72,34 +90,60 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     } else {
         mViews.insertAll(std::move(views));
     }
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(const _<AView>& view) {
+    AUI_NULLSAFE(view->mParent)->removeView(view);
     mViews << view;
     view->mParent = this;
-    AUI_NULLSAFE(mLayout)->addView(-1, view);
-    emit view->addedToContainer();
+    AUI_NULLSAFE(mLayout)->addView(view);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
-    emit view->addedToContainer();
+    AUI_NULLSAFE(mLayout)->addView(view);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
-    if (mLayout)
-        mLayout->addView(index, view);
-    emit view->addedToContainer();
+    AUI_NULLSAFE(mLayout)->addView(view, index);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
+    emit childrenChanged;
+}
+
+void AViewContainer::setLayout(_<ALayout> layout) {
+    mViews.clear();
+    mLayout = std::move(layout);
+    if (mLayout) {
+        mViews = mLayout->getAllViews();
+        for (const auto& v : mViews) {
+            v->mParent = this;
+            v->onViewGraphSubtreeChanged();
+        }
+    }
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
-    mViews.removeFirst(view);
-    if (mLayout)
-        mLayout->removeView(-1, view);
+    auto index = mViews.removeFirst(view);
+    if (!index) return;
+    if (!mLayout) return;
+    mLayout->removeView(view, *index);
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -107,43 +151,52 @@ void AViewContainer::removeView(AView* view) {
     if (it != mViews.end()) {
         if (mLayout) {
             auto sharedPtr = *it;
+            auto index = std::distance(mViews.begin(), it);
             mViews.erase(it);
-            mLayout->removeView(-1, sharedPtr);
+            mLayout->removeView(sharedPtr, index);
         } else {
             mViews.erase(it);
         }
     }
+    invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(size_t index) {
+    auto view = std::move(mViews[index]);
     mViews.removeAt(index);
     if (mLayout)
-        mLayout->removeView(index, nullptr);
+        mLayout->removeView(view, index);
+    invalidateCaches();
+    emit childrenChanged;
 }
 
-void AViewContainer::render() {
-    AView::render();
-    drawViews(mViews.begin(), mViews.end());
+void AViewContainer::render(ClipOptimizationContext context) {
+    AView::render(context);
+    renderChildren(context);
 }
 
 void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
+void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    AView::onPointerMove(pos, event);
 
-    auto viewUnderCursor = getViewAt(pos);
-    auto targetView = isMousePressed() ? mFocusChainTarget.lock() : viewUnderCursor;
+    auto viewUnderPointer = getViewAt(pos);
+    auto targetView = isPressed() ? pointerEventsMapping(event.pointerIndex) : viewUnderPointer;
+
+    if (viewUnderPointer && !viewUnderPointer->isMouseEntered()) {
+        viewUnderPointer->onMouseEnter();
+    }
 
     if (targetView) {
-        auto mousePos = pos - targetView->getPosition();
-        if (!targetView->isMouseHover()) targetView->onMouseEnter();
-        targetView->onPointerMove(mousePos);
+        auto mousePos = pos - glm::vec2(targetView->getPosition());
+        targetView->onPointerMove(mousePos, event);
     }
 
     for (auto& v: mViews) {
-        if (v->isMouseHover() && v != viewUnderCursor) {
+        if (v->isMouseEntered() && v != viewUnderPointer) {
             v->onMouseLeave();
         }
     }
@@ -152,8 +205,9 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
 void AViewContainer::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
-        if (view->isMouseHover())
+        if (view->isMouseEntered()) {
             view->onMouseLeave();
+        }
     }
 }
 
@@ -175,27 +229,50 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
 void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event);
 
+    //discard focus chain target for proper updating of focus chain targets when moving from child to parent
+    mFocusChainTarget.reset();
+
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
-        if (p->capturesFocus()) p->focus();
+        mPointerEventsMapping.push_back({event.pointerIndex, p});
+        if (p->capturesFocus()) {
+            p->focus(false);
+
+            //updating focus chain targets for views between p and first (maybe indirect) parent view of p that captures focus
+            auto childView = p;
+            for (auto view = p->getParent(); view; view = view->getParent()) {
+                if (view->focusChainTarget() == childView) {
+                    break;
+                }
+                view->setFocusChainTarget(childView);
+                childView = view->sharedPtr();
+            }
+        }
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
-
-        mFocusChainTarget = std::move(p);
     }
 }
 
 void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
-    auto chainTarget = mFocusChainTarget.lock();
 
-    if (chainTarget && chainTarget->isEnabled() && chainTarget->isMousePressed()) {
-        auto copy = event;
-        copy.position -= chainTarget->getPosition();
-        copy.triggerClick &= getViewAt(event.position) == chainTarget;
-        chainTarget->onPointerReleased(copy);
+    auto viewUnderPointer = getViewAt(event.position);
+    auto targetView = pointerEventsMapping(event.pointerIndex);
+    if (!targetView) {
+        targetView = viewUnderPointer;
     }
+
+    if (targetView && targetView->isEnabled() && targetView->isPressed()) {
+        auto copy = event;
+        copy.position -= targetView->getPosition();
+        copy.triggerClick &= viewUnderPointer == targetView;
+        targetView->onPointerReleased(copy);
+    }
+
+    mPointerEventsMapping.erase(std::remove_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
+        return v.pointerIndex == event.pointerIndex;
+    }), mPointerEventsMapping.end());
 }
 
 void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
@@ -220,19 +297,31 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+    if (mConsumesClickCache) {
+        if (mConsumesClickCache->position == pos) {
+            return mConsumesClickCache->value;
+        }
+    }
+
+    AView::consumesClick(pos);
+
+    bool result = false;
+    ARaiiHelper onExit = [&] {
+        mConsumesClickCache = ConsumesClickCache{
+            .position = pos,
+            .value = result,
+        };
+    };
+
     // has layout check
     if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
-        return true;
-    auto p = getViewAt(pos);
-    if (p)
-        return p->consumesClick(pos - p->getPosition());
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+        return result = true;
+    }
+    if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
+        return result = true;
+    }
     return false;
-}
-
-void AViewContainer::setLayout(_<ALayout> layout) {
-    mViews.clear();
-    mLayout = std::move(layout);
 }
 
 _<ALayout> AViewContainer::getLayout() const {
@@ -265,7 +354,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
 
         if (hitTest) {
             if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
-                if (!possibleOutput) {
+                if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
                 if (view->consumesClick(targetPos)) {
@@ -313,15 +402,19 @@ void AViewContainer::updateLayout() {
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    invalidateCaches();
 }
 
 void AViewContainer::removeAllViews() {
     if (mLayout) {
-        for (auto& x: getViews()) {
-            mLayout->removeView(0, x);
+        // using reverse iterator wrap here as vector is not efficient in removing first elements
+        std::size_t i = getViews().size();
+        for (auto& x: aui::reverse_iterator_wrap(getViews())) {
+            mLayout->removeView(x, --i);
         }
     }
     mViews.clear();
+    invalidateCaches();
 }
 
 void AViewContainer::updateParentsLayoutIfNecessary() {
@@ -422,5 +515,31 @@ void AViewContainer::adjustVerticalSizeToContent() {
 
 void AViewContainer::onClickPrevented() {
     AView::onClickPrevented();
-    AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
+    auto pointerEvents = std::move(mPointerEventsMapping);
+    for (const auto& e : pointerEvents) {
+        if (auto v = e.targetView.lock(); v && v->isEnabled() && v->isPressed(e.pointerIndex)) {
+            v->onClickPrevented();
+        }
+    }
+}
+
+void AViewContainer::invalidateCaches() {
+    mConsumesClickCache.reset();
+}
+
+void AViewContainer::onViewGraphSubtreeChanged() {
+    AView::onViewGraphSubtreeChanged();
+    for (const auto& v : mViews) {
+        v->onViewGraphSubtreeChanged();
+    }
+}
+
+_<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
+    auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
+        return v.pointerIndex == index;
+    });
+    if (it == mPointerEventsMapping.end()) {
+        return nullptr;
+    }
+    return it->targetView.lock();
 }

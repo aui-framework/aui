@@ -22,7 +22,7 @@
 #include "AUI/Image/IImageFactory.h"
 
 #include <AUI/Common/AString.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 
 
 inline uint64_t asKey(const glm::ivec2 size) {
@@ -46,16 +46,16 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
 void AVectorDrawable::draw(const Params& params) {
     auto& size = params.size;
     auto key = asKey(size);
-    auto doDraw = [&](const Render::Texture& texture) {
-        Render::rect(ATexturedBrush{
-                             texture,
-                             std::nullopt,
-                             std::nullopt,
-                             params.imageRendering,
-                             params.repeat,
+    auto doDraw = [&](const ARender::Texture& texture) {
+        ARender::rect(ATexturedBrush{
+                         .texture = texture,
+                         .uv1 = params.cropUvTopLeft,
+                         .uv2 = params.cropUvBottomRight,
+                         .imageRendering = ImageRendering::PIXELATED,
+                         .repeat = params.repeat,
                      },
-                     params.offset,
-                     size);
+                      params.offset,
+                      size);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {
@@ -67,7 +67,7 @@ void AVectorDrawable::draw(const Params& params) {
         mRasterized.pop_front();
     }
 
-    glm::ivec2 textureSize = size;
+    glm::ivec2 textureSize = params.renderingSize.valueOr(size);
 
     if (!!(params.repeat & Repeat::X)) {
         textureSize.x = getSizeHint().x;
@@ -77,8 +77,8 @@ void AVectorDrawable::draw(const Params& params) {
     }
 
     // rasterization
-    auto texture = Render::getNewTexture();
-    texture->setImage(_new<AImage>(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0)))));
+    auto texture = ARender::getNewTexture();
+    texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
     mRasterized.push_back({key, texture});
     doDraw(texture);
 }

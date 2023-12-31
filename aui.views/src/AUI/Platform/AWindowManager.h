@@ -16,6 +16,9 @@
 
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
+#include "AUI/Common/ATimer.h"
+#include "AUI/Platform/Pipe.h"
+#include "AUI/Util/AWatchdog.h"
 #include "IRenderingContext.h"
 
 class AWindow;
@@ -25,6 +28,10 @@ typedef union _XEvent XEvent;
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AWindow;
     friend class AClipboard;
+private:
+    AWatchdog mWatchdog;
+    _<ATimer> mHangTimer;
+
 protected:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
@@ -32,8 +39,8 @@ protected:
 
 #if AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
-    AMutex mXNotifyLock;
-    AConditionVariable mXNotifyCV;
+    Pipe mNotifyPipe;
+    std::atomic_bool mFastPathNotify = false;
     std::string mXClipboardText;
 
     void xProcessEvent(XEvent& ev);
@@ -45,6 +52,9 @@ public:
     AWindowManager();
     ~AWindowManager() override;
 
+    AWatchdog& watchdog() noexcept {
+        return mWatchdog;
+    }
 
     void removeAllWindows() {
         mWindows.clear();

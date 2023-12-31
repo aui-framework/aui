@@ -1,4 +1,4 @@
-﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  AUI Framework - Declarative UI toolkit for modern C++20
 //  Copyright (C) 2020-2023 Alex2772
 //
 //  This library is free software; you can redistribute it and/or
@@ -19,12 +19,15 @@
 #include <AUI/Views.h>
 #include <AUI/View/AView.h>
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Enum/AOverflow.h"
 #include "AUI/Util/ABitField.h"
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"
 #include "AUI/Common/AVector.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/ClipOptimizationContext.h"
+#include "glm/fwd.hpp"
 
 
 AUI_ENUM_FLAG(AViewLookupFlags) {
@@ -42,6 +45,14 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
      * (i.e. drag&drop).
      */
     ONLY_ONE_PER_CONTAINER = 0b10,
+
+    /**
+     * @brief Match views only by consumesClick() property.
+     * @details
+     * By default, getViewAt returns the first hit view, if neither view of the container have not passed
+     * consumesClick test. This flag disables that behaviour, returning nullptr instead.
+     */
+    ONLY_THAT_CONSUMES_CLICK = 0b100,
 };
 
 /**
@@ -58,6 +69,11 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
  */
 class API_AUI_VIEWS AViewContainer : public AView {
 public:
+    struct PointerEventsMapping {
+        APointerIndex pointerIndex;
+        _weak<AView> targetView;
+    };
+
     AViewContainer();
 
     virtual ~AViewContainer();
@@ -71,7 +87,7 @@ public:
         for (const auto& view: mViews) {
             view->mParent = this;
             if (mLayout)
-                mLayout->addView(-1, view);
+                mLayout->addView(view);
         }
     }
 
@@ -84,11 +100,15 @@ public:
     void removeView(size_t index);
     void removeAllViews();
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
+
+    void renderChildren(ClipOptimizationContext contextPassedToContainer) {
+        drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
+    }
 
     void onMouseEnter() override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void onMouseLeave() override;
 
@@ -310,21 +330,37 @@ public:
         mScrollbarAppearance = scrollbarAppearance;
         emit scrollbarAppearanceSet(scrollbarAppearance);
     }
+    
+    /**
+     * @see mPointerEventsMapping
+     */
+    const ASmallVector<PointerEventsMapping, 1>& pointerEventsMapping() const noexcept {
+        return mPointerEventsMapping;
+    }
 
 protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
 
-    void drawView(const _<AView>& view);
+    void drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer);
 
     template<typename Iterator>
-    void drawViews(Iterator begin, Iterator end) {
+    void drawViews(Iterator begin, Iterator end, ClipOptimizationContext contextPassedToContainer) {
+        switch (mOverflow) {
+            case AOverflow::VISIBLE: break;
+            case AOverflow::HIDDEN:
+            case AOverflow::HIDDEN_FROM_THIS:
+                contextPassedToContainer = { .position = glm::ivec2(0), .size = getSize() };
+        }
+        
         for (auto i = begin; i != end; ++i) {
-            drawView(*i);
+            drawView(*i, contextPassedToContainer);
         }
     }
 
     void invalidateAllStyles() override;
+
+    void onViewGraphSubtreeChanged() override;
 
     void invalidateAssHelper() override;
 
@@ -343,13 +379,28 @@ protected:
 
 signals:
     emits<ScrollbarAppearance> scrollbarAppearanceSet;
+    /**
+     * @brief Emitted when addView(s)/removeView/setLayout was called.
+     */
+    emits<> childrenChanged;
 
 private:
     _<ALayout> mLayout;
     bool mSizeSet = false;
     glm::ivec2 mPreviousSize = mSize;
 
-    void notifyParentEnabledStateChanged(bool enabled) override;
+    struct ConsumesClickCache {
+        glm::ivec2 position;
+        bool value;
+    };
+
+    /**
+     * @brief Temporary cache for consumesClick().
+     * @details
+     * AUI does several view graph visits for a single event in order to call virtual methods properly.
+     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     */
+    AOptional<ConsumesClickCache> mConsumesClickCache;
 
     /**
      * @brief Focus chain target.
@@ -358,4 +409,18 @@ private:
      * The focus chaining mechanism allows to catch such events and process them in the containers.
      */
     _weak<AView> mFocusChainTarget;
+
+    /**
+     * @brief Like focus chain target, but intended for pointer press -> move.. -> release event sequence on per-pointer
+     * (finger) basis.
+     */
+    ASmallVector<PointerEventsMapping, 1> mPointerEventsMapping;
+
+    void notifyParentEnabledStateChanged(bool enabled) override;
+    void invalidateCaches();
+
+    /**
+     * @see mPointerEventsMapping
+     */
+    _<AView> pointerEventsMapping(APointerIndex index);
 };

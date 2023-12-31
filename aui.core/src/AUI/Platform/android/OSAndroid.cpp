@@ -21,22 +21,31 @@
 #include <unistd.h>
 #include <AUI/Common/AByteBuffer.h>
 
+extern void aui_init_signal_handler();
 
-int(*_gEntry)(AStringVector);
+int(*_gEntry)(const AStringVector&);
 
-AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(AStringVector)) {
+AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
     aui::jni::setJavaVM(vm);
     _gEntry = aui_entry;
     return 0;
 }
 
+const ACommandLineArgs& aui::args() noexcept {
+    static ACommandLineArgs args;
+    return args; 
+}
+
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleInit(JNIEnv *env, jclass clazz, jstring internalStoragePathR) {
+Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstring internalStoragePathR) {
     jboolean isCopy;
     auto internalStoragePath = env->GetStringUTFChars(internalStoragePathR, &isCopy);
     chdir(internalStoragePath);
     env->ReleaseStringUTFChars(internalStoragePathR, internalStoragePath);
 
+#ifdef AUI_CATCH_UNHANDLED
+    aui_init_signal_handler();
+#endif
     _gEntry({});
 }

@@ -307,6 +307,15 @@ function(_auib_try_download_precompiled_binary)
     message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
 endfunction()
 
+function(_auib_dump_with_prefix PREFIX PATH)
+    file(READ "${PATH}" contents)
+    STRING(REPLACE ";" "\\\\;" contents "${contents}")
+    STRING(REPLACE "\n" ";" contents "${contents}")
+    foreach (line ${contents})
+        message("${PREFIX} ${line}")
+    endforeach ()
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -671,6 +680,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         XCODE_VERSION
                         SDK_VERSION
                         APPLE_TARGET_TRIPLE
+                        AUI_IOS_CODE_SIGNING_REQUIRED
                         CMAKE_POSITION_INDEPENDENT_CODE
                         ${_forwardable_vars})
 
@@ -687,11 +697,14 @@ function(auib_import AUI_MODULE_NAME URL)
                 list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${_build_shared_libs}")
 
                 file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
+                file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                 message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                        )
+                _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
@@ -700,9 +713,11 @@ function(auib_import AUI_MODULE_NAME URL)
                     execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                             RESULT_VARIABLE STATUS_CODE
-                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
+                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                            )
+                    _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
-                        message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+                        message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                     endif()
                 endif()
 
@@ -720,10 +735,12 @@ function(auib_import AUI_MODULE_NAME URL)
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
+                        )
+                _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
-                    message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
+                    message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                 endif()
 
                 message(STATUS "Installing ${AUI_MODULE_NAME}")
@@ -734,15 +751,20 @@ function(auib_import AUI_MODULE_NAME URL)
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log
+                        OUTPUT_QUIET)
+                _auib_dump_with_prefix("[Installing ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
-                    message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+                    message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                 endif()
                 if (NOT EXISTS ${DEP_INSTALL_PREFIX})
-                    message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
+                    message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                 endif()
                 file(TOUCH ${DEP_INSTALLED_FLAG})
+
+                message(STATUS "Cleaning up build directory")
+                file(REMOVE_RECURSE ${DEP_BINARY_DIR})
             endif()
         endif()
     endif()
@@ -801,7 +823,7 @@ function(auib_import AUI_MODULE_NAME URL)
             endforeach()
 
             # construct error message
-            set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME} (see verbose find output above)")
+            set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
             set(error_message "${error_message}\nnote: package names are case sensitive")
             if (possible_names)
                 string(JOIN " or " possible_names_joined ${possible_names})
@@ -815,7 +837,10 @@ function(auib_import AUI_MODULE_NAME URL)
 
     _auib_copy_runtime_dependencies()
 
-    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+    if (NOT DEP_ADD_SUBDIRECTORY)
+        set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+    endif()
+
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
     # display the imported targets (available since CMake 3.21)

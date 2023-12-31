@@ -26,17 +26,18 @@ namespace gl {
 
     template<unsigned TEXTURE_TARGET>
     class API_AUI_VIEWS Texture {
-    private:
-        uint32_t mTexture = 0;
     public:
         Texture();
         virtual ~Texture();
-        static void setupNearest();
-        static void setupLinear();
-        static void setupMirroredRepeat();
+        void setupNearest();
+        void setupLinear();
+        void setupClampToEdge();
+        void setupRepeat();
+        void setupMirroredRepeat();
         Texture(const Texture&) = delete;
 
         void bind(uint8_t index = 0);
+        static void unbind(uint8_t index = 0);
 
         operator bool() const {
             return mTexture;
@@ -44,5 +45,20 @@ namespace gl {
         uint32_t getHandle() const {
             return mTexture;
         }
+
+    private:
+        uint32_t mTexture = 0;
+        enum class Filtering {
+            UNDEFINED,
+            NEAREST,
+            LINEAR,
+        } mFiltering = Filtering::UNDEFINED;
+
+        enum class Wrapping {
+            UNDEFINED,
+            CLAMP_TO_EDGE,
+            REPEAT,
+            MIRRORED_REPEAT,
+        } mWrapping = Wrapping::UNDEFINED;
     };
 }

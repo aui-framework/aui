@@ -29,15 +29,15 @@ glm::ivec2 pos(AWindow* window, NSEvent* event) {
 }
 
 void onMouseMoved(AWindow* window, NSEvent* event) {
-    window->onPointerMove(pos(window, event));
+    window->onPointerMove(pos(window, event), {});
 }
 
 void onMouseButtonDown(AWindow* window, NSEvent* event, AInput::Key key) {
-    window->onPointerPressed({pos(window, event), key});
+    window->onPointerPressed({pos(window, event), APointerIndex::button(key)});
 }
 
 void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
-    window->onPointerReleased({pos(window, event), key});
+    window->onPointerReleased({pos(window, event), APointerIndex::button(key)});
 }
 
 @implementation MainView {
@@ -45,7 +45,9 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (MainView*)initWithWindow:(AWindow*)window {
+    [super init];
     mAWindow = window;
+    
     return self;
 }
 

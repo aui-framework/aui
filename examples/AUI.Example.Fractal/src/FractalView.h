@@ -18,12 +18,12 @@
 
 
 #include <AUI/View/AView.h>
-#include <AUI/GL/Shader.h>
+#include <AUI/GL/Program.h>
 #include <AUI/GL/Texture2D.h>
 
 class FractalView: public AView {
 private:
-    gl::Shader mShader;
+    gl::Program mShader;
     _<gl::Texture2D> mTexture;
     glm::dmat4 mTransform;
 
@@ -33,7 +33,7 @@ private:
 
 public:
     FractalView();
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     void reset();
 

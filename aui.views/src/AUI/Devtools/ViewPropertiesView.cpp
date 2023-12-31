@@ -18,9 +18,11 @@
 // Created by Alex2772 on 11/11/2021.
 //
 
+#include <range/v3/range.hpp>
 #include <AUI/View/ALabel.h>
 #include "ViewPropertiesView.h"
 #include "Devtools.h"
+#include "AUI/View/AText.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Traits/iterators.h>
@@ -44,6 +46,12 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
+    if (!targetView) {
+        return;
+    }
+    AUI_NULLSAFE(targetView->getWindow())->setProfiledView(targetView);
+    AUI_NULLSAFE(targetView->getWindow())->redraw();
+
     mTargetView = targetView;
     if (!targetView) return;
 
@@ -59,6 +67,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     AClipboard::copyToClipboard(addressStr);
                 }),
             },
+            Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(ALayoutDirection::NONE), targetView->getMinimumHeight(ALayoutDirection::NONE)) },
             CheckBoxWrapper {
                 Label { "Enabled "},
             } let {
@@ -68,7 +77,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     requestTargetUpdate();
                 });
             },
-
+            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             CheckBoxWrapper {
                 Label {"Expanding"},
             } let {

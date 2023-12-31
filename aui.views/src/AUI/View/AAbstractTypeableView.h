@@ -24,7 +24,7 @@
 #include <AUI/Util/ACursorSelectable.h>
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 
 
 /**
@@ -116,7 +116,7 @@ public:
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void clear() {

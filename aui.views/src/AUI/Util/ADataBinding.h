@@ -91,7 +91,9 @@ public:
 };
 
 /**
- * Data binding implementation.
+ * @brief Data binding implementation.
+ * @tparam Model Your model type.
+ * @details
  * <p>
  * If const reference of your model passed, ADataBinding will create and manage its own copy of your model.
  * </p>
@@ -101,12 +103,54 @@ public:
  * </p>
  *
  * <p>Example:</p>
- * <code>
+ * @code{cpp}
  * _new<ATextField>() && dataBinding(&User::username)
- * </code>
+ * @endcode
  * <p>This code will bind ATextField with username field in the User model.</p>
  *
- * @tparam Model Your model type.
+ * <p>Another example:</p>
+ * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20230705_173329.png">
+ * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Recording_20230705_at_17.51.14.gif">
+ * @code{cpp}
+ * class MyWindow: public AWindow {
+ * public:
+ *     MyWindow(): AWindow("Test") {
+ *
+ *         struct Model {
+ *             int value = 0;
+ *         };
+ *
+ *         auto data = _new<ADataBinding<Model>>(Model{});
+ *
+ *         data->addObserver(&Model::value, [](int v) {
+ *             ALogger::info("Debug") << "New value: " << v;
+ *         });
+ *
+ *         setContents(Centered {
+ *             Vertical {
+ *                 Label { } let {
+ *                     data->addObserver(&Model::value, [it](int v) {
+ *                         it->setText("{}"_format(v));
+ *                     });
+ *                 },
+ *                 Horizontal{
+ *                     Button{"+"}.clicked(this, [data] {
+ *                         data->getEditableModel().value += 1;
+ *                         data->notifyUpdate();
+ *                     }),
+ *                     Button{"-"}.clicked(this, [data] {
+ *                         data->getEditableModel().value -= 1;
+ *                         data->notifyUpdate();
+ *                     }),
+ *                 },
+ *             }
+ *         });
+ *     }
+ * };
+ * @endcode
+ * <p>Here, we use getEditableModel() in order to change data in our model and notifyUpdate() to notify.</p>
+ * <p>Also, we use @ref #let construction to define custom format for label.</p>
+ *
  */
 template <typename Model>
 class ADataBinding: public AObject {

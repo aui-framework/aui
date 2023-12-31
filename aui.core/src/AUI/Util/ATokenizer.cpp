@@ -205,6 +205,8 @@ ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
                 case '7':
                 case '8':
                 case '9':
+                    mTemporaryAStringBuffer << c;
+                    break;
 
                     // hex
                 case 'a':
@@ -219,8 +221,10 @@ ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
                 case 'E':
                 case 'f':
                 case 'F':
-                    mTemporaryAStringBuffer << c;
-                    break;
+                    if (isHex) {
+                        mTemporaryAStringBuffer << c;
+                        break;
+                    }
                 default:
                     reverseByte();
                     return {mTemporaryAStringBuffer.toUInt().valueOr(0), isHex};

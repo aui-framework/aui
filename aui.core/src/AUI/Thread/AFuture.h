@@ -24,6 +24,7 @@
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
+#include <AUI/Logging/ALogger.h>
 #include <AUI/Reflect/AReflect.h>
 
 class AThreadPool;
@@ -245,17 +246,17 @@ namespace aui::impl::future {
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         }
-                    } catch (const AException&) {
-                        if (auto sharedPtrLock = innerWeak.lock()) {
-                            inner->reportException();
-                        }
-                        return false;
-                    } catch (...) {
+                    } catch (const AThread::Interrupted&) {
                         if (auto sharedPtrLock = innerWeak.lock()) {
                             inner->reportInterrupted();
                         }
                         throw;
-                    }
+                    } catch (...) {
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportException();
+                        }
+                        return false;
+                    } 
                 }
                 return true;
             }
@@ -267,6 +268,9 @@ namespace aui::impl::future {
             }
 
             void reportException() noexcept {
+                if (cancelled) {
+                    return;
+                }
                 std::unique_lock lock(mutex);
                 exception.emplace();
                 cv.notify_all();
@@ -274,12 +278,19 @@ namespace aui::impl::future {
             }
 
 
-            void notifyOnSuccessCallback() {
+            void notifyOnSuccessCallback() noexcept {
+                if (cancelled) {
+                    return;
+                }
                 if (value && onSuccess) {
-                    if constexpr(isVoid) {
-                        onSuccess();
-                    } else {
-                        onSuccess(*value);
+                    try {
+                        if constexpr (isVoid) {
+                            onSuccess();
+                        } else {
+                            onSuccess(*value);
+                        }
+                    } catch (const AException& e) {
+                        ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
                     }
                     onSuccess = nullptr;
                 }
@@ -498,7 +509,14 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * However, it can be default-constructed and the result can be supplied manually with the supplyResult() method:
+ * If your operation consists of complex future sequences, use AComplexFutureOperation.
+ *
+ * @code{cpp}
+ *
+ * @endcode
+ *
+ * If it does not suit your needs, you be default-construct AFuture and the result can be supplied manually with the
+ * supplyResult() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
@@ -519,7 +537,7 @@ namespace aui::impl::future {
  * your task cannot be executed or be executing when AFuture destroyed and allows to efficiently utilize c++'s RAII
  * feature.
  *
- * To manage multiple AFutures, use AAsyncHolder and AFutureSet classes.
+ * To manage multiple AFutures, use AAsyncHolder or AFutureSet classes.
  *
  * When waiting for result, AFuture may execute the task (if not default-constructed) on the caller thread instead of
  * waiting. See AFuture::wait for details.
@@ -531,6 +549,7 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+    using Inner = aui::impl::future::CancellationWrapper<typename super::Inner>;
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
@@ -548,7 +567,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = std::move(v);
         inner->cv.notify_all();
-        AUI_NULLSAFE(inner->onSuccess)(*inner->value);
+        inner->notifyOnSuccessCallback();
     }
 
     /**
@@ -647,6 +666,7 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+    using Inner = decltype(std::declval<super>().inner());
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
@@ -671,7 +691,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = true;
         inner->cv.notify_all();
-        AUI_NULLSAFE(inner->onSuccess)();
+        inner->notifyOnSuccessCallback();
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {

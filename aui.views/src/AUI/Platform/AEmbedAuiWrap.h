@@ -67,17 +67,17 @@ public:
      * Handle mouse pressed in UI.
      * @param x x position
      * @param y y position
-     * @param button mouse button
+     * @param pointerIndex mouse button or finger index
      */
-    void onPointerPressed(int x, int y, AInput::Key button);
+    void onPointerPressed(int x, int y, APointerIndex pointerIndex);
 
     /**
      * Handle mouse released in UI.
      * @param x x position
      * @param y y position
-     * @param button mouse button
+     * @param pointerIndex mouse button or finger index
      */
-    void onPointerReleased(int x, int y, AInput::Key button);
+    void onPointerReleased(int x, int y, APointerIndex pointerIndex);
 
     /**
      * Handle mouse move in UI.
@@ -93,7 +93,7 @@ public:
      */
     void onCharEntered(wchar_t c);
 
-    void onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY);
+    void onScroll(int mouseX, int mouseY, int scrollX, int scrollY);
 
 
     void onKeyPressed(AInput::Key key);

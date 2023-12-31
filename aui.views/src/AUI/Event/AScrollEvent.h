@@ -17,13 +17,35 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include "APointerIndex.h"
 
+/**
+ * @brief Pointing method scroll event.
+ */
 struct AScrollEvent {
-    glm::ivec2 origin;
-    glm::ivec2 delta;
+    /**
+     * @brief Where does the event occurred.
+     * @details
+     * For mouse, it's the position of the cursor.
+     *
+     * For touchscreen, it's the origin point where the scroll gesture started.
+     */
+    glm::vec2 origin;
+
+    /**
+     * @brief The amount of scroll
+     * @details
+     * This field is mutable in order to be consumable.
+     */
+    mutable glm::vec2 delta;
 
     /**
      * @brief Whether the event simulated by kinetic scroll feature or not.
      */
     bool kinetic = false;
+
+    /**
+     * @brief Pointer index for touchscreen; LBUTTON for mouse cursor.
+     */
+    APointerIndex pointerIndex = APointerIndex::button(AInput::LBUTTON);
 };

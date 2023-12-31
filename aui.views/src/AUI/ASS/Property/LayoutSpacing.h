@@ -24,7 +24,9 @@
 namespace ass {
 
     /**
-     * @brief Controls the @ref ALayout::setSpacing "layout spacing" expanding of AViewContainer's layout.
+     * @brief Controls the gap between elements of the container. Basically acts like a margin, but the gaps appear
+     * between views only, not around them.
+     *
      * @ingroup ass
      */
     struct LayoutSpacing {

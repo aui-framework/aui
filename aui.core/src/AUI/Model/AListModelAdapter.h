@@ -20,7 +20,7 @@
 #include <AUI/Model/IMutableListModel.h>
 
 template<typename ItemTo, typename ItemFrom, typename Adapter>
-class AListModelAdapter: public IRemovableListModel<ItemTo>, public AObject {
+class AListModelAdapter: public IRemovableListModel<ItemTo> {
 private:
     _<IListModel<ItemFrom>> mOther;
     IRemovableListModel<ItemFrom>* mOtherMutable;
@@ -33,14 +33,14 @@ public:
             mOther(other),
             mAdapter(std::forward<Adapter>(adapter)) {
         mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
-        AObject::connect(other->dataChanged, this, [&](const AModelRange<ItemFrom>& r){
-            emit this->dataChanged({r.getBegin(), r.getEnd(), this});
+        AObject::connect(other->dataChanged, this, [&](const AListModelRange<ItemFrom>& r){
+            emit this->dataChanged(this->range(r.getBegin(), r.getEnd()));
         });
-        AObject::connect(other->dataInserted, this, [&](const AModelRange<ItemFrom>& r){
-            emit this->dataInserted({r.getBegin(), r.getEnd(), this});
+        AObject::connect(other->dataInserted, this, [&](const AListModelRange<ItemFrom>& r){
+            emit this->dataInserted(this->range(r.getBegin(), r.getEnd()));
         });
-        AObject::connect(other->dataRemoved, this, [&](const AModelRange<ItemFrom>& r){
-            emit this->dataRemoved({r.getBegin(), r.getEnd(), this});
+        AObject::connect(other->dataRemoved, this, [&](const AListModelRange<ItemFrom>& r){
+            emit this->dataRemoved(this->range(r.getBegin(), r.getEnd()));
         });
     }
 
@@ -50,20 +50,20 @@ public:
         return mOther->listSize();
     }
 
-    ItemTo listItemAt(const AModelIndex& index) override {
+    ItemTo listItemAt(const AListModelIndex& index) override {
         return mAdapter(mOther->listItemAt(index));
     }
 
 
-    void removeItems(const AModelRange<ItemTo>& items) override {
-        AUI_NULLSAFE(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
+    void removeItems(const AListModelRange<ItemTo>& items) override {
+        AUI_NULLSAFE(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther});
     }
 
-    void removeItems(const AModelSelection<ItemTo>& items) override {
-        AUI_NULLSAFE(mOtherMutable)->removeItems({items.getIndices(), mOther.get()});
+    void removeItems(const AListModelSelection<ItemTo>& items) override {
+        AUI_NULLSAFE(mOtherMutable)->removeItems({items.getIndices(), mOther});
     }
 
-    void removeItem(const AModelIndex& item) override {
+    void removeItem(const AListModelIndex& item) override {
         AUI_NULLSAFE(mOtherMutable)->removeItem(item);
     }
 

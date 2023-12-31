@@ -72,7 +72,7 @@ inline _<T>& _<T>::connect(SignalField signalField, Object object, Function&& fu
 template<typename T>
 template<typename SignalField, typename Function>
 inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
-    AObject::connect(super::get()->*signalField, _<T>::get(), std::forward<Function>(function));
+    AObject::connect(super::get()->*signalField, super::get(), std::forward<Function>(function));
     return *this;
 }
 

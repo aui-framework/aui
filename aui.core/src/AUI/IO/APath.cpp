@@ -37,31 +37,6 @@
 #else
 #include <dirent.h>
 #include <cstring>
-
-
-/**
- * @brief Creates APath object from rawString with guaranteed exception safety. rawString is freed.
- * @param rawString raw string which should be converted to path
- * @param throwExceptionCallback called then rawString is null (error has occurred)
- * @return APath object
- */
-template<typename Callback>
-static APath safePathFromRawString(const char* rawString, Callback&& throwExceptionCallback) {
-    if (rawString == nullptr) {
-        throwExceptionCallback();
-    }
-
-    try {
-        auto result = APath(rawString);
-        delete [] rawString;
-        return result;
-    } catch (...) {
-        delete [] rawString;
-        throw;
-    }
-}
-
-
 #endif
 
 APath APath::parent() const {
@@ -72,7 +47,7 @@ APath APath::parent() const {
     return {};
 }
 
-AString APath::filename() const {
+APath APath::filename() const {
      auto i = rfind(L'/');
      if (i == NPOS) {
          return *this;
@@ -80,7 +55,7 @@ AString APath::filename() const {
     return substr(i + 1);
 }
 
-AString APath::filenameWithoutExtension() const {
+APath APath::filenameWithoutExtension() const {
     auto name = filename();
     auto it = name.rfind('.');
     if (it == NPOS) {
@@ -236,9 +211,11 @@ APath APath::absolute() const {
 
     return APath(buf);
 #else
-    return safePathFromRawString(realpath(toStdString().c_str(), nullptr), [&] {
+    auto rawPath = aui::ptr::make_unique_with_deleter(realpath(toStdString().c_str(), nullptr), free);
+    if (!rawPath) {
         aui::impl::lastErrorToException("could not find absolute file " + *this);
-    });
+    }
+    return rawPath.get();
 #endif
 }
 
@@ -352,18 +329,20 @@ APath APath::workingDir() {
 #include <pwd.h>
 
 APath APath::workingDir() {
-    return safePathFromRawString(getcwd(nullptr, 0), [] {
+    auto cwd = aui::ptr::make_unique_with_deleter(getcwd(nullptr, 0), free);
+    if (!cwd) {
         aui::impl::lastErrorToException("could not find workingDir");
-    });
+    }
+    return cwd.get();
 }
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
         case APPDATA:
-            return APath(".").absolute() / "__aui_appdata";
+            return APath::workingDir() / "__aui_appdata";
         case TEMP:
-            return APath(".").absolute() / "__aui_tmp";
+            return APath::workingDir() / "__aui_tmp";
 #else
         case APPDATA:
             return getDefaultPath(HOME) / ".local/share";
@@ -470,4 +449,12 @@ const APath& APath::chmod(int newMode) const {
         aui::impl::lastErrorToException("unable to chmod {}"_format(*this));
     }
     return *this;
+}
+
+APath APath::extensionChanged(const AString& newExtension) const {
+    auto it = rfind('.');
+    if (it == NPOS) {
+        return *this + "." + newExtension;
+    }
+    return substr(0, it) + "." + newExtension;
 }

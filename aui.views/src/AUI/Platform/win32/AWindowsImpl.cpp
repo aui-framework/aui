@@ -19,7 +19,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -172,7 +172,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_MOUSEMOVE: {
-            onPointerMove(POS);
+            onPointerMove(POS, {});
 
             TRACKMOUSEEVENT tme;
             tme.cbSize = sizeof(tme);
@@ -200,29 +200,32 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_LBUTTONDOWN:
-            if (isMousePressed()) {
+            if (isPressed(APointerIndex::button(AInput::LBUTTON))) {
                 // fix assert(!mPressed);
                 onPointerReleased({
                     .position = POS,
-                    .button = AInput::LBUTTON
+                    .pointerIndex = APointerIndex::button(AInput::LBUTTON)
                 });
             }
             onPointerPressed({
                 .position = POS,
-                .button = AInput::LBUTTON
+                .pointerIndex = APointerIndex::button(AInput::LBUTTON)
             });
             SetCapture(mHandle);
             return 0;
-        case WM_MOUSEWHEEL :
+        case WM_MOUSEWHEEL: {
+            const auto SCROLL = 11_pt * 3.f / 120.f;
+
             onScroll({
                 .origin = mapPosition(POS),
-                .delta = {0, -(GET_WHEEL_DELTA_WPARAM(wParam)) },
+                .delta = {0, -float(GET_WHEEL_DELTA_WPARAM(wParam) * SCROLL) },
             });
             return 0;
+        }
         case WM_LBUTTONUP: {
             onPointerReleased({
                 .position = POS,
-                .button = AInput::LBUTTON
+                .pointerIndex = APointerIndex::button(AInput::LBUTTON)
             });
             ReleaseCapture();
             return 0;
@@ -230,14 +233,14 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_RBUTTONDOWN:
             onPointerPressed({
                 .position = POS,
-                .button = AInput::RBUTTON
+                .pointerIndex = APointerIndex::button(AInput::RBUTTON)
             });
             SetCapture(mHandle);
             return 0;
         case WM_RBUTTONUP:
             onPointerReleased({
                 .position = POS,
-                .button = AInput::RBUTTON
+                .pointerIndex = APointerIndex::button(AInput::RBUTTON)
             });
             ReleaseCapture();
             return 0;
@@ -481,9 +484,11 @@ void AWindowManager::loop() {
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        AThread::processMessages();
+        mWatchdog.runOperation([&] {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            AThread::processMessages();
+        });
     }
 }
 
@@ -544,4 +549,14 @@ void AWindow::requestTouchscreenKeyboardImpl() {
 
 void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboardImpl();
+}
+
+void AWindow::moveToCenter() {
+    auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+    GetMonitorInfo(m, &info);
+    glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
+    glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
+    setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
 }

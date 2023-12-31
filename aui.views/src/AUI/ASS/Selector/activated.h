@@ -32,7 +32,7 @@ namespace ass {
         }
 
         bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && view->isMousePressed();
+            return Base::isStateApplicable(view) && view->isPressed();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {

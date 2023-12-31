@@ -15,8 +15,10 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
+#include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
@@ -42,7 +44,7 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
-    render();
+    render({.position = glm::ivec2(0), .size = getSize()});
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -75,21 +77,26 @@ bool AWindow::isRedrawWillBeEfficient() {
 }
 void AWindow::redraw() {
     {
+        if (isClosed()) {
+            return;
+        }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         mRenderingContext->beginPaint(*this);
         ARaiiHelper endPaintCaller = [&] {
             mRenderingContext->endPaint(*this);
         };
-        if (mUpdateLayoutFlag) {
-            mUpdateLayoutFlag = false;
-            updateLayout();
+        AUI_REPEAT(2) { // AText may trigger extra layout update
+            if (mUpdateLayoutFlag) {
+                mUpdateLayoutFlag = false;
+                updateLayout();
+            }
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        Render::setWindow(this);
+        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time
@@ -131,8 +138,8 @@ void AWindow::onFocusAcquired() {
     AViewContainer::onFocusAcquired();
 }
 
-void AWindow::onPointerMove(glm::ivec2 pos) {
-    ABaseWindow::onPointerMove(pos);
+void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    ABaseWindow::onPointerMove(pos, event);
 }
 
 void AWindow::onFocusLost() {
@@ -140,6 +147,13 @@ void AWindow::onFocusLost() {
     ABaseWindow::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
+    }
+}
+
+void AWindow::onKeyDown(AInput::Key key) {
+    ABaseWindow::onKeyDown(key);
+    if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
+        focusNextView();
     }
 }
 
@@ -173,7 +187,20 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 }
 
 
-AWindowManager::AWindowManager(): mHandle(this) {}
+AWindowManager::AWindowManager(): mHandle(this) {
+    mHangTimer = _new<ATimer>(10s);
+    return;
+    AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
+        if (mWatchdog.isHang()) {
+            ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
+            std::exit(-1);
+        }
+    });
+#if !AUI_DEBUG
+    mHangTimer->start();
+#endif
+}
+
 
 AWindowManager::~AWindowManager() {
 
@@ -281,4 +308,8 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
         }
     }
     throw AException("unable to initialize graphics");
+}
+
+bool AWindow::isClosed() const noexcept {
+    return mSelfHolder == nullptr;
 }

@@ -18,6 +18,8 @@
 // Created by alex2 on 29.12.2020.
 //
 
+#include "AUI/Enum/AOverflow.h"
+#include "AUI/View/AScrollAreaInner.h"
 #if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
@@ -40,6 +42,7 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AProgressBar.h>
+#include <AUI/View/ACircleProgressBar.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
@@ -106,14 +109,14 @@ AStylesheet::AStylesheet() {
         // AButton
         {
             { t<AButton>(), c(".btn")},
-            BackgroundSolid {0xffffff_rgb},
+                BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 6_dp},
             Margin {2_dp, 4_dp},
             MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
-            TextAlign::CENTER,
-            VerticalAlign::MIDDLE,
+                ATextAlign::CENTER,
+                VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -137,9 +140,12 @@ AStylesheet::AStylesheet() {
         {
             { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
-            BackgroundGradient {getOsThemeColor().lighter(0.15f),
-                                getOsThemeColor().darker(0.15f),
-                                ALayoutDirection::VERTICAL },
+            BackgroundGradient { ALinearGradientBrush{
+                    .colors = {
+                            {0.f, getOsThemeColor().lighter(0.15f)},
+                            {0.f, getOsThemeColor().darker(0.15f)},
+                    },
+            } },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
@@ -155,9 +161,12 @@ AStylesheet::AStylesheet() {
         },
         {
             { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
-            BackgroundGradient {getOsThemeColor().lighter(0.2f),
-                                getOsThemeColor().darker(0.15f),
-                                ALayoutDirection::VERTICAL },
+            BackgroundGradient { ALinearGradientBrush{
+                    .colors = {
+                            {0.f, getOsThemeColor().lighter(0.15f)},
+                            {0.f, getOsThemeColor().darker(0.15f)},
+                    },
+            } },
         },
         {
             { button::Default(t<AButton>::active()), c::active(".btn_default")},
@@ -179,13 +188,13 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
-                TextColor { 0_rgb },
-                BackgroundSolid { 0xffffff_rgb },
+            TextColor { 0_rgb },
+            BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
-                BorderRadius { 4_dp },
-                Margin { 2_dp, 4_dp },
+            BorderRadius { 4_dp },
+            Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 17_dp },
-                AOverflow::HIDDEN
+            AOverflow::HIDDEN,
         },
         {
             class_of::hover(".input-field"),
@@ -337,7 +346,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-            TextAlign::LEFT,
+                ATextAlign::LEFT,
         },
 
         // AListView
@@ -469,13 +478,12 @@ AStylesheet::AStylesheet() {
             t<ATabButtonView>::hover(),
             BackgroundSolid {0xffffff_rgb },
         },
-
-        // scroll area
-        {
-            c(".scrollarea_inner"),
-                AOverflow::HIDDEN
-        },
         // scrollbar
+        {
+            t<AScrollAreaInner>(),
+            AOverflow::HIDDEN,
+            Expanding(),
+        },
         {
             t<AScrollbar>(),
             Margin { 0, 0, 0, 2_px },
@@ -589,13 +597,28 @@ AStylesheet::AStylesheet() {
             t<AProgressBar>(),
             BackgroundSolid { 0xd0d0d0_rgb },
             BorderRadius { 4_dp },
-            FixedSize { {}, 8_dp },
+            MinSize { 40_dp, 8_dp },
             Margin { 2_dp, 4_dp },
         },
         {
             t<AProgressBar::Inner>(),
             BackgroundSolid { getOsThemeColor() },
             BorderRadius { 4_dp },
+        },
+
+        // ACircleProgressBar
+        {
+            t<ACircleProgressBar>(),
+            Border { 4_dp, 0xd0d0d0_rgb },
+            BorderRadius { 8_dp },
+            FixedSize { 16_dp },
+            Margin { 2_dp, 4_dp },
+        },
+        {
+            t<ACircleProgressBar::Inner>(),
+            Border { 4_dp, getOsThemeColor() },
+            FixedSize { 16_dp },
+            BorderRadius { 8_dp },
         },
 
         {

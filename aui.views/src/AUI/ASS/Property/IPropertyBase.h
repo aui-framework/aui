@@ -27,6 +27,7 @@ namespace ass::prop {
 
         TRANSFORM_SCALE,
         TRANSFORM_OFFSET,
+        TRANSFORM_ROTATE,
 
         SHADOW,
         RENDER_OVERFLOW,
@@ -35,6 +36,7 @@ namespace ass::prop {
         BACKGROUND_IMAGE,
         BACKGROUND_EFFECT,
         BORDER,
+        SHADOW_INNER,
         TEXT_SHADOW,
 
         COUNT,

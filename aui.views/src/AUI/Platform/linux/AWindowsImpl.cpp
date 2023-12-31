@@ -14,12 +14,18 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <X11/Xlib.h>
+#include <unistd.h>
+#include <poll.h>
+#include <fcntl.h>
 
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Platform/ErrorToException.h"
+#include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -56,7 +62,9 @@ void AWindow::quit() {
         return p.get() == this;
     });
 
-    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    if (CommonRenderingContext::ourDisplay) {
+        XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    }
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -258,10 +266,10 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    AThread::current() << [&]() {
-        redraw();
-    };
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
+        AThread::current() << [&]() {
+            redraw();
+        };
         XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
@@ -361,15 +369,59 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 
 void AWindowManager::notifyProcessMessages() {
-    if (!mWindows.empty()) {
-        mXNotifyCV.notify_all();
+    if (mWindows.empty()) {
+        return;
     }
+    if (mFastPathNotify.exchange(true)) {
+        return;
+    }
+    char dummy = 0;
+    int unused = write(mNotifyPipe.in(), &dummy, sizeof(dummy));
 }
 
 void AWindowManager::loop() {
+    // make sure notifyProcessMessages would not block as it syscalls write to the pipe
+    fcntl(mNotifyPipe.in(), F_SETFL, O_NONBLOCK);
+    pollfd ps[] = {
+        {
+            .fd = XConnectionNumber(CommonRenderingContext::ourDisplay),
+            .events = POLLIN,
+        },
+        {
+            .fd = mNotifyPipe.out(),
+            .events = POLLIN,
+        },
+    };
+
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        xProcessEvent(ev);
+        try {
+            xProcessEvent(ev);
+        } catch (const AException& e) {
+            ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
+
+        AThread::processMessages();
+        if (AWindow::isRedrawWillBeEfficient()) {
+            for (auto &window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    AWindow::currentWindowStorage() = window.get();
+                    mWatchdog.runOperation([&] {
+                        window->redraw();
+                    });
+                }
+            }
+        }
+
+        if (poll(ps, std::size(ps), -1) < 0) {
+            aui::impl::unix_based::lastErrorToException("eventloop poll failed");
+        }
+        mFastPathNotify = false;
+        if (ps[1].revents & POLLIN) {
+            char unused[0xff];
+            while (read(mNotifyPipe.out(), unused, std::size(unused)) == std::size(unused));
+        }
     }
 }
 
@@ -386,226 +438,226 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
     };
     try {
         while (XPending(CommonRenderingContext::ourDisplay)) {
-            XNextEvent(CommonRenderingContext::ourDisplay, &ev);
-            _<AWindow> window;
-            switch (ev.type) {
-                case ClientMessage: {
-                    if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
-                        auto window = locateWindow(ev.xclient.window);
-                        if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
-                            // close button clicked
-                            window->onCloseButtonClicked();
-                        } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
-                            // flicker-fix sync on resize
-                            window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
-                            window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
-                        }
+            mWatchdog.runOperation([&] {
+                XNextEvent(CommonRenderingContext::ourDisplay, &ev);
+                _<AWindow> window;
+                switch (ev.type) {
+                    case Expose: {
+                        window = locateWindow(ev.xexpose.window);
+                        window->flagRedraw();
+                        break;
                     }
-                    break;
-                }
-                case KeyPress: {
-                    window = locateWindow(ev.xkey.window);
-                    int count = 0;
-                    KeySym keysym = 0;
-                    char buf[0x20];
-                    Status status = 0;
-                    count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
-                                              &status);
-
-                    // delete key
-                    if (buf[0] != 127) {
-                        if (count) {
-                            AString s(buf);
-                            assert(!s.empty());
-                            window->onCharEntered(s[0]);
-                        }
-                    }
-                    window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
-                    break;
-                }
-                case KeyRelease:
-                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
-                    {
-                        XEvent nextEvent;
-                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
-
-                        if (nextEvent.type == KeyPress &&
-                            nextEvent.xkey.time == ev.xkey.time &&
-                            nextEvent.xkey.keycode == ev.xkey.keycode) {
-                            // key wasn't actually released
-
-                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
-
-                            break;
-                        }
-                    }
-
-                    window = locateWindow(ev.xkey.window);
-                    window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
-                    break;
-
-                case ConfigureNotify: {
-                    window = locateWindow(ev.xconfigure.window);
-                    glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
-                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
-                        window->AViewContainer::setSize(size);
-                    }
-                    if (auto w = _cast<ACustomWindow>(window)) {
-                        w->handleXConfigureNotify();
-                    }
-                    window->mRedrawFlag = false;
-                    window->redraw();
-
-                    XSyncValue syncValue;
-                    XSyncIntsToValue(&syncValue,
-                                     window->mXsyncRequestCounter.lo,
-                                     window->mXsyncRequestCounter.hi);
-                    XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
-
-                    break;
-                }
-
-                case MappingNotify:
-                    XRefreshKeyboardMapping(&ev.xmapping);
-                    break;
-
-                case MotionNotify: {
-                    window = locateWindow(ev.xmotion.window);
-                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
-                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
-                    break;
-                }
-                case ButtonPress: {
-                    window = locateWindow(ev.xbutton.window);
-                    switch (ev.xbutton.button) {
-                        case 1:
-                        case 2:
-                        case 3:
-                            window->onPointerPressed({
-                                .position = { ev.xbutton.x, ev.xbutton.y },
-                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
-                            });
-                            break;
-                        case 4: // wheel down
-                            window->onScroll({                     // TODO libinput
-                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, -120 }                     //
-                            });                                          //
-                            break;                                       //
-                        case 5: // wheel up                              //
-                            window->onScroll({                     //
-                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, 120 }                      //
-                            });                                          //
-                            break;
-                    }
-                    break;
-                }
-                case ButtonRelease: {
-                    if (ev.xbutton.button < 4) {
-                        window = locateWindow(ev.xbutton.window);
-                        window->onPointerReleased({
-                             .position = { ev.xbutton.x, ev.xbutton.y },
-                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
-                        });
-                    }
-                    break;
-                }
-
-                case PropertyNotify: {
-                    window = locateWindow(ev.xproperty.window);
-                    if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
-                        auto maximized = window->isMaximized();
-                        if (maximized != window->mWasMaximized) {
-                            if (window->mWasMaximized) {
-                                AUI_EMIT_FOREIGN(window, restored);
-                            } else {
-                                AUI_EMIT_FOREIGN(window, maximized);
+                    case ClientMessage: {
+                        if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
+                            auto window = locateWindow(ev.xclient.window);
+                            if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
+                                // close button clicked
+                                window->onCloseButtonClicked();
+                            } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
+                                // flicker-fix sync on resize
+                                window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
+                                window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
                             }
-                            window->mWasMaximized = maximized;
                         }
+                        break;
                     }
-                    break;
-                }
+                    case KeyPress: {
+                        window = locateWindow(ev.xkey.window);
+                        int count = 0;
+                        KeySym keysym = 0;
+                        char buf[0x20];
+                        Status status = 0;
+                        count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                                                &status);
 
-                case SelectionClear: {
-                    // lost clipboard ownership -> clean up
-                    mXClipboardText.clear();
-                    break;
-                }
+                        // delete key
+                        if (buf[0] != 127) {
+                            if (count) {
+                                AString s(buf);
+                                assert(!s.empty());
+                                window->onCharEntered(s[0]);
+                            }
+                        }
+                        window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
+                        break;
+                    }
+                    case KeyRelease:
+                        if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                        {
+                            XEvent nextEvent;
+                            XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
 
-                case SelectionRequest: {
-                    if (ev.xselectionrequest.property == None) {
+                            if (nextEvent.type == KeyPress &&
+                                nextEvent.xkey.time == ev.xkey.time &&
+                                nextEvent.xkey.keycode == ev.xkey.keycode) {
+                                // key wasn't actually released
+
+                                XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+
+                                break;
+                            }
+                        }
+
+                        window = locateWindow(ev.xkey.window);
+                        window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
+                        break;
+
+                    case ConfigureNotify: {
+                        window = locateWindow(ev.xconfigure.window);
+                        glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
+                        if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                            AUI_NULLSAFE(window->mRenderingContext)->beginResize(*window);
+                            AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
+                            window->AViewContainer::setSize(size);
+                            AUI_NULLSAFE(window->mRenderingContext)->endResize(*window);
+                        }
+                        if (auto w = _cast<ACustomWindow>(window)) {
+                            w->handleXConfigureNotify();
+                        }
+                        window->mRedrawFlag = false;
+                        window->redraw();
+
+                        XSyncValue syncValue;
+                        XSyncIntsToValue(&syncValue,
+                                        window->mXsyncRequestCounter.lo,
+                                        window->mXsyncRequestCounter.hi);
+                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
+
                         break;
                     }
 
+                    case MappingNotify:
+                        XRefreshKeyboardMapping(&ev.xmapping);
+                        break;
 
-                    char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
-                    char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
-                    ALogger::info("{}: {}"_format(targetName, propertyName));
-                    XFree(targetName);
-                    XFree(propertyName);
-                    if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
-                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
-                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
-                        XChangeProperty(CommonRenderingContext::ourDisplay,
-                                        ev.xselectionrequest.requestor,
-                                        ev.xselectionrequest.property,
-                                        ev.xselectionrequest.target,
-                                        8,
-                                        PropModeReplace,
-                                        (unsigned char*) mXClipboardText.c_str(),
-                                        mXClipboardText.length());
-                    } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
-                        Atom atoms[] = {
-                                XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
-                        };
-                        XChangeProperty(CommonRenderingContext::ourDisplay,
-                                        ev.xselectionrequest.requestor,
-                                        ev.xselectionrequest.property,
-                                        ev.xselectionrequest.target,
-                                        8,
-                                        PropModeReplace,
-                                        (unsigned char*) atoms,
-                                        sizeof(atoms));
+                    case MotionNotify: {
+                        window = locateWindow(ev.xmotion.window);
+                        window->onPointerMove({ev.xmotion.x, ev.xmotion.y}, {});
+                        AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
+                        break;
+                    }
+                    case ButtonPress: {
+                        window = locateWindow(ev.xbutton.window);
+
+                        const auto SCROLL = 11_pt * 3.f;
+
+                        switch (ev.xbutton.button) {
+                            case 1:
+                            case 2:
+                            case 3:
+                                window->onPointerPressed({
+                                    .position = { ev.xbutton.x, ev.xbutton.y },
+                                    .pointerIndex = APointerIndex::button(
+                                            static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
+                                });
+                                break;
+                            case 4: // wheel down
+                                window->onScroll({                     // TODO libinput
+                                    .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                    .delta = { 0, -SCROLL }                     //
+                                });                                          //
+                                break;                                       //
+                            case 5: // wheel up                              //
+                                window->onScroll({                     //
+                                    .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                    .delta = { 0, SCROLL }                      //
+                                });                                          //
+                                break;
+                        }
+                        break;
+                    }
+                    case ButtonRelease: {
+                        if (ev.xbutton.button < 4) {
+                            window = locateWindow(ev.xbutton.window);
+                            window->onPointerReleased({
+                                .position = { ev.xbutton.x, ev.xbutton.y },
+                                .pointerIndex = APointerIndex::button(
+                                        static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
+                            });
+                        }
+                        break;
                     }
 
-                    XSelectionEvent ssev;
-                    ssev.type = SelectionNotify;
-                    ssev.requestor = ev.xselectionrequest.requestor;
-                    ssev.selection = ev.xselectionrequest.selection;
-                    ssev.target = ev.xselectionrequest.target;
-                    ssev.property = ev.xselectionrequest.property;
-                    ssev.time = ev.xselectionrequest.time;
+                    case PropertyNotify: {
+                        window = locateWindow(ev.xproperty.window);
+                        if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
+                            auto maximized = window->isMaximized();
+                            if (maximized != window->mWasMaximized) {
+                                if (window->mWasMaximized) {
+                                    AUI_EMIT_FOREIGN(window, restored);
+                                } else {
+                                    AUI_EMIT_FOREIGN(window, maximized);
+                                }
+                                window->mWasMaximized = maximized;
+                            }
+                        }
+                        break;
+                    }
 
-                    XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
-                    break;
+                    case SelectionClear: {
+                        // lost clipboard ownership -> clean up
+                        mXClipboardText.clear();
+                        break;
+                    }
+
+                    case SelectionRequest: {
+                        if (ev.xselectionrequest.property == None) {
+                            break;
+                        }
+
+
+                        char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
+                        char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
+                        ALogger::info("{}: {}"_format(targetName, propertyName));
+                        XFree(targetName);
+                        XFree(propertyName);
+                        if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
+                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
+                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
+                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                                            ev.xselectionrequest.requestor,
+                                            ev.xselectionrequest.property,
+                                            ev.xselectionrequest.target,
+                                            8,
+                                            PropModeReplace,
+                                            (unsigned char*) mXClipboardText.c_str(),
+                                            mXClipboardText.length());
+                        } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
+                            Atom atoms[] = {
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
+                            };
+                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                                            ev.xselectionrequest.requestor,
+                                            ev.xselectionrequest.property,
+                                            ev.xselectionrequest.target,
+                                            8,
+                                            PropModeReplace,
+                                            (unsigned char*) atoms,
+                                            sizeof(atoms));
+                        }
+
+                        XSelectionEvent ssev;
+                        ssev.type = SelectionNotify;
+                        ssev.requestor = ev.xselectionrequest.requestor;
+                        ssev.selection = ev.xselectionrequest.selection;
+                        ssev.target = ev.xselectionrequest.target;
+                        ssev.property = ev.xselectionrequest.property;
+                        ssev.time = ev.xselectionrequest.time;
+
+                        XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+                        break;
+                    }
                 }
-            }
+            });
         }
 
-        {
-            std::unique_lock lock(mXNotifyLock);
-            mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
-        }
-        AThread::processMessages();
-        if (AWindow::isRedrawWillBeEfficient()) {
-            for (auto &window : mWindows) {
-                if (window->mRedrawFlag) {
-                    window->mRedrawFlag = false;
-                    AWindow::currentWindowStorage() = window.get();
-                    window->redraw();
-                }
-            }
-        }
     } catch(NotFound e) {
 
     }
@@ -694,3 +746,6 @@ void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboardImpl();
 }
 
+void AWindow::moveToCenter() {
+
+}

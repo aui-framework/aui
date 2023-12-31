@@ -20,14 +20,9 @@
 #include "AUI/IO/AStringStream.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Common/AMap.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/APlatform.h"
-
-AMetric::AMetric(float value, Unit unit): mValue(value),
-                                          mUnit(unit)
-{
-}
 
 AMetric::AMetric(const AString& text)
 {

@@ -21,6 +21,7 @@
 #include "Converter.h"
 #include "Signature.h"
 #include "Env.h"
+#include "ArrayView.h"
 #include <AUI/Util/APreprocessor.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Common/AException.h>
@@ -41,7 +42,7 @@
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, AUI) {
  *     public:
  *         // class definition
  *         AUI_JNI_STATIC_METHOD(void, callStaticMethod, ())
@@ -49,7 +50,7 @@
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_CLASS(path, name) \
@@ -72,7 +73,7 @@ struct name: public name ## _info
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
  *         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
  *         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
@@ -80,7 +81,7 @@ struct name: public name ## _info
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_STATIC_METHOD(ret_t, name, args) \
@@ -106,7 +107,7 @@ struct name: public name ## _info
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
  *         AUI_JNI_METHOD(float, getDpiRatio, ())
  *         AUI_JNI_METHOD(void, openUrl, ((const AString&) url))
@@ -114,7 +115,7 @@ struct name: public name ## _info
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_METHOD(ret_t, name, args) \
@@ -130,6 +131,6 @@ struct name: public name ## _info
         return ::aui::jni::callMethod<ret_t>(this->asObject(), methodId AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS, _, args)); \
     }
 
-#define AUI_JNI_INTERNAL_OMIT_BRACES(a, b, c) AUI_PP_IDENTITY c
+#define AUI_JNI_INTERNAL_OMIT_BRACES(i, b, c) AUI_PP_COMMA_IF(i) AUI_PP_IDENTITY c
 
 #define AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS(i, b, c) , AUI_PP_EMPTY c

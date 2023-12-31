@@ -27,7 +27,7 @@
 #include <AUI/Model/IListModel.h>
 
 
-class DemoListModel: public AObject, public IListModel<AString> {
+class DemoListModel: public IListModel<AString> {
 private:
     size_t mListSize = 3;
 
@@ -35,7 +35,7 @@ public:
     virtual ~DemoListModel() = default;
 
     size_t listSize() override;
-    AString listItemAt(const AModelIndex& index) override;
+    AString listItemAt(const AListModelIndex& index) override;
 
     void addItem();
     void removeItem();

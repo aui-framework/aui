@@ -41,7 +41,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;
-                Render::setColor(info.overlayColor.or_default(0xffffff_rgb));
+                ARender::setColor(info.overlayColor.or_default(0xffffff_rgb));
                 IDrawable::Params p;
                 p.offset = {0, 0};
                 p.size = glm::vec2(size) * scale;
@@ -72,7 +72,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    Render::setTransform(
+                    ARender::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
@@ -95,15 +95,38 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    Render::setTransform(
+                    ARender::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
                     break;
                 }
+                case Sizing::CONTAIN_PADDING: {
+                    RenderHints::PushMatrix m;
+                    glm::ivec2 viewSize = view->getSize() - view->getPadding().occupiedSize();
+                    if (viewSize.x == 0 || viewSize.y == 0) {
+                        break;
+                    }
+
+                    glm::ivec2 imageSize = drawable->getSizeHint();
+                    glm::ivec2 sizeDelta = viewSize - imageSize;
+                    glm::ivec2 size;
+                    if (viewSize.x * imageSize.y / viewSize.y < imageSize.x) {
+                        size.x = viewSize.x;
+                        size.y = size.x * imageSize.y / imageSize.x;
+                    } else {
+                        size.y = viewSize.y;
+                        size.x = size.y * imageSize.x / imageSize.y;
+                    }
+                    ARender::setTransform(
+                            glm::translate(glm::mat4(1.f),
+                                           glm::vec3{glm::vec2(viewSize - size) / 2.f + glm::vec2(view->getPadding().leftTop()), 0.f}));
+                    drawableDrawWrapper(size);
+                    break;
+                }
                 case Sizing::FIT_PADDING: {
                     RenderHints::PushMatrix m;
-                    Render::setTransform(
+                    ARender::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{view->getPadding().left, view->getPadding().top, 0.f}));
                     drawableDrawWrapper(
@@ -142,6 +165,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         p.cropUvBottomRight = uv2;
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
+                        p.renderingSize = {textureWidth, textureHeight};
                         drawable->draw(p);
                     };
 
@@ -266,12 +290,12 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         imageSize *= AWindow::current()->getDpiRatio();
 
 
-                    Render::setTransform(
+                    ARender::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - imageSize) / 2.f, 0.f}));
 
                     RenderHints::PushMask mask([&] {
-                        Render::rect(ASolidBrush{}, {0, 0}, view->getSize());
+                        ARender::rect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
 
                     drawableDrawWrapper(imageSize);
@@ -279,7 +303,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                 }
                 case Sizing::NONE: {
                     RenderHints::PushMask mask([&] {
-                        Render::rect(ASolidBrush{}, {0, 0}, view->getSize());
+                        ARender::rect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
                     glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 

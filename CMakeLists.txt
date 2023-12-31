@@ -54,6 +54,7 @@ include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 auib_mark_var_forwardable(AUI_BUILD_EXAMPLES)
+auib_mark_var_forwardable(AUI_IOS_CODE_SIGNING_REQUIRED)
 
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUIB_COMPONENTS)
@@ -67,6 +68,7 @@ endfunction()
 
 auib_import(ZLIB https://github.com/aui-framework/zlib)
 
+# define all components
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(toolbox)
@@ -81,6 +83,7 @@ define_aui_component(image)
 define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
+define_aui_component(audio)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
@@ -103,19 +106,22 @@ if (NOT AUI_NO_TESTS)
 endif()
 
 #install(EXPORT AUI DESTINATION "cmake/")
+
+# all components for exporting
 set(AUI_ALL_COMPONENTS core
-        crypt
-        curl
-        data
-        image
-        json
-        mysql
-        network
-        sqlite
-        views
-        xml
-        uitests
-        toolbox
+                       crypt
+                       curl
+                       data
+                       image
+                       json
+                       mysql
+                       network
+                       sqlite
+                       views
+                       xml
+                       uitests
+                       toolbox
+                       audio
         )
 
 

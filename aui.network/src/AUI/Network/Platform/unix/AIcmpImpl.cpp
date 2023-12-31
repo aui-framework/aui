@@ -26,6 +26,7 @@
 
 #if !AUI_PLATFORM_APPLE
 #include <sys/socket.h>
+#include <unistd.h>
 #include <netinet/in.h>
 #include <csignal>
 

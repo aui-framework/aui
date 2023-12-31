@@ -115,6 +115,15 @@ public:
         return mThreadName;
     }
 
+     /**
+     * @brief Retrieve stacktrace of the thread.
+     */
+    [[nodiscard]]
+    AStacktrace threadStacktrace() const;
+        
+	[[nodiscard]]
+    bool messageQueueEmpty() noexcept;
+
 protected:
     /**
      * @brief Thread ID.

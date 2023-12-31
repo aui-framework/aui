@@ -30,7 +30,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    if (event.position.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
+    if (event.position.y < AUI_TITLE_HEIGHT && event.asButton == AInput::LBUTTON) {
         if (isCaptionAt(event.position)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
@@ -65,7 +65,7 @@ void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onPointerReleased({mDragPos, AInput::LBUTTON});
+    AViewContainer::onPointerReleased({mDragPos, APointerIndex::button(AInput::LBUTTON)});
 }
 
 

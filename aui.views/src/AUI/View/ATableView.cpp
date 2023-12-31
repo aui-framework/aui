@@ -18,7 +18,7 @@
 #include "ATableView.h"
 #include "ALabel.h"
 #include "AUI/Layout/AGridLayout.h"
-#include "AUI/Model/AModelIndex.h"
+#include "AUI/Model/AListModelIndex.h"
 
 ATableView::~ATableView()
 {
@@ -35,7 +35,7 @@ void ATableView::setModel(_<ITableModel> model)
 	{
 		for (size_t column = 0; column < mModel->tableColumns(); ++column)
 		{
-			addView(_new<ALabel>(mModel->tableItemAt(AModelIndex(row, column)).toString()));
+			addView(_new<ALabel>(mModel->tableItemAt(AListModelIndex(row, column)).toString()));
 		}
 	}
 	updateLayout();

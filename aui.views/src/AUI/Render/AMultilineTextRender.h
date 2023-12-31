@@ -17,7 +17,7 @@
 #pragma once
 
 
-#include <AUI/Render/Render.h>
+#include "ARender.h"
 #include <AUI/Util/AWordWrappingEngine.h>
 #include "AUI/Font/AFontStyle.h"
 
@@ -57,7 +57,7 @@ friend class TextEntry;
 
 
 public:
-    Render::PrerenderedString updateText(const AString& text, const glm::ivec2& size);
+    ARender::PrerenderedString updateText(const AString& text, const glm::ivec2& size);
 
     void setFontStyle(const AFontStyle& fontStyle) {
         mFontStyle = fontStyle;

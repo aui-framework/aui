@@ -34,8 +34,6 @@ void APageView::setPageId(unsigned int pageId) {
     getViews()[pageId]->setVisibility(Visibility::VISIBLE);
     mPageId = pageId;
     emit pageChanged();
-
-    AWindow::current()->flagUpdateLayout();
 }
 
 void APageView::addPage(const _<AView>& view) {

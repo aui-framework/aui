@@ -20,24 +20,35 @@
 #pragma once
 
 #include "AUI/Common/AByteBufferView.h"
-#include "AUI/Image/IImageFactory.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
 
-class GifImageFactory : public IImageFactory {
-private:
-    std::chrono::time_point<std::chrono::system_clock> mLastFrameStarted;
-    unsigned char* mLoadedGifPixels;
-    _<AImage> mCurrentFrame;
-    int* mDelays;
-    int mGifWidth;
-    int mGifHeight;
-    int mFramesCount;
-    int mChannelsCount;
-    int mCurrentFrameIndex;
+typedef struct nsgif nsgif_t;
 
+class GifImageFactory : public IAnimatedImageFactory {
 public:
     explicit GifImageFactory(AByteBufferView buf);
+
     ~GifImageFactory();
+
     AImage provideImage(const glm::ivec2& size) override;
+
     bool isNewImageAvailable() override;
+
     glm::ivec2 getSizeHint() override;
+
+    bool hasAnimationFinished() override;
+
+private:
+    AByteBuffer mGifData;
+    std::chrono::time_point<std::chrono::high_resolution_clock> mLastFrameStarted;
+    size_t mCurrentFrameIndex = -1;
+    size_t mFrameCount;
+    size_t mWidth = 0;
+    size_t mHeight = 0;
+    uint32_t mCurrentFrameLength;
+    bool mAnimationFinished = false;
+    nsgif_t* mContext;
+    uint8_t* mLastFrameBuffer = nullptr;
+
+    AImage fetchImage();
 };

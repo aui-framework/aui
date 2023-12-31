@@ -39,9 +39,9 @@ public:
 
     size_t textLength() const override;
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 

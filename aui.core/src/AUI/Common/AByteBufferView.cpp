@@ -18,6 +18,7 @@
 // Created by Alex2772 on 4/18/2022.
 //
 
+#include <AUI/IO/AByteBufferInputStream.h>
 #include "AByteBufferView.h"
 
 AString AByteBufferView::toHexString() const {
@@ -26,8 +27,26 @@ AString AByteBufferView::toHexString() const {
     char buf[8];
 
     for (size_t i = 0; i < size(); ++i) {
-        sprintf(buf, "%02x", static_cast<unsigned>(mBuffer[i]) & 0xff);
-        result += buf;
+        result += std::string_view(buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "{:02x}", (std::uint8_t)mBuffer[i])));
     }
     return result;
+}
+
+_<IInputStream> AByteBufferView::toStream() const {
+    class ByteBufferStream: public IInputStream {
+    private:
+        AByteBuffer mData;
+        AByteBufferInputStream mIs;
+
+    public:
+        ByteBufferStream(AByteBufferView view): mData(view), mIs(mData) {
+
+        }
+
+        size_t read(char* dst, size_t size) override {
+            return mIs.read(dst, size);
+        }
+    };
+
+    return _new<ByteBufferStream>(*this);
 }

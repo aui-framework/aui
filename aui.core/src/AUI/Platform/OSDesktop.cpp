@@ -24,6 +24,7 @@
 #include "AUI/Util/kAUI.h"
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Common/ATimer.h>
+#include <AUI/Platform/Entry.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -52,6 +53,13 @@ protected:
             mMessageQueue.pop_front();
             lock.unlock();
             auto time = util::measureExecutionTime<microseconds>(f.proc);
+            // TODO dynamically enable/disable logging
+            /*
+            ALOG_DEBUG("Performance")
+                    << "Executing:\n"
+                    << f.stacktrace
+                    << " - ...\n";
+            */
 
             if (time >= 1ms) {
                 ALogger::warn("Performance")
@@ -60,7 +68,7 @@ protected:
                     << " - ...\n";
             }
         }
-
+        lock.lock();
         {
             static std::size_t prevRecord = 1;
             auto currentSize = mMessageQueue.size();
@@ -83,8 +91,16 @@ void afterEntryCleanup() {
     ACleanup::inst().afterEntryPerform();
 }
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
-    AStringVector args;
+static ACommandLineArgs& argsImpl() {
+    static ACommandLineArgs args;
+    return args;
+}
+
+const ACommandLineArgs& aui::args() noexcept {
+    return argsImpl();
+}
+
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
 
     setupUIThread();
     ATimer::scheduler();
@@ -105,7 +121,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
 
                 case ' ':
                     if (!wrappedWithQuots) {
-                        args << std::move(currentArg);
+                        argsImpl() << std::move(currentArg);
                         currentArg = {};
                         assert(currentArg.empty());
                         break;
@@ -115,16 +131,21 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
             }
         }
         if (!currentArg.empty()) {
-            args << std::move(currentArg);
+            argsImpl() << std::move(currentArg);
         }
     }
 #endif
     for (int i = 0; i < argc; ++i) {
-        args << argv[i];
+        argsImpl() << argv[i];
     }
     int r = -1;
+
+#ifdef AUI_CATCH_UNHANDLED
+    extern void aui_init_signal_handler();
+    aui_init_signal_handler();
+#endif
     try {
-        r = aui_entry(std::move(args));
+        r = aui_entry(argsImpl());
         if (auto el = AThread::current()->getCurrentEventLoop()) {
             el->loop();
         }

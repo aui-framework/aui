@@ -22,6 +22,7 @@
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
 
 /**
  * Image loader used for IDrawable::fromUrl and AImage::fromUrl
@@ -36,9 +37,10 @@ private:
 	ADeque<_<IImageLoader>> mRasterLoaders;
     ADeque<_<IImageLoader>> mVectorLoaders;
     ADeque<_<IImageLoader>> mAnimatedLoaders;
+    ADeque<AString> mSupportedFormats;
 
     _<IImageFactory> loadVector(AByteBufferView buffer);
-    _<IImageFactory> loadAnimated(AByteBufferView buffer);
+    _<IAnimatedImageFactory> loadAnimated(AByteBufferView buffer);
     _<AImage> loadRaster(AByteBufferView buffer);
     inline _<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());
@@ -46,12 +48,16 @@ private:
     }
     _<AImage> loadImage(const AUrl& url);
 
+    void registerLoader(ADeque<_<IImageLoader>>& d, _<IImageLoader> loader, AString name);
+
 public:
 	AImageLoaderRegistry() = default;
 
-	void registerRasterLoader(_<IImageLoader> imageLoader);
-    void registerVectorLoader(_<IImageLoader> imageLoader);
-    void registerAnimatedLoader(_<IImageLoader> imageLoader);
+	void registerRasterLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerVectorLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerAnimatedLoader(_<IImageLoader> imageLoader, AString name = "");
+    [[nodiscard]]
+    const ADeque<AString>& supportedFormats() const noexcept;
 
 	static AImageLoaderRegistry& inst();
 };

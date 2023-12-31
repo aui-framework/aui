@@ -42,6 +42,8 @@ public:
             auto l = std::move(mFutureSet.last());
             mFutureSet.pop_back();
             lock.unlock();
+            l.cancel();
+            l.wait();
             l = nullptr;
             lock.lock();
         }
@@ -50,9 +52,11 @@ public:
             auto l = std::move(mCustomTypeFutures.back());
             mCustomTypeFutures.pop_back();
             lock.unlock();
+            l->cancelAndWait();
             l = nullptr;
             lock.lock();
         }
+        mDead = true;
     }
 
     template<typename T>
@@ -75,6 +79,7 @@ public:
             lock.unlock();
 
             future.onSuccess([this, it](const T& result) {
+                assert((!mDead, "you have concurrency issues"));
                 std::unique_lock lock(mSync);
                 assert(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
@@ -91,7 +96,19 @@ public:
 
     void waitForAll() {
         std::unique_lock lock(mSync);
-        mFutureSet.waitForAll();
+        if (!mFutureSet.empty()) {
+            waitAgain:
+            auto futureSet = std::move(mFutureSet);
+            lock.unlock();
+            futureSet.waitForAll();
+            lock.lock();
+            if (mFutureSet.empty()) {
+                mFutureSet = std::move(futureSet);
+            } else {
+                mFutureSet.insertAll(futureSet);
+                goto waitAgain;
+            }
+        }
 
         while (!mCustomTypeFutures.empty()) {
             mCustomTypeFutures.front()->wait(lock);
@@ -103,7 +120,9 @@ private:
         virtual ~IFuture() = default;
         virtual void get() = 0;
         virtual void wait(std::unique_lock<AMutex>& lock) = 0;
+        virtual void cancelAndWait() = 0;
     };
+    bool mDead = false;
 
     template<typename T>
     struct Future: IFuture {
@@ -117,6 +136,12 @@ private:
             copy.wait();
             lock.lock();
         }
+
+        void cancelAndWait() override {
+            mFuture.cancel();
+            mFuture.wait();
+        }
+
         ~Future() override = default;
 
         Future(AFuture<T> future) : mFuture(std::move(future)) {}

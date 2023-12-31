@@ -17,7 +17,7 @@
 #pragma once
 
 #include <AUI/api.h>
-#include <AUI/Common/AStringVector.h>
+#include <AUI/Util/ACommandLineArgs.h>
 
 /**
  * @def AUI_ENTRY
@@ -44,16 +44,16 @@
 // fake the main function when tests module compiling
 #ifdef AUI_TESTS_MODULE
 #define AUI_ENTRY \
-    AUI_EXPORT int aui_entry(AStringVector args); \
-    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)); \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
     int fake_main(int argc, char** argv) {                               \
         return aui_main(argc, argv, aui_entry);\
     }             \
-AUI_EXPORT int aui_entry(AStringVector args)
+AUI_EXPORT int aui_entry(const AStringVector& args)
 #else
     #define AUI_ENTRY \
-    AUI_EXPORT int aui_entry(AStringVector args); \
-    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)); \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
     int main(int argc, char** argv) {                               \
         return aui_main(argc, argv, aui_entry);\
     } \
@@ -65,42 +65,50 @@ AUI_EXPORT int aui_entry(AStringVector args)
 ) { \
     return main(0, nullptr); \
 } \
-AUI_EXPORT int aui_entry(AStringVector args)
+AUI_EXPORT int aui_entry(const AStringVector& args)
 #endif
 #elif AUI_PLATFORM_ANDROID
 
 #include <jni.h>
 
 #define AUI_ENTRY \
-    AUI_EXPORT int aui_entry(AStringVector args); \
-    AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(AStringVector)); \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)); \
 extern "C" \
 JNIEXPORT jint JNICALL \
 JNI_OnLoad(JavaVM* vm, void* reserved) { \
         aui_main(vm, aui_entry); \
         return JNI_VERSION_1_2;  \
     } \
-    AUI_EXPORT int aui_entry(AStringVector args)
+    AUI_EXPORT int aui_entry(const AStringVector& args)
 
 #else
 
 // fake the main function when tests module compiling
 #ifdef AUI_TESTS_MODULE
 #define AUI_ENTRY \
-    AUI_EXPORT int aui_entry(AStringVector args); \
-    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)); \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
     int fake_main(int argc, char** argv) {                               \
         return aui_main(argc, argv, aui_entry);\
     } \
-    AUI_EXPORT int aui_entry(AStringVector args)
+    AUI_EXPORT int aui_entry(const AStringVector& args)
 #else
 #define AUI_ENTRY \
-    AUI_EXPORT int aui_entry(AStringVector args); \
-    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)); \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
     int main(int argc, char** argv) {                               \
         return aui_main(argc, argv, aui_entry);\
     } \
-    AUI_EXPORT int aui_entry(AStringVector args)
+    AUI_EXPORT int aui_entry(const AStringVector& args)
 #endif
 
 #endif
+
+namespace aui {
+    /**
+     * @ingroup core
+     * @return Arguments passed to program.
+     */
+    API_AUI_CORE const ACommandLineArgs& args() noexcept;
+}

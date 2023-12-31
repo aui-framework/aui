@@ -185,12 +185,12 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
     return height;
 }
 
-void AText::render() {
+void AText::render(ClipOptimizationContext context) {
     if (!mPrerenderedString) {
         prerenderString();
     }
 
-    AViewContainer::render();
+    AViewContainer::render(context);
 
     if (mPrerenderedString) {
         mPrerenderedString->draw();
@@ -202,7 +202,7 @@ void AText::prerenderString() {
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
     {
-        auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
+        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
 
         if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
             for (auto& wordEntry: mWordEntries) {

@@ -22,6 +22,8 @@
 //
 
 #import "SceneDelegate.h"
+#import "AUIViewController.h"
+#import "AUIView.h"
 
 @interface SceneDelegate ()
 
@@ -31,9 +33,19 @@
 
 
 - (void)scene:(UIScene *)scene willConnectToSession:(UISceneSession *)session options:(UISceneConnectionOptions *)connectionOptions {
-    // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-    // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-    // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
+    CGRect rect = [[UIScreen mainScreen] bounds];
+    self.window = [[UIWindow alloc] initWithFrame:rect];
+    self.window.windowScene = (UIWindowScene *)scene;
+    
+    AUIViewController* vc = [[AUIViewController alloc] initWithNibName:nil bundle:nil];
+    vc.view = [[AUIView alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    
+    
+    self.window.rootViewController = [[UINavigationController alloc] initWithRootViewController: vc];
+    [self.window makeKeyAndVisible];
+    
+    
+    [(AUIView*)vc.view startAnimation];
 }
 
 

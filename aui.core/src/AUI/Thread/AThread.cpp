@@ -19,13 +19,23 @@
 #include <cassert>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/AMap.h>
 #include <AUI/Logging/ALogger.h>
-
+#include "AUI/Platform/AStacktrace.h"
+#include "AUI/Thread/AFuture.h"
+#include "AUI/Thread/AMutexWrapper.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
+#include <cstdint>
+#include <functional>
+#include <mutex>
+#include <thread>
 
 #if AUI_PLATFORM_WIN
-#include <windows.h>
+#include <Windows.h>
+#include <processthreadsapi.h>
+#include <AUI/Platform/ErrorToException.h>
+#include <AUI/Platform/win32/WinHandle.h>
 
 
 void setThreadNameImpl(HANDLE handle, const AString& name) {
@@ -54,8 +64,26 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         s(handle, name.c_str());
     }
 }
+#else
+#include <signal.h>
+#include <execinfo.h>
+#include <pthread.h>
 #endif
-
+namespace aui::impl::AThread {
+		static AMutexWrapper<AMap<std::thread::id, std::function<void()>>>& payloads() {
+				static AMutexWrapper<AMap<std::thread::id, std::function<void()>>> d;
+				return d;
+		}
+		void executeForcedPayload() {
+				std::unique_lock lock(payloads());
+				if (auto it = payloads()->contains(std::this_thread::get_id())) {
+					  if (it->second) {
+							  it->second();
+								it->second = {};
+						}
+				}
+		}
+}
 class CurrentThread: public AAbstractThread {
 public:
     using AAbstractThread::AAbstractThread;
@@ -63,6 +91,65 @@ public:
 
 AAbstractThread::AAbstractThread(const id& id) noexcept: mId(id)
 {
+}
+
+
+AStacktrace AAbstractThread::threadStacktrace() const {
+	  if (std::this_thread::get_id() == mId) {
+			  return AStacktrace::capture(1);
+		}
+		auto& payloads = aui::impl::AThread::payloads();
+		std::unique_lock lock(payloads);
+		AFuture<AStacktrace> future;
+		payloads.value()[mId] = [future] {
+#if AUI_PLATFORM_WIN
+			  future.supplyResult(AStacktrace::capture(1));
+#else
+			  future.supplyResult(AStacktrace::capture(6));
+#endif
+		};
+		lock.unlock();
+#if AUI_PLATFORM_WIN
+		aui::win32::Handle h = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, false, reinterpret_cast<const DWORD&>(mId));
+		if (!h) {
+        aui::impl::lastErrorToException("OpenThread returned null handle");
+		}
+		if (SuspendThread(h) == -1) {
+        aui::impl::lastErrorToException("SuspendThread failed");
+		}
+		CONTEXT context;
+		aui::zero(context);
+		context.ContextFlags = CONTEXT_FULL;
+		if (GetThreadContext(h, &context) == 0) {
+        aui::impl::lastErrorToException("GetThreadContext failed");
+		}
+		ARaiiHelper contextReturner = [&] {
+				SetThreadContext(h, &context);
+		};
+#if AUI_ARCH_X86_64
+	#define REG_SP Rsp
+	#define REG_IP Rip
+#else
+  #define REG_SP Esp
+	#define REG_IP Eip
+#endif    
+		{
+			  auto contextCopy = context;
+				auto& stackPointer = (reinterpret_cast<std::uintptr_t*&>(contextCopy. REG_SP));
+				*(--stackPointer) = contextCopy. REG_IP;
+				contextCopy. REG_IP = reinterpret_cast<const decltype(contextCopy. REG_IP)>(&aui::impl::AThread::executeForcedPayload);
+				SetThreadContext(h, &contextCopy);
+				if (ResumeThread(h) == -1) {
+					aui::impl::lastErrorToException("ResumeThread failed");
+				}
+		}	
+//		SuspendThread()
+#else
+		if (pthread_kill(reinterpret_cast<const pthread_t&>(mId), SIGUSR1) != 0) {
+			  throw AException("unable to acquire other thread stacktrace: pthread_kill failed");
+		}
+#endif
+		return *future;
 }
 
 _<AAbstractThread>& AAbstractThread::threadStorage()
@@ -99,7 +186,6 @@ void AThread::start()
 		auto f = std::move(mFunctor);
 		mFunctor = nullptr;
 		mId = std::this_thread::get_id();
-
 		try {
 			f();
 		} catch (const AException& e) {
@@ -243,4 +329,9 @@ void AAbstractThread::updateThreadName() noexcept {
 AThread::AThread(std::function<void()> functor)
         : mFunctor(std::move(functor))
 {
+}
+
+bool AAbstractThread::messageQueueEmpty() noexcept {
+	std::unique_lock lock(mQueueLock);
+	return mMessageQueue.empty();
 }

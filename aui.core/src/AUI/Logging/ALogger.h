@@ -322,7 +322,7 @@ private:
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
-    bool mDebug = true;
+    bool mDebug = AUI_DEBUG;
 
     void setLogFileImpl(AString path);
 
@@ -336,19 +336,19 @@ private:
     void log(Level level, std::string_view prefix, std::string_view message);
 
 };
+namespace glm {
+    template<glm::length_t L, typename T, glm::qualifier Q>
+    inline std::ostream& operator<<(std::ostream& o, vec<L, T, Q> vec) {
+        o << "{ ";
+        for (std::size_t i = 0; i < L; ++i) {
+            if (i != 0) o << ", ";
+            o << vec[i];
+        }
+        o << " }";
 
-template<std::size_t L, typename T, glm::qualifier Q>
-inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
-    o << "{ ";
-    for (std::size_t i = 0; i < L; ++i) {
-        if (i != 0) o << ", ";
-        o << vec[i];
+        return o;
     }
-    o << " }";
-
-    return o;
 }
-
 #define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

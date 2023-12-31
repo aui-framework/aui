@@ -19,24 +19,24 @@
 //
 
 #include "Border.h"
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 #include <AUI/Render/RenderHints.h>
 
 
 void ass::prop::Property<ass::Border>::renderFor(AView* view) {
     /*
     if (view->getBorderRadius() < 0.1f) {
-        Render::drawRectBorder(ASolidBrush{mInfo.color},
+        ARender::drawRectBorder(ASolidBrush{mInfo.color},
                                {0, 0},
                                view->getSize(),
                                mInfo.width);
     } else {
         */
-    Render::rectBorder(ASolidBrush{mInfo.color},
-                       {0, 0},
-                       view->getSize(),
-                       view->getBorderRadius(),
-                       mInfo.width);
+    ARender::roundedRectBorder(ASolidBrush{mInfo.color},
+                               {0, 0},
+                               view->getSize(),
+                               view->getBorderRadius(),
+                               mInfo.width);
     //}
 }
 

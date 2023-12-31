@@ -38,8 +38,8 @@ public:
         ON_CALL(*this, onMouseEnter).WillByDefault([this]() {
             AView::onMouseEnter();
         });
-        ON_CALL(*this, onPointerMove).WillByDefault([this](const auto& a) {
-            AView::onPointerMove(a);
+        ON_CALL(*this, onPointerMove).WillByDefault([this](const auto&... a) {
+            AView::onPointerMove(a...);
         });
         ON_CALL(*this, onMouseLeave).WillByDefault([this]() {
             AView::onMouseLeave();
@@ -54,7 +54,7 @@ public:
     MOCK_METHOD(void, onDummyTest, (), ());
 
     MOCK_METHOD(void, onMouseEnter, (), (override));
-    MOCK_METHOD(void, onPointerMove, (glm::ivec2 pos), (override));
+    MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
 
 };
@@ -74,11 +74,15 @@ protected:
                 mContainer = Vertical {
                   mView = _new<ViewMock>(),
                   Label { "Some bullshit to complicate layout" },
-                }
+                },
+                mOverlay = Vertical::Expanding {
+                  SpacerExpanding{},
+                  Button { "Another bullshit" }
+                },
               }
-            }
-            );
+            });
         mWindow->show();
+        uitest::frame();
     }
 
     void TearDown() override {
@@ -89,6 +93,7 @@ protected:
 
     _<AWindow> mWindow;
     _<AViewContainer> mContainer;
+    _<AViewContainer> mOverlay;
     _<ViewMock> mView;
 };
 
@@ -119,17 +124,16 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
     EXPECT_CALL(*mView, onPointerPressed(testing::_));
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked()).Times(0);
+
     mWindow->onPointerPressed({
         .position = mView->getCenterPointInWindow(), // somewhere over the mView
-        .button = AInput::LBUTTON,
     });
 
     mWindow->onPointerMove(
         { 100, 100 } // somewhere outside the mView
-    );
+    , {});
     mWindow->onPointerReleased({
         .position = { 100, 100 }, // somewhere outside the mView
-        .button = AInput::LBUTTON,
     });
 }
 
@@ -144,9 +148,72 @@ TEST_F(UIPointerBehaviour, MouseMoveNoClick) {
     EXPECT_CALL(*mView, onClicked()).Times(0);
 
     EXPECT_CALL(*mView, onMouseEnter);
-    EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*mView, onPointerMove(testing::_, testing::_)).Times(testing::AtLeast(1));
     EXPECT_CALL(*mView, onMouseLeave);
 
-    mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
-    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    mWindow->onPointerMove(mView->getCenterPointInWindow(), {}); // somewhere over the mView
+    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
+}
+
+
+/**
+ * Checks multiple button pointerPressed/Released behaviour.
+ */
+TEST_F(UIPointerBehaviour, MultiplePointerPressedReleased) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(2);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(2);
+
+    mWindow->onPointerPressed({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .pointerIndex = APointerIndex::button(AInput::LBUTTON),
+    });
+    mWindow->onPointerPressed({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .pointerIndex = APointerIndex::button(AInput::RBUTTON),
+    });
+    mWindow->onPointerReleased({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .pointerIndex = APointerIndex::button(AInput::RBUTTON),
+    });
+    mWindow->onPointerReleased({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .pointerIndex = APointerIndex::button(AInput::LBUTTON),
+    });
+}
+
+
+/**
+ * Checks that "Another bullshit" button is pressed.
+ */
+TEST_F(UIPointerBehaviour, FrontLayerClickTest) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onDummyTest()).Times(1);
+
+    auto anotherBullshit = By::text("Another bullshit");
+    AObject::connect(anotherBullshit.one()->clicked, slot(mView)::onDummyTest);
+
+    anotherBullshit.perform(click());
+}
+
+
+/**
+ * Checks that ViewMock is not reachable as there's overlay in front of it.
+ */
+TEST_F(UIPointerBehaviour, ClickOverlayTest) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onClicked()).Times(0);
+
+    mOverlay->setCustomStyle({
+        ass::BackgroundSolid(AColor::WHITE)
+    });
+
+    By::type<ViewMock>().perform(click());
 }

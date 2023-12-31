@@ -17,12 +17,12 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew-devel libstdc++-static
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static libpulse-dev
 ```
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel
+sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
 ```
 
 ## Your project CMake script
@@ -142,7 +142,6 @@ Check the `examples/` folder.
 ![Views](https://sun9-37.userapi.com/impg/1JYHdZ7PlYsCPvZnP3qeObUT4anFIH5GDghEEA/_JOtAwNfaLI.jpg?size=1261x1007&quality=96&sign=46300730d3b638ea9300e0238f8a511a&type=album)
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
-
 
 # Contributing
 You are always free to contribute to this project and add yourself to the authors list :)

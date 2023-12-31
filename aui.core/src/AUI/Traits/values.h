@@ -370,7 +370,7 @@ namespace aui {
         }
     };
 
-    namespace promise {
+    namespace constraint {
         /**
          * @brief Avoids copy of the wrapped value, pointing to a reference.
          * @tparam T
@@ -378,12 +378,12 @@ namespace aui {
          * The caller can be sure his value wouldn't be copied.
          */
         template<typename T>
-        class no_copy {
+        class avoid_copy {
         private:
             T* value;
 
         public:
-            no_copy(T& value): value(&value) {          // implicit initializer
+            avoid_copy(T& value): value(&value) {          // implicit initializer
 
             }
             operator T&() const {                      // implicit conversion
@@ -453,6 +453,9 @@ namespace aui {
     requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
     struct ranged_number {
     public:
+         static constexpr auto MIN = min;
+         static constexpr auto MAX = max;
+
         ranged_number(UnderlyingType value): value(glm::clamp(value, static_cast<UnderlyingType>(min), static_cast<UnderlyingType>(max))) {}
         ranged_number(): value(min) {}
 

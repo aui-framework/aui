@@ -25,9 +25,9 @@ void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
 
-    Render::rect(ASolidBrush{mInfo.color},
-                 {0, 0},
-                 {w, view->getHeight()});
+    ARender::rect(ASolidBrush{mInfo.color},
+                  {0, 0},
+                  {w, view->getHeight()});
 
 }
 

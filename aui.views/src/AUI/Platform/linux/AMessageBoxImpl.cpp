@@ -72,10 +72,17 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                   AMessageBox::Button b) {
 
     auto a = _new<MessageBox>(parent, title, message, icon, b);
-    AObject::connect(a->status, a, [a = a.weak()](AMessageBox::ResultButton r) {
-        AUI_NULLSAFE(a.lock())->close();
+    auto& loop = AWindow::getWindowManager();
+    AMessageBox::ResultButton result = AMessageBox::ResultButton::INVALID;
+    AObject::connect(a->status, a, [&](AMessageBox::ResultButton r) {
+        a->close();
+        loop.stop();
+        result = r;
     });
     a->show();
 
-    return ResultButton::INVALID;
+    ARaiiHelper loopStarter = [&] { loop.start(); };
+    loop.loop();
+
+    return result;
 }

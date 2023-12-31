@@ -21,6 +21,7 @@
 
 #include "AEmbedAuiWrap.h"
 #include "ABaseWindow.h"
+#include "glm/fwd.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
@@ -103,7 +104,7 @@ protected:
     }
 };
 
-void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
+void AEmbedAuiWrap::onScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
     mContainer->onScroll({
         .origin = { mouseX, mouseY },
         .delta = { scrollX, scrollY },
@@ -121,14 +122,14 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    Render::setWindow(mContainer.get());
+    ARender::setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render();
+    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
@@ -151,20 +152,20 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 }
 
 
-void AEmbedAuiWrap::onPointerPressed(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     AThread::processMessages();
     mContainer->onPointerPressed({
         .position = glm::ivec2{x, y},
-        .button = button
+        .pointerIndex = pointerIndex,
     });
 }
 
-void AEmbedAuiWrap::onPointerReleased(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     mContainer->onPointerReleased({
         .position = glm::ivec2{x, y},
-        .button = button
+        .pointerIndex = pointerIndex,
     });
 }
 
@@ -174,7 +175,7 @@ bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
 
 void AEmbedAuiWrap::onPointerMove(int x, int y) {
     mContainer->makeCurrent();
-    mContainer->onPointerMove(glm::ivec2{ x, y });
+    mContainer->onPointerMove(glm::ivec2{ x, y }, {APointerIndex::button(AInput::LBUTTON)});
 }
 
 

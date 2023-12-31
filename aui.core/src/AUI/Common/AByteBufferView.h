@@ -23,6 +23,8 @@
  * @ingroup core
  * @note don't use const reference of AByteBufferView. Passing by const reference forces compiler to use memory instead
  * of registers.
+ * @note AByteBufferView is intended for const access to memory data. As a function argument, consider to use
+ * `std::span<std::byte>` instead for non-const access.
  */
 class API_AUI_CORE AByteBufferView {
 private:
@@ -102,7 +104,21 @@ public:
     static AByteBufferView fromRaw(const T& data) noexcept {
         return { reinterpret_cast<const char*>(&data), sizeof(data) };
     }
+
+
+    _<IInputStream> toStream() const;
 };
+
+inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {
+    lhs << "[";
+    for (const auto b : rhs) {
+        char buf[8];
+        lhs.write(buf, std::distance(std::begin(buf), fmt::format_to(buf, " {:02x}", b)));
+    }
+    lhs << " ]";
+
+    return lhs;
+}
 
 template<>
 struct ASerializable<AByteBufferView> {

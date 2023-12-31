@@ -19,7 +19,7 @@
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Enum/WordBreak.h"
@@ -47,17 +47,17 @@ private:
     void processTextOverflow(AString &text);
 
     template < class Iterator >
-    int findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
+    size_t findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
 
     template < class Iterator >
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
 
 protected:
-    Render::PrerenderedString mPrerendered;
+    ARender::PrerenderedString mPrerendered;
 
     AFontStyle getFontStyleLabel();
 
-    const Render::PrerenderedString& getPrerendered() {
+    const ARender::PrerenderedString& getPrerendered() {
         return mPrerendered;
     }
 
@@ -72,7 +72,7 @@ public:
     AAbstractLabel();
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
     void doRenderText();
 
     int getContentMinimumWidth(ALayoutDirection layout) override;

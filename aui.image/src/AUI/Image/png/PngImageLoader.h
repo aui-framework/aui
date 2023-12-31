@@ -28,7 +28,7 @@ class PngImageLoader: public StbImageLoader {
 public:
     bool matches(AByteBufferView buffer) override;
 
-    API_AUI_IMAGE static void save(IOutputStream& outputStream, const AImage& image);
+    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image);
 };
 
 

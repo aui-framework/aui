@@ -24,14 +24,15 @@
 #include <AUI/Platform/AWindow.h>
 
 namespace {
-    class DragAreaLayout: public ALayout {
+    class DragAreaLayout: public ALinearLayout<> {
     public:
-        void addView(size_t index, const _<AView>& view) override {
+        void addView(const _<AView>& view, AOptional<size_t> index) override {
+            ALinearLayout::addView(view, index);
             markViewToBeCentered(*view);
         }
 
-        void removeView(size_t index, const _<AView>& view) override {
-
+        void removeView(aui::no_escape<AView> view, size_t index) override {
+            LinearLayoutImpl::removeView(view, index);
         }
 
         void onResize(int x, int y, int width, int height) override {
@@ -82,7 +83,7 @@ void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& e
     if (mCheckForClickConsumption) {
         auto p = getViewAt(event.position);
         if (p) {
-            if (p->consumesClick(event.position - p->getPosition())) {
+            if (p->consumesClick(event.position - glm::vec2(p->getPosition()))) {
                 return;
             }
         }

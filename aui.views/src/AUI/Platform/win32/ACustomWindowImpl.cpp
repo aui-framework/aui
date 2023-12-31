@@ -24,7 +24,7 @@ const int AUI_TITLE_HEIGHT = 30;
 #if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Platform/AFontManager.h"
 

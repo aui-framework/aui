@@ -20,43 +20,37 @@
 
 
 #include "DemoTreeModel.h"
+#include "AUI/Common/AStringVector.h"
 #include <AUI/Logging/ALogger.h>
+#include <optional>
 
-enum Type {
-    TYPE_ROOT,
-    TYPE_4ITEM,
-    TYPE_ZERO_CHILD,
+
+namespace {
+struct Node {
+    bool hasChildren;
 };
+}
 
-size_t DemoTreeModel::childrenCount(const ATreeIndex& parent) {
-    switch ((uintptr_t)parent.getUserData<void>()) {
-        case TYPE_ROOT:
-            return 3;
-        case TYPE_4ITEM:
-            return 4;
+ATreeModelIndex DemoTreeModel::root() {
+    return ATreeModelIndex(0, 0, Node { .hasChildren = true });
+}
+
+size_t DemoTreeModel::childrenCount(const ATreeModelIndex& vertex) {
+    auto node = vertex.as<Node>();
+    if (node.hasChildren) {
+        return 3;
     }
     return 0;
 }
 
-AString DemoTreeModel::itemAt(const ATreeIndex& index) {
-    if (((uintptr_t)index.getUserData<void>()) != TYPE_ROOT) {
-        return "Sub item";
-    }
-    return "Root item #";
+AString DemoTreeModel::itemAt(const ATreeModelIndex& index) {
+    return AString::number(index.row());
 }
 
-ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeIndex& parent) {
-    switch ((uintptr_t)parent.getUserData<void>()) {
-        case TYPE_ROOT:
-            if (row == 0) {
-                return ATreeIndex{(void*)TYPE_4ITEM};
-            }
-            break;
-
-    }
-    return ATreeIndex{(void*)TYPE_ZERO_CHILD};
+ATreeModelIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) {
+    return ATreeModelIndex(row, column, Node { .hasChildren = false });
 }
 
-void *DemoTreeModel::rootUserData() {
-    return (void*)TYPE_ROOT;
+ATreeModelIndex DemoTreeModel::parent(const ATreeModelIndex& vertex) {
+    return root(); 
 }

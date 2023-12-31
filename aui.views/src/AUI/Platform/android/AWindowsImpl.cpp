@@ -19,7 +19,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Platform/android/OSAndroid.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -122,7 +122,7 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-    com::github::aui::android::AUI::requestRedraw();
+    com::github::aui::android::Platform::requestRedraw();
 }
 
 void AWindowManager::loop() {
@@ -153,9 +153,13 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {
-    com::github::aui::android::AUI::showKeyboard();
+    com::github::aui::android::Platform::showKeyboard();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    com::github::aui::android::AUI::hideKeyboard();
+    com::github::aui::android::Platform::hideKeyboard();
+}
+
+void AWindow::moveToCenter() {
+
 }

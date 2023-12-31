@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include "AUI/ASS/Property/MinSize.h"
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
@@ -30,16 +31,19 @@ public:
 
         setContents(
             Vertical {
-                _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
+                mBigContent = _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
+                mBottomLabel = _new<ALabel>("Bottom"),
             }
         );
         *this << ".container";
         setCustomStyle({ ass::BackgroundSolid{ 0xff0000_rgb, } });
-
+    
         EXPECT_CALL(*this, setSize(testing::_)).Times(testing::AtLeast(1));
     }
 
     MOCK_METHOD(void, setSize, (glm::ivec2), (override));
+    _<ALabel> mBigContent;
+    _<ALabel> mBottomLabel;
 };
 
 class UIScrollTest: public testing::UITest {
@@ -50,9 +54,13 @@ protected:
     public:
         TestWindow(): AWindow("Test window", 200_dp, 100_dp) {
             setContents(Vertical {
-                    AScrollArea::Builder().withContents(_new<MockedViewContainer>()).withExpanding().build()
+                    mScrollArea = AScrollArea::Builder().withContents(mMockedContainer = _new<MockedViewContainer>()).withExpanding().build() with_style {
+                        ass::MinSize(100_dp),
+                    }
             });
         }
+        _<AScrollArea> mScrollArea;
+        _<MockedViewContainer> mMockedContainer;
     };
     _<TestWindow> mTestWindow;
 
@@ -73,13 +81,24 @@ protected:
     }
 };
 
-
-
 TEST_F(UIScrollTest, ContainedViewExpanded) {
     // scroll a little to see whether container view expanded properly
     mTestWindow->updateLayout();
     By::type<AScrollArea>().perform(scroll({0, 500}));
     By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+}
 
+TEST_F(UIScrollTest, ScrollTo) {
+    mTestWindow->updateLayout();
+    By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
+    mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
+    By::text("Bottom").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+}
 
+TEST_F(UIScrollTest, ScrollTo2) {
+    mTestWindow->updateLayout();
+    mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
+    By::text("Content").check(isTopAboveTopOf(By::type<AScrollArea>()), "first check");
+    mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBigContent);
+    By::text("Content").check(uitest::impl::not$(isTopAboveTopOf(By::type<AScrollArea>())), "second check");
 }

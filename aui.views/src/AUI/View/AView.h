@@ -22,6 +22,7 @@
 
 #include <glm/glm.hpp>
 
+#include "AUI/Common/ASmallVector.h"
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
@@ -33,6 +34,7 @@
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
+#include "AUI/Util/ClipOptimizationContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
@@ -45,9 +47,10 @@
 #include <AUI/Event/AGestureEvent.h>
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
+#include <AUI/Event/APointerMoveEvent.h>
 
 
-class Render;
+class ARender;
 class AWindow;
 class ABaseWindow;
 class AViewContainer;
@@ -152,11 +155,18 @@ private:
     /**
      * @brief Redraw requested flag for this particular view/
      * @details
-     * This flag is set in redraw() method and reset in AView::render(). redraw() method does not actually requests
+     * This flag is set in redraw() method and reset in AView::render(ClipOptimizationContext context). redraw() method does not actually requests
      * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
      * drawn.
      */
     bool mRedrawRequested = false;
+
+
+    /**
+     * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
+     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
+     */
+    bool mMouseEntered = false;
 
 protected:
     /**
@@ -167,7 +177,7 @@ protected:
     /**
      * @brief Determines how to display text that go out of the bounds.
      */
-    TextOverflow mTextOverflow = TextOverflow::NONE;
+    ATextOverflow mTextOverflow = ATextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -187,12 +197,12 @@ protected:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-    glm::ivec2 mPosition;
+    glm::ivec2 mPosition = { 0, 0 };
 
     /**
      * @brief Size, including content area, border and padding.
      */
-    glm::ivec2 mSize = glm::ivec2(20, 20);
+    glm::ivec2 mSize = { 20, 20 };
 
     /**
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
@@ -227,13 +237,10 @@ protected:
 
     /**
      * @brief ASS class names.
+     * @details
+     * Needs keeping order.
      */
-    ASet<AString> mAssNames;
-
-    /**
-     * @brief defines if the next view must be focused on tab button pressed
-     */
-    bool mFocusNextViewOnTab = false;
+    AVector<AString> mAssNames;
 
     void requestLayoutUpdate();
 
@@ -261,6 +268,17 @@ protected:
      */
     virtual AMenuModel composeContextMenu();
 
+
+    /**
+     * @brief Called when direct or indirect parent has changed.
+     * @details
+     * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
+     * the new (in)direct parent.
+     *
+     * Emits viewGraphSubtreeChanged signal.
+     */
+    virtual void onViewGraphSubtreeChanged();
+
 public:
     AView();
     virtual ~AView() = default;
@@ -280,15 +298,20 @@ public:
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
+     * @see AView::drawView
      */
-    virtual void render();
+    virtual void render(ClipOptimizationContext context);
 
+    /**
+     * @brief Performs post-draw routines of this AView. Noone should call this function except rendering routine.
+     * @see AView::drawView
+     */
     virtual void postRender();
 
     void popStencilIfNeeded();
 
     [[nodiscard]]
-    const ASet<AString>& getAssNames() const noexcept {
+    const AVector<AString>& getAssNames() const noexcept {
         return mAssNames;
     }
 
@@ -368,7 +391,7 @@ public:
         mOverflow = overflow;
     }
 
-    void setTextOverflow(TextOverflow textOverflow) {
+    void setTextOverflow(ATextOverflow textOverflow) {
         mTextOverflow = textOverflow;
     }
 
@@ -602,6 +625,7 @@ public:
 
     /**
      * @brief Fixed size.
+     * @return Fixed size. {0, 0} if unspecified.
      */
     const glm::ivec2& getFixedSize() {
         return mFixedSize;
@@ -611,33 +635,43 @@ public:
         mFixedSize = size;
     }
 
-    bool isMouseHover() const
+    [[nodiscard]]
+    bool isMouseHover() const noexcept
     {
         return mHovered;
     }
 
-    bool isMousePressed() const
+    [[nodiscard]]
+    bool isPressed() const noexcept
     {
-        return mPressed;
+        return !mPressed.empty();
     }
-    bool isEnabled() const
+
+    [[nodiscard]]
+    bool isPressed(APointerIndex index) const noexcept
+    {
+        return mPressed.contains(index);
+    }
+
+    [[nodiscard]]
+    bool isEnabled() const noexcept
     {
         return mEnabled;
     }
     bool isFocused() const {
         return mHasFocus;
     }
+    bool isMouseEntered() const {
+        return mMouseEntered;
+    }
+
     Visibility getVisibility() const
     {
         return mVisibility;
     }
     Visibility getVisibilityRecursive() const;
 
-    void setVisibility(Visibility visibility) noexcept
-    {
-        mVisibility = visibility;
-        redraw();
-    }
+    void setVisibility(Visibility visibility) noexcept;
 
     void setVisible(bool visible) noexcept
     {
@@ -657,7 +691,7 @@ public:
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
     void click() {
-        emit clickedButton(AInput::LBUTTON);
+        emit clickedButton(APointerIndex::button(AInput::LBUTTON));
         emit clicked();
     }
 
@@ -668,8 +702,10 @@ public:
 
     /**
      * @brief Requests focus for this AView.
+     * @param needFocusChainUpdate if true, focus chain for new focused view will be updated
+     * @note if needFocusChainUpdate is false you need to control focus chain targets outside the focus function
      */
-     void focus();
+     void focus(bool needFocusChainUpdate = true);
 
      /**
       * @return Can this view capture focus.
@@ -760,7 +796,7 @@ public:
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
-    virtual void onPointerMove(glm::ivec2 pos);
+    virtual void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
@@ -786,7 +822,10 @@ public:
     /**
      * Handles mouse wheel events.
      * @param pos mouse cursor position.
-     * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
+     * @param delta the distance mouse wheel scrolled.
+     * @details
+     * By default, 120 is single mouse wheel click.
+     * 120 = mouse scroll down, -120 = mouse scroll up.
      */
     virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
@@ -804,10 +843,6 @@ public:
 
     void setDisabled(bool disabled = true) {
         setEnabled(!disabled);
-    }
-
-    void setFocusNextViewOnTab(bool value) {
-        mFocusNextViewOnTab = value;
     }
 
     void updateEnableState();
@@ -876,15 +911,18 @@ public:
     virtual bool wantsTouchscreenKeyboard();
 
 signals:
-    emits<> addedToContainer;
+    /**
+     * @see onViewGraphSubtreeChanged()
+     */
+    emits<> viewGraphSubtreeChanged;
 
     emits<bool> hoveredState;
     emits<> mouseEnter;
     emits<> mouseLeave;
 
-    emits<bool> pressedState;
-    emits<> pressed;
-    emits<> released;
+    emits<bool, APointerIndex> pressedState;
+    emits<APointerIndex> pressed;
+    emits<APointerIndex> released;
 
     emits<bool> enabledState;
     emits<> enabled;
@@ -893,7 +931,7 @@ signals:
     /**
      * @brief Some mouse button clicked.
      */
-    emits<AInput::Key> clickedButton;
+    emits<APointerIndex> clickedButton;
 
     /**
      * @brief Left mouse button clicked.
@@ -930,7 +968,7 @@ signals:
      */
     emits<> clickedRightOrLongPressed;
 
-    emits<AInput::Key> doubleClicked;
+    emits<APointerIndex> doubleClicked;
 
     emits<> customCssPropertyChanged;
 
@@ -946,7 +984,7 @@ signals:
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
-    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, pressed, released);
+    ASmallVector<APointerIndex, 1> mPressed;
     //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
     AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;

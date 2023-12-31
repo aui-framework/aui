@@ -24,7 +24,7 @@
 
 
 #include "AUI/Platform/APlatform.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
 #include <AUI/Util/AMetric.h>
@@ -351,14 +351,14 @@ void AAbstractTypeableView::onPointerPressed(const APointerPressedEvent& event)
     updateCursorBlinking();
 }
 
-void AAbstractTypeableView::onPointerMove(glm::ivec2 pos)
+void AAbstractTypeableView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
 {
-    AView::onPointerMove(pos);
+    AView::onPointerMove(pos, event);
     ACursorSelectable::handleMouseMove(pos);
 }
 
 bool AAbstractTypeableView::isLButtonPressed() {
-    return isMousePressed();
+    return isPressed();
 }
 
 void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
@@ -366,7 +366,7 @@ void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event
     AView::onPointerReleased(event);
     if (!event.triggerClick) return;
 
-    if (event.button != AInput::RBUTTON) {
+    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
         ACursorSelectable::handleMouseReleased(event);
     }
 }

@@ -19,19 +19,7 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
 
-class API_AUI_VIEWS SoftwareRenderingContext: public CommonRenderingContext {
-private:
-#if AUI_PLATFORM_WIN
-    AByteBuffer mBitmapBlob;
-    BITMAPINFO* mBitmapInfo;
-#else
-    AByteBuffer mBitmapBlob;
-#endif
-
-protected:
-    AByteBuffer mStencilBlob;
-    glm::uvec2 mBitmapSize;
-
+class API_AUI_VIEWS SoftwareRenderingContext: public aui::noncopyable, public CommonRenderingContext {
 public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
@@ -78,24 +66,44 @@ public:
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
         assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
 
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + (mBitmapSize.x * position.y + position.x) * 4);
-        dataPtr[0] = color[0];
+        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
+        dataPtr[0] = color[2];
         dataPtr[1] = color[1];
-        dataPtr[2] = color[2];
+        dataPtr[2] = color[0];
         dataPtr[3] = color[3];
     }
     inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
         assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
 
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + (mBitmapSize.x * position.y + position.x) * 4);
+        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
         return {
-            dataPtr[0],
-            dataPtr[1],
             dataPtr[2],
+            dataPtr[1],
+            dataPtr[0],
             dataPtr[3],
         };
     }
 #endif
 
     void endResize(ABaseWindow& window) override;
+
+protected:
+    AByteBuffer mStencilBlob;
+    glm::uvec2 mBitmapSize;
+
+    void reallocateImageBuffers(const ABaseWindow& window);
+
+private:
+#if AUI_PLATFORM_WIN
+    AByteBuffer mBitmapBlob;
+    BITMAPINFO* mBitmapInfo;
+#elif AUI_PLATFORM_LINUX
+    std::uint8_t* mBitmapBlob = nullptr;
+    _<XImage> mXImage;
+    std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
+
+    void reallocate();
+#else
+    std::uint8_t* mBitmapBlob = nullptr;
+#endif
 };

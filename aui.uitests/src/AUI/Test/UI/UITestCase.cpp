@@ -26,6 +26,7 @@
 #include <AUI/Traits/strings.h>
 #include <AUI/UITest.h>
 #include <gmock/gmock.h>
+#include <AUI/Util/AStubWindowManager.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
@@ -51,9 +52,9 @@ public:
             // draw red rects to highlight views
             if (auto matcher = ::UIMatcher::current()) {
                 for (auto& v: matcher->toSet()) {
-                    Render::rectBorder(ASolidBrush{0xaae00000_argb},
-                                       v->getPositionInWindow() - glm::ivec2{1, 1},
-                                       v->getSize() + glm::ivec2{2, 2});
+                    ARender::rectBorder(ASolidBrush{0xaae00000_argb},
+                                        v->getPositionInWindow() - glm::ivec2{1, 1},
+                                        v->getSize() + glm::ivec2{2, 2});
                 }
             }
 
@@ -107,22 +108,22 @@ void testing::UITest::SetUp() {
     }
     UITestState::beginUITest();
     Test::SetUp();
-    Render::setRenderer(std::make_unique<SoftwareRenderer>());
-    AWindow::setWindowManager<UITestWindowManager>();
+    ARender::setRenderer(_new<SoftwareRenderer>());
+    AWindow::setWindowManager<AStubWindowManager>();
     ABaseWindow::currentWindowStorage() = nullptr;
 }
 
 void testing::UITest::TearDown() {
-    for (const auto& w : AWindow::getWindowManager().getWindows()) w->close();
+    for (const auto& w : AWindow::getWindowManager().getWindows()) AUI_NULLSAFE(w)->close();
     AWindow::getWindowManager().removeAllWindows();
 
     // to process all ui messages
-    repeat (10) {
+    AUI_REPEAT (10) {
         uitest::frame();
     };
 
     AWindow::destroyWindowManager();
-    Render::setRenderer(nullptr);
+    ARender::setRenderer(nullptr);
 
     Test::TearDown();
 }

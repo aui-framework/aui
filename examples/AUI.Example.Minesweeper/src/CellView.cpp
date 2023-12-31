@@ -17,7 +17,7 @@
 #include "CellView.h"
 
 #include "AUI/Image/Drawables.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 CellView::CellView(FieldCell& cell)
 	: mCell(cell), mCellValueCopy(cell)
@@ -37,14 +37,14 @@ int CellView::getContentMinimumWidth()
 }
 
 
-void CellView::render()
+void CellView::render(ClipOptimizationContext context)
 {
 	if (mCell != mCellValueCopy)
 	{
 		recompileCSS();
 		mCellValueCopy = mCell;
 	}
-	AView::render();
+	AView::render(context);
 
 	if (mCell & F_OPEN)
 	{
@@ -83,7 +83,7 @@ void CellView::render()
 				break;
 			}
 			
-			Render::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
+			ARender::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
 		}
 	}
 }

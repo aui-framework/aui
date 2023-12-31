@@ -39,15 +39,18 @@
 #include <AUI/Image/png/PngImageLoader.h>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Image/svg/SvgImageLoader.h>
-
+#include <AUI/Image/webp/WebpImageLoader.h>
 
 struct AImageInit
 {
     AImageInit() {
-        AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>());
-        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>());
+        auto webpLoader = _new<WebpImageLoader>();
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>(), "bmp");
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>(), "png");
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>(), "jpg");
+        AImageLoaderRegistry::inst().registerRasterLoader(webpLoader, "webp");
+        AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>(), "svg");
+        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>(), "gif");
+        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader, "webp (animated)");
     }
 } _aimageinit;

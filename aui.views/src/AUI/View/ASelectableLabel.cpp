@@ -50,25 +50,25 @@ void ASelectableLabel::doRedraw() {
     redraw();
 }
 
-void ASelectableLabel::render() {
-    AView::render();
+void ASelectableLabel::render(ClipOptimizationContext context) {
+    AView::render(context);
 
     if (hasFocus()) {
         auto x =  mTextLeftOffset;
-        if (getFontStyleLabel().align == TextAlign::CENTER) {
+        if (getFontStyleLabel().align == ATextAlign::CENTER) {
             x -= mPrerendered->getWidth() / 2.f;
         }
         {
             RenderHints::PushMatrix m;
 
-            Render::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
             drawSelectionPre();
         }
         doRenderText();
 
         {
             RenderHints::PushMatrix m;
-            Render::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
             drawSelectionPost();
         }
     } else {
@@ -78,10 +78,10 @@ void ASelectableLabel::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void ASelectableLabel::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
+void ASelectableLabel::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    AView::onPointerMove(pos, event);
     pos.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == TextAlign::CENTER) {
+    if (getFontStyleLabel().align == ATextAlign::CENTER) {
         pos.x += mPrerendered->getWidth() / 2.f;
     }
     handleMouseMove(pos);
@@ -92,20 +92,20 @@ void ASelectableLabel::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event);
     auto position = event.position;
     position.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == TextAlign::CENTER) {
+    if (getFontStyleLabel().align == ATextAlign::CENTER) {
         position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMousePressed({position, event.button});
+    handleMousePressed({position, event.pointerIndex});
  }
 
 void ASelectableLabel::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
     auto position = event.position;
     position.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == TextAlign::CENTER) {
+    if (getFontStyleLabel().align == ATextAlign::CENTER) {
         position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMouseReleased({position, event.button});
+    handleMouseReleased({position, event.pointerIndex});
 }
 
 void ASelectableLabel::onFocusLost() {

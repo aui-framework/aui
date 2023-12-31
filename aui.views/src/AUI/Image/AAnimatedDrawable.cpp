@@ -19,17 +19,24 @@
 //
 
 #include "AAnimatedDrawable.h"
+#include "AUI/Image/gif/GifImageFactory.h"
+
+AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
+}
 
 void AAnimatedDrawable::draw(const IDrawable::Params &params) {
     if (!mTexture)
-        mTexture = Render::getNewTexture();
+        mTexture = ARender::getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
-        auto img = _new<AImage>(mFactory->provideImage(params.size));
+        auto img = mFactory->provideImage(params.size);
+        if (mFactory->hasAnimationFinished()) {
+            emit animationFinished;
+        }
         mTexture->setImage(img);
     }
 
-    Render::rect(ATexturedBrush{
+    ARender::rect(ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

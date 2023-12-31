@@ -43,8 +43,9 @@ public:
      * @param blending blending. Optional. Cheaper. When set, the one set by the <code>setBlending</code> function is
      *        ignored.
      */
-    inline void putPixel(const glm::ivec2& position, const AColor& color, AOptional<Blending> blending = std::nullopt) noexcept {
+    inline void putPixel(glm::ivec2 position, AColor color, AOptional<Blending> blending = std::nullopt) noexcept {
         assert(("context is null" && mContext != nullptr));
+        color = glm::clamp(color, glm::vec4(0), glm::vec4(1));
         auto actualBlending = blending ? *blending : mBlending;
         glm::uvec2 uposition(position);
         if (!glm::all(glm::lessThan(uposition, mContext->bitmapSize()))) return;
@@ -110,40 +111,43 @@ public:
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     void drawRect(const ABrush& brush,
-                  const glm::vec2& position,
-                  const glm::vec2& size) override;
+                  glm::vec2 position,
+                  glm::vec2 size) override;
 
     void drawRoundedRect(const ABrush& brush,
-                         const glm::vec2& position,
-                         const glm::vec2& size,
+                         glm::vec2 position,
+                         glm::vec2 size,
                          float radius) override;
 
-    void drawRoundedRectAntialiased(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
-                                    float radius) override;
-
     void drawRectBorder(const ABrush& brush,
-                        const glm::vec2& position,
-                        const glm::vec2& size,
+                        glm::vec2 position,
+                        glm::vec2 size,
                         float lineWidth) override;
 
-    void drawRectBorder(const ABrush& brush,
-                        const glm::vec2& position,
-                        const glm::vec2& size,
-                        float radius,
-                        int borderWidth) override;
+    void drawRoundedRectBorder(const ABrush& brush,
+                               glm::vec2 position,
+                               glm::vec2 size,
+                               float radius,
+                               int borderWidth) override;
 
-    void drawBoxShadow(const glm::vec2& position,
-                       const glm::vec2& size,
+    void drawBoxShadow(glm::vec2 position,
+                       glm::vec2 size,
                        float blurRadius,
                        const AColor& color) override;
+    
+    void drawBoxShadowInner(glm::vec2 position,
+                            glm::vec2 size,
+                            float blurRadius,
+                            float spreadRadius,
+                            float borderRadius,
+                            const AColor& color,
+                            glm::vec2 offset) override;   
 
-    void drawString(const glm::vec2& position,
+    void drawString(glm::vec2 position,
                     const AString& string,
                     const AFontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(const glm::vec2& position,
+    _<IPrerenderedString> prerenderString(glm::vec2 position,
                                           const AString& text,
                                           const AFontStyle& fs) override;
 
@@ -161,14 +165,20 @@ public:
 
     void popMaskAfter() override;
 
-    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
 
-    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
+    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
 
-    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
+    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
 
+    void drawSquareSector(const ABrush& brush,
+                          const glm::vec2& position,
+                          const glm::vec2& size,
+                          AAngleRadians begin,
+                          AAngleRadians end) override;
 protected:
     ITexture* createNewTexture() override;
+
+    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
 
 };
 

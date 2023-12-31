@@ -76,7 +76,6 @@ protected:
 };
 
 
-
 /**
  * Checks that when the text field focused and enter pressed, the inner dialog box handles that message.
  */

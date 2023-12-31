@@ -26,12 +26,12 @@
 namespace ass {
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TextAlign>: IPropertyBase {
+        struct API_AUI_VIEWS Property<ATextAlign>: IPropertyBase {
         private:
-            TextAlign mInfo;
+            ATextAlign mInfo;
 
         public:
-            Property(const TextAlign& info) : mInfo(info) {
+            Property(const ATextAlign& info) : mInfo(info) {
 
             }
 

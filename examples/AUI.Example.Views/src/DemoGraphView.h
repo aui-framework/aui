@@ -23,7 +23,7 @@ class DemoGraphView: public AView {
 public:
     DemoGraphView();
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
 private:
     AVector<glm::vec2> mPoints;

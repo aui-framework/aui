@@ -18,17 +18,27 @@
 
 #include "AUI/Common/AByteBuffer.h"
 
-
-void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader) {
-    mRasterLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerLoader(ADeque<_<IImageLoader>> &d, _<IImageLoader> loader, AString name) {
+    d << std::move(loader);
+    if (!name.empty()) {
+        mSupportedFormats << std::move(name);
+    }
 }
 
-void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader) {
-    mVectorLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mRasterLoaders, std::move(imageLoader), std::move(formatName));
 }
 
-void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader) {
-    mAnimatedLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mVectorLoaders, std::move(imageLoader), std::move(formatName));
+}
+
+void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mAnimatedLoaders, std::move(imageLoader), std::move(formatName));
+}
+
+const ADeque<AString>& AImageLoaderRegistry::supportedFormats() const noexcept {
+    return mSupportedFormats;
 }
 
 _<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
@@ -83,14 +93,14 @@ AImageLoaderRegistry& AImageLoaderRegistry::inst() {
     return a;
 }
 
-_<IImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
+_<IAnimatedImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
     for (auto& loader : mAnimatedLoaders)
     {
         try {
             bool matches = loader->matches(buffer);
             if (matches)
             {
-                if (auto imageFactory = loader->getImageFactory(buffer))
+                if (auto imageFactory = _cast<IAnimatedImageFactory>(loader->getImageFactory(buffer)))
                 {
                     return imageFactory;
                 }

@@ -78,7 +78,7 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", 
         }
     }).withWriteCallback([this] (AByteBufferView v) {
         return onDataReceived(v);
-    }).withReadCallback([this](char* dst, std::size_t maxLen) {
+    }).withBody([this](char* dst, std::size_t maxLen) {
         return onDataSend(dst, maxLen);
     })), mKey(std::move(key)) {
 

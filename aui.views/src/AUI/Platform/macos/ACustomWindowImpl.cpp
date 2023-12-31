@@ -24,7 +24,7 @@ const int AUI_TITLE_HEIGHT = 30;
 #if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Platform/AFontManager.h"
 
@@ -214,16 +214,6 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    const auto pos = event.position;
-    if (pos.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
-        if (isCaptionAt(pos)) {
-            // TODO apple
-
-            mDragging = true;
-            mDragPos = pos;
-            emit dragBegin(pos);
-        }
-    }
     AViewContainer::onPointerPressed(event);
 }
 
@@ -235,7 +225,7 @@ void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onPointerReleased({mDragPos, AInput::LBUTTON});
+    AViewContainer::onPointerReleased({mDragPos, APointerIndex::button(AInput::LBUTTON)});
 }
 
 

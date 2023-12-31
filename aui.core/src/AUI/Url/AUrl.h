@@ -27,16 +27,16 @@
  * @ingroup core
  * @details
  * Handles standard web url (schema://host:port/path).
+ *
+ * Empty schema is mapped to the assets file. In example, ":icon.svg" references to `icon.svg` file in your assets.
+ * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/AUI.Example.Views)
+ * of asset usage.
  */
 class API_AUI_CORE AUrl
 {
-private:
-	AString mSchema;
-	AString mPath;
-
-    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& resolvers();
-
 public:
+	using Resolver = std::function<_<IInputStream>(const AUrl&)>;
+
 	AUrl(AString full);
 	inline AUrl(const char* full): AUrl(AString(full)) {}
 
@@ -70,7 +70,13 @@ public:
         return full() < u.full();
     }
 
-	static void registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory);
+	static void registerResolver(const AString& protocol, Resolver resolver);
+
+private:
+	AString mSchema;
+	AString mPath;
+
+	static AMap<AString, AVector<AUrl::Resolver>>& resolvers();
 };
 
 

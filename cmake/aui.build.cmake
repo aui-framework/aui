@@ -65,6 +65,7 @@ else()
     set(AUI_DEBUG FALSE)
 endif()
 
+# platforms
 if (WIN32)
     set(AUI_PLATFORM_WIN 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
@@ -111,6 +112,35 @@ if (UNIX)
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
     set(AUI_PLATFORM_UNIX 0 CACHE INTERNAL "Platform")
+endif()
+
+# compilers
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(AUI_COMPILER_CLANG 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_CLANG 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(AUI_COMPILER_GCC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_GCC 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (MSVC)
+    set(AUI_COMPILER_MSVC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+    if (CMAKE_SIZEOF_VOID_P STREQUAL 8)
+        set(AUI_ARCH_X86_64 1 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
+    else()
+        set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_X86 1 CACHE INTERNAL "Arch")
+    endif()
 endif()
 
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
@@ -263,11 +293,6 @@ function(aui_common AUI_MODULE_NAME)
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
-    endif()
-    if(AUI_DEBUG)
-        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG=1)
-    else()
-        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG=0)
     endif()
 
     if ((UNIX OR MINGW) AND NOT ANDROID AND NOT APPLE)
@@ -456,6 +481,11 @@ function(aui_common AUI_MODULE_NAME)
             endif()
         ]])
     endif()
+    if (CMAKE_GENERATOR STREQUAL "Xcode")
+        if (BUILD_SHARED_LIBS)
+            message(WARNING "With Xcode and BUILD_SHARED_LIBS=TRUE you may be required to sign the frameworks.")
+        endif()
+    endif()
 endfunction(aui_common)
 
 
@@ -598,6 +628,8 @@ macro(_aui_provide_toolbox_for_host)
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
+set(CMAKE_CXX_STANDARD 20)
+set(BUILD_SHARED_LIBS FALSE)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
@@ -605,7 +637,8 @@ file(
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
-            COMPONENTS core toolbox image)
+            COMPONENTS core toolbox image
+            VERSION 03bfb4f86094784124728ba803007b22de3aaf29)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -636,6 +669,22 @@ auib_import(aui https://github.com/aui-framework/aui
     endif()
 endmacro()
 
+macro(_aui_check_toolbox)
+    if (NOT AUI_TOOLBOX_EXE)
+        if (CMAKE_CROSSCOMPILING)
+            # the worst case because we (possibly) have to compile aui.toolbox for the host system
+            _aui_try_find_toolbox()
+            if (NOT AUI_TOOLBOX_EXE)
+                _aui_provide_toolbox_for_host()
+            endif()
+        elseif (TARGET aui.toolbox)
+            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
+        else()
+            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
+        endif()
+        message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
+    endif()
+endmacro()
 
 function(aui_compile_assets AUI_MODULE_NAME)
     set(oneValueArgs DIR)
@@ -666,21 +715,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    if (NOT AUI_TOOLBOX_EXE)
-        if (CMAKE_CROSSCOMPILING)
-            # the worst case because we (possibly) have to compile aui.toolbox for the host system
-            _aui_try_find_toolbox()
-            if (NOT AUI_TOOLBOX_EXE)
-                _aui_provide_toolbox_for_host()
-            endif()
-        elseif (TARGET aui.toolbox)
-            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
-        else()
-            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
-        endif()
-    endif()
-
-    message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
+    _aui_check_toolbox()
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -918,6 +953,37 @@ function(aui_module AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(aui_module)
+
+# links the auisl shader located in shaders/<NAME>
+function(auisl_shader TARGET NAME)
+    set(_path ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${NAME})
+    if (NOT EXISTS ${_path})
+        message(FATAL_ERROR "shader not exists: ${_path}")
+    endif()
+
+    if (NOT TARGET ${TARGET})
+        message(FATAL_ERROR "no such target: ${TARGET}")
+    endif()
+
+    set(_compiled_shader_dir ${CMAKE_CURRENT_BINARY_DIR}/shaders/AUISL/Generated)
+    file(MAKE_DIRECTORY ${_compiled_shader_dir})
+
+    set(_targets software glsl120)
+    _aui_check_toolbox()
+    foreach(_target ${_targets})
+        set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
+
+        add_custom_command(
+                OUTPUT ${_output}
+                DEPENDS ${_path}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS auisl ${_target} ${_path} ${_output}
+        )
+        target_sources(${TARGET} PRIVATE ${_output})
+    endforeach()
+
+    target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+endfunction()
 
 macro(aui_app)
     _aui_find_root()
@@ -1175,11 +1241,9 @@ macro(aui_app)
         message(STATUS XCTestFound:${XCTest_FOUND})
 
         set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
@@ -1187,8 +1251,8 @@ macro(aui_app)
 
         # Locate system libraries on iOS
         find_library(UIKIT UIKit REQUIRED)
+        find_library(COREANIMATION QuartzCore REQUIRED)
         find_library(OPENGL OpenGLES REQUIRED)
-        find_library(GLKIT GLKit REQUIRED)
         find_library(FOUNDATION Foundation REQUIRED)
         find_library(MOBILECORESERVICES MobileCoreServices REQUIRED)
         find_library(CFNETWORK CFNetwork REQUIRED)
@@ -1199,15 +1263,19 @@ macro(aui_app)
                 PRIVATE
                 ${OPENGL}
                 ${UIKIT}
-                ${GLKIT}
                 ${FOUNDATION}
                 ${MOBILECORESERVICES}
                 ${CFNETWORK}
+                ${COREANIMATION}
                 ${SYSTEMCONFIGURATION})
 
 
         # Turn on ARC
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
+
+        if (NOT DEFINED AUI_IOS_CODE_SIGNING_REQUIRED)
+            set(AUI_IOS_CODE_SIGNING_REQUIRED YES)
+        endif()
 
         # Create the app target
         set_target_properties(${APP_TARGET} PROPERTIES
@@ -1224,8 +1292,8 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
+                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
                 )
-
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
         # build product output directory.
@@ -1291,30 +1359,32 @@ macro(aui_app)
         exit 1 \;
         fi\"
         )
-
         # Codesign the framework in it's new spot
-        add_custom_command(
-                TARGET
-                ${APP_TARGET}
-                POST_BUILD COMMAND /bin/sh -c
-                \"COMMAND_DONE=0 \;
-                if codesign --force --verbose
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-                --sign ${APP_APPLE_SIGN_IDENTITY}
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if codesign --force --verbose
-        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-        --sign ${APP_APPLE_SIGN_IDENTITY}
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Framework codesign failed \;
-        exit 1 \;
-        fi\"
-        )
+        if (AUI_IOS_CODE_SIGNING_REQUIRED)
+            add_custom_command(
+                    TARGET
+                    ${APP_TARGET}
+                    POST_BUILD COMMAND /bin/sh -c
+                    \"COMMAND_DONE=0 \;
+                    if codesign --force --verbose
+                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    --sign ${APP_APPLE_SIGN_IDENTITY}
+            \&\>/dev/null \; then
+            COMMAND_DONE=1 \;
+            fi \;
+            if codesign --force --verbose
+            \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+            --sign ${APP_APPLE_SIGN_IDENTITY}
+            \&\>/dev/null \; then
+            COMMAND_DONE=1 \;
+            fi \;
+            if [ \\$$COMMAND_DONE -eq 0 ] \; then
+            echo Framework codesign failed \;
+            exit 1 \;
+            fi\"
+            )
+
+        endif()
 
         # Add a "PlugIns" folder as a kludge fix for how the XcTest package generates paths
         add_custom_command(

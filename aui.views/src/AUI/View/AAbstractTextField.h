@@ -20,7 +20,7 @@
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 
 /**
  * @brief Text field implementation
@@ -29,34 +29,6 @@
  */
 class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
 {
-private:
-    bool mIsPasswordTextField = false;
-
-	void invalidatePrerenderedString() override;
-	AString getContentsPasswordWrap();
-
-protected:
-    Render::PrerenderedString mPrerenderedString;
-    AString mContents;
-	virtual bool isValidText(const AString& text);
-
-    void prerenderStringIfNeeded();
-
-    void typeableErase(size_t begin, size_t end) override;
-    bool typeableInsert(size_t at, const AString& toInsert) override;
-    size_t typeableFind(wchar_t c, size_t startPos) override;
-    size_t typeableReverseFind(wchar_t c, size_t startPos) override;
-    size_t length() const override;
-
-    bool typeableInsert(size_t at, wchar_t toInsert) override;
-
-    AString getDisplayText() override;
-
-    void doRedraw() override;
-
-
-    void doDrawString();
-
 public:
 	AAbstractTextField();
 	virtual ~AAbstractTextField();
@@ -64,7 +36,7 @@ public:
 	int getContentMinimumHeight(ALayoutDirection layout) override;
 	void setText(const AString& t) override;
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     AString toString() const override;
 
@@ -91,4 +63,38 @@ public:
 
     bool wantsTouchscreenKeyboard() override;
 
+    void setSize(glm::ivec2 size) override;
+
+protected:
+    ARender::PrerenderedString mPrerenderedString;
+    AString mContents;
+    virtual bool isValidText(const AString& text);
+
+    void prerenderStringIfNeeded();
+
+    void typeableErase(size_t begin, size_t end) override;
+    bool typeableInsert(size_t at, const AString& toInsert) override;
+    size_t typeableFind(wchar_t c, size_t startPos) override;
+    size_t typeableReverseFind(wchar_t c, size_t startPos) override;
+    size_t length() const override;
+
+    bool typeableInsert(size_t at, wchar_t toInsert) override;
+
+    AString getDisplayText() override;
+
+    void doRedraw() override;
+
+
+    void doDrawString();
+
+    glm::ivec2 getMouseSelectionPadding() override;
+
+private:
+    bool mIsPasswordTextField = false;
+    int mTextAlignOffset = 0;
+
+    void invalidatePrerenderedString() override;
+    AString getContentsPasswordWrap();
+
+    void updateTextAlignOffset();
 };

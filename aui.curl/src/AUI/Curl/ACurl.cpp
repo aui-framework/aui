@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ACurl.h"
+#include "ACurlMulti.h"
 
 
 #include <cassert>
@@ -24,6 +25,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Logging/ALogger.h"
+#include "ACurlMulti.h"
 
 
 #undef min
@@ -99,56 +101,55 @@ _<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
         _<ACurl> mCurl;
-        AFuture<> mFuture;
         APipe mPipe;
 
     public:
         CurlInputStream(_<ACurl> curl) : mCurl(std::move(curl)) {
-            mFuture = async {
-                mCurl->mWriteCallback = [&](AByteBufferView buf) {
-                    mPipe << buf;
-                    return buf.size();
-                };
-                mCurl->run();
+            mCurl->mWriteCallback = [&](AByteBufferView buf) {
+                mPipe << buf;
+                return buf.size();
             };
+            AObject::connect(mCurl->success, mCurl.get(), [this]() {
+                mPipe.close();
+            });
+            AObject::connect(mCurl->fail, mCurl.get(), [this]() {
+                mPipe.close();
+            });
+            ACurlMulti::global() << mCurl;
         }
 
         size_t read(char* dst, size_t size) override {
             return mPipe.read(dst, size);
         }
     };
+
     return _new<CurlInputStream>(_new<ACurl>(*this));
 }
 
-AByteBuffer ACurl::Builder::toByteBuffer() {
-    AByteBuffer out;
-    mWriteCallback = [&](AByteBufferView buf) {
-        out << buf;
-        return buf.size();
-    };
-    ACurl r(*this);
-    r.run();
-    return out;
-}
 
 ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
-    mUrl.reserve(std::accumulate(params.begin(), params.end(), mUrl.size() + 1, [](std::size_t l, const std::pair<AString, AString>& p) {
+    std::string paramsString;
+    paramsString.reserve(std::accumulate(params.begin(), params.end(), 1, [](std::size_t l, const std::pair<AString, AString>& p) {
         return l + p.first.size() + p.second.size() + 2;
     }));
 
-    bool first = true;
-
     for (const auto&[key, value] : params) {
-        if (first) {
-            mUrl += '?';
-            first = false;
-        } else {
-            mUrl += '&';
+        if (!paramsString.empty()) {
+            paramsString += '&';
         }
-        mUrl += key;
-        mUrl += "=";
-        mUrl += value;
+        paramsString += key.toStdString();
+        paramsString += "=";
+
+        for (std::uint8_t c : value.toStdString()) {
+            if (std::isalnum(c)) {
+                paramsString += (char)c;
+            } else {
+                char buf[128];
+                paramsString += std::string_view(buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "%{:02x}", c)));
+            }
+        }
     }
+    mParams = std::move(paramsString);
 
     return *this;
 }
@@ -171,17 +172,43 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     builder.mCURL = nullptr;
 
 
-    auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
-    assert(res == 0);
+    switch (builder.mMethod) {
+        case Method::GET: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            assert(res == 0);
+            break;
+        }
 
-	res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+        case Method::POST: {
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
+            assert(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
+
+            assert(res == 0);
+            if (!builder.mParams.empty()) {
+                mPostFieldsStorage = builder.mParams.toStdString();
+                res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
+                assert(res == 0);
+            }
+            break;
+        }
+    }
+
+	auto res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
     assert(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
     if (mReadCallback) {
-        curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
-        curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+        res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        assert(res == 0);
+        res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+        assert(res == 0);
     }
 
     if (!builder.mHeaders.empty()) {
@@ -198,6 +225,12 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         assert(res == CURLE_OK);
         res = curl_easy_setopt(mCURL, CURLOPT_HEADERFUNCTION, ACurl::headerCallback);
         assert(res == CURLE_OK);
+    }
+
+    if (builder.mOnSuccess) {
+        connect(success, [this, success = std::move(builder.mOnSuccess)]() {
+            success(*this);
+        });
     }
 
     return *this;
@@ -320,10 +353,56 @@ int64_t ACurl::getContentLength() const {
     return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
 }
 
+AString ACurl::getContentType() const {
+    auto v = getInfo<const char*>(CURLINFO_CONTENT_TYPE);
+    return v ? v : "";
+}
+
 ACurl::ResponseCode ACurl::getResponseCode() const {
     return static_cast<ACurl::ResponseCode>(getInfo<long>(CURLINFO_RESPONSE_CODE));
 }
 
 void ACurl::ErrorDescription::throwException() const {
     throw ACurl::Exception(*this);
+}
+
+static ACurl::Response makeResponse(ACurl& r, AByteBuffer body) {
+    return {
+            .code = r.getResponseCode(),
+            .contentType = r.getContentType(),
+            .body = std::move(body),
+    };
+}
+
+ACurl::Response ACurl::Builder::runBlocking() {
+    AByteBuffer out;
+    mWriteCallback = [&](AByteBufferView buf) {
+        out << buf;
+        return buf.size();
+    };
+    ACurl r(*this);
+    r.run();
+    return makeResponse(r, std::move(out));
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync() {
+    return runAsync(ACurlMulti::global());
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
+    AFuture<ACurl::Response> result;
+    auto body = _new<AByteBuffer>();
+    withDestinationBuffer(*body);
+    withOnSuccess([result, body = std::move(body)](ACurl& c) {
+        result.supplyResult(makeResponse(c, std::move(*body)));
+    });
+    withErrorCallback([result](const ErrorDescription& error) {
+        try {
+            error.throwException();
+        } catch (...) {
+            result.supplyException();
+        }
+    });
+    curlMulti << _new<ACurl>(std::move(*this));
+    return result;
 }

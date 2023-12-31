@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include "AUI/Curl/ACurl.h"
+#include "AUI/Json/AJson.h"
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Curl/AWebsocket.h"
@@ -30,8 +31,32 @@
 #include <gmock/gmock.h>
 
 TEST(CurlTest, ToByteBuffer) {
-    AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
+    AByteBuffer buffer = ACurl::Builder("https://github.com").runBlocking().body;
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
+}
+
+TEST(CurlTest, Post1) {
+    auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withParams("hello=world").runBlocking().body);
+    try {
+        EXPECT_STREQ(buffer["form"]["hello"].asString().toStdString().c_str(), "world") << AJson::toString(buffer);
+    } catch (...) {
+        FAIL() << "Whoops! " << AJson::toString(buffer);
+    }
+}
+TEST(CurlTest, Post2) {
+    auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withHeaders({
+                "Content-Type: application/json; charset=utf-8"
+            })
+            .withBody("[\"hello\"]").runBlocking().body);
+    try {
+        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
+    } catch (...) {
+        FAIL() << "Whoops! " << AJson::toString(buffer);
+    }
 }
 
 TEST(CurlTest, ToStream) {

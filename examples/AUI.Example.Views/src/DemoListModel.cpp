@@ -27,7 +27,7 @@ size_t DemoListModel::listSize() {
     return mListSize;
 }
 
-AString DemoListModel::listItemAt(const AModelIndex& index) {
+AString DemoListModel::listItemAt(const AListModelIndex& index) {
     return "List item #{}"_format(index.getRow() + 1);
 }
 

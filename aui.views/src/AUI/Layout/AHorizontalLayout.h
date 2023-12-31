@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "ALayout.h"
+#include "ALinearLayout.h"
 #include <AUI/Util/ALayoutDirection.h>
 
 
@@ -43,7 +43,7 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  */
-class API_AUI_VIEWS AHorizontalLayout: public ALayout
+class API_AUI_VIEWS AHorizontalLayout: public ALinearLayout<>
 {
 private:
 	int mSpacing = 0;

@@ -15,7 +15,7 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
@@ -39,6 +39,7 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
+#include "glm/common.hpp"
 
 // windows.h
 #undef max
@@ -84,18 +85,15 @@ void AView::drawStencilMask()
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
-#if !AUI_PLATFORM_IOS // on ios stencil buffer does not work with discard as expected
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                Render::roundedRect(ASolidBrush{},
-                                    {mPadding.left, mPadding.top},
-                                    {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                    mBorderRadius);
-            } else
-#endif
-            {
-                Render::rect(ASolidBrush{},
-                             {mPadding.left, mPadding.top},
-                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ARender::roundedRect(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                                     mBorderRadius);
+            } else {
+                ARender::rect(ASolidBrush{},
+                              {mPadding.left, mPadding.top},
+                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
@@ -127,8 +125,13 @@ void AView::popStencilIfNeeded() {
         });
     }
 }
-void AView::render()
+void AView::render(ClipOptimizationContext context)
 {
+    if (mAnimator)
+        mAnimator->animate(this);
+
+    ensureAssUpdated();
+
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
@@ -137,18 +140,11 @@ void AView::render()
         });
     }
 
-    if (mAnimator)
-        mAnimator->animate(this);
-
-    {
-        ensureAssUpdated();
-
-        // draw list
-        for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
-            if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
-            if (auto w = mAss[i]) {
-                w->renderFor(this);
-            }
+    // draw list
+    for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+        if (auto w = mAss[i]) {
+            w->renderFor(this);
         }
     }
 
@@ -193,10 +189,6 @@ void AView::invalidateAllStyles()
 
     for (auto target = this; target != nullptr; target = target->getParent()) {
         if (target->mExtraStylesheet) {
-            if (mAssNames.contains("CellStyle")) {
-                printf("\n");
-            }
-
             viewTree.push(target);
         }
     }
@@ -261,13 +253,13 @@ bool AView::hasFocus() const
 int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(layout), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(layout), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -288,8 +280,11 @@ void AView::pack()
 
 void AView::addAssName(const AString& assName)
 {
-    mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
+    if (mAssNames.contains(assName)) {
+        return;
+    }
+    mAssNames << assName;
     invalidateAssHelper();
 }
 
@@ -297,8 +292,8 @@ void AView::invalidateAssHelper() { mAssHelper = nullptr; }
 
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
+    mAssNames.removeAll(assName);
     invalidateAssHelper();
 }
 
@@ -334,26 +329,32 @@ void AView::ensureAssUpdated()
 
 void AView::onMouseEnter()
 {
+    mMouseEntered = true;
     if (AWindow::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, true);
     }
 }
 
 
-void AView::onPointerMove(glm::ivec2 pos)
+void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
 {
     AWindow::current()->setCursor(mCursor);
 }
 
 void AView::onMouseLeave()
 {
+    mMouseEntered = false;
     mHovered.set(this, false);
 }
 
 
 void AView::onPointerPressed(const APointerPressedEvent& event)
 {
-    mPressed.set(this, true);
+    if (!mPressed.contains(event.pointerIndex)) {
+        mPressed << event.pointerIndex;
+        emit pressedState(true, event.pointerIndex);
+        emit pressed(event.pointerIndex);
+    }
 
     /**
      * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
@@ -371,13 +372,16 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
 
 void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
-    mPressed.set(this, false);
+    mPressed.removeAll(event.pointerIndex);
+    emit pressedState(false, event.pointerIndex);
+    emit released(event.pointerIndex);
+
     if (event.triggerClick) {
-        emit clickedButton(event.button);
-        switch (event.button) {
-            case AInput::LBUTTON:
-                emit clicked();
-                break;
+        emit clickedButton(event.pointerIndex);
+        if (event.asButton == AInput::LBUTTON) {
+            emit clicked();
+        }
+        switch (event.pointerIndex.rawValue()) {
             case AInput::RBUTTON:
                 emit clickedRight;
                 emit clickedRightOrLongPressed;
@@ -398,7 +402,7 @@ AMenuModel AView::composeContextMenu() {
 
 void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
 {
-    emit doubleClicked(event.button);
+    emit doubleClicked(event.pointerIndex);
 }
 
 void AView::onScroll(const AScrollEvent& event) {
@@ -408,9 +412,6 @@ void AView::onScroll(const AScrollEvent& event) {
 void AView::onKeyDown(AInput::Key key)
 {
     emit keyPressed(key);
-    if (key == AInput::TAB && mFocusNextViewOnTab) {
-        AWindow::current()->focusNextView();
-    }
 }
 
 void AView::onKeyRepeat(AInput::Key key)
@@ -529,22 +530,22 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
     mParent->notifyParentChildFocused(view);
 }
 
-void AView::focus() {
+void AView::focus(bool needFocusChainUpdate) {
     // holding reference here
     auto mySharedPtr = sharedPtr();
-    auto window = AWindow::current();
 
     notifyParentChildFocused(mySharedPtr);
 
-    try {
-        auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
-
-        ui_threadX [window, mySharedPtr = std::move(mySharedPtr), windowSharedPtr = std::move(windowSharedPtr)]() {
-            window->setFocusedView(mySharedPtr);
-        };
-    } catch (...) {
+    ui_threadX [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+        auto window = mySharedPtr->getWindow();
+        if (!window) {
+            return;
+        }
         window->setFocusedView(mySharedPtr);
-    }
+        if (needFocusChainUpdate) {
+            window->updateFocusChain();
+        }
+    };
 }
 
 bool AView::capturesFocus() {
@@ -586,14 +587,6 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 }
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
-        [&](const AFingerDragEvent& e) {
-            onScroll({
-                .origin = origin,
-                .delta = e.delta,
-                .kinetic = e.kinetic,
-            });
-            return true;
-        },
         [&](const ALongPressEvent& e) {
             auto menuModel = composeContextMenu();
             bool result = false;
@@ -666,8 +659,10 @@ void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
 }
 
 void AView::onClickPrevented() {
-    if (mPressed) {
-        mPressed.set(this, false);
+    auto pressed = std::move(mPressed);
+    for (auto v : pressed) {
+        emit pressedState(false, v);
+        emit released(v);
     }
 }
 
@@ -676,4 +671,17 @@ void AView::setCursor(AOptional<ACursor> cursor) {
     if (mParent) { // ABaseWindow does not have parent
         AWindow::current()->forceUpdateCursor();
     }
+}
+
+void AView::onViewGraphSubtreeChanged() {
+    invalidateAssHelper();
+    emit viewGraphSubtreeChanged;
+}
+void AView::setVisibility(Visibility visibility) noexcept
+{
+    if (mVisibility == visibility) {
+        return;
+    }
+    mVisibility = visibility;
+    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }

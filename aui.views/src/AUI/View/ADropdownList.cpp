@@ -67,8 +67,8 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void ADropdownList::render() {
-    AAbstractLabel::render();
+void ADropdownList::render(ClipOptimizationContext context) {
+    AAbstractLabel::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
@@ -122,7 +122,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
                                                          _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
                                                  }));
         }
-        connect(list->selectionChanged, this, [&](const AModelSelection<AString>& s) {
+        connect(list->selectionChanged, this, [&](const AListModelSelection<AString>& s) {
             if (!s.getIndices().empty()) {
                 setSelectionId(s.getIndices().begin()->getRow());
             }
