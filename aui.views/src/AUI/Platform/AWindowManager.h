@@ -17,6 +17,7 @@
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Platform/Pipe.h"
 #include "AUI/Util/AWatchdog.h"
 #include "IRenderingContext.h"
 
@@ -38,8 +39,8 @@ protected:
 
 #if AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
-    AMutex mXNotifyLock;
-    AConditionVariable mXNotifyCV;
+    Pipe mNotifyPipe;
+    std::atomic_bool mFastPathNotify = false;
     std::string mXClipboardText;
 
     void xProcessEvent(XEvent& ev);
