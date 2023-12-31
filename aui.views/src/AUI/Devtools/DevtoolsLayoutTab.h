@@ -16,10 +16,19 @@
 
 #pragma once
 
+#include "AUI/View/ATreeView.h"
 #include "AUI/Platform/ABaseWindow.h"
+#include "ViewPropertiesView.h"
 
-class DevtoolsPanel: public AViewContainer {
+class DevtoolsLayoutTab: public AViewContainer {
 public:
-    DevtoolsPanel(ABaseWindow* targetWindow);
+    DevtoolsLayoutTab(ABaseWindow* targetWindow);
 
+private:
+    ABaseWindow* mTargetWindow;
+
+    _<ATreeView> mViewHierarchyTree;
+    _<ViewPropertiesView> mViewPropertiesView;
+
+    void forceLayoutUpdate();
 };
