@@ -26,8 +26,13 @@ if(AUI_DEBUG)
 else()
     target_compile_definitions(aui.core PUBLIC AUI_DEBUG=0)
 endif()
+
 if (AUI_CATCH_UNHANDLED)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
+endif()
+
+if (AUI_PROFILING)
+    target_compile_definitions(aui.core PUBLIC AUI_PROFILING=1)
 endif()
 
 if (NOT WIN32)

@@ -21,6 +21,7 @@
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
+#include "AUI/Performance/APerformanceFrame.h"
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
@@ -247,6 +248,7 @@ public:
 
     void onFocusLost() override;
     void render(ClipOptimizationContext context) override;
+    void updateLayout() override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**
@@ -309,6 +311,10 @@ signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
+
+#if AUI_PROFILING
+    emits<APerformanceFrame::Sections> performanceFrameComplete;
+#endif
 
 protected:
     bool mIsFocused = true;

@@ -22,6 +22,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Traits/values.h"
 #include "AUI/View/ASplitter.h"
+#include "AUI/View/ATabView.h"
 #include "AUI/View/AViewContainer.h"
 #include "Devtools.h"
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -124,6 +125,7 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     using namespace declarative;
 
     setContents(Vertical {
+        TabView
         Horizontal {
             Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
             SpacerExpanding{},

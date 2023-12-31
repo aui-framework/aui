@@ -19,6 +19,7 @@
 //
 
 #include <AUI/Traits/strings.h>
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Platform/AWindow.h"
 #include "ABaseWindow.h"
@@ -28,6 +29,7 @@
 #include <chrono>
 #include "APlatform.h"
 #include "AUI/Logging/ALogger.h"
+#include "AUI/View/AViewContainer.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -343,7 +345,13 @@ void ABaseWindow::flagUpdateLayout() {
 
 }
 
+void ABaseWindow::updateLayout() {
+    APerformanceSection updateLayout("layout update");
+    AViewContainer::updateLayout();
+}
+
 void ABaseWindow::render(ClipOptimizationContext context) {
+    APerformanceSection root("render");
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
