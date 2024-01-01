@@ -14,21 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//#ifdef _DEBUG
+#pragma once
 
-#include "DevtoolsPanel.h"
-#include "AUI/Devtools/DevtoolsLayoutTab.h"
-#include "AUI/Devtools/DevtoolsPerformanceTab.h"
+#include "AUI/View/ATreeView.h"
 #include "AUI/Platform/ABaseWindow.h"
-#include "AUI/Util/UIBuildingHelpers.h"
-#include "AUI/View/ATabView.h"
+#include "ViewPropertiesView.h"
 
-DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow) {
-    auto tabs = _new<ATabView>();
-    tabs->setExpanding();
+class DevtoolsPerformanceTab: public AViewContainer {
+public:
+    DevtoolsPerformanceTab(ABaseWindow* targetWindow);
 
-    tabs->addTab(_new<DevtoolsLayoutTab>(targetWindow), "Layout");
-    tabs->addTab(_new<DevtoolsPerformanceTab>(targetWindow), "Performance");
+private:
+    ABaseWindow* mTargetWindow;
 
-    setContents(Centered { tabs });
-}
+};

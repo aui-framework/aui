@@ -52,12 +52,9 @@ public:
     ~APerformanceFrame() = default;
 #endif
 
-    static APerformanceFrame& current() {
+    static APerformanceFrame* current() {
 #if AUI_PROFILING
-        if (auto v = currentStorage()) {
-            return *v;
-        }
-        throw AException("APerformanceFrame is not set");
+        return currentStorage();
 #else
         throw AException("AUI_PROFILING is disabled");
 #endif
