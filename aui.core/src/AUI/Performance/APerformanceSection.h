@@ -35,7 +35,7 @@ public:
     ~APerformanceSection();
 #else
     // expected to be optimized out
-    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt) = default;
+    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt) {}
     ~APerformanceSection() = default;
 #endif
 

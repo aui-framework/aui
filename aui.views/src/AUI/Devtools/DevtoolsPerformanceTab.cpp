@@ -48,6 +48,7 @@ namespace {
             setExpanding();
             connect(targetWindow->performanceFrameComplete, me::onPerformanceFrame);
             mTexture = ARender::getNewTexture();
+            mImage.fill({0, 0, 0, 0});
         }
 
         void render(ClipOptimizationContext c) override {
@@ -59,9 +60,13 @@ namespace {
         }
 
         void setSize(glm::ivec2 size) override {
+            if (getSize() == size) {
+                return;
+            }
             AView::setSize(size);
 
             mImage = glm::uvec2{size};
+            mImage.fill({0, 0, 0, 0});
         }
 
     private:
