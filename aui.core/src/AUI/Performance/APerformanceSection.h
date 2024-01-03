@@ -21,6 +21,7 @@
 
 #include "AUI/Common/AColor.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Common/AVector.h"
 
 /**
  * @brief Defines performance profiling named (and colored) span within RAII range.
@@ -30,6 +31,15 @@
  */
 class API_AUI_CORE APerformanceSection {
 public:
+    struct Data {
+        AString name;
+        AColor color;
+        std::chrono::high_resolution_clock::duration duration;
+        AVector<Data> children;
+    };
+
+    using Datas = AVector<Data>;
+
 #if AUI_PROFILING
     APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt);
     ~APerformanceSection();
@@ -39,11 +49,23 @@ public:
     ~APerformanceSection() = default;
 #endif
 
+    void addSection(Data section) {
+        mChildren << std::move(section);
+    }
+
 private:
 #if AUI_PROFILING
+    static APerformanceSection*& current() noexcept {
+        static APerformanceSection* v = nullptr;
+        return v;
+    }
+
     AString mName;
     AColor mColor;
     std::chrono::high_resolution_clock::time_point mStart;
+    AVector<Data> mChildren;
+
+    APerformanceSection* mParent;
 
     static AColor generateColorFromName(const AString& name);
 #endif

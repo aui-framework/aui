@@ -86,7 +86,7 @@ namespace {
             return duration_cast<microseconds>(t).count() / 100;
         }
 
-        void onPerformanceFrame(const APerformanceFrame::Sections& sections) {
+        void onPerformanceFrame(const APerformanceSection::Datas& sections) {
             // fade-out effect
             if (mFrameIndex % 10 == 0) {
                 for (auto& c : mImage) {

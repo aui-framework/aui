@@ -26,6 +26,7 @@
 #include <chrono>
 #include "AUI/Common/AColor.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Traits/values.h"
 
 
@@ -36,13 +37,7 @@
  */
 class API_AUI_CORE APerformanceFrame: public aui::noncopyable {
 public:
-    struct Section {
-        AString name;
-        AColor color;
-        std::chrono::high_resolution_clock::duration duration;
-    };
-    using Sections = AVector<Section>;
-    using Consumer = std::function<void(Sections sections)>;
+    using Consumer = std::function<void(APerformanceSection::Datas sections)>;
 
 #if AUI_PROFILING
     APerformanceFrame(Consumer consumer);
@@ -60,17 +55,17 @@ public:
 #endif
     }
 
-    void addSection(Section section) {
+    void addSection(APerformanceSection::Data section) {
         mSections << std::move(section);
     };
 
     [[nodiscard]]
-    const Sections& sections() const noexcept {
+    const APerformanceSection::Datas& sections() const noexcept {
         return mSections;
     };
 
 private:
-    Sections mSections;
+    APerformanceSection::Datas mSections;
     Consumer mConsumer;
 
     [[nodiscard]]
