@@ -22,12 +22,14 @@
 #include <chrono>
 
 #include "AUI/Common/AObject.h"
+#include "AUI/Enum/ImageRendering.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
 #include "AUI/Model/ATreeModelIndex.h"
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Render/ITexture.h"
@@ -56,7 +58,8 @@ namespace {
 
             ARender::rect(ATexturedBrush {
                 .texture = mTexture,
-            }, {0, 0}, mImage.size());
+                .imageRendering = ImageRendering::PIXELATED,
+            }, {0, 0}, mImage.size() * plotScale());
         }
 
         void setSize(glm::ivec2 size) override {
@@ -65,7 +68,7 @@ namespace {
             }
             AView::setSize(size);
 
-            mImage = glm::uvec2{size};
+            mImage = glm::uvec2{size} / plotScale();
             mImage.fill({0, 0, 0, 0});
         }
 
@@ -73,6 +76,15 @@ namespace {
         AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
         _<ITexture> mTexture;
         unsigned mFrameIndex = 0;
+
+        [[nodiscard]]
+        unsigned plotScale() const {
+            return unsigned(APlatform::getDpiRatio() * 2.f);
+        }
+
+        static int timeToY(high_resolution_clock::duration t) {
+            return duration_cast<microseconds>(t).count() / 100;
+        }
 
         void onPerformanceFrame(const APerformanceFrame::Sections& sections) {
             // fade-out effect
@@ -91,7 +103,7 @@ namespace {
 
             unsigned y = 0;
             for (const auto& section : sections) {
-                const int times = duration_cast<microseconds>(section.duration).count() / 100;
+                const int times = timeToY(section.duration);
                 for (int i = 0; i < times; ++i, ++y) {
                     if (y >= mImage.size().y) {
                         goto end;
@@ -99,8 +111,11 @@ namespace {
                     mImage.set(glm::uvec2{mFrameIndex, mImage.size().y - y - 1}, AFormattedColorConverter(section.color));
                 }
             }
-
             end:
+
+            mImage.set(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(16'600us) - 1}, AFormattedColorConverter(AColor::RED)); // 60 fps
+            mImage.set(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
+
             mTexture->setImage(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
