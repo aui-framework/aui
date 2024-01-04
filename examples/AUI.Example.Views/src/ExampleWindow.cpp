@@ -285,7 +285,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                     }),
                                                     _new<ASpacerExpanding>(),
                                             },
-                                            ui_for (i, model, AWordWrappingLayout) {
+                                            AUI_DECLARATIVE_FOR (i, model, AWordWrappingLayout) {
                                                 return Horizontal {
                                                         _new<ALabel>(i.color.toString()) with_style {
                                                                 TextColor { i.color.readableBlackOrWhite() },
