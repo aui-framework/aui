@@ -70,7 +70,7 @@ private:
 
     [[nodiscard]]
     static APerformanceFrame*& currentStorage() noexcept {
-        static APerformanceFrame* s = nullptr;
+        thread_local APerformanceFrame* s = nullptr;
         return s;
     }
 };

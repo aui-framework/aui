@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <range/v3/action.hpp>
+#include <range/v3/algorithm.hpp>
+#include <range/v3/view.hpp>
+
 #include "DevtoolsPerformanceTab.h"
 
 #include <AUI/ASS/ASS.h>
@@ -22,6 +26,7 @@
 #include <chrono>
 
 #include "AUI/Common/AObject.h"
+#include "AUI/Common/AOptional.h"
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
@@ -76,6 +81,17 @@ namespace {
         }
 
     private:
+        struct SectionStat {
+            AString name;
+            AColor color;
+
+            /**
+             * Unlike APerformanceSection::Data::duration, this one excludes the duration of children sections.
+             */
+            high_resolution_clock::duration duration;
+        };
+        using SectionStatMap = AMap<AString /* section name */, SectionStat>;
+
         AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
         _<ITexture> mTexture;
         unsigned mFrameIndex = 0;
@@ -87,6 +103,19 @@ namespace {
 
         static int timeToY(high_resolution_clock::duration t) {
             return duration_cast<microseconds>(t).count() / 100;
+        }
+
+        static high_resolution_clock::duration populateSectionStat(SectionStatMap& dst, const APerformanceSection::Datas& sections) {
+            high_resolution_clock::duration accumulator;
+            for (const auto& section : sections) {
+                auto& sectionStat = dst.getOrInsert(section.name, [&] {
+                    return SectionStat { .name = section.name, .color = section.color };
+                });
+                auto childrenDuration = populateSectionStat(dst, section.children);
+                sectionStat.duration += section.duration - childrenDuration;
+                accumulator += section.duration;
+            }
+            return accumulator;
         }
 
         void onPerformanceFrame(const APerformanceSection::Datas& sections) {
@@ -104,8 +133,19 @@ namespace {
                 mImage.set(glm::uvec2{mFrameIndex, i}, AFormattedColorConverter(AColor(0.f, 0.f, 0.f, 0.f)));
             }
 
+            SectionStatMap sectionStatsMap;
+            populateSectionStat(sectionStatsMap, sections);
+
+            auto sectionStatsList = sectionStatsMap
+                                    | ranges::view::values
+                                    | ranges::to_vector
+                                    | ranges::actions::sort([](const auto& l, const auto& r) {
+                                        return l.duration > r.duration;
+                                      })
+                                    ;
+
             unsigned y = 0;
-            for (const auto& section : sections) {
+            for (const auto& section : sectionStatsList) {
                 const int times = timeToY(section.duration);
                 for (int i = 0; i < times; ++i, ++y) {
                     if (y >= mImage.size().y) {
