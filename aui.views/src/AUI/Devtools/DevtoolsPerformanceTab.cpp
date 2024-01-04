@@ -25,9 +25,11 @@
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
+#include "AUI/Model/AListModel.h"
 #include "AUI/Model/ATreeModelIndex.h"
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/ABaseWindow.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
@@ -41,6 +43,7 @@
 #include "Devtools.h"
 
 using namespace std::chrono;
+using namespace std::chrono_literals;
 
 namespace {
 #if AUI_PROFILING
@@ -123,6 +126,41 @@ namespace {
         }
     };
 #endif
+
+    struct ColoredChip {
+        AColor color;
+        AString text;  
+
+        bool operator==(const ColoredChip& other) const = default;
+    };
+    struct DevtoolsPerformanceSectionsListModel: public AListModel<ColoredChip> {
+    public:
+        DevtoolsPerformanceSectionsListModel(ABaseWindow* targetWindow) {
+            connect(targetWindow->performanceFrameComplete, [this](const APerformanceSection::Datas& sections) {
+                auto now = high_resolution_clock::now();
+                if ((now - mLastTimeUpdated) < 1s) {
+                    return;
+                }
+                mLastTimeUpdated = now;
+                AVector<ColoredChip> dst;
+                populate(dst, sections);
+                if (toVector() != dst) {
+                    AListModel<ColoredChip>::operator=(std::move(dst));
+                }
+            });
+        }
+    private:
+        high_resolution_clock::time_point mLastTimeUpdated;
+        static void populate(AVector<ColoredChip>& dst, const APerformanceSection::Datas& sections) {
+            for (const auto& section : sections) {
+                dst.push_back({
+                    .color = section.color,
+                    .text = section.name,
+                });
+                populate(dst, section.children);
+            }
+        }
+    };
 }
 
 
@@ -130,7 +168,23 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTar
     using namespace declarative;
 
 #if AUI_PROFILING
-    setContents(Centered { _new<GraphView>(targetWindow) });
+    auto model = _new<DevtoolsPerformanceSectionsListModel>(targetWindow);
+    setContents(Centered { 
+        _new<GraphView>(targetWindow),
+        Vertical::Expanding {
+            AUI_DECLARATIVE_FOR (i, model, AWordWrappingLayout) {
+                return Horizontal {
+                    _new<ALabel>(i.text) with_style {
+                        TextColor { i.color.readableBlackOrWhite() },
+                    }
+                } with_style {
+                    BackgroundSolid { i.color },
+                    BorderRadius { 6_pt },
+                    Margin { 2_dp, 4_dp },
+                };
+            }
+        }
+    });  
 #else
     setContents(Centered {
         Label { "Please set -DAUI_PROFILING=TRUE in CMake configure." }
