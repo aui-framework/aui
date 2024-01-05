@@ -34,7 +34,7 @@ public:
     struct Data {
         AString name;
         AColor color;
-        std::chrono::high_resolution_clock::duration duration;
+        std::chrono::high_resolution_clock::duration duration = std::chrono::high_resolution_clock::duration(0);
         AVector<Data> children;
     };
 

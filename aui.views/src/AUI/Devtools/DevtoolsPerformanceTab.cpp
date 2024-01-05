@@ -25,6 +25,7 @@
 #include <AUI/View/AButton.h>
 #include <chrono>
 
+#include "AUI/ASS/Property/FixedSize.h"
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Enum/ImageRendering.h"
@@ -42,6 +43,7 @@
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
 #include "AUI/View/AViewContainer.h"
@@ -49,6 +51,7 @@
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
+using namespace ass;
 
 namespace {
 #if AUI_PROFILING
@@ -88,7 +91,9 @@ namespace {
             /**
              * Unlike APerformanceSection::Data::duration, this one excludes the duration of children sections.
              */
-            high_resolution_clock::duration duration;
+            high_resolution_clock::duration duration = high_resolution_clock::duration(0);
+
+            high_resolution_clock::duration durationIncludingChildren = high_resolution_clock::duration(0);
         };
         using SectionStatMap = AMap<AString /* section name */, SectionStat>;
 
@@ -106,12 +111,14 @@ namespace {
         }
 
         static high_resolution_clock::duration populateSectionStat(SectionStatMap& dst, const APerformanceSection::Datas& sections) {
-            high_resolution_clock::duration accumulator;
+            high_resolution_clock::duration accumulator = high_resolution_clock::duration(0);
             for (const auto& section : sections) {
                 auto& sectionStat = dst.getOrInsert(section.name, [&] {
                     return SectionStat { .name = section.name, .color = section.color };
                 });
+                sectionStat.durationIncludingChildren += section.duration;
                 auto childrenDuration = populateSectionStat(dst, section.children);
+                //assert(("children duration bigger than parent?", section.duration >= childrenDuration));
                 sectionStat.duration += section.duration - childrenDuration;
                 accumulator += section.duration;
             }
@@ -140,7 +147,7 @@ namespace {
                                     | ranges::view::values
                                     | ranges::to_vector
                                     | ranges::actions::sort([](const auto& l, const auto& r) {
-                                        return l.duration > r.duration;
+                                        return l.durationIncludingChildren > r.durationIncludingChildren;
                                       })
                                     ;
 
@@ -167,37 +174,53 @@ namespace {
     };
 #endif
 
-    struct ColoredChip {
-        AColor color;
-        AString text;  
 
-        bool operator==(const ColoredChip& other) const = default;
-    };
-    struct DevtoolsPerformanceSectionsListModel: public AListModel<ColoredChip> {
+    class PerformanceSectionsTreeView: public AViewContainer {
     public:
-        DevtoolsPerformanceSectionsListModel(ABaseWindow* targetWindow) {
+        PerformanceSectionsTreeView(ABaseWindow* targetWindow) {
             connect(targetWindow->performanceFrameComplete, [this](const APerformanceSection::Datas& sections) {
                 auto now = high_resolution_clock::now();
                 if ((now - mLastTimeUpdated) < 1s) {
                     return;
                 }
                 mLastTimeUpdated = now;
-                AVector<ColoredChip> dst;
-                populate(dst, sections);
-                if (toVector() != dst) {
-                    AListModel<ColoredChip>::operator=(std::move(dst));
-                }
+                _<AViewContainer> root = Vertical{};
+                populate(*root, sections);
+                setContents(Horizontal { root });
             });
         }
+
     private:
         high_resolution_clock::time_point mLastTimeUpdated;
-        static void populate(AVector<ColoredChip>& dst, const APerformanceSection::Datas& sections) {
+
+        static _<AView> makeChip(const APerformanceSection::Data& i) {
+            return Horizontal {
+                _new<ALabel>(i.name) with_style {
+                    TextColor { i.color.readableBlackOrWhite() },
+                }
+            } with_style {
+                BackgroundSolid { i.color },
+                BorderRadius { 6_pt },
+                Margin { 2_dp, 4_dp },
+                FixedSize { 1_dp * glm::max(0.25f * float(duration_cast<microseconds>(i.duration).count()), 1.f), {} },
+            };
+        }
+
+        static void populate(AViewContainer& container, const APerformanceSection::Datas& sections) {
             for (const auto& section : sections) {
-                dst.push_back({
-                    .color = section.color,
-                    .text = section.name,
-                });
-                populate(dst, section.children);
+                _<AViewContainer> v = Vertical{} with_style {
+                    BorderLeft { 2_dp, section.color },
+                };
+                container.addView(v);
+                v->addView(makeChip(section));
+                if (section.children.empty()) {
+                    continue;
+                }
+                _<AViewContainer> root = Vertical{} with_style {
+                    Padding { {}, {}, {}, 8_dp },
+                };
+                populate(*root, section.children);
+                v->addView(Horizontal { root });
             }
         }
     };
@@ -208,21 +231,10 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTar
     using namespace declarative;
 
 #if AUI_PROFILING
-    auto model = _new<DevtoolsPerformanceSectionsListModel>(targetWindow);
     setContents(Centered { 
         _new<GraphView>(targetWindow),
         Vertical::Expanding {
-            AUI_DECLARATIVE_FOR (i, model, AWordWrappingLayout) {
-                return Horizontal {
-                    _new<ALabel>(i.text) with_style {
-                        TextColor { i.color.readableBlackOrWhite() },
-                    }
-                } with_style {
-                    BackgroundSolid { i.color },
-                    BorderRadius { 6_pt },
-                    Margin { 2_dp, 4_dp },
-                };
-            }
+            _new<PerformanceSectionsTreeView>(targetWindow),
         }
     });  
 #else
