@@ -172,8 +172,6 @@ namespace {
             redraw();
         }
     };
-#endif
-
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
@@ -224,6 +222,8 @@ namespace {
             }
         }
     };
+
+#endif
 }
 
 

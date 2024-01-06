@@ -43,15 +43,16 @@ public:
 #if AUI_PROFILING
     APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt);
     ~APerformanceSection();
+
+    void addSection(Data section) {
+        mChildren << std::move(section);
+    }
+
 #else
     // expected to be optimized out
     APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt) {}
     ~APerformanceSection() = default;
 #endif
-
-    void addSection(Data section) {
-        mChildren << std::move(section);
-    }
 
 private:
 #if AUI_PROFILING
