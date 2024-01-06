@@ -17,7 +17,7 @@
 #include "DemoGraphView.h"
 #include <AUI/ASS/ASS.h>
 
-constexpr auto POINT_COUNT = 100;
+constexpr auto POINT_COUNT = 100.f;
 
 DemoGraphView::DemoGraphView()
 {
