@@ -16,15 +16,41 @@
 
 #pragma once
 
+#include "AUI/Util/ADataBinding.h"
 #include "AUI/View/ATreeView.h"
 #include "AUI/Platform/ABaseWindow.h"
 #include "ViewPropertiesView.h"
+#include <variant>
 
 class DevtoolsPerformanceTab: public AViewContainer {
 public:
     DevtoolsPerformanceTab(ABaseWindow* targetWindow);
 
+#if AUI_PROFILING
+    struct Model {
+        struct Running {};
+        struct Paused {};
+
+        using State = std::variant<Running, Paused>;
+        State state = Running{};
+    };
+    ADataBinding<Model> mModel;
+
+    void toggleRunPause() {
+        if (std::holds_alternative<Model::Running>(mModel->state)) {
+            mModel.setValue(&Model::state, Model::Paused{});
+        } else {
+            mModel.setValue(&Model::state, Model::Running{});
+        }
+
+    }
+#endif
+
+
 private:
     ABaseWindow* mTargetWindow;
+#if AUI_PROFILING
+    emits<APerformanceSection::Datas> nextFrame;
+#endif
 
 };

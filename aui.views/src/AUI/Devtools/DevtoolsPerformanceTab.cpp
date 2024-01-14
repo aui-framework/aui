@@ -24,11 +24,13 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <chrono>
+#include <variant>
 
 #include "AUI/ASS/Property/FixedSize.h"
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Enum/ImageRendering.h"
+#include "AUI/Enum/Visibility.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
 #include "AUI/Model/AListModel.h"
@@ -48,6 +50,7 @@
 #include "AUI/View/ATabView.h"
 #include "AUI/View/AViewContainer.h"
 #include "Devtools.h"
+#include "glm/vector_relational.hpp"
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -57,9 +60,8 @@ namespace {
 #if AUI_PROFILING
     class GraphView: public AView {
     public:
-        GraphView(ABaseWindow* targetWindow): mImage({256, 256}) {
+        GraphView(): mImage({256, 256}) {
             setExpanding();
-            connect(targetWindow->performanceFrameComplete, me::onPerformanceFrame);
             mTexture = ARender::getNewTexture();
             mImage.fill({0, 0, 0, 0});
         }
@@ -83,49 +85,11 @@ namespace {
             mImage.fill({0, 0, 0, 0});
         }
 
-    private:
-        struct SectionStat {
-            AString name;
-            AColor color;
-
-            /**
-             * Unlike APerformanceSection::Data::duration, this one excludes the duration of children sections.
-             */
-            high_resolution_clock::duration duration = high_resolution_clock::duration(0);
-
-            high_resolution_clock::duration durationIncludingChildren = high_resolution_clock::duration(0);
-        };
-        using SectionStatMap = AMap<AString /* section name */, SectionStat>;
-
-        AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
-        _<ITexture> mTexture;
-        unsigned mFrameIndex = 0;
-
-        [[nodiscard]]
-        unsigned plotScale() const {
-            return unsigned(APlatform::getDpiRatio() * 2.f);
-        }
-
-        static int timeToY(high_resolution_clock::duration t) {
-            return duration_cast<microseconds>(t).count() / 100;
-        }
-
-        static high_resolution_clock::duration populateSectionStat(SectionStatMap& dst, const APerformanceSection::Datas& sections) {
-            high_resolution_clock::duration accumulator = high_resolution_clock::duration(0);
-            for (const auto& section : sections) {
-                auto& sectionStat = dst.getOrInsert(section.name, [&] {
-                    return SectionStat { .name = section.name, .color = section.color };
-                });
-                sectionStat.durationIncludingChildren += section.duration;
-                auto childrenDuration = populateSectionStat(dst, section.children);
-                //assert(("children duration bigger than parent?", section.duration >= childrenDuration));
-                sectionStat.duration += section.duration - childrenDuration;
-                accumulator += section.duration;
-            }
-            return accumulator;
-        }
-
         void onPerformanceFrame(const APerformanceSection::Datas& sections) {
+            if (glm::any(glm::equal(mImage.size(), glm::uvec2(0, 0)))) {
+                return;
+            }
+
             // fade-out effect
             if (mFrameIndex % 10 == 0) {
                 for (auto& c : mImage) {
@@ -171,21 +135,69 @@ namespace {
             mFrameIndex %= mImage.size().x;
             redraw();
         }
+
+        void setSelectionMode(bool isSelectionMode) {
+            mSelectionMode = isSelectionMode;
+        }
+    private:
+        bool mSelectionMode = false;
+        struct SectionStat {
+            AString name;
+            AColor color;
+
+            /**
+             * Unlike APerformanceSection::Data::duration, this one excludes the duration of children sections.
+             */
+            high_resolution_clock::duration duration = high_resolution_clock::duration(0);
+
+            high_resolution_clock::duration durationIncludingChildren = high_resolution_clock::duration(0);
+        };
+        using SectionStatMap = AMap<AString /* section name */, SectionStat>;
+
+        AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
+        _<ITexture> mTexture;
+        unsigned mFrameIndex = 0;
+
+        [[nodiscard]]
+        unsigned plotScale() const {
+            return unsigned(APlatform::getDpiRatio() * 2.f);
+        }
+
+        static int timeToY(high_resolution_clock::duration t) {
+            return duration_cast<microseconds>(t).count() / 100;
+        }
+
+        static high_resolution_clock::duration populateSectionStat(SectionStatMap& dst, const APerformanceSection::Datas& sections) {
+            high_resolution_clock::duration accumulator = high_resolution_clock::duration(0);
+            for (const auto& section : sections) {
+                auto& sectionStat = dst.getOrInsert(section.name, [&] {
+                    return SectionStat { .name = section.name, .color = section.color };
+                });
+                sectionStat.durationIncludingChildren += section.duration;
+                auto childrenDuration = populateSectionStat(dst, section.children);
+                //assert(("children duration bigger than parent?", section.duration >= childrenDuration));
+                sectionStat.duration += section.duration - childrenDuration;
+                accumulator += section.duration;
+            }
+            return accumulator;
+        }
+
     };
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
-        PerformanceSectionsTreeView(ABaseWindow* targetWindow) {
-            connect(targetWindow->performanceFrameComplete, [this](const APerformanceSection::Datas& sections) {
-                auto now = high_resolution_clock::now();
-                if ((now - mLastTimeUpdated) < 1s) {
-                    return;
-                }
-                mLastTimeUpdated = now;
-                _<AViewContainer> root = Vertical{};
-                populate(*root, sections);
-                setContents(Horizontal { root });
-            });
+        PerformanceSectionsTreeView() {
+        }
+
+        void onPerformanceFrame(const APerformanceSection::Datas& sections) {
+            auto now = high_resolution_clock::now();
+            if ((now - mLastTimeUpdated) < 1s) {
+                return;
+            }
+            mLastTimeUpdated = now;
+            _<AViewContainer> root = Vertical{};
+            populate(*root, sections);
+            setContents(Horizontal { root });
         }
 
     private:
@@ -231,12 +243,63 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTar
     using namespace declarative;
 
 #if AUI_PROFILING
-    setContents(Centered { 
-        _new<GraphView>(targetWindow),
-        Vertical::Expanding {
-            _new<PerformanceSectionsTreeView>(targetWindow),
+    connect(targetWindow->performanceFrameComplete, [this](const APerformanceSection::Datas& frame) {
+        if (!std::holds_alternative<Model::Running>(mModel->state)) {
+            return;
         }
+        emit nextFrame(frame);
+    });
+
+    auto graphView = _new<GraphView>() let {
+        connect(nextFrame, slot(it)::onPerformanceFrame);
+        
+    };
+
+    auto treeView = _new<PerformanceSectionsTreeView>() let { connect(nextFrame, slot(it)::onPerformanceFrame); };
+
+    mModel.addObserver(&Model::state, [graphView](const Model::State& state) {
+        bool isPaused = std::holds_alternative<Model::Paused>(state);
+        graphView->setSelectionMode(isPaused);
+    });
+
+    setContents(Centered { 
+        Centered::Expanding {
+            graphView,
+            Vertical::Expanding {
+                treeView,
+            },
+        } let {
+            mModel.addObserver(&Model::state, [it](const Model::State& state) {
+                using namespace ass;
+                if (std::holds_alternative<Model::Running>(state)) {
+                    it->setCustomStyle({
+                        Opacity { 0.7f },
+                        Visibility::UNREACHABLE,
+                    });
+                } else {
+                    it->setCustomStyle({
+                        Opacity { 1.f },
+                        Visibility::VISIBLE,
+                    });
+                }
+            });
+        },
+        Vertical::Expanding {
+            Centered {
+                _new<AButton>(/* pause */) let {
+                    mModel.addObserver(&Model::state, [it](const Model::State& state) {
+                        if (std::holds_alternative<Model::Running>(state)) {
+                            it->setText("Pause");
+                        } else {
+                            it->setText("Resume");
+                        }
+                    });
+                    connect(it->clicked, me::toggleRunPause);
+                },
+            },
+        },
     });  
+    mModel.setModel(Model{});
 #else
     setContents(Centered {
         Label { "Please set -DAUI_PROFILING=TRUE in CMake configure." }
