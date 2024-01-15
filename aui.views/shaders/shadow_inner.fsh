@@ -14,7 +14,7 @@ output {
 }
 
 inter {
-  vec2 vertex
+  vec4 vertex
   vec2 uv 
 }
 
@@ -30,9 +30,10 @@ vec4 erf(vec4 x) {
 entry {
   vec4 result = uniform.color
 
-  vec4 query = vec4(inter.vertex - vec2(uniform.lower), inter.vertex - vec2(uniform.upper))
+  vec2 v = inter.vertex.xy
+  vec4 query = vec4(v - vec2(uniform.lower), v - vec2(uniform.upper))
   vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / uniform.sigma))
-  result.a = 1 - result.a * clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0)
+  result.a = result.a * (1 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0))
   result.a = result.a * rounded(abs(inter.uv * 2 - 1), uniform.outerSize)
   output.albedo = result
 }

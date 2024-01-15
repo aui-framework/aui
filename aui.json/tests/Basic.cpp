@@ -128,4 +128,19 @@ TEST(Json, Long)
     EXPECT_EQ(v["value"].asLongInt(), -1499040000000);
 }
 
+TEST(Json, Double)
+{
+    auto v = AJson::fromString(R"({"value":-3.102})");
+    EXPECT_NEAR(v["value"].asNumber(), -3.102, 0.0001);
+}
+
+
+
+TEST(Json, Double2)
+{
+    auto v = AJson::fromString(R"([0.0645069876039,-0.13864406])");
+    EXPECT_NEAR(v.asArray()[0].asNumber(), 0.0645069876039, 0.0001);
+    EXPECT_NEAR(v.asArray()[1].asNumber(), -0.13864406, 0.0001);
+}
+
 

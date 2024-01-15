@@ -14,28 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by alex2 on 13.11.2020.
-//
-
 #pragma once
 
+#include "AUI/View/ATreeView.h"
+#include "AUI/Platform/ABaseWindow.h"
+#include "ViewPropertiesView.h"
 
-#include "IInputStream.h"
-#include <AUI/Common/ADeque.h>
-
-class MultipleInputStream: public IInputStream {
-private:
-    ADeque<_<IInputStream>> mInputStreams;
-
+class DevtoolsPerformanceTab: public AViewContainer {
 public:
-    explicit MultipleInputStream(const ADeque<_<IInputStream>>& inputStreams) : mInputStreams(inputStreams) {
+    DevtoolsPerformanceTab(ABaseWindow* targetWindow);
 
-    }
+private:
+    ABaseWindow* mTargetWindow;
 
-    ~MultipleInputStream() override = default;
-
-    size_t read(char* dst, size_t size) override;
 };
-
-

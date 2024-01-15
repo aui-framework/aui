@@ -23,34 +23,47 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Logging/ALogger.h"
+#include "glm/gtc/quaternion.hpp"
 #include <AUI/Traits/iterators.h>
 
 
 static constexpr auto LOG_TAG = "AViewContainer";
 
-void AViewContainer::drawView(const _<AView>& view) {
-    if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
-        const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
-
-        RenderHints::PushState s;
-        glm::mat4 t(1.f);
-        view->getTransform(t);
-        ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
-        ARender::setTransform(t);
-
-        try {
-            view->render();
-            view->postRender();
-        }
-        catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-            ARender::getRenderer()->setStencilDepth(prevStencilLevel);
-            return;
-        }
-
-        auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
-        assert(currentStencilLevel == prevStencilLevel);
+void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
+    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) {
+        return;
     }
+
+    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
+    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) {
+        return;
+    }
+
+    auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
+    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) {
+        return;
+    }
+
+    const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
+
+    RenderHints::PushState s;
+    glm::mat4 t(1.f);
+    view->getTransform(t);
+    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
+    ARender::setTransform(t);
+
+    try {
+        view->render(contextOfTheView);
+        view->postRender();
+    }
+    catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Unable to render view: " << e;
+        ARender::getRenderer()->setStencilDepth(prevStencilLevel);
+        return;
+    }
+
+    auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
+    assert(currentStencilLevel == prevStencilLevel);
 }
 
 
@@ -158,9 +171,9 @@ void AViewContainer::removeView(size_t index) {
     emit childrenChanged;
 }
 
-void AViewContainer::render() {
-    AView::render();
-    renderChildren();
+void AViewContainer::render(ClipOptimizationContext context) {
+    AView::render(context);
+    renderChildren(context);
 }
 
 void AViewContainer::onMouseEnter() {

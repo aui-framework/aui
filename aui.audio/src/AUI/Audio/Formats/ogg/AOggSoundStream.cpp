@@ -28,11 +28,12 @@ AAudioFormat AOggSoundStream::info() {
     return {
         .channelCount = static_cast<AChannelFormat>(mVorbisFile->vi->channels),
         .sampleRate = static_cast<unsigned int>(mVorbisFile->vi->rate),
-        .sampleFormat = ASampleFormat::I16
+        .sampleFormat = SAMPLE_FORMAT
     };
 }
 
 size_t AOggSoundStream::read(char* dst, size_t size) {
+    size -= size % (aui::audio::bytesPerSample(SAMPLE_FORMAT) * mVorbisFile->vi->channels);
     int currentSection;
     char* end = dst + size;
     for (auto begin = dst; begin != end; ) {
@@ -42,7 +43,7 @@ size_t AOggSoundStream::read(char* dst, size_t size) {
             throw AException("ogg decode error");
         }
         if (r == 0) {
-            return dst - begin;
+            return begin - dst;
         }
         begin += r;
     }

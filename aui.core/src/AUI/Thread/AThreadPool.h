@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -24,7 +24,6 @@
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
-#include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
 #include <utility>
 
@@ -171,8 +170,9 @@ public:
 
     /**
      * @brief Wait for the result of every AFuture.
+     * @deprecated use onAllComplete instead.
      */
-    void waitForAll() const {
+    void waitForAll() {
         // wait from the end to avoid idling (see AFuture::wait for details)
         for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
             v.operator*();
@@ -188,6 +188,49 @@ public:
             if (v.hasResult()) {
                 v.operator*(); // TODO bad design
             }
+        }
+    }
+
+    /**
+     * @brief Specifies a callback which will be called when all futures in future set would have the result.
+     * @details
+     * Even if all tasks are already completed, it's guaranteed that your callback will be called.
+     *
+     * The thread on which your callback will be called is undefined.
+     *
+     * @note AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
+     * temporary object is created to keep track of the task completeness.
+     */
+    template<aui::invocable OnComplete>
+    void onAllComplete(OnComplete&& onComplete) {
+        // check if all futures is already complete.
+        for (const AFuture<T>& v : *this) {
+            if (!v.hasResult()) {
+                goto setupTheHell;
+            }
+        }
+        onComplete();
+        return;
+
+        setupTheHell:
+        struct Temporary {
+            OnComplete onComplete;
+            AFutureSet myCopy;
+            std::atomic_bool canBeCalled = true;
+        };
+        auto temporary = _new<Temporary>(std::forward<OnComplete>(onComplete), *this);
+        for (const AFuture<T>& v : *this) {
+            v.onSuccess([temporary](const auto& v) {
+                for (const AFuture<T>& v : temporary->myCopy) {
+                    if (!v.hasResult()) {
+                        return;
+                    }
+                }
+                // yay! all tasks are completed. the last thing to check if the callback is already called
+                if (temporary->canBeCalled.exchange(false)) {
+                    temporary->onComplete();
+                }
+            });
         }
     }
 };

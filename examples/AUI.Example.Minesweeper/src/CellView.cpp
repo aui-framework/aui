@@ -37,14 +37,14 @@ int CellView::getContentMinimumWidth()
 }
 
 
-void CellView::render()
+void CellView::render(ClipOptimizationContext context)
 {
 	if (mCell != mCellValueCopy)
 	{
 		recompileCSS();
 		mCellValueCopy = mCell;
 	}
-	AView::render();
+	AView::render(context);
 
 	if (mCell & F_OPEN)
 	{

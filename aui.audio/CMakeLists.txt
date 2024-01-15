@@ -41,3 +41,18 @@ if (AUI_PLATFORM_MACOS)
 					   "-framework Foundation"
 					   "-framework QuartzCore")
 endif()
+
+set(BIN_INSTALL_DIR "aui.audio/bin")
+set(LIB_INSTALL_DIR "aui.audio/lib")
+set(INCLUDE_INSTALL_DIR "aui.audio/include")
+set(DOC_INSTALL_DIR "aui.audio/doc")
+auib_import(soxr https://github.com/IlyaZavalov/soxr
+            ADD_SUBDIRECTORY
+            VERSION c4610df
+            )
+unset(BIN_INSTALL_DIR)
+unset(LIB_INSTALL_DIR)
+unset(INCLUDE_INSTALL_DIR)
+unset(DOC_INSTALL_DIR)
+
+target_link_libraries(aui.audio PRIVATE soxr)

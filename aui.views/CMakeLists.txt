@@ -60,6 +60,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	auisl_shader(aui.views symbol.fsh)
 	auisl_shader(aui.views symbol_sub.fsh)
 	auisl_shader(aui.views square_sector.fsh)
+	auisl_shader(aui.views line_solid_dashed.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 

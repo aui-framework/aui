@@ -18,6 +18,9 @@
 #include <X11/Xdefs.h>
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Image/AImage.h"
+#include "AUI/Image/APixelFormat.h"
 #include "AUI/Software/SoftwareRenderer.h"
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
@@ -97,9 +100,14 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (ARender::getRenderer() == nullptr) {
         ARender::setRenderer(std::make_unique<SoftwareRenderer>());
     }
+    SoftwareRenderingContext::endResize(init.window);
 }
 
 void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+    reallocateImageBuffers(window);
+}
+
+void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
     mBitmapSize = window.getSize();
     reallocate();
 }
@@ -113,6 +121,9 @@ void SoftwareRenderingContext::reallocate() {
 
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 
+    if (!ourDisplay.value() || !vi) {
+        return;
+    }
     mXImage = aui::ptr::make_unique_with_deleter(XCreateImage(ourDisplay,
                                                               vi->visual,
                                                               vi->depth,
@@ -132,6 +143,5 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob, s);
-    return {std::move(data), mBitmapSize, APixelFormat::ARGB | APixelFormat::BYTE};
+    return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
 }
-

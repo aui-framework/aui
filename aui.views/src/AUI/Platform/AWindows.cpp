@@ -17,6 +17,8 @@
 
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Performance/APerformanceFrame.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
@@ -44,7 +46,7 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
-    render();
+    render({.position = glm::ivec2(0), .size = getSize()});
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -76,7 +78,16 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
+#if AUI_PROFILING
+    APerformanceFrame frame([&](APerformanceSection::Datas sections) {
+        emit performanceFrameComplete(sections);
+    });
+#endif
+
     {
+        if (isClosed()) {
+            return;
+        }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         mRenderingContext->beginPaint(*this);
         ARaiiHelper endPaintCaller = [&] {
@@ -305,4 +316,8 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
         }
     }
     throw AException("unable to initialize graphics");
+}
+
+bool AWindow::isClosed() const noexcept {
+    return mSelfHolder == nullptr;
 }

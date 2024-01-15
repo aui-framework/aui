@@ -44,7 +44,7 @@ private:
 public:
     explicit ARulerView(ALayoutDirection layoutDirection);
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     void setOffsetPx(int offsetPx) {
         mOffsetPx = offsetPx;

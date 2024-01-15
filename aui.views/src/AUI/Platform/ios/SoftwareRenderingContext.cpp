@@ -56,3 +56,7 @@ void SoftwareRenderingContext::endResize(ABaseWindow &window) {
 AImage SoftwareRenderingContext::makeScreenshot() {
     return {};
 }
+
+void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
+    mBitmapSize = window.getSize();
+}

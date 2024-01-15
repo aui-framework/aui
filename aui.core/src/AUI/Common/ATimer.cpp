@@ -37,7 +37,7 @@ void ATimer::restart()
 void ATimer::start()
 {
     if (!mTimer) {
-        ATimer::timerThread();
+        ATimer::scheduler();
         mTimer = scheduler().timer(mPeriod, [this] {
             emit fired;
         });
@@ -58,7 +58,6 @@ bool ATimer::isStarted()
 }
 
 _<AThread>& ATimer::timerThread() {
-    ATimer::scheduler();
     static _<AThread> thread = [] {
         auto t = _new<AThread>([&]()
             {
@@ -67,15 +66,18 @@ _<AThread>& ATimer::timerThread() {
                 ATimer::scheduler().loop();
             });
         t->start();
+#if !AUI_PLATFORM_WIN
+        std::atexit([] {
+            thread->interrupt();
+        });
+#endif
         return t;
     }();
-    std::atexit([] {
-        thread->interrupt();
-    });
     return thread;
 }
 
 AScheduler& ATimer::scheduler() {
     static AScheduler scheduler;
+    ATimer::timerThread();
     return scheduler;
 }

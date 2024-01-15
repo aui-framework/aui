@@ -42,7 +42,7 @@ _<IDrawable> IDrawable::Cache::load(const AUrl& key)
             return _new<AImageDrawable>(raster);
         }
 
-
+        ALogger::err("Drawable") << "Image of unknown format: " << key.full() << ", AUI-supported formats: " << AImageLoaderRegistry::inst().supportedFormats();
     } catch (const AException& e) {
         ALogger::err("Drawable") << "Could not load image: " + key.full() + ": " << e;
     }

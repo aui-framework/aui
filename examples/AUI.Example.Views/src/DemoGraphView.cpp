@@ -17,7 +17,7 @@
 #include "DemoGraphView.h"
 #include <AUI/ASS/ASS.h>
 
-constexpr auto POINT_COUNT = 100;
+constexpr auto POINT_COUNT = 100.f;
 
 DemoGraphView::DemoGraphView()
 {
@@ -31,9 +31,9 @@ DemoGraphView::DemoGraphView()
     }
 }
 
-void DemoGraphView::render() {
-    AView::render();
+void DemoGraphView::render(ClipOptimizationContext context) {
+    AView::render(context);
 
-    ARender::lines(ASolidBrush{0xff0000_rgb }, mPoints);
+    ARender::lines(ASolidBrush{0xff0000_rgb }, mPoints, ABorderStyle::Dashed{}, 4_dp);
 
 }

@@ -42,6 +42,7 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"step",  "glm::step"},
             {"mix",   "glm::mix"},
             {"dot",   "glm::dot"},
+            {"mod",   "glm::mod"},
     };
     return internalFunctions;
 }

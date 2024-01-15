@@ -3,16 +3,16 @@ uniform {
 }
 
 input {
-  [0] vec2 pos
+  [0] vec4 pos
   [1] vec2 uv
 }
 inter {
-  vec2 vertex
+  vec4 vertex
   vec2 uv
 }
 
 entry {
-    sl_position = uniform.transform * vec4(input.pos, 0, 1)
+    sl_position = uniform.transform * vec4(input.pos.xy, 0, 1)
     inter.vertex = input.pos
     inter.uv = input.uv
 }

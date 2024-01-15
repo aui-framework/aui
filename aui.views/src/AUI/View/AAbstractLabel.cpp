@@ -32,9 +32,9 @@ AAbstractLabel::AAbstractLabel()
 }
 
 
-void AAbstractLabel::render()
+void AAbstractLabel::render(ClipOptimizationContext context)
 {
-	AView::render();
+	AView::render(context);
 
 	doRenderText();
 }
@@ -104,7 +104,7 @@ void AAbstractLabel::userProcessStyleSheet(const std::function<void(css, const s
 }*/
 
 template < class Iterator >
-int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
+size_t AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
                                              const Iterator& end,
                                              int overflowingWidth) {
     size_t gotWidth = 0;
@@ -121,9 +121,9 @@ int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 
 template < class Iterator >
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
+    size_t firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        if (firstOverflowedIndex != 0) {
+        if (firstOverflowedIndex >= 3) {
             std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
         } else {
             std::fill(begin, end, ' ');

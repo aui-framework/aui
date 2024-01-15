@@ -110,7 +110,7 @@ public:
         return length;
     }
 
-    void render() override {
+    void render(ClipOptimizationContext context) override {
         // TODO stub
         /*
         if (mLines.empty() && !mFullText->empty()) {
@@ -126,7 +126,7 @@ public:
             }
             updateScrollDimensions();
         }*/
-        AView::render();
+        AView::render(context);
 
         auto drawText = [&] {
             size_t lineHeight = getFontStyle().getLineHeight();

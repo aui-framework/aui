@@ -20,12 +20,15 @@
 
 class SoftwareTexture: public ITexture {
 private:
-    _<AImage> mImage;
+    AImage mImage;
 
 public:
-    void setImage(const _<AImage>& image) override;
+    void setImage(AImageView image) override;
+    void setImage(AImage&& image) {
+        mImage = std::move(image);
+    }
 
-    [[nodiscard]] const _<AImage>& getImage() const noexcept {
+    [[nodiscard]] const AImage& getImage() const noexcept {
         return mImage;
     }
 };

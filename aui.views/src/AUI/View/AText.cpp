@@ -185,12 +185,12 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
     return height;
 }
 
-void AText::render() {
+void AText::render(ClipOptimizationContext context) {
     if (!mPrerenderedString) {
         prerenderString();
     }
 
-    AViewContainer::render();
+    AViewContainer::render(context);
 
     if (mPrerenderedString) {
         mPrerenderedString->draw();

@@ -14,11 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <X11/Xlib.h>
+#include <unistd.h>
+#include <poll.h>
+#include <fcntl.h>
 
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Platform/ErrorToException.h"
 #include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -260,10 +266,10 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    AThread::current() << [&]() {
-        redraw();
-    };
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
+        AThread::current() << [&]() {
+            redraw();
+        };
         XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
@@ -363,19 +369,58 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 
 void AWindowManager::notifyProcessMessages() {
-    if (!mWindows.empty()) {
-        if (CommonRenderingContext::ourDisplay) XClearArea(CommonRenderingContext::ourDisplay, mWindows.first()->mHandle, 0, 0, 1, 1, true);
-        mXNotifyCV.notify_all();
+    if (mWindows.empty()) {
+        return;
     }
+    if (mFastPathNotify.exchange(true)) {
+        return;
+    }
+    char dummy = 0;
+    int unused = write(mNotifyPipe.in(), &dummy, sizeof(dummy));
 }
 
 void AWindowManager::loop() {
+    // make sure notifyProcessMessages would not block as it syscalls write to the pipe
+    fcntl(mNotifyPipe.in(), F_SETFL, O_NONBLOCK);
+    pollfd ps[] = {
+        {
+            .fd = XConnectionNumber(CommonRenderingContext::ourDisplay),
+            .events = POLLIN,
+        },
+        {
+            .fd = mNotifyPipe.out(),
+            .events = POLLIN,
+        },
+    };
+
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
         try {
             xProcessEvent(ev);
         } catch (const AException& e) {
             ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
+
+        AThread::processMessages();
+        if (AWindow::isRedrawWillBeEfficient()) {
+            for (auto &window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    AWindow::currentWindowStorage() = window.get();
+                    mWatchdog.runOperation([&] {
+                        window->redraw();
+                    });
+                }
+            }
+        }
+
+        if (poll(ps, std::size(ps), -1) < 0) {
+            aui::impl::unix_based::lastErrorToException("eventloop poll failed");
+        }
+        mFastPathNotify = false;
+        if (ps[1].revents & POLLIN) {
+            char unused[0xff];
+            while (read(mNotifyPipe.out(), unused, std::size(unused)) == std::size(unused));
         }
     }
 }
@@ -399,14 +444,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 switch (ev.type) {
                     case Expose: {
                         window = locateWindow(ev.xexpose.window);
-                        window->mRedrawFlag = false;
-                        window->redraw();
-                        XSyncValue syncValue;
-                        XSyncIntsToValue(&syncValue,
-                                        window->mXsyncRequestCounter.lo,
-                                        window->mXsyncRequestCounter.hi);
-                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
-
+                        window->flagRedraw();
                         break;
                     }
                     case ClientMessage: {
@@ -620,22 +658,6 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             });
         }
 
-        {
-            std::unique_lock lock(mXNotifyLock);
-            mXNotifyCV.wait_for(lock, std::chrono::microseconds(10000));
-        }
-        AThread::processMessages();
-        if (AWindow::isRedrawWillBeEfficient()) {
-            for (auto &window : mWindows) {
-                if (window->mRedrawFlag) {
-                    window->mRedrawFlag = false;
-                    AWindow::currentWindowStorage() = window.get();
-                    mWatchdog.runOperation([&] {
-                        window->redraw();
-                    });
-                }
-            }
-        }
     } catch(NotFound e) {
 
     }

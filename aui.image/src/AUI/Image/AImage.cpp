@@ -22,9 +22,9 @@
 #include <stdexcept>
 #include <AUI/Traits/memory.h>
 
-_<AImage> AImage::fromUrl(const AUrl& url) {
-    return Cache::get(url);
-}
+
+static constexpr auto CACHE_SIZE_THRESHOLD = 1024 * 1024 * 10; // 10 MB
+
 
 _<AImage> AImage::fromFile(const APath& path) {
     return fromUrl(AUrl("file://" + path));
@@ -40,30 +40,26 @@ _<AImage> AImage::fromBuffer(AByteBufferView buffer) {
     return nullptr;
 }
 
-_<AImage> AImage::Cache::load(const AUrl& key)
-{
+_<AImage> AImage::fromUrl(const AUrl& url) {
     try {
-        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x10000000);
+        auto buffer = AByteBuffer::fromStream(AUrl(url).open(), 0x10000000);
 
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
     } catch (const AException& e) {
-        ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
+        ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
     }
     return nullptr;
 }
 
-AImage::Cache& AImage::Cache::inst() {
-    static AImage::Cache s;
-    return s;
-}
 
 void AImage::mirrorVertically() {
+    auto bpp = bytesPerPixel();
     for (std::uint32_t y = 0; y < height() / 2; ++y) {
         auto mirroredY = height() - y - 1;
-        auto l1 = modifiableBuffer().begin() + bytesPerPixel() * width() * y;
-        auto l2 = modifiableBuffer().begin() + bytesPerPixel() * height() * mirroredY;
-        for (std::uint32_t x = 0; x < width() * bytesPerPixel(); ++x, ++l1, ++l2) {
+        auto l1 = modifiableBuffer().begin() + bpp * width() * y;
+        auto l2 = modifiableBuffer().begin() + bpp * width() * mirroredY;
+        for (std::uint32_t x = 0; x < width() * bpp; ++x, ++l1, ++l2) {
             std::swap(*l1, *l2);
         }
     }
@@ -115,11 +111,11 @@ AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
     }
 
     auto ratio = glm::vec2(size() - 1u) / glm::vec2(newSize);
-    AImage n(size(), format());
+    AImage n(newSize, format());
     n.fill(0x0_argb);
 
     for (uint32_t i = 0; i < newSize.y; i++) {
-        for (uint32_t j = 0; j < newSize.y; j++) {
+        for (uint32_t j = 0; j < newSize.x; j++) {
             auto x = static_cast<uint32_t>(ratio.x * static_cast<float>(j));
             auto y = static_cast<uint32_t>(ratio.y * static_cast<float>(i));
             float xWeight = (ratio.x * static_cast<float>(j)) - static_cast<float>(x);

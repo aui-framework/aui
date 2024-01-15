@@ -34,6 +34,7 @@
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
+#include "AUI/Util/ClipOptimizationContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
@@ -154,7 +155,7 @@ private:
     /**
      * @brief Redraw requested flag for this particular view/
      * @details
-     * This flag is set in redraw() method and reset in AView::render(). redraw() method does not actually requests
+     * This flag is set in redraw() method and reset in AView::render(ClipOptimizationContext context). redraw() method does not actually requests
      * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
      * drawn.
      */
@@ -297,9 +298,14 @@ public:
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
+     * @see AView::drawView
      */
-    virtual void render();
+    virtual void render(ClipOptimizationContext context);
 
+    /**
+     * @brief Performs post-draw routines of this AView. Noone should call this function except rendering routine.
+     * @see AView::drawView
+     */
     virtual void postRender();
 
     void popStencilIfNeeded();

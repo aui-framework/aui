@@ -106,6 +106,13 @@ public:
         return *std::prev(end());
     }
 
+    template<typename... Args>
+    constexpr void emplace_back(Args&&... args) noexcept {
+        assert(("insufficient size in AStaticVector", size() + 1 <= MaxSize));
+        new (mEnd++) StoredType(std::forward<Args>(args)...);
+    }
+
+
     constexpr void push_back(StoredType value) noexcept {
         assert(("insufficient size in AStaticVector", size() + 1 <= MaxSize));
         new (mEnd++) StoredType(std::move(value));

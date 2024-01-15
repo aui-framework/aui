@@ -47,7 +47,7 @@ private:
     void processTextOverflow(AString &text);
 
     template < class Iterator >
-    int findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
+    size_t findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
 
     template < class Iterator >
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
@@ -72,7 +72,7 @@ public:
     AAbstractLabel();
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
     void doRenderText();
 
     int getContentMinimumWidth(ALayoutDirection layout) override;

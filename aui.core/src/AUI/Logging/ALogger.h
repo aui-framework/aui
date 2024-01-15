@@ -322,7 +322,7 @@ private:
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
-    bool mDebug = true;
+    bool mDebug = AUI_DEBUG;
 
     void setLogFileImpl(AString path);
 

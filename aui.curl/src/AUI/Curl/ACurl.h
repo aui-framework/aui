@@ -21,13 +21,16 @@
 
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
+#include "AFormMultipart.h"
 #include <AUI/IO/APipe.h>
 #include <AUI/Common/AByteBufferView.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Reflect/AEnumerate.h>
+#include <AUI/Thread/AFuture.h>
 
 class AString;
+class ACurlMulti;
 
 /**
  * @brief Easy curl instance.
@@ -107,6 +110,15 @@ public:
     enum class Method {
         GET,
         POST,
+    };
+
+    /**
+     * @brief Response struct for Builder::runBlocking() and Builder::runAsync()
+     */
+    struct Response {
+        ResponseCode code;
+        AString contentType;
+        AByteBuffer body;
     };
 
 
@@ -193,6 +205,18 @@ public:
         }
 
         /**
+         * @brief Add multipart data.
+         * @details
+         * This function implies adding Content-Type: multipart and it's boundaries, setting withBody with multipart
+         * data.
+         */
+         Builder& withMultipart(const AFormMultipart& multipart) {
+            withInputStream(multipart.makeInputStream());
+            mHeaders.push_back("Content-Type: multipart/form-data; boundary={}"_format(multipart.boundary()));
+            return *this;
+         }
+
+        /**
          * @brief Called on client -> server data requested (upload).
          * @param callback callback to call.
          * @return this
@@ -200,6 +224,22 @@ public:
         Builder& withBody(ReadCallback callback) {
             assert(("write callback already set" && mReadCallback == nullptr));
             mReadCallback = std::move(callback);
+            return *this;
+        }
+
+        /**
+         * @brief Called on client -> server data requested (upload).
+         * @param callback callback to call.
+         * @return this
+         */
+        Builder& withInputStream(_<IInputStream> inputStream) {
+            withBody([inputStream = std::move(inputStream)](char* dst, std::size_t length) {
+                auto v = inputStream->read(dst, length);
+                if (v == 0) {
+                    throw AEOFException();
+                }
+                return v;
+            });
             return *this;
         }
 
@@ -250,7 +290,7 @@ public:
             return *this;
         }
 
-        Builder& withDestinationBuffer(aui::promise::no_copy<AByteBuffer> dst) {
+        Builder& withDestinationBuffer(aui::constraint::avoid_copy<AByteBuffer> dst) {
             return withWriteCallback([dst](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();
@@ -286,6 +326,13 @@ public:
             return *this;
         }
 
+        template<aui::invocable OnSuccess>
+        Builder& withOnSuccess(OnSuccess&& onSuccess) {
+            mOnSuccess = [onSuccess = std::forward<OnSuccess>(onSuccess)](ACurl&) {
+                onSuccess();
+            };
+            return *this;
+        }
 
         /**
          * @brief Sets HTTP method to the query.
@@ -301,11 +348,19 @@ public:
         /**
          * @brief Sets HTTP params to the query.
          * @param params params map in key,value pairs.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
          */
         Builder& withParams(const AVector<std::pair<AString /* key */, AString /* value */>>& params);
 
         /**
          * @brief Sets HTTP params to the query.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
          */
         Builder& withParams(AString params) noexcept {
             mParams = std::move(params);
@@ -318,7 +373,7 @@ public:
         }
 
         /**
-         * Makes input stream from curl builder.
+         * @brief Makes input stream from curl builder.
          * @note creates async task where curl's loop lives in.
          * @throws AIOException
          * @return input stream
@@ -326,10 +381,24 @@ public:
         _<IInputStream> toInputStream();
 
         /**
-         * Makes bytebuffer from curl builder.
+         * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if
+         * possible.
+         *
          * @throws AIOException
          */
-         AByteBuffer toByteBuffer();
+        Response runBlocking();
+
+         /**
+          * @brief Constructs ACurl object and performs curl request in global ACurlMulti.
+          * @return Response future.
+          */
+         AFuture<Response> runAsync();
+
+        /**
+         * @brief Constructs ACurl object and performs curl request in specified ACurlMulti.
+         * @return Response future.
+         */
+         AFuture<Response> runAsync(ACurlMulti& curlMulti);
     };
 
 	explicit ACurl(Builder& builder):

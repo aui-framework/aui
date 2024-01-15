@@ -50,8 +50,8 @@ void ASelectableLabel::doRedraw() {
     redraw();
 }
 
-void ASelectableLabel::render() {
-    AView::render();
+void ASelectableLabel::render(ClipOptimizationContext context) {
+    AView::render(context);
 
     if (hasFocus()) {
         auto x =  mTextLeftOffset;

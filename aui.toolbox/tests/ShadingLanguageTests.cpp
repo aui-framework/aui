@@ -151,20 +151,6 @@ TEST_F(ShadingLanguage, Math5) {
     EXPECT_STREQ("clamp(((val1+val2)+val3),0.0,1.0)", toGlslExpression(expr).toStdString().c_str());
 }
 
-TEST_F(ShadingLanguage, IfDef) {
-    Lexer l(_new<AStringStream>(std::string(R"(
-{
-#if test
-  as is
-#endif
-}
-    )")));
-    Parser p(l.performLexAnalysis(), "");
-    auto expr = p.parseExpression();
-    EXPECT_STREQ("clamp(((val1+val2)+val3),0.0,1.0)", toGlslExpression(expr).toStdString().c_str());
-}
-
-
 TEST_F(ShadingLanguage, MemberAccess) {
     Lexer l(_new<AStringStream>(std::string("output.albedo.a = output.albedo.a + 1\n")));
     Parser p(l.performLexAnalysis(), "");

@@ -270,12 +270,6 @@ private:
     friend class ::Cache<AImage, Cache, AUrl>;
     friend class AImageLoaderRegistry;
     friend class AImageView;
-    class Cache: public ::Cache<AImage, Cache, AUrl> {
-    public:
-        static Cache& inst();
-    protected:
-        _<AImage> load(const AUrl& key) override;
-    };
 
     void setPixelAt(std::uint32_t index, glm::ivec4 color);
 

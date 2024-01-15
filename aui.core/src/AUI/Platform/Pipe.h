@@ -29,6 +29,9 @@
 #endif
 
 
+/**
+ * @brief Unix pipe RAII wrapper.
+ */
 class Pipe: public aui::noncopyable {
 public:
 #if AUI_PLATFORM_WIN
@@ -51,26 +54,30 @@ public:
     }
 
 
-    [[nodiscard]]
-    pipe_t in() const noexcept {
-        return mIn;
-    }
-
+    /**
+     * @brief Out pipe. Also known as pipe[0].
+     */
     [[nodiscard]]
     pipe_t out() const noexcept {
         return mOut;
     }
 
-    void closeIn() noexcept;
-    void closeOut() noexcept;
-
+    /**
+     * @brief In pipe. Also known as pipe[1].
+     */
     [[nodiscard]]
-    pipe_t stealIn() noexcept {
-        auto copy = mIn;
-        mIn = 0;
-        return copy;
+    pipe_t in() const noexcept {
+        return mIn;
     }
 
+    void closeOut() noexcept;
+    void closeIn() noexcept;
+
+    /**
+     * @brief Steals ownership of the out pipe outside of the Pipe class.
+     * @details
+     * Resets the pipe value to zero. Caller is responsible for closing the pipe.
+     */
     [[nodiscard]]
     pipe_t stealOut() noexcept {
         auto copy = mOut;
@@ -78,7 +85,27 @@ public:
         return copy;
     }
 
+    /**
+     * @brief Steals ownership of the in pipe outside of the Pipe class.
+     * @details
+     * Resets the pipe value to zero. Caller is responsible for closing the pipe.
+     */
+    [[nodiscard]]
+    pipe_t stealIn() noexcept {
+        auto copy = mIn;
+        mIn = 0;
+        return copy;
+    }
+
+
 private:
+    /**
+     * @brief Out pipe. Also known as pipe[0].
+     */
     pipe_t mOut;
+
+    /**
+     * @brief In pipe. Also known as pipe[1].
+     */
     pipe_t mIn;
 };
