@@ -126,7 +126,10 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		ARaiiHelper contextReturner = [&] {
 				SetThreadContext(h, &context);
 		};
-#if AUI_ARCH_X86_64
+#if AUI_ARCH_ARM_64
+	#define REG_SP Sp
+	#define REG_IP Pc
+#elif AUI_ARCH_X86_64
 	#define REG_SP Rsp
 	#define REG_IP Rip
 #else
