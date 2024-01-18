@@ -39,6 +39,7 @@
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
 #include "AUI/Render/ARender.h"
@@ -73,6 +74,18 @@ namespace {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
+
+            if (!mSelectionMode) {
+                return;
+            }
+
+            if (mHoveredFrameIndex && !mSelectedFrameIndex) {
+                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+            }
+
+            if (mSelectedFrameIndex) {
+                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+            }
         }
 
         void setSize(glm::ivec2 size) override {
@@ -83,12 +96,15 @@ namespace {
 
             mImage = glm::uvec2{size} / plotScale();
             mImage.fill({0, 0, 0, 0});
+            mFrames.resize(mImage.width());
         }
 
         void onPerformanceFrame(const APerformanceSection::Datas& sections) {
             if (glm::any(glm::equal(mImage.size(), glm::uvec2(0, 0)))) {
                 return;
             }
+
+            mFrames[mFrameIndex] = sections;
 
             // fade-out effect
             if (mFrameIndex % 10 == 0) {
@@ -116,6 +132,7 @@ namespace {
                                     ;
 
             unsigned y = 0;
+
             for (const auto& section : sectionStatsList) {
                 const int times = timeToY(section.duration);
                 for (int i = 0; i < times; ++i, ++y) {
@@ -138,8 +155,42 @@ namespace {
 
         void setSelectionMode(bool isSelectionMode) {
             mSelectionMode = isSelectionMode;
+
+            if (!isSelectionMode) {
+                mHoveredFrameIndex.reset();
+                mSelectedFrameIndex.reset();
+            }
         }
+
+        void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override {
+            AView::onPointerMove(pos, event);
+            unsigned index = unsigned(pos.x) / plotScale();
+            mHoveredFrameIndex = index;
+            if (event.pointerIndex.isFinger() || AInput::isKeyDown(event.pointerIndex.button().valueOr(AInput::LBUTTON))) {
+                setSelectedFrameIndex(index);
+            }
+        }
+
+        void onPointerReleased(const APointerReleasedEvent& event) override {
+            AView::onPointerReleased(event);
+            setSelectedFrameIndex(unsigned(event.position.x) / plotScale());
+        }
+
+        void setSelectedFrameIndex(unsigned index) {
+            if (mSelectedFrameIndex == index) {
+                return;
+            }
+            mSelectedFrameIndex = index;
+            emit selectionChanged(mFrames[index]);
+        }
+
+    signals:
+        emits<APerformanceSection::Datas> selectionChanged;
+
     private:
+        AOptional<unsigned> mHoveredFrameIndex;
+        AOptional<unsigned> mSelectedFrameIndex;
+        AVector<APerformanceSection::Datas> mFrames;
         bool mSelectionMode = false;
         struct SectionStat {
             AString name;
@@ -190,18 +241,12 @@ namespace {
         }
 
         void onPerformanceFrame(const APerformanceSection::Datas& sections) {
-            auto now = high_resolution_clock::now();
-            if ((now - mLastTimeUpdated) < 1s) {
-                return;
-            }
-            mLastTimeUpdated = now;
             _<AViewContainer> root = Vertical{};
             populate(*root, sections);
             setContents(Horizontal { root });
         }
 
     private:
-        high_resolution_clock::time_point mLastTimeUpdated;
 
         static _<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
@@ -250,12 +295,21 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTar
         emit nextFrame(frame);
     });
 
-    auto graphView = _new<GraphView>() let {
-        connect(nextFrame, slot(it)::onPerformanceFrame);
-        
-    };
+    auto graphView = _new<GraphView>();
+    auto treeView = _new<PerformanceSectionsTreeView>();
 
-    auto treeView = _new<PerformanceSectionsTreeView>() let { connect(nextFrame, slot(it)::onPerformanceFrame); };
+    connect(nextFrame, slot(graphView)::onPerformanceFrame);
+    connect(nextFrame, treeView, [treeView = treeView.get()](const APerformanceSection::Datas& sections) {
+        static high_resolution_clock::time_point lastTimeUpdated;
+        auto now = high_resolution_clock::now();
+        if ((now - lastTimeUpdated) < 1s) {
+            return;
+        }
+        lastTimeUpdated = now;
+
+        treeView->onPerformanceFrame(sections);
+    }); 
+    connect(graphView->selectionChanged, slot(treeView)::onPerformanceFrame);
 
     mModel.addObserver(&Model::state, [graphView](const Model::State& state) {
         bool isPaused = std::holds_alternative<Model::Paused>(state);
