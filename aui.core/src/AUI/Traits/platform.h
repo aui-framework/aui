@@ -148,6 +148,15 @@ namespace aui::platform {
 
     constexpr bool is_x86 = AUI_ARCH_X86;
     constexpr bool is_x86_64 = AUI_ARCH_X86_64;
+
+    /**
+     * @brief ARM 32 bit.
+     */
+    constexpr bool is_armv7 = AUI_ARCH_ARM_V7;
+
+    /**
+     * @brief ARM 64 bit architecture, also known as aarch64.
+     */
     constexpr bool is_arm64 = AUI_ARCH_ARM_64;
 
 #if AUI_PLATFORM_WIN
