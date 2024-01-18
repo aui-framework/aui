@@ -61,10 +61,12 @@ namespace {
 #if AUI_PROFILING
     class GraphView: public AView {
     public:
-        GraphView(): mImage({256, 256}) {
+        static constexpr auto DEFAULT_SIZE = 256;
+        GraphView(): mImage({DEFAULT_SIZE, DEFAULT_SIZE}) {
             setExpanding();
             mTexture = ARender::getNewTexture();
             mImage.fill({0, 0, 0, 0});
+            mFrames.resize(DEFAULT_SIZE);
         }
 
         void render(ClipOptimizationContext c) override {
@@ -238,7 +240,7 @@ namespace {
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
-        static constexpr auto MAX_DEPTH = 5;
+        static constexpr auto MAX_DEPTH = 7;
         PerformanceSectionsTreeView() {
         }
 

@@ -29,7 +29,7 @@ using namespace std::chrono_literals;
 
 static constexpr auto THRESHOLD = 50us;
 
-APerformanceSection::APerformanceSection(const char* name, AOptional<AColor> color, AString verboseInfo)
+APerformanceSection::APerformanceSection(const char* name, AOptional<AColor> color, std::string verboseInfo)
     : mName(name),
       mColor(color.valueOr([&] { return generateColorFromName(mName); })),
       mVerboseInfo(std::move(verboseInfo)),
@@ -45,7 +45,7 @@ APerformanceSection::~APerformanceSection() {
     return;
   }
 
-  std::variant<APerformanceSection *, APerformanceFrame *> sectionReceiever =
+  std::variant<APerformanceSection*, APerformanceFrame*> sectionReceiever =
       APerformanceFrame::current();
 
   if (mParent) {
@@ -58,7 +58,7 @@ APerformanceSection::~APerformanceSection() {
           return;
         }
         value->addSection({
-            .name = std::move(mName),
+            .name = mName,
             .color = mColor,
             .verboseInfo = std::move(mVerboseInfo),
             .duration = delta,
@@ -68,9 +68,9 @@ APerformanceSection::~APerformanceSection() {
       sectionReceiever);
 }
 
-AColor APerformanceSection::generateColorFromName(const AString &name) {
+AColor APerformanceSection::generateColorFromName(const char* name) {
   std::uint64_t seed = 0;
-  for (auto c : name) {
+  for (auto c : std::string_view(name)) {
     seed ^= c;
     seed <<= 1;
   }

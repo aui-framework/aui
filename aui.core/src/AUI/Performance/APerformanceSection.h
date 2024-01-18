@@ -32,9 +32,16 @@
 class API_AUI_CORE APerformanceSection {
 public:
     struct Data {
-        AString name;
+        /**
+         * @brief Name of the section. Expected to be alive whole program lifetime.
+         */
+        const char* name;
+
+        /**
+         * @brief Color of the section.
+         */
         AColor color;
-        AString verboseInfo;
+        std::string verboseInfo;
         std::chrono::high_resolution_clock::duration duration = std::chrono::high_resolution_clock::duration(0);
         AVector<Data> children;
     };
@@ -42,7 +49,15 @@ public:
     using Datas = AVector<Data>;
 
 #if AUI_PROFILING
-    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, AString verboseInfo = {});
+    /**
+     * @brief Defines performance profiling named (and colored) span within RAII range.
+     * @param name name of the section. Since it is a C-style string, it must be alive during the whole lifetime of the
+     *             program. Typically, you would want to use string literals. C-style string is used to avoid
+     *             performance overhead.
+     * @param color color of the section. If nullopt, it would be generated from name.
+     * @param verboseInfo extra usefull information that displayed in tree view in paused mode.
+     */
+    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, std::string verboseInfo = {});
     ~APerformanceSection();
 
     void addSection(Data section) {
@@ -51,7 +66,16 @@ public:
 
 #else
     // expected to be optimized out
-    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, AString verboseInfo = {}) {}
+
+    /**
+     * @brief Defines performance profiling named (and colored) span within RAII range.
+     * @param name name of the section. Since it is a C-style string, it must be alive during the whole lifetime of the
+     *             program. Typically, you would want to use string literals. C-style string is used to avoid
+     *             performance overhead.
+     * @param color color of the section. If nullopt, it would be generated from name.
+     * @param verboseInfo extra usefull information that displayed in tree view in paused mode.
+     */
+    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, std::string verboseInfo = {}) {}
     ~APerformanceSection() = default;
 #endif
 
@@ -62,14 +86,14 @@ private:
         return v;
     }
 
-    AString mName;
+    const char* mName;
     AColor mColor;
-    AString mVerboseInfo;
+    std::string mVerboseInfo;
     std::chrono::high_resolution_clock::time_point mStart;
     AVector<Data> mChildren;
 
     APerformanceSection* mParent;
 
-    static AColor generateColorFromName(const AString& name);
+    static AColor generateColorFromName(const char* name);
 #endif
 };
