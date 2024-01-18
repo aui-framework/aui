@@ -25,18 +25,25 @@
 #if AUI_PROFILING
 
 using namespace std::chrono;
+using namespace std::chrono_literals;
 
-APerformanceSection::APerformanceSection(const char *name,
-                                         AOptional<AColor> color)
+static constexpr auto THRESHOLD = 50us;
+
+APerformanceSection::APerformanceSection(const char* name, AOptional<AColor> color, AString verboseInfo)
     : mName(name),
       mColor(color.valueOr([&] { return generateColorFromName(mName); })),
+      mVerboseInfo(std::move(verboseInfo)),
       mStart(high_resolution_clock::now()), mParent(current()) {
   current() = this;
 }
 
 APerformanceSection::~APerformanceSection() {
   current() = mParent;
+
   auto delta = high_resolution_clock::now() - mStart;
+  if (delta < THRESHOLD) {
+    return;
+  }
 
   std::variant<APerformanceSection *, APerformanceFrame *> sectionReceiever =
       APerformanceFrame::current();
@@ -53,6 +60,7 @@ APerformanceSection::~APerformanceSection() {
         value->addSection({
             .name = std::move(mName),
             .color = mColor,
+            .verboseInfo = std::move(mVerboseInfo),
             .duration = delta,
             .children = std::move(mChildren),
         });

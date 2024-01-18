@@ -34,6 +34,7 @@ public:
     struct Data {
         AString name;
         AColor color;
+        AString verboseInfo;
         std::chrono::high_resolution_clock::duration duration = std::chrono::high_resolution_clock::duration(0);
         AVector<Data> children;
     };
@@ -41,7 +42,7 @@ public:
     using Datas = AVector<Data>;
 
 #if AUI_PROFILING
-    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt);
+    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, AString verboseInfo = {});
     ~APerformanceSection();
 
     void addSection(Data section) {
@@ -50,7 +51,7 @@ public:
 
 #else
     // expected to be optimized out
-    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt) {}
+    APerformanceSection(const char* name, AOptional<AColor> color = std::nullopt, AString verboseInfo = {}) {}
     ~APerformanceSection() = default;
 #endif
 
@@ -63,6 +64,7 @@ private:
 
     AString mName;
     AColor mColor;
+    AString mVerboseInfo;
     std::chrono::high_resolution_clock::time_point mStart;
     AVector<Data> mChildren;
 

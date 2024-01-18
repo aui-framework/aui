@@ -180,6 +180,7 @@ namespace {
             if (mSelectedFrameIndex == index) {
                 return;
             }
+            index %= mFrames.size();
             mSelectedFrameIndex = index;
             emit selectionChanged(mFrames[index]);
         }
@@ -237,6 +238,7 @@ namespace {
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
+        static constexpr auto MAX_DEPTH = 5;
         PerformanceSectionsTreeView() {
         }
 
@@ -246,13 +248,22 @@ namespace {
             setContents(Horizontal { root });
         }
 
-    private:
+        void setVerboseMode(bool verboseMode) {
+            mVerboseMode = verboseMode;
+        }
 
-        static _<AView> makeChip(const APerformanceSection::Data& i) {
+    private:
+        bool mVerboseMode  = false;
+
+        _<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
                 _new<ALabel>(i.name) with_style {
                     TextColor { i.color.readableBlackOrWhite() },
-                }
+                },
+                mVerboseMode ? _new<ALabel>(i.verboseInfo) with_style {
+                    TextColor { i.color.readableBlackOrWhite().transparentize(0.3f) },
+                    BackgroundSolid { AColor::BLACK },
+                } : nullptr,
             } with_style {
                 BackgroundSolid { i.color },
                 BorderRadius { 6_pt },
@@ -261,7 +272,10 @@ namespace {
             };
         }
 
-        static void populate(AViewContainer& container, const APerformanceSection::Datas& sections) {
+        void populate(AViewContainer& container, const APerformanceSection::Datas& sections, int remainingDepth = MAX_DEPTH) {
+            if (remainingDepth == 0) {
+                return;
+            }
             for (const auto& section : sections) {
                 _<AViewContainer> v = Vertical{} with_style {
                     BorderLeft { 2_dp, section.color },
@@ -274,7 +288,7 @@ namespace {
                 _<AViewContainer> root = Vertical{} with_style {
                     Padding { {}, {}, {}, 8_dp },
                 };
-                populate(*root, section.children);
+                populate(*root, section.children, remainingDepth - 1);
                 v->addView(Horizontal { root });
             }
         }
@@ -311,9 +325,10 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTar
     }); 
     connect(graphView->selectionChanged, slot(treeView)::onPerformanceFrame);
 
-    mModel.addObserver(&Model::state, [graphView](const Model::State& state) {
+    mModel.addObserver(&Model::state, [graphView, treeView](const Model::State& state) {
         bool isPaused = std::holds_alternative<Model::Paused>(state);
         graphView->setSelectionMode(isPaused);
+        treeView->setVerboseMode(isPaused);
     });
 
     setContents(Centered { 
