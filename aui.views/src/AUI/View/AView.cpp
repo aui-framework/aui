@@ -15,6 +15,7 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
+#include "AUI/Common/AException.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
@@ -22,6 +23,7 @@
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Animator/AAnimator.h"
 
+#include <exception>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <AUI/IO/AStringStream.h>
@@ -373,26 +375,32 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
 void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
     mPressed.removeAll(event.pointerIndex);
-    emit pressedState(false, event.pointerIndex);
-    emit released(event.pointerIndex);
+    try {
+        emit pressedState(false, event.pointerIndex);
+        emit released(event.pointerIndex);
 
-    if (event.triggerClick) {
-        emit clickedButton(event.pointerIndex);
-        if (event.asButton == AInput::LBUTTON) {
-            emit clicked();
+        if (event.triggerClick) {
+            emit clickedButton(event.pointerIndex);
+            if (event.asButton == AInput::LBUTTON) {
+                emit clicked();
+            }
+            switch (event.pointerIndex.rawValue()) {
+                case AInput::RBUTTON:
+                    emit clickedRight;
+                    emit clickedRightOrLongPressed;
+
+                    auto menuModel = composeContextMenu();
+                    if (!menuModel.empty()) {
+                        AMenu::show(menuModel);
+                    }
+
+                    break;
+            }
         }
-        switch (event.pointerIndex.rawValue()) {
-            case AInput::RBUTTON:
-                emit clickedRight;
-                emit clickedRightOrLongPressed;
-
-                auto menuModel = composeContextMenu();
-                if (!menuModel.empty()) {
-                    AMenu::show(menuModel);
-                }
-
-                break;
-        }
+    } catch (const AException& e) {
+        ALogger::err("AView") << "Unhandled exception in clicked signal: " << e;
+    } catch (const std::exception& e) {
+        ALogger::err("AView") << "Unhandled exception in clicked signal: " << e;
     }
 }
 
