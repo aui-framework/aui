@@ -513,7 +513,7 @@ void AView::setSize(glm::ivec2 size)
         if (mMinSize.y != 0)
             newSize.y = glm::max(mMinSize.y, newSize.y);
     }
-    newSize = glm::min(mSize, mMaxSize);
+    newSize = glm::min(newSize, mMaxSize);
 
     if (mSize == newSize) {
         return;
