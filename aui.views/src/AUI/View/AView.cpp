@@ -484,45 +484,53 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    if (mPosition == position) {
+        return;
+    }
     mPosition = position;
+    emit positionChanged(position);
 }
 void AView::setSize(glm::ivec2 size)
 {
-    /*
-    int minWidth = getContentMinimumWidth();
-    int minHeight = getContentMinimumHeight();
-
-    // some bias is allowed
-    assert(minWidth <= width + 5);
-    assert(minHeight <= height + 5);
-*/
+    auto newSize = mSize;
     if (mFixedSize.x != 0)
     {
-        mSize.x = mFixedSize.x;
+        newSize.x = mFixedSize.x;
     }
     else
     {
-        mSize.x = size.x;
+        newSize.x = size.x;
         if (mMinSize.x != 0)
-            mSize.x = glm::max(mMinSize.x, mSize.x);
+            newSize.x = glm::max(mMinSize.x, newSize.x);
     }
     if (mFixedSize.y != 0)
     {
-        mSize.y = mFixedSize.y;
+        newSize.y = mFixedSize.y;
     }
     else
     {
-        mSize.y = size.y;
+        newSize.y = size.y;
         if (mMinSize.y != 0)
-            mSize.y = glm::max(mMinSize.y, mSize.y);
+            newSize.y = glm::max(mMinSize.y, newSize.y);
     }
-    mSize = glm::min(mSize, mMaxSize);
+    newSize = glm::min(mSize, mMaxSize);
+
+    if (mSize == newSize) {
+        return;
+    }
+    mSize = newSize;
+    emit sizeChanged(newSize);
 }
 
 void AView::setGeometry(int x, int y, int width, int height) {
+    auto oldPosition = mPosition;
+    auto oldSize = mSize;
     setPosition({ x, y });
     setSize({width, height});
 
+    if (mPosition == oldPosition && mSize == oldSize) {
+        return;
+    }
     emit geometryChanged({x, y}, {width, height});
 }
 
