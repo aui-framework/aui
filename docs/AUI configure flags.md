@@ -15,6 +15,9 @@ cmake --build .
 Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for
 debugging.
 
+## AUI_COROUTINES
+Whether use C++ 20 coroutines support or not.
+
 ## AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
 performance information. See [Profiling](@ref profiling)
