@@ -17,7 +17,7 @@ debugging.
 
 ## AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
-performance information. See [Profiling](@ref group__profiling)
+performance information. See [Profiling](@ref profiling)
 
 # aui.build
 
