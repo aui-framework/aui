@@ -1,10 +1,31 @@
+
+These configuration flags are set on CMake configure flag before building, i.e.:
+
+```
+cd aui
+mkdir build
+cd build
+cmake .. -DAUI_BUILD_EXAMPLES=TRUE # <-- here
+cmake --build .
+```
+
+# AUI C++ code itself
+
+## AUI_CATCH_UNHANDLED
+Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for
+debugging.
+
+## AUI_PROFILING
+When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
+performance information. See [Profiling](@ref group__profiling)
+
 # aui.build
 
 ## AUI_BUILD_EXAMPLES
 Whether build examples or not.
 
 ## AUI_BUILD_FOR
-Specifies target platform for cross-compilation (see [cross-compiling](md)).
+Specifies target platform for cross-compilation (see [cross-compiling](@ref md_docs_Crosscompiling)).
 
 ## AUI_CACHE_DIR
 Changes aui.boot's cache dir (which is `~/.aui` by default)
@@ -23,12 +44,13 @@ Disables HIDPI.
 Disables tests.
 
 ## AUI_SHARED_PTR_FIND_INSTANCES
-Adds `printAllInstances()` to AUI's shared pointer type (`_`) which prints stacktrace from constructor of every instance of `shared_ptr` (`_`) pointing to that object. Made for debugging purposes to find cycle and unwanted pointers. Dramatically slows the application's performance.
+Adds `printAllInstances()` to AUI's shared pointer type (`_`) which prints stacktrace from constructor of every instance of `shared_ptr` (`_`) pointing to that object. Made for debugging purposes to find cycling and unwanted pointers. Dramatically slows the application's performance.
 
 ## BUILD_SHARED_LIBS
 When evaluates to `true`, libraries are built as shared, as static otherwise.
 
-When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false` (see [cross-compiling](md)).
+When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false` 
+(see [cross-compiling](@ref md_docs_Crosscompiling))
 
 ## AUI_IOS_CODE_SIGNING_REQUIRED
 Disables code signing step on iOS.
