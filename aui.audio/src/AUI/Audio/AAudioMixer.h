@@ -1,7 +1,6 @@
 #pragma once
 
 #include <list>
-#include <mutex>
 #include <span>
 
 #include <AUI/Common/AObject.h>
@@ -14,7 +13,7 @@ class API_AUI_AUDIO IAudioPlayer;
  */
 class API_AUI_AUDIO AAudioMixer {
 private:
-    std::mutex mMutex;
+    AMutex mMutex;
     std::list<_<IAudioPlayer>> mPlayers;
 
 public:
