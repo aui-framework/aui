@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
+option(AUI_COROUTINES "Use C++20 coroutines" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
@@ -29,6 +30,10 @@ endif()
 
 if (AUI_CATCH_UNHANDLED)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
+endif()
+
+if (AUI_CATCH_UNHANDLED)
+    target_compile_definitions(aui.core PUBLIC AUI_COROUTINES=1)
 endif()
 
 if (AUI_PROFILING)

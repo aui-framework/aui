@@ -16,6 +16,10 @@
 
 #pragma once
 
+#if AUI_COROUTINES
+#include <coroutine>
+#endif
+
 #include <atomic>
 #include <functional>
 #include <optional>
@@ -229,10 +233,10 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = true;
                                 cv.notify_all();
-                                notifyOnSuccessCallback();
+                                notifyOnSuccessCallback(lock);
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
-                                lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
+                                if (lock.owns_lock()) lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         } else {
                             auto result = func();
@@ -240,10 +244,10 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = std::move(result);
                                 cv.notify_all();
-                                notifyOnSuccessCallback();
+                                notifyOnSuccessCallback(lock);
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
-                                lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
+                                if (lock.owns_lock()) lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         }
                     } catch (const AThread::Interrupted&) {
@@ -274,28 +278,52 @@ namespace aui::impl::future {
                 std::unique_lock lock(mutex);
                 exception.emplace();
                 cv.notify_all();
-                AUI_NULLSAFE(onError)(*exception);
+                if (!onError) {
+                    return;
+                }
+                auto localOnError = std::move(onError);
+                lock.unlock();
+                localOnError(*exception);
             }
 
 
-            void notifyOnSuccessCallback() noexcept {
+            /**
+             * @brief Calls onSuccess callback.
+             * @param lock lock of Inner::mutex mutex.
+             * @details
+             * lock is expected to be locked. Under the lock, callback is moved to local stack, lock is unlocked, and
+             * only then callback is called. This helps to avoid deadlocks (i.e. retreiving AFuture's value in
+             * onSuccess callback). lock is not locked again. If AFuture does not have value or onSuccess callback,
+             * the lock remains untouched.
+             */
+            void notifyOnSuccessCallback(std::unique_lock<decltype(mutex)>& lock) noexcept {
+                assert(lock.owns_lock());
                 if (cancelled) {
                     return;
                 }
                 if (value && onSuccess) {
+                    auto localOnSuccess = std::move(onSuccess);
+                    onSuccess = nullptr;
+                    lock.unlock();
                     try {
                         if constexpr (isVoid) {
-                            onSuccess();
+                            localOnSuccess();
                         } else {
-                            onSuccess(*value);
+                            localOnSuccess(*value);
                         }
                     } catch (const AException& e) {
                         ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
                     }
-                    onSuccess = nullptr;
                 }
             }
         };
+
+#if AUI_COROUTINES
+        /**
+         * @brief promise_type for C++ coroutines TS.
+         */
+        struct CoPromiseType;
+#endif
 
     protected:
         _<CancellationWrapper<Inner>> mInner;
@@ -370,7 +398,7 @@ namespace aui::impl::future {
                     };
                 }
             }
-            (*mInner)->notifyOnSuccessCallback();
+            (*mInner)->notifyOnSuccessCallback(lock);
         }
 
         template<aui::invocable<const AException&> Callback>
@@ -549,6 +577,9 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+#if AUI_COROUTINES
+    using promise_type = typename super::CoPromiseType;
+#endif
     using Inner = aui::impl::future::CancellationWrapper<typename super::Inner>;
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
@@ -567,7 +598,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = std::move(v);
         inner->cv.notify_all();
-        inner->notifyOnSuccessCallback();
+        inner->notifyOnSuccessCallback(lock);
     }
 
     /**
@@ -666,6 +697,9 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+#if AUI_COROUTINES
+    using promise_type = typename super::CoPromiseType;
+#endif
     using Inner = decltype(std::declval<super>().inner());
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
@@ -691,7 +725,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = true;
         inner->cv.notify_all();
-        inner->notifyOnSuccessCallback();
+        inner->notifyOnSuccessCallback(lock);
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
@@ -758,3 +792,59 @@ public:
 
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Common/AException.h>
+
+#if AUI_COROUTINES
+template<typename Value>
+struct aui::impl::future::Future<Value>::CoPromiseType {
+    AFuture<Value> future;
+    auto initial_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+
+    auto final_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+    auto unhandled_exception() const noexcept {
+        future.supplyException();
+    }
+
+    const AFuture<Value>& get_return_object() const noexcept {
+        return future; 
+    }
+
+    void return_value(Value v) const noexcept {
+        future.supplyResult(std::move(v));
+    }
+};
+
+template<typename T>
+auto operator co_await(AFuture<T> future) {
+    struct Awaitable {
+        AFuture<T> future;
+
+        bool await_ready() const noexcept {
+            return future.hasResult();
+        }
+
+        T await_resume() {
+            return *future;
+        }
+
+
+        void await_suspend(std::coroutine_handle<> h)
+        {
+            future.onSuccess([h](const int&) {
+                h.resume();
+            });
+            
+            future.onError([h](const AException&) {
+                h.resume();
+            });
+        }
+    };
+
+    return Awaitable{ std::move(future) };
+}
+#endif
