@@ -835,7 +835,7 @@ auto operator co_await(AFuture<T> future) {
 
         void await_suspend(std::coroutine_handle<> h)
         {
-            future.onSuccess([h](const int&) {
+            future.onSuccess([h](const T&) {
                 h.resume();
             });
             
