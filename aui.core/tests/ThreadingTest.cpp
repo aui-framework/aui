@@ -296,7 +296,7 @@ TEST(Threading, FutureOnDone) {
                 called = true;
             });
             // check that cancellation does not triggers here
-            future.wait(AFutureWait::ASYNC_ONLY);
+            future.wait(AFutureWait::JUST_WAIT);
         }
         ASSERT_TRUE(called) << "onSuccess callback has not called";
     }

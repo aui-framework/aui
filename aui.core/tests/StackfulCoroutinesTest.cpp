@@ -25,13 +25,15 @@
 #include <chrono>
 
 static constexpr auto LOG_TAG = "StackfulCoroutinesTest";
+using namespace std::chrono;
 using namespace std::chrono_literals;
 
 
 
-AFuture<int> longTask(std::chrono::milliseconds duration) {
+AFuture<int> longTask(high_resolution_clock::time_point* returnTimePoint, milliseconds duration) {
     return async {
         AThread::sleep(duration); // long tamssk
+        *returnTimePoint = high_resolution_clock::now();
         return 228;
     };
 }
@@ -45,16 +47,31 @@ TEST(StackfulCoroutines, CoAwait) {
     // function should finish faster than the first function.
 
     auto future1 = localThreadPool * [&]() {
-        EXPECT_EQ(*longTask(1s), 228);
+        high_resolution_clock::time_point returnTimePoint;
+        auto f = longTask(&returnTimePoint, 1s);
+        f.wait(AFutureWait::ALLOW_STACKFULL_COROUTINES);
+        EXPECT_EQ(*f, 228);
+        ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << (high_resolution_clock::now() - returnTimePoint);
         EXPECT_EQ(executionOrder++, 1);
     };
 
     auto future2 = localThreadPool * [&]() {
-        EXPECT_EQ(*longTask(1ms), 228);
+        high_resolution_clock::time_point returnTimePoint;
+        auto f = longTask(&returnTimePoint, 1ms);
+        f.wait(AFutureWait::ALLOW_STACKFULL_COROUTINES);
+        EXPECT_EQ(*f, 228);
+        ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << (high_resolution_clock::now() - returnTimePoint);
         EXPECT_EQ(executionOrder++, 0);
     };
-    future1.wait(AFutureWait::ASYNC_ONLY);
-    future2.wait(AFutureWait::ASYNC_ONLY);
+    future1.wait(AFutureWait::JUST_WAIT);
+    future2.wait(AFutureWait::JUST_WAIT);
+}
+
+AFuture<int> longTaskException() {
+    return async -> int {
+        AThread::sleep(10ms); // long tamssk
+        throw AException("Whoops! Something bad happened");
+    };
 }
 
 
