@@ -66,7 +66,9 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 }
 #else
 #include <signal.h>
+#if !AUI_PLATFORM_ANDROID
 #include <execinfo.h>
+#endif
 #include <pthread.h>
 #endif
 namespace aui::impl::AThread {
