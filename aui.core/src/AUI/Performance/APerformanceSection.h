@@ -82,7 +82,7 @@ public:
 private:
 #if AUI_PROFILING
     static APerformanceSection*& current() noexcept {
-        static APerformanceSection* v = nullptr;
+        thread_local APerformanceSection* v = nullptr;
         return v;
     }
 

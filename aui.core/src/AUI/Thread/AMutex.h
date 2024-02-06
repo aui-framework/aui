@@ -26,7 +26,7 @@ namespace aui::detail {
     struct MutexExtras: T {
     public:
         void lock() {
-            APerformanceSection section("Mutex");
+            APerformanceSection section("Mutex", AColor::RED);
             T::lock();
         }
     };
@@ -37,7 +37,7 @@ struct ARecursiveMutex: aui::detail::MutexExtras<std::recursive_mutex>{};
 struct ASharedMutex: aui::detail::MutexExtras<std::shared_mutex> {
 public:
     void lock_shared() {
-        APerformanceSection section("Mutex");
+        APerformanceSection section("Mutex", AColor::RED);
         MutexExtras::lock_shared();
     }
 };

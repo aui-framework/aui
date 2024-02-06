@@ -34,10 +34,17 @@ APerformanceSection::APerformanceSection(const char* name, AOptional<AColor> col
       mColor(color.valueOr([&] { return generateColorFromName(mName); })),
       mVerboseInfo(std::move(verboseInfo)),
       mStart(high_resolution_clock::now()), mParent(current()) {
+  if (!APerformanceFrame::current()) {
+    return;
+  }
   current() = this;
 }
 
 APerformanceSection::~APerformanceSection() {
+  if (!APerformanceFrame::current()) {
+    return;
+  }
+
   current() = mParent;
 
   auto delta = high_resolution_clock::now() - mStart;
