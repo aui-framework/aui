@@ -23,10 +23,11 @@
 #include <dbghelp.h>
 #include <AUI/IO/APath.h>
 #include <mutex>
+#include "AUI/Thread/AMutex.h"
 
 struct Win32SymService {
     HANDLE process;
-    std::mutex mutex;
+    AMutex mutex;
 
     Win32SymService() noexcept {
         process = GetCurrentProcess();

@@ -50,7 +50,9 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
+#if !AUI_PLATFORM_ANDROID
 #include <execinfo.h>
+#endif
 #include <dlfcn.h>
 }
 

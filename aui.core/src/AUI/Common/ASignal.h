@@ -50,7 +50,7 @@ private:
         bool isDisconnected = false;
     };
 
-    std::recursive_mutex mSlotsLock;
+    ARecursiveMutex mSlotsLock;
     AVector<_<slot>> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
