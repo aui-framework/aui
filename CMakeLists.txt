@@ -105,8 +105,6 @@ if (NOT AUI_NO_TESTS)
     endif()
 endif()
 
-#install(EXPORT AUI DESTINATION "cmake/")
-
 # all components for exporting
 set(AUI_ALL_COMPONENTS core
                        crypt
