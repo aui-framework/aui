@@ -138,7 +138,6 @@ protected:
     AMutex mQueueLock;
 
     struct Message {
-        AStacktrace stacktrace;
         std::function<void()> proc;
     };
 

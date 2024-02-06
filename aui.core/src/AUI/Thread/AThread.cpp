@@ -262,7 +262,7 @@ void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ AStacktrace::capture(2, 4), std::move(f) };
+		mMessageQueue << Message{ std::move(f) };
 	}
 	{
 		if (mCurrentEventLoop) {

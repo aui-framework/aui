@@ -64,7 +64,6 @@ protected:
             if (time >= 1ms) {
                 ALogger::warn("Performance")
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
-                    << f.stacktrace
                     << " - ...\n";
             }
         }
