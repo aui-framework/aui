@@ -73,5 +73,3 @@ AFuture<int> longTaskException() {
         throw AException("Whoops! Something bad happened");
     };
 }
-
-
