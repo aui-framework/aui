@@ -513,10 +513,12 @@ namespace aui::impl::future {
 
 
 /**
- * @brief Represents the result of an asynchronous operation.
+ * @brief Represents a value that is not currently available.
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
+ * AFuture is used as a result for asynchronous functions.
+ *
  * AFuture is returned by @ref async keyword:
  *
  * @code{cpp}
@@ -527,14 +529,30 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * If your operation consists of complex future sequences, use AComplexFutureOperation.
+ * If your operation consists of complex future sequences, you have multiple options:
+ * 1. Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
+ *    threadpool thread (including the one that runs @ref async 's body). If value is not currently available, these
+ *    methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
+ *    @note Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
+ *          acquiring operation.
+ * 2. Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
+ *    AFuture value:
+ * @code{cpp}
+ * AFuture<int> longOperation();
+ * AFuture<int> myFunction() {
+ *   int resultOfLongOperation = co_await longOperation();
+ *   return resultOfLongOperation + 1;
+ * }
+ * @endcode
+ * 3. Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
+ *    AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
+ *    method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
  *
  * @code{cpp}
  *
  * @endcode
  *
- * If it does not suit your needs, you be default-construct AFuture and the result can be supplied manually with the
- * supplyResult() method:
+ * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyResult() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
@@ -545,6 +563,10 @@ namespace aui::impl::future {
  * t.start();
  * cout << *theFuture; // 123
  * @endcode
+ *
+ * @note Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
+ *       unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
+ *       Consider using one of suggested methods of usage instead.
  *
  * AFuture provides a set of functions to manage the process execution: cancel(), wait(), hasResult(), hasValue().
  *
