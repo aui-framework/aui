@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <cstdint>
 
 /**
  * @brief Bit field implementation.

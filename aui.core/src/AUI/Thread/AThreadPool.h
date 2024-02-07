@@ -26,41 +26,54 @@
 #include <AUI/Thread/AThread.h>
 #include <glm/glm.hpp>
 #include <utility>
+#include "AUI/Traits/concepts.h"
 
 template<typename T>
 class AFuture;
-
 
 /**
  * @brief Thread pool implementation.
  * @see AThreadPool::global()
  */
-class API_AUI_CORE AThreadPool
-{
-private:
-    class Worker {
-    private:
+class API_AUI_CORE AThreadPool {
+   public:
+    class API_AUI_CORE Worker : public AThread {
+       private:
         bool mEnabled = true;
-        _<AThread> mThread;
         bool processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue);
-        void thread_fn();
         AThreadPool& mTP;
-    public:
+
+        void iteration(std::unique_lock<std::mutex>& tpLock);
+
+       public:
         Worker(AThreadPool& tp, size_t index);
         ~Worker();
         void aboutToDelete();
+
+        template<aui::predicate ShouldContinue>
+        void loop(ShouldContinue&& shouldContinue) {
+            if (!shouldContinue()) {
+                return;
+            }
+
+            std::unique_lock lock(mTP.mQueueLock);
+            while (shouldContinue()) {
+                iteration(lock);
+            }
+        }
+
+        AThreadPool& threadPool() noexcept { return mTP; }
     };
 
-public:
-    enum Priority
-    {
+    enum Priority {
         PRIORITY_HIGHEST,
         PRIORITY_MEDIUM,
         PRIORITY_LOWEST,
     };
-protected:
+
+   protected:
     typedef std::function<void()> task;
-    AVector<std::unique_ptr<Worker>> mWorkers;
+    AVector<_<Worker>> mWorkers;
     AQueue<task> mQueueHighest;
     AQueue<task> mQueueMedium;
     AQueue<task> mQueueLowest;
@@ -69,7 +82,7 @@ protected:
     std::condition_variable mCV;
     size_t mIdleWorkers = 0;
 
-public:
+   public:
     /**
      * @brief Initializes the thread pool with size of threads.
      * @param size thread count to initialize.
@@ -89,17 +102,18 @@ public:
 
     void setWorkersCount(std::size_t workersCount);
 
+    void wakeUpAll() {
+        std::unique_lock lck(mQueueLock);
+        mCV.notify_all();
+    }
+
     /**
      * @return a global thread pool created with the default constructor.
      */
     static AThreadPool& global();
 
-    size_t getTotalWorkerCount() const {
-        return mWorkers.size();
-    }
-    size_t getIdleWorkerCount() const {
-        return mIdleWorkers;
-    }
+    size_t getTotalWorkerCount() const { return mWorkers.size(); }
+    size_t getIdleWorkerCount() const { return mIdleWorkers; }
 
     /**
      * Parallels work of some range, grouping tasks per thread (i.e. for 8 items on a 4-core processor each core will
@@ -120,30 +134,30 @@ public:
      *   </dd>
      * </dl>
      */
-    template<typename Iterator, typename Functor>
+    template <typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
     template <aui::invocable Callable>
-    [[nodiscard]]
-    inline auto operator*(Callable fun)
-    {
+    [[nodiscard]] inline auto operator*(Callable fun) {
         using Value = std::invoke_result_t<Callable>;
         AFuture<Value> future(std::move(fun));
-        run([innerWeak = future.inner().weak()]()
-            {
+        run(
+            [innerWeak = future.inner().weak()]() {
                 /*
                  * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
                  * even while actual future execution.
                  */
                 if (auto lock = innerWeak.lock()) {
-                    auto innerUnsafePointer = lock->ptr().get(); // using .get() here in order to bypass
-                                                                 // null check in operator->
+                    auto innerUnsafePointer = lock->ptr().get();   // using .get() here in order to bypass
+                                                                   // null check in operator->
 
-                    lock = nullptr;                              // destroy strong ref
+                    lock = nullptr;   // destroy strong ref
 
-                    innerUnsafePointer->tryExecute(innerWeak);   // there's a check inside tryExecute to check its validity
+                    innerUnsafePointer->tryExecute(
+                        innerWeak);   // there's a check inside tryExecute to check its validity
                 }
-            }, AThreadPool::PRIORITY_LOWEST);
+            },
+            AThreadPool::PRIORITY_LOWEST);
         return future;
     }
 
@@ -161,11 +175,12 @@ public:
  *
  * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
  */
-template<typename T = void>
-class AFutureSet: public AVector<AFuture<T>> {
-private:
+template <typename T = void>
+class AFutureSet : public AVector<AFuture<T>> {
+   private:
     using super = AVector<AFuture<T>>;
-public:
+
+   public:
     using AVector<AFuture<T>>::AVector;
 
     /**
@@ -186,7 +201,7 @@ public:
     void checkForExceptions() const {
         for (const AFuture<T>& v : *this) {
             if (v.hasResult()) {
-                v.operator*(); // TODO bad design
+                v.operator*();   // TODO bad design
             }
         }
     }
@@ -201,7 +216,7 @@ public:
      * @note AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
      * temporary object is created to keep track of the task completeness.
      */
-    template<aui::invocable OnComplete>
+    template <aui::invocable OnComplete>
     void onAllComplete(OnComplete&& onComplete) {
         // check if all futures is already complete.
         for (const AFuture<T>& v : *this) {
@@ -212,7 +227,7 @@ public:
         onComplete();
         return;
 
-        setupTheHell:
+    setupTheHell:
         struct Temporary {
             OnComplete onComplete;
             AFutureSet myCopy;
@@ -235,27 +250,27 @@ public:
     }
 };
 
-template<typename Iterator, typename Functor>
+template <typename Iterator, typename Functor>
 auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
     using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
     AFutureSet<ResultType> futureSet;
 
     size_t itemCount = end - begin;
     size_t affinity = (glm::min)(AThreadPool::global().getTotalWorkerCount(), itemCount);
-    if (affinity == 0) return futureSet;
+    if (affinity == 0)
+        return futureSet;
     size_t itemsPerThread = itemCount / affinity;
 
     for (size_t threadIndex = 0; threadIndex < affinity; ++threadIndex) {
         auto forThreadBegin = begin;
         begin += itemsPerThread;
         auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
-        futureSet.push_back(*this * [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
-            return functor(forThreadBegin, forThreadEnd);
-        });
+        futureSet.push_back(*this *
+                                [functor = std::forward<Functor>(functor), forThreadBegin,
+                                 forThreadEnd]() -> decltype(auto) { return functor(forThreadBegin, forThreadEnd); });
     }
 
     return futureSet;
 }
-
 
 #include <AUI/Reflect/AReflect.h>

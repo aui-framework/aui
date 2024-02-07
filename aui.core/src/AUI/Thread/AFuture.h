@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <utility>
+#include "AUI/Util/ABitField.h"
 #if AUI_COROUTINES
 #include <coroutine>
 #endif
@@ -49,8 +51,10 @@ public:
  * @see AFuture::wait
  */
 AUI_ENUM_FLAG(AFutureWait) {
-    DEFAULT = 0b01,
-    ASYNC_ONLY = 0b00
+    JUST_WAIT = 0b00,
+    ALLOW_STACKFULL_COROUTINES = 0b10,
+    ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP = 0b01,
+    DEFAULT = ALLOW_STACKFULL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
 };
 
 
@@ -170,24 +174,7 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
-                std::unique_lock lock(mutex);
-                try {
-                    if ((thread || !cancelled) && !hasResult() && int(flags) & int(AFutureWait::DEFAULT) && task) {
-                        // task is not have picked up by the threadpool; execute it here
-                        lock.unlock();
-                        if (tryExecute(innerWeak)) {
-                            return;
-                        }
-                        lock.lock();
-                    }
-                    while ((thread || !cancelled) && !hasResult()) {
-                        cv.wait(lock);
-                    }
-                } catch (const AThread::Interrupted& e) {
-                    e.needRethrow();
-                }
-            }
+            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT) noexcept;
 
             void cancel() noexcept {
                 std::unique_lock lock(mutex);
@@ -316,6 +303,46 @@ namespace aui::impl::future {
                     }
                 }
             }
+
+            template<typename Callback>
+            void addOnSuccessCallback(Callback&& callback) {
+                if constexpr (isVoid) {
+                    if (onSuccess) {
+                        onSuccess = [prev = std::move(onSuccess),
+                                     callback = std::forward<Callback>(callback)]() mutable {
+                            prev();
+                            callback();
+                        };
+                    } else {
+                        onSuccess = [callback = std::forward<Callback>(callback)]() mutable { callback(); };
+                    }
+                } else {
+                    if (onSuccess) {
+                        onSuccess = [prev = std::move(onSuccess),
+                                     callback = std::forward<Callback>(callback)](const Value& v) mutable {
+                            prev(v);
+                            callback(v);
+                        };
+                    } else {
+                        onSuccess = [callback = std::forward<Callback>(callback)](const Value& v) mutable {
+                            callback(v);
+                        };
+                    }
+                }
+            }
+
+            template<typename Callback>
+            void addOnErrorCallback(Callback&& callback) {
+                if (onError) {
+                    onError = [prev = std::move(onError),
+                               callback = std::forward<Callback>(callback)](const AException& v) {
+                        prev(v);
+                        callback(v);
+                    };
+                } else {
+                    onError = [callback = std::forward<Callback>(callback)](const AException& v) { callback(v); };
+                }
+            }
         };
 
 #if AUI_COROUTINES
@@ -372,51 +399,14 @@ namespace aui::impl::future {
         template<typename Callback>
         void onSuccess(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
-            if constexpr(isVoid) {
-                if ((*mInner)->onSuccess) {
-                    (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)]() mutable {
-                        prev();
-                        callback();
-                    };
-                } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() mutable {
-                        callback();
-                    };
-                }
-            } else {
-                if ((*mInner)->onSuccess) {
-                    (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)](const Value& v) mutable {
-                        prev(v);
-                        callback(v);
-                    };
-                } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)](
-                            const Value& v) mutable {
-                        callback(v);
-                    };
-                }
-            }
+            (*mInner)->addOnSuccessCallback(std::forward<Callback>(callback));
             (*mInner)->notifyOnSuccessCallback(lock);
         }
 
         template<aui::invocable<const AException&> Callback>
         void onError(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
-
-            if ((*mInner)->onError) {
-                (*mInner)->onError = [prev = std::move((*mInner)->onError),
-                        callback = std::forward<Callback>(callback)](const AException& v) {
-                    prev(v);
-                    callback(v);
-                };
-            } else {
-                (*mInner)->onError = [callback = std::forward<Callback>(callback)](
-                        const AException& v) {
-                    callback(v);
-                };
-            }
+            (*mInner)->addOnErrorCallback(std::forward<Callback>(callback));
         }
 
 
@@ -440,7 +430,7 @@ namespace aui::impl::future {
         /**
          * @brief Sleeps if the supplyResult is not currently available.
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
-         *       yet. This behaviour can be disabled by <code>AFutureWait::ASYNC_ONLY</code> flag.
+         *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
             (*mInner)->wait(mInner, flags);
@@ -523,10 +513,12 @@ namespace aui::impl::future {
 
 
 /**
- * @brief Represents the result of an asynchronous operation.
+ * @brief Represents a value that is not currently available.
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
+ * AFuture is used as a result for asynchronous functions.
+ *
  * AFuture is returned by @ref async keyword:
  *
  * @code{cpp}
@@ -537,14 +529,30 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * If your operation consists of complex future sequences, use AComplexFutureOperation.
+ * If your operation consists of complex future sequences, you have multiple options:
+ * 1. Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
+ *    threadpool thread (including the one that runs @ref async 's body). If value is not currently available, these
+ *    methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
+ *    @note Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
+ *          acquiring operation.
+ * 2. Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
+ *    AFuture value:
+ * @code{cpp}
+ * AFuture<int> longOperation();
+ * AFuture<int> myFunction() {
+ *   int resultOfLongOperation = co_await longOperation();
+ *   return resultOfLongOperation + 1;
+ * }
+ * @endcode
+ * 3. Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
+ *    AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
+ *    method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
  *
  * @code{cpp}
  *
  * @endcode
  *
- * If it does not suit your needs, you be default-construct AFuture and the result can be supplied manually with the
- * supplyResult() method:
+ * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyResult() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
@@ -555,6 +563,10 @@ namespace aui::impl::future {
  * t.start();
  * cout << *theFuture; // 123
  * @endcode
+ *
+ * @note Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
+ *       unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
+ *       Consider using one of suggested methods of usage instead.
  *
  * AFuture provides a set of functions to manage the process execution: cancel(), wait(), hasResult(), hasValue().
  *
@@ -793,6 +805,41 @@ public:
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Common/AException.h>
 
+template <typename Value>
+void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
+                                                   ABitField<AFutureWait> flags) noexcept {
+    std::unique_lock lock(mutex);
+    try {
+        if ((thread || !cancelled) && !hasResult() && flags & AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP && task) {
+            // task is not have picked up by the threadpool; execute it here
+            lock.unlock();
+            if (tryExecute(innerWeak)) {
+                return;
+            }
+            lock.lock();
+        }
+
+        if (flags & AFutureWait::ALLOW_STACKFULL_COROUTINES) {
+            if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
+                auto callback = [threadPoolWorker](auto&&...) {
+                    threadPoolWorker->threadPool().wakeUpAll();
+                };
+                addOnSuccessCallback(callback);
+                addOnErrorCallback(callback);
+                lock.unlock();
+                threadPoolWorker->loop([&] { return !hasValue(); });
+
+                return;
+            }
+        }
+        while ((thread || !cancelled) && !hasResult()) {
+            cv.wait(lock);
+        }
+    } catch (const AThread::Interrupted& e) {
+        e.needRethrow();
+    }
+}
+
 #if AUI_COROUTINES
 template<typename Value>
 struct aui::impl::future::Future<Value>::CoPromiseType {
@@ -835,7 +882,7 @@ auto operator co_await(AFuture<T> future) {
 
         void await_suspend(std::coroutine_handle<> h)
         {
-            future.onSuccess([h](const T&) {
+            future.onSuccess([h](const int&) {
                 h.resume();
             });
             
