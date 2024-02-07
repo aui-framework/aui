@@ -359,7 +359,7 @@ namespace aui {
 
     template<typename T>
     _<T> ptr::fake(T* raw) {
-        return _<T>(raw, [](T*) {});
+        return _<T>(std::shared_ptr<void>{}, raw);
     }
 
     template<typename T, typename Deleter>
