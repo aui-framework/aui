@@ -550,8 +550,6 @@ namespace aui::impl::future {
  *
  * @code{cpp}
  *
- * @endcode
- *
  * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyResult() method:
  *
  * @code{cpp}
@@ -568,7 +566,8 @@ namespace aui::impl::future {
  *       unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
  *       Consider using one of suggested methods of usage instead.
  *
- * AFuture provides a set of functions to manage the process execution: cancel(), wait(), hasResult(), hasValue().
+ * AFuture provides a set of functions for both "value emitting" side: supplyValue(), supplyException(), and "value
+ * receiving" side:
  *
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *
