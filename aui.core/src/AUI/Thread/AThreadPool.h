@@ -37,7 +37,7 @@ class AFuture;
  */
 class API_AUI_CORE AThreadPool {
    public:
-    class Worker : public AThread {
+    class API_AUI_CORE Worker : public AThread {
        private:
         bool mEnabled = true;
         bool processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue);
