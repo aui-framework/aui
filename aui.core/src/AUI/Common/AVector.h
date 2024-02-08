@@ -52,6 +52,8 @@ public:
     template<typename Iterator>
     explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
 
+    explicit AVector(std::vector<StoredType, Allocator>&& rhs) noexcept: super(std::move(rhs)) {}
+
 
     /**
      * Inserts all values of the specified container to the end.
