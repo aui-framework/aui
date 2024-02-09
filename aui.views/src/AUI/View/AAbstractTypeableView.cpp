@@ -420,3 +420,7 @@ AString AAbstractTypeableView::getDisplayText() {
 void AAbstractTypeableView::doRedraw() {
     redraw();
 }
+
+void AAbstractTypeableView::onSelectionChanged() {
+    if (selectionChanged) emit selectionChanged(selection());
+}

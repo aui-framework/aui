@@ -28,6 +28,7 @@
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
 #include "AUI/GL/Vao.h"
+#include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
@@ -294,6 +295,9 @@ void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2
 }
 
 void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
+    if (AInput::isKeyDown(AInput::LCONTROL)) {
+        return;
+    }
     mRectangleVao.bind();
 
     mRectangleVao.insert(0, AArrayView(getVerticesForRect(position, size)), "drawRectImpl");
@@ -526,6 +530,9 @@ public:
 
 
     void draw() override {
+    if (AInput::isKeyDown(AInput::LCONTROL)) {
+        return;
+    }
         if (mIndexBuffer.count() == 0) return;
 
         decltype(auto) img = mEntryData->texturePacker.getImage();

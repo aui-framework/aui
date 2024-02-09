@@ -185,6 +185,19 @@ namespace aui::impl::slot {
  */
 #define AUI_EMIT_FOREIGN_SIGNAL(object) (*object) ^ object
 
+/**
+ * @brief Defers execution of the next block to the end of current block (RAII scope).
+ * @ingroup useful_macros
+ * @details
+ * This example prints "Hello world\n":
+ * @code{cpp}
+ * AUI_DEFER { printf("world\n") };
+ * printf("Hello");
+ * @endcode
+ * @sa ARaiiHelper
+ */
+#define AUI_DEFER ARaiiHelper auiDeffer ## __LINE__ = [&]
+
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name (in place)
