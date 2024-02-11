@@ -143,4 +143,15 @@ TEST(Json, Double2)
     EXPECT_NEAR(v.asArray()[1].asNumber(), -0.13864406, 0.0001);
 }
 
+TEST(Json, Utf8Sequence1)
+{
+    auto v = AJson::fromString(R"(["\u0425\u0443\u0439"])");
+    EXPECT_EQ(v.asArray()[0].asString(), "Хуй");
+}
 
+
+TEST(Json, Utf8Sequence2)
+{
+    auto v = AJson::fromString(R"([" \u043c\u0438\u440e, "])");
+    EXPECT_EQ(v.asArray()[0].asString(), " мире, ");
+}

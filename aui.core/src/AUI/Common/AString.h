@@ -41,6 +41,7 @@ private:
 public:
 
     using iterator = super::iterator;
+    using value_type = super::value_type;
     using const_iterator = super::const_iterator;
     using reverse_iterator = super::reverse_iterator;
     using const_reverse_iterator = super::const_reverse_iterator;

@@ -15,6 +15,9 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ATokenizer.h"
+#include "AUI/Common/ADynamicVector.h"
+#include "AUI/Common/AOptional.h"
+#include "AUI/Common/AStaticVector.h"
 #include "AUI/Common/AStringVector.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/ASet.h"
@@ -271,6 +274,35 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
                     case 'r': out += '\r'; break;
                     case 'n': out += '\n'; break;
                     case 't': out += '\t'; break;
+                    case 'u': {
+                        // utf8 sequence
+                        AString::value_type currentChar = 0;
+                        auto commit4bitValue = [&](uint8_t v) {
+                            currentChar = currentChar << 4 | v;
+                        };
+                        for (;;) {
+                            char bit4 = readChar();
+                            if (bit4 >= '0' && bit4 <= '9') {
+                                commit4bitValue(bit4 - '0');
+                                continue;
+                            }
+
+                            if (bit4 >= 'a' && bit4 <= 'f') {
+                                commit4bitValue(bit4 - 'a' + 10);
+                                continue;
+                            }
+
+                            if (bit4 >= 'A' && bit4 <= 'F') {
+                                commit4bitValue(bit4 - 'A');
+                                continue;
+                            }
+                            reverseByte();
+                            break;
+                        }
+                        out += AString(1, currentChar).toStdString();
+
+                        break;
+                    }
                     default: out += tmp;
                 }
             }

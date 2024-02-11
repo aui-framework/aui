@@ -406,3 +406,9 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
     curlMulti << _new<ACurl>(std::move(*this));
     return result;
 }
+
+ACurl::Builder& ACurl::Builder::withTimeout(std::chrono::seconds timeout) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, timeout.count());
+    assert(res == 0);
+    return *this;
+}
