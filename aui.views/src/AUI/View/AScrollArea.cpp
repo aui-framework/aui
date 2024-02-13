@@ -139,6 +139,10 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
 }
 
 void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
+    if (!target) {
+        // nullptr target???
+        return;
+    }
     const auto targetBegin = target->getPositionInWindow();
     const auto myBegin = getPositionInWindow();
 
