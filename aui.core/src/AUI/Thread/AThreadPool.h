@@ -52,10 +52,6 @@ class API_AUI_CORE AThreadPool {
 
         template<aui::predicate ShouldContinue>
         void loop(ShouldContinue&& shouldContinue) {
-            if (!shouldContinue()) {
-                return;
-            }
-
             std::unique_lock lock(mTP.mQueueLock);
             while (shouldContinue()) {
                 iteration(lock);

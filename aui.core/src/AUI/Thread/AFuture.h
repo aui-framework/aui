@@ -825,8 +825,8 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
                 };
                 addOnSuccessCallback(callback);
                 addOnErrorCallback(callback);
-                lock.unlock();
-                threadPoolWorker->loop([&] { return !hasValue(); });
+
+                threadPoolWorker->loop([&] { lock.unlock(); return !hasValue(); });
 
                 return;
             }
