@@ -25,6 +25,8 @@
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Curl/AWebsocket.h"
 #include "AUI/Thread/AEventLoop.h"
+#include "AUI/Thread/AFuture.h"
+#include "AUI/Thread/AThreadPool.h"
 #include "AUI/Util/kAUI.h"
 #include "AUI/Curl/ACurlMulti.h"
 #include <random>
@@ -135,3 +137,30 @@ public:
         acceptMessage(msg);
     }
 };
+
+TEST(CurlTest, StackfulCoroutine) {
+
+
+    AThreadPool localThreadPool(1);
+    int callOrder = 0;
+    auto f1 = localThreadPool * [&] {
+        EXPECT_EQ(callOrder, 0);
+
+        auto future = ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withHeaders({
+                "Content-Type: application/json; charset=utf-8"
+            })
+            .withBody("[\"hello\"]").runAsync();
+        auto buffer = AJson::fromBuffer(future->body);
+        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
+        EXPECT_EQ(callOrder++, 1);
+    };
+    auto f2 = localThreadPool * [&] {
+        // should be executed earlier despite of the task is pushed to threadpool later.
+        EXPECT_EQ(callOrder++, 0);
+    };
+    f1.wait(AFutureWait::JUST_WAIT);
+
+    EXPECT_EQ(callOrder, 2);
+}

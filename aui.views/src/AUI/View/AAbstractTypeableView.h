@@ -81,6 +81,8 @@ protected:
     virtual size_t length() const = 0;
     virtual void updateSelectionOnTextSet(const AString& t);
 
+    void onSelectionChanged() override;
+
     /**
      * Char enter implementation. Should be called in onCharEntered.
      * @param c
@@ -162,6 +164,8 @@ signals:
      * </dl>
      */
     emits<AString> textChanging;
+
+    emits<Selection> selectionChanged;
 };
 
 

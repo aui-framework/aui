@@ -21,7 +21,10 @@
 #pragma once
 
 #include <AUI/Common/AString.h>
+#include <cstdint>
 #include <glm/glm.hpp>
+#include <optional>
+#include <variant>
 #include <AUI/Common/AMap.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Views.h>
@@ -30,21 +33,6 @@ class AString;
 
 namespace gl {
 	class API_AUI_VIEWS Program {
-	private:
-		uint32_t mProgram;
-		uint32_t mVertex = 0;
-		uint32_t mFragment = 0;
-		uint32_t load(const AString&, uint32_t type, bool raw);
-        mutable int32_t mUniforms[64];
-
-        class UniformState {
-        public:
-            enum Value {
-                UNINITIALIZED = -2,
-                DOES_NOT_EXIST = -1
-            };
-        };
-		
 	public:
 
         class API_AUI_VIEWS Uniform
@@ -105,5 +93,34 @@ namespace gl {
 			static gl::Program* c;
 			return c;
 		}
+
+	private:
+		uint32_t mProgram;
+		uint32_t mVertex = 0;
+		uint32_t mFragment = 0;
+		uint32_t load(const AString&, uint32_t type, bool raw);
+
+        struct UniformCache {
+            int32_t id = UniformState::UNINITIALIZED;
+            using Value = std::variant<std::nullopt_t, int, float, double ,glm::vec2, glm::vec3, glm::vec4, glm::mat3, glm::mat4, glm::dmat4>;
+            Value lastValue = std::nullopt;
+        };
+        mutable UniformCache mUniforms[64];
+
+        class UniformState {
+        public:
+            enum Value {
+                UNINITIALIZED = -2,
+                DOES_NOT_EXIST = -1
+            };
+        };
+
+        template<typename T>
+        inline bool sameAsCache(const gl::Program::Uniform& uniform, T value) const {
+            if (auto p = std::get_if<T>(&mUniforms[uniform.getId()].lastValue)) {
+                return *p == value;
+            }
+            return false;
+        }
     };
 }

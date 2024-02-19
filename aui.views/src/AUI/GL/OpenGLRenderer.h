@@ -20,6 +20,7 @@
 #include <AUI/GL/Program.h>
 #include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
+#include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
 
 class OpenGLRenderer: public IRenderer {
@@ -33,28 +34,26 @@ public:
 
         FontEntryData() {
             texture.bind();
-            gl::Texture2D::setupNearest();
+            texture.setupNearest();
         }
     };
 
 private:
-    gl::Program mSolidShader;
-    gl::Program mGradientShader;
-    gl::Program mRoundedSolidShader;
-    gl::Program mRoundedSolidShaderBorder;
-    gl::Program mRoundedGradientShader;
-    gl::Program mBoxShadowShader;
-    gl::Program mBoxShadowInnerShader;
-    gl::Program mTexturedShader;
-    gl::Program mSymbolShader;
-    gl::Program mSymbolShaderSubPixel;
-    gl::Program mSquareSectorShader;
-    gl::Vao mTempVao;
+    AOptional<gl::Program> mSolidShader;
+    AOptional<gl::Program> mGradientShader;
+    AOptional<gl::Program> mRoundedSolidShader;
+    AOptional<gl::Program> mRoundedSolidShaderBorder;
+    AOptional<gl::Program> mRoundedGradientShader;
+    AOptional<gl::Program> mBoxShadowShader;
+    AOptional<gl::Program> mBoxShadowInnerShader;
+    AOptional<gl::Program> mTexturedShader;
+    AOptional<gl::Program> mSymbolShader;
+    AOptional<gl::Program> mSymbolShaderSubPixel;
+    AOptional<gl::Program> mSquareSectorShader;
+    AOptional<gl::Program> mLineSolidDashedShader;
+    gl::Vao mRectangleVao;
+    gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;
-
-    glm::uvec2 mViewportSize;
-
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
 
 
     struct CharacterData {
@@ -69,17 +68,22 @@ private:
                                           glm::vec2 size);
 
     void uploadToShaderCommon();
-    void identityUv();
 
-    void endDraw(const ABrush& brush);
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
+
+    /**
+     * @return true, if the caller should compute distances
+     */
+    bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
+
 protected:
     ITexture* createNewTexture() override;
 
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
+    void identityUv();
     bool isVaoAvailable() const noexcept;
 
     void drawRect(const ABrush& brush,
@@ -129,11 +133,9 @@ public:
 
     glm::mat4 getProjectionMatrix() const override;
 
-    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
+    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
 
-    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
-
-    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
+    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
 
     void drawSquareSector(const ABrush& brush,
                           const glm::vec2& position,
@@ -150,16 +152,7 @@ public:
     void endPaint();
     
     uint32_t getDefaultFb() const noexcept;
-    void bindViewport() const noexcept;
     void bindTemporaryVao() const noexcept;
-
-    [[nodiscard]]
-    uint32_t getSupersamplingRatio() const noexcept;
-
-    [[nodiscard]]
-    glm::uvec2 viewportSize() const noexcept {
-        return mViewportSize;
-    }
 };
 
 

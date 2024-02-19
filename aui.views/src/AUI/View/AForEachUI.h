@@ -76,4 +76,4 @@ public:
     }
 };
 
-#define ui_for(value, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [&](const std::decay_t<decltype(model)>::stored_t::stored_t& value, unsigned index) -> _<AView>
+#define AUI_DECLARATIVE_FOR(value, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [&](const std::decay_t<decltype(model)>::stored_t::stored_t& value, unsigned index) -> _<AView>

@@ -42,8 +42,16 @@ public:
 
     AListModel() = default;
     AListModel(const self& s): mVector(s.mVector) {}
-    AListModel(self&& s): mVector(std::move(s.mVector)) {}
-    explicit AListModel(AVector<StoredType>&& vector): mVector(std::move(vector)) {}
+    AListModel(self&& s) noexcept: mVector(std::move(s.mVector)) {}
+    explicit AListModel(AVector<StoredType>&& vector) noexcept: mVector(std::move(vector)) {}
+
+    AListModel& operator=(AVector<StoredType>&& rhs) noexcept {
+        clear();
+        mVector = std::move(rhs);
+        emit this->dataInserted(this->range(AListModelIndex(0),
+                                            AListModelIndex(mVector.size())));
+        return *this;
+    }
 
     void setItem(const AListModelIndex& item, const StoredType& value) override {
         mVector[item.getRow()] = value;
@@ -242,5 +250,10 @@ public:
     template<typename UnaryOperation>
     auto map(UnaryOperation&& transformer) {
         return mVector.map(std::forward<UnaryOperation>(transformer));
+    }
+
+    [[nodiscard]]
+    const AVector<StoredType>& toVector() noexcept {
+        return mVector;
     }
 };

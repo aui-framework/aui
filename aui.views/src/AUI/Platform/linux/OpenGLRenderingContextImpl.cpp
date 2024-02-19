@@ -157,9 +157,6 @@ void OpenGLRenderingContext::init(const Init& init) {
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
-
-    //assert(glGetError() == 0);
-
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -175,11 +172,13 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(ourDisplay, w->mHandle, ourContext);
     }
+    beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
+    endFramebuffer();
     mRenderer->endPaint();
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXSwapBuffers(ourDisplay, w->mHandle);

@@ -18,6 +18,8 @@
 
 namespace aui::ShaderUniforms {
     gl::Program::Uniform COLOR("SL_uniform_color");
+    gl::Program::Uniform COLOR1("SL_uniform_color1");
+    gl::Program::Uniform COLOR2("SL_uniform_color2");
     gl::Program::Uniform GRADIENT_MAT_UV("SL_uniform_matUv");
     gl::Program::Uniform TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
@@ -32,4 +34,6 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform WHICH_ALGO("SL_uniform_whichAlgo");
     gl::Program::Uniform M1("SL_uniform_m1");
     gl::Program::Uniform M2("SL_uniform_m2");
+    gl::Program::Uniform DIVIDER("SL_uniform_divider");
+    gl::Program::Uniform THRESHOLD("SL_uniform_threshold");
 }

@@ -167,12 +167,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
 
-    //assert(glGetError() == 0);
-
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-    //assert(("no stencil bits" && stencilBits > 0));
-
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -184,6 +180,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
+    beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
@@ -196,6 +193,7 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
     if (mSmoothResize) {

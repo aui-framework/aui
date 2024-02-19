@@ -165,11 +165,10 @@ public:
 
     void popMaskAfter() override;
 
-    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
 
-    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
+    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
 
-    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
+    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
 
     void drawSquareSector(const ABrush& brush,
                           const glm::vec2& position,
@@ -178,6 +177,8 @@ public:
                           AAngleRadians end) override;
 protected:
     ITexture* createNewTexture() override;
+
+    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
 
 };
 

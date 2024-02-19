@@ -78,12 +78,13 @@ private:
 public:
 	AListItem()
 	{
-
+        addAssName(".list-item");
 	}
 
 	AListItem(const AString& text)
 		: ALabel(text)
 	{
+        addAssName(".list-item");
 	}
 
 	virtual ~AListItem() = default;
@@ -104,13 +105,13 @@ public:
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 

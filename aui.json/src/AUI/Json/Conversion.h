@@ -229,6 +229,16 @@ struct AJsonConv<int> {
         dst = json.asInt();
     }
 };
+
+template<>
+struct AJsonConv<int64_t> {
+    static AJson toJson(int64_t v) {
+        return v;
+    }
+    static void fromJson(const AJson& json, int64_t& dst) {
+        dst = json.asLongInt();
+    }
+};
 template<>
 struct AJsonConv<short> {
     static AJson toJson(int v) {

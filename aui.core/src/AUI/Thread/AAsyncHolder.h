@@ -96,7 +96,19 @@ public:
 
     void waitForAll() {
         std::unique_lock lock(mSync);
-        mFutureSet.waitForAll();
+        if (!mFutureSet.empty()) {
+            waitAgain:
+            auto futureSet = std::move(mFutureSet);
+            lock.unlock();
+            futureSet.waitForAll();
+            lock.lock();
+            if (mFutureSet.empty()) {
+                mFutureSet = std::move(futureSet);
+            } else {
+                mFutureSet.insertAll(futureSet);
+                goto waitAgain;
+            }
+        }
 
         while (!mCustomTypeFutures.empty()) {
             mCustomTypeFutures.front()->wait(lock);

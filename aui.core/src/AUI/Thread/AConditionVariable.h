@@ -17,6 +17,7 @@
 #pragma once
 #include <condition_variable>
 #include "AThread.h"
+#include "AUI/Performance/APerformanceSection.h"
 
 /**
  * @brief Represents a condition variable.
@@ -75,6 +76,7 @@ public:
 
     template<typename Lock>
     void wait(Lock& lock) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait(lock);
@@ -89,6 +91,7 @@ public:
      */
     template<typename Lock, typename Predicate>
     void wait(Lock& lock, Predicate&& predicate) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait(lock, PredicateHelper(std::forward<Predicate>(predicate)));
@@ -103,6 +106,7 @@ public:
      */
     template<typename Lock, typename Duration>
     void wait_for(Lock& lock, Duration duration) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait_for(lock, duration);
@@ -118,6 +122,7 @@ public:
      */
     template<typename Lock, typename Duration, typename Predicate>
     void wait_for(Lock& lock, Duration duration, Predicate&& predicate) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait_for(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));
@@ -132,6 +137,7 @@ public:
      */
     template<typename Lock, typename Timepoint>
     void wait_until(Lock& lock, Timepoint timepoint) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait_until(lock, timepoint);
@@ -147,6 +153,7 @@ public:
      */
     template<typename Lock, typename Duration, typename Predicate>
     void wait_until(Lock& lock, Duration duration, Predicate&& predicate) {
+        APerformanceSection section("Conditional Variable");
         {
             WaitHelper w(*this);
             mImpl.wait_until(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));

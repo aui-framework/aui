@@ -25,7 +25,9 @@
 #include "gl.h"
 #include "AUI/Views.h"
 
-//#define SO_STATE
+
+// comment this define in order to debug state machine cache failures
+#define SO_STATE
 
 namespace gl {
 	/**

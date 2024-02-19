@@ -29,7 +29,7 @@ void AAnimatedDrawable::draw(const IDrawable::Params &params) {
         mTexture = ARender::getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
-        auto img = _new<AImage>(mFactory->provideImage(params.size));
+        auto img = mFactory->provideImage(params.size);
         if (mFactory->hasAnimationFinished()) {
             emit animationFinished;
         }

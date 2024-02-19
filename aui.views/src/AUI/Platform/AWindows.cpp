@@ -17,6 +17,8 @@
 
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Performance/APerformanceFrame.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
@@ -76,6 +78,12 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
+#if AUI_PROFILING
+    APerformanceFrame frame([&](APerformanceSection::Datas sections) {
+        emit performanceFrameComplete(sections);
+    });
+#endif
+
     {
         if (isClosed()) {
             return;

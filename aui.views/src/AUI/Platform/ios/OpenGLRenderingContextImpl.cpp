@@ -39,6 +39,7 @@ void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+    beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
@@ -50,6 +51,7 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    endFramebuffer();
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);
 }

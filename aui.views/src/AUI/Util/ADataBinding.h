@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "AUI/Traits/concepts.h"
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
@@ -250,8 +251,8 @@ public:
         notifyUpdate(nullptr, c.i);
     }
 
-    template<typename ModelField>
-    void setValue(ModelField(Model::*field), ModelField value) {
+    template<typename ModelField, aui::convertible_to<ModelField> U>
+    void setValue(ModelField(Model::*field), U&& value) {
         mModel->*field = std::move(value);
         notifyUpdate(field);
     }

@@ -54,7 +54,7 @@ struct BrushHelper {
         if (!textureHelper) {
             auto tex = dynamic_cast<SoftwareTexture*>(brush.texture.get());
             textureHelper = {
-                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != glm::ivec2(tex->getImage()->size()),
+                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != glm::ivec2(tex->getImage().size()),
                 tex
             };
         }
@@ -65,17 +65,17 @@ struct BrushHelper {
             auto uv1 = brush.uv1.valueOr(glm::ivec2{0, 0});
             auto uv2 = brush.uv2.valueOr(glm::ivec2{0, 0});
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
-            auto& image = textureHelper->texture->getImage();
-            auto imagePixelCoords = glm::ivec2{glm::vec2(image->size()) * uv};
+            const auto& image = textureHelper->texture->getImage();
+            auto imagePixelCoords = glm::ivec2{glm::vec2(image.size()) * uv};
             if (glm::any(glm::lessThan(imagePixelCoords, glm::ivec2(0)))) {
                 return;
             }
 
-            auto color = image->get({imagePixelCoords.x, imagePixelCoords.y});
+            auto color = image.get({imagePixelCoords.x, imagePixelCoords.y});
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
-            auto color = textureHelper->texture->getImage()->get(glm::uvec2{ x, y } - glm::uvec2(position));
+            auto color = textureHelper->texture->getImage().get(glm::uvec2{ x, y } - glm::uvec2(position));
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         }
     }
@@ -87,7 +87,9 @@ struct BrushHelper {
         aui::render::brush::gradient::Helper h(brush);
         const auto output = Shader::entry({.uv = calculateUv()},
                                           {
-                                            .gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
+                                            //.gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
+                                            .color1 = h.colors[0],
+                                            .color2 = h.colors[1],
                                             .matUv = h.matrix,
                                             .color = renderer->getColor()
                                           });
@@ -293,7 +295,7 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .vertex = iTransformedPos + glm::ivec2{x, y},
+                .vertex = glm::ivec4(iTransformedPos + glm::ivec2{x, y}, 0, 1),
             }, uniform).albedo;
 
             /*
@@ -331,7 +333,7 @@ void SoftwareRenderer::drawBoxShadowInner(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .vertex = transformedPos + glm::vec2{x, y},
+                .vertex = glm::vec4(transformedPos + glm::vec2{x, y}, 0.f, 1.f),
             }, uniform).albedo;
 
             /*
@@ -553,7 +555,7 @@ void SoftwareRenderer::setWindow(ABaseWindow* window) {
     }
 }
 
-void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
+void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width) {
     // TODO
     if (p1.x == p2.x || p1.y == p2.y) {
         auto begin = glm::min(p1, p2);
@@ -562,21 +564,21 @@ void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2)
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
+void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() == 0) {
         return;
     }
 
     auto prevPoint = points[0];
     for (auto point : points | ranges::view::drop(1)) {
-        drawLine(brush, prevPoint, point);
+        drawLine(brush, prevPoint, point, style, width);
         prevPoint = point;
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
+void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) {
     for (auto[p1, p2] : points) {
-        drawLine(brush, p1, p2);
+        drawLine(brush, p1, p2, style, width);
     }
 }
 

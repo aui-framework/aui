@@ -84,7 +84,7 @@ public:
             std::unique_lock lock(inner->mutex);
             inner->value = std::move(value);
             inner->cv.notify_all();
-            inner->notifyOnSuccessCallback();
+            inner->notifyOnSuccessCallback(lock);
         }
     }
 

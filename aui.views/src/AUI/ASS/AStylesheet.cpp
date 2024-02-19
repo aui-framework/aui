@@ -377,16 +377,16 @@ AStylesheet::AStylesheet() {
             BorderLeft { 1_dp, 0x0_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<AAbstractLabel>(), c(".list-item")},
+            c(".list-item"),
             Margin { 0 },
             Padding { 1_dp, 4_dp, 4_dp },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<AAbstractLabel>::hover(), c::hover(".list-item"),},
+            c::hover(".list-item"),
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > Selected(t<AAbstractLabel>()), Selected(c(".list-item"))},
+            Selected(c(".list-item")),
             BackgroundSolid { 0xcde8ff_rgb },
         },
 

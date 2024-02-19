@@ -26,6 +26,17 @@
 class ABaseWindow;
 class AWindow;
 
+/**
+ * @brief Glue between AWindow and IRenderer.
+ * @details
+ * IRenderingContext is linker object between AWindow and IRenderer, that exposes IRenderer to the client code in order
+ * to draw.
+ *
+ * Unlike IRenderer, each AWindow has it's own instance of IRenderingContext, thus it can be used to carry
+ * platform-specific and window-specific objects, like handles and framebuffers.
+ *
+ * @sa IRenderer
+ */
 class API_AUI_VIEWS IRenderingContext {
 public:
     struct API_AUI_VIEWS Init {

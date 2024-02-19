@@ -81,7 +81,6 @@ void OpenGLRenderingContext::init(const Init& init) {
     auto contentView  = [static_cast<NSWindow*>(window.mHandle) contentView];
     [contentView setWantsBestResolutionOpenGLSurface:YES];
     [context setView:contentView];
-    //assert(glGetError() == 0);
 
     [context makeCurrentContext];
 
@@ -110,6 +109,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     //bool ok = wglMakeCurrent(mPainterDC, ourHrc);
     //assert(ok);
 
+    beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
@@ -125,6 +125,7 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    endFramebuffer();
     mRenderer->endPaint();
     //SwapBuffers(mPainterDC);
     //wglMakeCurrent(mWindowDC, ourHrc);

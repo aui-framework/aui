@@ -25,6 +25,8 @@
 #include <AUI/Util/APool.h>
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
+#include "AUI/Render/ABorderStyle.h"
+#include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
 
@@ -142,6 +144,11 @@ enum class Blending {
 /**
  * @brief Base class for rendering (for drawing use ARender facade instead).
  * @ingroup views
+ * @details
+ * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
+ * specific routines.
+ *
+ * @sa IRenderingContext
  */
 class IRenderer {
 public:
@@ -351,34 +358,23 @@ public:
      */
     virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
-
-
-    /**
-     * @brief Draws a line between <code>p1</code> and <code>p2</code>.
-     * @param brush brush
-     * @param p1 first point
-     * @param p2 second point
-     * @details
-     * <dl>
-     *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
-     * </dl>
-     */
-    virtual void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) = 0;
-
     /**
      * @brief Draws polyline (non-loop line strip).
      * @param brush brush
      * @param points polyline points
+     * @param style style
+     * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) = 0;
+    virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
 
     /**
      * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points
+     * @param style style
+     * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
+    virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
 
     /**
      * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.

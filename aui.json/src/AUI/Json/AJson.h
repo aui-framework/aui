@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/IO/IOutputStream.h>
+#include "AUI/Common/AOptional.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
@@ -211,6 +212,14 @@ public:
     [[nodiscard]]
     bool contains(const AString& mapKey) const {
         return as<Object>().contains(mapKey);
+    }
+
+    [[nodiscard]]
+    AOptional<AJson> containsOpt(const AString& mapKey) const {
+        if (auto c = as<Object>().contains(mapKey)) {
+            return c->second;
+        }
+        return std::nullopt;
     }
 
     AJson& operator[](const AString& mapKey) {

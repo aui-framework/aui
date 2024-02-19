@@ -939,6 +939,16 @@ signals:
     emits<> clicked;
 
     /**
+     * @brief Position changed.
+     */
+    emits<glm::ivec2> positionChanged;
+
+    /**
+     * @brief Size changed.
+     */
+    emits<glm::ivec2> sizeChanged;
+
+    /**
      * @brief Geometry (position and size) changed.
      */
     emits<glm::ivec2, glm::ivec2> geometryChanged;

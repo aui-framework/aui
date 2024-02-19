@@ -372,11 +372,11 @@ void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event
 }
 
 AMenuModel AAbstractTypeableView::composeContextMenu() {
-    return { { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
-             { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
-             { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
-             AMenu::SEPARATOR,
-             { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !text().empty() } };
+    return { { .name = "aui.cut"_i18n, .shortcut = AInput::LCONTROL + AInput::X, .onAction = [&]{cutToClipboard();}, .enabled = hasSelection(), },
+             { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
+             { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
+             { .type = AMenu::SEPARATOR, },
+             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !text().empty() } };
 }
 
 void AAbstractTypeableView::setText(const AString& t)
@@ -419,4 +419,8 @@ AString AAbstractTypeableView::getDisplayText() {
 
 void AAbstractTypeableView::doRedraw() {
     redraw();
+}
+
+void AAbstractTypeableView::onSelectionChanged() {
+    if (selectionChanged) emit selectionChanged(selection());
 }

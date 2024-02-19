@@ -244,6 +244,12 @@ public:
         }
 
         /**
+         * @brief Specifies acceptable response time.
+         * @return this
+         */
+        Builder& withTimeout(std::chrono::seconds timeout);
+
+        /**
          * @brief Like withBody with callback, but wrapped with string.
          */
         Builder& withBody(std::string contents) {

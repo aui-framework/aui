@@ -94,6 +94,17 @@ public:
      */
     void clearSelection();
 
+    void setSelection(int cursorIndex) {
+        mCursorIndex = cursorIndex;
+        mCursorSelection = -1;
+        onSelectionChanged();
+    }
+
+    void setSelection(Selection selection) {
+        mCursorIndex = selection.begin;
+        mCursorSelection = selection.end;
+        onSelectionChanged();
+    }
 
 protected:
     unsigned mCursorIndex = 0;
@@ -105,6 +116,7 @@ protected:
     virtual bool isLButtonPressed() = 0;
     virtual AString getDisplayText() = 0;
     virtual void doRedraw() = 0;
+    virtual void onSelectionChanged() = 0;
 
 
     void handleMouseDoubleClicked(const APointerPressedEvent& event);

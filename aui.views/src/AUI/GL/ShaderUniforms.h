@@ -18,6 +18,8 @@
 
 namespace aui::ShaderUniforms {
     extern gl::Program::Uniform COLOR;
+    extern gl::Program::Uniform COLOR1;
+    extern gl::Program::Uniform COLOR2;
     extern gl::Program::Uniform GRADIENT_MAT_UV;
     extern gl::Program::Uniform TRANSFORM;
     extern gl::Program::Uniform SL_UNIFORM_TRANSFORM;
@@ -34,4 +36,6 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform WHICH_ALGO;
     extern gl::Program::Uniform M1;
     extern gl::Program::Uniform M2;
+    extern gl::Program::Uniform DIVIDER;
+    extern gl::Program::Uniform THRESHOLD;
 }

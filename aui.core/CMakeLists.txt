@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
+option(AUI_COROUTINES "Use C++20 coroutines" OFF)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
@@ -26,8 +27,17 @@ if(AUI_DEBUG)
 else()
     target_compile_definitions(aui.core PUBLIC AUI_DEBUG=0)
 endif()
+
 if (AUI_CATCH_UNHANDLED)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
+endif()
+
+if (AUI_COROUTINES)
+    target_compile_definitions(aui.core PUBLIC AUI_COROUTINES=1)
+endif()
+
+if (AUI_PROFILING)
+    target_compile_definitions(aui.core PUBLIC AUI_PROFILING=1)
 endif()
 
 if (NOT WIN32)
@@ -130,6 +140,8 @@ foreach(_var AUI_PLATFORM_WIN
              
              AUI_ARCH_X86
              AUI_ARCH_X86_64
+             AUI_ARCH_ARM_64
+             AUI_ARCH_ARM_V7
         )
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
@@ -158,5 +170,5 @@ endif()
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)
     if (AUI_COMPILER_GCC)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
-    endif ()
+    endif()
 endif()

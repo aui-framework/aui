@@ -66,7 +66,9 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 }
 #else
 #include <signal.h>
+#if !AUI_PLATFORM_ANDROID
 #include <execinfo.h>
+#endif
 #include <pthread.h>
 #endif
 namespace aui::impl::AThread {
@@ -126,7 +128,10 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		ARaiiHelper contextReturner = [&] {
 				SetThreadContext(h, &context);
 		};
-#if AUI_ARCH_X86_64
+#if AUI_ARCH_ARM_64
+	#define REG_SP Sp
+	#define REG_IP Pc
+#elif AUI_ARCH_X86_64
 	#define REG_SP Rsp
 	#define REG_IP Rip
 #else
@@ -257,7 +262,7 @@ void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ AStacktrace::capture(2, 4), std::move(f) };
+		mMessageQueue << Message{ std::move(f) };
 	}
 	{
 		if (mCurrentEventLoop) {

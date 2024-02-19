@@ -48,31 +48,11 @@ public:
 
 
 struct AMenuItem {
-    AMenu::Type type;
+    AMenu::Type type = AMenu::SINGLE;
     AString name;
     AShortcut shortcut;
     std::function<void()> onAction;
     AVector<AMenuItem> subItems;
-    bool enabled;
-
-
-    AMenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
-        type(AMenu::SINGLE),
-        name(name),
-        onAction(onAction),
-        shortcut(shortcut),
-        enabled(enabled) {
-
-    }
-    AMenuItem(const AString& name, const AVector<AMenuItem>& subItems, bool enabled = true):
-        type(AMenu::SUBLIST),
-        name(name),
-        subItems(subItems),
-        enabled(enabled) {
-
-    }
-    AMenuItem(AMenu::Type t): type(t) {
-
-    }
+    bool enabled = true;
 };
 

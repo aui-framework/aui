@@ -34,7 +34,7 @@ class API_AUI_CORE AStacktrace;
 
 namespace aui::impl::shared_ptr {
     struct InstancesDict {
-        std::recursive_mutex sync;
+        ARecursiveMutex sync;
         std::map<void*, std::set<void*>> map;
     };
 
@@ -359,7 +359,7 @@ namespace aui {
 
     template<typename T>
     _<T> ptr::fake(T* raw) {
-        return _<T>(raw, [](T*) {});
+        return _<T>(std::shared_ptr<void>{}, raw);
     }
 
     template<typename T, typename Deleter>

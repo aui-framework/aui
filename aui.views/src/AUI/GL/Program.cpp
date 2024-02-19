@@ -27,10 +27,6 @@
 
 
 gl::Program::Program() {
-    for (int32_t& uniform : mUniforms)
-    {
-        uniform = UniformState::UNINITIALIZED;
-    }
 	mProgram = glCreateProgram();
 }
 
@@ -149,18 +145,21 @@ void gl::Program::bindAttribute(uint32_t index, const AString& name) {
 
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat4 value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniformMatrix4fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat3 value) const {
+    if (sameAsCache(uniform, value)) return;
     auto loc = getLocation(uniform);
     if (loc >= 0)
         glUniformMatrix3fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::dmat4 value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
@@ -173,36 +172,42 @@ void gl::Program::set(const gl::Program::Uniform& uniform, glm::dmat4 value) con
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, float value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform1f(loc, value);
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec2 value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform2f(loc, value.x, value.y);
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec3 value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform3f(loc, value.x, value.y, value.z);
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec4 value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform4f(loc, value.x, value.y, value.z, value.a);
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, int value) const {
+    if (sameAsCache(uniform, value)) return;
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform1i(loc, value);
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, double value) const {
+    if (sameAsCache(uniform, value)) return;
     auto loc = getLocation(uniform);
     if (loc >= 0) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
@@ -214,7 +219,8 @@ void gl::Program::set(const gl::Program::Uniform& uniform, double value) const {
 }
 
 int32_t gl::Program::getLocation(const gl::Program::Uniform& uniform) const {
-    int32_t& location = mUniforms[uniform.getId()];
+    auto& cache = mUniforms[uniform.getId()];
+    auto& location = cache.id;
     if (location == UniformState::UNINITIALIZED) {
         location = glGetUniformLocation(mProgram, uniform.getUniformName());
         //assert(location != -1);

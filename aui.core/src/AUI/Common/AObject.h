@@ -141,6 +141,11 @@ public:
 		mSignalsEnabled = enabled;
 	}
 
+    [[nodiscard]]
+    bool isSignalsEnabled() const noexcept {
+        return mSignalsEnabled;
+    }
+
     template<ASignalInvokable T>
 	void operator^(T&& t) {
 	    if (mSignalsEnabled) {

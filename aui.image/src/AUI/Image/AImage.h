@@ -30,6 +30,7 @@
 #include "AUI/Common/AColor.h"
 #include "AUI/Traits/memory.h"
 #include "APixelFormat.h"
+#include "glm/vector_relational.hpp"
 
 
 class API_AUI_IMAGE AImage;
@@ -270,12 +271,6 @@ private:
     friend class ::Cache<AImage, Cache, AUrl>;
     friend class AImageLoaderRegistry;
     friend class AImageView;
-    class Cache: public ::Cache<AImage, Cache, AUrl> {
-    public:
-        static Cache& inst();
-    protected:
-        _<AImage> load(const AUrl& key) override;
-    };
 
     void setPixelAt(std::uint32_t index, glm::ivec4 color);
 
@@ -363,6 +358,13 @@ public:
     }
 
     void set(glm::uvec2 position, Color color) noexcept {
+        const_cast<Color&>(get(position)) = color;
+    }
+    
+    void setWithPositionCheck(glm::uvec2 position, Color color) noexcept {
+        if (glm::any(glm::greaterThanEqual(position, size()))) {
+            return;
+        }
         const_cast<Color&>(get(position)) = color;
     }
 
