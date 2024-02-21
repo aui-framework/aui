@@ -17,10 +17,10 @@ if (AUI_PLATFORM_ANDROID)
             PUBLIC_HEADER DESTINATION "aui.audio/include"
             INCLUDES      DESTINATION "aui.audio/include"
     )
-endif()
-
-if (AUI_PLATFORM_LINUX)
+elseif (AUI_PLATFORM_LINUX)
     aui_link(aui.audio PUBLIC pulse)
+elseif (AUI_PLATFORM_WIN)
+    aui_link(aui.audio PUBLIC Winmm dsound.lib dxguid.lib)
 endif()
 
 auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
