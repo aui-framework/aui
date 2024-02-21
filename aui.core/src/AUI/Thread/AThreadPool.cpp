@@ -18,6 +18,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
+#include <thread>
 
 AThreadPool::Worker::Worker(AThreadPool& tp, size_t index)
     : AThread([&, index]() {
@@ -26,6 +27,7 @@ AThreadPool::Worker::Worker(AThreadPool& tp, size_t index)
           std::unique_lock tpLock(mTP.mQueueLock);
           while (mEnabled) {
               iteration(tpLock);
+              wait(tpLock);
           }
       }),
       mTP(tp) {
@@ -39,6 +41,9 @@ void AThreadPool::Worker::iteration(std::unique_lock<std::mutex>& tpLock) {
 			continue;
 		processQueue(tpLock, mTP.mQueueLowest);
 	}
+}
+
+void AThreadPool::Worker::wait(std::unique_lock<std::mutex>& tpLock) {
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "ConstantConditionsOC"
 	if (!mEnabled)
@@ -46,6 +51,7 @@ void AThreadPool::Worker::iteration(std::unique_lock<std::mutex>& tpLock) {
 #pragma clang diagnostic pop
 	mTP.mIdleWorkers += 1;
 	assert(tpLock.owns_lock());
+
 	mTP.mCV.wait(tpLock);
 	mTP.mIdleWorkers -= 1;
 }

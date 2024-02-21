@@ -49,7 +49,7 @@ TEST(StackfulCoroutines, CoAwait) {
     auto future1 = localThreadPool * [&]() {
         high_resolution_clock::time_point returnTimePoint;
         auto f = longTask(&returnTimePoint, 1s);
-        f.wait(AFutureWait::ALLOW_STACKFULL_COROUTINES);
+        f.wait(AFutureWait::ALLOW_STACKFUL_COROUTINES);
         EXPECT_EQ(*f, 228);
         ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << duration_cast<microseconds>(high_resolution_clock::now() - returnTimePoint).count() << "us";
         EXPECT_EQ(executionOrder++, 1);
@@ -58,7 +58,7 @@ TEST(StackfulCoroutines, CoAwait) {
     auto future2 = localThreadPool * [&]() {
         high_resolution_clock::time_point returnTimePoint;
         auto f = longTask(&returnTimePoint, 1ms);
-        f.wait(AFutureWait::ALLOW_STACKFULL_COROUTINES);
+        f.wait(AFutureWait::ALLOW_STACKFUL_COROUTINES);
         EXPECT_EQ(*f, 228);
         ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << duration_cast<microseconds>(high_resolution_clock::now() - returnTimePoint).count() << "us";
         EXPECT_EQ(executionOrder++, 0);

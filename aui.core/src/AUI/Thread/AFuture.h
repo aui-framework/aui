@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <thread>
 #include <utility>
 #include "AUI/Util/ABitField.h"
 #if AUI_COROUTINES
@@ -52,9 +53,9 @@ public:
  */
 AUI_ENUM_FLAG(AFutureWait) {
     JUST_WAIT = 0b00,
-    ALLOW_STACKFULL_COROUTINES = 0b10,
+    ALLOW_STACKFUL_COROUTINES = 0b10,
     ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP = 0b01,
-    DEFAULT = ALLOW_STACKFULL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
+    DEFAULT = ALLOW_STACKFUL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
 };
 
 
@@ -807,6 +808,7 @@ public:
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
                                                    ABitField<AFutureWait> flags) noexcept {
+    if (hasResult()) return; // cheap check
     std::unique_lock lock(mutex);
     try {
         if ((thread || !cancelled) && !hasResult() && flags & AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP && task) {
@@ -818,15 +820,21 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
             lock.lock();
         }
 
-        if (flags & AFutureWait::ALLOW_STACKFULL_COROUTINES) {
+        if (flags & AFutureWait::ALLOW_STACKFUL_COROUTINES) {
             if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
+                if (hasResult()) return; // for sure
+                assert(lock.owns_lock());
                 auto callback = [threadPoolWorker](auto&&...) {
                     threadPoolWorker->threadPool().wakeUpAll();
                 };
                 addOnSuccessCallback(callback);
                 addOnErrorCallback(callback);
 
-                threadPoolWorker->loop([&] { if (lock.owns_lock()) lock.unlock(); return !hasValue(); });
+                threadPoolWorker->loop([&] {
+                  if (lock.owns_lock())
+                    lock.unlock();
+                  return !hasResult();
+                });
 
                 return;
             }

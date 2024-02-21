@@ -44,6 +44,7 @@ class API_AUI_CORE AThreadPool {
         AThreadPool& mTP;
 
         void iteration(std::unique_lock<std::mutex>& tpLock);
+        void wait(std::unique_lock<std::mutex>& tpLock);
 
        public:
         Worker(AThreadPool& tp, size_t index);
@@ -55,6 +56,10 @@ class API_AUI_CORE AThreadPool {
             std::unique_lock lock(mTP.mQueueLock);
             while (shouldContinue()) {
                 iteration(lock);
+                if (!shouldContinue()) {
+                    return;
+                }
+                wait(lock);
             }
         }
 
