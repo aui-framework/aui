@@ -23,6 +23,7 @@
 #include "AUI/Thread/AMutex.h"
 #include "AUI/Traits/concepts.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "AUI/Util/kAUI.h"
 
 /**
  * @brief Watchdog helper class.
@@ -56,7 +57,7 @@ public:
     auto runOperation(Operation&& operation) -> decltype(operation()) {
         std::unique_lock lock(mSync);
         mBeginPoint = std::chrono::high_resolution_clock::now();
-        ARaiiHelper resetter = [&] {
+        AUI_DEFER {
             lock.lock();
             mBeginPoint.reset();
         };
