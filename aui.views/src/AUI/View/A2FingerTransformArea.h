@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "AUI/View/AViewContainer.h"
 #include "AView.h"
 #include "AUI/Util/AAngleRadians.h"
 
@@ -38,38 +39,38 @@ struct A2DTransform {
  * @ingroup useful_views
  * @details
  * Represents a translucent area that handles and processes multi-finger transformation gestures (i.e. pinch-to-zoom,
- * move, rotate).
+ * move, rotate). A2FingerTransformArea is a container, so the transformed view should be somewhere inside.
+ * A2FingerTransformArea does not apply any transformation though, so you can control transformation behaviour.
  *
  * The transformation data is emitted on delta basis via `transform` signal. This allows to easily incomporate
  * A2FingerTransformArea to transforming routines, including limit handling.
  *
- * Consider the following example:
+ * Consider the following example, where the transformation is applied through ASS styles:
  * @code{cpp}
  * 
  * _<AView> multitouchDemo() {
- *   _<AView> blackRect = Stacked { _new<ALabel>("A2FingerTransformArea") with_style {
- *     FixedSize{200_dp, 100_dp},
- *     BackgroundSolid{AColor::BLACK},
- *     TextColor{AColor::WHITE},
- *     ATextAlign::CENTER,
- *   }};
- *   return Stacked {
- *     blackRect,
- *     _new<A2FingerTransformArea>() let {
- *       connect(it->transformed, blackRect, [blackRect = blackRect.get(),
- *                                          keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
- *         keptTransform->applyDelta(transform);
- *         blackRect->setCustomStyle({
- *             TransformOffset{AMetric(keptTransform->offset.x, AMetric::T_PX),
- *                             AMetric(keptTransform->offset.y, AMetric::T_PX)},
- *             TransformScale{keptTransform->scale},
- *             TransformRotate{keptTransform->rotation},
- *         });
+ *   return _new<A2FingerTransformArea>() let {    
+ *       it->setCustomStyle({
+ *         MinSize { 256_dp },
+ *         Border { 1_px, AColor::BLACK },
  *       });
- *     },
- *   } with_style {
- *     MinSize { 256_dp },
- *     Border { 1_px, AColor::BLACK },
+ *       _<AView> blackRect = Stacked { _new<ALabel>("A2FingerTransformArea") with_style {
+ *         FixedSize{200_dp, 100_dp},
+ *         BackgroundSolid{AColor::BLACK},
+ *         TextColor{AColor::WHITE},
+ *         ATextAlign::CENTER,
+ *       }};
+ *       ALayoutInflater::inflate(it, Stacked { blackRect });
+ *       connect(it->transformed, blackRect, [blackRect = blackRect.get(),
+ *                                            keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
+ *           keptTransform->applyDelta(transform);
+ *           blackRect->setCustomStyle({
+ *               TransformOffset{AMetric(keptTransform->offset.x, AMetric::T_PX),
+ *                               AMetric(keptTransform->offset.y, AMetric::T_PX)},
+ *               TransformScale{keptTransform->scale},
+ *               TransformRotate{keptTransform->rotation},
+ *           });
+ *       });
  *   };
  * }
  * @endcode
@@ -77,7 +78,7 @@ struct A2DTransform {
  * This example renders to the following result:
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/a2fingertransformarea.gif">
  */
-class API_AUI_VIEWS A2FingerTransformArea: public AView
+class API_AUI_VIEWS A2FingerTransformArea: public AViewContainer
 {
 public:
     A2FingerTransformArea();
@@ -85,6 +86,8 @@ public:
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
 
 signals:
     emits<A2DTransform> transformed;
