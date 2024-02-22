@@ -115,6 +115,18 @@ public:
     }
 
     /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename T, aui::mapper<const StoredType&, const T&> Projection>
+    void removeAll(const T& item, Projection projection) noexcept
+    {
+        aui::container::remove_all(*this, item, projection);
+    }
+
+    /**
      * Removes first occurrence of <code>item</code>.
      * @param item element to remove.
      * @return If the item is removed, it's index returned.
@@ -297,6 +309,7 @@ public:
         }
         return nullptr;
     }
+
 
     /**
      * Removes element at the specified index.

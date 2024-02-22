@@ -59,6 +59,25 @@ public:
         return glm::degrees(mValue);
     }
 
+    AAngleRadians& operator+=(AAngleRadians rhs) noexcept {
+        mValue += rhs.mValue;
+        return *this;
+    }
+
+    AAngleRadians& operator-=(AAngleRadians rhs) noexcept {
+        mValue -= rhs.mValue;
+        return *this;
+    }
+
+    AAngleRadians& operator*=(float k) noexcept {
+        mValue *= k;
+        return *this;
+    }
+
+    AAngleRadians& operator/=(float k) noexcept {
+        mValue /= k;
+        return *this;
+    }
 
     AAngleRadians operator+(AAngleRadians rhs) const noexcept {
         return AAngleRadians(mValue + rhs.mValue);
