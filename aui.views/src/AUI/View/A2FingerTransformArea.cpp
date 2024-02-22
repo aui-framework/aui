@@ -39,7 +39,7 @@ void A2FingerTransformArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent
     switch (mTrackedPoints.size()) {
         case 1: {
             trackedPoint->pos = pos;
-            emit transform(A2DTransform{ .offset = delta });
+            emit transformed(A2DTransform{ .offset = delta });
             break;
         }
         case 2: {
@@ -56,7 +56,7 @@ void A2FingerTransformArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent
             trackedPoint->pos = pos;
             auto newLength = calculateLength();
             auto newAngle = calculateAngle();
-            emit transform(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = newLength / prevLength });
+            emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = newLength / prevLength });
             break;   
         }
         default:

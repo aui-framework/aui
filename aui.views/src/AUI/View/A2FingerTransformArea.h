@@ -56,7 +56,7 @@ struct A2DTransform {
  *   return Stacked {
  *     blackRect,
  *     _new<A2FingerTransformArea>() let {
- *       connect(it->transform, blackRect, [blackRect = blackRect.get(),
+ *       connect(it->transformed, blackRect, [blackRect = blackRect.get(),
  *                                          keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
  *         keptTransform->applyDelta(transform);
  *         blackRect->setCustomStyle({
@@ -73,6 +73,9 @@ struct A2DTransform {
  *   };
  * }
  * @endcode
+ *
+ * This example renders to the following result:
+ * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/a2fingertransformarea.gif">
  */
 class API_AUI_VIEWS A2FingerTransformArea: public AView
 {
@@ -84,7 +87,7 @@ public:
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
 signals:
-    emits<A2DTransform> transform;
+    emits<A2DTransform> transformed;
 
 private:
     struct TrackedPoint {
