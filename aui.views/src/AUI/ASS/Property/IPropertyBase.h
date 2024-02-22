@@ -25,9 +25,9 @@ namespace ass::prop {
     enum class PropertySlot {
         NONE,
 
-        TRANSFORM_SCALE,
         TRANSFORM_OFFSET,
         TRANSFORM_ROTATE,
+        TRANSFORM_SCALE,
 
         SHADOW,
         RENDER_OVERFLOW,

@@ -181,6 +181,21 @@ namespace aui::container {
         }), container.end());
     }
 
+
+    /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename Container, typename T, typename Projection>
+    void remove_all(Container& container, const T& value, const Projection& projection) noexcept {
+        container.erase(std::remove_if(container.begin(), container.end(), [&](typename Container::const_reference probe)
+        {
+            return value == std::invoke(projection, probe);
+        }), container.end());
+    }
+
     /**
      * @brief Removes first occurrence of <code>value</code>.
      * @ingroup core
