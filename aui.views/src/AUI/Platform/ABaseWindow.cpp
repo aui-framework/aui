@@ -19,7 +19,9 @@
 //
 
 #include <AUI/Traits/strings.h>
+#include "AUI/Event/APointerIndex.h"
 #include "AUI/Performance/APerformanceSection.h"
+#include "AUI/Render/ABrush.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Platform/AWindow.h"
 #include "ABaseWindow.h"
@@ -187,6 +189,14 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
+#if AUI_SHOW_TOUCHES
+    if (!isPressed()) {
+        // first touch of gesture
+        mShowTouches.clear();
+    }
+    ALogger::info("AUI_SHOW_TOUCHES") << "onPointerPressed(pointerIndex = " << event.pointerIndex << ", pos = " << event.position << ")";
+    mShowTouches[event.pointerIndex] = {};
+#endif
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
     mPreventClickOnPointerRelease = false;
@@ -246,6 +256,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
+#if AUI_SHOW_TOUCHES
+    ALogger::info("AUI_SHOW_TOUCHES") << "onPointerReleased(pI=" << event.pointerIndex << ",pos=" << event.position << ",tC=" << event.triggerClick << ")";
+#endif
     APointerReleasedEvent copy = event;
     // in case of multitouch, we should not treat pointer release event as a click.
     copy.triggerClick = pointerEventsMapping().size() < 2 && !mPreventClickOnPointerRelease.valueOr(true);
@@ -289,6 +302,12 @@ void ABaseWindow::onScroll(const AScrollEvent& event) {
 void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
+#endif
+#if AUI_SHOW_TOUCHES
+    ALogger::info("AUI_SHOW_TOUCHES") << "onPointerMove(pI=" << event.pointerIndex << ",pos=" << pos << ")";
+    if (auto c = mShowTouches.contains(event.pointerIndex)) {
+        c->second.positions << pos;
+    }
 #endif
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
@@ -379,6 +398,26 @@ void ABaseWindow::render(ClipOptimizationContext context) {
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
     }
+
+#if AUI_SHOW_TOUCHES
+    for (const auto&[pointerIndex, data] : mShowTouches) {
+        ARender::lines(ASolidBrush{AColor::BLUE}, data.positions);
+        ARender::points(ASolidBrush{AColor::RED}, data.positions, 6_dp);
+
+        if (!isPressed(pointerIndex) && data.positions.size() >= 2) {
+            // show tangent trail
+            const auto last = data.positions.last();
+            const auto preLast = *(data.positions.end() - 2);
+            const auto vector = last - preLast;
+
+            const glm::vec2 trail[] = {
+                last,
+                last + vector * 10.f / float(frameMillis()),
+            };
+            ARender::lines(ASolidBrush{AColor::GREEN}, trail);
+        }
+    }
+#endif
 
     using namespace std::chrono;
     using namespace std::chrono_literals;

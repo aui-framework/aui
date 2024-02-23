@@ -22,6 +22,9 @@ Whether use C++ 20 coroutines support or not.
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
 performance information. See [Profiling](@ref profiling)
 
+## AUI_SHOW_TOUCHES
+When `true`, shows touches visually (like in Android Developer Tools) and performs additional trace logging on touches.
+
 # aui.build
 
 ## AUI_BUILD_EXAMPLES

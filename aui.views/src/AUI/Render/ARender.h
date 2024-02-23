@@ -146,6 +146,16 @@ public:
     }
 
     /**
+     * @brief Draws points list.
+     * @param brush brush
+     * @param points points
+     * @param size point size
+     */
+    static void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size = 1_dp) {
+        ourRenderer->drawPoints(brush, points, size);
+    }
+
+    /**
      * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points

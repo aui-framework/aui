@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
+option(AUI_SHOW_TOUCHES "Show debug touches" OFF)
 
 auib_use_system_libs_begin()
 cmake_policy(SET CMP0072 NEW)
@@ -63,6 +64,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	auisl_shader(aui.views line_solid_dashed.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
+	if (AUI_SHOW_TOUCHES)
+		target_compile_definitions(aui.views PUBLIC AUI_SHOW_TOUCHES=1)
+	endif()
+
 
 	aui_link(aui.views PUBLIC aui::core aui::image)
 	aui_link(aui.views PRIVATE aui::xml)

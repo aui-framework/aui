@@ -137,6 +137,8 @@ public:
 
     void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
 
+    void drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
+
     void drawSquareSector(const ABrush& brush,
                           const glm::vec2& position,
                           const glm::vec2& size,

@@ -368,6 +368,14 @@ public:
     virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
 
     /**
+     * @brief Draws points list.
+     * @param brush brush
+     * @param points points
+     * @param size point size
+     */
+    virtual void drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
+
+    /**
      * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points

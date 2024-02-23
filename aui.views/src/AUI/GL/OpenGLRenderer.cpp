@@ -882,6 +882,36 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     mRectangleVao.drawArrays(GL_LINES, positions.size());
 }
 
+void OpenGLRenderer::drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
+    if (points.size() == 0) {
+        return;
+    }
+
+    std::visit(aui::lambda_overloaded {
+            GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+            SolidShaderHelper(*mSolidShader),
+            CustomShaderHelper{},
+    }, brush);
+
+    const auto widthPx = size.getValuePx();
+    uploadToShaderCommon();
+
+
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    // TODO slow, use instancing instead
+    for (auto point : points) {
+        drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
+    }
+#else
+    glPointSize(widthPx);
+
+    mRectangleVao.bind();
+    mRectangleVao.insert(0, AArrayView(points), "drawPoints");
+    mRectangleVao.drawArrays(GL_POINTS, points.size());
+#endif
+}
+
 void OpenGLRenderer::drawSquareSector(const ABrush& brush,
                                       const glm::vec2& position,
                                       const glm::vec2& size,

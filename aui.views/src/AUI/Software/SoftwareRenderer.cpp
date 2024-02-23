@@ -582,10 +582,11 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::
     }
 }
 
-void SoftwareRenderer::drawSquareSector(const ABrush& brush,
-                                        const glm::vec2& position,
-                                        const glm::vec2& size,
-                                        AAngleRadians begin,
-                                        AAngleRadians end) {
-    
+void SoftwareRenderer::drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
+    if (points.size() == 0) {
+        return;
+    }
 }
+
+void SoftwareRenderer::drawSquareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size,
+                                        AAngleRadians begin, AAngleRadians end) {}

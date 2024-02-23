@@ -373,6 +373,13 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> mLastTimeFpsCaptured = std::chrono::high_resolution_clock::now();
     size_t mFpsCounter = 0;
     size_t mLastCapturedFps = 0;
+
+#if AUI_SHOW_TOUCHES
+    struct ShowTouches {
+        AVector<glm::vec2> positions;
+    };
+    AMap<APointerIndex, ShowTouches> mShowTouches;
+#endif
 };
 
 
