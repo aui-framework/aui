@@ -179,7 +179,7 @@ void AView::invalidateAllStyles()
     auto applyStylesheet = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {
             if (r.getSelector().isPossiblyApplicable(this)) {
-                mAssHelper->mPossiblyApplicableRules << &r;
+                mAssHelper->mPossiblyApplicableRules << r;
                 r.getSelector().setupConnections(this, mAssHelper);
             }
         }
@@ -216,9 +216,9 @@ void AView::invalidateStateStyles() {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.url.reset();
 
-    for (auto& r : mAssHelper->mPossiblyApplicableRules) {
-        if (r->getSelector().isStateApplicable(this)) {
-            applyAssRule(*r);
+    for (const auto& r : mAssHelper->mPossiblyApplicableRules) {
+        if (r.getSelector().isStateApplicable(this)) {
+            applyAssRule(r);
         }
     }
     applyAssRule(mCustomStyleRule);

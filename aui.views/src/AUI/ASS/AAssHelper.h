@@ -40,7 +40,7 @@ class AAssHelper: public AObject {
     friend class AView;
 
 private:
-    AVector<const ass::Rule*> mPossiblyApplicableRules;
+    AVector<ass::Rule> mPossiblyApplicableRules;
 
 public:
     void onInvalidateFullAss() {
@@ -51,7 +51,7 @@ public:
     }
 
     [[nodiscard]]
-    const AVector<const ass::Rule*>& getPossiblyApplicableRules() const {
+    const AVector<ass::Rule>& getPossiblyApplicableRules() const {
         return mPossiblyApplicableRules;
     }
 
