@@ -156,7 +156,10 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
             os << (v ? "true" : "false");
         },
         [&](const AString& v) {
-            os << '"' << v.replacedAll("\\", "\\\\").replacedAll("\"", "\\\"") << '"';
+            os << '"' << v.replacedAll("\\", "\\\\")
+                .replacedAll("\"", "\\\"")
+                .replacedAll("\r\n", "\\n")
+                .replacedAll("\n", "\\n") << '"';
         },
         [&](std::nullptr_t) {
             os << "null";
