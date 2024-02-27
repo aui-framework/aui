@@ -142,6 +142,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!index) return;
     if (!mLayout) return;
     mLayout->removeView(view, *index);
+    view->mParent = nullptr;
     invalidateCaches();
     emit childrenChanged;
 }
@@ -157,6 +158,7 @@ void AViewContainer::removeView(AView* view) {
         } else {
             mViews.erase(it);
         }
+        view->mParent = nullptr;
     }
     invalidateCaches();
     emit childrenChanged;
@@ -167,6 +169,7 @@ void AViewContainer::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    view->mParent = nullptr;
     invalidateCaches();
     emit childrenChanged;
 }
