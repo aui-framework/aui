@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ public:
 
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
-        assert(("out of bounds", offset + size <= mSize));
+        AUI_ASSERTX(offset + size <= mSize, "out of bounds");
         return { mBuffer + offset, size };
     }
 

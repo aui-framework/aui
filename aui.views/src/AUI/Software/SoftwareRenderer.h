@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,7 @@ public:
      *        ignored.
      */
     inline void putPixel(glm::ivec2 position, AColor color, AOptional<Blending> blending = std::nullopt) noexcept {
-        assert(("context is null" && mContext != nullptr));
+        AUI_ASSERTX(mContext != nullptr, "context is null");
         color = glm::clamp(color, glm::vec4(0), glm::vec4(1));
         auto actualBlending = blending ? *blending : mBlending;
         glm::uvec2 uposition(position);

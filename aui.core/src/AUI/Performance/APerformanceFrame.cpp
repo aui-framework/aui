@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,12 +19,12 @@
 #include "AUI/Performance/APerformanceFrame.h"
 
 APerformanceFrame::APerformanceFrame(Consumer consumer): mConsumer(std::move(consumer)) {
-    assert(("there are could not be 2 APerformance frames at the same time", currentStorage() == nullptr));
+    AUI_ASSERTX(currentStorage() == nullptr, "there are could not be 2 APerformance frames at the same time");
     currentStorage() = this;
 }
 
 APerformanceFrame::~APerformanceFrame() {
-    assert(currentStorage() == this);
+    AUI_ASSERT(currentStorage() == this);
     currentStorage() = nullptr;
 
     mConsumer(std::move(mSections));

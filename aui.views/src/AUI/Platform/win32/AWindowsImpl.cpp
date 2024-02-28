@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
 
-    assert(mHandle == hwnd);
+    AUI_ASSERT(mHandle == hwnd);
 
     static glm::ivec2 lastWindowSize;
 
@@ -201,7 +201,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_LBUTTONDOWN:
             if (isPressed(APointerIndex::button(AInput::LBUTTON))) {
-                // fix assert(!mPressed);
+                // fix AUI_ASSERT(!mPressed);
                 onPointerReleased({
                     .position = POS,
                     .pointerIndex = APointerIndex::button(AInput::LBUTTON)
@@ -441,7 +441,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.format() & APixelFormat::BYTE);
+    AUI_ASSERT(image.format() & APixelFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);
@@ -540,7 +540,7 @@ void AWindow::allowDragNDrop() {
     Ole::inst();
 
     auto r = RegisterDragDrop(mHandle, new DropTarget(this));
-    assert(r == S_OK);
+    AUI_ASSERT(r == S_OK);
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {

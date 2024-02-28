@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -183,14 +183,14 @@ public:
     }
     template<typename View, typename ModelField, typename SetterArg>
     ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg> operator()(ModelField(Model::*field), void(View::*setterFunc)(SetterArg)) {
-        assert(setterFunc != nullptr);
+        AUI_ASSERT(setterFunc != nullptr);
         return ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg>(this, nullptr, setterFunc, field);
     }
     template<typename View, typename ModelField, typename GetterRV, typename SetterArg>
     ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg> operator()(ModelField(Model::*field),
                                                                                               ASignal<GetterRV>(View::*getter),
                                                                                               void(View::*setterFunc)(SetterArg) = nullptr) {
-        assert((getter != nullptr || setterFunc != nullptr) &&
+        AUI_ASSERT((getter != nullptr || setterFunc != nullptr) &&
                "implement ADataBindingDefault for your view in order to use default binding");
 
         return ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg>(this, getter, setterFunc, field);
@@ -304,7 +304,7 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
     };
     if (linker.getGetter()) {
         AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const GetterRV& data) {
-            assert(("please setModel for ADataBinding" && &linker.getBinder()->getEditableModel()));
+            AUI_ASSERTX(&linker.getBinder()->getEditableModel(), "please setModel for ADataBinding");
             object->setSignalsEnabled(false);
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;

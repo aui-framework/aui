@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -212,7 +212,7 @@ namespace aui::impl::future {
                             return false;
                         }
                         auto func = std::move(task);
-                        assert(bool(func));
+                        AUI_ASSERT(bool(func));
                         lock.unlock();
                         innerCancellation = nullptr;
                         if constexpr(isVoid) {
@@ -285,7 +285,7 @@ namespace aui::impl::future {
              * the lock remains untouched.
              */
             void notifyOnSuccessCallback(std::unique_lock<decltype(mutex)>& lock) noexcept {
-                assert(lock.owns_lock());
+                AUI_ASSERT(lock.owns_lock());
                 if (cancelled) {
                     return;
                 }
@@ -605,7 +605,7 @@ public:
      */
     void supplyResult(T v) const noexcept {
         auto& inner = (*super::mInner);
-        assert(("task is already provided", inner->task == nullptr));
+        AUI_ASSERTX(inner->task == nullptr, "task is already provided");
 
         std::unique_lock lock(inner->mutex);
         inner->value = std::move(v);
@@ -732,7 +732,7 @@ public:
      */
     void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
-        assert(("task is already provided", inner->task == nullptr));
+        AUI_ASSERTX(inner->task == nullptr, "task is already provided");
 
         std::unique_lock lock(inner->mutex);
         inner->value = true;
@@ -823,7 +823,7 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
         if (flags & AFutureWait::ALLOW_STACKFUL_COROUTINES) {
             if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
                 if (hasResult()) return; // for sure
-                assert(lock.owns_lock());
+                AUI_ASSERT(lock.owns_lock());
                 auto callback = [threadPoolWorker](auto&&...) {
                     threadPoolWorker->threadPool().wakeUpAll();
                 };

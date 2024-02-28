@@ -14,31 +14,13 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by alex2772 on 1/3/21.
-//
-
 #pragma once
 
+#include <cassert>
 
-namespace ass {
-    template<typename Base>
-    struct focused: Base {
-        template<typename... Args>
-        focused(Args&&... args):
-                Base(std::forward<Args>(args)...)
-        {
-
-        }
-
-        bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && view->hasFocus();
-        }
-
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
-            Base::setupConnections(view, helper);
-            view->focusState.clearAllConnectionsWith(helper.get());
-            AObject::connect(view->focusState, slot(helper)::onInvalidateStateAss);
-        }
-    };
+namespace aui::assertion::detail {
+    inline void checkArgs(bool cond, const char* what = nullptr) {}
 }
+
+#define AUI_ASSERT(cond) assert(cond); aui::assertion::detail::checkArgs(cond)
+#define AUI_ASSERTX(cond, what) assert((cond) && what); aui::assertion::detail::checkArgs(cond, what)

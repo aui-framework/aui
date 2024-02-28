@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -69,7 +69,7 @@ static GLuint defaultFb, colorBuffer = 0;
         
         if (!context || ![EAGLContext setCurrentContext:context])
 		{
-            assert(0);
+            AUI_ASSERT(0);
             return nil;
 		}
         
@@ -102,10 +102,10 @@ static GLuint defaultFb, colorBuffer = 0;
     if (!initialized) {
         initialized = true;
         
-        assert(defaultFb == 1);
+        AUI_ASSERT(defaultFb == 1);
         
         [self layoutSubviews];
-        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        AUI_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     }
     
     if (!AWindow::getWindowManager().getWindows().empty()) {
@@ -130,7 +130,7 @@ static GLuint defaultFb, colorBuffer = 0;
     glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBuffer);glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     if (![self.context renderbufferStorage:GL_RENDERBUFFER fromDrawable:eaglLayer]) {
-        assert(0);
+        AUI_ASSERT(0);
     }
     
     CGSize size = self.bounds.size;

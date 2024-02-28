@@ -100,7 +100,7 @@ DBusHandlerResult ADBus::listener(DBusConnection     *connection,
 
     auto listener = reinterpret_cast<RawMessageListener*>(user_data);
     try {
-        assert(connection == listener->parent->mConnection);
+        AUI_ASSERT(connection == listener->parent->mConnection);
         auto r = listener->function(message);
         return r;
     } catch (const AException& e) {

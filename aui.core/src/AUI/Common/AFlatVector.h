@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -38,12 +38,12 @@ public:
     }
 
     T& operator[](std::size_t index) noexcept {
-        assert(("index out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "index out of bounds");
         return data()[index];
     }
 
     const T& operator[](std::size_t index) const noexcept {
-        assert(("index out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "index out of bounds");
         return data()[index];
     }
 
@@ -77,7 +77,7 @@ public:
     }
 
     void push_back(T value) {
-        assert(("size exceeded", mSize < MAX_SIZE));
+        AUI_ASSERTX(mSize < MAX_SIZE, "size exceeded");
         new (data() + mSize) T(std::move(value));
     }
 

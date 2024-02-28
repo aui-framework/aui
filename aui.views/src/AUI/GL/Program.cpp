@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -103,7 +103,7 @@ uint32_t gl::Program::load(const AString& data, uint32_t type, bool raw) {
     }
 
     uint32_t shader = glCreateShader(type);
-    assert(!code.empty());
+    AUI_ASSERT(!code.empty());
     const char* c = code.c_str();
     glShaderSource(shader, 1, &c, nullptr);
     glCompileShader(shader);

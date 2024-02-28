@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext cont
     }
 
     auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
-    assert(currentStencilLevel == prevStencilLevel);
+    AUI_ASSERT(currentStencilLevel == prevStencilLevel);
 }
 
 
@@ -437,7 +437,7 @@ void AViewContainer::onDpiChanged() {
 }
 
 void AViewContainer::setContents(const _<AViewContainer>& container) {
-    assert(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" &&
+    AUI_ASSERT(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" &&
             typeid(*container.get()) == typeid(AViewContainer)));
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);

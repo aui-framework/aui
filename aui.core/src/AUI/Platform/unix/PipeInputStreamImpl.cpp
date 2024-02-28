@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,7 @@
 
 PipeInputStream::PipeInputStream(Pipe pipe) : mPipe(std::move(pipe)) {
     mFileHandle = fdopen(mPipe.out(),"r");
-    assert(("invalid pipe", mFileHandle != nullptr));
+    AUI_ASSERTX(mFileHandle != nullptr, "invalid pipe");
 }
 
 PipeInputStream::~PipeInputStream() {

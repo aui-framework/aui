@@ -26,7 +26,7 @@
 #include "AException.h"
 
 
-#define AUI_ASSERT_MY_ITERATOR(it) assert(("foreign iterator", (this->begin() <= it && it <= this->end())))
+#define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
 
 /**
  * @brief Vector implementation for ASmallVector.
@@ -116,17 +116,17 @@ public:
     }
 
     constexpr void pop_back() noexcept {
-        assert(("ADynamicVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ADynamicVector is empty");
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("ADynamicVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ADynamicVector is empty");
         erase(begin());
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) noexcept {
-        assert(("out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "out of bounds");
         return *(data() + index);
     }
 
@@ -404,7 +404,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -417,7 +417,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -430,7 +430,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -443,7 +443,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 

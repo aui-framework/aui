@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -85,12 +85,12 @@ APath APath::ensureNonSlashEnding() const {
 AString APath::relativelyTo(const APath& dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
-        assert(startsWith(f));
+        AUI_ASSERT(startsWith(f));
         return substr(f.length());
     }
     auto meButAbsolute = absolute();
     auto f = dir.absolute().ensureSlashEnding();
-    assert(meButAbsolute.startsWith(f));
+    AUI_ASSERT(meButAbsolute.startsWith(f));
     return meButAbsolute.substr(f.length());
 }
 bool APath::exists() const {
@@ -301,7 +301,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             break;
 
         default:
-            assert(0);
+            AUI_ASSERT(0);
     }
     result.resizeToNullTerminator();
     result.removeBackSlashes();
@@ -356,7 +356,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
         case TEMP:
             return "/tmp";
         default:
-            assert(0);
+            AUI_ASSERT(0);
 #endif
     }
     return {};

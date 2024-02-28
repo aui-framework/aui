@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ public:
 
     T& value() noexcept {
 #if AUI_DEBUG
-        assert(("AMutexWrapper should be locked by this thread in order to get access to the underlying object", mOwnerThread == std::this_thread::get_id()));
+        AUI_ASSERTX(mOwnerThread == std::this_thread::get_id(), "AMutexWrapper should be locked by this thread in order to get access to the underlying object");
 #endif
         return mValue;
     }
