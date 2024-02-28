@@ -72,6 +72,8 @@ public:
         DEBUG,
 	};
 
+    static const char* LevelCStr(Level level);
+
 
     struct LogWriter {
         private:
