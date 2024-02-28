@@ -34,18 +34,18 @@ ALogger::ALogger()
 #endif
 }
 
-const char* ALogger::LevelCStr(Level level) {
+static const char* levelCStr(ALogger::Level level) {
     switch (level) {
-        case INFO:
+        case ALogger::INFO:
             return "INFO";
 
-        case WARN:
+        case ALogger::WARN:
             return "WARN";
 
-        case ERR:
+        case ALogger::ERR:
             return "ERR";
 
-        case DEBUG:
+        case ALogger::DEBUG:
             return "DEBUG";
     }
 
@@ -106,7 +106,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
         std::time_t t = std::time(nullptr);
         std::tm* tm;
         tm = localtime(&t);
-        const char* levelName = LevelCStr(level);
+        const char* levelName = levelCStr(level);
         char timebuf[64];
         std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
 
@@ -143,7 +143,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
         threadName = "?";
     }
 
-    const char* levelName = LevelCStr(level);
+    const char* levelName = levelCStr(level);
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
