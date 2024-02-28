@@ -22,5 +22,5 @@ namespace aui::assertion::detail {
     inline void checkArgs(bool cond, const char* what = nullptr) {}
 }
 
-#define AUI_ASSERT(cond) assert(cond); aui::assertion::detail::checkArgs(cond)
-#define AUI_ASSERTX(cond, what) assert((cond) && what); aui::assertion::detail::checkArgs(cond, what)
+#define AUI_ASSERT(cond) assert(cond); ::aui::assertion::detail::checkArgs(cond)
+#define AUI_ASSERTX(cond, what) assert((cond) && what); ::aui::assertion::detail::checkArgs(cond, what)
