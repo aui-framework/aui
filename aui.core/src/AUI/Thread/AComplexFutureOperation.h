@@ -27,7 +27,7 @@ public:
     AComplexFutureOperation(): mFutureWeakReference(mFutureStrongReference.inner().weak()) {}
 
     ~AComplexFutureOperation() {
-        assert((mFutureStrongReference.inner() == nullptr, "makeFuture() is not called. Please check docs"));
+        AUI_ASSERTX(mFutureStrongReference.inner() == nullptr, "makeFuture() is not called. Please check docs");
         if (auto f = mFutureWeakReference.lock()) {
             if (!(*f)->hasResult()) {
                 try {

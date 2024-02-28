@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -474,7 +474,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         if (buf[0] != 127) {
                             if (count) {
                                 AString s(buf);
-                                assert(!s.empty());
+                                AUI_ASSERT(!s.empty());
                                 window->onCharEntered(s[0]);
                             }
                         }
@@ -675,7 +675,7 @@ AString AWindowManager::xClipboardPasteImpl() {
     if (!auiWindow)
         return {};
     auto nativeHandle = auiWindow->getNativeHandle();
-    assert(nativeHandle);
+    AUI_ASSERT(nativeHandle);
 
     XConvertSelection(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, CommonRenderingContext::ourAtoms.utf8String, CommonRenderingContext::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);

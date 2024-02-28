@@ -150,52 +150,52 @@ public:
     }
 
     AMetric& operator+=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue += rhs.mValue;
         return *this;
     }
 
     AMetric& operator-=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue -= rhs.mValue;
         return *this;
     }
 
     AMetric& operator*=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue *= rhs.mValue;
         return *this;
     }
 
     AMetric& operator/=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue /= rhs.mValue;
         return *this;
     }
 
     AMetric operator+(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy += rhs;
         return copy;
     }
 
     AMetric operator-(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy -= rhs;
         return copy;
     }
 
     AMetric operator*(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy *= rhs;
         return copy;
     }
 
     AMetric operator/(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy /= rhs;
         return copy;

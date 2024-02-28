@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -199,7 +199,7 @@ public:
          * @see withDestinationBuffer
          */
         Builder& withWriteCallback(WriteCallback callback) {
-            assert(("write callback already set" && mWriteCallback == nullptr));
+            AUI_ASSERTX(mWriteCallback == nullptr, "write callback already set");
             mWriteCallback = std::move(callback);
             return *this;
         }
@@ -222,7 +222,7 @@ public:
          * @return this
          */
         Builder& withBody(ReadCallback callback) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
             mReadCallback = std::move(callback);
             return *this;
         }
@@ -253,7 +253,7 @@ public:
          * @brief Like withBody with callback, but wrapped with string.
          */
         Builder& withBody(std::string contents) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
 
             struct Body {
                 explicit Body(std::string b) : contents(std::move(b)), i(contents.begin()) {}
@@ -291,7 +291,7 @@ public:
          * @note Also disables throwing exception on error
          */
         Builder& withErrorCallback(ErrorCallback callback) {
-            assert(("error callback already set" && mErrorCallback == nullptr));
+            AUI_ASSERTX(mErrorCallback == nullptr, "error callback already set");
             mErrorCallback = std::move(callback);
             return *this;
         }

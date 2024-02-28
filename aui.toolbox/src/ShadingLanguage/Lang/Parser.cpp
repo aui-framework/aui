@@ -530,7 +530,7 @@ _<ExpressionNode> Parser::parseExpression() {
                 .op = out,
                 .priority = currentPriority,
             };
-            assert(temporaryValue == nullptr);
+            AUI_ASSERT(temporaryValue == nullptr);
             return out;
         }
 
@@ -556,7 +556,7 @@ _<ExpressionNode> Parser::parseExpression() {
                     .op = out,
                     .priority = currentPriority,
             };
-            assert(temporaryValue == nullptr);
+            AUI_ASSERT(temporaryValue == nullptr);
             return out;
         }
 
@@ -691,7 +691,7 @@ _<ExpressionNode> Parser::parseExpression() {
             case got<LSquareBracketToken>: {
                 // array style [] access
                 auto arrayAccessNode = handleBinaryOperator.operator()<ArrayAccessOperatorNode>(Priority::ARRAY_ACCESS);
-                assert(arrayAccessNode->mRight == nullptr);
+                AUI_ASSERT(arrayAccessNode->mRight == nullptr);
                 arrayAccessNode->mRight = parseExpression();
                 expect<RSquareBracketToken>();
                 nextTokenAndCheckEof();

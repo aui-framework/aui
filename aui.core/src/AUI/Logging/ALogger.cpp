@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -93,7 +93,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
             prio = ANDROID_LOG_DEBUG;
             break;
         default:
-            assert(0);
+            AUI_ASSERT(0);
     }
     if (message.length() == 0) {
         __android_log_print(prio, "AUI", "%s", prefix.data());

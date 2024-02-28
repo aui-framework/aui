@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -154,7 +154,7 @@ public:
      * @param s new size of the payload
      */
     void setSize(size_t s) {
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mCapacity));
+        AUI_ASSERTX(s <= mCapacity, "size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?");
         mSize = s;
     }
     /**
@@ -170,7 +170,7 @@ public:
      */
     void increaseSize(size_t s) {
         mSize += s;
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && mSize <= mCapacity));
+        AUI_ASSERTX(mSize <= mCapacity, "size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?");
     }
 
     /**

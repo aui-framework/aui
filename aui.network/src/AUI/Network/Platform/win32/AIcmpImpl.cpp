@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                 } reply;
 
                 Icmp(AFuture<std::chrono::high_resolution_clock::duration> result) : result(std::move(result)) {
-                    assert(handle != INVALID_HANDLE_VALUE);
+                    AUI_ASSERT(handle != INVALID_HANDLE_VALUE);
                 }
 
                 ~Icmp() {
@@ -86,7 +86,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                                    timeout.count() // timeout in ms
             );
 
-            assert(r == 0);
+            AUI_ASSERT(r == 0);
             if (auto lastError = GetLastError(); lastError != ERROR_IO_PENDING) {
                 delete icmp;
                 throw AIOException(aui::impl::formatSystemError(lastError).description);

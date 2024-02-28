@@ -1,6 +1,6 @@
 
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -37,7 +37,7 @@ Ole::Ole() {
     OleInitialize(0);
 
     HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-    assert(SUCCEEDED(hr));
+    AUI_ASSERT(SUCCEEDED(hr));
 }
 
 Ole::~Ole() {

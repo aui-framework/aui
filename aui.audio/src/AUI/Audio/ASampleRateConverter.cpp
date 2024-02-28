@@ -70,7 +70,7 @@ ASampleRateConverter::~ASampleRateConverter() {
 ASampleRateConverter::SoxrProcessResult ASampleRateConverter::soxrProcess(std::span<std::byte> src, std::span<std::byte> dst) {
     size_t samplesInUsed;
     size_t samplesOut;
-    assert(src.size() % aui::audio::bytesPerSample(mInputFormat.sampleFormat) == 0);
+    AUI_ASSERT(src.size() % aui::audio::bytesPerSample(mInputFormat.sampleFormat) == 0);
     auto error = soxr_process(mContext,
                               src.data(), bytesToSamplesPerChannel(src.size(), mInputFormat), &samplesInUsed,
                               dst.data(), bytesToSamplesPerChannel(dst.size(), mOutputFormat), &samplesOut);
@@ -102,16 +102,16 @@ size_t ASampleRateConverter::AuxBuffer::size() const {
 }
 
 std::span<std::byte> ASampleRateConverter::AuxBuffer::span() {
-    assert(0 <= begin && begin <= BUFFER_SIZE);
-    assert(0 <= end && end <= BUFFER_SIZE);
-    assert(begin <= end);
+    AUI_ASSERT(0 <= begin && begin <= BUFFER_SIZE);
+    AUI_ASSERT(0 <= end && end <= BUFFER_SIZE);
+    AUI_ASSERT(begin <= end);
     return {reinterpret_cast<std::byte*>(buffer) + begin, end - begin};
 }
 
 void ASampleRateConverter::AuxBuffer::convertFormatToInt32() {
-    assert(("convertFormatToInt32 must be called immedeatly after writing data to buffer", begin == 0));
-    assert(("wrong amount of data has been read or converting is not needed", size() % 3 == 0));
-    assert(("too much data has been read", 4 * size() / 3 <= BUFFER_SIZE));
+    AUI_ASSERTX(begin == 0, "convertFormatToInt32 must be called immedeatly after writing data to buffer");
+    AUI_ASSERTX(size() % 3 == 0, "wrong amount of data has been read or converting is not needed");
+    AUI_ASSERTX(4 * size() / 3 <= BUFFER_SIZE, "too much data has been read");
     if (size() == 0) {
         return;
     }

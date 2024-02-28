@@ -33,8 +33,8 @@ void gl::Framebuffer::unbind()
 }
 
 void gl::Framebuffer::resize(glm::u32vec2 newSize) {
-    assert(newSize.x != 0);
-    assert(newSize.y != 0);
+    AUI_ASSERT(newSize.x != 0);
+    AUI_ASSERT(newSize.y != 0);
     mSize = newSize;
     bind();
     auto o = supersampledSize();

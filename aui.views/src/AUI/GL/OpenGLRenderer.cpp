@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -92,7 +92,7 @@ namespace {
 template<typename Brush>
 struct UnsupportedBrushHelper {
     void operator()(const Brush& brush) const {
-        assert(("this brush is unsupported"));
+        AUI_ASSERT(("this brush is unsupported"));
     }
 };
 
@@ -396,7 +396,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
                                    glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
-    assert(("blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead");
     identityUv();
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
@@ -435,7 +435,7 @@ void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    assert(("blurRadius is expected to be non negative", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
     mBoxShadowInnerShader->use();

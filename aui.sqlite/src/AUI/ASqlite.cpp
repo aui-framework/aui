@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -45,7 +45,7 @@ public:
             case SQLITE_NULL:
                 return nullptr;
         }
-        assert(0);
+        AUI_ASSERT(0);
         return AVariant();
     }
 };
@@ -85,7 +85,7 @@ public:
     }
 
     size_t rowCount() override {
-        assert(0);
+        AUI_ASSERT(0);
         return 0;
     }
 
@@ -102,7 +102,7 @@ public:
             case SQLITE_ERROR:
                 throw AException("could not fetch row");
         }
-        assert(0);
+        AUI_ASSERT(0);
         return nullptr;
     }
 };

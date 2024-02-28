@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -157,9 +157,9 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
                                           std::size_t(mLastPayloadLength - mLastPayload.size()));
         mLastPayload << AByteBufferView(begin, dataToRead);
         begin += dataToRead;
-        assert(begin <= end);
+        AUI_ASSERT(begin <= end);
 
-        assert(mLastPayload.size() <= mLastPayloadLength);
+        AUI_ASSERT(mLastPayload.size() <= mLastPayloadLength);
 
         if (mLastPayload.size() == mLastPayloadLength) {
             emit received(mLastPayload);

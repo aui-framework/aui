@@ -166,7 +166,7 @@ void AView::render(ClipOptimizationContext context)
 
 void AView::invalidateAllStyles()
 {
-    assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
+    AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
@@ -282,7 +282,7 @@ void AView::pack()
 
 void AView::addAssName(const AString& assName)
 {
-    assert(("empty ass name" && !assName.empty()));
+    AUI_ASSERTX(!assName.empty(), "empty ass name");
     if (mAssNames.contains(assName)) {
         return;
     }
@@ -294,7 +294,7 @@ void AView::invalidateAssHelper() { mAssHelper = nullptr; }
 
 void AView::removeAssName(const AString& assName)
 {
-    assert(("empty ass name" && !assName.empty()));
+    AUI_ASSERTX(!assName.empty(), "empty ass name");
     mAssNames.removeAll(assName);
     invalidateAssHelper();
 }

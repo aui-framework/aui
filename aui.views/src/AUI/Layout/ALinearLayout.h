@@ -12,7 +12,7 @@ namespace aui::detail {
     public:
         void removeView(aui::no_escape<AView> view, size_t index) override {
             if constexpr (std::is_same_v<Storage, _<AView>>) {
-                assert(mViews[index].get() == view.ptr());
+                AUI_ASSERT(mViews[index].get() == view.ptr());
             }
             mViews.removeAt(index);
         }

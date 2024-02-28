@@ -287,7 +287,7 @@ public:
      */
     void setFocusChainTarget(_weak<AView> target) {
         if (auto v = target.lock()) {
-            assert(v->mParent == this);
+            AUI_ASSERT(v->mParent == this);
         }
         mFocusChainTarget = std::move(target);
     }

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -31,9 +31,9 @@ public:
         auto self = shared_from_this();
         mBuffer.reserve(0x1000);
         UnixIoThread::inst().registerCallback(fileHandle, UnixPollEvent::IN, [&](ABitField<UnixPollEvent>) {
-            assert(mBuffer.data() != nullptr);
+            AUI_ASSERT(mBuffer.data() != nullptr);
             auto r = read(mFileHandle, mBuffer.data(), mBuffer.capacity());
-            assert(r >= 0);
+            AUI_ASSERT(r >= 0);
             mBuffer.setSize(r);
             mCallback(mBuffer);
         });
@@ -54,7 +54,7 @@ private:
 };
 
 void UnixIoAsync::init(int fileHandle, std::function<void(const AByteBuffer&)> callback) {
-    assert(("already initialized", mImpl == nullptr));
+    AUI_ASSERTX(mImpl == nullptr, "already initialized");
     mImpl = _new<Impl>();
     mImpl->init(fileHandle, std::move(callback));
 }
