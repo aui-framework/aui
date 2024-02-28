@@ -72,7 +72,6 @@ public:
         DEBUG,
 	};
 
-
     struct LogWriter {
         private:
             ALogger& mLogger;

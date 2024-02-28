@@ -34,6 +34,24 @@ ALogger::ALogger()
 #endif
 }
 
+static const char* levelCStr(ALogger::Level level) {
+    switch (level) {
+        case ALogger::INFO:
+            return "INFO";
+
+        case ALogger::WARN:
+            return "WARN";
+
+        case ALogger::ERR:
+            return "ERR";
+
+        case ALogger::DEBUG:
+            return "DEBUG";
+    }
+
+    return "UNKNOWN";
+}
+
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
     static ALogger l(std::move(path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
     return l;
@@ -79,28 +97,38 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     }
     if (message.length() == 0) {
         __android_log_print(prio, "AUI", "%s", prefix.data());
-    } else {
+    }
+    else {
         __android_log_print(prio, prefix.data(), "%s", message.data());
     }
-#else
-    const char* levelName = "UNKNOWN";
 
-    switch (level)
-    {
-    case INFO:
-        levelName = "INFO";
-        break;
-    case WARN:
-        levelName = "WARN";
-        break;
-    case ERR:
-        levelName = "ERR";
-        break;
-    case DEBUG:
-        levelName = "DEBUG";
-        break;
+    if (mLogFile) {
+        std::time_t t = std::time(nullptr);
+        std::tm* tm;
+        tm = localtime(&t);
+        const char* levelName = levelCStr(level);
+        char timebuf[64];
+        std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
+
+        std::string threadName;
+        if (auto currentThread = AThread::current()) {
+            threadName = currentThread->threadName().toStdString();
+        }
+        else {
+            threadName = "?";
+        }
+
+        std::unique_lock lock(mLogSync);
+        if (message.length() == 0) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        }
+        else {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        }
+        fflush(mLogFile->nativeHandle());
     }
 
+#else
     std::time_t t = std::time(nullptr);
     std::tm* tm;
     tm = localtime(&t);
@@ -110,20 +138,30 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     std::string threadName;
     if (auto currentThread = AThread::current()) {
         threadName = currentThread->threadName().toStdString();
-    } else {
+    }
+    else {
         threadName = "?";
     }
+
+    const char* levelName = levelCStr(level);
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
         printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s[%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-    } else {
+        if (mLogFile) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        }
+    }
+    else {
         printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
-        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        if (mLogFile) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        }
     }
     fflush(stdout);
-    if (mLogFile) fflush(mLogFile->nativeHandle());
+    if (mLogFile) {
+        fflush(mLogFile->nativeHandle());
+    }
 #endif
 }
 
