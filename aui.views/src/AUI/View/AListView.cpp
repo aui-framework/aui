@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -78,12 +78,13 @@ private:
 public:
 	AListItem()
 	{
-
+        addAssName(".list-item");
 	}
 
 	AListItem(const AString& text)
 		: ALabel(text)
 	{
+        addAssName(".list-item");
 	}
 
 	virtual ~AListItem() = default;
@@ -104,13 +105,13 @@ public:
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 

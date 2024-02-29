@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/IO/IOutputStream.h>
+#include "AUI/Common/AOptional.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
@@ -211,6 +212,14 @@ public:
     [[nodiscard]]
     bool contains(const AString& mapKey) const {
         return as<Object>().contains(mapKey);
+    }
+
+    [[nodiscard]]
+    AOptional<AJson> containsOpt(const AString& mapKey) const {
+        if (auto c = as<Object>().contains(mapKey)) {
+            return c->second;
+        }
+        return std::nullopt;
     }
 
     AJson& operator[](const AString& mapKey) {

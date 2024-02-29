@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,8 @@
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
+#include "AUI/Performance/APerformanceFrame.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
@@ -247,6 +249,7 @@ public:
 
     void onFocusLost() override;
     void render(ClipOptimizationContext context) override;
+    void updateLayout() override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**
@@ -310,6 +313,10 @@ signals:
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+#if AUI_PROFILING
+    emits<APerformanceSection::Datas> performanceFrameComplete;
+#endif
+
 protected:
     bool mIsFocused = true;
 
@@ -366,6 +373,13 @@ private:
     std::chrono::time_point<std::chrono::high_resolution_clock> mLastTimeFpsCaptured = std::chrono::high_resolution_clock::now();
     size_t mFpsCounter = 0;
     size_t mLastCapturedFps = 0;
+
+#if AUI_SHOW_TOUCHES
+    struct ShowTouches {
+        AVector<glm::vec2> positions;
+    };
+    AMap<APointerIndex, ShowTouches> mShowTouches;
+#endif
 };
 
 
@@ -375,7 +389,7 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", (AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()))); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX((AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -383,5 +397,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() != AWindow::current()->getThread())); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
 

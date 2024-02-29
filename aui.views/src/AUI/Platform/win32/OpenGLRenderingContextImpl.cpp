@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,7 +42,7 @@ void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
         prev = hdc;
         if (hdc != nullptr) {
             bool ok = wglMakeCurrent(hdc, ourHrc);
-            assert(ok);
+            AUI_ASSERT(ok);
         }
     }
 }
@@ -118,7 +118,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             UINT iNumFormats;
 
             wglChoosePixelFormatARB(mWindowDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
-            assert(iNumFormats);
+            AUI_ASSERT(iNumFormats);
             DescribePixelFormat(mWindowDC, pxf, sizeof(pfd), &pfd);
             k = SetPixelFormat(mWindowDC, pxf, &pfd);
         };
@@ -159,7 +159,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         //makeCurrent(mDC);
     } else {
         bool k = SetPixelFormat(mWindowDC, pxf, &pfd);
-        assert(k);
+        AUI_ASSERT(k);
     }
 
     ARender::setRenderer(mRenderer = ourRenderer());

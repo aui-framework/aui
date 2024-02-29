@@ -18,9 +18,14 @@
 #include <AUI/View/ARadioGroup.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Audio/ASS/Property/Sound.h>
+#include "AUI/ASS/Property/BackgroundSolid.h"
+#include "AUI/ASS/Property/Border.h"
+#include "AUI/ASS/Property/TransformOffset.h"
 #include "AUI/ASS/Selector/on_state.h"
 #include "ExampleWindow.h"
 #include "AUI/Layout/AVerticalLayout.h"
+#include "AUI/Util/AMetric.h"
+#include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Platform/ACustomCaptionWindow.h"
@@ -62,6 +67,7 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ADragArea.h>
+#include <memory>
 #include <random>
 #include <AUI/View/ASplitter.h>
 #include <AUI/View/AScrollArea.h>
@@ -230,7 +236,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                             AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
                                         }),
                                         _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
-                                            assert(("assertion fail", false));
+                                            AUI_ASSERTX(false, "assertion fail");
                                         }),
                                         _new<AButton>("Cause hang").connect(&AView::clicked, this, [&] {
                                             for (;;);
@@ -285,7 +291,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                     }),
                                                     _new<ASpacerExpanding>(),
                                             },
-                                            ui_for (i, model, AWordWrappingLayout) {
+                                            AUI_DECLARATIVE_FOR (i, model, AWordWrappingLayout) {
                                                 return Horizontal {
                                                         _new<ALabel>(i.color.toString()) with_style {
                                                                 TextColor { i.color.readableBlackOrWhite() },
@@ -460,15 +466,31 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }(),
         } let { it->setExpanding(); }), "Text");
 
-        it->addTab(Vertical {
-                // Rulers
-                _new<ALabel>("ARulerArea"),
-                _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
-                                                            //BackgroundGradient { 0x0_rgb, 0x404040_rgb, ALayoutDirection::VERTICAL },
-                                                            MaxSize { {}, 300_dp },
-                                                            Expanding{}, }) with_style { Expanding{} },
 
-                _new<DemoGraphView>(),
+        it->addTab(Vertical {
+                _new<A2FingerTransformArea>() let {    
+                    it->setCustomStyle({
+                        MinSize { 256_dp },
+                        Border { 1_px, AColor::BLACK },
+                    });
+
+                    _<AView> blackRect = Stacked { Stacked { _new<AButton>("Hi") } with_style {
+                        FixedSize{200_dp, 100_dp},
+                        BackgroundSolid{AColor::BLACK},
+                        TextColor{AColor::WHITE},
+                        ATextAlign::CENTER,
+                    }};
+                    ALayoutInflater::inflate(it, Stacked { blackRect });
+                    connect(it->transformed, blackRect, [blackRect = blackRect.get(),
+                                                         keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
+                        keptTransform->applyDelta(transform);
+                        blackRect->setCustomStyle({
+                            TransformOffset{AMetric(keptTransform->offset.x, AMetric::T_PX), AMetric(keptTransform->offset.y, AMetric::T_PX)},
+                            TransformScale{keptTransform->scale},
+                            TransformRotate{keptTransform->rotation},
+                        });
+                    });
+                },
                 _new<ADragNDropView>(),
 
                 Label { "Custom cursor" } with_style {

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -61,7 +61,7 @@ TEST_F(UILayoutTest, SmallCorner1) {
         void setGeometry(int x, int y, int width, int height) override {
             ALabel::setGeometry(x, y, width, height);
             auto box = By::name("Box").one();
-            assert((getCenterPointInWindow().x <= box->getPositionInWindow().x + box->getWidth()));
+            AUI_ASSERT((getCenterPointInWindow().x <= box->getPositionInWindow().x + box->getWidth()));
         }
     };
 

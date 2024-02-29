@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -50,7 +50,7 @@ private:
         bool isDisconnected = false;
     };
 
-    std::recursive_mutex mSlotsLock;
+    ARecursiveMutex mSlotsLock;
     AVector<_<slot>> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
@@ -298,13 +298,15 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                 receiverPtr = std::move(sharedPtr);
             }
 
-            (std::apply)(slot.func, args);
-            if (AAbstractSignal::isDisconnected()) {
-                unlinkSlot(slot.object);
-                i = slots.erase(i);
-            } else {
-                ++i;
+            if (!receiverPtr || receiverPtr->isSignalsEnabled()) {
+                (std::apply)(slot.func, args);
+                if (AAbstractSignal::isDisconnected()) {
+                    unlinkSlot(slot.object);
+                    i = slots.erase(i);
+                    continue;
+                }
             }
+            ++i;
         }
     }
     AUI_MARK_AS_USED(emitterPtr);

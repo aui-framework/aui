@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -41,6 +41,7 @@ private:
 public:
 
     using iterator = super::iterator;
+    using value_type = super::value_type;
     using const_iterator = super::const_iterator;
     using reverse_iterator = super::reverse_iterator;
     using const_reverse_iterator = super::const_reverse_iterator;
@@ -407,26 +408,26 @@ public:
 
     void removeAt(unsigned at) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         erase(begin() + at);
     }
     AString excessSpacesRemoved() const noexcept;
 
     iterator insert(size_type at, wchar_t c) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         return super::insert(begin() + at, 1, c);
     }
     iterator insert(size_type at, const AString& c) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         return super::insert(begin() + at, c.begin(), c.end());
     }
 
     template<typename Iterator>
     iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
     {
-        assert(std::distance(super::cbegin(), at) <= length());
+        AUI_ASSERT(std::distance(super::cbegin(), at) <= length());
         return super::insert(at, begin, end);
     }
 

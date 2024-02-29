@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        assert(("AAbstractThread::processMessages() should not be called from other thread",
+        AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
                 mId == std::this_thread::get_id()));
         std::unique_lock lock(mQueueLock, std::defer_lock);
 
@@ -64,7 +64,6 @@ protected:
             if (time >= 1ms) {
                 ALogger::warn("Performance")
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
-                    << f.stacktrace
                     << " - ...\n";
             }
         }
@@ -123,7 +122,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
                     if (!wrappedWithQuots) {
                         argsImpl() << std::move(currentArg);
                         currentArg = {};
-                        assert(currentArg.empty());
+                        AUI_ASSERT(currentArg.empty());
                         break;
                     }
                 default:

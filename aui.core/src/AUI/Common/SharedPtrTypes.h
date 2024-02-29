@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@ class API_AUI_CORE AStacktrace;
 
 namespace aui::impl::shared_ptr {
     struct InstancesDict {
-        std::recursive_mutex sync;
+        ARecursiveMutex sync;
         std::map<void*, std::set<void*>> map;
     };
 
@@ -168,7 +168,7 @@ private:
             std::unique_lock lock(inst.sync);
             if (auto mapIt = inst.map.find(pointingTo); mapIt != inst.map.end()) {
                 auto setIt = mapIt->second.find(self);
-                assert(setIt != mapIt->second.end());
+                AUI_ASSERT(setIt != mapIt->second.end());
                 mapIt->second.erase(setIt);
                 if (mapIt->second.empty()) {
                     //inst.map.erase(it);
@@ -359,7 +359,7 @@ namespace aui {
 
     template<typename T>
     _<T> ptr::fake(T* raw) {
-        return _<T>(raw, [](T*) {});
+        return _<T>(std::shared_ptr<void>{}, raw);
     }
 
     template<typename T, typename Deleter>

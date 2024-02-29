@@ -24,7 +24,7 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     mState = WaitingForThresholdState {
         .pointer = e.pointerIndex,
         .origin  = e.position,
@@ -32,7 +32,7 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 }
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     if (auto s = std::get_if<ScrollingState>(&mState)) {
         auto direction = glm::normalize(s->currentVelocity);
         auto velocity = glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
@@ -87,7 +87,7 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
             return r.origin;
         },
         [](std::nullopt_t) -> glm::ivec2 {
-            assert((0, "ATouchScroller::origin is called in invalid state"));
+            AUI_ASSERTX(0, "ATouchScroller::origin is called in invalid state");
             return {0, 0};
         },
     }, mState);

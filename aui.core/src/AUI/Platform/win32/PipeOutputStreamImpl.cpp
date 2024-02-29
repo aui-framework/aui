@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,5 +25,5 @@ void PipeOutputStream::write(const char* src, size_t size) {
     if (!WriteFile(mPipe.in(), src, size, &bytesWritten, nullptr)) {
         throw AIOException("failed to write to pipe");
     }
-    assert(bytesWritten == size);
+    AUI_ASSERT(bytesWritten == size);
 }

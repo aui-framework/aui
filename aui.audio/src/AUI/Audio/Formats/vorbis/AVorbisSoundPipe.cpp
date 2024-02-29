@@ -13,7 +13,7 @@ AVorbisSoundPipe::AVorbisSoundPipe() {
 void AVorbisSoundPipe::write(const char *src, size_t size) {
     ARaiiHelper helper = [data = std::string(src, size), src, size]() {
         for (size_t i = 0; i < size; i++) {
-            assert(data[i] == src[i]);
+            AUI_ASSERT(data[i] == src[i]);
         }
     };
     ogg_packet packet;

@@ -140,7 +140,7 @@ public:
 
     template<ASampleFormat format>
     inline void commitSample(aui::audio::impl::sample_type_t<format> sample) {
-        assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
+        AUI_ASSERTX(mDestinationBufferIt <= mDestinationBufferEnd, "buffer overrun");
         //use int64_t for overflow preventing
         int64_t newSample = int64_t(aui::audio::impl::sample_cast<sample_out, format>(sample));
         if (mVolumeLevel) {

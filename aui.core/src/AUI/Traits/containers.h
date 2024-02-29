@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -131,7 +131,7 @@ namespace aui::container {
      */
     template<typename Container>
     void remove_at(Container& c, size_t index) noexcept {
-        assert(("index out of bounds" && c.size() > index));
+        AUI_ASSERTX(c.size() > index, "index out of bounds");
         c.erase(c.begin() + index);
     }
 
@@ -178,6 +178,21 @@ namespace aui::container {
         container.erase(std::remove_if(container.begin(), container.end(), [&](typename Container::const_reference probe)
         {
             return value == probe;
+        }), container.end());
+    }
+
+
+    /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename Container, typename T, typename Projection>
+    void remove_all(Container& container, const T& value, const Projection& projection) noexcept {
+        container.erase(std::remove_if(container.begin(), container.end(), [&](typename Container::const_reference probe)
+        {
+            return value == std::invoke(projection, probe);
         }), container.end());
     }
 

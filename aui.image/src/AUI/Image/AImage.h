@@ -30,6 +30,7 @@
 #include "AUI/Common/AColor.h"
 #include "AUI/Traits/memory.h"
 #include "APixelFormat.h"
+#include "glm/vector_relational.hpp"
 
 
 class API_AUI_IMAGE AImage;
@@ -159,8 +160,8 @@ public:
      */
     [[nodiscard]]
     const char& rawDataAt(glm::uvec2 position) const noexcept {
-        assert(position.x < width());
-        assert(position.y < height());
+        AUI_ASSERT(position.x < width());
+        AUI_ASSERT(position.y < height());
         return mData.at<char>((position.y * width() + position.x) * bytesPerPixel());
     }
 
@@ -357,6 +358,13 @@ public:
     }
 
     void set(glm::uvec2 position, Color color) noexcept {
+        const_cast<Color&>(get(position)) = color;
+    }
+    
+    void setWithPositionCheck(glm::uvec2 position, Color color) noexcept {
+        if (glm::any(glm::greaterThanEqual(position, size()))) {
+            return;
+        }
         const_cast<Color&>(get(position)) = color;
     }
 

@@ -149,28 +149,78 @@ public:
         return {-mValue, mUnit};
     }
 
-    AMetric& operator+=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator+=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue += rhs.mValue;
         return *this;
     }
 
-    AMetric& operator-=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator-=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue -= rhs.mValue;
         return *this;
     }
 
-    AMetric& operator*=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator*=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue *= rhs.mValue;
         return *this;
     }
 
-    AMetric& operator/=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator/=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue /= rhs.mValue;
         return *this;
+    }
+
+    AMetric operator+(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy += rhs;
+        return copy;
+    }
+
+    AMetric operator-(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy -= rhs;
+        return copy;
+    }
+
+    AMetric operator*(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy *= rhs;
+        return copy;
+    }
+
+    AMetric operator/(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy /= rhs;
+        return copy;
+    }
+
+    AMetric& operator*=(float rhs) noexcept {
+        mValue *= rhs;
+        return *this;
+    }
+
+    AMetric& operator/=(float rhs) noexcept {
+        mValue /= rhs;
+        return *this;
+    }
+
+    AMetric operator*(float rhs) const noexcept {
+        auto copy = *this;
+        copy *= rhs;
+        return copy;
+    }
+
+    AMetric operator/(float rhs) const noexcept {
+        auto copy = *this;
+        copy /= rhs;
+        return copy;
     }
 
     bool operator==(const AMetric& rhs) const {

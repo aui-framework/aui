@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -48,31 +48,11 @@ public:
 
 
 struct AMenuItem {
-    AMenu::Type type;
+    AMenu::Type type = AMenu::SINGLE;
     AString name;
     AShortcut shortcut;
     std::function<void()> onAction;
     AVector<AMenuItem> subItems;
-    bool enabled;
-
-
-    AMenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
-        type(AMenu::SINGLE),
-        name(name),
-        onAction(onAction),
-        shortcut(shortcut),
-        enabled(enabled) {
-
-    }
-    AMenuItem(const AString& name, const AVector<AMenuItem>& subItems, bool enabled = true):
-        type(AMenu::SUBLIST),
-        name(name),
-        subItems(subItems),
-        enabled(enabled) {
-
-    }
-    AMenuItem(AMenu::Type t): type(t) {
-
-    }
+    bool enabled = true;
 };
 

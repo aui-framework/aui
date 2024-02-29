@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -89,7 +89,7 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
             }
         });
         auto c = curl_multi_add_handle(mMulti, curl->handle());
-        assert(c == CURLM_OK);
+        AUI_ASSERT(c == CURLM_OK);
         mEasyCurls[curl->handle()] = std::move(curl);
     };
     return *this;
@@ -110,7 +110,7 @@ void ACurlMulti::removeCurl(const _<ACurl>& curl) {
 
 void ACurlMulti::clear() {
     mFunctionQueue << [this] {
-        assert(mMulti);
+        AUI_ASSERT(mMulti);
         for (const auto& [handle, acurl]: mEasyCurls) {
             curl_multi_remove_handle(mMulti, handle);
         }

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -156,7 +156,10 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
             os << (v ? "true" : "false");
         },
         [&](const AString& v) {
-            os << '"' << v.replacedAll("\\", "\\\\").replacedAll("\"", "\\\"") << '"';
+            os << '"' << v.replacedAll("\\", "\\\\")
+                .replacedAll("\"", "\\\"")
+                .replacedAll("\r\n", "\\n")
+                .replacedAll("\n", "\\n") << '"';
         },
         [&](std::nullptr_t) {
             os << "null";

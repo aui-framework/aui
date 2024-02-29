@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -45,6 +45,7 @@ void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
 void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
     if (!mIgnoreSelection && isLButtonPressed()) {
         mCursorIndex = cursorIndexByPos(pos);
+        onSelectionChanged();
         doRedraw();
     }
 }
@@ -57,6 +58,7 @@ void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) 
         {
             mCursorSelection = -1;
         }
+        onSelectionChanged();
     }
 }
 
@@ -97,6 +99,7 @@ void ACursorSelectable::selectAll() {
     if (length > 0) {
         mCursorSelection = 0;
         mCursorIndex = length;
+        onSelectionChanged();
     }
 }
 
@@ -165,5 +168,6 @@ void ACursorSelectable::handleMouseDoubleClicked(const APointerPressedEvent& eve
 
     mCursorSelection = begin;
     mCursorIndex = end;
+    onSelectionChanged();
 }
 

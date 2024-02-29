@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -25,7 +25,7 @@
 {
     CADisplayLink* displayLink;
     BOOL animating;
-    NSMutableArray<UITouch*>* trackedTouches;
+    std::vector<UITouch*> trackedTouches;
 }
 
 @synthesize context;
@@ -69,14 +69,14 @@ static GLuint defaultFb, colorBuffer = 0;
         
         if (!context || ![EAGLContext setCurrentContext:context])
 		{
-            assert(0);
+            AUI_ASSERT(0);
             return nil;
 		}
         
-        trackedTouches = [[NSMutableArray<UITouch*> alloc] init];
         animating = NO;
         displayLink = nil;
         view = self;
+        [self setMultipleTouchEnabled:true];
         
         // setup "default" framebuffer
         glGenFramebuffers(1, &defaultFb);
@@ -102,10 +102,10 @@ static GLuint defaultFb, colorBuffer = 0;
     if (!initialized) {
         initialized = true;
         
-        assert(defaultFb == 1);
+        AUI_ASSERT(defaultFb == 1);
         
         [self layoutSubviews];
-        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        AUI_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     }
     
     if (!AWindow::getWindowManager().getWindows().empty()) {
@@ -130,7 +130,7 @@ static GLuint defaultFb, colorBuffer = 0;
     glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBuffer);glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     if (![self.context renderbufferStorage:GL_RENDERBUFFER fromDrawable:eaglLayer]) {
-        assert(0);
+        AUI_ASSERT(0);
     }
     
     CGSize size = self.bounds.size;
@@ -175,8 +175,12 @@ static GLuint defaultFb, colorBuffer = 0;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
         auto vec = glm::ivec2{location.x * scale, location.y * scale};
-        auiWindow()->onPointerPressed({vec, APointerIndex::finger([trackedTouches count])});
-        [trackedTouches addObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), nullptr);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerPressed({vec, APointerIndex::finger(index)});
+
+        trackedTouches.insert(it, touch);
+        
     }
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -184,7 +188,8 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerMove(glm::vec2{location.x * scale, location.y * scale}, APointerMoveEvent{APointerIndex::finger([trackedTouches indexOfObject:touch])});
+        auto index = std::find(trackedTouches.begin(), trackedTouches.end(), touch) - trackedTouches.begin();
+        auiWindow()->onPointerMove(glm::vec2{location.x * scale, location.y * scale}, APointerMoveEvent{APointerIndex::finger(index)});
     }
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -192,8 +197,10 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger([trackedTouches indexOfObject:touch])});
-        [trackedTouches removeObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), touch);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger(index)});
+        *it = nullptr;
     }
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -201,8 +208,10 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerReleased({.position = glm::ivec2{location.x * scale, location.y * scale}, .pointerIndex = APointerIndex::finger([trackedTouches indexOfObject:touch]), .triggerClick = false});
-        [trackedTouches removeObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), touch);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerReleased({.position = glm::ivec2{location.x * scale, location.y * scale}, .pointerIndex = APointerIndex::finger(index), .triggerClick = false});
+        *it = nullptr;
     }
 }
 

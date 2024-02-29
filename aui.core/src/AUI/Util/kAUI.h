@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -184,6 +184,19 @@ namespace aui::impl::slot {
  * </table>
  */
 #define AUI_EMIT_FOREIGN_SIGNAL(object) (*object) ^ object
+
+/**
+ * @brief Defers execution of the next block to the end of current block (RAII scope).
+ * @ingroup useful_macros
+ * @details
+ * This example prints "Hello world\n":
+ * @code{cpp}
+ * AUI_DEFER { printf("world\n") };
+ * printf("Hello");
+ * @endcode
+ * @sa ARaiiHelper
+ */
+#define AUI_DEFER ARaiiHelper auiDeffer ## __LINE__ = [&]
 
 
 /**

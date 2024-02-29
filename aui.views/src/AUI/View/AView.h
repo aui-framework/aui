@@ -631,7 +631,7 @@ public:
         return mFixedSize;
     }
     void setFixedSize(glm::ivec2 size) {
-        assert(("abnormal fixed size", glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000)))));
+        AUI_ASSERTX(glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000))), "abnormal fixed size");
         mFixedSize = size;
     }
 
@@ -937,6 +937,16 @@ signals:
      * @brief Left mouse button clicked.
      */
     emits<> clicked;
+
+    /**
+     * @brief Position changed.
+     */
+    emits<glm::ivec2> positionChanged;
+
+    /**
+     * @brief Size changed.
+     */
+    emits<glm::ivec2> sizeChanged;
 
     /**
      * @brief Geometry (position and size) changed.

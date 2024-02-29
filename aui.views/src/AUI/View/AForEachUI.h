@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -76,4 +76,4 @@ public:
     }
 };
 
-#define ui_for(value, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [&](const std::decay_t<decltype(model)>::stored_t::stored_t& value, unsigned index) -> _<AView>
+#define AUI_DECLARATIVE_FOR(value, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [&](const std::decay_t<decltype(model)>::stored_t::stored_t& value, unsigned index) -> _<AView>

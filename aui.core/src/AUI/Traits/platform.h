@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -145,6 +145,19 @@ namespace aui::platform {
 
     constexpr bool is_64_bit = sizeof(void*) == 8;
     constexpr bool is_32_bit = sizeof(void*) == 4;
+
+    constexpr bool is_x86 = AUI_ARCH_X86;
+    constexpr bool is_x86_64 = AUI_ARCH_X86_64;
+
+    /**
+     * @brief ARM 32 bit.
+     */
+    constexpr bool is_armv7 = AUI_ARCH_ARM_V7;
+
+    /**
+     * @brief ARM 64 bit architecture, also known as aarch64.
+     */
+    constexpr bool is_arm64 = AUI_ARCH_ARM_64;
 
 #if AUI_PLATFORM_WIN
     namespace current = os_windows;

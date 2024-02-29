@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -95,10 +95,10 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
 
-    for (auto r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
-        if (r->getSelector().isStateApplicable(targetView.get())) {
+    for (const auto& r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
+        if (r.getSelector().isStateApplicable(targetView.get())) {
             AStringVector sl;
-            for (auto& ss : r->getSelector().getSubSelectors()) {
+            for (auto& ss : r.getSelector().getSubSelectors()) {
                 if (auto classOf = _cast<class_of>(ss)) {
                     sl << "ass::class_of(\"{}\")"_format(classOf->getClasses().join(", "));
                 } else {
@@ -110,7 +110,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             } else {
                 dst->addView(_new<ALabel>("{" + sl.join(',') + "},"));
             }
-            displayApplicableRule(dst, applicableDeclarations, r);
+            displayApplicableRule(dst, applicableDeclarations, &r);
         }
     }
     dst->addView( _new<ALabel>("}") << ".declaration_br");

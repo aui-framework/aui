@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -28,6 +28,7 @@
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
 #include "AUI/GL/Vao.h"
+#include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
@@ -91,7 +92,7 @@ namespace {
 template<typename Brush>
 struct UnsupportedBrushHelper {
     void operator()(const Brush& brush) const {
-        assert(("this brush is unsupported"));
+        AUI_ASSERT(("this brush is unsupported"));
     }
 };
 
@@ -395,7 +396,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
                                    glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
-    assert(("blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead");
     identityUv();
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
@@ -434,7 +435,7 @@ void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    assert(("blurRadius is expected to be non negative", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
     mBoxShadowInnerShader->use();
@@ -879,6 +880,36 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
 
     mRectangleVao.insert(0, AArrayView(positions), "drawLines");
     mRectangleVao.drawArrays(GL_LINES, positions.size());
+}
+
+void OpenGLRenderer::drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
+    if (points.size() == 0) {
+        return;
+    }
+
+    std::visit(aui::lambda_overloaded {
+            GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+            SolidShaderHelper(*mSolidShader),
+            CustomShaderHelper{},
+    }, brush);
+
+    const auto widthPx = size.getValuePx();
+    uploadToShaderCommon();
+
+
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    // TODO slow, use instancing instead
+    for (auto point : points) {
+        drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
+    }
+#else
+    glPointSize(widthPx);
+
+    mRectangleVao.bind();
+    mRectangleVao.insert(0, AArrayView(points), "drawPoints");
+    mRectangleVao.drawArrays(GL_POINTS, points.size());
+#endif
 }
 
 void OpenGLRenderer::drawSquareSector(const ABrush& brush,

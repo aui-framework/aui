@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -18,16 +18,42 @@
 #include <glm/glm.hpp>
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
+#include <thread>
 
-AThreadPool::Worker::Worker(AThreadPool& tp, size_t index) :
-	mThread(_new<AThread>([&, index]()
-{
-    AThread::setName("AThreadPool #" + AString::number(index + 1));
-	thread_fn();
-})),
-mTP(tp)
-{
-	mThread->start();
+AThreadPool::Worker::Worker(AThreadPool& tp, size_t index)
+    : AThread([&, index]() {
+          AThread::setName("AThreadPool #" + AString::number(index + 1));
+
+          std::unique_lock tpLock(mTP.mQueueLock);
+          while (mEnabled) {
+              iteration(tpLock);
+              wait(tpLock);
+          }
+      }),
+      mTP(tp) {
+}
+
+void AThreadPool::Worker::iteration(std::unique_lock<std::mutex>& tpLock) {
+	while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
+		if (processQueue(tpLock, mTP.mQueueHighest))
+			continue;
+		if (processQueue(tpLock, mTP.mQueueMedium))
+			continue;
+		processQueue(tpLock, mTP.mQueueLowest);
+	}
+}
+
+void AThreadPool::Worker::wait(std::unique_lock<std::mutex>& tpLock) {
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantConditionsOC"
+	if (!mEnabled)
+		return;
+#pragma clang diagnostic pop
+	mTP.mIdleWorkers += 1;
+	assert(tpLock.owns_lock());
+
+	mTP.mCV.wait(tpLock);
+	mTP.mIdleWorkers -= 1;
 }
 
 bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue)
@@ -58,30 +84,8 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
 	return false;
 }
 
-void AThreadPool::Worker::thread_fn() {
-	std::unique_lock tpLock(mTP.mQueueLock);
-	while (mEnabled) {
-		while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
-			if (processQueue(tpLock, mTP.mQueueHighest))
-				continue;
-			if (processQueue(tpLock, mTP.mQueueMedium))
-				continue;
-			processQueue(tpLock, mTP.mQueueLowest);
-		}
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "ConstantConditionsOC"
-        if (!mEnabled) return;
-#pragma clang diagnostic pop
-        mTP.mIdleWorkers += 1;
-		assert(tpLock.owns_lock());
-		mTP.mCV.wait(tpLock);
-        mTP.mIdleWorkers -= 1;
-	}
-}
-
 AThreadPool::Worker::~Worker() {
-	mThread->join();
-	mThread = nullptr;
+	join();
 }
 
 void AThreadPool::Worker::aboutToDelete() {
@@ -149,8 +153,11 @@ AThreadPool& AThreadPool::global()
 
 AThreadPool::AThreadPool(size_t size) {
     mWorkers.reserve(size);
-	for (size_t i = 0; i < size; ++i)
-		mWorkers.push_back(std::make_unique<Worker>(*this, i));
+	for (size_t i = 0; i < size; ++i) {
+		auto worker = _new<Worker>(*this, i);
+		worker->start();
+		mWorkers.push_back(std::move(worker));
+	}
 }
 
 AThreadPool::AThreadPool() :
@@ -172,7 +179,7 @@ AThreadPool::~AThreadPool() {
 }
 
 void AThreadPool::setWorkersCount(std::size_t workersCount) {
-    assert(("invalid worker count", workersCount >= 2 && workersCount <= 1000));
+    AUI_ASSERTX(workersCount >= 2 && workersCount <= 1000, "invalid worker count");
     std::unique_lock lck(mQueueLock);
     if (mWorkers.size() >= workersCount) {
         while (mWorkers.size() > workersCount) {

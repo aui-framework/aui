@@ -219,7 +219,7 @@ namespace aui::dbus {
 
             AMap<K, V> result;
             for (;;) {
-                assert(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
+                AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
                 DBusMessageIter item;
                 dbus_message_iter_recurse(&sub, &item);
                 auto k = aui::dbus::iter_get<K>(&item);
@@ -278,7 +278,7 @@ namespace aui::dbus {
 
         static void iter_append(DBusMessageIter* iter, const Variant & t) {
             // TODO
-            assert(0);
+            AUI_ASSERT(0);
         }
 
         static Variant iter_get(DBusMessageIter* iter);
@@ -303,7 +303,7 @@ namespace aui::dbus {
 
         static void iter_append(DBusMessageIter* iter, const Unknown& t) {
             // TODO
-            assert(0);
+            AUI_ASSERT(0);
         }
 
         static Unknown iter_get(DBusMessageIter* iter);

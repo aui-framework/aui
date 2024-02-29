@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -66,7 +66,9 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 }
 #else
 #include <signal.h>
+#if !AUI_PLATFORM_ANDROID
 #include <execinfo.h>
+#endif
 #include <pthread.h>
 #endif
 namespace aui::impl::AThread {
@@ -126,7 +128,10 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		ARaiiHelper contextReturner = [&] {
 				SetThreadContext(h, &context);
 		};
-#if AUI_ARCH_X86_64
+#if AUI_ARCH_ARM_64
+	#define REG_SP Sp
+	#define REG_IP Pc
+#elif AUI_ARCH_X86_64
 	#define REG_SP Rsp
 	#define REG_IP Rip
 #else
@@ -257,7 +262,7 @@ void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ AStacktrace::capture(2, 4), std::move(f) };
+		mMessageQueue << Message{ std::move(f) };
 	}
 	{
 		if (mCurrentEventLoop) {
@@ -272,7 +277,7 @@ void AAbstractThread::enqueue(std::function<void()> f)
 
 void AAbstractThread::processMessagesImpl()
 {
-    assert(("AAbstractThread::processMessages() should not be called from other thread",
+    AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
             mId == std::this_thread::get_id()));
 	std::unique_lock lock(mQueueLock);
 	while (!mMessageQueue.empty())
@@ -316,11 +321,11 @@ void AAbstractThread::updateThreadName() noexcept {
         setThreadNameImpl((HANDLE) GetCurrentThread(), mThreadName);
 #elif AUI_PLATFORM_APPLE
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
 #else
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());
 #endif
     }

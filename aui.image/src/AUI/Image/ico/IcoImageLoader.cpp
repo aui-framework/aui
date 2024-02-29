@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -73,7 +73,7 @@ template<>
 struct ASerializable<IconEntry>: aui::raw_serializable<IconEntry> {};
 
 void IcoImageLoader::save(aui::no_escape<IOutputStream> os, const AVector<AImage>& images) {
-    assert(("sizes could not be empty", !images.empty()));
+    AUI_ASSERTX(!images.empty(), "sizes could not be empty");
 
     Header header;
     header.count = images.size();
@@ -102,7 +102,7 @@ void IcoImageLoader::save(aui::no_escape<IOutputStream> os, const AVector<AImage
     });
 
     for (const auto&[image, buffer] : aui::zip(images, bitmaps)) {
-        assert(("ico does not support images bigger than 256 px side", glm::all(glm::lessThanEqual(image.size(), glm::uvec2(256)))));
+        AUI_ASSERTX(glm::all(glm::lessThanEqual(image.size(), glm::uvec2(256))), "ico does not support images bigger than 256 px side");
         IconEntry iconEntry {
                 static_cast<uint8_t>(image.width() == 256 ? 0 : image.width()),
                 static_cast<uint8_t>(image.height() == 256 ? 0 : image.height()),

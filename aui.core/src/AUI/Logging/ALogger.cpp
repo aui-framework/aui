@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,24 @@ ALogger::ALogger()
                              " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
                              " and only if it's actually needed.");
 #endif
+}
+
+static const char* levelCStr(ALogger::Level level) {
+    switch (level) {
+        case ALogger::INFO:
+            return "INFO";
+
+        case ALogger::WARN:
+            return "WARN";
+
+        case ALogger::ERR:
+            return "ERR";
+
+        case ALogger::DEBUG:
+            return "DEBUG";
+    }
+
+    return "UNKNOWN";
 }
 
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
@@ -75,32 +93,42 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
             prio = ANDROID_LOG_DEBUG;
             break;
         default:
-            assert(0);
+            AUI_ASSERT(0);
     }
     if (message.length() == 0) {
         __android_log_print(prio, "AUI", "%s", prefix.data());
-    } else {
+    }
+    else {
         __android_log_print(prio, prefix.data(), "%s", message.data());
     }
-#else
-    const char* levelName = "UNKNOWN";
 
-    switch (level)
-    {
-    case INFO:
-        levelName = "INFO";
-        break;
-    case WARN:
-        levelName = "WARN";
-        break;
-    case ERR:
-        levelName = "ERR";
-        break;
-    case DEBUG:
-        levelName = "DEBUG";
-        break;
+    if (mLogFile) {
+        std::time_t t = std::time(nullptr);
+        std::tm* tm;
+        tm = localtime(&t);
+        const char* levelName = levelCStr(level);
+        char timebuf[64];
+        std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
+
+        std::string threadName;
+        if (auto currentThread = AThread::current()) {
+            threadName = currentThread->threadName().toStdString();
+        }
+        else {
+            threadName = "?";
+        }
+
+        std::unique_lock lock(mLogSync);
+        if (message.length() == 0) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        }
+        else {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        }
+        fflush(mLogFile->nativeHandle());
     }
 
+#else
     std::time_t t = std::time(nullptr);
     std::tm* tm;
     tm = localtime(&t);
@@ -110,20 +138,30 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     std::string threadName;
     if (auto currentThread = AThread::current()) {
         threadName = currentThread->threadName().toStdString();
-    } else {
+    }
+    else {
         threadName = "?";
     }
+
+    const char* levelName = levelCStr(level);
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
         printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s[%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-    } else {
+        if (mLogFile) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        }
+    }
+    else {
         printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
-        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        if (mLogFile) {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        }
     }
     fflush(stdout);
-    if (mLogFile) fflush(mLogFile->nativeHandle());
+    if (mLogFile) {
+        fflush(mLogFile->nativeHandle());
+    }
 #endif
 }
 

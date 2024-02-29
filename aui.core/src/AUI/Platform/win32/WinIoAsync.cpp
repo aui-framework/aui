@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -54,7 +54,7 @@ public:
                 break;
 
             default:
-                assert(!("WinIoAsync failed"));
+                AUI_ASSERT(!("WinIoAsync failed"));
         }
     }
 
@@ -63,11 +63,11 @@ public:
             auto r = CancelIoEx(mFileHandle, &mOverlapped);
             auto err = GetLastError();
             if (err != ERROR_NOT_FOUND) {
-                assert(("CancelIo failed", r));
+                AUI_ASSERTX(r, "CancelIo failed");
             }
 
             r = CloseHandle(mFileHandle);
-            assert(("CloseHandle failed", r));
+            AUI_ASSERTX(r, "CloseHandle failed");
         }
     }
 
@@ -94,7 +94,7 @@ private:
 };
 
 void WinIoAsync::init(HANDLE fileHandle, std::function<void(const AByteBuffer&)> callback) {
-    assert(("already initialized", mImpl == nullptr));
+    AUI_ASSERTX(mImpl == nullptr, "already initialized");
     mImpl = _new<Impl>();
     mImpl->init(fileHandle, std::move(callback));
 }

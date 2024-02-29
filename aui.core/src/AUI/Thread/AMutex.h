@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,25 +16,28 @@
 
 #pragma once
 #include <mutex>
+#include <shared_mutex>
 #include <thread>
+#include "AUI/Performance/APerformanceSection.h"
 
-class AMutex: public std::mutex
-{
+
+namespace aui::detail {
+    template<typename T>
+    struct MutexExtras: T {
+    public:
+        void lock() {
+            APerformanceSection section("Mutex", AColor::RED);
+            T::lock();
+        }
+    };
+}
+
+struct AMutex: aui::detail::MutexExtras<std::mutex>{};
+struct ARecursiveMutex: aui::detail::MutexExtras<std::recursive_mutex>{};
+struct ASharedMutex: aui::detail::MutexExtras<std::shared_mutex> {
 public:
-    using super = std::mutex;
-/*	
-#if AUI_DEBUG
-    void lock() {
-        super::lock();
-        auto h = pthread_self();
-        pthread_getname_np(h, mOwnerThread, std::size(mOwnerThread));
+    void lock_shared() {
+        APerformanceSection section("Mutex", AColor::RED);
+        MutexExtras::lock_shared();
     }
-    void unlock() {
-        mOwnerThread[0] = 0;
-        super::unlock();
-    }
-private
-    char mOwnerThread[64];
-#endif*/
-
 };

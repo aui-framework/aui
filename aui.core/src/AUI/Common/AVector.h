@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -51,6 +51,8 @@ public:
 
     template<typename Iterator>
     explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
+
+    explicit AVector(std::vector<StoredType, Allocator>&& rhs) noexcept: super(std::move(rhs)) {}
 
 
     /**
@@ -110,6 +112,18 @@ public:
     void removeAll(const StoredType& item) noexcept
     {
         aui::container::remove_all(*this, item);
+    }
+
+    /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename T, aui::mapper<const StoredType&, const T&> Projection>
+    void removeAll(const T& item, Projection projection) noexcept
+    {
+        aui::container::remove_all(*this, item, projection);
     }
 
     /**
@@ -217,7 +231,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -230,7 +244,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -243,7 +257,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -256,7 +270,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -295,6 +309,7 @@ public:
         }
         return nullptr;
     }
+
 
     /**
      * Removes element at the specified index.

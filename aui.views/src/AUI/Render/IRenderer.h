@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -217,7 +217,7 @@ public:
          * @note can be called only once.
          */
         ATextLayoutHelper getTextLayoutHelper() noexcept {
-            assert(("call enableCachingForTextLayoutHelper() before using getTextLayoutHelper" && bool(mSymbols)));
+            AUI_ASSERTX(bool(mSymbols), "call enableCachingForTextLayoutHelper() before using getTextLayoutHelper");
             return ATextLayoutHelper(std::move(*mSymbols));
         }
     };
@@ -366,6 +366,14 @@ public:
      * @param width line width
      */
     virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws points list.
+     * @param brush brush
+     * @param points points
+     * @param size point size
+     */
+    virtual void drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
 
     /**
      * @brief Draws multiple individual lines in a batch.
