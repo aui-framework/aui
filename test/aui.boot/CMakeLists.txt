@@ -39,6 +39,7 @@ endfunction()
 
 define_aui_boot_test(BasicProgram)
 define_aui_boot_test(ImportAUIDependency)
+define_aui_boot_test(Precompiled)
 define_aui_boot_test(Tests)
 define_aui_boot_test(BuildSharedLibsAddSubdirectory)
 
