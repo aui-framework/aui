@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <cassert>
+#include "AUI/Util/Assert.h"
 #include <algorithm>
 #include <ostream>
 
