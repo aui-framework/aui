@@ -131,7 +131,9 @@ if (AUI_FOUND AND NOT TARGET aui)
 endif()
 
 if (UNIX AND NOT APPLE)
+    auib_use_system_libs_begin()
     find_package(Threads REQUIRED)
+    auib_use_system_libs_end()
 endif()
 
 if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)

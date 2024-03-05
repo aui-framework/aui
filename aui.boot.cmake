@@ -520,7 +520,7 @@ function(auib_import AUI_MODULE_NAME URL)
     if(AUI_BOOT_SOURCEDIR_COMPAT)
         unset(SOURCE_BINARY_DIRS_ARG)
     else()
-        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
+        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
                 message(STATUS "Waiting for repository...")
