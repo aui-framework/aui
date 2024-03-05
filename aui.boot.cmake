@@ -77,6 +77,11 @@ define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
         FULL_DOCS "Global list of aui boot root entries")
 
+
+define_property(GLOBAL PROPERTY AUI_BOOT_DEPS
+        BRIEF_DOCS "Global list of auib_import commands"
+        FULL_DOCS "Global list of auib_import commands")
+
 # checking host system not by WIN32 because of cross compilation
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(HOME_DIR $ENV{USERPROFILE})
@@ -368,12 +373,18 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
-    set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
+    set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    # save arguments for later use by dependent modules
+    if (NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG)
+        string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG)\n")
+    endif()
 
     # check for dependencies
     foreach (_dep ${AUIB_IMPORT_REQUIRES})
@@ -870,6 +881,8 @@ endmacro()
 
 macro(auib_precompiled_binary)
     set(CPACK_GENERATOR "TGZ")
+    get_property(_auib_deps GLOBAL PROPERTY AUI_BOOT_DEPS)
+    set(AUIB_DEPS ${_auib_deps} CACHE STRING "" FORCE)
     _auib_precompiled_archive_name(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
     message(STATUS "[AUI.BOOT] Output precompiled archive name: ${CPACK_PACKAGE_FILE_NAME}")
     set(CPACK_VERBATIM_VARIABLES YES)
