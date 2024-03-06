@@ -17,6 +17,8 @@
 #pragma once
 
 #include <AUI/View/AAbstractTypeableView.h>
+#include "AUI/Enum/ATextInputAction.h"
+#include "AUI/Enum/ATextInputType.h"
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
@@ -39,6 +41,25 @@ public:
     void render(ClipOptimizationContext context) override;
 
     AString toString() const override;
+
+    void setTextInputType(ATextInputType textInputType) noexcept {
+        mTextInputType = textInputType;
+    }
+
+    [[nodiscard]]
+    ATextInputType textInputType() const noexcept {
+        return mTextInputType;
+    }
+
+    void setTextInputAction(ATextInputAction textInputAction) noexcept {
+        mTextInputAction = textInputAction;
+    }
+
+    [[nodiscard]]
+    ATextInputAction textInputAction() const noexcept {
+        return mTextInputAction;
+    }
+
 
     void setPasswordMode(bool isPasswordMode) {
         mIsPasswordTextField = isPasswordMode;
@@ -90,6 +111,8 @@ protected:
     glm::ivec2 getMouseSelectionPadding() override;
 
 private:
+    ATextInputType mTextInputType = ATextInputType::DEFAULT;
+    ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
 
