@@ -20,6 +20,7 @@
 
 /**
  * @brief Controls IME text input action the user is requested to perform.
+ * @ingroup views
  * @details
  * Each action configures soft keyboard to display the certain kind of operation. The visual appearance of the action
  * button might differ depending on the target platform, it's version, and the keyboard implementation (especially on

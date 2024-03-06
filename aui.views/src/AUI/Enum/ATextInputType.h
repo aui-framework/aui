@@ -20,6 +20,7 @@
 
 /**
  * @brief Controls IME text input type of the text field.
+ * @ingroup views
  * @details
  * The type of information for which to optimize the text input control.
  *
