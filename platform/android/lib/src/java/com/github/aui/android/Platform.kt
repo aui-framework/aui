@@ -40,10 +40,10 @@ object Platform {
 
         val keyboardAction = when (iKeyboardAction) {
             /* DONE */ 1 -> EditorInfo.IME_ACTION_DONE
-            /* GO */ 1 -> EditorInfo.IME_ACTION_GO
-            /* SEND */ 1 -> EditorInfo.IME_ACTION_SEND
-            /* SEARCH */ 1 -> EditorInfo.IME_ACTION_SEARCH
-            /* NEXT */ 1 -> EditorInfo.IME_ACTION_NEXT
+            /* GO */ 2 -> EditorInfo.IME_ACTION_GO
+            /* SEND */ 3 -> EditorInfo.IME_ACTION_SEND
+            /* SEARCH */ 4 -> EditorInfo.IME_ACTION_SEARCH
+            /* NEXT */ 5 -> EditorInfo.IME_ACTION_NEXT
             /* default */ else -> EditorInfo.IME_ACTION_UNSPECIFIED
         }
     }
