@@ -41,7 +41,7 @@
 
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-
+#include <AUI/View/AAbstractTextField.h>
 
 
 AWindow::~AWindow() {
@@ -153,7 +153,16 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {
-    com::github::aui::android::Platform::showKeyboard();
+    ATextInputType type = ATextInputType::DEFAULT;
+    ATextInputAction action = ATextInputAction::DEFAULT;
+    bool isPassword = false;
+    if (auto textField = _cast<AAbstractTextField>(AWindow::getFocusedView())) {
+        type = textField->textInputType();
+        action = textField->textInputAction();
+        isPassword = textField->isPasswordMode();
+    }
+    com::github::aui::android::Platform::showKeyboard(static_cast<int>(type),
+                                                      static_cast<int>(action), isPassword);
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
