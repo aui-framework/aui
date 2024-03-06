@@ -3,6 +3,8 @@ package com.github.aui.android
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
+import android.text.InputType
+import android.view.inputmethod.EditorInfo
 import androidx.appcompat.app.AlertDialog
 
 object Platform {
@@ -23,8 +25,27 @@ object Platform {
     }
 
     @JvmStatic
-    private fun showKeyboard() {
+    private fun showKeyboard(iKeyboardType: Int, iKeyboardAction: Int, isPassword: Boolean) {
         // TODO
+        var keyboardType = when (iKeyboardType) {
+            /* EMAIL */ 1 -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            /* MULTILINE */ 2 -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
+            /* NUMBER */ 3 -> InputType.TYPE_CLASS_NUMBER
+            /* URL */ 4 -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
+            /* default */ else -> InputType.TYPE_CLASS_TEXT
+        }
+        if (isPassword) {
+            keyboardType = keyboardType or InputType.TYPE_TEXT_VARIATION_PASSWORD
+        }
+
+        val keyboardAction = when (iKeyboardAction) {
+            /* DONE */ 1 -> EditorInfo.IME_ACTION_DONE
+            /* GO */ 1 -> EditorInfo.IME_ACTION_GO
+            /* SEND */ 1 -> EditorInfo.IME_ACTION_SEND
+            /* SEARCH */ 1 -> EditorInfo.IME_ACTION_SEARCH
+            /* NEXT */ 1 -> EditorInfo.IME_ACTION_NEXT
+            /* default */ else -> EditorInfo.IME_ACTION_UNSPECIFIED
+        }
     }
 
     @JvmStatic
