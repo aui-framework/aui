@@ -65,6 +65,7 @@ public:
     [[nodiscard]] int getSelectedId() const {
         return mGroup->getSelectedId();
     }
+    void setSelectedId(int id) const;
 
 signals:
     emits<AListModelIndex> selectionChanged;

@@ -49,3 +49,7 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
 
     requestLayoutUpdate();
 }
+
+void ARadioGroup::setSelectedId(int id) const {
+    mGroup->setSelectedId(id);
+}
