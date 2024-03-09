@@ -23,6 +23,12 @@
 #include <AUI/Platform/AWindow.h>
 
 
+ARadioGroup::ARadioGroup() : mGroup(_new<ARadioButton::Group>()) {
+    connect(mGroup->selectionChanged, this, [&](const AListModelIndex& index) {
+        emit selectionChanged(index);
+    });
+}
+
 ARadioGroup::~ARadioGroup() {
 
 }

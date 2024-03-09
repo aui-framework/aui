@@ -45,7 +45,7 @@ public:
         setLayout(_new<AVerticalLayout>());
         setViews({ std::forward<RadioButtons>(radioButtons)... });
     }
-    ARadioGroup(): mGroup(_new<ARadioButton::Group>()) {}
+    ARadioGroup();
     ~ARadioGroup() override;
 
     void setViews(AVector<_<AView>> views) {
