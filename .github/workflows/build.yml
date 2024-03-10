@@ -201,7 +201,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          release_name: ${{ github.ref }}
           draft: false
           prerelease: false
     outputs:
@@ -217,6 +217,31 @@ jobs:
         os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A Win32'
+            debug_or_release: Debug
+            shared_or_static: shared
+            is32bit: true
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: macos-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
 
     needs: release
     steps:
