@@ -42,6 +42,7 @@ bool AWindow::consumesClick(const glm::ivec2& pos) {
 }
 
 void AWindow::onClosed() {
+    emit closed();
     quit();
 }
 
@@ -181,7 +182,7 @@ void AWindow::flagUpdateLayout() {
 
 
 void AWindow::onCloseButtonClicked() {
-    emit closed();
+    close();
 }
 
 
@@ -222,8 +223,6 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     mSize = (glm::max)(glm::ivec2{ width, height }, getMinimumSize());
 
     currentWindowStorage() = this;
-
-    connect(closed, this, &AWindow::close);
 
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
