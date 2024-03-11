@@ -217,8 +217,6 @@ jobs:
         os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
-
-    needs: release
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1
