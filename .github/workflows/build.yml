@@ -169,6 +169,15 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
 
+      - name: Build tests
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
+
+      - name: Run tests
+        # Build your program with the given configuration
+        working-directory: ${{github.workspace}}/build
+        run: ctest . -C ${{matrix.debug_or_release}} -VV
+
       - name: Pack
         working-directory: ${{github.workspace}}/build
         run: cpack . -C ${{ matrix.debug_or_release }}
@@ -247,3 +256,63 @@ jobs:
           asset_path: ${{ steps.getfilename.outputs.file }}
           asset_name: ${{ steps.getfilename.outputs.file }}
           asset_content_type: application/x-gtar
+
+  deployment-tests:
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+    if: contains(github.ref, 'tags/v')
+    runs-on: ${{ matrix.os }}
+    needs: [publish]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+        is32bit: [false]
+        include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A Win32'
+            debug_or_release: Debug
+            shared_or_static: shared
+            is32bit: true
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: macos-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+            
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
+
+      - name: Install macos dependencies
+        if: matrix.os == 'macos-latest'
+        run: brew install ninja 
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION=${{ github.ref }}
+
+      - name: Run tests
+        # Build your program with the given configuration
+        working-directory: ${{github.workspace}}/build
+        run: ctest . -C ${{matrix.debug_or_release}} -VV
