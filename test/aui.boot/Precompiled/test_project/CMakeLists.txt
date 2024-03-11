@@ -6,7 +6,7 @@ include(../../../../aui.boot.cmake)
 set(AUIB_DEBUG_PRECOMPILED aui)
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core
-            VERSION v3.0.5)
+            VERSION v3.0.6)
 
 aui_executable(test_project)
 aui_link(test_project PUBLIC aui::core)
