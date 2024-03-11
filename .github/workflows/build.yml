@@ -20,7 +20,7 @@ permissions:
 jobs:
   doxygen:
     if: github.event_name != 'pull_request'
-    name: Doxygen
+    name: "Create and upload Doxygen"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -182,6 +182,7 @@ jobs:
   release:
     if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
+    name: "Create release page"
 
     steps:
       - name: Create Release
@@ -208,6 +209,24 @@ jobs:
         os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A Win32'
+            debug_or_release: Debug
+            shared_or_static: shared
+            is32bit: true
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: macos-latest
+            generator: "Ninja"
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1
