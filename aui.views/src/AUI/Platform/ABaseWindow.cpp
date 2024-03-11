@@ -476,6 +476,7 @@ void ABaseWindow::requestTouchscreenKeyboard() {
     }
     mIgnoreTouchscreenKeyboardRequests = true;
     requestTouchscreenKeyboardImpl();
+    emit touchscreenKeyboardShowRequested;
 }
 
 void ABaseWindow::hideTouchscreenKeyboard() {
@@ -483,6 +484,7 @@ void ABaseWindow::hideTouchscreenKeyboard() {
         return;
     }
     hideTouchscreenKeyboardImpl();
+    emit touchscreenKeyboardHideRequested;
 }
 
 bool ABaseWindow::shouldDisplayHoverAnimations() const {
