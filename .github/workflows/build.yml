@@ -234,8 +234,6 @@ jobs:
             generator: "Ninja"
             additional_cmake_flags: ''
 
-          - os: macos-latest
-            generator: "Ninja"
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1
@@ -282,10 +280,6 @@ jobs:
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: ''
-
-          - os: macos-latest
             generator: "Ninja"
             additional_cmake_flags: ''
 
