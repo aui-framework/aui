@@ -186,7 +186,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -239,7 +239,7 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           path: ./
-          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{matrix.debug_or_release }}
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - id: getfilename
         run: echo "::set-output name=file::$(ls *.tar.gz)"
@@ -263,7 +263,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
