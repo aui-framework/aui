@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <chrono>
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -33,6 +34,10 @@
 #endif
 
 
+using namespace std::chrono_literals;
+static constexpr auto MAX_PROCESSING_ITERATIONS_PER_FRAME = 100'000;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ALL_TASKS = 10ms;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ONE_TASK = 1ms;
 
 class UIThread: public AAbstractThread {
 public:
@@ -45,9 +50,9 @@ protected:
         std::unique_lock lock(mQueueLock, std::defer_lock);
 
         using namespace std::chrono;
-        using namespace std::chrono_literals;
 
-        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
+        auto beginTime = system_clock::now();
+        for (std::size_t i = 0; i <= MAX_PROCESSING_ITERATIONS_PER_FRAME && !mMessageQueue.empty() && lock.try_lock(); ++i)
         {
             auto f = std::move(mMessageQueue.front());
             mMessageQueue.pop_front();
@@ -61,10 +66,16 @@ protected:
                     << " - ...\n";
             */
 
-            if (time >= 1ms) {
+            if (time >= MAX_PROCESSING_TIME_FOR_ONE_TASK) {
                 ALogger::warn("Performance")
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
                     << " - ...\n";
+            }
+
+            if (i % 10000 == 0) {
+                if (system_clock::now() - beginTime >= MAX_PROCESSING_TIME_FOR_ALL_TASKS) {
+                    break;
+                }
             }
         }
         lock.lock();
