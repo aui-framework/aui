@@ -560,7 +560,7 @@ function(auib_import AUI_MODULE_NAME URL)
             unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
             # check for GitHub Release
-            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED)
+            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED AND NOT DEP_ADD_SUBDIRECTORY)
                 _auib_try_download_precompiled_binary()
             endif()
 
