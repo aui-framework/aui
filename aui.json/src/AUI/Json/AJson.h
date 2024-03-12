@@ -32,7 +32,7 @@
 
 class AJson;
 namespace aui::impl {
-    using JsonObject = AMap<AString, AJson>;
+    using JsonObject = AUnorderedMap<AString, AJson>;
     using JsonArray = AVector<AJson>;
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
