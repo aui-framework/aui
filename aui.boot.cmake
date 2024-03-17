@@ -524,6 +524,17 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                 BINARY_DIR ${DEP_BINARY_DIR})
     endif()
+    
+    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+        # validate the CMAKELISTS_CUSTOM param
+        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
+            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
+        endif()
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
+        endif()
+    endif()
 
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
