@@ -313,6 +313,17 @@ signals:
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+    /**
+     * @brief On touch screen keyboard show requested.
+     */
+    emits<> touchscreenKeyboardShowRequested;
+
+
+    /**
+     * @brief On touch screen keyboard hide requested.
+     */
+    emits<> touchscreenKeyboardHideRequested;
+
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
 #endif

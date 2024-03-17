@@ -362,7 +362,7 @@ namespace aui::impl::future {
          * @param task a callback which will be executed by Future::Inner::tryExecute. Can be null. If null, the result
          *        should be provided by AFuture::supplyResult function.
          */
-        Future(TaskCallback task = nullptr) noexcept: mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
+        Future(TaskCallback task = nullptr): mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
 
         [[nodiscard]]
         const _<CancellationWrapper<Inner>>& inner() const noexcept {
@@ -594,6 +594,10 @@ public:
 #endif
     using Inner = aui::impl::future::CancellationWrapper<typename super::Inner>;
 
+    explicit AFuture(T immediateValue): super() {
+        auto& inner = (*super::mInner);
+        inner->value = std::move(immediateValue);
+    }
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 

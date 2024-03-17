@@ -195,7 +195,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         mShowTouches.clear();
     }
     ALogger::info("AUI_SHOW_TOUCHES") << "onPointerPressed(pointerIndex = " << event.pointerIndex << ", pos = " << event.position << ")";
-    mShowTouches[event.pointerIndex] = {};
+    mShowTouches[event.pointerIndex] = {{event.position}};
 #endif
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
@@ -256,13 +256,18 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
-#if AUI_SHOW_TOUCHES
-    ALogger::info("AUI_SHOW_TOUCHES") << "onPointerReleased(pI=" << event.pointerIndex << ",pos=" << event.position << ",tC=" << event.triggerClick << ")";
-#endif
     APointerReleasedEvent copy = event;
     // in case of multitouch, we should not treat pointer release event as a click.
     copy.triggerClick = pointerEventsMapping().size() < 2 && !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
+
+#if AUI_SHOW_TOUCHES
+    if (auto c = mShowTouches.contains(event.pointerIndex)) {
+        c->second.positions << event.position;
+    }
+
+    ALogger::info("AUI_SHOW_TOUCHES") << "onPointerReleased(pI=" << copy.pointerIndex << ",pos=" << copy.position << ",tC=" << copy.triggerClick << ")";
+#endif
 
     // handle touchscreen scroll
     if (event.pointerIndex.isFinger()) {
@@ -471,6 +476,7 @@ void ABaseWindow::requestTouchscreenKeyboard() {
     }
     mIgnoreTouchscreenKeyboardRequests = true;
     requestTouchscreenKeyboardImpl();
+    emit touchscreenKeyboardShowRequested;
 }
 
 void ABaseWindow::hideTouchscreenKeyboard() {
@@ -478,6 +484,7 @@ void ABaseWindow::hideTouchscreenKeyboard() {
         return;
     }
     hideTouchscreenKeyboardImpl();
+    emit touchscreenKeyboardHideRequested;
 }
 
 bool ABaseWindow::shouldDisplayHoverAnimations() const {

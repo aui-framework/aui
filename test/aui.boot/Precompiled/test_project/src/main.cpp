@@ -14,17 +14,10 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
-#include <AUI/JNI/AJni.h>
+#include <AUI/Platform/Entry.h>
+#include <AUI/Logging/ALogger.h>
 
-namespace com::github::aui::android {
-    AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {
-        AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
-        AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
-        AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
-        AUI_JNI_STATIC_METHOD(void, showKeyboard, ((int) keyboardType, (int) keyboardAction, (bool) isPassword))
-        AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
-        AUI_JNI_STATIC_METHOD(void, showMessageBox, ((const AString&) title, (const AString&) message))
-    };
+AUI_ENTRY {
+    ALogger::info("Hello world!");
+    return 0;
 }
-

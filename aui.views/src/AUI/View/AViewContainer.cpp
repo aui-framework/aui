@@ -124,6 +124,9 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
+    for (const auto& v : mViews) {
+        v->mParent = nullptr;
+    }
     mViews.clear();
     mLayout = std::move(layout);
     if (mLayout) {
