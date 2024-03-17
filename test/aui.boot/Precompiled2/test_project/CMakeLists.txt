@@ -10,4 +10,4 @@ auib_import(aui https://github.com/aui-framework/aui
 
 aui_executable(test_project)
 aui_link(test_project PUBLIC aui::core aui::views)
-aui_enable_tests(test_project)
+aui_compile_assets(test_project)
