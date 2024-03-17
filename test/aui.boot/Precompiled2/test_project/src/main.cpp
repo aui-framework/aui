@@ -17,9 +17,13 @@
 #include <AUI/Platform/Entry.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/AMimedData.h>
+#include "AUI/Common/AByteBuffer.h"
 
 AUI_ENTRY {
     ALogger::info("Hello world!");
     AMimedData d;
-    return 0;
+
+    auto c = AString::fromUtf8(AByteBuffer::fromStream(":test.txt"_url.open()));
+    ALogger::info("test.txt") << c;
+    return c == "test" ? 0 : -1;
 }
