@@ -7,7 +7,7 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++20.
 
-[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html)
+[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -17,7 +17,7 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static libpulse-dev
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev libglew-dev libstdc++-static libpulse-dev
 ```
 
 ### Fedora
