@@ -191,6 +191,7 @@ jobs:
   release:
     if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
+    permissions: write-all
     name: "Create release page"
 
     steps:
