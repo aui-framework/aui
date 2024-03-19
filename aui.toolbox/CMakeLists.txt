@@ -5,6 +5,6 @@ if(ANDROID OR IOS)
     return()
 endif()
 
-aui_executable(aui.toolbox WIN32_SUBSYSTEM_CONSOLE)
+aui_executable(aui.toolbox WIN32_SUBSYSTEM_CONSOLE EXPORT aui)
 aui_link(aui.toolbox PRIVATE aui::core aui::crypt aui::image)
 aui_enable_tests(aui.toolbox)

@@ -674,6 +674,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 # forward all necessary variables to child cmake build
                 foreach(_varname
                         AUIB_NO_PRECOMPILED
+                        AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
                         AUI_CACHE_DIR
                         CMAKE_C_FLAGS
