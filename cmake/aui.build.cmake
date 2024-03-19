@@ -493,11 +493,14 @@ function(aui_common AUI_MODULE_NAME)
             ]])
         endif()
 
-        install(CODE [[
-            if (EXISTS ${AUI_MODULE_PATH})
-                file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
-            endif()
-        ]])
+        if (WIN32)
+            # Install dependencies (dlls) that are located in bin/ directory.
+            install(CODE [[
+                if (EXISTS ${AUI_MODULE_PATH})
+                    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+                endif()
+            ]])
+        endif()
     endif()
     if (CMAKE_GENERATOR STREQUAL "Xcode")
         if (BUILD_SHARED_LIBS)
