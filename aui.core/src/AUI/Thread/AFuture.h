@@ -420,11 +420,11 @@ namespace aui::impl::future {
          * @ref AAbstractThread::interrupt() "requested for interrupt".
          * 3. AFuture's task is already completed. cancel() does nothing.
          */
-        void cancel() noexcept {
+        void cancel() const noexcept {
             (*mInner)->cancel();
         }
 
-        void reportInterrupted() {
+        void reportInterrupted() const {
             (*mInner)->reportInterrupted();
         }
 
@@ -433,7 +433,7 @@ namespace aui::impl::future {
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
          *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
-        void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
+        void wait(AFutureWait flags = AFutureWait::DEFAULT) const noexcept {
             (*mInner)->wait(mInner, flags);
         }
 
@@ -445,7 +445,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) {
+        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) const {
             AThread::interruptionPoint();
             (*mInner)->wait(mInner, flags);
             AThread::interruptionPoint();
@@ -493,7 +493,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        Value* operator->() {
+        Value* operator->() const {
             return &operator*();
         }
 
@@ -505,7 +505,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        Value const * operator->() const {
+        Value const * operator->() {
             return &operator*();
         }
     };
