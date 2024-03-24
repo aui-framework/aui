@@ -81,7 +81,7 @@ public:
     APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
-        fmt::format_to_n(std::begin(path), sizeof(path), "/proc/%u/exe", mHandle);
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
