@@ -24,7 +24,6 @@
 #include "AUI/Platform/PipeInputStream.h"
 #include "AUI/Platform/PipeOutputStream.h"
 #include "UnixIoThread.h"
-#include <fmt/core.h>
 #include <sys/types.h>
 #include <signal.h>
 #include <unistd.h>
