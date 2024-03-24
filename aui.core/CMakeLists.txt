@@ -5,6 +5,7 @@ option(AUI_COROUTINES "Use C++20 coroutines" OFF)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
+aui_enable_benchmarks(aui.core)
 
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)

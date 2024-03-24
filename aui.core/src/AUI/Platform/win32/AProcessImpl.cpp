@@ -92,6 +92,12 @@ public:
     uint32_t getPid() const noexcept override {
         return GetProcessId(mHandle);
     }
+    size_t processMemory() const override { 
+        PROCESS_MEMORY_COUNTERS info;
+        GetProcessMemoryInfo(mHandle, &info, sizeof(info));
+        return (size_t)info.WorkingSetSize; 
+    }
+    
 };
 
 AVector<_<AProcess>> AProcess::all() {
@@ -248,6 +254,12 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mProcessInformation.dwProcessId;
+}
+
+size_t AChildProcess::processMemory() const {
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo(mProcessInformation.hProcess, &info, sizeof(info));
+    return (size_t)info.WorkingSetSize; 
 }
 
 

@@ -39,6 +39,25 @@
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
 
+namespace {
+    size_t processMemory(pid_t pid) {
+        // avoid fancy apis here for performance reasons.
+        long rss = 0L;
+        FILE* fp = NULL;
+        char path[0x100];
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/statm", pid).out = '\0';
+        if ((fp = fopen(path, "r")) == nullptr) {
+            return (size_t)0L;
+        }
+        if (fscanf(fp, "%*s%ld", &rss ) != 1) {
+            fclose(fp);
+            return (size_t)0L;
+        }
+        fclose(fp);
+        return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+    }
+}
+
 class AOtherProcess: public AProcess {
 private:
     pid_t mHandle;
@@ -62,12 +81,16 @@ public:
     APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
-        sprintf(path, "/proc/%u/exe", mHandle);
+        fmt::format_to_n(std::begin(path), sizeof(path), "/proc/%u/exe", mHandle);
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
     uint32_t getPid() const noexcept override {
         return mHandle;
+    }
+
+    size_t processMemory() const override { 
+        return ::processMemory(mHandle); 
     }
 };
 
@@ -190,6 +213,10 @@ int AChildProcess::waitForExitCode() {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
+}
+
+size_t AChildProcess::processMemory() const {
+    return ::processMemory(mPid); 
 }
 
 void AProcess::kill() const noexcept {
