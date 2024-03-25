@@ -46,53 +46,37 @@ if (NOT WIN32)
         set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
     endif()
 
-    # probe for backtrace
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp [[
-    #include <execinfo.h>
-    #include <backtrace.h>
-    int main() {
-        void* buffer[1024];
-        int n = backtrace(buffer, 1024);
-        return 0;
-    }
-    ]])
+    if (AUI_PLATFORM_LINUX)
+        auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
+                    CMAKELISTS_CUSTOM cmake/backtrace.cmake)
+        set(_use_backtrace TRUE)
+    else()
 
-    try_compile(_use_backtrace ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test/b ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp OUTPUT_VARIABLE _tmp)
-
-    if (NOT _use_backtrace)
-        if (AUI_PLATFORM_LINUX)
-            auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
-                        CMAKELISTS_CUSTOM cmake/backtrace.cmake)
-            set(_use_backtrace TRUE)
-        else()
-
-            # probe for unwind
-            file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unwind_test)
-            file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp [[
+        # probe for unwind
+        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unwind_test)
+        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp [[
 #include <dlfcn.h>
 #include <unwind.h>
 
 static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg)
 {
-    uintptr_t pc = _Unwind_GetIP(context);
-    return _URC_NO_REASON;
+uintptr_t pc = _Unwind_GetIP(context);
+return _URC_NO_REASON;
 }
 
 size_t captureBacktrace(void** buffer, size_t max)
 {
-    _Unwind_Backtrace(unwindCallback, nullptr);
+_Unwind_Backtrace(unwindCallback, nullptr);
 
-    return 0;
+return 0;
 }
 int main() {
-    captureBacktrace(nullptr, 0);
-    return 0;
+captureBacktrace(nullptr, 0);
+return 0;
 }
-            ]])
+        ]])
 
-            try_compile(_use_unwind ${CMAKE_CURRENT_BINARY_DIR}/unwind_test/b ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp OUTPUT_VARIABLE _tmp)
-        endif ()
+        try_compile(_use_unwind ${CMAKE_CURRENT_BINARY_DIR}/unwind_test/b ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp OUTPUT_VARIABLE _tmp)
     endif ()
 endif()
 
