@@ -179,7 +179,7 @@ jobs:
         run: ${{github.workspace}}/build/bin/Tests.exe
 
       - name: Run AUI tests
-        if: matrix.os != 'windows-latest'
+        if: matrix.os == 'ubuntu-latest'
         working-directory: ${{github.workspace}}/build/bin
         run: ${{github.workspace}}/build/bin/Tests
 

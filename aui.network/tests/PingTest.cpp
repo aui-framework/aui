@@ -18,5 +18,5 @@
 #include "AUI/Network/AIcmp.h"
 
 TEST(Ping, Case1) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("8.8.8.8"))->count(), 0);
+    EXPECT_GE(AIcmp::ping(AInet4Address("1.1.1.1"))->count(), 0);
 }
