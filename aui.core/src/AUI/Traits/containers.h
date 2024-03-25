@@ -222,6 +222,14 @@ namespace aui::container {
     auto to_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AMap.h
 
     /**
+     * @brief Transforms sequence to unordered_map.
+     * @ingroup core
+     */
+    template<typename Iterator, typename UnaryOperation>
+    [[nodiscard]]
+    auto to_unordered_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AUnorderedMap.h
+
+    /**
      * @ingroup core
      * @return true if <code>r</code> container is a subset of <code>l</code> container, false otherwise.
      */

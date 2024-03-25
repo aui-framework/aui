@@ -24,7 +24,7 @@
 #include "AUI/Render/ARender.h"
 
 
-class AVectorDrawable: public IDrawable
+class API_AUI_VIEWS AVectorDrawable: public IDrawable
 {
 private:
     struct Pair {
