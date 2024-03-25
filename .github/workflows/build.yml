@@ -173,8 +173,11 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
-      - name: Run tests
-        # Build your program with the given configuration
+      - name: Run AUI tests
+        working-directory: ${{github.workspace}}/build/bin
+        run: ${{github.workspace}}/build/bin/Tests
+
+      - name: Run CMake tests
         working-directory: ${{github.workspace}}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV
 
