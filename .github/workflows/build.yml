@@ -169,11 +169,17 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
 
-      - name: Build tests
+      - name: Build AUI tests
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
       - name: Run AUI tests
+        if: matrix.os == 'windows-latest'
+        working-directory: ${{github.workspace}}/build/bin
+        run: ${{github.workspace}}/build/bin/Tests.exe
+
+      - name: Run AUI tests
+        if: matrix.os != 'windows-latest'
         working-directory: ${{github.workspace}}/build/bin
         run: ${{github.workspace}}/build/bin/Tests
 
