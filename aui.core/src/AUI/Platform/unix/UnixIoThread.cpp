@@ -19,6 +19,8 @@
 //
 
 #include "UnixIoThread.h"
+#include "AUI/Logging/ALogger.h"
+#include "AUI/Thread/AThread.h"
 #include "UnixEventFd.h"
 #include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
@@ -51,8 +53,10 @@ public:
 
     void loop() override {
         for (;;) {
+            ALogger::info("TRACE") << "before processMessage";
             AThread::processMessages();
             epoll_event events[1024];
+            ALogger::info("TRACE") << "before epoll_wait";
             int count = epoll_wait(mParent.mEpollFd, events, std::size(events), -1);
             if (count < 0) {
                 if (errno == EINTR) {
@@ -60,11 +64,15 @@ public:
                 }
                 aui::impl::unix_based::lastErrorToException("epoll_wait failed");
             }
+            ALogger::info("TRACE") << "before lock";
             std::unique_lock lock (mParent.mSync);
             for (int i = 0; i < count; ++i) {
+                ALogger::info("TRACE") << "before find";
                 auto it = mParent.mFdInfo.find(events[i].data.fd);
                 if (it == mParent.mFdInfo.end()) continue;
+                ALogger::info("TRACE") << "after end check";
                 for (const auto& callback : it->second.callbacks) {
+                    ALogger::info("TRACE") << "callback iteration";
                     if (!callback.mask.testAny(static_cast<UnixPollEvent>(events[i].events))) {
                         continue;
                     }

@@ -53,9 +53,9 @@ protected:
                                  Vertical {
                                    Centered {
                                      AScrollArea::Builder().withContents(Vertical {
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                        mView = _new<ViewMock>() with_style {
                                          MinSize { 16_dp },
                                          BackgroundSolid { AColor::BLACK },
@@ -63,12 +63,12 @@ protected:
                                              BackgroundSolid { AColor::RED },
                                          },
                                        },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                      }).build() with_style {
                                        MinSize { 100_dp },
                                      }

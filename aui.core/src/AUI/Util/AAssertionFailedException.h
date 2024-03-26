@@ -14,14 +14,10 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include <gmock/gmock.h>
-#include "AUI/Network/AIcmp.h"
 
-TEST(Ping, Case1) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("8.8.8.8"))->count(), 0);
-}
+#include <AUI/Common/AException.h>
 
-TEST(Ping, Case2) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
-}
-
+class API_AUI_CORE AAssertionFailedException: public AException {
+public:
+    using AException::AException;
+};
