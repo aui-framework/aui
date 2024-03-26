@@ -38,7 +38,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		include_directories(${DBUS_INCLUDE_DIRS})
 		link_directories(${DBUS_LIBRARY_DIRS})
 
-		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${Fontconfig_LIBRARIES})
+		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} Fontconfig::Fontconfig)
 	endif()
 
 	if (NOT AUI_PLATFORM_WINDOWS)

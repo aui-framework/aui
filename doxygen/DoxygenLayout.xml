@@ -54,6 +54,7 @@
             <tab type="usergroup" title="All AUI CMake commands">
                 <tab type="user" title="aui_app" url="@ref md_docs_aui_app" />
                 <tab type="user" title="aui_executable" url="@ref md_docs_aui_executable" />
+                <tab type="user" title="aui_module" url="@ref md_docs_aui_module" />
             </tab>
         </tab>
     </navindex>
