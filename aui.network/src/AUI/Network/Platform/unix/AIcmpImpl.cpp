@@ -20,6 +20,7 @@
 
 #include <AUI/Network/AIcmp.h>
 #include "AUI/IO/AIOException.h"
+#include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/unix/UnixIoThread.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
@@ -298,9 +299,11 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
     auto impl = _new<IcmpImpl>(destination);
 
     UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl](ABitField<UnixPollEvent>) mutable {
+        ALogger::info("TRACE") << "registerCallback begin";
         if (impl->receive()) {
             UnixIoThread::inst().unregisterCallback(impl->mSocket);
         }
+        ALogger::info("TRACE") << "registerCallback end";
     });
 
 

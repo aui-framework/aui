@@ -175,8 +175,8 @@ jobs:
 
       - name: Run AUI tests
         if: matrix.os == 'windows-latest'
-        working-directory: ${{github.workspace}}/build/bin/${{ matrix.shared_or_static }}
-        run: ${{github.workspace}}/build/bin/${{ matrix.shared_or_static }}/Tests.exe
+        working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
+        run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
 
       - name: Run AUI tests
         if: matrix.os == 'ubuntu-latest'
