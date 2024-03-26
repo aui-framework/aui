@@ -95,6 +95,10 @@ public:
      */
     virtual int waitForExitCode() = 0;
 
+    /**
+     * @brief Obtain process memory usage.
+     */
+    virtual size_t processMemory() const = 0;
 
     /**
      * @brief Launches executable.
@@ -220,6 +224,8 @@ public:
     int waitForExitCode() override;
 
     uint32_t getPid() const noexcept override;
+
+    size_t processMemory() const override;
 
     APath getModuleName() override;
 

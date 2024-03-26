@@ -24,7 +24,7 @@
 #include "AUI/Render/ARender.h"
 #include "AUI/Common/ASignal.h"
 
-class AAnimatedDrawable : public IDrawable, public AObject {
+class API_AUI_VIEWS AAnimatedDrawable : public IDrawable, public AObject {
 private:
     _<IAnimatedImageFactory> mFactory;
     _<ITexture> mTexture;

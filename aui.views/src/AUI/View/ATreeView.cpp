@@ -232,24 +232,72 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     if (mModel) {
         fillViewsRecursively(mContent, model->root());
         connect(mModel->dataInserted, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
-            try {
-                auto itemView = indexToView(parent);
-                bool group = mModel->childrenCount(i) != 0;
-                auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
-                makeElement(itemView->childrenContainer(), i, group, item);
-            } catch (const AException& e) {
-                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+            if (i.isRoot()) {
+                return;
+            } else {
+                auto parent = mModel->parent(i);
+                try {
+                    _<AViewContainer> itemContainer;
+                    if (parent.isRoot()) {
+                        itemContainer = mContent;
+                    } else {
+                        itemContainer = indexToView(parent)->childrenContainer();
+                    }
+                    bool group = mModel->childrenCount(i) != 0;
+                    auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
+                    makeElement(itemContainer, i, group, item);
+                    redraw();
+                } catch (const AException& e) {
+                    ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+                }
             }
         });
         connect(mModel->dataRemoved, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
-            try {
-                auto itemView = indexToView(parent);
-                itemView->childrenContainer()->removeView(i.row() * 2);
-                itemView->childrenContainer()->removeView(i.row() * 2);
-            } catch (const AException& e) {
-                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+            if (i.isRoot()) {
+                mContent->removeAllViews();
+                redraw();
+            } else {
+                auto parent = mModel->parent(i);
+                try {
+                    _<AViewContainer> itemContainer;
+                    if (parent.isRoot()) {
+                        itemContainer = mContent;
+                    } else {
+                        itemContainer = indexToView(parent)->childrenContainer();
+                    }
+                    itemContainer->removeView(i.row() * 2);
+                    itemContainer->removeView(i.row() * 2);
+                    redraw();
+                } catch (const AException& e) {
+                    ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+                }
+            }
+        });
+        connect(mModel->dataChanged, [this](ATreeModelIndex i) {
+            if (i.isRoot()) {
+                mContent->removeAllViews();
+                fillViewsRecursively(mContent, mModel->root());
+                redraw();
+            } else {
+                auto parent = mModel->parent(i);
+                try {
+                    _<AViewContainer> itemContainer;
+                    if (parent.isRoot()) {
+                        itemContainer = mContent;
+                    } else {
+                        itemContainer = indexToView(parent)->childrenContainer();
+                    }
+                    // remove old view
+                    itemContainer->removeView(i.row() * 2);
+                    itemContainer->removeView(i.row() * 2);
+                    // add new view
+                    bool group = mModel->childrenCount(i) != 0;
+                    auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
+                    makeElement(itemContainer, i, group, item);
+                    redraw();
+                } catch (const AException& e) {
+                    ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+                }
             }
         });
     }
@@ -338,7 +386,7 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
 
 template<aui::invocable<std::size_t /* row */> Callable>
 static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeModelIndex& indexToSelect) {
-    if (!indexToSelect.hasValue()) {
+    if (indexToSelect.isRoot()) {
         return;
     }
     findRoot(callable, model, model->parent(indexToSelect));
@@ -364,13 +412,8 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
 _<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
     auto currentTarget = _cast<AViewContainer>(mContent);
     _<ATreeView::ItemView> itemView;
-    bool ignore = true;
     findRoot([&](std::size_t row) {
         if (!currentTarget) {
-            return;
-        }
-        if (ignore) {
-            ignore = false;
             return;
         }
         auto c = _cast<ATreeView::ItemView>(currentTarget->getViews().at(row * 2));
