@@ -194,7 +194,7 @@ TEST_F(UIClick, DoubleClickNoEmit) {
         .asButton = AInput::LBUTTON
     });
 
-    AThread::sleep(ABaseWindow::DOUBLECLICK_MAX_DURATION);
+    AThread::sleep(ABaseWindow::DOUBLECLICK_MAX_DURATION * 2);
 
     mTestWindow->onPointerPressed({
         .position = By::text("Say hello").one()->getCenterPointInWindow(),

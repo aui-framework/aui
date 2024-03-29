@@ -299,11 +299,9 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
     auto impl = _new<IcmpImpl>(destination);
 
     UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl](ABitField<UnixPollEvent>) mutable {
-        ALogger::info("TRACE") << "registerCallback begin";
         if (impl->receive()) {
             UnixIoThread::inst().unregisterCallback(impl->mSocket);
         }
-        ALogger::info("TRACE") << "registerCallback end";
     });
 
 

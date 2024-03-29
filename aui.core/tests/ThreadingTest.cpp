@@ -282,7 +282,7 @@ TEST(Threading, FutureOnDone) {
     AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
         localThreadPool.run([] {
-            AThread::sleep(10ms); // long task
+            AThread::sleep(100ms); // long task
         });
 
 
