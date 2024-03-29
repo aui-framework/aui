@@ -14,9 +14,13 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include <gmock/gmock.h>
-#include "AUI/Network/AIcmp.h"
+#include "AUI/Platform/AWindowManager.h"
+#include "AUI/Platform/AWindow.h"
 
-TEST(Ping, Case1) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+void AWindowManager::closeAllWindows() {
+    auto windows = std::move(mWindows); // keeping it safe
+    for (const auto& w : windows) {
+        w->close();
+    }
+    windows.clear();
 }
