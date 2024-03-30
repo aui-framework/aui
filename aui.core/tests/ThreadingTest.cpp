@@ -294,7 +294,7 @@ TEST(Threading, FutureOnDone) {
             // check that cancellation does not triggers here
             future.wait(AFutureWait::JUST_WAIT);
         }
-        ASSERT_TRUE(called) << "onSuccess callback has not called";
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
     }
 }
 
