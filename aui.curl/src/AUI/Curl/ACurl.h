@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <optional>
 #include <queue>
 #include <AUI/ACurl.h>
 
@@ -319,10 +320,36 @@ public:
          * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * @param begin start index of the part
-         * @param end end index of the part. Zero means end of the file.
+         * @param end end index of the part.
          * @return this
          */
         Builder& withRanges(size_t begin, size_t end);
+
+        /**
+         * @brief Sets: Accept-Ranges: begin-end
+         *        (download part of the file)
+         * @param begin start index of the part
+         * @param end end index of the part.
+         * @return this
+         */
+        Builder& withRanges(size_t begin) {
+            return withRanges(begin, 0);
+        }
+
+        /**
+         * @brief Set the average transfer speed in bytes per that the transfer should be below during 'low speed time'
+         * seconds to consider it to be too slow and abort.
+         * @param speed threshold speed (bytes per second).
+         */
+        Builder& withLowSpeedLimit(size_t speed);
+
+        /**
+         * @brief Duration that the transfer speed should be below the 'low speed limit' to consider it to be too slow
+         * and abort
+         * @param duration duration
+         */
+        Builder& withLowSpeedTime(std::chrono::seconds duration);
+
 
         Builder& withHttpVersion(Http version);
         Builder& withUpload(bool upload);
@@ -425,6 +452,7 @@ public:
     ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
+    int64_t getNumberOfBytesDownloaded() const;
 	AString getContentType() const;
 
     void run();
