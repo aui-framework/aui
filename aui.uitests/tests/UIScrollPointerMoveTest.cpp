@@ -21,6 +21,7 @@
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AScrollArea.h"
 
+namespace {
 class ViewMock: public AView {
 public:
     ViewMock() {
@@ -39,7 +40,7 @@ public:
     MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
 };
-
+}
 
 class UIScrollPointerMove: public testing::UITest {
 public:
@@ -170,11 +171,13 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
     //pressing LMB and moving out of view
     {
         testing::InSequence s;
-        APointerPressedEvent event;
+
+        EXPECT_CALL(*mView, onMouseLeave);
+
+        APointerPressedEvent event;        
         event.position = mView->getCenterPointInWindow();
         event.asButton = AInput::LBUTTON;
         mWindow->onPointerPressed(event);
-        EXPECT_CALL(*mView, onMouseLeave);
         mWindow->onPointerMove(posOutOfView, {});
     }
 

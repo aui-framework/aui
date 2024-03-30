@@ -207,6 +207,7 @@ public:
 
             {
                 char data[64];
+                aui::zero(data);
                 auto icp = (icmphdr*)data;
                 icp->type = ICMP_ECHO;
                 icp->code = 0;

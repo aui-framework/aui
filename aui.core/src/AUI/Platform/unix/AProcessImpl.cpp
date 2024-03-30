@@ -171,9 +171,6 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
         exit(-1);
     } else {
-        // we are in old process
-        ALOG_DEBUG("AProcess") << "Started new process: " << pid;
-
         mWatchdog = _new<AThread>([&] {
             int loc;
             waitpid(mPid, &loc, 0);

@@ -214,7 +214,7 @@ endfunction(aui_add_properties)
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                    VERSION release-1.11.0
+                    VERSION v1.14.0
                     CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
                     LINK STATIC)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)

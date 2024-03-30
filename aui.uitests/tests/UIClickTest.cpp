@@ -100,6 +100,7 @@ TEST_F(UIClick, HelloIsNotAppeared) {
  * Checks that the message appears when button is clicked.
  */
 TEST_F(UIClick, HelloAppearsAfterClick) {
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
     // press the button
     By::text("Say hello").perform(click());
 
