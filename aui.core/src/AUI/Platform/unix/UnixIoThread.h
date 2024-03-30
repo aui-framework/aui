@@ -23,7 +23,7 @@
 #include <AUI/Thread/AThread.h>
 #include <sys/poll.h>
 #include "UnixEventFd.h"
-#include <AUI/Thread/ACutoffSignal.h>
+#include <AUI/Thread/AFuture.h>
 #include <AUI/Util/EnumUtil.h>
 #include <AUI/Util/ABitField.h>
 #include <unordered_map>
@@ -80,12 +80,11 @@ private:
             return;
         }
 
-        ACutoffSignal cv;
-        mThread->enqueue([&]() noexcept {
-            callback();
-            cv.makeSignal();
+        AFuture<> cs;
+        mThread->enqueue([&] {
+            cs.supplyResult();
         });
-        cv.waitForSignal();
+        cs.wait();
     }
 
     UnixIoThread() noexcept;

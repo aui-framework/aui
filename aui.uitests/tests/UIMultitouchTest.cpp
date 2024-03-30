@@ -117,7 +117,6 @@ TEST_F(UIMultitouchTest, Multi) {
     By::value(mTestWindow->mSlider2).perform(pointerPress {
         .pointerIndex = APointerIndex::finger(1),
     });
-    std::cout << "Size: " << mTestWindow->mSlider2->getSize() << '\n';
 
     By::value(mTestWindow->mSlider1).perform(pointerMove {
         .position = mTestWindow->mSlider1->getSize() - glm::ivec2(2, 2),

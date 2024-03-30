@@ -84,6 +84,7 @@ TEST_F(SignalSlot, Basic) {
     AObject::connect(master->message, slot(slave)::acceptMessage);
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello")));
+    EXPECT_CALL(*slave, die());
     master->broadcastMessage("hello");
 }
 
@@ -93,6 +94,7 @@ TEST_F(SignalSlot, BasicNoArgs) {
     AObject::connect(master->message, slot(slave)::acceptMessageNoArgs);
 
     EXPECT_CALL(*slave, acceptMessageNoArgs);
+    EXPECT_CALL(*slave, die());
     master->broadcastMessage("hello");
 }
 
@@ -102,6 +104,7 @@ TEST_F(SignalSlot, Multithread) {
     AObject::connect(master->message, slot(slave)::acceptMessage);
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello")));
+    EXPECT_CALL(*slave, die());
     auto t = async {
         master->broadcastMessage("hello");
     };
@@ -145,6 +148,7 @@ TEST_F(SignalSlot, NestedConnection) {
     });
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    EXPECT_CALL(*slave, die());
     master->broadcastMessage("hello");
     master->broadcastMessage("hello");
 }
@@ -160,6 +164,7 @@ TEST_F(SignalSlot, ObjectDisconnect1) {
     });
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    EXPECT_CALL(*slave, die());
     master->broadcastMessage("hello");
     master->broadcastMessage("hello");
 }
@@ -182,6 +187,7 @@ TEST_F(SignalSlot, ObjectDisconnect2) {
     });
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    EXPECT_CALL(*slave, die());
     master->broadcastMessage("hello");
     called = false;
     master->broadcastMessage("hello");
@@ -212,6 +218,7 @@ TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
 
     master->broadcastMessage("hello");
     master->broadcastMessage("hello");
+    EXPECT_CALL(*slave, die());
     EXPECT_TRUE(called1);
     EXPECT_TRUE(called2);
 }
@@ -221,6 +228,7 @@ TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
  */
 TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
     slave = _new<Slave>();
+    EXPECT_CALL(*slave, die());
     {
         testing::InSequence s;
         AObject::connect(master->message, slave, [&] {
@@ -236,6 +244,7 @@ TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
  */
 TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
     slave = _new<Slave>();
+    EXPECT_CALL(*slave, die());
     {
         testing::InSequence s;
         AObject::connect(master->message, slave, [&] {

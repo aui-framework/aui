@@ -14,9 +14,9 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include <gmock/gmock.h>
-#include "AUI/Network/AIcmp.h"
+#include "Assert.h"
+#include "AAssertionFailedException.h"
 
-TEST(Ping, Case1) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+API_AUI_CORE void aui::assertion::detail::triggerAssertion(const char* message) {
+    throw AAssertionFailedException(message);
 }

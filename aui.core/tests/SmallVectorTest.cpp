@@ -23,6 +23,8 @@ class SmallVector: public ::testing::Test {
 
 
 TEST_F(SmallVector, PushBack) {
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
+
     ASmallVector<std::unique_ptr<int>, 2> vector;
 
     for (int i = 0; i < 4; ++i) {

@@ -25,7 +25,7 @@
  * @details
  * Used for guaranteed signal from slave thread to master thread (i.e. wait till slave thread starts).
  */
-class ACutoffSignal {
+class [[deprecated("Use AFuture<void> instead")]] ACutoffSignal {
 public:
     ACutoffSignal() = default;
 

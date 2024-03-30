@@ -293,15 +293,20 @@ namespace aui::impl::future {
                     auto localOnSuccess = std::move(onSuccess);
                     onSuccess = nullptr;
                     lock.unlock();
-                    try {
-                        if constexpr (isVoid) {
-                            localOnSuccess();
-                        } else {
-                            localOnSuccess(*value);
-                        }
-                    } catch (const AException& e) {
-                        ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
+                    invokeOnSuccessCallback(localOnSuccess);
+                }
+            }
+
+            template<typename F>
+            void invokeOnSuccessCallback(F&& f) {
+                try {
+                    if constexpr (isVoid) {
+                        f();
+                    } else {
+                        f(*value);
                     }
+                } catch (const AException& e) {
+                    ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
                 }
             }
 
@@ -399,9 +404,16 @@ namespace aui::impl::future {
 
         template<typename Callback>
         void onSuccess(Callback&& callback) const noexcept {
+            if (hasValue()) { // cheap lookahead
+                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
+                return;
+            }
             std::unique_lock lock((*mInner)->mutex);
+            if (hasValue()) { // not so cheap, but cheapier than adding the callback to inner
+                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
+                return;
+            }
             (*mInner)->addOnSuccessCallback(std::forward<Callback>(callback));
-            (*mInner)->notifyOnSuccessCallback(lock);
         }
 
         template<aui::invocable<const AException&> Callback>

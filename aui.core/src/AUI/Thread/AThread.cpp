@@ -256,7 +256,7 @@ void AThread::resetInterruptFlag()
 void AThread::join()
 {
 	if (mThread->get_id() == std::this_thread::get_id()) {
-		return;
+		throw AException("AThread::join to the self thread");
 	}
 	if (!mThread->joinable()) {
 		return;

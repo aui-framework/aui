@@ -34,10 +34,10 @@
  */
 
 namespace {
-    class ViewMock: public AView {
-    public:
-        MOCK_METHOD(void, render, (ClipOptimizationContext), ());
-    };
+class ViewMock: public AView {
+public:
+    MOCK_METHOD(void, render, (ClipOptimizationContext), ());
+};
 }
 
 

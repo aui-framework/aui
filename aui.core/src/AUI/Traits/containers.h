@@ -71,7 +71,7 @@ namespace aui::container {
             aui::range insertTargetRange(at, at + distance);
 
             // shift elements to the right
-            aui::range shiftRange(std::prev(insertTargetRange.end()), vectorEnd);
+            aui::range shiftRange(at, vectorEnd);
             if (!shiftRange.empty()) {
                 auto shiftFrom = std::prev(shiftRange.end());
                 auto shiftTo = shiftFrom + distance;
