@@ -64,7 +64,7 @@ TEST_F(Process, Stdout) {
     p->run();
     p->waitForExitCode();
     AThread::processMessages();
-    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test."));
+    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
 }
 
 class ProcessSignalReceiver: public AObject {

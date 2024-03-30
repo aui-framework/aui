@@ -23,13 +23,13 @@
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/Util.h>
+#include <chrono>
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
 #include "AUI/Util/ARaiiHelper.h"
-#include "AUI/Thread/ACutoffSignal.h"
 
 using namespace std::chrono_literals;
 
@@ -277,8 +277,8 @@ TEST(Threading, FutureOnDone) {
 
     AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
-        localThreadPool.run([] {
-            AThread::sleep(100ms); // long task
+        localThreadPool.run([&] {
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
         });
 
 

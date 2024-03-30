@@ -218,6 +218,7 @@ public:
                 icp->checksum = calculateCheckum((unsigned short*) &icp, 64, 0);
 
                 timeval tmp_tv;
+                aui::zero(tmp_tv);
                 gettimeofday(&tmp_tv, NULL);
                 memcpy(icp + 1, &tmp_tv, sizeof(tmp_tv));
                 icp->checksum = calculateCheckum((unsigned short*) &tmp_tv, sizeof(tmp_tv), ~icp->checksum);
