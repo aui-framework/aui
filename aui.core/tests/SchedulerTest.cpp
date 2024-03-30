@@ -19,6 +19,7 @@
 //
 
 #include <gtest/gtest.h>
+#include "AUI/Thread/AThread.h"
 #include "AUI/Util/AScheduler.h"
 #include "AUI/Traits/iterators.h"
 
@@ -84,6 +85,7 @@ TEST(Scheduler, Timer) {
     });
 
     for (int i = 0; i < 20; ++i) {
+        AThread::sleep(10ms); // minimize unsync
         scheduler.iteration();
     }
 

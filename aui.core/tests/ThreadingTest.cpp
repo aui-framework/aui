@@ -27,6 +27,7 @@
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Thread/AThread.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
 #include "AUI/Util/ARaiiHelper.h"
@@ -273,7 +274,7 @@ TEST(Threading, FutureInterruptionCascade) {
 }
 
 
-TEST(Threading, FutureOnDone) {
+TEST(Threading, FutureOnDone1) {
 
     AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
@@ -293,6 +294,34 @@ TEST(Threading, FutureOnDone) {
             });
             // check that cancellation does not triggers here
             future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
+        }
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
+    }
+}
+TEST(Threading, FutureOnDone2) {
+
+    AUI_REPEAT(100) {
+        AThreadPool localThreadPool(1);
+        localThreadPool.run([&] {
+        });
+
+
+        bool called = false;
+        {
+            auto future = localThreadPool * [] {
+                return 322;
+            };
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
+            future.onSuccess([&](int i) {
+                ASSERT_EQ(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+            future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
         }
         ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
     }
