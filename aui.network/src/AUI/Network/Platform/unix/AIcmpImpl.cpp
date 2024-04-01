@@ -20,6 +20,7 @@
 
 #include <AUI/Network/AIcmp.h>
 #include "AUI/IO/AIOException.h"
+#include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/unix/UnixIoThread.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
@@ -206,6 +207,7 @@ public:
 
             {
                 char data[64];
+                aui::zero(data);
                 auto icp = (icmphdr*)data;
                 icp->type = ICMP_ECHO;
                 icp->code = 0;
@@ -216,6 +218,7 @@ public:
                 icp->checksum = calculateCheckum((unsigned short*) &icp, 64, 0);
 
                 timeval tmp_tv;
+                aui::zero(tmp_tv);
                 gettimeofday(&tmp_tv, NULL);
                 memcpy(icp + 1, &tmp_tv, sizeof(tmp_tv));
                 icp->checksum = calculateCheckum((unsigned short*) &tmp_tv, sizeof(tmp_tv), ~icp->checksum);

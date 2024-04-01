@@ -114,8 +114,7 @@ void testing::UITest::SetUp() {
 }
 
 void testing::UITest::TearDown() {
-    for (const auto& w : AWindow::getWindowManager().getWindows()) AUI_NULLSAFE(w)->close();
-    AWindow::getWindowManager().removeAllWindows();
+    AWindow::getWindowManager().closeAllWindows();
 
     // to process all ui messages
     AUI_REPEAT (10) {

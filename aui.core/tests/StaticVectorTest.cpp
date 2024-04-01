@@ -23,6 +23,7 @@ class StaticVector: public ::testing::Test {
 
 
 TEST_F(StaticVector, PushBack) {
+    GTEST_FLAG_SET(death_test_style, "threadsafe");
     AStaticVector<std::unique_ptr<int>, 4> vector;
 
     for (int i = 0; i < 4; ++i) {

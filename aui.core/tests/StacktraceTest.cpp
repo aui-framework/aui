@@ -44,6 +44,5 @@ TEST(Exception, Stacktrace) {
         EXPECT_TRUE(s.contains("my exception"));
         EXPECT_TRUE(s.contains("AException"));
         EXPECT_TRUE(s.contains("- at"));
-        ALogger::info("Exception::Stacktrace") << e;
     }
 }

@@ -28,7 +28,6 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Thread/ACutoffSignal.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;

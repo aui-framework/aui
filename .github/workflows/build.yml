@@ -163,18 +163,27 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_INSTALL_RUNTIME_DEPENDENCIES=TRUE
 
       - name: Build project
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
 
-      - name: Build tests
+      - name: Build AUI tests
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
-      - name: Run tests
-        # Build your program with the given configuration
+      - name: Run AUI tests
+        if: matrix.os == 'windows-latest'
+        working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
+        run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
+
+      - name: Run AUI tests
+        if: matrix.os == 'ubuntu-latest'
+        working-directory: ${{github.workspace}}/build/bin
+        run: ${{github.workspace}}/build/bin/Tests
+
+      - name: Run CMake tests
         working-directory: ${{github.workspace}}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV
 
@@ -191,6 +200,7 @@ jobs:
   release:
     if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
+    permissions: write-all
     name: "Create release page"
 
     steps:

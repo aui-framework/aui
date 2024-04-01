@@ -21,7 +21,6 @@
 #include "ACurlMulti.h"
 #include "AUI/Util/kAUI.h"
 #include <curl/curl.h>
-#include <AUI/Thread/ACutoffSignal.h>
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Util/ARaiiHelper.h>
 
@@ -120,7 +119,7 @@ void ACurlMulti::clear() {
 
 ACurlMulti& ACurlMulti::global() noexcept {
     static struct Instance {
-        AOptional<ACurlMulti> multi = ACurlMulti();
+        AOptional<ACurlMulti> multi;
         _<AThread> thread = _new<AThread>([this] {
             AThread::setName("AUI CURL IO");
             ARaiiHelper h = [&] {
@@ -130,17 +129,18 @@ ACurlMulti& ACurlMulti::global() noexcept {
         });
 
         Instance() {
+            multi.emplace();
             thread->start();
 
-            ACutoffSignal cs;
+            AFuture<> cs;
             thread->enqueue([&] {
-                cs.makeSignal();
+                cs.supplyResult();
             });
-            cs.waitForSignal();
-
-            ACleanup::afterEntry([&] {
-                thread->interrupt();
-            });
+            cs.wait();
+        }
+        ~Instance() {
+            thread->interrupt();
+            thread->join();
         }
     } instance;
 

@@ -140,7 +140,7 @@ namespace aui::ui_building {
             }, std::forward<Views>(views)...);
         }
 
-        ViewContainer operator()() {
+        _<Container> operator()() {
             auto c = _new<Container>();
             if constexpr(!std::is_same_v<Layout, std::nullopt_t>) {
                 c->setLayout(_new<Layout>());
@@ -164,7 +164,7 @@ namespace aui::ui_building {
 
             }
 
-            ViewContainer operator()() {
+            _<Container> operator()() {
                 return layouted_container_factory_impl<Layout>::operator()() let {
                     it->setExpanding();
                 };

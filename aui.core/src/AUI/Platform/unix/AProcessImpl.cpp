@@ -39,6 +39,25 @@
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
 
+namespace {
+    size_t processMemory(pid_t pid) {
+        // avoid fancy apis here for performance reasons.
+        long rss = 0L;
+        FILE* fp = NULL;
+        char path[0x100];
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/statm", pid).out = '\0';
+        if ((fp = fopen(path, "r")) == nullptr) {
+            return (size_t)0L;
+        }
+        if (fscanf(fp, "%*s%ld", &rss ) != 1) {
+            fclose(fp);
+            return (size_t)0L;
+        }
+        fclose(fp);
+        return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+    }
+}
+
 class AOtherProcess: public AProcess {
 private:
     pid_t mHandle;
@@ -62,12 +81,16 @@ public:
     APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
-        sprintf(path, "/proc/%u/exe", mHandle);
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
     uint32_t getPid() const noexcept override {
         return mHandle;
+    }
+
+    size_t processMemory() const override { 
+        return ::processMemory(mHandle); 
     }
 };
 
@@ -81,23 +104,16 @@ AVector<_<AProcess>> AProcess::all() {
     return result;
 }
 
+#if !AUI_PLATFORM_APPLE
 _<AProcess> AProcess::self() {
-#if AUI_PLATFORM_APPLE
-    return _new<AOtherProcess>(getpid());
-#else
     char buf[0x100];
     return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
-#endif
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-#if !AUI_PLATFORM_APPLE
-    if (!(APath("/proc") / AString::number(pid)).isDirectoryExists()) {
-        return nullptr;
-    }
-#endif
     return _new<AOtherProcess>(pid_t(pid));
 }
+#endif
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
     AUI_ASSERT(0);
@@ -155,9 +171,6 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
         exit(-1);
     } else {
-        // we are in old process
-        ALOG_DEBUG("AProcess") << "Started new process: " << pid;
-
         mWatchdog = _new<AThread>([&] {
             int loc;
             waitpid(mPid, &loc, 0);
@@ -190,6 +203,10 @@ int AChildProcess::waitForExitCode() {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
+}
+
+size_t AChildProcess::processMemory() const {
+    return ::processMemory(mPid); 
 }
 
 void AProcess::kill() const noexcept {

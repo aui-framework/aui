@@ -167,14 +167,16 @@ AThreadPool::AThreadPool() :
 
 AThreadPool::~AThreadPool() {
 	std::unique_lock lck(mQueueLock);
-	for (auto& f : mWorkers) {
+	auto workers = std::move(mWorkers);
+	for (auto& f : workers) {
         f->aboutToDelete();
 	}
-	for (auto& f : mWorkers) {
-        mCV.notify_all();
-		lck.unlock();
-		f.reset();
-		lck.lock();
+
+	mCV.notify_all();
+	lck.unlock();
+
+	for (auto& f : workers) {
+		f->join();
 	}
 }
 

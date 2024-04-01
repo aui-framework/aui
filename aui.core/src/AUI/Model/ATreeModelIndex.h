@@ -58,6 +58,14 @@ public:
         return mColumn;
     }
 
+    /**
+     * @brief check if this vertex is the root.
+     */
+    [[nodiscard]]
+    bool isRoot() const noexcept {
+        return mRow == 0 && mColumn == 0;
+    }
+
 private:
     std::size_t mRow;
     std::size_t mColumn;

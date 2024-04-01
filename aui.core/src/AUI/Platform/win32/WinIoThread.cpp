@@ -19,7 +19,6 @@
 //
 
 #include "WinIoThread.h"
-#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Thread/AFuture.h>
 #include <Windows.h>
@@ -65,9 +64,10 @@ WinIoThread::WinIoThread() noexcept: mThread(_new<AThread>([] {
     AThread::current()->getCurrentEventLoop()->loop();
 })) {
     mThread->start();
-    ACutoffSignal cutoff;
+
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cutoff.makeSignal();
+        cs.supplyResult();
     });
-    cutoff.waitForSignal();
+    cs.wait();
 }

@@ -81,7 +81,7 @@ ANumberPicker::ANumberPicker()
 
 	connect(mTextField->textChanged, this, [&]()
 	{
-		int v = getValue();
+		int64_t v = getValue();
 		if (v < mMin)
 		{
 			v = mMin;
@@ -114,25 +114,25 @@ int ANumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 	return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void ANumberPicker::setValue(int v)
+void ANumberPicker::setValue(int64_t v)
 {
 	mTextField->setText(AString::number(v));
     redraw();
 }
 
-int ANumberPicker::getValue() const
+int64_t ANumberPicker::getValue() const
 {
 	return mTextField->text().toInt().valueOr(0);
 }
 
-void ANumberPicker::setMin(int min)
+void ANumberPicker::setMin(int64_t min)
 {
 	mMin = min;
 	if (getValue() < min)
 		setValue(min);
 }
 
-void ANumberPicker::setMax(int max)
+void ANumberPicker::setMax(int64_t max)
 {
 	mMax = max;
 	if (getValue() > max)
@@ -148,7 +148,7 @@ void ANumberPicker::decrease() {
     changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -10 : -1);
 }
 
-void ANumberPicker::changeBy(int v) {
+void ANumberPicker::changeBy(int64_t v) {
     setValue(getValue() + v);
     emit valueChanging();
 }

@@ -19,6 +19,7 @@
 
 
 #include <cassert>
+#include <chrono>
 #include <curl/curl.h>
 #include <AUI/Util/kAUI.h>
 #include <numeric>
@@ -78,6 +79,18 @@ ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
 
 ACurl::Builder& ACurl::Builder::withHttpVersion(ACurl::Http version) {
     auto res = curl_easy_setopt(mCURL, CURLOPT_HTTP_VERSION, version);
+    AUI_ASSERT(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withLowSpeedLimit(size_t speed) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_LIMIT, long(speed));
+    AUI_ASSERT(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withLowSpeedTime(std::chrono::seconds duration) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, long(duration.count()));
     AUI_ASSERT(res == CURLE_OK);
     return *this;
 }
@@ -351,6 +364,10 @@ Ret ACurl::getInfo(int curlInfo) const {
 
 int64_t ACurl::getContentLength() const {
     return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
+}
+
+int64_t ACurl::getNumberOfBytesDownloaded() const {
+    return getInfo<curl_off_t>(CURLINFO_SIZE_DOWNLOAD_T);
 }
 
 AString ACurl::getContentType() const {

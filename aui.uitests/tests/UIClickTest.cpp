@@ -100,6 +100,7 @@ TEST_F(UIClick, HelloIsNotAppeared) {
  * Checks that the message appears when button is clicked.
  */
 TEST_F(UIClick, HelloAppearsAfterClick) {
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
     // press the button
     By::text("Say hello").perform(click());
 
@@ -194,7 +195,7 @@ TEST_F(UIClick, DoubleClickNoEmit) {
         .asButton = AInput::LBUTTON
     });
 
-    AThread::sleep(ABaseWindow::DOUBLECLICK_MAX_DURATION);
+    AThread::sleep(ABaseWindow::DOUBLECLICK_MAX_DURATION * 2);
 
     mTestWindow->onPointerPressed({
         .position = By::text("Say hello").one()->getCenterPointInWindow(),

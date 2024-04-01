@@ -20,6 +20,7 @@
 #include <AUI/View/AButton.h>
 #include "AUI/Util/ALayoutInflater.h"
 
+namespace {
 class ViewMock: public AView {
 public:
     ViewMock() {
@@ -56,8 +57,8 @@ public:
     MOCK_METHOD(void, onMouseEnter, (), (override));
     MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
-
 };
+}
 
 
 class UIPointerBehaviour: public testing::UITest {
@@ -122,6 +123,7 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
     testing::InSequence s;
 
     EXPECT_CALL(*mView, onPointerPressed(testing::_));
+    EXPECT_CALL(*mView, onPointerMove(testing::_, testing::_));
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked()).Times(0);
 

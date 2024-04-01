@@ -57,9 +57,11 @@ public:
     }
 
     void removeAllWindows() {
-        mWindows.clear();
+        auto windows = std::move(mWindows); // keeping it safe
+        windows.clear();
     }
 
+    void closeAllWindows();
     void notifyProcessMessages() override;
     void loop() override;
 

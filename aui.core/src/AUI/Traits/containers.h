@@ -71,7 +71,7 @@ namespace aui::container {
             aui::range insertTargetRange(at, at + distance);
 
             // shift elements to the right
-            aui::range shiftRange(std::prev(insertTargetRange.end()), vectorEnd);
+            aui::range shiftRange(at, vectorEnd);
             if (!shiftRange.empty()) {
                 auto shiftFrom = std::prev(shiftRange.end());
                 auto shiftTo = shiftFrom + distance;
@@ -220,6 +220,14 @@ namespace aui::container {
     template<typename Iterator, typename UnaryOperation>
     [[nodiscard]]
     auto to_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AMap.h
+
+    /**
+     * @brief Transforms sequence to unordered_map.
+     * @ingroup core
+     */
+    template<typename Iterator, typename UnaryOperation>
+    [[nodiscard]]
+    auto to_unordered_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AUnorderedMap.h
 
     /**
      * @ingroup core

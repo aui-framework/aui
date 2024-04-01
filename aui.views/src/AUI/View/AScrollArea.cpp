@@ -152,7 +152,7 @@ void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
         return;
     }
 
-    const auto targetEnd = targetBegin + target->getSize();
+    const auto targetEnd = targetBegin + target->getSize() * 2;
     const auto myEnd = myBegin + getSize();
 
     const auto toEndPoint = targetEnd - myEnd;

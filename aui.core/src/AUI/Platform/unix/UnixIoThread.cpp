@@ -19,8 +19,9 @@
 //
 
 #include "UnixIoThread.h"
+#include "AUI/Logging/ALogger.h"
+#include "AUI/Thread/AThread.h"
 #include "UnixEventFd.h"
-#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <sys/poll.h>
 #include <AUI/Thread/AFuture.h>
@@ -112,12 +113,11 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     });
 
     mThread->start();
-
-    ACutoffSignal cv;
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cv.makeSignal();
+        cs.supplyResult();
     });
-    cv.waitForSignal();
+    cs.wait();
 }
 
 #else
@@ -190,10 +190,10 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     };
     mThread->start();
 
-    ACutoffSignal cv;
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cv.makeSignal();
+        cs.supplyResult();
     });
-    cv.waitForSignal();
+    cs.wait();
 }
 #endif

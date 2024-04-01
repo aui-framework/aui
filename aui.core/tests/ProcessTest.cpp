@@ -46,7 +46,6 @@ TEST_F(Process, Self) {
 #else
     EXPECT_EQ(mSelf.filename(), "Tests");
 #endif
-    ALogger::info("Process.Self") << mSelf;
     EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
@@ -65,7 +64,7 @@ TEST_F(Process, Stdout) {
     p->run();
     p->waitForExitCode();
     AThread::processMessages();
-    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test."));
+    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
 }
 
 class ProcessSignalReceiver: public AObject {

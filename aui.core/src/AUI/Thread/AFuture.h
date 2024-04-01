@@ -293,15 +293,20 @@ namespace aui::impl::future {
                     auto localOnSuccess = std::move(onSuccess);
                     onSuccess = nullptr;
                     lock.unlock();
-                    try {
-                        if constexpr (isVoid) {
-                            localOnSuccess();
-                        } else {
-                            localOnSuccess(*value);
-                        }
-                    } catch (const AException& e) {
-                        ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
+                    invokeOnSuccessCallback(localOnSuccess);
+                }
+            }
+
+            template<typename F>
+            void invokeOnSuccessCallback(F&& f) {
+                try {
+                    if constexpr (isVoid) {
+                        f();
+                    } else {
+                        f(*value);
                     }
+                } catch (const AException& e) {
+                    ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
                 }
             }
 
@@ -399,9 +404,16 @@ namespace aui::impl::future {
 
         template<typename Callback>
         void onSuccess(Callback&& callback) const noexcept {
+            if (hasValue()) { // cheap lookahead
+                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
+                return;
+            }
             std::unique_lock lock((*mInner)->mutex);
+            if (hasValue()) { // not so cheap, but cheapier than adding the callback to inner
+                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
+                return;
+            }
             (*mInner)->addOnSuccessCallback(std::forward<Callback>(callback));
-            (*mInner)->notifyOnSuccessCallback(lock);
         }
 
         template<aui::invocable<const AException&> Callback>
@@ -420,11 +432,11 @@ namespace aui::impl::future {
          * @ref AAbstractThread::interrupt() "requested for interrupt".
          * 3. AFuture's task is already completed. cancel() does nothing.
          */
-        void cancel() noexcept {
+        void cancel() const noexcept {
             (*mInner)->cancel();
         }
 
-        void reportInterrupted() {
+        void reportInterrupted() const {
             (*mInner)->reportInterrupted();
         }
 
@@ -433,7 +445,7 @@ namespace aui::impl::future {
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
          *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
-        void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
+        void wait(AFutureWait flags = AFutureWait::DEFAULT) const noexcept {
             (*mInner)->wait(mInner, flags);
         }
 
@@ -445,7 +457,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) {
+        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) const {
             AThread::interruptionPoint();
             (*mInner)->wait(mInner, flags);
             AThread::interruptionPoint();
@@ -493,7 +505,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        Value* operator->() {
+        Value* operator->() const {
             return &operator*();
         }
 
@@ -505,7 +517,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        Value const * operator->() const {
+        Value const * operator->() {
             return &operator*();
         }
     };

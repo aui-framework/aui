@@ -86,6 +86,7 @@ int ARadioButton::Group::getSelectedId() const {
 }
 
 void ARadioButton::Group::setSelectedId(int id) {
+    if (mSelectedId == id) return;
     mSelectedId = id;
     mButtons[id]->setChecked(true);
 }

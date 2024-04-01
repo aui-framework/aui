@@ -88,7 +88,7 @@ TEST_F(UIScrollTest, ContainedViewExpanded) {
     By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
 }
 
-TEST_F(UIScrollTest, ScrollTo) {
+TEST_F(UIScrollTest, ScrollTo1) {
     mTestWindow->updateLayout();
     By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);

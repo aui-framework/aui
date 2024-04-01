@@ -18,11 +18,16 @@
 // Created by alex2 on 21.09.2020.
 //
 
-#include <AUI/Layout/AVerticalLayout.h>
 #include "ARadioGroup.h"
 #include "ARadioButton.h"
 #include <AUI/Platform/AWindow.h>
 
+
+ARadioGroup::ARadioGroup() : mGroup(_new<ARadioButton::Group>()) {
+    connect(mGroup->selectionChanged, this, [&](const AListModelIndex& index) {
+        emit selectionChanged(index);
+    });
+}
 
 ARadioGroup::~ARadioGroup() {
 
@@ -30,7 +35,6 @@ ARadioGroup::~ARadioGroup() {
 
 void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
-    setLayout(_new<AVerticalLayout>());
 
     if (mModel) {
         for (size_t i = 0; i < model->listSize(); ++i) {
@@ -50,4 +54,8 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
     }
 
     requestLayoutUpdate();
+}
+
+void ARadioGroup::setSelectedId(int id) const {
+    mGroup->setSelectedId(id);
 }

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 
 list(APPEND TEST_CMAKE_ARGS "-G${CMAKE_GENERATOR}")
+list(APPEND TEST_CMAKE_ARGS "-DAUIB_TRACE_BUILD_SYSTEM=ON")
 
 foreach(_varname
         BUILD_SHARED_LIBS AUI_TEST_DEPLOY_VERSION
@@ -39,7 +40,8 @@ endfunction()
 
 if (DEFINED AUI_TEST_DEPLOY_VERSION)
     message(STATUS "AUI_TEST_DEPLOY_VERSION=${AUI_TEST_DEPLOY_VERSION} (deployment tests only)")
-    define_aui_boot_test(Precompiled)
+    define_aui_boot_test(Precompiled1)
+    define_aui_boot_test(Precompiled2)
 else()
     define_aui_boot_test(BasicProgram)
     define_aui_boot_test(ImportAUIDependency)
