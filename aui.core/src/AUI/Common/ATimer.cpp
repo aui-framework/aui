@@ -87,6 +87,8 @@ AScheduler& ATimer::scheduler() {
         GlobalScheduler() {
         }
         ~GlobalScheduler() {
+            scheduler.stop();
+
             // wait for the thread before destructing the scheduler.
             thread->interrupt();
             thread->join();
