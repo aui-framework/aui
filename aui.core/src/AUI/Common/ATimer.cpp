@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Util/ACleanup.h>
+#include "AUI/Util/AScheduler.h"
 #include "ATimer.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
@@ -66,18 +67,30 @@ _<AThread>& ATimer::timerThread() {
                 ATimer::scheduler().loop();
             });
         t->start();
-#if !AUI_PLATFORM_WIN
-        std::atexit([] {
+        ACleanup::afterEntry([] {
             thread->interrupt();
+            thread->join();
+            thread = nullptr;
         });
-#endif
         return t;
     }();
     return thread;
 }
 
 AScheduler& ATimer::scheduler() {
-    static AScheduler scheduler;
-    ATimer::timerThread();
-    return scheduler;
+    static struct GlobalScheduler {
+        AScheduler scheduler;
+
+        // make sure scheduler thread is started.
+        _<AThread> thread = ATimer::timerThread();
+
+        GlobalScheduler() {
+        }
+        ~GlobalScheduler() {
+            // wait for the thread before destructing the scheduler.
+            thread->interrupt();
+            thread->join();
+        }
+    } global;
+    return global.scheduler;
 }

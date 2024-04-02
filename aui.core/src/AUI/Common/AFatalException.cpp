@@ -125,7 +125,7 @@ static void __cdecl onSignal(int c) {
 
     ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
 
-    throw e;
+    //throw e;
 }
 #endif
 
