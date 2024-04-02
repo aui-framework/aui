@@ -31,9 +31,10 @@ private:
     std::condition_variable_any mImpl;
 
     struct WaitHelper {
-        WaitHelper(AConditionVariable& var) noexcept {
+        WaitHelper(AConditionVariable& var) {
             auto thread = AThread::current();
             std::unique_lock lock(thread->mCurrentCV.mutex);
+            AThread::interruptionPoint();
             thread->mCurrentCV.cv = &var;
         }
         ~WaitHelper() noexcept(false) {
