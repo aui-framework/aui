@@ -18,6 +18,11 @@ public:
         mMixer->removeSoundSource(source);
     }
 
+    [[nodiscard]]
+    const _<oboe::AudioStream>& stream() const noexcept {
+        return mStream;
+    }
+
 private:
     OboeSoundOutput() : mMixer(_new<AAudioMixer>()) {
         oboe::AudioStreamBuilder builder;
@@ -72,4 +77,14 @@ void OboeAudioPlayer::onLoopSet() {
 
 void OboeAudioPlayer::onVolumeSet() {
 
+}
+
+namespace aui::oboe {
+    void onResume() {
+        OboeSoundOutput::instance().stream()->requestStart();
+    }
+
+    void onPause() {
+        OboeSoundOutput::instance().stream()->requestPause();
+    }
 }
