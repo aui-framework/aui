@@ -63,7 +63,7 @@ public:
      */
     [[nodiscard]]
     bool isRoot() const noexcept {
-        return mRow == 0 && mColumn == 0;
+        return mRow == 0 && mColumn == 0 && !mUserdata.has_value();
     }
 
 private:

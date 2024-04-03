@@ -396,6 +396,9 @@ static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& mod
 void ATreeView::select(const ATreeModelIndex& indexToSelect) {
     try {
         auto itemView = indexToView(indexToSelect);
+        if (itemView == nullptr) {
+            return;
+        }
         itemView->focus();
         itemView->setSelected(true);
 
