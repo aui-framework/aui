@@ -387,7 +387,9 @@ private:
 
 #if AUI_SHOW_TOUCHES
     struct ShowTouches {
-        AVector<glm::vec2> positions;
+        glm::vec2 press;
+        AVector<glm::vec2> moves;
+        AOptional<glm::vec2> release;
     };
     AMap<APointerIndex, ShowTouches> mShowTouches;
 #endif
