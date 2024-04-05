@@ -16,12 +16,13 @@
 
 #pragma once
 
-#include <AUI/Model/AListModelSelection.h>
 #include <AUI/Model/AListModelObserver.h>
-#include "AUI/View/AScrollArea.h"
+#include <AUI/Model/AListModelSelection.h>
+
+#include "AScrollbar.h"
 #include "AUI/Model/AListModelIndex.h"
 #include "AUI/Model/IListModel.h"
-#include "AScrollbar.h"
+#include "AUI/View/AScrollArea.h"
 
 class AListItem;
 class AListViewContainer;
@@ -30,36 +31,36 @@ class AListViewContainer;
  * @brief Displays a list model of strings.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AListView: public AScrollArea, public AListModelObserver<AString>::IListModelListener
-{
+class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {
     friend class AListItem;
-private:
+
+   private:
     _<AListViewContainer> mContent;
-	ASet<AListModelIndex> mSelectionModel;
-	_<AListModelObserver<AString>> mObserver;
+    ASet<AListModelIndex> mSelectionModel;
+    _<AListModelObserver<AString>> mObserver;
     bool mAllowMultipleSelection = false;
 
     void handleMousePressed(AListItem* item);
     void handleMouseDoubleClicked(AListItem* item);
-	
-public:
-    AListView(): AListView(nullptr) {}
-	explicit AListView(const _<IListModel<AString>>& model);
+
+    void clearSelectionInternal();
+
+   public:
+    AListView() : AListView(nullptr) {}
+    explicit AListView(const _<IListModel<AString>>& model);
     virtual ~AListView();
 
     void setModel(const _<IListModel<AString>>& model);
 
     void selectItem(size_t i);
 
-    int getContentFullHeight() {
-        return getLayout()->getMinimumHeight() + 8;
-    }
+    int getContentFullHeight() { return getLayout()->getMinimumHeight() + 8; }
 
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
     [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
-	    return AListModelSelection<AString>(mSelectionModel, mObserver->getModel());
-	}
+        return AListModelSelection<AString>(mSelectionModel, mObserver->getModel());
+    }
 
     void insertItem(size_t at, const AString& value) override;
     void updateItem(size_t at, const AString& value) override;
@@ -68,11 +69,11 @@ public:
     void onDataCountChanged() override;
     void onDataChanged() override;
 
-signals:
-	emits<AListModelSelection<AString>> selectionChanged;
-	emits<unsigned> itemDoubleClicked;
+   signals:
+    emits<AListModelSelection<AString>> selectionChanged;
+    emits<unsigned> itemDoubleClicked;
 
     void clearSelection();
 
-    bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
+    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 };
