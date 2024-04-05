@@ -387,6 +387,10 @@ void ABaseWindow::render(ClipOptimizationContext context) {
         if (*delta == glm::ivec2(0, 0)) {
             return true;
         }
+
+#if AUI_SHOW_TOUCHES
+        ALogger::info("AUI_SHOW_TOUCHES") << "onScroll(pointerIndex = " << scroll.pointer << ", delta = " << *delta << ", kinetic = true)";
+#endif
         onScroll(AScrollEvent {
                 .origin       = scroll.scroller.origin(),
                 .delta        = *delta,
