@@ -97,7 +97,7 @@ namespace aui::impl::json {
 
         void operator()(const AJson::Object& object) {
             if (auto c = object.contains(name)) {
-                value = aui::from_json<T>(c->second);
+                aui::from_json<T>(c->second, value);
             } else {
                 if (!(flags & AJsonFieldFlags::OPTIONAL)) {
                     throw AJsonException(R"(field "{}" is not present)"_format(name));
