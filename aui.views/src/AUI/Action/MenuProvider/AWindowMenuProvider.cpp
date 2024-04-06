@@ -24,15 +24,23 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
+#include "AUI/Common/ATimer.h"
 #include "AWindowMenuProvider.h"
+
+using namespace std::chrono_literals;
 
 class AMenuContainer: public AViewContainer {
 private:
     _<AMenuContainer> mSubWindow;
     _weak<AOverlappingSurface> mSurface;
+    _<ATimer> mTimer;
+    glm::ivec2 mOriginPosition;
 public:
-    AMenuContainer(const AVector<AMenuItem>& vector)
+    explicit AMenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 oiginPosition = {})
     {
+        mTimer = _new<ATimer>(200ms);
+        mOriginPosition = oiginPosition;
+
         addAssName(".menu");
         setExpanding();
         setLayout(_new<AVerticalLayout>());
@@ -42,7 +50,10 @@ public:
             switch (i.type) {
                 case AMenu::SINGLE: {
                     if (i.shortcut.empty()) {
-                        addView(view = _new<ALabel>(i.name) << ".menu-item" << ".menu-item-name");
+                        addView(view = Horizontal {
+                            _new<ALabel>(i.name) << ".menu-item-name",
+                            _new<ASpacerExpanding>()
+                        } << ".menu-item");
                     } else {
                         addView(view = Horizontal {
                                 _new<ALabel>(i.name) << ".menu-item-name",
@@ -52,7 +63,10 @@ public:
                     }
 
                     if (i.enabled) {
-                        connect(view->mouseEnter, [&] {
+                        connect(view->mouseEnter, [this] {
+                            mTimer->fired.clearAllConnections();
+                            mTimer->stop();
+
                             if (mSubWindow) {
                                 mSubWindow->close();
                             }
@@ -76,17 +90,29 @@ public:
 
                     auto items = i.subItems;
                     if (i.enabled) {
-                        connect(view->mouseEnter, [&, view, items] {
+                        connect(view->mouseEnter, [this, view, items] {
+                            mTimer->fired.clearAllConnections();
+                            mTimer->stop();
+
                             if (mSubWindow) {
                                 mSubWindow->close();
                             }
 
-                            mSubWindow = _new<AMenuContainer>(items);
-                            auto pos = getPositionInWindow();
-                            auto window = getWindow();
-                            auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
-                            surfaceContainer->setLayout(_new<AStackedLayout>());
-                            surfaceContainer->addView(mSubWindow);
+                            connect(mTimer->fired, [this, view, items] {
+                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+                                mSubWindow = _new<AMenuContainer>(items, pos);
+                                ABaseWindow* window;
+                                if (auto s = mSurface.lock()) window = s->getParentWindow();
+                                else window = AWindow::current();
+                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                                surfaceContainer->setLayout(_new<AStackedLayout>());
+                                surfaceContainer->addView(mSubWindow);
+                                mSubWindow->setSurface(surfaceContainer);
+
+                                mTimer->stop();
+                            });
+
+                            mTimer->start();
                         });
                     } else {
                         view->disable();
@@ -120,8 +146,8 @@ public:
 void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
     mWindow = AWindow::current();
-    auto menu = _new<AMenuContainer>(vector);
     auto mousePos = mWindow->getMousePos();
+    auto menu = _new<AMenuContainer>(vector, mousePos);
     auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
     surfaceContainer->setLayout(_new<AStackedLayout>());
     surfaceContainer->addView(menu);
