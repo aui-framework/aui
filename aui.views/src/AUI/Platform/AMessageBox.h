@@ -35,6 +35,7 @@ namespace AMessageBox
 		OK,
 		OK_CANCEL,
 		YES_NO,
+		YES_NO_CANCEL,
 	};
 	enum class ResultButton
 	{
