@@ -19,8 +19,6 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
-const int AUI_TITLE_HEIGHT = 30;
-
 #if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -214,7 +212,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    if (event.position.y < AUI_TITLE_HEIGHT) {
+    if (event.position.y < mTitleHeight) {
         if (isCaptionAt(event.position)) {
             // TODO apple
 
@@ -249,7 +247,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
+    if (pos.y < mTitleHeight && button == AInput::LBUTTON) {
         if (isCaptionAt(pos)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
@@ -293,7 +291,7 @@ void ACustomWindow::handleXConfigureNotify() {
 
 
 bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
-    if (pos.y <= AUI_TITLE_HEIGHT) {
+    if (pos.y <= mTitleHeight) {
         if (auto v = getViewAtRecursive(pos)) {
             if (!(_cast<AButton>(v)) &&
                 !v->getAssNames().contains(".override-title-dragging")) {
