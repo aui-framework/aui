@@ -216,11 +216,11 @@ jobs:
 
       - name: Build project
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
+        run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo
 
       - name: Build AUI tests
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
+        run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
 
       - name: Run AUI tests
         if: matrix.os == 'ubuntu-latest'
@@ -229,7 +229,7 @@ jobs:
 
       - name: Run CMake tests
         working-directory: ${{github.workspace}}/build
-        run: ctest . -C ${{matrix.debug_or_release}} -VV
+        run: ctest . -C RelWithDebInfo -VV
 
       - name: Pack
         working-directory: ${{github.workspace}}/build
