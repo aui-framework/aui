@@ -6,6 +6,7 @@
 
 
 #include <AUI/Common/AVector.h>
+#include "AUI/IO/APath.h"
 #include "AnyToken.h"
 #include "ShadingLanguage/Lang/AST/IndexedAttributesDeclarationNode.h"
 #include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"

@@ -193,25 +193,6 @@ public:
     }
 #endif
 
-    class [[deprecated]] SafeCallWrapper
-    {
-    private:
-        _<T>& mPtr;
-
-    public:
-        SafeCallWrapper(_<T>& ptr)
-                : mPtr(ptr)
-        {
-        }
-
-        template<typename MemberFunction, typename... Args>
-        SafeCallWrapper& operator()(MemberFunction memberFunction, Args&& ... args) {
-            if (mPtr)
-                (mPtr.get()->*memberFunction)(std::forward<Args>(args)...);
-            return *this;
-        }
-    };
-
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
@@ -258,19 +239,6 @@ public:
         functor(*this);
         return *this;
     }
-
-    /**
-     * @brief Guarantees that further builder calls will be executed if and only if this pointer
-     *        not equal to null.
-     * @return safe builder
-     * @deprecated use AUI_NULLSAFE() instead
-     */
-    [[deprecated]]
-    inline auto safe()
-    {
-        return SafeCallWrapper(*this);
-    }
-
     // forward ranged-for loops
     auto begin() const {
         return super::operator->()->begin();

@@ -15,7 +15,6 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "AUI/Util/EnumUtil.h"
 #include "AUI/Reflect/AEnumerate.h"
 
 

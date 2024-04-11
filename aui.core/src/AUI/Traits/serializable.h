@@ -145,9 +145,6 @@ struct ASerializable<AString> {
     }
 };
 
-template<>
-struct ASerializable<APath>: ASerializable<AString> {};
-
 
 template<typename T>
 struct ASerializable<aui::serialize_sized<T>> {

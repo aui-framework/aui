@@ -138,6 +138,11 @@ namespace aui {
         no_escape(T& value): value(&value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }
+        // referring to a temporary value; no_escape should never be used anything else than as argument
+        // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
+        no_escape(T&& value): value(&value) {
+            AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
+        }
         no_escape(T* value): value(value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }

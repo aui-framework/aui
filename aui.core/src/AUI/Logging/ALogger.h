@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/Core.h>
+#include <AUI/IO/APath.h>
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Util/ARaiiHelper.h>

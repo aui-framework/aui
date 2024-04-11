@@ -21,6 +21,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Traits/serializable.h>
 
 /**
  * @brief Flag enum for APath::find
@@ -363,3 +364,6 @@ public:
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
 }
+
+template<>
+struct ASerializable<APath>: ASerializable<AString> {};

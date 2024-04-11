@@ -17,6 +17,8 @@
 #pragma once
 
 
+#include "AUI/Reflect/AEnumerate.h"
+
 AUI_ENUM_FLAG(WindowStyle)
 {
     DEFAULT = 0,
