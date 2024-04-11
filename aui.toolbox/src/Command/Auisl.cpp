@@ -60,8 +60,8 @@ AString Auisl::getName() {
 AString Auisl::getSignature() {
     using namespace ranges;
     return "<target_platform {}> <auisl_file> <output_cpp>"_format(targetPlatforms()
-                                                                   | view::keys
-                                                                   | view::join(',')
+                                                                   | views::keys
+                                                                   | views::join(',')
                                                                    | to<AString>());
 }
 
