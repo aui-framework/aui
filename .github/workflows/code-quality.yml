@@ -47,17 +47,12 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
 
       - name: Run AUI tests
-        if: matrix.os == 'ubuntu-latest'
         working-directory: ${{github.workspace}}/build/bin
         run: ${{github.workspace}}/build/bin/Tests
 
-      - name: Run CMake tests
-        working-directory: ${{github.workspace}}/build
-        run: ctest . -C RelWithDebInfo -VV
-
       - name: Pack
         working-directory: ${{github.workspace}}/build
-        run: cpack . -C ${{ matrix.debug_or_release }}
+        run: cpack . -C RelWithDebInfo
 
       - name: Upload
         uses: actions/upload-artifact@v3

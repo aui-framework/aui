@@ -549,3 +549,14 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
     }
     return it->targetView.lock();
 }
+
+void AViewContainer::setViews(AVector<_<AView>> views) {
+    views.removeIf([](const _<AView>& v) { return v == nullptr; });
+    mViews = std::move(views);
+
+    for (const auto& view : mViews) {
+        view->mParent = this;
+        if (mLayout)
+            mLayout->addView(view);
+    }
+}
