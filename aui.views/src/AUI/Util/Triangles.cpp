@@ -17,6 +17,12 @@
 #include "Triangles.h"
 #include <glm/gtx/norm.hpp>
 
+
+int test(int i) {
+	static std::array<int, 32> v;
+	return v[i];
+}
+
 // -------------------------------------------------------------------------------
 /** Compute the signed area of a triangle.
  *  The function accepts an unconstrained template parameter for use with
@@ -166,13 +172,13 @@ void Triangles::triangulate(const AVector<glm::vec2>& vertices, AVector<unsigned
 	{
 		// We have three indices forming the last 'ear' remaining. Collect them.
 
-		for (tmp = 0; done[tmp]; ++tmp);
+		for (tmp = 0; done[tmp]; ++tmp)
 			indices << tmp;
 
-		for (++tmp; done[tmp]; ++tmp);
+		for (++tmp; done[tmp]; ++tmp)
 			indices << tmp;
 
-		for (++tmp; done[tmp]; ++tmp);
+		for (++tmp; done[tmp]; ++tmp)
 			indices << tmp;
 	}
 }

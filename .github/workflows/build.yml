@@ -197,49 +197,6 @@ jobs:
           path: ${{github.workspace}}/build/*.tar.gz
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
-  linting:
-    name: Linting
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-
-      - name: Install Linux dependencies
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev clang
-
-      - name: Configure CMake
-        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: CC=/usr/bin/clang CXX=/usr/bin/clang++  cmake -GNinja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_INSTALL_RUNTIME_DEPENDENCIES=TRUE
-
-      - name: Build project
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo
-
-      - name: Build AUI tests
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
-
-      - name: Run AUI tests
-        if: matrix.os == 'ubuntu-latest'
-        working-directory: ${{github.workspace}}/build/bin
-        run: ${{github.workspace}}/build/bin/Tests
-
-      - name: Run CMake tests
-        working-directory: ${{github.workspace}}/build
-        run: ctest . -C RelWithDebInfo -VV
-
-      - name: Pack
-        working-directory: ${{github.workspace}}/build
-        run: cpack . -C ${{ matrix.debug_or_release }}
-
-      - name: Upload
-        uses: actions/upload-artifact@v3
-        with:
-          path: ${{github.workspace}}/build/*.tar.gz
-          name: ubuntu-latest static Release clang
   release:
     if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest

@@ -47,7 +47,7 @@ namespace By {
             ~ExactTypeMatcher() override = default;
 
             bool matches(const _<AView>& view) override {
-                return typeid(*view.get()) == typeid(T);
+                return typeid(decltype(*view.get())) == typeid(T);
             }
         };
         return { _new<ExactTypeMatcher>() };
