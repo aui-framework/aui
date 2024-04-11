@@ -5,7 +5,7 @@ WarningsAsErrors: 'clang-analyzer-*,
 
   # rvalue references should be handled properly
   cppcoreguidelines-rvalue-reference-*'
-HeaderFilterRegex: '.*/src/AUI/.*'
+HeaderFilterRegex: '^.*/src/AUI/.*$'
 AnalyzeTemporaryDtors: false
 FormatStyle:     google
 CheckOptions:
