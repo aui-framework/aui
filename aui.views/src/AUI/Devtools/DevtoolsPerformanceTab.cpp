@@ -126,7 +126,7 @@ namespace {
             populateSectionStat(sectionStatsMap, sections);
 
             auto sectionStatsList = sectionStatsMap
-                                    | ranges::view::values
+                                    | ranges::views::values
                                     | ranges::to_vector
                                     | ranges::actions::sort([](const auto& l, const auto& r) {
                                         return l.durationIncludingChildren > r.durationIncludingChildren;

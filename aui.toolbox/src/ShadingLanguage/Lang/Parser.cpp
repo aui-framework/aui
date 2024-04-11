@@ -534,7 +534,7 @@ _<ExpressionNode> Parser::parseExpression() {
             return out;
         }
 
-        for (const auto& o : binaryOperators | ranges::view::reverse) {
+        for (const auto& o : binaryOperators | ranges::views::reverse) {
             if (o.priority < currentPriority && o.op->mRight) {
                 // steal rhs
                 auto currentOperator = _new<T>(std::move(o.op->mRight), nullptr);
@@ -754,7 +754,7 @@ _<ExpressionNode> Parser::parseExpression() {
             default:
                 if (temporaryValue && !binaryOperators.empty()) {
                     // should assign it to some operator
-                    for (const auto& o : binaryOperators | ranges::view::reverse) {
+                    for (const auto& o : binaryOperators | ranges::views::reverse) {
                         if (o.op->mRight == nullptr) {
                             o.op->mRight = std::move(temporaryValue);
                             return binaryOperators.first().op;
