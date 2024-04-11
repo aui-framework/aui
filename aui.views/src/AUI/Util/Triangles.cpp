@@ -18,10 +18,6 @@
 #include <glm/gtx/norm.hpp>
 
 
-int test(int i) {
-	static std::array<int, 32> v;
-	return v[i];
-}
 
 // -------------------------------------------------------------------------------
 /** Compute the signed area of a triangle.

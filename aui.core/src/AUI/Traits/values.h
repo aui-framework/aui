@@ -138,9 +138,6 @@ namespace aui {
         no_escape(T& value): value(&value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }
-        no_escape(T&& value): value(&value) {
-            AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
-        }
         no_escape(T* value): value(value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }
@@ -224,7 +221,7 @@ namespace aui {
         }
 
         lazy<T>& operator=(T&& t) {
-            value = std::forward<T>(t);
+            value = std::move(t);
             return *this;
         }
         lazy<T>& operator=(const T& t) {
@@ -348,7 +345,7 @@ namespace aui {
 
         atomic_lazy<T>& operator=(T&& t) {
             std::unique_lock lock(sync);
-            value = std::forward<T>(t);
+            value = std::move(t);
             return *this;
         }
 
@@ -413,7 +410,7 @@ namespace aui {
             move_only(T&& rhs): value(std::move(rhs)) {
 
             }
-            move_only(move_only&& rhs): value(std::move(rhs.value)) {
+            move_only(move_only&& rhs) noexcept: value(std::move(rhs.value)) {
 
             }
             move_only(const move_only&) = delete;

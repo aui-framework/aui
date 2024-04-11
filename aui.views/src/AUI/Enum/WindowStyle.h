@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include <AUI/Util/EnumUtil.h>
 
 AUI_ENUM_FLAG(WindowStyle)
 {

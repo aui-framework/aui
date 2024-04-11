@@ -134,21 +134,27 @@ public:
         return *this;
     }
 
+    // we want to move the U value, not the whole optional
+    // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
     template<typename U>
     constexpr AOptional<T>& operator=(AOptional<U>&& rhs) noexcept {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
+            return *this;
+        } else {
+            reset();
         }
         return *this;
     }
+    //NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
     template<typename U = T>
     constexpr AOptional<T>& operator=(T&& rhs) noexcept {
         if (mInitialized) {
             ptrUnsafe()->~T();
         }
-        new (ptrUnsafe()) T(std::forward<T>(rhs));
+        new (ptrUnsafe()) T(std::move(rhs));
         mInitialized = true;
         return *this;
     }

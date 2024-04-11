@@ -21,7 +21,6 @@
 #include <gtest/gtest.h>
 
 #include <AUI/Util/ABitField.h>
-#include <AUI/Util/EnumUtil.h>
 
 
 AUI_ENUM_FLAG(Flags) {

@@ -20,7 +20,6 @@
 #include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
 

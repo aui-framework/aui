@@ -14,7 +14,6 @@
 #include <AUI/Reflect/AClass.h>
 #include <ShadingLanguage/Lang/AST/VariableDeclarationNode.h>
 #include <ShadingLanguage/Lang/AST/ExpressionNode.h>
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/AException.h>
 
 

@@ -143,12 +143,14 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
     WIN32_FIND_DATA fd;
     HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
 
-    if (dir == INVALID_HANDLE_VALUE)
+    if (dir == INVALID_HANDLE_VALUE) {
 #else
     DIR* dir = opendir(toStdString().c_str());
-    if (!dir)
+    if (!dir) {
 #endif
         aui::impl::lastErrorToException("could not list " + *this);
+        return {};
+    }
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -156,8 +158,8 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
         bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
         bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
-    for (dirent* i; (i = readdir(dir));) {
-        auto& filename = i->d_name;
+    for (dirent* i = nullptr; (i = readdir(dir));) {
+        const auto* filename = i->d_name;
         bool isFile = i->d_type & DT_REG;
         bool isDirectory = i->d_type & DT_DIR;
 #endif

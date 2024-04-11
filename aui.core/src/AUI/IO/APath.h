@@ -17,10 +17,10 @@
 #pragma once
 
 #include <iterator>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Common/AString.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
-#include <AUI/Util/EnumUtil.h>
 
 /**
  * @brief Flag enum for APath::find
@@ -123,7 +123,7 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(other) {
+    APath(AString&& other) noexcept: AString(std::move(other)) {
         removeBackSlashes();
     }
     APath(const AString& other) noexcept: AString(other) {

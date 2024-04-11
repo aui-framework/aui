@@ -19,8 +19,7 @@
 #include <glm/glm.hpp>
 
 
-#include "AUI/Core.h"
-#include "AUI/Util/EnumUtil.h"
+#include "AUI/Reflect/AEnumerate.h"
 
 /**
  * @brief Describes sides of a 2D rectangle.

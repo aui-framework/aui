@@ -24,7 +24,6 @@
 #include <sys/poll.h>
 #include "UnixEventFd.h"
 #include <AUI/Thread/AFuture.h>
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Util/ABitField.h>
 #include <unordered_map>
 
