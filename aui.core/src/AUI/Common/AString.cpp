@@ -19,6 +19,9 @@
 #include "AStringVector.h"
 #include <AUI/Common/AByteBuffer.h>
 
+// utf8 stuff has a lot of magic
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+
 inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
     destination.reserve(length);
 
@@ -27,12 +30,11 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     {
         if (*str & 0x80)
         {
-            wchar_t t;
             // utf8 symbol
             if (*str & 0b00100000)
             {
                 // 3-byte symbol
-                t = *(str++) & 0b1111;
+                wchar_t t = *(str++) & 0b1111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 t <<= 6;
@@ -42,7 +44,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
             } else
             {
                 // 2-byte symbol
-                t = *(str++) & 0b11111;
+                wchar_t t = *(str++) & 0b11111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
@@ -531,9 +533,9 @@ AString AString::uppercase() const {
                                     *pExtChar = 0x82;
                                     (*p) += 0x10;
                                 }
-                                else if ((*p >= 0xb0)
+                                else if (((*p >= 0xb0)
                                          && ((*p <= 0xb5)
-                                             || (*p == 0xb7))
+                                             || (*p == 0xb7)))
                                          || (*p == 0xbd))
                                     (*p) -= 0x30;
                                 break;
@@ -938,9 +940,9 @@ AString AString::lowercase() const {
                                 }
                                 break;
                             case 0x83: // Georgian
-                                if ((*p >= 0x80)
+                                if (((*p >= 0x80)
                                     && ((*p <= 0x85)
-                                        || (*p == 0x87))
+                                        || (*p == 0x87)))
                                     || (*p == 0x8d))
                                     (*p) += 0x30;
                                 break;
@@ -1083,8 +1085,8 @@ AString AString::lowercase() const {
 }
 
 void AString::resizeToNullTerminator() {
-    wchar_t* i;
-    for (i = data(); *i; ++i);
+    wchar_t* i = data();
+    for (; *i; ++i);
     resize(i - data());
 }
 
@@ -1244,3 +1246,5 @@ AOptional<double> AString::toDouble() const noexcept {
 AOptional<float> AString::toFloat() const noexcept {
     return toNumberImpl<float>();
 }
+
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

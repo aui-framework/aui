@@ -32,7 +32,25 @@ namespace aui::dbus {
         using std::string::string;
     };
 
-    struct Unknown;
+    template<typename T>
+    struct converter;
+
+    template<typename T>
+    concept convertible = requires(T t) {
+        { converter<T>::iter_append(static_cast<DBusMessageIter*>(nullptr), t) };
+        { converter<T>::signature } -> aui::convertible_to<std::string>;
+    };
+
+    struct Unknown {
+    public:
+        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
+
+        template<convertible T>
+        T as();
+
+    private:
+        DBusMessageIter mIter;
+    };
 
     using VariantImpl = std::variant<
             std::nullopt_t,      // DBUS_TYPE_INVALID
@@ -55,15 +73,6 @@ namespace aui::dbus {
     };
 
     template<typename T>
-    struct converter;
-
-    template<typename T>
-    concept convertible = requires(T t) {
-        { converter<T>::iter_append(static_cast<DBusMessageIter*>(nullptr), t) };
-        { converter<T>::signature } -> aui::convertible_to<std::string>;
-    };
-
-    template<typename T>
     concept convertible_or_void = convertible<T> || std::is_void_v<T>;
 
 
@@ -75,6 +84,12 @@ namespace aui::dbus {
     T iter_get(DBusMessageIter* iter) {
         return converter<T>::iter_get(iter);
     }
+
+    template<convertible T>
+    T Unknown::as() {
+        return aui::dbus::iter_get<T>(&mIter);
+    }
+
 
     namespace impl {
         template<typename T, char dbusType = DBUS_TYPE_INVALID>
@@ -282,19 +297,6 @@ namespace aui::dbus {
         }
 
         static Variant iter_get(DBusMessageIter* iter);
-    };
-
-    struct Unknown {
-    public:
-        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
-
-        template<convertible T>
-        T as() {
-            return aui::dbus::iter_get<T>(&mIter);
-        }
-
-    private:
-        DBusMessageIter mIter;
     };
 
     template<>

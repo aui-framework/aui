@@ -17,14 +17,13 @@
 #pragma once
 
 #include <chrono>
-#include <memory>
 #include <functional>
 #include <list>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AConditionVariable.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Util/ABitField.h>
-#include "EnumUtil.h"
 
 
 /**

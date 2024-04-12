@@ -21,9 +21,12 @@
 template<aui::invocable Callback>
 class ARaiiHelper {
 public:
-    ARaiiHelper(Callback&& callback) noexcept: mCallback(std::forward<Callback>(callback)) {
+    ARaiiHelper(Callback&& callback) noexcept: mCallback(std::move(callback)) {
 
     }
+    ARaiiHelper(const ARaiiHelper&) = delete;
+    ARaiiHelper(ARaiiHelper&&) noexcept = delete;
+
     ~ARaiiHelper() {
         mCallback();
     }

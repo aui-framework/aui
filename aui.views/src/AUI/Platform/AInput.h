@@ -16,7 +16,6 @@
 
 #pragma once
 #include "AUI/Common/AString.h"
-#include "AUI/Util/EnumUtil.h"
 
 namespace AInput
 {

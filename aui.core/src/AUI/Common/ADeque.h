@@ -116,7 +116,7 @@ public:
      */
     inline self& operator<<(StoredType&& rhs) noexcept
     {
-        p::push_back(std::forward<StoredType>(rhs));
+        p::push_back(std::move(rhs));
         return *this;
     }
 

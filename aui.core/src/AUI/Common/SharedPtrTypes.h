@@ -60,7 +60,7 @@ public:
     using super::weak_ptr;
 
     _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
-    _weak(std::weak_ptr<T>&& v): std::weak_ptr<T>(std::forward<std::weak_ptr<T>>(v)) {}
+    _weak(std::weak_ptr<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
 
     _<T> lock() const noexcept {
         return static_cast<_<T>>(super::lock());
@@ -193,31 +193,12 @@ public:
     }
 #endif
 
-    class SafeCallWrapper
-    {
-    private:
-        _<T>& mPtr;
-
-    public:
-        SafeCallWrapper(_<T>& ptr)
-                : mPtr(ptr)
-        {
-        }
-
-        template<typename MemberFunction, typename... Args>
-        SafeCallWrapper& operator()(MemberFunction memberFunction, Args&& ... args) {
-            if (mPtr)
-                (mPtr.get()->*memberFunction)(std::forward<Args>(args)...);
-            return *this;
-        }
-    };
-
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
-    _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(v)) {}
+    _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(std::move(v))) {}
     _(const _& v): std::shared_ptr<T>(v) {}
-    _(_&& v): std::shared_ptr<T>(std::forward<_>(v)) {}
+    _(_&& v) noexcept: std::shared_ptr<T>(std::forward<_>(v)) {}
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
@@ -258,19 +239,6 @@ public:
         functor(*this);
         return *this;
     }
-
-    /**
-     * @brief Guarantees that further builder calls will be executed if and only if this pointer
-     *        not equal to null.
-     * @return safe builder
-     * @deprecated use AUI_NULLSAFE() instead
-     */
-    [[deprecated]]
-    inline auto safe()
-    {
-        return SafeCallWrapper(*this);
-    }
-
     // forward ranged-for loops
     auto begin() const {
         return super::operator->()->begin();
