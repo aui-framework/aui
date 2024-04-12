@@ -1003,3 +1003,5 @@ private:
 
     void notifyParentChildFocused(const _<AView> &view);
 };
+
+API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);
