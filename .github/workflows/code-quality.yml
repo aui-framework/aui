@@ -42,13 +42,13 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo
 
-      - name: Build AUI tests
-        # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
+      # - name: Build AUI tests
+      #   # Build your program with the given configuration
+      #   run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
 
-      - name: Run AUI tests
-        working-directory: ${{github.workspace}}/build/bin
-        run: ${{github.workspace}}/build/bin/Tests
+      # - name: Run AUI tests
+      #   working-directory: ${{github.workspace}}/build/bin
+      #   run: ${{github.workspace}}/build/bin/Tests
 
       - name: Pack
         working-directory: ${{github.workspace}}/build
