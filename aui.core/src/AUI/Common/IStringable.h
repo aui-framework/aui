@@ -33,6 +33,8 @@
  */
 class IStringable {
 public:
+    virtual ~IStringable() = default;
+
     /**
      * @return string representation of the object
      */

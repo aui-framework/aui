@@ -16,6 +16,7 @@
 
 #include "AView.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/IStringable.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
@@ -700,4 +701,9 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+}
+std::ostream& operator<<(std::ostream& os, const AView& view) {
+    os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
+       << ", size = " << view.getSize() << " }";
+    return os;
 }

@@ -385,6 +385,15 @@ public:
         return result;
     }
 
+    template<aui::invocable<StoredType&> UnaryOperation>
+    [[nodiscard]]
+    auto map(UnaryOperation&& transformer) -> AVector<decltype(transformer(std::declval<StoredType&>()))> {
+        AVector<decltype(transformer(std::declval<StoredType&>()))> result;
+        result.reserve(super::size());
+        std::transform(super::begin(), super::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
+    }
+
     template<aui::invocable<const StoredType&> UnaryOperation>
     [[nodiscard]]
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
