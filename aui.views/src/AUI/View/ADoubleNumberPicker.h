@@ -103,6 +103,8 @@ namespace aui::impl {
     public:
 
         static void setup(const _<ADoubleNumberPicker>& view) {
+            view->setMin((std::numeric_limits<Num>::min)());
+            view->setMax((std::numeric_limits<Num>::max)());
         }
 
         static auto getGetter() {
