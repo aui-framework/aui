@@ -16,15 +16,15 @@
 
 #include "AListView.h"
 
+#include <AUI/ASS/Property/ScrollbarAppearance.h>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Enum/Visibility.h>
 #include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
 #include "ALabel.h"
-#include "AUI/ASS/Property/ScrollbarAppearance.h"
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Enum/Visibility.h"
-#include "AUI/Layout/AVerticalLayout.h"
-#include "AUI/Platform/AWindow.h"
 
 class AListViewContainer : public AViewContainer {
    private:
@@ -127,13 +127,10 @@ void AListView::handleMousePressed(AListItem* item) {
     }
 
     auto index = AListModelIndex(mContent->getIndex());
-    if (mSelectionModel.contains(index))
-    {
+    if (mSelectionModel.contains(index)) {
         mSelectionModel.erase(index);
         item->setSelected(false);
-    }
-    else
-    {
+    } else {
         mSelectionModel << index;
         item->setSelected(true);
     }
@@ -163,15 +160,35 @@ void AListView::onDataCountChanged() { AUI_NULLSAFE(AWindow::current())->flagUpd
 
 void AListView::onDataChanged() { redraw(); }
 
-void AListView::selectItem(size_t i) {
-    if (mAllowMultipleSelection) {
-        mSelectionModel << AListModelIndex(i);
-    } else {
-        clearSelectionInternal();
-        mSelectionModel = {AListModelIndex(i)};
+void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
+    switch (action) {
+        case SelectAction::CLEAR_SELECTION_AND_SET:
+            clearSelectionInternal();
+            mSelectionModel = {AListModelIndex(i)};
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            break;
+        case SelectAction::SET:
+            if (mAllowMultipleSelection) {
+                mSelectionModel << AListModelIndex(i);
+            } else {
+                clearSelectionInternal();
+                mSelectionModel = {AListModelIndex(i)};
+            }
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            break;
+        case SelectAction::UNSET:
+            mSelectionModel.erase(i);
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(false);
+            break;
+        case SelectAction::TOGGLE:
+            if (mSelectionModel.contains(i)) {
+                updateSelectionOnItem(i, SelectAction::UNSET);
+            } else {
+                updateSelectionOnItem(i, SelectAction::SET);
+            }
+            break;
     }
 
-    _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
     emit selectionChanged(getSelectionModel());
 }
 

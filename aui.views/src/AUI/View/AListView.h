@@ -16,13 +16,12 @@
 
 #pragma once
 
+#include <AUI/Model/AListModelIndex.h>
 #include <AUI/Model/AListModelObserver.h>
 #include <AUI/Model/AListModelSelection.h>
+#include <AUI/Model/IListModel.h>
 
-#include "AScrollbar.h"
-#include "AUI/Model/AListModelIndex.h"
-#include "AUI/Model/IListModel.h"
-#include "AUI/View/AScrollArea.h"
+#include "AScrollArea.h"
 
 class AListItem;
 class AListViewContainer;
@@ -46,13 +45,43 @@ class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AS
     void clearSelectionInternal();
 
    public:
+    /**
+     * @brief Selection action for updateSelectionOnItem.
+     */
+    enum class SelectAction {
+        /**
+         * @brief Clears old selection and selects the specified index. Used by selectItem.
+         */
+        CLEAR_SELECTION_AND_SET,
+
+        /**
+         * @brief Selects the specified index. In single selection mode, acts like CLEAR_SELECTION_AND_SET.
+         */
+        SET,
+
+        /**
+         * @brief Deselects the specified index.
+         */
+        UNSET,
+
+        /**
+         * @brief Selects or deselects the specified index depending on it's current state.
+         */
+        TOGGLE,
+    };
+
     AListView() : AListView(nullptr) {}
     explicit AListView(const _<IListModel<AString>>& model);
     virtual ~AListView();
 
     void setModel(const _<IListModel<AString>>& model);
 
-    void selectItem(size_t i);
+    void updateSelectionOnItem(size_t i, AListView::SelectAction action);
+
+    /**
+     * @brief Acts on the item at index i as if the user were left-clicked without keyboard modifiers on it.
+     */
+    void selectItem(size_t i) { updateSelectionOnItem(i, SelectAction::CLEAR_SELECTION_AND_SET); }
 
     int getContentFullHeight() { return getLayout()->getMinimumHeight() + 8; }
 

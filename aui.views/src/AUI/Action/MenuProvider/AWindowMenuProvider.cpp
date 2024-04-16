@@ -18,28 +18,46 @@
 // Created by alex2 on 5/13/2021.
 //
 
+#include "AWindowMenuProvider.h"
 
+#include <AUI/Common/ATimer.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Layout/AVerticalLayout.h>
-#include <AUI/View/ALabel.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "AUI/Common/ATimer.h"
-#include "AWindowMenuProvider.h"
+#include <AUI/View/ALabel.h>
 
 using namespace std::chrono_literals;
 
-class AMenuContainer: public AViewContainer {
-private:
+class AMenuContainer : public AViewContainer {
+   private:
     _<AMenuContainer> mSubWindow;
     _weak<AOverlappingSurface> mSurface;
-    _<ATimer> mTimer;
+    _<ATimer> mSublistOnHoverDisplayDelay;
     glm::ivec2 mOriginPosition;
-public:
-    explicit AMenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 oiginPosition = {})
-    {
-        mTimer = _new<ATimer>(200ms);
-        mOriginPosition = oiginPosition;
+
+    void onShowSublistMenu(const _<AView>& view, const AVector<AMenuItem>& items) {
+        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+        mSubWindow = _new<AMenuContainer>(items, pos);
+
+        ABaseWindow* window = nullptr;
+        if (auto s = mSurface.lock())
+            window = s->getParentWindow();
+        else
+            window = AWindow::current();
+
+        auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+        surfaceContainer->setLayout(_new<AStackedLayout>());
+        surfaceContainer->addView(mSubWindow);
+        mSubWindow->setSurface(surfaceContainer);
+
+        mSublistOnHoverDisplayDelay->stop();
+    }
+
+   public:
+    explicit AMenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 originPosition = {})
+        : mOriginPosition(originPosition) {
+        mSublistOnHoverDisplayDelay = _new<ATimer>(200ms);
 
         addAssName(".menu");
         setExpanding();
@@ -52,20 +70,19 @@ public:
                     if (i.shortcut.empty()) {
                         addView(view = Horizontal {
                             _new<ALabel>(i.name) << ".menu-item-name",
-                            _new<ASpacerExpanding>()
                         } << ".menu-item");
                     } else {
                         addView(view = Horizontal {
-                                _new<ALabel>(i.name) << ".menu-item-name",
-                                _new<ASpacerExpanding>(),
-                                _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
+                            _new<ALabel>(i.name) << ".menu-item-name",
+                            _new<ASpacerExpanding>(),
+                            _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
                         } << ".menu-item");
                     }
 
                     if (i.enabled) {
                         connect(view->mouseEnter, [this] {
-                            mTimer->fired.clearAllConnections();
-                            mTimer->stop();
+                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {
                                 mSubWindow->close();
@@ -83,36 +100,25 @@ public:
 
                 case AMenu::SUBLIST: {
                     addView(view = Horizontal {
-                            _new<ALabel>(i.name) << ".menu-item-name",
-                            _new<ASpacerExpanding>(),
-                            _new<ALabel>(">")
+                        _new<ALabel>(i.name) << ".menu-item-name",
+                        _new<ASpacerExpanding>(),
+                        _new<ALabel>(">")
                     } << ".menu-item");
 
                     auto items = i.subItems;
                     if (i.enabled) {
                         connect(view->mouseEnter, [this, view, items] {
-                            mTimer->fired.clearAllConnections();
-                            mTimer->stop();
+                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {
                                 mSubWindow->close();
                             }
 
-                            connect(mTimer->fired, [this, view, items] {
-                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
-                                mSubWindow = _new<AMenuContainer>(items, pos);
-                                ABaseWindow* window;
-                                if (auto s = mSurface.lock()) window = s->getParentWindow();
-                                else window = AWindow::current();
-                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
-                                surfaceContainer->setLayout(_new<AStackedLayout>());
-                                surfaceContainer->addView(mSubWindow);
-                                mSubWindow->setSurface(surfaceContainer);
+                            connect(mSublistOnHoverDisplayDelay->fired,
+                                    [this, view, items] { onShowSublistMenu(view, items); });
 
-                                mTimer->stop();
-                            });
-
-                            mTimer->start();
+                            mSublistOnHoverDisplayDelay->start();
                         });
                     } else {
                         view->disable();
@@ -124,19 +130,16 @@ public:
                     addView(_new<AView>() << ".menu-separator");
                     break;
             }
-
         }
     }
 
-    void setSurface(const _<AOverlappingSurface>& surface) {
-        mSurface = surface;
-    }
+    void setSurface(const _<AOverlappingSurface>& surface) { mSurface = surface; }
 
-    virtual ~AMenuContainer() {
-        close();
-    }
+    virtual ~AMenuContainer() { close(); }
+
     void close() {
-        if (auto s = mSurface.lock()) s->close();
+        if (auto s = mSurface.lock())
+            s->close();
         if (mSubWindow) {
             mSubWindow->close();
         }
@@ -161,6 +164,4 @@ void AWindowMenuProvider::closeMenu() {
     }
 }
 
-bool AWindowMenuProvider::isOpen() {
-    return !mMenuContainer.expired();
-}
+bool AWindowMenuProvider::isOpen() { return !mMenuContainer.expired(); }
