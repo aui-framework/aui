@@ -115,7 +115,7 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     mThread->start();
     AFuture<> cs;
     mThread->enqueue([&] {
-        cs.supplyResult();
+        cs.supplyValue();
     });
     cs.wait();
 }
@@ -192,7 +192,7 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
 
     AFuture<> cs;
     mThread->enqueue([&] {
-        cs.supplyResult();
+        cs.supplyValue();
     });
     cs.wait();
 }

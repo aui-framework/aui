@@ -81,7 +81,7 @@ private:
 
         AFuture<> cs;
         mThread->enqueue([&] {
-            cs.supplyResult();
+            cs.supplyValue();
         });
         cs.wait();
     }
