@@ -78,7 +78,7 @@ public:
      * @brief Pushes the result of operation to it's AFuture<T>.
      * @param value operation
      */
-    void supplyResult(T value) {
+    void supplyValue(T value) {
         if (auto l = mFutureWeakReference.lock()) {
             auto& inner = *l;
             std::unique_lock lock(inner->mutex);

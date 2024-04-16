@@ -69,7 +69,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                                            if (result->Status != 0) {
                                                throw AIOException(aui::impl::formatSystemError(result->Status).description);
                                            }
-                                           icmp->result.supplyResult(
+                                           icmp->result.supplyValue(
                                                    std::chrono::milliseconds(icmp->reply.icmp.RoundTripTime));
                                        } catch (...) {
                                            icmp->result.supplyException();

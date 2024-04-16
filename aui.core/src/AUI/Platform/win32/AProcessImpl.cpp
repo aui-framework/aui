@@ -192,7 +192,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
         assert(("process already finished; os signaled process termination second time",
                 !isFinished()));
-        mExitCode.supplyResult(waitForExitCode());
+        mExitCode.supplyValue(waitForExitCode());
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 

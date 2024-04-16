@@ -105,9 +105,9 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		AFuture<AStacktrace> future;
 		payloads.value()[mId] = [future] {
 #if AUI_PLATFORM_WIN
-			  future.supplyResult(AStacktrace::capture(1));
+			  future.supplyValue(AStacktrace::capture(1));
 #else
-			  future.supplyResult(AStacktrace::capture(6));
+			  future.supplyValue(AStacktrace::capture(6));
 #endif
 		};
 		lock.unlock();

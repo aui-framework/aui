@@ -161,7 +161,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         mWatchdog = _new<AThread>([&] {
             int loc;
             waitpid(mPid, &loc, 0);
-            mExitCode.supplyResult(WEXITSTATUS(loc));
+            mExitCode.supplyValue(WEXITSTATUS(loc));
             emit finished;
         });
         mWatchdog->start();
