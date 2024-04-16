@@ -59,11 +59,53 @@ private:
 public:
     using super::weak_ptr;
 
+    _weak(const _weak<T>& v) noexcept: std::weak_ptr<T>(v) {}
+    _weak(_weak<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
     _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
     _weak(std::weak_ptr<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
 
     _<T> lock() const noexcept {
         return static_cast<_<T>>(super::lock());
+    }
+
+    _weak& operator=(const std::weak_ptr<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(std::weak_ptr<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const _weak<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(_weak<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const std::shared_ptr<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(std::shared_ptr<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const _<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(_<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
     }
 };
 
@@ -196,9 +238,9 @@ public:
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
-    _(std::shared_ptr<T>&& v) noexcept: std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(std::move(v))) {}
+    _(std::shared_ptr<T>&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     _(const _& v): std::shared_ptr<T>(v) {}
-    _(_&& v) noexcept: std::shared_ptr<T>(std::forward<_>(v)) {}
+    _(_&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
