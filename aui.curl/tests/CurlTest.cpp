@@ -36,7 +36,8 @@ TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").runBlocking().body;
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
-
+/*
+ temporary disabled, the service does not work
 TEST(CurlTest, Post1) {
     auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
             .withMethod(ACurl::Method::POST)
@@ -60,6 +61,7 @@ TEST(CurlTest, Post2) {
         FAIL() << "Whoops! " << AJson::toString(buffer);
     }
 }
+*/
 
 TEST(CurlTest, ToStream) {
     {
