@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -121,6 +121,10 @@ public:
         emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
     }
 
+    void invalidate(iterator index) {
+        invalidate(std::distance(begin(), index));
+    }
+
     void clear() noexcept {
         erase(mVector.begin(), mVector.end());
     }
@@ -185,7 +189,7 @@ public:
      * </dl>
      */
     const StoredType& operator[](size_t index) const {
-        assert(("index out of bounds" && size() > index));
+        AUI_ASSERTX(size() > index, "index out of bounds");
         return *(mVector.begin() + index);
     }
 

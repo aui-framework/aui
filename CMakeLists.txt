@@ -150,9 +150,6 @@ else()
 endif()
 
 set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\nset(AUI_AVAILABLE_COMPONENTS ${AUIB_COMPONENTS})\n")
-get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-# forward AUI's dependencies
-set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\nset(AUI_BOOT_ROOT_ENTRIES ${AUI_BOOT_ROOT_ENTRIES})\n")
 foreach(_module ${AUIB_COMPONENTS})
     set(_target "aui.${_module}")
     get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
@@ -184,11 +181,10 @@ set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
     endif()
 endforeach()
 
+auib_precompiled_binary()
 
 # test aui.boot on ci/cd
-if (DEFINED ENV{GITHUB_SHA})
-    add_subdirectory(test/)
-endif()
+add_subdirectory(test/)
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
@@ -202,5 +198,4 @@ install(DIRECTORY cmake/
 install(DIRECTORY platform/
         DESTINATION platform)
 
-auib_precompiled_binary()
 enable_testing()

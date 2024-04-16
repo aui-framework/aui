@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -79,7 +79,7 @@ public:
         DWORD exitCode;
         waitForExitCode();
         int r = GetExitCodeProcess(mHandle, &exitCode);
-        assert(r && r != STILL_ACTIVE);
+        AUI_ASSERT(r && r != STILL_ACTIVE);
         return exitCode;
     }
 
@@ -92,6 +92,12 @@ public:
     uint32_t getPid() const noexcept override {
         return GetProcessId(mHandle);
     }
+    size_t processMemory() const override { 
+        PROCESS_MEMORY_COUNTERS info;
+        GetProcessMemoryInfo(mHandle, &info, sizeof(info));
+        return (size_t)info.WorkingSetSize; 
+    }
+    
 };
 
 AVector<_<AProcess>> AProcess::all() {
@@ -158,7 +164,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
     for (auto handle : {pipeStdout.out(), pipeStderr.out(), pipeStdin.in() }) {
         if (!SetHandleInformation(handle, HANDLE_FLAG_INHERIT, 0)) {
-            assert((!"SetHandleInformation failed"));
+            AUI_ASSERT((!"SetHandleInformation failed"));
         }
     }
 
@@ -224,11 +230,11 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
 
 int AChildProcess::waitForExitCode() {
-    assert(("process handle is null; have you ever run the process?", mProcessInformation.hProcess != nullptr));
+    AUI_ASSERTX(mProcessInformation.hProcess != nullptr, "process handle is null; have you ever run the process?");
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
     DWORD exitCode;
     int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
-    assert(r && r != STILL_ACTIVE);
+    AUI_ASSERT(r && r != STILL_ACTIVE);
     return exitCode;
 }
 
@@ -248,6 +254,12 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mProcessInformation.dwProcessId;
+}
+
+size_t AChildProcess::processMemory() const {
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo(mProcessInformation.hProcess, &info, sizeof(info));
+    return (size_t)info.WorkingSetSize; 
 }
 
 

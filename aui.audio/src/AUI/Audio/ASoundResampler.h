@@ -19,7 +19,7 @@
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/ACompileTimeSoundResampler.h"
 
-class IAudioPlayer;
+class API_AUI_AUDIO IAudioPlayer;
 
 namespace aui::audio::impl {
     class ResamplerBase {

@@ -7,7 +7,7 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++20.
 
-[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html)
+[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -17,7 +17,7 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static libpulse-dev
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev libglew-dev libstdc++-static libpulse-dev libdbus-1-dev
 ```
 
 ### Fedora
@@ -35,8 +35,8 @@ cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
 
-# Tip: in a production project don't use branch name, use a specific name tag (i.e. v1.1.1), but for a sandbox project
-# branch name is perfectly enough
+# Tip: in a production project don't use branch name, use a specific name tag (i.e. v1.1.1),
+# but for a sandbox project branch name is perfectly enough
 set(AUI_VERSION master)
 
 # Use AUI.Boot
@@ -52,8 +52,8 @@ auib_import(aui https://github.com/aui-framework/aui
         VERSION ${AUI_VERSION})
 
 
-# Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
-# places the resulting executable to bin/ folder.
+# Create the executable. This function automatically links all sources from the src/ folder,
+# creates CMake target and places the resulting executable to bin/ folder.
 aui_executable(${PROJECT_NAME})
 
 # Link required libs

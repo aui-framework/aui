@@ -18,9 +18,9 @@
 
 #include <AUI/Core.h>
 #include <type_traits>
-#include <cassert>
 #include <ostream>
 #include <tuple>
+#include "AUI/Util/Assert.h"
 
 class AString;
 
@@ -116,8 +116,9 @@ public:
     constexpr AMetric(T value):
         AMetric(value, T_PX)
     {
-        assert(("please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to initialise "
-                "AMetric without literal", value == 0));
+        AUI_ASSERTX(value == 0,
+                    "please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to "
+                    "initialise AMetric without literal");
     }
 
     constexpr AMetric(float value, Unit unit): mValue(value), mUnit(unit) {
@@ -150,52 +151,52 @@ public:
     }
 
     AMetric& operator+=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue += rhs.mValue;
         return *this;
     }
 
     AMetric& operator-=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue -= rhs.mValue;
         return *this;
     }
 
     AMetric& operator*=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue *= rhs.mValue;
         return *this;
     }
 
     AMetric& operator/=(AMetric rhs) noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue /= rhs.mValue;
         return *this;
     }
 
     AMetric operator+(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy += rhs;
         return copy;
     }
 
     AMetric operator-(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy -= rhs;
         return copy;
     }
 
     AMetric operator*(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy *= rhs;
         return copy;
     }
 
     AMetric operator/(AMetric rhs) const noexcept {
-        assert(mUnit == rhs.mUnit);
+        AUI_ASSERT(mUnit == rhs.mUnit);
         auto copy = *this;
         copy /= rhs;
         return copy;

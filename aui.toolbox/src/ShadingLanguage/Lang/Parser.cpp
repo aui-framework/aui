@@ -530,11 +530,11 @@ _<ExpressionNode> Parser::parseExpression() {
                 .op = out,
                 .priority = currentPriority,
             };
-            assert(temporaryValue == nullptr);
+            AUI_ASSERT(temporaryValue == nullptr);
             return out;
         }
 
-        for (const auto& o : binaryOperators | ranges::view::reverse) {
+        for (const auto& o : binaryOperators | ranges::views::reverse) {
             if (o.priority < currentPriority && o.op->mRight) {
                 // steal rhs
                 auto currentOperator = _new<T>(std::move(o.op->mRight), nullptr);
@@ -556,7 +556,7 @@ _<ExpressionNode> Parser::parseExpression() {
                     .op = out,
                     .priority = currentPriority,
             };
-            assert(temporaryValue == nullptr);
+            AUI_ASSERT(temporaryValue == nullptr);
             return out;
         }
 
@@ -691,7 +691,7 @@ _<ExpressionNode> Parser::parseExpression() {
             case got<LSquareBracketToken>: {
                 // array style [] access
                 auto arrayAccessNode = handleBinaryOperator.operator()<ArrayAccessOperatorNode>(Priority::ARRAY_ACCESS);
-                assert(arrayAccessNode->mRight == nullptr);
+                AUI_ASSERT(arrayAccessNode->mRight == nullptr);
                 arrayAccessNode->mRight = parseExpression();
                 expect<RSquareBracketToken>();
                 nextTokenAndCheckEof();
@@ -754,7 +754,7 @@ _<ExpressionNode> Parser::parseExpression() {
             default:
                 if (temporaryValue && !binaryOperators.empty()) {
                     // should assign it to some operator
-                    for (const auto& o : binaryOperators | ranges::view::reverse) {
+                    for (const auto& o : binaryOperators | ranges::views::reverse) {
                         if (o.op->mRight == nullptr) {
                             o.op->mRight = std::move(temporaryValue);
                             return binaryOperators.first().op;

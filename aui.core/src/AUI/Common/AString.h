@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -71,8 +71,8 @@ public:
     {
     }
 
-    AString(const basic_string& _Right, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Al)
+    AString(const basic_string& rhs, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, allocator)
     {
     }
 
@@ -98,58 +98,58 @@ public:
      */
     AString(std::string_view utf8) noexcept;
 
-    explicit AString(const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Al)
+    explicit AString(const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(allocator)
     {
     }
 
-    AString(const basic_string& _Right, size_type _Roff, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Roff, _Al)
+    AString(const basic_string& rhs, size_type offset, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, offset, allocator)
     {
     }
 
-    AString(const basic_string& _Right, size_type _Roff, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Roff, _Count, _Al)
+    AString(const basic_string& rhs, size_type offset, size_type count, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, offset, count, allocator)
     {
     }
 
-    AString(const wchar_t* _Ptr, size_type _Count) noexcept
-            : basic_string<wchar_t>(_Ptr, _Count)
+    AString(const wchar_t* cStyleString, size_type count) noexcept
+            : basic_string<wchar_t>(cStyleString, count)
     {
     }
 
-    AString(const wchar_t* _Ptr, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Ptr, _Count, _Al)
+    AString(const wchar_t* cStyleString, size_type count, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(cStyleString, count, allocator)
     {
     }
 
-    AString(const wchar_t* _Ptr) noexcept
-            : basic_string<wchar_t>(_Ptr)
+    AString(const wchar_t* cStyleString) noexcept
+            : basic_string<wchar_t>(cStyleString)
     {
     }
 
-    AString(const wchar_t* _Ptr, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Ptr, _Al)
+    AString(const wchar_t* cStyleString, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(cStyleString, allocator)
     {
     }
 
-    AString(size_type _Count, wchar_t _Ch) noexcept
-            : basic_string<wchar_t>(_Count, _Ch)
+    AString(size_type count, wchar_t _Ch) noexcept
+            : basic_string<wchar_t>(count, _Ch)
     {
     }
 
-    AString(size_type _Count, wchar_t _Ch, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Count, _Ch, _Al)
+    AString(size_type count, wchar_t _Ch, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(count, _Ch, allocator)
     {
     }
 
-    AString(basic_string&& _Right) noexcept
-            : basic_string<wchar_t>(_Right)
+    AString(basic_string&& rhs) noexcept
+            : basic_string<wchar_t>(std::move(rhs))
     {
     }
 
-    AString(basic_string&& _Right, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Al)
+    AString(basic_string&& rhs, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(std::move(rhs), allocator)
     {
     }
 
@@ -408,26 +408,26 @@ public:
 
     void removeAt(unsigned at) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         erase(begin() + at);
     }
     AString excessSpacesRemoved() const noexcept;
 
     iterator insert(size_type at, wchar_t c) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         return super::insert(begin() + at, 1, c);
     }
     iterator insert(size_type at, const AString& c) noexcept
     {
-        assert(at <= length());
+        AUI_ASSERT(at <= length());
         return super::insert(begin() + at, c.begin(), c.end());
     }
 
     template<typename Iterator>
     iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
     {
-        assert(std::distance(super::cbegin(), at) <= length());
+        AUI_ASSERT(std::distance(super::cbegin(), at) <= length());
         return super::insert(at, begin, end);
     }
 

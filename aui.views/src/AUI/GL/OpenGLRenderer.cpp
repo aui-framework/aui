@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,6 +32,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Util/AArrayView.h"
 #include "ShaderUniforms.h"
@@ -92,7 +93,7 @@ namespace {
 template<typename Brush>
 struct UnsupportedBrushHelper {
     void operator()(const Brush& brush) const {
-        assert(("this brush is unsupported"));
+        AUI_ASSERT(("this brush is unsupported"));
     }
 };
 
@@ -396,7 +397,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
                                    glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
-    assert(("blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead");
     identityUv();
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
@@ -435,7 +436,7 @@ void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    assert(("blurRadius is expected to be non negative", blurRadius >= 0.f));
+    AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
     mBoxShadowInnerShader->use();
@@ -478,6 +479,14 @@ void OpenGLRenderer::setBlending(Blending blending) {
 
         case Blending::INVERSE_DST:
             glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+            break;
+
+        case Blending::ADDITIVE:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+
+        case Blending::INVERSE_SRC:
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ZERO);
             break;
     }
 }
@@ -843,7 +852,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
     positions << LineVertex{ points[0], 0.f, 1.f };
 
     float distanceAccumulator = 0.f;
-    for (const auto& point : points | ranges::view::drop(1)) {
+    for (const auto& point : points | ranges::views::drop(1)) {
         if (computeDistances) {
             distanceAccumulator += glm::distance(positions.last().position, point);
         }

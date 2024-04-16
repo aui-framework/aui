@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -116,7 +116,7 @@ public:
      */
     inline self& operator<<(StoredType&& rhs) noexcept
     {
-        p::push_back(std::forward<StoredType>(rhs));
+        p::push_back(std::move(rhs));
         return *this;
     }
 
@@ -142,7 +142,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the first element");
         return p::front();
     }
 
@@ -155,7 +155,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the first element");
         return p::front();
     }
 
@@ -168,7 +168,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the last element");
         return p::back();
     }
 
@@ -181,7 +181,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the last element");
         return p::back();
     }
 

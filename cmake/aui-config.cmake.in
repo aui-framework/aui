@@ -28,6 +28,7 @@ include(${SELF_DIR}/cmake/aui.build.cmake)
 
 
 @AUI_CONFIG_VARS@
+@AUIB_DEPS@
 
 
 if (NOT AUI_FIND_COMPONENTS) # case fix
@@ -45,35 +46,11 @@ else()
     list(REMOVE_DUPLICATES AUI_FIND_COMPONENTS)
 endif()
 
-foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
-    string(REPLACE "=" ";" _entry ${_entry})
-    list(GET _entry 0 VAR_NAME)
-    list(GET _entry 1 VAR_VALUE)
-    message("Forwarded ${VAR_NAME} with ${VAR_VALUE}")
-    set(${VAR_NAME} ${VAR_VALUE})
-    set(${VAR_NAME} ${VAR_VALUE} PARENT_SCOPE)
-
-    # import required targets
-
-    # remove the _ROOT suffix
-    string(LENGTH ${VAR_NAME} _len)
-    math(EXPR _len "${_len}-5")
-    string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
-
-    # some targets can be found using the config mode only or the module mode only; the point is to try the both ways
-    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-    find_package(${MODULE_NAME})
-    if (NOT ${MODULE_NAME}_FOUND)
-        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
-        find_package(${MODULE_NAME} REQUIRED)
-    endif()
-endforeach()
-
-set(AUI_FOUND TRUE)
+set(${CMAKE_FIND_PACKAGE_NAME}_FOUND TRUE)
 foreach(_module ${AUI_FIND_COMPONENTS})
     if (_module STREQUAL "toolbox")
         # ignore it
-        set(AUI_toolbox_FOUND TRUE)
+        set(${CMAKE_FIND_PACKAGE_NAME}_toolbox_FOUND TRUE)
         continue()
     endif()
 
@@ -91,39 +68,39 @@ foreach(_module ${AUI_FIND_COMPONENTS})
         set(_module_dir "${SELF_DIR}/aui.${_module}")
         if (EXISTS ${_module_dir})
             set(_user_install_dir "${CMAKE_CURRENT_BINARY_DIR}/lib")
-            set(AUI_${_module}_FOUND TRUE)
+            set(${CMAKE_FIND_PACKAGE_NAME}_${_module}_FOUND TRUE)
             if (WIN32)
-                find_file(AUI_${_module}_LIBRARY
+                find_file(${CMAKE_FIND_PACKAGE_NAME}_${_module}_LIBRARY
                           NAMES "aui.${_module}.dll" "libaui.${_module}.dll"
                           PATHS "${SELF_DIR}/aui.${_module}/bin"
                           NO_DEFAULT_PATH
                           NO_CACHE)
-                find_library(AUI_${_module}_IMPLIBRARY "aui.${_module}"
+                find_library(${CMAKE_FIND_PACKAGE_NAME}_${_module}_IMPLIBRARY "aui.${_module}"
                              PATHS "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
             else()
-                find_library(AUI_${_module}_LIBRARY "aui.${_module}"
+                find_library(${CMAKE_FIND_PACKAGE_NAME}_${_module}_LIBRARY "aui.${_module}"
                              PATHS ${_user_install_dir} "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
             endif()
-            set(_lib ${AUI_${_module}_LIBRARY})
-            set(_implib ${AUI_${_module}_IMPLIBRARY})
+            set(_lib ${${CMAKE_FIND_PACKAGE_NAME}_${_module}_LIBRARY})
+            set(_implib ${${CMAKE_FIND_PACKAGE_NAME}_${_module}_IMPLIBRARY})
             set(_include ${SELF_DIR}/aui.${_module}/include)
             if ((_lib OR _implib) AND EXISTS ${_include})
                 if (NOT _lib)
                     set(_lib ${_implib})
                 endif()
-                list(APPEND AUI_LIBRARIES ${_lib})
-                list(APPEND AUI_INCLUDE_DIRS ${_include})
-                list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
+                list(APPEND ${CMAKE_FIND_PACKAGE_NAME}_LIBRARIES ${_lib})
+                list(APPEND ${CMAKE_FIND_PACKAGE_NAME}_INCLUDE_DIRS ${_include})
+                list(APPEND ${CMAKE_FIND_PACKAGE_NAME}_IMPORTED_TARGETS "${_module_target_name}")
                 add_library(${_module_target_name} SHARED IMPORTED)
                 target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
                 target_link_options(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_OPTIONS})
                 set_target_properties(${_module_target_name} PROPERTIES
                         IMPORTED_LOCATION "${_lib}"
-                        IMPORTED_IMPLIB "${AUI_${_module}_IMPLIBRARY}"
+                        IMPORTED_IMPLIB "${${CMAKE_FIND_PACKAGE_NAME}_${_module}_IMPLIBRARY}"
                         INTERFACE_INCLUDE_DIRECTORIES "${_include}"
                         INTERFACE_LINK_DIRECTORIES "${SELF_DIR}/aui.${_module}/lib")
 
@@ -136,10 +113,10 @@ foreach(_module ${AUI_FIND_COMPONENTS})
         endif()
     endif()
 
-    set(AUI_${_module}_FOUND FALSE)
+    set(${CMAKE_FIND_PACKAGE_NAME}_${_module}_FOUND FALSE)
     if (NOT _all)
-        set(AUI_FOUND FALSE)
-        if (AUI_FIND_REQUIRED AND AUI_FIND_REQUIRED_${_module})
+        set(${CMAKE_FIND_PACKAGE_NAME}_FOUND FALSE)
+        if (${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED AND ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED_${_module})
             message(FATAL_ERROR "Component ${_module} is not found")
         else()
             message(STATUS "Component ${_module} is not found")
@@ -147,25 +124,28 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     endif()
 endforeach()
 
-if (AUI_FOUND AND NOT TARGET aui)
+if (${CMAKE_FIND_PACKAGE_NAME}_FOUND AND NOT TARGET aui)
     add_library(aui INTERFACE IMPORTED)
     set_target_properties(aui PROPERTIES
-            INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
+            INTERFACE_LINK_LIBRARIES "${${CMAKE_FIND_PACKAGE_NAME}_IMPORTED_TARGETS}")
 endif()
 
 if (UNIX AND NOT APPLE)
+    auib_use_system_libs_begin()
     find_package(Threads REQUIRED)
+    auib_use_system_libs_end()
 endif()
 
-if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
+if (${CMAKE_FIND_PACKAGE_NAME}_views_FOUND AND NOT ANDROID AND NOT IOS)
     auib_use_system_libs_begin()
     if (UNIX AND NOT APPLE)
         find_package(X11 REQUIRED)
+        find_package(Fontconfig REQUIRED)
     endif()
     find_package(OpenGL REQUIRED)
     auib_use_system_libs_end()
 endif()
 
-if (AUI_uitests_FOUND AND NOT ANDROID AND NOT IOS)
+if (${CMAKE_FIND_PACKAGE_NAME}_uitests_FOUND AND NOT ANDROID AND NOT IOS)
     find_package(GTest REQUIRED)
 endif()

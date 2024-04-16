@@ -78,18 +78,7 @@ public:
 
     virtual ~AViewContainer();
 
-    void setViews(AVector<_<AView>> views) {
-        views.removeIf([](const _<AView>& v) {
-            return v == nullptr;
-        });
-        mViews = std::move(views);
-
-        for (const auto& view: mViews) {
-            view->mParent = this;
-            if (mLayout)
-                mLayout->addView(view);
-        }
-    }
+    void setViews(AVector<_<AView>> views);
 
     void addViews(AVector<_<AView>> views);
     void addView(const _<AView>& view);
@@ -287,7 +276,7 @@ public:
      */
     void setFocusChainTarget(_weak<AView> target) {
         if (auto v = target.lock()) {
-            assert(v->mParent == this);
+            AUI_ASSERT(v->mParent == this);
         }
         mFocusChainTarget = std::move(target);
     }

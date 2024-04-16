@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -20,6 +20,7 @@
 
 #include <AUI/Network/AIcmp.h>
 #include "AUI/IO/AIOException.h"
+#include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/unix/UnixIoThread.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
@@ -40,13 +41,13 @@ public:
     static void setEUid() {
 #if AUI_PLATFORM_LINUX
         auto r = setuid(geteuid());
-        assert(r >= 0);
+        AUI_ASSERT(r >= 0);
 #endif
     }
     static void setUid() {
 #if AUI_PLATFORM_LINUX
         auto r = setuid(getuid());
-        assert(r >= 0);
+        AUI_ASSERT(r >= 0);
 #endif
     }
 
@@ -206,6 +207,7 @@ public:
 
             {
                 char data[64];
+                aui::zero(data);
                 auto icp = (icmphdr*)data;
                 icp->type = ICMP_ECHO;
                 icp->code = 0;
@@ -216,6 +218,7 @@ public:
                 icp->checksum = calculateCheckum((unsigned short*) &icp, 64, 0);
 
                 timeval tmp_tv;
+                aui::zero(tmp_tv);
                 gettimeofday(&tmp_tv, NULL);
                 memcpy(icp + 1, &tmp_tv, sizeof(tmp_tv));
                 icp->checksum = calculateCheckum((unsigned short*) &tmp_tv, sizeof(tmp_tv), ~icp->checksum);

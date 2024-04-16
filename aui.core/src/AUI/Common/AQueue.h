@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -57,7 +57,7 @@ public:
 
 	AQueue<StoredType>& operator<<(StoredType&& rhs)
 	{
-		super::push(std::forward<StoredType>(rhs));
+		super::push(std::move(rhs));
 		return *this;
 	}
 
@@ -85,7 +85,7 @@ public:
      */
     template<typename Factory>
     [[nodiscard]]
-    StoredType popOrGenerate(Factory&& factory) noexcept(noexcept(factory())) {
+    StoredType popOrGenerate(Factory factory) noexcept(noexcept(factory())) {
         if (super::empty()) {
             return factory();
         }

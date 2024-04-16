@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,8 @@
 #include "AViewContainer.h"
 #include "ARadioButton.h"
 #include "AUI/Model/AListModel.h"
-#include "AUI/Layout/AVerticalLayout.h"
+#include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Model/IListModel.h>
 
 /**
@@ -40,15 +41,21 @@ private:
 
 public:
     template<typename... RadioButtons>
-    explicit ARadioGroup(RadioButtons&&... radioButtons): mGroup(_new<ARadioButton::Group>()) {
+    explicit ARadioGroup(RadioButtons&&... radioButtons): ARadioGroup() {
         setLayout(_new<AVerticalLayout>());
-        aui::parameter_pack::for_each([&](const _<ARadioButton>& v) {
-            mGroup->addRadioButton(v);
-            addView(v);
-        }, std::forward<RadioButtons>(radioButtons)...);
+        setViews({ std::forward<RadioButtons>(radioButtons)... });
     }
     ARadioGroup();
     ~ARadioGroup() override;
+
+    void setViews(AVector<_<AView>> views) {
+        for (const _<AView>& v : views) {
+            if (auto rb = _cast<ARadioButton>(v)) {
+                mGroup->addRadioButton(rb);
+                addView(v);
+            }
+        }
+    }
 
     void setModel(const _<IListModel<AString>>& model);
 
@@ -58,6 +65,7 @@ public:
     [[nodiscard]] int getSelectedId() const {
         return mGroup->getSelectedId();
     }
+    void setSelectedId(int id) const;
 
 signals:
     emits<AListModelIndex> selectionChanged;
@@ -65,9 +73,10 @@ signals:
 
 
 namespace declarative {
-    struct RadioGroup: aui::ui_building::view<ARadioGroup> {
-    public:
-        using view<ARadioGroup>::view;
-
+    struct RadioGroup: aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup> {
+        using aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup>::layouted_container_factory;
+        struct Horizontal: aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup> {
+            using aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
+        };
     };
 }

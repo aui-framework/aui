@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -22,7 +22,7 @@ namespace com::github::aui::android {
         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
         AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
-        AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
+        AUI_JNI_STATIC_METHOD(void, showKeyboard, ((int) keyboardType, (int) keyboardAction, (bool) isPassword))
         AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
         AUI_JNI_STATIC_METHOD(void, showMessageBox, ((const AString&) title, (const AString&) message))
     };

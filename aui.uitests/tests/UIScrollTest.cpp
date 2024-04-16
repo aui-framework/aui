@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -88,7 +88,7 @@ TEST_F(UIScrollTest, ContainedViewExpanded) {
     By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
 }
 
-TEST_F(UIScrollTest, ScrollTo) {
+TEST_F(UIScrollTest, ScrollTo1) {
     mTestWindow->updateLayout();
     By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -230,24 +230,57 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        fillViewsRecursively(mContent, model->root());
+        fillViewsRecursively(mContent, ATreeModelIndex::ROOT);
         connect(mModel->dataInserted, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
             try {
-                auto itemView = indexToView(parent);
+                auto parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
                 bool group = mModel->childrenCount(i) != 0;
                 auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
-                makeElement(itemView->childrenContainer(), i, group, item);
+                makeElement(itemContainer, i, group, item);
+                redraw();
             } catch (const AException& e) {
                 ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
             }
         });
         connect(mModel->dataRemoved, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
             try {
-                auto itemView = indexToView(parent);
-                itemView->childrenContainer()->removeView(i.row() * 2);
-                itemView->childrenContainer()->removeView(i.row() * 2);
+                ATreeModelIndexOrRoot parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
+                itemContainer->removeView(i.row() * 2);
+                itemContainer->removeView(i.row() * 2);
+                redraw();
+            } catch (const AException& e) {
+                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+            }
+        });
+        connect(mModel->dataChanged, [this](ATreeModelIndex i) {
+            try {
+                auto parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
+                // remove old view
+                itemContainer->removeView(i.row() * 2);
+                itemContainer->removeView(i.row() * 2);
+                // add new view
+                bool group = mModel->childrenCount(i) != 0;
+                auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
+                makeElement(itemContainer, i, group, item);
+                redraw();
             } catch (const AException& e) {
                 ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
             }
@@ -318,7 +351,7 @@ void ATreeView::handleSelected(ATreeView::ItemView* v) {
     emit itemSelected(v->getIndex());
 }
 
-void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index) {
+void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
         bool group = mModel->childrenCount(childIndex) != 0;
@@ -336,18 +369,29 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
     emit itemMouseHover(pView->getIndex());
 }
 
-template<aui::invocable<std::size_t /* row */> Callable>
-static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeModelIndex& indexToSelect) {
-    if (!indexToSelect.hasValue()) {
+/**
+ * @brief Determines rows path from root node to the target node.
+ * @details
+ * Supplies the callable with row indices from root node directly to the specified target. The indices are passed to 
+ * callback function.
+ */
+template <aui::invocable<std::size_t /* row */> Callback>
+static void traverseFromRootToTarget(const Callback& callback, const _<ITreeModel<AString>>& model,
+                                     const ATreeModelIndexOrRoot& target) {
+    if (target == ATreeModelIndex::ROOT) {
         return;
     }
-    findRoot(callable, model, model->parent(indexToSelect));
-    callable(indexToSelect.row());
+    auto& asIndex = *target;
+    traverseFromRootToTarget(callback, model, model->parent(asIndex));
+    callback(asIndex.row());
 }
 
 void ATreeView::select(const ATreeModelIndex& indexToSelect) {
     try {
         auto itemView = indexToView(indexToSelect);
+        if (itemView == nullptr) {
+            return;
+        }
         itemView->focus();
         itemView->setSelected(true);
 
@@ -364,13 +408,8 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
 _<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
     auto currentTarget = _cast<AViewContainer>(mContent);
     _<ATreeView::ItemView> itemView;
-    bool ignore = true;
-    findRoot([&](std::size_t row) {
+    traverseFromRootToTarget([&](std::size_t row) {
         if (!currentTarget) {
-            return;
-        }
-        if (ignore) {
-            ignore = false;
             return;
         }
         auto c = _cast<ATreeView::ItemView>(currentTarget->getViews().at(row * 2));

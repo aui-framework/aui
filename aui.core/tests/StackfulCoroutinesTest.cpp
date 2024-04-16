@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,6 @@
 
 
 #include "AUI/Common/AException.h"
-#include "AUI/Logging/ALogger.h"
 #include "AUI/Thread/AThreadPool.h"
 #include <gtest/gtest.h>
 #include <AUI/Thread/AFuture.h>
@@ -51,7 +50,6 @@ TEST(StackfulCoroutines, CoAwait) {
         auto f = longTask(&returnTimePoint, 1s);
         f.wait(AFutureWait::ALLOW_STACKFUL_COROUTINES);
         EXPECT_EQ(*f, 228);
-        ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << duration_cast<microseconds>(high_resolution_clock::now() - returnTimePoint).count() << "us";
         EXPECT_EQ(executionOrder++, 1);
     };
 
@@ -60,7 +58,6 @@ TEST(StackfulCoroutines, CoAwait) {
         auto f = longTask(&returnTimePoint, 1ms);
         f.wait(AFutureWait::ALLOW_STACKFUL_COROUTINES);
         EXPECT_EQ(*f, 228);
-        ALogger::info(LOG_TAG) << "AFuture time between return and value acquired: " << duration_cast<microseconds>(high_resolution_clock::now() - returnTimePoint).count() << "us";
         EXPECT_EQ(executionOrder++, 0);
     };
     future1.wait(AFutureWait::JUST_WAIT);

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -18,5 +18,5 @@
 #include "AUI/Network/AIcmp.h"
 
 TEST(Ping, Case1) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("8.8.8.8"))->count(), 0);
+    EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
 }

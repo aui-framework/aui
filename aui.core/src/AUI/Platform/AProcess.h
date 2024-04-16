@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -95,6 +95,10 @@ public:
      */
     virtual int waitForExitCode() = 0;
 
+    /**
+     * @brief Obtain process memory usage.
+     */
+    virtual size_t processMemory() const = 0;
 
     /**
      * @brief Launches executable.
@@ -220,6 +224,8 @@ public:
     int waitForExitCode() override;
 
     uint32_t getPid() const noexcept override;
+
+    size_t processMemory() const override;
 
     APath getModuleName() override;
 

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -134,34 +134,40 @@ public:
         return *this;
     }
 
+    // we want to move the U value, not the whole optional
+    // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
     template<typename U>
     constexpr AOptional<T>& operator=(AOptional<U>&& rhs) noexcept {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
+            return *this;
+        } else {
+            reset();
         }
         return *this;
     }
+    //NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
     template<typename U = T>
     constexpr AOptional<T>& operator=(T&& rhs) noexcept {
         if (mInitialized) {
             ptrUnsafe()->~T();
         }
-        new (ptrUnsafe()) T(std::forward<T>(rhs));
+        new (ptrUnsafe()) T(std::move(rhs));
         mInitialized = true;
         return *this;
     }
 
     [[nodiscard]]
     T& value() noexcept {
-        assert(("optional is empty", mInitialized));
+        AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<T&>(mStorage);
     }
 
     [[nodiscard]]
     const T& value() const noexcept {
-        assert(("optional is empty", mInitialized));
+        AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<const T&>(mStorage);
     }
 
@@ -245,7 +251,7 @@ public:
         } else if constexpr(isInvocable) {
             if constexpr (std::is_same_v<std::invoke_result_t<F>, void>) {
                 alternative();
-                assert(("should not have reached here", false));
+                AUI_ASSERTX(false, "should not have reached here");
                 throw std::runtime_error("should not have reached here"); // stub exception
             } else {
                 return alternative();

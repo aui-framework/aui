@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,7 +23,7 @@
 
 #include <AUI/IO/APath.h>
 #include "Auisl.h"
-#include "ShadingLanguage/Lang/Frontend/IFronted.h"
+#include "ShadingLanguage/Lang/Frontend/IFrontend.h"
 #include "ShadingLanguage/Lang/Frontend/CppFrontend.h"
 #include "ShadingLanguage/Lang/Frontend/GLSLFrontend.h"
 #include "AUI/IO/AStringStream.h"
@@ -60,8 +60,8 @@ AString Auisl::getName() {
 AString Auisl::getSignature() {
     using namespace ranges;
     return "<target_platform {}> <auisl_file> <output_cpp>"_format(targetPlatforms()
-                                                                   | view::keys
-                                                                   | view::join(',')
+                                                                   | views::keys
+                                                                   | views::join(',')
                                                                    | to<AString>());
 }
 

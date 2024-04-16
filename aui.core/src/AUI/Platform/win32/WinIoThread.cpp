@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,6 @@
 //
 
 #include "WinIoThread.h"
-#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Thread/AFuture.h>
 #include <Windows.h>
@@ -34,7 +33,7 @@ namespace {
     class MyEventLoop: public IEventLoop {
     public:
         MyEventLoop(): mNotifyHandle(CreateEvent(nullptr, false, false, nullptr)) {
-            assert(mNotifyHandle != nullptr);
+            AUI_ASSERT(mNotifyHandle != nullptr);
         }
 
         ~MyEventLoop() override {
@@ -43,7 +42,7 @@ namespace {
 
         void notifyProcessMessages() override {
             auto r = SetEvent(mNotifyHandle);
-            assert(r);
+            AUI_ASSERT(r);
         }
 
         void loop() override {
@@ -65,9 +64,10 @@ WinIoThread::WinIoThread() noexcept: mThread(_new<AThread>([] {
     AThread::current()->getCurrentEventLoop()->loop();
 })) {
     mThread->start();
-    ACutoffSignal cutoff;
+
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cutoff.makeSignal();
+        cs.supplyResult();
     });
-    cutoff.waitForSignal();
+    cs.wait();
 }

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,7 @@ public:
     }
 #if AUI_PLATFORM_WIN
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
             + (mBitmapSize.x * position.y + position.x) * 4);
@@ -56,7 +56,8 @@ public:
         dataPtr[3] = color[3];
     }
     inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
+
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
                                                   + (mBitmapSize.x * position.y + position.x) * 4);
 
@@ -64,7 +65,7 @@ public:
     }
 #else
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
         dataPtr[0] = color[2];
@@ -73,7 +74,7 @@ public:
         dataPtr[3] = color[3];
     }
     inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
         return {

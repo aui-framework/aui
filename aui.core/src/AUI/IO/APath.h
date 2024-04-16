@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -17,10 +17,11 @@
 #pragma once
 
 #include <iterator>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Common/AString.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
-#include <AUI/Util/EnumUtil.h>
+#include <AUI/Traits/serializable.h>
 
 /**
  * @brief Flag enum for APath::find
@@ -123,7 +124,7 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(other) {
+    APath(AString&& other) noexcept: AString(std::move(other)) {
         removeBackSlashes();
     }
     APath(const AString& other) noexcept: AString(other) {
@@ -363,3 +364,6 @@ public:
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
 }
+
+template<>
+struct ASerializable<APath>: ASerializable<AString> {};

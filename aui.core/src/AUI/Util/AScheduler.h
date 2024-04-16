@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -17,14 +17,13 @@
 #pragma once
 
 #include <chrono>
-#include <memory>
 #include <functional>
 #include <list>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AConditionVariable.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Util/ABitField.h>
-#include "EnumUtil.h"
 
 
 /**
@@ -134,10 +133,16 @@ public:
         return mTasks.empty();
     }
 
+    void stop() {
+        mIsRunning = false;
+        mCV.notify_all();
+    }
+
 
 private:
     AMutex mSync;
     AConditionVariable mCV;
+    bool mIsRunning = false;
 
     std::list<Task> mTasks;
     std::list<_<Timer>> mTimers;

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -32,11 +32,11 @@ void CommonRenderingContext::init(const Init& init) {
     auto& window = init.window;
     MacosApp::inst();
     auto delegate = [[WindowDelegate alloc] initWithWindow: &window];
-    assert(delegate != nullptr);
+    AUI_ASSERT(delegate != nullptr);
     auto windowRect = NSMakeRect(100, 100, init.width, init.height);
     NSWindowStyleMask windowStyle = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
     NSWindow* nsWindow = [[NSWindow alloc] initWithContentRect:windowRect styleMask:windowStyle backing:NSBackingStoreBuffered defer:NO];
-    assert(nsWindow != nullptr);
+    AUI_ASSERT(nsWindow != nullptr);
     window.mHandle = nsWindow;
     window.updateDpi();
     [nsWindow setContentSize:NSMakeSize(init.width / window.getDpiRatio(), init.height / window.getDpiRatio())];
@@ -80,7 +80,7 @@ void CommonRenderingContext::init(const Init& init) {
 }
 
 void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
-    assert(mDisplayLink != nullptr);
+    AUI_ASSERT(mDisplayLink != nullptr);
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
     mDisplayLink = nullptr;

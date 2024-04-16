@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -18,7 +18,6 @@
 
 #include <coroutine>
 #include "AUI/Common/AException.h"
-#include "AUI/Logging/ALogger.h"
 #include <gtest/gtest.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
@@ -38,9 +37,7 @@ AFuture<int> longTask() {
 
 TEST(Coroutines, CoAwait) {
     auto future = []() -> AFuture<int> {
-        ALogger::info(LOG_TAG) << "longTask(): before longTask";
         auto v228 = co_await longTask();
-        ALogger::info(LOG_TAG) << "longTask(): after longTask";
         co_return v228 + 322;
     }();
     auto v = *future;
@@ -56,9 +53,7 @@ AFuture<int> longTaskException() {
 
 TEST(Coroutines, CoAwaitException) {
     auto future = []() -> AFuture<int> {
-        ALogger::info(LOG_TAG) << "longTask(): before longTask";
         auto v228 = co_await longTaskException();
-        ALogger::info(LOG_TAG) << "longTask(): after longTask";
         co_return v228 + 322;
     }();
     EXPECT_ANY_THROW(*future);

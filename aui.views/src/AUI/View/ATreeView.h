@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -30,6 +30,8 @@
 /**
  * @brief Displays a tree model of strings.
  * @ingroup useful_views
+ * @details
+ * ATreeView provides view of string-capable ITreeModel objects.
  */
 class API_AUI_VIEWS ATreeView: public AViewContainer {
 private:
@@ -71,7 +73,7 @@ private:
     void handleMouseDoubleClicked(ItemView* v);
     void handleSelected(ItemView* v);
 
-    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index);
+    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
     void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
     _<ItemView> indexToView(const ATreeModelIndex& target);
 };

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -33,12 +33,12 @@ public:
     ~AWin32EventWait() {
         if (mNewWaitObject != nullptr) {
             auto r = UnregisterWaitEx(mNewWaitObject, INVALID_HANDLE_VALUE);
-            assert(r != 0);
+            AUI_ASSERT(r != 0);
         }
     }
 
     void registerWaitForSingleObject(HANDLE baseHandle, std::function<void()> callback, DWORD timeout = INFINITE, DWORD flags = WT_EXECUTEDEFAULT) noexcept {
-        assert(("waitForExitCode object already registered", mNewWaitObject == nullptr));
+        AUI_ASSERTX(mNewWaitObject == nullptr, "waitForExitCode object already registered");
 
         mCallback = std::move(callback);
 
@@ -46,7 +46,7 @@ public:
             auto self = reinterpret_cast<AWin32EventWait*>(context);
             self->mCallback();
         }, this, timeout, flags);
-        assert(r != 0);
+        AUI_ASSERT(r != 0);
     }
 };
 

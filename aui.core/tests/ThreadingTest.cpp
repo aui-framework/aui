@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,13 +23,14 @@
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/Util.h>
+#include <chrono>
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Thread/AThread.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
 #include "AUI/Util/ARaiiHelper.h"
-#include "AUI/Thread/ACutoffSignal.h"
 
 using namespace std::chrono_literals;
 
@@ -93,11 +94,7 @@ TEST(Threading, Future1) {
         }
 
         for (auto& f : taskList) *f;
-
-        printf("Ok, supplyValue: %f\n", *taskList.first());
     }).count();
-
-    printf("Finished in %llu ms\n", time);
     ASSERT_EQ(*taskList.first(),
                       21430172143725346418968500981200036211228096234110672148875007767407021022498722449863967576313917162551893458351062936503742905713846280871969155149397149607869135549648461970842149210124742283755908364306092949967163882534797535118331087892154125829142392955373084335320859663305248773674411336138752.000000);
     ASSERT_TRUE(time < 1000);
@@ -277,12 +274,12 @@ TEST(Threading, FutureInterruptionCascade) {
 }
 
 
-TEST(Threading, FutureOnDone) {
+TEST(Threading, FutureOnDone1) {
 
     AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
-        localThreadPool.run([] {
-            AThread::sleep(10ms); // long tamssk
+        localThreadPool.run([&] {
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
         });
 
 
@@ -297,8 +294,36 @@ TEST(Threading, FutureOnDone) {
             });
             // check that cancellation does not triggers here
             future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
         }
-        ASSERT_TRUE(called) << "onSuccess callback has not called";
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
+    }
+}
+TEST(Threading, FutureOnDone2) {
+
+    AUI_REPEAT(100) {
+        AThreadPool localThreadPool(1);
+        localThreadPool.run([&] {
+        });
+
+
+        bool called = false;
+        {
+            auto future = localThreadPool * [] {
+                return 322;
+            };
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
+            future.onSuccess([&](int i) {
+                ASSERT_EQ(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+            future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
+        }
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
     }
 }
 
@@ -313,7 +338,6 @@ TEST(Threading, FutureOnSuccess) {
     std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
         destructorCalled = true;                                                               //
     };                                                                                         //
-    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
 
     AAsyncHolder holder;
     bool called = false;
@@ -321,7 +345,8 @@ TEST(Threading, FutureOnSuccess) {
         auto future = localThreadPool * [] {
             return 322;
         };
-        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+        holder << future.onSuccess([&, destructorCallback = std::move(destructorCallback)](int i) {
+            ARaiiHelper raii = std::move(destructorCallback);
             ASSERT_EQ(i, 322);
             called = true;
         });

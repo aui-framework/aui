@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -41,7 +41,7 @@
 
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-
+#include <AUI/View/AAbstractTextField.h>
 
 
 AWindow::~AWindow() {
@@ -153,7 +153,18 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {
-    com::github::aui::android::Platform::showKeyboard();
+    ui_thread {
+        ATextInputType type = ATextInputType::DEFAULT;
+        ATextInputAction action = ATextInputAction::DEFAULT;
+        bool isPassword = false;
+        if (auto textField = _cast<AAbstractTextField>(AWindow::getFocusedView())) {
+            type = textField->textInputType();
+            action = textField->textInputAction();
+            isPassword = textField->isPasswordMode();
+        }
+        com::github::aui::android::Platform::showKeyboard(static_cast<int>(type),
+                                                        static_cast<int>(action), isPassword);
+    };
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {

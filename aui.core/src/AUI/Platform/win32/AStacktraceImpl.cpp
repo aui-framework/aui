@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -43,7 +43,7 @@ static Win32SymService& symService() noexcept {
 AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
     symService();
     void* backtrace[128];
-    assert(("too many", maxFrames <= std::size(backtrace)));
+    AUI_ASSERTX(maxFrames <= std::size(backtrace), "too many");
     std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, maxFrames, backtrace, nullptr);
 
     AVector<Entry> entries;

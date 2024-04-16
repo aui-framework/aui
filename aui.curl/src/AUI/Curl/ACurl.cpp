@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -19,6 +19,7 @@
 
 
 #include <cassert>
+#include <chrono>
 #include <curl/curl.h>
 #include <AUI/Util/kAUI.h>
 #include <numeric>
@@ -54,9 +55,9 @@ ACurl::Builder::Builder(AString url): mUrl(std::move(url))
 
     // at least 1kb/sec during 10sec
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, 10L);
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_LIMIT, 1'024);
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
 
 	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, ACurl::writeCallback);
 	assert(res == 0);
@@ -71,25 +72,37 @@ ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
 			s += std::to_string(end);
 		}
 		auto res = curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
-        assert(res == CURLE_OK);
+        AUI_ASSERT(res == CURLE_OK);
 	}
 	return *this;
 }
 
 ACurl::Builder& ACurl::Builder::withHttpVersion(ACurl::Http version) {
     auto res = curl_easy_setopt(mCURL, CURLOPT_HTTP_VERSION, version);
-    assert(res == CURLE_OK);
+    AUI_ASSERT(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withLowSpeedLimit(size_t speed) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_LIMIT, long(speed));
+    AUI_ASSERT(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withLowSpeedTime(std::chrono::seconds duration) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, long(duration.count()));
+    AUI_ASSERT(res == CURLE_OK);
     return *this;
 }
 
 ACurl::Builder& ACurl::Builder::withUpload(bool upload) {
     auto res = curl_easy_setopt(mCURL, CURLOPT_UPLOAD, upload ? 1L : 0L);
-    assert(res == CURLE_OK);
+    AUI_ASSERT(res == CURLE_OK);
     return *this;
 }
 ACurl::Builder& ACurl::Builder::withCustomRequest(const AString& v) {
     auto res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, v.toStdString().c_str());
-    assert(res == CURLE_OK);
+    AUI_ASSERT(res == CURLE_OK);
     return *this;
 }
 
@@ -168,7 +181,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             e.throwException();
         });
     }
-    assert(("buffer size mismatch", std::size(mErrorBuffer) == CURL_ERROR_SIZE));
+    AUI_ASSERTX(std::size(mErrorBuffer) == CURL_ERROR_SIZE, "buffer size mismatch");
     builder.mCURL = nullptr;
 
 
@@ -180,35 +193,35 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
                 url += builder.mParams.toStdString();
             }
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
-            assert(res == 0);
+            AUI_ASSERT(res == 0);
             break;
         }
 
         case Method::POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
-            assert(res == 0);
+            AUI_ASSERT(res == 0);
             res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
 
-            assert(res == 0);
+            AUI_ASSERT(res == 0);
             if (!builder.mParams.empty()) {
                 mPostFieldsStorage = builder.mParams.toStdString();
                 res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
-                assert(res == 0);
+                AUI_ASSERT(res == 0);
             }
             break;
         }
     }
 
 	auto res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
     if (mReadCallback) {
         res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
-        assert(res == 0);
+        AUI_ASSERT(res == 0);
         res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
-        assert(res == 0);
+        AUI_ASSERT(res == 0);
     }
 
     if (!builder.mHeaders.empty()) {
@@ -216,15 +229,15 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             mCurlHeaders = curl_slist_append(mCurlHeaders, h.toStdString().c_str());
         }
         res = curl_easy_setopt(mCURL, CURLOPT_HTTPHEADER, mCurlHeaders);
-        assert(res == 0);
+        AUI_ASSERT(res == 0);
     }
 
     if (builder.mHeaderCallback){
         mHeaderCallback = std::move(builder.mHeaderCallback);
         res = curl_easy_setopt(mCURL, CURLOPT_HEADERDATA, this);
-        assert(res == CURLE_OK);
+        AUI_ASSERT(res == CURLE_OK);
         res = curl_easy_setopt(mCURL, CURLOPT_HEADERFUNCTION, ACurl::headerCallback);
-        assert(res == CURLE_OK);
+        AUI_ASSERT(res == CURLE_OK);
     }
 
     if (builder.mOnSuccess) {
@@ -242,9 +255,9 @@ ACurl& ACurl::operator=(ACurl&& o) noexcept {
 
     o.mCURL = nullptr;
     CURLcode res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
     return *this;
 }
 
@@ -353,6 +366,10 @@ int64_t ACurl::getContentLength() const {
     return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
 }
 
+int64_t ACurl::getNumberOfBytesDownloaded() const {
+    return getInfo<curl_off_t>(CURLINFO_SIZE_DOWNLOAD_T);
+}
+
 AString ACurl::getContentType() const {
     auto v = getInfo<const char*>(CURLINFO_CONTENT_TYPE);
     return v ? v : "";
@@ -409,6 +426,6 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
 
 ACurl::Builder& ACurl::Builder::withTimeout(std::chrono::seconds timeout) {
     auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, timeout.count());
-    assert(res == 0);
+    AUI_ASSERT(res == 0);
     return *this;
 }

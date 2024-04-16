@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -97,12 +97,12 @@ namespace aui::ui_building {
         template<typename... Args>
         view(Args&&... args): view_helper<view<View>>(*this), mView(_new<View>(std::forward<Args>(args)...)) {}
 
-        _<View> operator()() {
-            return std::move(mView);
+        _<View>& operator()() {
+            return mView;
         }
 
-        operator _<View>() {
-            return std::move(mView);
+        operator _<View>&() {
+            return mView;
         }
 
     private:
@@ -117,21 +117,6 @@ namespace aui::ui_building {
         AVector<View> mViews;
 
     public:
-        struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
-        public:
-            template<typename... Views>
-            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...),
-                                         view_helper<Expanding>(*this) {
-
-            }
-
-            ViewContainer operator()() {
-                return layouted_container_factory_impl<Layout>::operator()() let {
-                    it->setExpanding();
-                };
-            }
-        };
-
         template<typename... Views>
         layouted_container_factory_impl(Views&&... views) {
             mViews.reserve(sizeof...(views));
@@ -155,26 +140,45 @@ namespace aui::ui_building {
             }, std::forward<Views>(views)...);
         }
 
-        ViewContainer operator()() {
+        _<Container> operator()() {
             auto c = _new<Container>();
             if constexpr(!std::is_same_v<Layout, std::nullopt_t>) {
                 c->setLayout(_new<Layout>());
             }
-            c->setViews(std::move(mViews));
+            c->setViews(mViews);
             return c;
         }
     };
 
 
     template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
-    struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
+    struct layouted_container_factory_impl_with_expanding: layouted_container_factory_impl<Layout, Container> {
+    public:
+        using layouted_container_factory_impl<Layout, Container>::layouted_container_factory_impl;
 
-        template<typename... Views>
-        layouted_container_factory(Views&&... views): layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...),
-                                                      view_helper<layouted_container_factory<Layout, Container>>(*this) {
+        struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
+        public:
+            template<typename... Views>
+            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...),
+                                         view_helper<Expanding>(*this) {
 
-        }
+            }
 
+            _<Container> operator()() {
+                return layouted_container_factory_impl<Layout>::operator()() let {
+                    it->setExpanding();
+                };
+            }
+        };
+    };
+
+    template <typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
+    struct layouted_container_factory : layouted_container_factory_impl_with_expanding<Layout, Container>,
+                                        view_helper<layouted_container_factory<Layout, Container>> {
+        template <typename... Views>
+        layouted_container_factory(Views&&... views)
+            : layouted_container_factory_impl_with_expanding<Layout, Container>(std::forward<Views>(views)...),
+              view_helper<layouted_container_factory<Layout, Container>>(*this) {}
     };
 }
 
@@ -205,7 +209,7 @@ namespace declarative {
 
         Style& operator()(AVector<_<AView>> views) {
             for (const auto& view : views) {
-                assert(("extra stylesheet already specified", view->extraStylesheet() == nullptr));
+                AUI_ASSERTX(view->extraStylesheet() == nullptr, "extra stylesheet already specified");
                 view->setExtraStylesheet(mStylesheet);
             }
             mViews = std::move(views);

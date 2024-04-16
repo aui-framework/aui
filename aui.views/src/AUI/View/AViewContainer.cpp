@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -63,7 +63,7 @@ void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext cont
     }
 
     auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
-    assert(currentStencilLevel == prevStencilLevel);
+    AUI_ASSERT(currentStencilLevel == prevStencilLevel);
 }
 
 
@@ -124,6 +124,9 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
+    for (const auto& v : mViews) {
+        v->mParent = nullptr;
+    }
     mViews.clear();
     mLayout = std::move(layout);
     if (mLayout) {
@@ -142,6 +145,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!index) return;
     if (!mLayout) return;
     mLayout->removeView(view, *index);
+    view->mParent = nullptr;
     invalidateCaches();
     emit childrenChanged;
 }
@@ -157,6 +161,7 @@ void AViewContainer::removeView(AView* view) {
         } else {
             mViews.erase(it);
         }
+        view->mParent = nullptr;
     }
     invalidateCaches();
     emit childrenChanged;
@@ -167,6 +172,7 @@ void AViewContainer::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    view->mParent = nullptr;
     invalidateCaches();
     emit childrenChanged;
 }
@@ -370,11 +376,12 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
     _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
-    while (auto parent = _cast<AViewContainer>(target)) {
-        pos -= parent->getPosition();
-        target = parent->getViewAt(pos, flags);
+    int depth = 0;
+    while (auto asContainer = _cast<AViewContainer>(target)) {
+        pos -= asContainer->getPosition();
+        target = asContainer->getViewAt(pos, flags);
         if (!target)
-            return parent;
+            return asContainer;
     }
     return target;
 }
@@ -434,7 +441,7 @@ void AViewContainer::onDpiChanged() {
 }
 
 void AViewContainer::setContents(const _<AViewContainer>& container) {
-    assert(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" &&
+    AUI_ASSERT(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" &&
             typeid(*container.get()) == typeid(AViewContainer)));
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
@@ -542,4 +549,15 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
         return nullptr;
     }
     return it->targetView.lock();
+}
+
+void AViewContainer::setViews(AVector<_<AView>> views) {
+    views.removeIf([](const _<AView>& v) { return v == nullptr; });
+    mViews = std::move(views);
+
+    for (const auto& view : mViews) {
+        view->mParent = this;
+        if (mLayout)
+            mLayout->addView(view);
+    }
 }

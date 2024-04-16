@@ -631,7 +631,7 @@ public:
         return mFixedSize;
     }
     void setFixedSize(glm::ivec2 size) {
-        assert(("abnormal fixed size", glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000)))));
+        AUI_ASSERTX(glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000))), "abnormal fixed size");
         mFixedSize = size;
     }
 
@@ -1003,3 +1003,5 @@ private:
 
     void notifyParentChildFocused(const _<AView> &view);
 };
+
+API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -55,8 +55,8 @@ struct AModelMetaBase {
  */
 template<class T>
 struct AModelMeta: AModelMetaBase<T> {
-    static AMap<AString, _<AField<T>>> getFields() { assert(0); return {};}
-    static AString getSqlTable() { assert(0); return {};}
+    static AMap<AString, _<AField<T>>> getFields() { AUI_ASSERT(0); return {};}
+    static AString getSqlTable() { AUI_ASSERT(0); return {};}
 };
 
 #define A_META(name) template<> struct AModelMeta< name >: AModelMetaBase< name >

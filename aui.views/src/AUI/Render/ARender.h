@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -233,7 +233,7 @@ public:
      * @return an instance of IPrerenderedString
      */
     static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, AFontStyle& fs) {
-        assert(("empty string could not be prerendered" && !text.empty()));
+        AUI_ASSERTX(!text.empty(), "empty string could not be prerendered");
         return ourRenderer->prerenderString(position, text, fs);
     }
 

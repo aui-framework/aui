@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <chrono>
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -33,6 +34,10 @@
 #endif
 
 
+using namespace std::chrono_literals;
+static constexpr auto MAX_PROCESSING_ITERATIONS_PER_FRAME = 100'000;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ALL_TASKS = 10ms;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ONE_TASK = 1ms;
 
 class UIThread: public AAbstractThread {
 public:
@@ -40,14 +45,14 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        assert(("AAbstractThread::processMessages() should not be called from other thread",
+        AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
                 mId == std::this_thread::get_id()));
         std::unique_lock lock(mQueueLock, std::defer_lock);
 
         using namespace std::chrono;
-        using namespace std::chrono_literals;
 
-        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
+        auto beginTime = system_clock::now();
+        for (std::size_t i = 0; i <= MAX_PROCESSING_ITERATIONS_PER_FRAME && !mMessageQueue.empty() && lock.try_lock(); ++i)
         {
             auto f = std::move(mMessageQueue.front());
             mMessageQueue.pop_front();
@@ -61,10 +66,16 @@ protected:
                     << " - ...\n";
             */
 
-            if (time >= 1ms) {
+            if (time >= MAX_PROCESSING_TIME_FOR_ONE_TASK) {
                 ALogger::warn("Performance")
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
                     << " - ...\n";
+            }
+
+            if (i % 10000 == 0) {
+                if (system_clock::now() - beginTime >= MAX_PROCESSING_TIME_FOR_ALL_TASKS) {
+                    break;
+                }
             }
         }
         lock.lock();
@@ -122,7 +133,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
                     if (!wrappedWithQuots) {
                         argsImpl() << std::move(currentArg);
                         currentArg = {};
-                        assert(currentArg.empty());
+                        AUI_ASSERT(currentArg.empty());
                         break;
                     }
                 default:

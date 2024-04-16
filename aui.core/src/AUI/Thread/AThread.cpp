@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -255,7 +255,13 @@ void AThread::resetInterruptFlag()
 
 void AThread::join()
 {
-	if (mThread->joinable()) mThread->join();
+	if (mThread->get_id() == std::this_thread::get_id()) {
+		throw AException("AThread::join to the self thread");
+	}
+	if (!mThread->joinable()) {
+		return;
+	}
+	mThread->join();
 }
 
 void AAbstractThread::enqueue(std::function<void()> f)
@@ -277,11 +283,10 @@ void AAbstractThread::enqueue(std::function<void()> f)
 
 void AAbstractThread::processMessagesImpl()
 {
-    assert(("AAbstractThread::processMessages() should not be called from other thread",
-            mId == std::this_thread::get_id()));
-	std::unique_lock lock(mQueueLock);
-	while (!mMessageQueue.empty())
-	{
+    AUI_ASSERTX(mId == std::this_thread::get_id(),
+                "AAbstractThread::processMessages() should not be called from other thread");
+    std::unique_lock lock(mQueueLock);
+    while (!mMessageQueue.empty()) {
         auto f = std::move(mMessageQueue.front());
 		mMessageQueue.pop_front();
 		lock.unlock();
@@ -321,11 +326,11 @@ void AAbstractThread::updateThreadName() noexcept {
         setThreadNameImpl((HANDLE) GetCurrentThread(), mThreadName);
 #elif AUI_PLATFORM_APPLE
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
 #else
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());
 #endif
     }

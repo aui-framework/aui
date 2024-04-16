@@ -77,6 +77,11 @@ define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
         FULL_DOCS "Global list of aui boot root entries")
 
+
+define_property(GLOBAL PROPERTY AUI_BOOT_DEPS
+        BRIEF_DOCS "Global list of auib_import commands"
+        FULL_DOCS "Global list of auib_import commands")
+
 # checking host system not by WIN32 because of cross compilation
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(HOME_DIR $ENV{USERPROFILE})
@@ -240,19 +245,12 @@ macro(_auib_try_find)
                 set(_mode MODULE)
             endif()
         else()
-            foreach(_component ${AUIB_IMPORT_COMPONENTS})
-                if (NOT ${AUI_MODULE_NAME}_${_component}_FOUND AND NOT ${AUI_MODULE_NAME_UPPER}_${_component}_FOUND)
-                    message(STATUS "Component ${_component} of module ${AUI_MODULE_NAME} is not found")
-                    set(${AUI_MODULE_NAME}_FOUND FALSE)
-                    set(${AUI_MODULE_NAME_UPPER}_FOUND FALSE)
-                endif()
-            endforeach()
             break()
         endif()
     endwhile()
     unset(_mode)
     # expose result ignoring case sensitivity
-    if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
+    if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND OR ${AUI_MODULE_NAME_LOWER}_FOUND)
         set(${AUI_MODULE_NAME}_FOUND TRUE)
     else()
         set(${AUI_MODULE_NAME}_FOUND FALSE)
@@ -304,6 +302,10 @@ function(_auib_try_download_precompiled_binary)
             return()
         endif()
     endforeach()
+    if (AUIB_DEBUG_PRECOMPILED STREQUAL ${AUI_MODULE_NAME})
+        message(FATAL_ERROR "Precompiled binary for ${AUI_MODULE_NAME} is not available"
+                "\ntrace: download urls: ${_binary_download_urls}")
+    endif()
     message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
 endfunction()
 
@@ -365,12 +367,18 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
-    set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
+    set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    # save arguments for later use by dependent modules
+    if (NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG)
+        string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG)\n")
+    endif()
 
     # check for dependencies
     foreach (_dep ${AUIB_IMPORT_REQUIRES})
@@ -506,7 +514,7 @@ function(auib_import AUI_MODULE_NAME URL)
     if(AUI_BOOT_SOURCEDIR_COMPAT)
         unset(SOURCE_BINARY_DIRS_ARG)
     else()
-        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
+        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
                 message(STATUS "Waiting for repository...")
@@ -515,6 +523,28 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                 BINARY_DIR ${DEP_BINARY_DIR})
+    endif()
+    
+    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+        # validate the CMAKELISTS_CUSTOM param
+        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
+            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
+        endif()
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
+        endif()
+    endif()
+
+    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+        # validate the CMAKELISTS_CUSTOM param
+        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
+            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
+        endif()
+        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
+            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
+        endif()
     endif()
 
     if (NOT DEP_ADD_SUBDIRECTORY)
@@ -552,7 +582,7 @@ function(auib_import AUI_MODULE_NAME URL)
             unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
             # check for GitHub Release
-            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED)
+            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED AND NOT DEP_ADD_SUBDIRECTORY)
                 _auib_try_download_precompiled_binary()
             endif()
 
@@ -655,6 +685,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 # forward all necessary variables to child cmake build
                 foreach(_varname
                         AUIB_NO_PRECOMPILED
+                        AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
                         AUI_CACHE_DIR
                         CMAKE_C_FLAGS
@@ -867,6 +898,8 @@ endmacro()
 
 macro(auib_precompiled_binary)
     set(CPACK_GENERATOR "TGZ")
+    get_property(_auib_deps GLOBAL PROPERTY AUI_BOOT_DEPS)
+    set(AUIB_DEPS ${_auib_deps} CACHE STRING "" FORCE)
     _auib_precompiled_archive_name(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
     message(STATUS "[AUI.BOOT] Output precompiled archive name: ${CPACK_PACKAGE_FILE_NAME}")
     set(CPACK_VERBATIM_VARIABLES YES)

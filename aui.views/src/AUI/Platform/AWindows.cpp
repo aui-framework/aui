@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -42,6 +42,7 @@ bool AWindow::consumesClick(const glm::ivec2& pos) {
 }
 
 void AWindow::onClosed() {
+    emit closed();
     quit();
 }
 
@@ -181,7 +182,7 @@ void AWindow::flagUpdateLayout() {
 
 
 void AWindow::onCloseButtonClicked() {
-    emit closed();
+    close();
 }
 
 
@@ -222,8 +223,6 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     mSize = (glm::max)(glm::ivec2{ width, height }, getMinimumSize());
 
     currentWindowStorage() = this;
-
-    connect(closed, this, &AWindow::close);
 
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 

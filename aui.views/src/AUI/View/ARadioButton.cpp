@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -59,7 +59,7 @@ bool ARadioButton::selectableIsSelectedImpl() {
 
 _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio, int id) {
     if (id == -1) id = int(mButtons.size());
-    assert(("this id is already used; please choose another id" && !mButtons.contains(id)));
+    AUI_ASSERTX(!mButtons.contains(id), "this id is already used; please choose another id");
     mButtons[id] = radio;
 
     auto onChecked = [&, radio, id](bool checked) {
@@ -86,6 +86,7 @@ int ARadioButton::Group::getSelectedId() const {
 }
 
 void ARadioButton::Group::setSelectedId(int id) {
+    if (mSelectedId == id) return;
     mSelectedId = id;
     mButtons[id]->setChecked(true);
 }

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -36,6 +36,7 @@ bool AScheduler::iteration(ABitField<ASchedulerIteration> flag) {
     }
 
     while (!mTasks.empty()) {
+        AThread::interruptionPoint();
         auto now = currentTime();
         if (now < mTasks.front().executionTime) {
             if (flag & ASchedulerIteration::DONT_BLOCK_TIMED) {
@@ -62,7 +63,8 @@ void AScheduler::notifyProcessMessages() {
 }
 
 void AScheduler::loop() {
-    for (;;) {
+    mIsRunning = true;
+    while (mIsRunning) {
         iteration();
     }
 }

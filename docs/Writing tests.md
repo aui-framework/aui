@@ -1,7 +1,31 @@
 AUI uses GTest as the tests framework and provides a simple way to use it in your application.
-                
-In order to enable tests for your project, call `aui_enable_tests()` in the end of your `CMakeLists.txt` and create
-`tests/` dir along with `src/` and `CMakeLists.txt`. Place your test suites inside the `tests/` directory.
+
+It also includes GMock library.
+
+GoogleTest is Google's C++ testing and mocking framework. This user's guide has
+the following contents:
+
+*   [GoogleTest Primer](https://github.com/google/googletest/blob/main/docs/primer.md) - Teaches you how to write simple tests using
+    GoogleTest. Read this first if you are new to GoogleTest.
+*   [GoogleTest Advanced](https://github.com/google/googletest/blob/main/docs/advanced.md) - Read this when you've finished the
+    Primer and want to utilize GoogleTest to its full potential.
+*   [GoogleTest Samples](https://github.com/google/googletest/blob/main/docs/samples.md) - Describes some GoogleTest samples.
+*   [GoogleTest FAQ](https://github.com/google/googletest/blob/main/docs/faq.md) - Have a question? Want some tips? Check here
+    first.
+*   [Mocking for Dummies](https://github.com/google/googletest/blob/main/docs/gmock_for_dummies.md) - Teaches you how to create mock
+    objects and use them in tests.
+*   [Mocking Cookbook](https://github.com/google/googletest/blob/main/docs/gmock_cook_book.md) - Includes tips and approaches to
+    common mocking use cases.
+*   [Mocking Cheat Sheet](https://github.com/google/googletest/blob/main/docs/gmock_cheat_sheet.md) - A handy reference for
+    matchers, actions, invariants, and more.
+*   [Mocking FAQ](https://github.com/google/googletest/blob/main/docs/gmock_faq.md) - Contains answers to some mocking-specific
+    questions.
+
+
+## In AUI
+
+In order to enable tests for your project, call `aui_enable_tests(<target-name>)` in the end of your `CMakeLists.txt`
+and create `tests/` dir along with `src/` and `CMakeLists.txt`. Place your test suites inside the `tests/` directory.
 
 # Example
 
@@ -32,7 +56,8 @@ Possible output:
 
 ## Project structure
 
-To write a test, enable tests for your projects first. Add `aui_enable_tests()` to the end of your `CMakeLists.txt`:
+To write a test, enable tests for your projects first. Add `aui_enable_tests(<target-name>)` to the end of your
+`CMakeLists.txt`:
 
 ```cmake
 # Standard routine
@@ -59,7 +84,7 @@ aui_executable(project_template)
 # Link required libs
 target_link_libraries(project_template PRIVATE aui::core)
 
-aui_enable_tests() # <----------------------------------------------
+aui_enable_tests(project_template) # <----------------------------------------------
 ```
 
 and create the `tests/` dir along with `CMakeLists.txt` and `src/`. Inside `tests/`, create `MyTest.cpp`:

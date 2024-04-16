@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -85,12 +85,12 @@ APath APath::ensureNonSlashEnding() const {
 AString APath::relativelyTo(const APath& dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
-        assert(startsWith(f));
+        AUI_ASSERT(startsWith(f));
         return substr(f.length());
     }
     auto meButAbsolute = absolute();
     auto f = dir.absolute().ensureSlashEnding();
-    assert(meButAbsolute.startsWith(f));
+    AUI_ASSERT(meButAbsolute.startsWith(f));
     return meButAbsolute.substr(f.length());
 }
 bool APath::exists() const {
@@ -143,12 +143,14 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
     WIN32_FIND_DATA fd;
     HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
 
-    if (dir == INVALID_HANDLE_VALUE)
+    if (dir == INVALID_HANDLE_VALUE) {
 #else
     DIR* dir = opendir(toStdString().c_str());
-    if (!dir)
+    if (!dir) {
 #endif
         aui::impl::lastErrorToException("could not list " + *this);
+        return {};
+    }
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -156,8 +158,8 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
         bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
         bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
-    for (dirent* i; (i = readdir(dir));) {
-        auto& filename = i->d_name;
+    for (dirent* i = nullptr; (i = readdir(dir));) {
+        const auto* filename = i->d_name;
         bool isFile = i->d_type & DT_REG;
         bool isDirectory = i->d_type & DT_DIR;
 #endif
@@ -301,7 +303,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             break;
 
         default:
-            assert(0);
+            AUI_ASSERT(0);
     }
     result.resizeToNullTerminator();
     result.removeBackSlashes();
@@ -356,7 +358,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
         case TEMP:
             return "/tmp";
         default:
-            assert(0);
+            AUI_ASSERT(0);
 #endif
     }
     return {};

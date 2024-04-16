@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
 
 #pragma once
 #include <map>
+#include <unordered_map>
 #include "AUI/Core.h"
 #include "AException.h"
 #include <AUI/Common/AVector.h>
@@ -24,37 +25,36 @@
 #include "AContainerPrototypes.h"
 
 /**
- * @brief A std::map with AUI extensions.
+ * @brief Base class for maps with AUI extensions.
  * @ingroup core
  */
-template <class KeyType, class ValueType, class Predicate, class Allocator>
-class AMap: public std::map<KeyType, ValueType, Predicate, Allocator>
+template <class KeyType, class ValueType, class Parent>
+class ABaseMap: public Parent
 {
 public:
-	using parent = std::map<KeyType, ValueType, Predicate, Allocator>;
-	using iterator = typename parent::iterator;
-	using const_iterator = typename parent::const_iterator;
+	using iterator = typename Parent::iterator;
+	using const_iterator = typename Parent::const_iterator;
 
-	using parent::parent;
+	using Parent::Parent;
 
 	ValueType& operator[](KeyType&& k)
 	{
-		return parent::operator[](std::forward<KeyType>(k));
+		return Parent::operator[](std::move(k));
 	}
 
 	ValueType& operator[](const KeyType& k)
 	{
-		return parent::operator[](k);
+		return Parent::operator[](k);
 	}
 
 	const ValueType& operator[](KeyType&& k) const
 	{
-		return parent::at(std::forward<KeyType>(k));
+		return Parent::at(std::move(k));
 	}
 
 	const ValueType& operator[](const KeyType& k) const
 	{
-		return parent::at(k);
+		return Parent::at(k);
 	}
 
 	// ================
@@ -127,14 +127,14 @@ public:
 	};
 
 	ValueType& at(const KeyType& key) {
-	    auto it = parent::find(key);
-	    if (it == parent::end())
+	    auto it = Parent::find(key);
+	    if (it == Parent::end())
 	        throw AException("no such element: " + AClass<KeyType>::toString(key));
 	    return it->second;
 	}
 	const ValueType& at(const KeyType& key) const {
-	    auto it = parent::find(key);
-	    if (it == parent::end())
+	    auto it = Parent::find(key);
+	    if (it == Parent::end())
 	        throw AException("no such element: " + AClass<KeyType>::toString(key));
 	    return it->second;
 	}
@@ -142,21 +142,21 @@ public:
     [[nodiscard]]
 	const_contains_iterator contains(const KeyType& key) const noexcept
 	{
-		auto it = parent::find(key);
-		return const_contains_iterator(it, it != parent::end());
+		auto it = Parent::find(key);
+		return const_contains_iterator(it, it != Parent::end());
 	}
 
     [[nodiscard]]
     contains_iterator contains(const KeyType& key) noexcept
 	{
-		auto it = parent::find(key);
-		return contains_iterator(it, it != parent::end());
+		auto it = Parent::find(key);
+		return contains_iterator(it, it != Parent::end());
 	}
 
     [[nodiscard]]
     AOptional<ValueType> optional(const KeyType& key) const noexcept {
-        auto it = parent::find(key);
-        if (it == parent::end()) {
+        auto it = Parent::find(key);
+        if (it == Parent::end()) {
             return std::nullopt;
         }
         return it->second;
@@ -164,7 +164,7 @@ public:
 
 	AVector<KeyType> keyVector() {
         AVector<KeyType> r;
-        r.reserve(parent::size());
+        r.reserve(Parent::size());
         for (auto& p : *this) {
             r << p.first;
         }
@@ -172,7 +172,7 @@ public:
 	}
 	AVector<ValueType> valueVector() {
         AVector<ValueType> r;
-        r.reserve(parent::size());
+        r.reserve(Parent::size());
         for (auto& p : *this) {
             r << p.second;
         }
@@ -189,8 +189,8 @@ public:
     template<typename Factory>
     ValueType& getOrInsert(const KeyType& keyType, Factory&& factory) noexcept(noexcept(factory())) {
         static_assert(std::is_constructible_v<ValueType>, "ValueType is expected to be default-constructible");
-        auto[it, isElementCreated] = parent::insert(typename parent::value_type(keyType, ValueType{}));
-        static_assert(std::is_same_v<decltype(it), typename parent::iterator>, "govno");
+        auto[it, isElementCreated] = Parent::insert(typename Parent::value_type(keyType, ValueType{}));
+        static_assert(std::is_same_v<decltype(it), typename Parent::iterator>, "govno");
         if (isElementCreated) {
             it->second = factory();
         }
@@ -200,8 +200,8 @@ public:
     template<typename BinaryOperation>
     auto toVector(BinaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> {
         AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> result;
-        result.reserve(parent::size());
-        std::transform(parent::begin(), parent::end(), std::back_inserter(result), [transformer = std::forward<BinaryOperation>(transformer)](const typename parent::value_type& p){
+        result.reserve(Parent::size());
+        std::transform(Parent::begin(), Parent::end(), std::back_inserter(result), [transformer = std::forward<BinaryOperation>(transformer)](const typename Parent::value_type& p){
             return transformer(p.first, p.second);
         });
         return result;
@@ -214,6 +214,29 @@ public:
     }
 };
 
+/**
+ * @brief A std::map with AUI extensions.
+ * @ingroup core
+ */
+template <class KeyType, class ValueType, class Predicate, class Allocator>
+class AMap: public ABaseMap<KeyType, ValueType, std::map<KeyType, ValueType, Predicate, Allocator>>
+{
+	using parent = ABaseMap<KeyType, ValueType, std::map<KeyType, ValueType, Predicate, Allocator>>;
+
+	using parent::parent;
+};
+
+/**
+ * @brief A std::unordered_map with AUI extensions.
+ * @ingroup core
+ */
+template <class KeyType, class ValueType, class Hasher, class Comparer, class Allocator>
+class AUnorderedMap: public ABaseMap<KeyType, ValueType, std::unordered_map<KeyType, ValueType, Hasher, Comparer, Allocator>>
+{
+	using parent = ABaseMap<KeyType, ValueType, std::unordered_map<KeyType, ValueType, Hasher, Comparer, Allocator>>;
+
+	using parent::parent;
+};
 
 template<typename Iterator, typename UnaryOperation>
 inline auto aui::container::to_map(Iterator begin,
@@ -221,6 +244,20 @@ inline auto aui::container::to_map(Iterator begin,
                                    UnaryOperation&& transformer) {
     AMap<decltype(transformer(*begin).first),
          decltype(transformer(*begin).second)> result;
+
+    for (auto it = begin; it != end; ++it) {
+        auto[key, value] = transformer(*it);
+        result[std::move(key)] = std::move(value);
+    }
+    return result;
+}
+
+template<typename Iterator, typename UnaryOperation>
+inline auto aui::container::to_unordered_map(Iterator begin,
+                                             Iterator end,
+                                             UnaryOperation&& transformer) {
+    AUnorderedMap<decltype(transformer(*begin).first),
+                  decltype(transformer(*begin).second)> result;
 
     for (auto it = begin; it != end; ++it) {
         auto[key, value] = transformer(*it);

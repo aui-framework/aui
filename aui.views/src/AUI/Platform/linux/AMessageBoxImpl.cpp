@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include "AUI/Common/AException.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
@@ -43,6 +44,7 @@ namespace {
                                 Button { "Yes"_i18n }.clicked(me::onYes),
                                 Button { "No"_i18n }.clicked(me::onNo),
                             };
+                            default: throw AException("invalid AMessageBox::Button");
                         }
                     },
                 }

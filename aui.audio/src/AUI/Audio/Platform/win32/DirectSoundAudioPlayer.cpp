@@ -18,7 +18,7 @@ static AAudioMixer& loop() {
 #define ASSERT_OK AssertOkHelper{} +
 struct AssertOkHelper {
     void operator+(HRESULT r) const {
-        assert(r == DS_OK);
+        AUI_ASSERT(r == DS_OK);
     }
 };
 
@@ -175,20 +175,20 @@ private:
 };
 
 void DirectSoundAudioPlayer::playImpl() {
-    assert(mResampled == nullptr);
+    AUI_ASSERT(mResampled == nullptr);
     mResampled = _new<ASoundResampler>(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     DirectSound::instance();
     ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    assert(mResampled != nullptr);
+    AUI_ASSERT(mResampled != nullptr);
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    assert(mResampled != nullptr);
+    AUI_ASSERT(mResampled != nullptr);
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     mResampled.reset();
     source()->rewind();

@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,6 @@
 #include "ACurlMulti.h"
 #include "AUI/Util/kAUI.h"
 #include <curl/curl.h>
-#include <AUI/Thread/ACutoffSignal.h>
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Util/ARaiiHelper.h>
 
@@ -89,7 +88,7 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
             }
         });
         auto c = curl_multi_add_handle(mMulti, curl->handle());
-        assert(c == CURLM_OK);
+        AUI_ASSERT(c == CURLM_OK);
         mEasyCurls[curl->handle()] = std::move(curl);
     };
     return *this;
@@ -110,7 +109,7 @@ void ACurlMulti::removeCurl(const _<ACurl>& curl) {
 
 void ACurlMulti::clear() {
     mFunctionQueue << [this] {
-        assert(mMulti);
+        AUI_ASSERT(mMulti);
         for (const auto& [handle, acurl]: mEasyCurls) {
             curl_multi_remove_handle(mMulti, handle);
         }
@@ -120,7 +119,7 @@ void ACurlMulti::clear() {
 
 ACurlMulti& ACurlMulti::global() noexcept {
     static struct Instance {
-        AOptional<ACurlMulti> multi = ACurlMulti();
+        AOptional<ACurlMulti> multi;
         _<AThread> thread = _new<AThread>([this] {
             AThread::setName("AUI CURL IO");
             ARaiiHelper h = [&] {
@@ -130,17 +129,18 @@ ACurlMulti& ACurlMulti::global() noexcept {
         });
 
         Instance() {
+            multi.emplace();
             thread->start();
 
-            ACutoffSignal cs;
+            AFuture<> cs;
             thread->enqueue([&] {
-                cs.makeSignal();
+                cs.supplyResult();
             });
-            cs.waitForSignal();
-
-            ACleanup::afterEntry([&] {
-                thread->interrupt();
-            });
+            cs.wait();
+        }
+        ~Instance() {
+            thread->interrupt();
+            thread->join();
         }
     } instance;
 

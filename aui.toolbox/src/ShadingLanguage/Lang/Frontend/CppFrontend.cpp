@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -131,7 +131,7 @@ void CppFrontend::emitAttributeKeyword(KeywordToken::Type type) {
             break;
 
         default:
-            assert(0);
+            AUI_ASSERT(0);
     }
 }
 
@@ -168,7 +168,7 @@ void CppFrontend::visitNode(const VariableReferenceNode& node) {
 void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) {
     for (const auto& type : {KeywordToken::Type::UNIFORM, KeywordToken::Type::INTER}) {
         auto range = mHeaderNonIndexedAttributesDeclarations
-                     | ranges::view::filter([&](const auto& n) { return n.type() == type; });
+                     | ranges::views::filter([&](const auto& n) { return n.type() == type; });
         if (range.empty()) {
             continue;
         }

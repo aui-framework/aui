@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AScrollArea.h"
 
+namespace {
 class ViewMock: public AView {
 public:
     ViewMock() {
@@ -39,7 +40,7 @@ public:
     MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
 };
-
+}
 
 class UIScrollPointerMove: public testing::UITest {
 public:
@@ -53,9 +54,9 @@ protected:
                                  Vertical {
                                    Centered {
                                      AScrollArea::Builder().withContents(Vertical {
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                        mView = _new<ViewMock>() with_style {
                                          MinSize { 16_dp },
                                          BackgroundSolid { AColor::BLACK },
@@ -63,12 +64,12 @@ protected:
                                              BackgroundSolid { AColor::RED },
                                          },
                                        },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                      }).build() with_style {
                                        MinSize { 100_dp },
                                      }
@@ -170,11 +171,13 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
     //pressing LMB and moving out of view
     {
         testing::InSequence s;
-        APointerPressedEvent event;
+
+        EXPECT_CALL(*mView, onMouseLeave);
+
+        APointerPressedEvent event;        
         event.position = mView->getCenterPointInWindow();
         event.asButton = AInput::LBUTTON;
         mWindow->onPointerPressed(event);
-        EXPECT_CALL(*mView, onMouseLeave);
         mWindow->onPointerMove(posOutOfView, {});
     }
 

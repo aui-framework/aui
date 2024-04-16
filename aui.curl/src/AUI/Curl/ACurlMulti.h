@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -34,7 +34,7 @@
  * <code>
  * auto m = _new<ACurlMulti>();
  * m << _new<ACurl>(...);
- * assert(!m->empty()); // assertion failure here
+ * AUI_ASSERT(!m->empty()); // assertion failure here
  * </code>
  *
  * Use AThread::processMessages() function to avoid this limitation:
@@ -43,7 +43,7 @@
  * auto m = _new<ACurlMulti>();
  * m << _new<ACurl>(...);
  * AThread::processMessages() // +
- * assert(!m->empty());       // ok!
+ * AUI_ASSERT(!m->empty());       // ok!
  * </code>
  */
 class API_AUI_CURL ACurlMulti: public AObject {

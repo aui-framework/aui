@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -71,7 +71,7 @@ namespace aui::container {
             aui::range insertTargetRange(at, at + distance);
 
             // shift elements to the right
-            aui::range shiftRange(std::prev(insertTargetRange.end()), vectorEnd);
+            aui::range shiftRange(at, vectorEnd);
             if (!shiftRange.empty()) {
                 auto shiftFrom = std::prev(shiftRange.end());
                 auto shiftTo = shiftFrom + distance;
@@ -131,7 +131,7 @@ namespace aui::container {
      */
     template<typename Container>
     void remove_at(Container& c, size_t index) noexcept {
-        assert(("index out of bounds" && c.size() > index));
+        AUI_ASSERTX(c.size() > index, "index out of bounds");
         c.erase(c.begin() + index);
     }
 
@@ -220,6 +220,14 @@ namespace aui::container {
     template<typename Iterator, typename UnaryOperation>
     [[nodiscard]]
     auto to_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AMap.h
+
+    /**
+     * @brief Transforms sequence to unordered_map.
+     * @ingroup core
+     */
+    template<typename Iterator, typename UnaryOperation>
+    [[nodiscard]]
+    auto to_unordered_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AUnorderedMap.h
 
     /**
      * @ingroup core

@@ -24,7 +24,7 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     mState = WaitingForThresholdState {
         .pointer = e.pointerIndex,
         .origin  = e.position,
@@ -32,10 +32,12 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 }
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     if (auto s = std::get_if<ScrollingState>(&mState)) {
         auto direction = glm::normalize(s->currentVelocity);
-        auto velocity = glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
+        auto velocity = glm::max(glm::length(s->prevPrevVelocity),
+                                 glm::length(s->prevVelocity),
+                                 glm::length(s->currentVelocity));
         auto fps = static_cast<float>(AWindow::current()->getFps());
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
@@ -73,6 +75,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
     s.lastFrameTime = now;
 
     auto delta = s.previousPosition - pos;
+    s.prevPrevVelocity = s.prevVelocity;
     s.prevVelocity = s.currentVelocity;
     s.currentVelocity = delta * INITIAL_ACCELERATION_COEFFICIENT;
 
@@ -87,7 +90,7 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
             return r.origin;
         },
         [](std::nullopt_t) -> glm::ivec2 {
-            assert((0, "ATouchScroller::origin is called in invalid state"));
+            AUI_ASSERTX(0, "ATouchScroller::origin is called in invalid state");
             return {0, 0};
         },
     }, mState);

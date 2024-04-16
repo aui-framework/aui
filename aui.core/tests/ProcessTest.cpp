@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -46,7 +46,6 @@ TEST_F(Process, Self) {
 #else
     EXPECT_EQ(mSelf.filename(), "Tests");
 #endif
-    ALogger::info("Process.Self") << mSelf;
     EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
@@ -65,7 +64,7 @@ TEST_F(Process, Stdout) {
     p->run();
     p->waitForExitCode();
     AThread::processMessages();
-    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test."));
+    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
 }
 
 class ProcessSignalReceiver: public AObject {

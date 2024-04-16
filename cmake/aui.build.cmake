@@ -35,6 +35,10 @@ define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 
+if (AUIB_TRACE_BUILD_SYSTEM)
+    message(STATUS "AUIB_TRACE_BUILD_SYSTEM=TRUE (build system verbose logging is enabled)")
+endif()
+
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
@@ -210,10 +214,11 @@ function(aui_add_properties AUI_MODULE_NAME)
     endif()
 endfunction(aui_add_properties)
 
+# gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                    VERSION release-1.11.0
+                    VERSION v1.14.0
                     CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
                     LINK STATIC)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
@@ -222,13 +227,13 @@ macro(_aui_import_gtest)
 endmacro()
 
 macro(aui_enable_tests AUI_MODULE_NAME)
-    _aui_import_gtest()
-    if (NOT TARGET GTest::gtest)
-        message(FATAL_ERROR "GTest::gtest not found!")
-    endif()
-
-    enable_testing()
     if (NOT ANDROID AND NOT IOS)
+        _aui_import_gtest()
+        if (NOT TARGET GTest::gtest)
+            message(FATAL_ERROR "GTest::gtest not found!")
+        endif()
+
+        enable_testing()
         get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
         unset(TESTS_SRCS)
 
@@ -241,13 +246,13 @@ macro(aui_enable_tests AUI_MODULE_NAME)
             set(TESTS_MODULE_NAME Tests)
 
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gmock/gmock.h>
-int main(int argc, char **argv) {
+    #include <gmock/gmock.h>
+    int main(int argc, char **argv) {
     // Since Google Mock depends on Google Test, InitGoogleMock() is
     // also responsible for initializing Google Test.  Therefore there's
     testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
-}]])
+    }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             #gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
@@ -300,6 +305,97 @@ int main(int argc, char **argv) {
     endif()
 endmacro()
 
+# google benchmark
+
+macro(_aui_import_google_benchmark)
+    if (NOT TARGET benchmark::benchmark)
+        auib_import(benchmark https://github.com/google/benchmark
+                    VERSION v1.8.3
+                    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on
+                    LINK STATIC)
+        set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+    endif()
+endmacro()
+
+macro(aui_enable_benchmarks AUI_MODULE_NAME)
+    if (NOT ANDROID AND NOT IOS)
+        _aui_import_gtest()
+        _aui_import_google_benchmark()
+        if (NOT TARGET benchmark::benchmark)
+            message(FATAL_ERROR "benchmark::benchmark not found!")
+        endif()
+
+        get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
+        unset(benchmarks_SRCS)
+
+        if (NOT EXISTS ${_source_dir}/benchmarks)
+            message(FATAL_ERROR "aui_enable_benchmarks expects ${_source_dir}/benchmarks to exist")
+        endif()
+        file(GLOB_RECURSE benchmarks_SRCS ${_source_dir}/benchmarks/*.cpp)
+
+        if (NOT TARGET Benchmarks)
+            set(benchmarks_MODULE_NAME Benchmarks)
+
+            file(WRITE ${CMAKE_BINARY_DIR}/benchmarks_main_${benchmarks_MODULE_NAME}.cpp [[
+    #include <benchmark/benchmark.h>
+    int main(int argc, char** argv)
+    {
+        ::benchmark::Initialize(&argc, argv);
+        ::benchmark::RunSpecifiedBenchmarks();
+    }
+    ]])
+            add_executable(${benchmarks_MODULE_NAME} ${benchmarks_SRCS} ${CMAKE_BINARY_DIR}/benchmarks_main_${benchmarks_MODULE_NAME}.cpp)
+            set_property(TARGET ${benchmarks_MODULE_NAME} PROPERTY CXX_STANDARD 20)
+            target_include_directories(${benchmarks_MODULE_NAME} PUBLIC benchmarks)
+            target_link_libraries(${benchmarks_MODULE_NAME} PUBLIC benchmark::benchmark benchmark::benchmark_main)
+
+            target_compile_definitions(${benchmarks_MODULE_NAME} PUBLIC AUI_benchmarks_MODULE=1)
+
+            if (TARGET aui::core)
+                aui_link(${benchmarks_MODULE_NAME} PUBLIC aui::core)
+            endif()
+
+            if (TARGET aui::uibenchmarks)
+                aui_link(${benchmarks_MODULE_NAME} PUBLIC aui::uibenchmarks)
+            endif()
+
+            aui_add_properties(${benchmarks_MODULE_NAME})
+            set_target_properties(${benchmarks_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+        else()
+            target_sources(Benchmarks PRIVATE ${benchmarks_SRCS}) # append sources
+        endif()
+
+        if (TARGET Benchmarks)
+            # if the specified target is an executable, we should add it's srcs to the Benchmarks target, otherwise just link it.
+            get_property(_type TARGET ${AUI_MODULE_NAME} PROPERTY TYPE)
+            if (_type STREQUAL EXECUTABLE)
+                get_target_property(_t ${AUI_MODULE_NAME} SOURCES)
+
+                # remove unexisting sources; otherwise cmake would fail for unknown reason
+                foreach(_e ${_t})
+                    if (NOT EXISTS ${_e})
+                        list(REMOVE_ITEM _t ${_e})
+                    endif()
+                endforeach()
+
+                target_sources(Benchmarks PRIVATE ${_t})
+                get_target_property(_t ${AUI_MODULE_NAME} INCLUDE_DIRECTORIES)
+                target_include_directories(Benchmarks PRIVATE ${_t})
+                get_target_property(_t ${AUI_MODULE_NAME} COMPILE_DEFINITIONS)
+                if(_t)
+                    target_compile_definitions(Benchmarks PRIVATE ${_t})
+                endif()
+                get_target_property(_t ${AUI_MODULE_NAME} LINK_LIBRARIES)
+                aui_link(Benchmarks PRIVATE ${_t})
+            else()
+                aui_link(Benchmarks PRIVATE ${AUI_MODULE_NAME})
+            endif()
+        endif()
+    endif()
+endmacro()
+
+
+# common function fo aui_executable and aui_module
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
@@ -489,11 +585,14 @@ function(aui_common AUI_MODULE_NAME)
             ]])
         endif()
 
-        install(CODE [[
-            if (EXISTS ${AUI_MODULE_PATH})
-                file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
-            endif()
-        ]])
+        if (WIN32)
+            # Install dependencies (dlls) that are located in bin/ directory.
+            install(CODE [[
+                if (EXISTS ${AUI_MODULE_PATH})
+                    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+                endif()
+            ]])
+        endif()
     endif()
     if (CMAKE_GENERATOR STREQUAL "Xcode")
         if (BUILD_SHARED_LIBS)

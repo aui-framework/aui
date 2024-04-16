@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <optional>
 #include <queue>
 #include <AUI/ACurl.h>
 
@@ -199,7 +200,7 @@ public:
          * @see withDestinationBuffer
          */
         Builder& withWriteCallback(WriteCallback callback) {
-            assert(("write callback already set" && mWriteCallback == nullptr));
+            AUI_ASSERTX(mWriteCallback == nullptr, "write callback already set");
             mWriteCallback = std::move(callback);
             return *this;
         }
@@ -222,7 +223,7 @@ public:
          * @return this
          */
         Builder& withBody(ReadCallback callback) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
             mReadCallback = std::move(callback);
             return *this;
         }
@@ -253,7 +254,7 @@ public:
          * @brief Like withBody with callback, but wrapped with string.
          */
         Builder& withBody(std::string contents) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
 
             struct Body {
                 explicit Body(std::string b) : contents(std::move(b)), i(contents.begin()) {}
@@ -291,7 +292,7 @@ public:
          * @note Also disables throwing exception on error
          */
         Builder& withErrorCallback(ErrorCallback callback) {
-            assert(("error callback already set" && mErrorCallback == nullptr));
+            AUI_ASSERTX(mErrorCallback == nullptr, "error callback already set");
             mErrorCallback = std::move(callback);
             return *this;
         }
@@ -319,10 +320,36 @@ public:
          * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * @param begin start index of the part
-         * @param end end index of the part. Zero means end of the file.
+         * @param end end index of the part.
          * @return this
          */
         Builder& withRanges(size_t begin, size_t end);
+
+        /**
+         * @brief Sets: Accept-Ranges: begin-end
+         *        (download part of the file)
+         * @param begin start index of the part
+         * @param end end index of the part.
+         * @return this
+         */
+        Builder& withRanges(size_t begin) {
+            return withRanges(begin, 0);
+        }
+
+        /**
+         * @brief Set the average transfer speed in bytes per that the transfer should be below during 'low speed time'
+         * seconds to consider it to be too slow and abort.
+         * @param speed threshold speed (bytes per second).
+         */
+        Builder& withLowSpeedLimit(size_t speed);
+
+        /**
+         * @brief Duration that the transfer speed should be below the 'low speed limit' to consider it to be too slow
+         * and abort
+         * @param duration duration
+         */
+        Builder& withLowSpeedTime(std::chrono::seconds duration);
+
 
         Builder& withHttpVersion(Http version);
         Builder& withUpload(bool upload);
@@ -425,6 +452,7 @@ public:
     ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
+    int64_t getNumberOfBytesDownloaded() const;
 	AString getContentType() const;
 
     void run();

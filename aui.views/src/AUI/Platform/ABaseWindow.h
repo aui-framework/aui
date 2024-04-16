@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -313,6 +313,17 @@ signals:
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+    /**
+     * @brief On touch screen keyboard show requested.
+     */
+    emits<> touchscreenKeyboardShowRequested;
+
+
+    /**
+     * @brief On touch screen keyboard hide requested.
+     */
+    emits<> touchscreenKeyboardHideRequested;
+
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
 #endif
@@ -376,7 +387,9 @@ private:
 
 #if AUI_SHOW_TOUCHES
     struct ShowTouches {
-        AVector<glm::vec2> positions;
+        glm::vec2 press;
+        AVector<glm::vec2> moves;
+        AOptional<glm::vec2> release;
     };
     AMap<APointerIndex, ShowTouches> mShowTouches;
 #endif
@@ -389,7 +402,7 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", (AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()))); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX((AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -397,5 +410,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() != AWindow::current()->getThread())); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
 

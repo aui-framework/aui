@@ -125,17 +125,17 @@ public:
     }
 
     constexpr void pop_back() noexcept {
-        assert(("ASmallVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ASmallVector is empty");
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("ASmallVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ASmallVector is empty");
         erase(begin());
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) noexcept {
-        assert(("out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "out of bounds");
         return *(data() + index);
     }
 
@@ -410,7 +410,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -423,7 +423,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -436,7 +436,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -449,7 +449,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -595,12 +595,12 @@ private:
 
 
     StaticVector* inplace() {
-        assert(isInplaceAllocated());
+        AUI_ASSERT(isInplaceAllocated());
         return reinterpret_cast<StaticVector*>(&mBase.inplace);
     }
 
     DynamicVector * dynamic() {
-        assert(!isInplaceAllocated());
+        AUI_ASSERT(!isInplaceAllocated());
         return reinterpret_cast<DynamicVector*>(&mBase.dynamic);
     }
 

@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -15,12 +15,13 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Util/ACleanup.h>
+#include "AUI/Util/AScheduler.h"
 #include "ATimer.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
 	mPeriod(period)
 {
-    assert(("zero period?", period.count() != 0));
+    AUI_ASSERTX(period.count() != 0, "zero period?");
 }
 
 ATimer::~ATimer()
@@ -66,18 +67,32 @@ _<AThread>& ATimer::timerThread() {
                 ATimer::scheduler().loop();
             });
         t->start();
-#if !AUI_PLATFORM_WIN
-        std::atexit([] {
+        ACleanup::afterEntry([] {
             thread->interrupt();
+            thread->join();
+            thread = nullptr;
         });
-#endif
         return t;
     }();
     return thread;
 }
 
 AScheduler& ATimer::scheduler() {
-    static AScheduler scheduler;
-    ATimer::timerThread();
-    return scheduler;
+    static struct GlobalScheduler {
+        AScheduler scheduler;
+
+        // make sure scheduler thread is started.
+        _<AThread> thread = ATimer::timerThread();
+
+        GlobalScheduler() {
+        }
+        ~GlobalScheduler() {
+            scheduler.stop();
+
+            // wait for the thread before destructing the scheduler.
+            thread->interrupt();
+            thread->join();
+        }
+    } global;
+    return global.scheduler;
 }

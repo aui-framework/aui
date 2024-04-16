@@ -32,7 +32,25 @@ namespace aui::dbus {
         using std::string::string;
     };
 
-    struct Unknown;
+    template<typename T>
+    struct converter;
+
+    template<typename T>
+    concept convertible = requires(T t) {
+        { converter<T>::iter_append(static_cast<DBusMessageIter*>(nullptr), t) };
+        { converter<T>::signature } -> aui::convertible_to<std::string>;
+    };
+
+    struct Unknown {
+    public:
+        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
+
+        template<convertible T>
+        T as();
+
+    private:
+        DBusMessageIter mIter;
+    };
 
     using VariantImpl = std::variant<
             std::nullopt_t,      // DBUS_TYPE_INVALID
@@ -55,15 +73,6 @@ namespace aui::dbus {
     };
 
     template<typename T>
-    struct converter;
-
-    template<typename T>
-    concept convertible = requires(T t) {
-        { converter<T>::iter_append(static_cast<DBusMessageIter*>(nullptr), t) };
-        { converter<T>::signature } -> aui::convertible_to<std::string>;
-    };
-
-    template<typename T>
     concept convertible_or_void = convertible<T> || std::is_void_v<T>;
 
 
@@ -75,6 +84,12 @@ namespace aui::dbus {
     T iter_get(DBusMessageIter* iter) {
         return converter<T>::iter_get(iter);
     }
+
+    template<convertible T>
+    T Unknown::as() {
+        return aui::dbus::iter_get<T>(&mIter);
+    }
+
 
     namespace impl {
         template<typename T, char dbusType = DBUS_TYPE_INVALID>
@@ -219,7 +234,7 @@ namespace aui::dbus {
 
             AMap<K, V> result;
             for (;;) {
-                assert(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
+                AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
                 DBusMessageIter item;
                 dbus_message_iter_recurse(&sub, &item);
                 auto k = aui::dbus::iter_get<K>(&item);
@@ -278,23 +293,10 @@ namespace aui::dbus {
 
         static void iter_append(DBusMessageIter* iter, const Variant & t) {
             // TODO
-            assert(0);
+            AUI_ASSERT(0);
         }
 
         static Variant iter_get(DBusMessageIter* iter);
-    };
-
-    struct Unknown {
-    public:
-        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
-
-        template<convertible T>
-        T as() {
-            return aui::dbus::iter_get<T>(&mIter);
-        }
-
-    private:
-        DBusMessageIter mIter;
     };
 
     template<>
@@ -303,7 +305,7 @@ namespace aui::dbus {
 
         static void iter_append(DBusMessageIter* iter, const Unknown& t) {
             // TODO
-            assert(0);
+            AUI_ASSERT(0);
         }
 
         static Unknown iter_get(DBusMessageIter* iter);

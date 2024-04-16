@@ -28,7 +28,6 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Thread/ACutoffSignal.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;
@@ -52,7 +51,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
         auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                                    IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
 
 
         ARaiiHelper d = [&] {
@@ -132,7 +131,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
                 });
         };
 
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
         AVector<COMDLG_FILTERSPEC> filter;
         AVector<AString> storage;
         filter.reserve(extensions.size());
@@ -146,7 +145,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
 
 
         hr = pFileOpen->SetFileTypes(filter.size(), filter.data());
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
 
         {
             IShellItem* psiFolder = nullptr;

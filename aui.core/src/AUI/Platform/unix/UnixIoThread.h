@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,7 @@
 #include <AUI/Thread/AThread.h>
 #include <sys/poll.h>
 #include "UnixEventFd.h"
-#include <AUI/Thread/ACutoffSignal.h>
-#include <AUI/Util/EnumUtil.h>
+#include <AUI/Thread/AFuture.h>
 #include <AUI/Util/ABitField.h>
 #include <unordered_map>
 
@@ -80,12 +79,11 @@ private:
             return;
         }
 
-        ACutoffSignal cv;
-        mThread->enqueue([&]() noexcept {
-            callback();
-            cv.makeSignal();
+        AFuture<> cs;
+        mThread->enqueue([&] {
+            cs.supplyResult();
         });
-        cv.waitForSignal();
+        cs.wait();
     }
 
     UnixIoThread() noexcept;

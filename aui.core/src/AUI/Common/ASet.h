@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+// Copyright (C) 2020-2024 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,6 @@
 
 #pragma once
 
-#include "AUI/Core.h"
 #include <set>
 #include <ostream>
 #include <AUI/Traits/containers.h>
@@ -77,7 +76,7 @@ public:
      */
     inline self& operator<<(KeyType&& rhs) noexcept
     {
-        p::insert(std::forward<KeyType>(rhs));
+        p::insert(std::move(rhs));
         return *this;
     }
     /**
