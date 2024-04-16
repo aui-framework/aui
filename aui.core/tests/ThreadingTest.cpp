@@ -161,7 +161,7 @@ TEST(Threading, ParallelVoid) {
                     }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
-            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyResult";
+            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyValue";
         }
         watchdogTrigger = false;
     }
@@ -188,7 +188,7 @@ TEST(Threading, PararellWithResult) {
         for (auto& v : result) {
             accumulator += *v;
         }
-        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyResult";
+        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyValue";
     }
 }
 
