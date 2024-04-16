@@ -196,7 +196,7 @@ public:
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
-    _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(std::move(v))) {}
+    _(std::shared_ptr<T>&& v) noexcept: std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(std::move(v))) {}
     _(const _& v): std::shared_ptr<T>(v) {}
     _(_&& v) noexcept: std::shared_ptr<T>(std::forward<_>(v)) {}
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
