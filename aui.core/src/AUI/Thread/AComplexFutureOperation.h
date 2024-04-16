@@ -45,8 +45,10 @@ public:
      * AFuture<T> can be created only once.
      */
     [[nodiscard]]
-    AFuture<T> makeFuture() const noexcept {
-        return std::move(mFutureStrongReference);
+    AFuture<T> makeFuture() noexcept {
+        auto r = std::move(mFutureStrongReference);
+        AUI_ASSERT(mFutureStrongReference.inner() == nullptr);
+        return r;
     }
 
     /**

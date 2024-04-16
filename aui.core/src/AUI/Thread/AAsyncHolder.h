@@ -64,7 +64,7 @@ public:
         std::unique_lock lock(mSync);
         if constexpr (std::is_same_v<void, T>) {
             auto impl = future.inner().get();
-            mFutureSet << std::move(future);
+            mFutureSet << future;
             lock.unlock();
             future.onSuccess([this, impl]() {
                 std::unique_lock lock(mSync);

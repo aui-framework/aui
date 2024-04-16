@@ -635,6 +635,12 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    AFuture(const AFuture&) = default;
+    AFuture(AFuture&&) noexcept = default;
+
+    AFuture& operator=(const AFuture&) = default;
+    AFuture& operator=(AFuture&&) noexcept = default;
+
     /**
      * @brief Pushes the result to AFuture.
      * @param v value
@@ -763,6 +769,12 @@ public:
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
+
+    AFuture(const AFuture&) = default;
+    AFuture(AFuture&&) noexcept = default;
+
+    AFuture& operator=(const AFuture&) = default;
+    AFuture& operator=(AFuture&&) noexcept = default;
 
     /**
      * @brief Stores an exception from std::current_exception to the future.
