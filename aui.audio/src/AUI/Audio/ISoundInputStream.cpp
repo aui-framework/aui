@@ -25,7 +25,7 @@ _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
         throw;
     }
 
-    throw AException("Failed to create ISoundInputStream from url = {}: unsupported format"_format(url));
+    throw AException("Failed to create ISoundInputStream from url = {}: unsupported format"_format(url.full()));
 }
 
 ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
