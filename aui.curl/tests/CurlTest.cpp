@@ -37,7 +37,7 @@ TEST(CurlTest, ToByteBuffer) {
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 /*
- temporary disabled, the service does not work
+ temporary disabled, this service does not work
 TEST(CurlTest, Post1) {
     auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
             .withMethod(ACurl::Method::POST)
@@ -60,6 +60,33 @@ TEST(CurlTest, Post2) {
     } catch (...) {
         FAIL() << "Whoops! " << AJson::toString(buffer);
     }
+}
+
+TEST(CurlTest, StackfulCoroutine) {
+
+
+    AThreadPool localThreadPool(1);
+    int callOrder = 0;
+    auto f1 = localThreadPool * [&] {
+        EXPECT_EQ(callOrder, 0);
+
+        auto future = ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withHeaders({
+                "Content-Type: application/json; charset=utf-8"
+            })
+            .withBody("[\"hello\"]").runAsync();
+        auto buffer = AJson::fromBuffer(future->body);
+        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
+        EXPECT_EQ(callOrder++, 1);
+    };
+    auto f2 = localThreadPool * [&] {
+        // should be executed earlier despite of the task is pushed to threadpool later.
+        EXPECT_EQ(callOrder++, 0);
+    };
+    f1.wait(AFutureWait::JUST_WAIT);
+
+    EXPECT_EQ(callOrder, 2);
 }
 */
 
@@ -139,30 +166,3 @@ public:
         acceptMessage(msg);
     }
 };
-
-TEST(CurlTest, StackfulCoroutine) {
-
-
-    AThreadPool localThreadPool(1);
-    int callOrder = 0;
-    auto f1 = localThreadPool * [&] {
-        EXPECT_EQ(callOrder, 0);
-
-        auto future = ACurl::Builder("https://httpbin.org/post")
-            .withMethod(ACurl::Method::POST)
-            .withHeaders({
-                "Content-Type: application/json; charset=utf-8"
-            })
-            .withBody("[\"hello\"]").runAsync();
-        auto buffer = AJson::fromBuffer(future->body);
-        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
-        EXPECT_EQ(callOrder++, 1);
-    };
-    auto f2 = localThreadPool * [&] {
-        // should be executed earlier despite of the task is pushed to threadpool later.
-        EXPECT_EQ(callOrder++, 0);
-    };
-    f1.wait(AFutureWait::JUST_WAIT);
-
-    EXPECT_EQ(callOrder, 2);
-}
