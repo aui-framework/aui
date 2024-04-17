@@ -39,8 +39,11 @@ void ATimer::start()
 {
     if (!mTimer) {
         ATimer::scheduler();
-        mTimer = scheduler().timer(mPeriod, [this] {
-            emit fired;
+        mTimer = scheduler().timer(mPeriod, [this, self = weakPtr()] {
+            if (auto v = self.lock()) {
+                // this is valid
+                emit fired;
+            }
         });
     }
 }
