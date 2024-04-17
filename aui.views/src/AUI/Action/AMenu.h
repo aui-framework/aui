@@ -31,7 +31,7 @@ struct AMenuItem;
 
 using AMenuModel = AVector<AMenuItem>;
 
-class AMenu {
+class API_AUI_VIEWS AMenu {
 private:
     static _<IMenuProvider>& provider();
 public:
