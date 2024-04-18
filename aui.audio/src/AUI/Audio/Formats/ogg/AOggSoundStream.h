@@ -38,9 +38,10 @@ public:
     static _<AOggSoundStream> fromUrl(AUrl url);
 
 private:
+    void clear();
     void initialize();
 
     AOptional<AUrl> mUrl;
     _<IInputStream> mStream;
-    aui::fast_pimpl<OggVorbis_File, 944> mVorbisFile;
+    AOptional<aui::fast_pimpl<OggVorbis_File, 944>> mVorbisFile;
 };
