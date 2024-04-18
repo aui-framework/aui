@@ -10,9 +10,6 @@
 
 AOggSoundStream::AOggSoundStream(AUrl url) : mUrl(std::move(url)) {
     mStream = mUrl->open();
-    if (mStream == nullptr) {
-        throw AException("Failed to get input source for ogg file from {}"_format(mUrl->full()));
-    }
     initialize();
 }
 
@@ -21,24 +18,31 @@ AOggSoundStream::AOggSoundStream(_<IInputStream> stream) : mStream(std::move(str
 }
 
 AOggSoundStream::~AOggSoundStream() {
-    ov_clear(mVorbisFile.ptr());
+    clear();
 }
 
 AAudioFormat AOggSoundStream::info() {
+    if (!mVorbisFile) {
+        throw AException("cannot get AOggSoundStream stream info: vorbis file is not opened");
+    }
     return {
-        .channelCount = static_cast<AChannelFormat>(mVorbisFile->vi->channels),
-        .sampleRate = static_cast<unsigned int>(mVorbisFile->vi->rate),
+        .channelCount = static_cast<AChannelFormat>((*mVorbisFile)->vi->channels),
+        .sampleRate = static_cast<unsigned int>((*mVorbisFile)->vi->rate),
         .sampleFormat = SAMPLE_FORMAT
     };
 }
 
 size_t AOggSoundStream::read(char* dst, size_t size) {
-    size -= size % (aui::audio::bytesPerSample(SAMPLE_FORMAT) * mVorbisFile->vi->channels);
+    if (!mVorbisFile) {
+        throw AException("ogg decode error: vorbis file is not opened");
+    }
+
+    size -= size % (aui::audio::bytesPerSample(SAMPLE_FORMAT) * (*mVorbisFile)->vi->channels);
     int currentSection;
     char* end = dst + size;
     for (auto begin = dst; begin != end; ) {
         size_t len = end - begin;
-        auto r = ov_read(mVorbisFile.ptr(), begin, len, false, 2, true, &currentSection);
+        auto r = ov_read(mVorbisFile->ptr(), begin, len, false, 2, true, &currentSection);
         if (r < 0) {
             throw AException("ogg decode error");
         }
@@ -51,13 +55,12 @@ size_t AOggSoundStream::read(char* dst, size_t size) {
 }
 
 void AOggSoundStream::rewind() {
-    if (mUrl) {
-        ov_clear(mVorbisFile.ptr());
-        mStream.reset();
-        mStream = getInputStream(*mUrl);
-        if (mStream) {
-            initialize();
-        }
+    if (!mUrl) {
+        throw AException("cannot rewind AOggSoundStream: url is not provided");
+    }
+    mStream = getInputStream(*mUrl);
+    if (mStream) {
+        initialize();
     }
 }
 
@@ -90,5 +93,13 @@ void AOggSoundStream::initialize() {
         throw aui::audio::ABadFormatException("not an ogg stream");
     }
 
+    clear();
     mVorbisFile = vorbisFile;
+}
+
+void AOggSoundStream::clear() {
+    if (mVorbisFile) {
+        ov_clear(mVorbisFile->ptr());
+        mVorbisFile.reset();
+    }
 }
