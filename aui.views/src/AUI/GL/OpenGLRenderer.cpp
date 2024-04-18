@@ -32,6 +32,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Util/AArrayView.h"
 #include "ShaderUniforms.h"
@@ -479,6 +480,14 @@ void OpenGLRenderer::setBlending(Blending blending) {
         case Blending::INVERSE_DST:
             glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
             break;
+
+        case Blending::ADDITIVE:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+
+        case Blending::INVERSE_SRC:
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ZERO);
+            break;
     }
 }
 
@@ -843,7 +852,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
     positions << LineVertex{ points[0], 0.f, 1.f };
 
     float distanceAccumulator = 0.f;
-    for (const auto& point : points | ranges::view::drop(1)) {
+    for (const auto& point : points | ranges::views::drop(1)) {
         if (computeDistances) {
             distanceAccumulator += glm::distance(positions.last().position, point);
         }

@@ -17,7 +17,6 @@
 #pragma once
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AStringVector.h>
-#include <AUI/IO/APath.h>
 #include <glm/glm.hpp>
 #include <cstring>
 #include "types.h"

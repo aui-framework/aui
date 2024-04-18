@@ -354,7 +354,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
     using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
 
     object && (*linker.getBinder())(linker.getField(),
-                                    static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
+                                    (ASignal<Data>(View::*))(ADataBindingDefault<View, Data>::getGetter()),
                                     static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
     return object;
 }

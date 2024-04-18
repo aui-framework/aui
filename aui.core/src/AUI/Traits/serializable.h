@@ -69,6 +69,7 @@ namespace aui {
         }
     };
 
+    //NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
     template<typename T>
     struct serialize_sized {
         T* value;
@@ -83,6 +84,7 @@ namespace aui {
         serialize_raw(T& value): value(&value) {}
         serialize_raw(T&& value): value(&value) {}
     };
+    //NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 }
 
 // ints, floats, doubles, etc...
@@ -142,9 +144,6 @@ struct ASerializable<AString> {
         aui::serialize(os, value.toStdString());
     }
 };
-
-template<>
-struct ASerializable<APath>: ASerializable<AString> {};
 
 
 template<typename T>

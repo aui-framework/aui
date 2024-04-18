@@ -167,7 +167,7 @@ public:
             if (from->sin_addr.s_addr != mDestination.addr().sin_addr.s_addr)
                 return 0;
 
-            mResult.supplyResult(std::chrono::floor<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - mTime));
+            mResult.supplyValue(std::chrono::floor<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - mTime));
         }
 
         return 0;

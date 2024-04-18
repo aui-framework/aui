@@ -53,6 +53,10 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
         case Button::YES_NO:
             flags |= MB_YESNO;
             break;
+
+        case Button::YES_NO_CANCEL:
+            flags |= MB_YESNOCANCEL;
+            break;
     }
 
     switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {

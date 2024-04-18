@@ -168,7 +168,7 @@ void CppFrontend::visitNode(const VariableReferenceNode& node) {
 void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) {
     for (const auto& type : {KeywordToken::Type::UNIFORM, KeywordToken::Type::INTER}) {
         auto range = mHeaderNonIndexedAttributesDeclarations
-                     | ranges::view::filter([&](const auto& n) { return n.type() == type; });
+                     | ranges::views::filter([&](const auto& n) { return n.type() == type; });
         if (range.empty()) {
             continue;
         }

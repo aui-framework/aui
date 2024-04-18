@@ -29,10 +29,10 @@
 
 class ViewHierarchyTreeModel: public ITreeModel<AString> {
 private:
-    _<AView> mRoot;
+    _<AViewContainer> mRoot;
 
 public:
-    ViewHierarchyTreeModel(_<AView> root) : mRoot(std::move(root)) {
+    ViewHierarchyTreeModel(_<AViewContainer> root) : mRoot(std::move(root)) {
         // scan(mRoot); // crashes
     }
 
@@ -72,7 +72,10 @@ public:
         });
     }
 
-    static ATreeModelIndex makeIndex(aui::no_escape<AView> view) {
+    ATreeModelIndexOrRoot makeIndex(aui::no_escape<AView> view) {
+        if (view.ptr() == mRoot.get()) {
+            return ATreeModelIndex::ROOT;
+        }
         std::size_t row = 0;
         if (auto p = view->getParent()) {
             row = p->getViews().indexOf(view->sharedPtr());
@@ -80,8 +83,8 @@ public:
         return ATreeModelIndex(row, 0, view->sharedPtr());
     }
 
-    size_t childrenCount(const ATreeModelIndex& vertex) override {
-        auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
+    size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
         if (c) {
             return c->getViews().size();
         }
@@ -92,28 +95,24 @@ public:
         return Devtools::prettyViewName(index.as<_<AView>>().get());
     }
 
-    ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) override {
-        auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
+    ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndexOrRoot& vertex) override {
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
         if (!c) {
             throw AException("invalid index");
         }
         return ATreeModelIndex(row, column, c->getViews().at(row));
     }
 
-    ATreeModelIndex parent(const ATreeModelIndex& ofChild) override {
+    ATreeModelIndexOrRoot parent(const ATreeModelIndex& ofChild) override {
         auto view = ofChild.as<_<AView>>();
         auto parent = view->getParent();
+
         if (!parent) {
-            return {};
+            // window
+            return ATreeModelIndex::ROOT;
         }
 
-        auto parentOfParent = parent->getParent();
-
-        return ATreeModelIndex{ parentOfParent ? parentOfParent->getViews().indexOf(parent->sharedPtr()) : 0, 0, parent->sharedPtr() };
-    }
-
-    ATreeModelIndex root() override {
-        return ATreeModelIndex(0, 0, mRoot);
+        return makeIndex(parent);
     }
 };
 

@@ -105,9 +105,9 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		AFuture<AStacktrace> future;
 		payloads.value()[mId] = [future] {
 #if AUI_PLATFORM_WIN
-			  future.supplyResult(AStacktrace::capture(1));
+			  future.supplyValue(AStacktrace::capture(1));
 #else
-			  future.supplyResult(AStacktrace::capture(6));
+			  future.supplyValue(AStacktrace::capture(6));
 #endif
 		};
 		lock.unlock();
@@ -283,11 +283,10 @@ void AAbstractThread::enqueue(std::function<void()> f)
 
 void AAbstractThread::processMessagesImpl()
 {
-    AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
-            mId == std::this_thread::get_id()));
-	std::unique_lock lock(mQueueLock);
-	while (!mMessageQueue.empty())
-	{
+    AUI_ASSERTX(mId == std::this_thread::get_id(),
+                "AAbstractThread::processMessages() should not be called from other thread");
+    std::unique_lock lock(mQueueLock);
+    while (!mMessageQueue.empty()) {
         auto f = std::move(mMessageQueue.front());
 		mMessageQueue.pop_front();
 		lock.unlock();

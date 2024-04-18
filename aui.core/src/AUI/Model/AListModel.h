@@ -121,6 +121,10 @@ public:
         emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
     }
 
+    void invalidate(iterator index) {
+        invalidate(std::distance(begin(), index));
+    }
+
     void clear() noexcept {
         erase(mVector.begin(), mVector.end());
     }

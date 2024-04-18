@@ -87,11 +87,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, Others...)
         {
-            l(std::forward<A1>(a1));
+            l(std::move(a1));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
     template<typename Lambda, typename A1, typename A2>
@@ -107,11 +107,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, A2&& a2, Others...)
         {
-            l(std::forward<A1>(a1), std::forward<A2>(a2));
+            l(std::move(a1), std::move(a2));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
 
@@ -128,11 +128,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, A2&& a2, A3&& a3, Others...)
         {
-            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
+            l(std::move(a1), std::move(a2), std::move<A3>(a3));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
 
@@ -168,7 +168,7 @@ public:
         std::tuple<Args...> args;
 
         void invokeSignal(AObject* emitter) {
-            signal.invokeSignal(emitter, args);
+            signal.invokeSignal(emitter, std::move(args));
         }
     };
 
@@ -177,7 +177,8 @@ public:
     }
 
     ASignal() = default;
-    ASignal(ASignal&&) = default;
+    ASignal(ASignal&&) noexcept = default;
+    ASignal(const ASignal&) = delete;
 
     virtual ~ASignal() noexcept
     {

@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include "AUI/Common/AException.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
@@ -43,6 +44,12 @@ namespace {
                                 Button { "Yes"_i18n }.clicked(me::onYes),
                                 Button { "No"_i18n }.clicked(me::onNo),
                             };
+                            case AMessageBox::Button::YES_NO_CANCEL: return Horizontal {
+                                Button { "Yes"_i18n }.clicked(me::onYes),
+                                Button { "No"_i18n }.clicked(me::onNo),
+                                Button { "Cancel"_i18n }.clicked(me::onCancel),
+                            };
+                            default: throw AException("invalid AMessageBox::Button");
                         }
                     },
                 }

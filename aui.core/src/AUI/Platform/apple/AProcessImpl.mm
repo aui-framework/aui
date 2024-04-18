@@ -29,7 +29,11 @@ class ASelfProcess : public AProcess {
 
     uint32_t getPid() const noexcept override { return getpid(); }
 
-    size_t processMemory() const override { throw AException("unimplemented"); }
+    size_t processMemory() const override {
+        struct rusage r;
+        getrusage(RUSAGE_SELF, &r);
+        return r.ru_maxrss;
+    }
 };
 
 _<AProcess> AProcess::self() { return _new<ASelfProcess>(); }

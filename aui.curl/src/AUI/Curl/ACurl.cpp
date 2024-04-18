@@ -411,7 +411,7 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
     auto body = _new<AByteBuffer>();
     withDestinationBuffer(*body);
     withOnSuccess([result, body = std::move(body)](ACurl& c) {
-        result.supplyResult(makeResponse(c, std::move(*body)));
+        result.supplyValue(makeResponse(c, std::move(*body)));
     });
     withErrorCallback([result](const ErrorDescription& error) {
         try {

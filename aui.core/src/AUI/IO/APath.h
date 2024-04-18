@@ -17,10 +17,11 @@
 #pragma once
 
 #include <iterator>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Common/AString.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
-#include <AUI/Util/EnumUtil.h>
+#include <AUI/Traits/serializable.h>
 
 /**
  * @brief Flag enum for APath::find
@@ -123,7 +124,7 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(other) {
+    APath(AString&& other) noexcept: AString(std::move(other)) {
         removeBackSlashes();
     }
     APath(const AString& other) noexcept: AString(other) {
@@ -349,7 +350,7 @@ public:
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
      * @endcode
-     * Which would supplyResult into "path/to/your/file.txt"
+     * Which would supplyValue into "path/to/your/file.txt"
      * @return path to child file relatively to this folder
      */
     [[nodiscard]]
@@ -363,3 +364,6 @@ public:
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
 }
+
+template<>
+struct ASerializable<APath>: ASerializable<AString> {};

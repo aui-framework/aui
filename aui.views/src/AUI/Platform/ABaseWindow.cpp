@@ -195,7 +195,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         mShowTouches.clear();
     }
     ALogger::info("AUI_SHOW_TOUCHES") << "onPointerPressed(pointerIndex = " << event.pointerIndex << ", pos = " << event.position << ")";
-    mShowTouches[event.pointerIndex] = {{event.position}};
+    mShowTouches[event.pointerIndex] = { .press = event.position };
 #endif
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
@@ -263,7 +263,7 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 
 #if AUI_SHOW_TOUCHES
     if (auto c = mShowTouches.contains(event.pointerIndex)) {
-        c->second.positions << event.position;
+        c->second.release  = event.position;
     }
 
     ALogger::info("AUI_SHOW_TOUCHES") << "onPointerReleased(pI=" << copy.pointerIndex << ",pos=" << copy.position << ",tC=" << copy.triggerClick << ")";
@@ -311,7 +311,7 @@ void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 #if AUI_SHOW_TOUCHES
     ALogger::info("AUI_SHOW_TOUCHES") << "onPointerMove(pI=" << event.pointerIndex << ",pos=" << pos << ")";
     if (auto c = mShowTouches.contains(event.pointerIndex)) {
-        c->second.positions << pos;
+        c->second.moves << pos;
     }
 #endif
     mMousePos = pos;
@@ -387,6 +387,10 @@ void ABaseWindow::render(ClipOptimizationContext context) {
         if (*delta == glm::ivec2(0, 0)) {
             return true;
         }
+
+#if AUI_SHOW_TOUCHES
+        ALogger::info("AUI_SHOW_TOUCHES") << "onScroll(pointerIndex = " << scroll.pointer << ", delta = " << *delta << ", kinetic = true)";
+#endif
         onScroll(AScrollEvent {
                 .origin       = scroll.scroller.origin(),
                 .delta        = *delta,
@@ -406,20 +410,23 @@ void ABaseWindow::render(ClipOptimizationContext context) {
 
 #if AUI_SHOW_TOUCHES
     for (const auto&[pointerIndex, data] : mShowTouches) {
-        ARender::lines(ASolidBrush{AColor::BLUE}, data.positions);
-        ARender::points(ASolidBrush{AColor::RED}, data.positions, 6_dp);
+        {
+            AVector<glm::vec2> lines;
+            lines << data.press;
+            lines << data.moves;
 
-        if (!isPressed(pointerIndex) && data.positions.size() >= 2) {
-            // show tangent trail
-            const auto last = data.positions.last();
-            const auto preLast = *(data.positions.end() - 2);
-            const auto vector = last - preLast;
+            if (data.release) {
+                lines << *data.release;
+            }
+            ARender::lines(ASolidBrush{AColor::BLUE}, lines);
+        }
+        ARender::points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
+        glm::vec2 p[1] = { data.press };
+        ARender::points(ASolidBrush{AColor::GREEN}, p, 6_dp);
 
-            const glm::vec2 trail[] = {
-                last,
-                last + vector * 10.f / float(frameMillis()),
-            };
-            ARender::lines(ASolidBrush{AColor::GREEN}, trail);
+        if (data.release) {
+            glm::vec2 p[1] = { *data.release };
+            ARender::points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
         }
     }
 #endif

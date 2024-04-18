@@ -93,6 +93,7 @@ private:
         glm::vec2 previousPosition = {0.f, 0.f}; // to calculate velocity
         glm::vec2 currentVelocity = {0.f, 0.f};
         glm::vec2 prevVelocity = {0.f, 0.f};
+        glm::vec2 prevPrevVelocity = {0.f, 0.f};
         std::chrono::microseconds timeBetweenFrames;
         AOptional<std::chrono::high_resolution_clock::time_point> lastFrameTime;
     };

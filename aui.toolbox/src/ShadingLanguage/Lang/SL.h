@@ -8,6 +8,7 @@
 #include <ShadingLanguage/Lang/AST/AST.h>
 #include <ShadingLanguage/Lang/AST/ExpressionNode.h>
 #include <AUI/IO/IInputStream.h>
+#include "AUI/IO/APath.h"
 
 namespace aui::sl {
     _<AST> parseCode(_<IInputStream> is, APath fileDir = APath::workingDir());
