@@ -20,3 +20,10 @@
 TEST(Ping, Case1) {
     EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
 }
+
+/*
+// we are unable to ping even to github on github actions
+TEST(Ping, Case2) {
+    EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
+}
+*/

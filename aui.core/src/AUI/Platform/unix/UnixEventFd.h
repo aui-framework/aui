@@ -23,6 +23,12 @@
 
 #include "AUI/Traits/values.h"
 
+/**
+ * @brief File-descriptor object to trigger select/poll/epoll/kqueue
+ * @details
+ * On Linux implemented with eventfd.
+ * On FreeBSD/Apple implemented with pipes.
+ */
 class UnixEventFd: public aui::noncopyable {
 public:
     UnixEventFd() noexcept;
@@ -34,7 +40,7 @@ public:
     [[nodiscard]]
     int handle() noexcept {
 #if AUI_PLATFORM_APPLE
-        return mIn;
+        return mOut;
 #else
         return mHandle;
 #endif

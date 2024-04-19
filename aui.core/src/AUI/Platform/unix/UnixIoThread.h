@@ -42,6 +42,9 @@ AUI_ENUM_FLAG(UnixPollEvent) {
 #endif
 
 
+/**
+ * @brief Poll-based event loop to handle events of file descriptors.
+ */
 class API_AUI_CORE UnixIoThread {
 public:
     using Callback = std::function<void(ABitField<UnixPollEvent> triggeredFlags)>;
@@ -81,6 +84,7 @@ private:
 
         AFuture<> cs;
         mThread->enqueue([&] {
+            callback();
             cs.supplyValue();
         });
         cs.wait();
