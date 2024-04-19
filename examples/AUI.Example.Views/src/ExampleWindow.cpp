@@ -25,7 +25,6 @@
 #include "ExampleWindow.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/Model/ATreeModel.h"
-#include "AUI/Network/AIcmp.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
@@ -68,7 +67,6 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ADragArea.h>
-#include <chrono>
 #include <memory>
 #include <random>
 #include <AUI/View/ASplitter.h>
@@ -332,21 +330,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         },
                 },
                 Vertical::Expanding {
-                        GroupBox {
-                                Label { "Test"},
-                                Vertical {
-                                        Horizontal {
-                                                Label {"Ping to github.com: "},
-                                                [&] {
-                                                        auto l = _new<ALabel>("Quering...");
-                                                        mAsync << AIcmp::ping(AInet4Address("github.com")).onSuccess([l](std::chrono::high_resolution_clock::duration d) {
-                                                            l->setText("{}ms"_format(std::chrono::duration_cast<std::chrono::milliseconds>(d).count()));
-                                                        });
-                                                        return l;
-                                                }(),
-                                        }
-                                }
-                        },
                         // fields
                         GroupBox {
                                 Label { "Progressbar" },
