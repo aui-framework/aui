@@ -43,13 +43,13 @@ UnixEventFd::~UnixEventFd() {
 
 void UnixEventFd::set() noexcept {
     std::uint64_t buffer = 1;
-    auto r = write(mOut, &buffer, sizeof(buffer));
+    auto r = write(mIn, &buffer, sizeof(buffer));
     AUI_ASSERT(r == sizeof(buffer));
 }
 
 void UnixEventFd::reset() noexcept {
     std::uint64_t buffer = 0;
-    auto r = read(mIn, &buffer, sizeof(buffer));
+    auto r = read(mOut, &buffer, sizeof(buffer));
     AUI_ASSERT(r == sizeof(buffer));
 }
 

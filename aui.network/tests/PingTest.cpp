@@ -20,3 +20,7 @@
 TEST(Ping, Case1) {
     EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
 }
+
+TEST(Ping, Case2) {
+    EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
+}
