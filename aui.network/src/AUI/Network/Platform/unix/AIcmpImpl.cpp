@@ -18,6 +18,15 @@
 // Created by Alex2772 on 1/27/2023.
 //
 
+extern "C" {
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <netinet/ip_icmp.h>
+#include <sys/time.h>
+}
+
 #include <AUI/Network/AIcmp.h>
 #include "AUI/Common/AByteBufferView.h"
 #include "AUI/Common/AException.h"
@@ -27,17 +36,9 @@
 #include "AUI/Platform/unix/UnixIoThread.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
-
-#include <_types/_uint16_t.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
 #include <chrono>
 #include <csignal>
-#include <fcntl.h>
 
-#include <netinet/ip_icmp.h>
-#include <sys/time.h>
 
 namespace {
     static constexpr auto MESSAGE_BUFFER_SIZE = 192;
@@ -59,30 +60,10 @@ public:
 #endif
     }
 
-    IcmpImpl(const AInet4Address& mDestination) : mDestination(mDestination) {
-        setUid();
-        setEUid();
-        constexpr int SOCKET_TYPE = SOCK_DGRAM;
-        mSocket = socket(AF_INET, SOCKET_TYPE, IPPROTO_ICMP);
-        setUid();
-
+    IcmpImpl(const AInet4Address& mDestination) : mSocket(socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP)), mDestination(mDestination) {
         if (mSocket < 0) {
             throw AIOException(aui::impl::formatSystemError().description);
         }
-    }
-
-    static inline void tvsub(struct timeval *out, struct timeval *in)
-    {
-        if ((out->tv_usec -= in->tv_usec) < 0) {
-            --out->tv_sec;
-            out->tv_usec += 1000000;
-        }
-        out->tv_sec -= in->tv_sec;
-    }
-
-    int isOurs(uint16_t id)
-    {
-        return SOCKET_TYPE == SOCK_DGRAM || id == mId;
     }
 
     static uint16_t calculateCheckum(AByteBufferView buffer)
@@ -134,31 +115,21 @@ public:
             }
 
             const auto socketAddress = mDestination.addr();
-#ifdef __linux
-            {
-                auto r = ::connect(mSocket, reinterpret_cast<const sockaddr*>(&socketAddress), sizeof(sockaddr_in));
-
-                if (r != 0) {
-                    throw AIOException(aui::impl::formatSystemError().description);
-            }
-#endif
             {
                 icmp icp;
                 aui::zero(icp);
                 icp.icmp_type = ICMP_ECHO;
-                icp.icmp_code = 0;
-                icp.icmp_cksum = 0;
-                icp.icmp_id = htons(mId);
                 icp.icmp_seq = htons(1);
 
                 icp.icmp_cksum = calculateCheckum(AByteBufferView::fromRaw(icp));
 
-                auto r = sendto(mSocket, (const char *) &icp, sizeof(icp), 0,
+                auto r = sendto(mSocket, reinterpret_cast<const char *>(&icp), sizeof(icp), 0,
                                 reinterpret_cast<const sockaddr *>(&socketAddress), sizeof(socketAddress));
                 mTime = std::chrono::high_resolution_clock::now();
                 if (r != sizeof(icp)) {
                     throw AIOException("ping send error: {}"_format(aui::impl::formatSystemError().description));
                 }
+                receive();
             }
         } catch (...) {
             mResult.supplyException();
@@ -176,7 +147,7 @@ public:
                 sizeof(messageBuffer)
             };
             msghdr msg = {
-                NULL,
+                nullptr,
                 0,
                 &messageBufferIov,
                 1,
@@ -184,7 +155,6 @@ public:
                 sizeof(packetInfoBuffer),
                 0
             };
-            cmsghdr *cmsg;
 
             const auto messageLength = (int)recvmsg(mSocket, &msg, 0);
             if (messageLength < 0) {
@@ -201,7 +171,6 @@ public:
             const auto ipHeaderLength = ((*(uint8_t *)messageBuffer) & 0x0F) * 4;
 
             const auto reply = (icmp*)(messageBuffer + ipHeaderLength);
-            const auto replyId = ntohs(reply->icmp_id);
             const auto replySeq = ntohs(reply->icmp_seq);
 
             /*
@@ -212,10 +181,10 @@ public:
             }
 
             /*
-             * Verify the ID and sequence number to make sure that the reply
+             * Verify the sequence number to make sure that the reply
              * is associated with the current request.
              */
-            if (replyId != mId || replySeq != 1) {
+            if (replySeq != 1) {
                 return false;
             }
 
@@ -245,7 +214,6 @@ public:
     int mSocket;
 
 private:
-    uint16_t mId = getpid();
     AInet4Address mDestination;
     AFuture<std::chrono::high_resolution_clock::duration> mResult;
 
