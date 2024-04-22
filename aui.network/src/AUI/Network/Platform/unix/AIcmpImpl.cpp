@@ -18,6 +18,8 @@
 // Created by Alex2772 on 1/27/2023.
 //
 
+#include <exception>
+#include "AUI/Common/ATimer.h"
 extern "C" {
 #include <sys/socket.h>
 #include <unistd.h>
@@ -212,7 +214,10 @@ public:
 
     int mSocket;
 
-    AFuture<std::chrono::high_resolution_clock::duration> mResult;
+    const AFuture<std::chrono::high_resolution_clock::duration>& result() const noexcept {
+        return mResult;
+    }
+
 private:
     AInet4Address mDestination;
     AFuture<std::chrono::high_resolution_clock::duration> mResult;
@@ -225,7 +230,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
     auto impl = _new<IcmpImpl>(destination);
     auto timer = _new<ATimer>(timeout);
     AObject::connect(timer->fired, timer, [impl]() {
-        impl->supplyException(AIOException("timeout"));
+        impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
         UnixIoThread::inst().unregisterCallback(impl->mSocket);
     });
 

@@ -15,15 +15,20 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <gmock/gmock.h>
+#include "AUI/Common/AException.h"
 #include "AUI/Network/AIcmp.h"
 
-TEST(Ping, Case1) {
+TEST(Ping, Localhost) {
     EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+}
+
+TEST(Ping, NeverRespond) {
+    EXPECT_THROW(AIcmp::ping(AInet4Address("0.0.0.0"))->count(), AException);
 }
 
 /*
 // we are unable to ping even to github on github actions
-TEST(Ping, Case2) {
+TEST(Ping, External) {
     EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
 }
 */
