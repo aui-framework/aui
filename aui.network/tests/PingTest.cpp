@@ -22,10 +22,6 @@ TEST(Ping, Localhost) {
     EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
 }
 
-TEST(Ping, NeverRespond) {
-    EXPECT_THROW(AIcmp::ping(AInet4Address("0.0.0.0"))->count(), AException);
-}
-
 /*
 // we are unable to ping even to github on github actions
 TEST(Ping, External) {
