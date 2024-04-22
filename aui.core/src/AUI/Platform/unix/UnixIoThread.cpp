@@ -137,15 +137,26 @@ public:
     void loop() override {
         for (;;) {
             AThread::processMessages();
-            auto r = poll(mParent.mPollFd.data(), mParent.mPollFd.size(), -1);
+            auto pollFd = std::move(mParent.mPollFd);
+            auto callbacks = std::move(mParent.mCallbacks);
+            auto r = poll(pollFd.data(), pollFd.size(), -1);
             AUI_ASSERT(r > 0);
-            for (auto it = mParent.mPollFd.begin(); it != mParent.mPollFd.end() && r > 0; ++it) {
-                if (it->revents) {
-                    mParent.mCallbacks[it - mParent.mPollFd.begin()](static_cast<UnixPollEvent>(it->revents));
+            auto pollIt = pollFd.begin();
+            auto callbacksIt = callbacks.begin();
+            for (; pollIt != pollFd.end() && callbacksIt != callbacks.end(); ++pollIt, ++callbacksIt) {
+                if (pollIt->revents) {
+                    (*callbacksIt)(static_cast<UnixPollEvent>(pollIt->revents));
+                    pollIt->revents = 0;
                     r -= 1;
-                    it->revents = 0;
+                    if (r == 0) {
+                        break;
+                    }
                 }
             }
+            AUI_ASSERT(mParent.mPollFd.empty());
+            AUI_ASSERT(mParent.mCallbacks.empty());
+            mParent.mPollFd = std::move(pollFd);
+            mParent.mCallbacks = std::move(callbacks);
         }
     }
 private:
@@ -153,16 +164,20 @@ private:
 };
 
 void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept {
-    executeOnIoThreadBlocking([&]() mutable {
+    executeOnIoThreadBlocking([this, fd, flags, callback = std::move(callback)]() mutable {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
+        AUI_ASSERT(callback != nullptr);
         mCallbacks << std::move(callback);
         mPollFd << pollfd {
             fd, static_cast<short>(flags.value()), 0
         };
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
 void UnixIoThread::unregisterCallback(int fd) noexcept {
-    executeOnIoThreadBlocking([&] {
+    executeOnIoThreadBlocking([this, fd] {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
         std::size_t index = 0;
         mPollFd.removeIf([&](const pollfd& p) {
             if (p.fd == fd) {
@@ -172,6 +187,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
             ++index;
             return false;
         });
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
