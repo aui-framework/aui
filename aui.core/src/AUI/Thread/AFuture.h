@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <exception>
 #include <thread>
 #include <utility>
 #include "AUI/Traits/concepts.h"
@@ -41,7 +42,8 @@ class AThreadPool;
 class AInvocationTargetException: public AException {
 
 public:
-    AInvocationTargetException(const AString& message = {}): AException(message, std::current_exception(), AStacktrace::capture(3)) {}
+    AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
+        AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
 
 
     ~AInvocationTargetException() noexcept override = default;
@@ -264,12 +266,12 @@ namespace aui::impl::future {
                 cv.notify_all();
             }
 
-            void reportException() noexcept {
+            void reportException(std::exception_ptr causedBy = std::current_exception()) noexcept {
                 if (cancelled) {
                     return;
                 }
                 std::unique_lock lock(mutex);
-                exception.emplace();
+                exception.emplace("exception reported", std::move(causedBy));
                 cv.notify_all();
                 if (!onError) {
                     return;
@@ -660,9 +662,9 @@ public:
     /**
      * @brief Stores an exception from std::current_exception to the future.
      */
-    void supplyException() const noexcept {
+    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
         auto& inner = (*super::mInner);
-        inner->reportException();
+        inner->reportException(std::move(causedBy));
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
@@ -779,9 +781,9 @@ public:
     /**
      * @brief Stores an exception from std::current_exception to the future.
      */
-    void supplyException() const noexcept {
+    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
         auto& inner = (*super::mInner);
-        inner->reportException();
+        inner->reportException(std::move(causedBy));
     }
 
     /**

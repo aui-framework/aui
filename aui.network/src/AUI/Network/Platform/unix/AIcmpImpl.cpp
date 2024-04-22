@@ -18,6 +18,8 @@
 // Created by Alex2772 on 1/27/2023.
 //
 
+#include <exception>
+#include "AUI/Common/ATimer.h"
 extern "C" {
 #include <sys/socket.h>
 #include <unistd.h>
@@ -129,7 +131,6 @@ public:
                 if (r != sizeof(icp)) {
                     throw AIOException("ping send error: {}"_format(aui::impl::formatSystemError().description));
                 }
-                receive();
             }
         } catch (...) {
             mResult.supplyException();
@@ -213,6 +214,10 @@ public:
 
     int mSocket;
 
+    const AFuture<std::chrono::high_resolution_clock::duration>& result() const noexcept {
+        return mResult;
+    }
+
 private:
     AInet4Address mDestination;
     AFuture<std::chrono::high_resolution_clock::duration> mResult;
@@ -223,13 +228,18 @@ private:
 
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
     auto impl = _new<IcmpImpl>(destination);
+    auto timer = _new<ATimer>(timeout);
+    AObject::connect(timer->fired, timer, [impl]() {
+        impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
+        UnixIoThread::inst().unregisterCallback(impl->mSocket);
+    });
 
-    UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl](ABitField<UnixPollEvent>) mutable {
+    UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl, timer](ABitField<UnixPollEvent>) mutable {
         if (impl->receive()) {
             UnixIoThread::inst().unregisterCallback(impl->mSocket);
         }
     });
-
+    timer->start();
 
     return impl->send(timeout);
 }
