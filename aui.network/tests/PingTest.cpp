@@ -17,9 +17,12 @@
 #include <gmock/gmock.h>
 #include "AUI/Common/AException.h"
 #include "AUI/Network/AIcmp.h"
+#include "AUI/Util/kAUI.h"
 
 TEST(Ping, Localhost) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+    AUI_REPEAT(1000) {
+        EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+    }
 }
 
 /*

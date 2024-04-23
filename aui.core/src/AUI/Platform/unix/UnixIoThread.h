@@ -74,6 +74,7 @@ private:
     AVector<pollfd> mPollFd;
     AVector<Callback> mCallbacks;
 #endif
+    AMessageQueue mMessageQueue;
 
     template<aui::invocable Callback>
     void executeOnIoThreadBlocking(Callback&& callback) {
@@ -83,10 +84,11 @@ private:
         }
 
         AFuture<> cs;
-        mThread->enqueue([&] {
+        mMessageQueue.enqueue([&] {
             callback();
             cs.supplyValue();
         });
+        mNotifyEvent.set();
         cs.wait();
     }
 

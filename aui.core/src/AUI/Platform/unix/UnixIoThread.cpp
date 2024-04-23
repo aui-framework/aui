@@ -19,6 +19,7 @@
 //
 
 #include "UnixIoThread.h"
+#include <range/v3/view.hpp>
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Thread/AThread.h"
 #include "UnixEventFd.h"
@@ -137,26 +138,26 @@ public:
     void loop() override {
         for (;;) {
             AThread::processMessages();
-            auto pollFd = std::move(mParent.mPollFd);
-            auto callbacks = std::move(mParent.mCallbacks);
+            mParent.mMessageQueue.processMessages();
+            auto& pollFd = mParent.mPollFd;
+            auto& callbacks = mParent.mCallbacks;
+            /*
+            ALogger::info("UnixIoThread") << "poll:";
+            for (const auto& i : pollFd) {
+                ALogger::info("UnixIoThread") << i.fd;
+            }*/
             auto r = poll(pollFd.data(), pollFd.size(), -1);
             AUI_ASSERT(r > 0);
-            auto pollIt = pollFd.begin();
-            auto callbacksIt = callbacks.begin();
-            for (; pollIt != pollFd.end() && callbacksIt != callbacks.end(); ++pollIt, ++callbacksIt) {
-                if (pollIt->revents) {
-                    (*callbacksIt)(static_cast<UnixPollEvent>(pollIt->revents));
-                    pollIt->revents = 0;
+            for (const auto&[pollInfo, callback] : ranges::zip_view(pollFd, callbacks)) {
+                if (pollInfo.revents) {
+                    callback(static_cast<UnixPollEvent>(pollInfo.revents));
+                    pollInfo.revents = 0;
                     r -= 1;
                     if (r == 0) {
                         break;
                     }
                 }
             }
-            AUI_ASSERT(mParent.mPollFd.empty());
-            AUI_ASSERT(mParent.mCallbacks.empty());
-            mParent.mPollFd = std::move(pollFd);
-            mParent.mCallbacks = std::move(callbacks);
         }
     }
 private:
