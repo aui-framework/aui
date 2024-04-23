@@ -147,9 +147,10 @@ public:
                 messageBuffer,
                 sizeof(messageBuffer)
             };
+            char addrBuf[128];
             msghdr msg = {
-                nullptr,
-                0,
+                addrBuf,
+                sizeof(addrBuf),
                 &messageBufferIov,
                 1,
                 packetInfoBuffer,
