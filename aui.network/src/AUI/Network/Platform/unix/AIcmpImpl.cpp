@@ -182,6 +182,16 @@ public:
                 return false;
             }
 
+            /**
+             * Compare the source with mDestination. Actually, on Linux the check is not required as the kernel
+             * does ID checking for us. On FreeBSD/Apple, however, it doesn't.
+             */
+            const auto& from = *reinterpret_cast<sockaddr_in*>(msg.msg_name);
+            const auto expectedFrom = mDestination.addr();
+            if (std::memcmp(&from.sin_addr, &expectedFrom.sin_addr, sizeof(from.sin_addr)) != 0) {
+                return false;
+            }
+
             /*
              * Verify the sequence number to make sure that the reply
              * is associated with the current request.
