@@ -24,6 +24,7 @@
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
+#include "AUI/Util/AMessageQueue.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
@@ -264,35 +265,23 @@ void AThread::join()
 	mThread->join();
 }
 
-void AAbstractThread::enqueue(std::function<void()> f)
+void AAbstractThread::enqueue(AMessageQueue::Message f)
 {
-	{
-		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ std::move(f) };
-	}
-	{
-		if (mCurrentEventLoop) {
-			std::unique_lock lock(mEventLoopLock);
-			if (mCurrentEventLoop)
-			{
-				mCurrentEventLoop->notifyProcessMessages();
-			}
-		}
-	}
+    mMessageQueue.enqueue(std::move(f));
+    if (mCurrentEventLoop) {
+        std::unique_lock lock(mEventLoopLock);
+        if (mCurrentEventLoop)
+        {
+            mCurrentEventLoop->notifyProcessMessages();
+        }
+    }
 }
 
 void AAbstractThread::processMessagesImpl()
 {
     AUI_ASSERTX(mId == std::this_thread::get_id(),
                 "AAbstractThread::processMessages() should not be called from other thread");
-    std::unique_lock lock(mQueueLock);
-    while (!mMessageQueue.empty()) {
-        auto f = std::move(mMessageQueue.front());
-		mMessageQueue.pop_front();
-		lock.unlock();
-		f.proc();
-		lock.lock();
-	}
+    mMessageQueue.processMessages();
 }
 
 AThread::~AThread()
@@ -342,6 +331,5 @@ AThread::AThread(std::function<void()> functor)
 }
 
 bool AAbstractThread::messageQueueEmpty() noexcept {
-	std::unique_lock lock(mQueueLock);
-	return mMessageQueue.empty();
+	return mMessageQueue.messages().empty();
 }

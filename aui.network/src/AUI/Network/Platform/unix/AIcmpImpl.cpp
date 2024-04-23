@@ -147,9 +147,10 @@ public:
                 messageBuffer,
                 sizeof(messageBuffer)
             };
+            char addrBuf[128];
             msghdr msg = {
-                nullptr,
-                0,
+                addrBuf,
+                sizeof(addrBuf),
                 &messageBufferIov,
                 1,
                 packetInfoBuffer,
@@ -178,6 +179,16 @@ public:
              * Verify that this is indeed an echo reply packet.
              */
             if (reply->icmp_type != 0 /* ICMP_ECHO_REPLY */) {
+                return false;
+            }
+
+            /**
+             * Compare the source with mDestination. Actually, on Linux the check is not required as the kernel
+             * does ID checking for us. On FreeBSD/Apple, however, it doesn't.
+             */
+            const auto& from = *reinterpret_cast<sockaddr_in*>(msg.msg_name);
+            const auto expectedFrom = mDestination.addr();
+            if (std::memcmp(&from.sin_addr, &expectedFrom.sin_addr, sizeof(from.sin_addr)) != 0) {
                 return false;
             }
 
