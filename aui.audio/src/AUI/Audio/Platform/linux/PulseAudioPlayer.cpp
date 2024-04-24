@@ -130,11 +130,17 @@ void PulseAudioPlayer::playImpl() {
 }
 
 void PulseAudioPlayer::pauseImpl() {
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
 void PulseAudioPlayer::stopImpl() {
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
     mResampled.reset();
     source()->rewind();

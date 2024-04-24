@@ -182,13 +182,17 @@ void DirectSoundAudioPlayer::playImpl() {
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    AUI_ASSERT(mResampled != nullptr);
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    AUI_ASSERT(mResampled != nullptr);
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     mResampled.reset();
     source()->rewind();

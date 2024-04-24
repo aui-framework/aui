@@ -57,11 +57,17 @@ void OboeAudioPlayer::playImpl() {
 }
 
 void OboeAudioPlayer::pauseImpl() {
+    if (mResampled == nullptr) {
+        return;
+    }
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
 void OboeAudioPlayer::stopImpl() {
+    if (mResampled == nullptr) {
+        return;
+    }
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
     mResampled.reset();
     source()->rewind();

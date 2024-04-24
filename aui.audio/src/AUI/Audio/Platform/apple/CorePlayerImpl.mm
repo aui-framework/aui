@@ -136,13 +136,17 @@ void CoreAudioPlayer::playImpl() {
 }
 
 void CoreAudioPlayer::pauseImpl() {
-    AUI_ASSERT(mResampled != nullptr);
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
 void CoreAudioPlayer::stopImpl() {
-    AUI_ASSERT(mResampled != nullptr);
+    if (mResampled == nullptr) {
+        return;
+    }
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
     source()->rewind();
     mResampled.reset();
