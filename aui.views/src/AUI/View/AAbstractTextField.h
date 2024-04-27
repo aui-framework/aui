@@ -86,6 +86,13 @@ public:
 
     void setSize(glm::ivec2 size) override;
 
+
+signals:
+    /**
+     * @brief On action button of touchscreen keyboard pressed
+     */
+    emits<> actionButtonPressed;
+
 protected:
     ARender::PrerenderedString mPrerenderedString;
     AString mContents;
