@@ -1,8 +1,11 @@
 #include <benchmark/benchmark.h>
 #include "AUI/Thread/AFuture.h"
+#include "AUI/Thread/AThread.h"
 #include "AUI/Thread/AThreadPool.h"
 #include "AUI/Util/Assert.h"
+#include "AUI/Util/kAUI.h"
 
+using namespace std::chrono_literals;
 
 static constexpr auto VALUE = 228;
 
@@ -27,7 +30,7 @@ static void FutureSingleThread(benchmark::State& state) {
 }
 BENCHMARK(FutureSingleThread);
 
-static void FutureMultiThread(benchmark::State& state) {
+static void FutureMultiThread1(benchmark::State& state) {
     AThreadPool tp(1);
     for (auto _ : state) {
         AFuture<int> f = tp * [] {
@@ -38,4 +41,26 @@ static void FutureMultiThread(benchmark::State& state) {
         benchmark::DoNotOptimize(value);
     }
 }
-BENCHMARK(FutureMultiThread);
+BENCHMARK(FutureMultiThread1);
+
+static void FutureMultiThread2(benchmark::State& state) {
+    AThreadPool tp(1);
+    for (auto _ : state) {
+        AVector<AFuture<int>> futures;
+        AUI_REPEAT(100) {
+            futures << tp * [] {
+                AThread::sleep(1ms);
+                return VALUE;  
+            };
+        }
+        auto value = *(tp * [] {
+            return VALUE;
+        });
+        AUI_ASSERT(value == VALUE);
+        for (auto& f : futures) {
+            benchmark::DoNotOptimize(*f);
+        }
+        benchmark::DoNotOptimize(value);
+    }
+}
+BENCHMARK(FutureMultiThread2);
