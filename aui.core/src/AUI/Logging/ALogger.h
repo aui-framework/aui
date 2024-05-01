@@ -250,7 +250,8 @@ public:
      */
     static void setLogFileForGlobal(APath path);
 
-    const AString& logFile() {
+    [[nodiscard]]
+    APath logFile() {
         return mLogFile.valueOrException().path();
     }
 
