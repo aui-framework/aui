@@ -706,6 +706,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
                         CMAKE_OSX_DEPLOYMENT_TARGET
+                        DEPLOYMENT_TARGET
                         CMAKE_POLICY_DEFAULT_CMP0074 # find_package uses *_ROOT variables
                         PLATFORM
                         CMAKE_OSX_ARCHITECTURES
