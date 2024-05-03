@@ -17,6 +17,7 @@
 #pragma once
 #include "AUI/Enum/ATextAlign.h"
 #include "AFont.h"
+#include "AUI/Platform/AFontManager.h"
 #include "AUI/Render/FontRendering.h"
 #include "AUI/Common/AColor.h"
 
@@ -25,7 +26,7 @@ class AString;
 
 
 struct API_AUI_VIEWS AFontStyle {
-	mutable _<AFont> font;
+	mutable _<AFont> font = AFontManager::inst().getDefaultFont();
 	unsigned size = 12;
 	bool formatting = false;
 	ATextAlign align = ATextAlign::LEFT;
@@ -36,7 +37,6 @@ struct API_AUI_VIEWS AFontStyle {
 	FontRendering fontRendering = FontRendering::SUBPIXEL;
 	float lineSpacing = 0.5f;
 
-    AFontStyle();
 
 	size_t getWidth(const AString& text) const;
 
