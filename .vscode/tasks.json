@@ -29,5 +29,19 @@
 			"problemMatcher": [],
 			"detail": "CMake template build task"
 		},
+		{
+			"type": "cmake",
+			"label": "CMake: build Benchmarks",
+			"command": "build",
+			"targets": [
+				"Benchmarks"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "CMake template build task"
+		},
 	]
 }

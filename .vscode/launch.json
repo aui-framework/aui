@@ -63,6 +63,36 @@
             ],
             "preLaunchTask": "CMake: build Tests"
         },
+        {
+            "name": "Benchmarks",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/build/bin/Benchmarks",
+            //"args": ["--gtest_filter=\"Strings*\""],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/build/bin/",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "python import sys;sys.path.insert(0, '/usr/share/gcc-13/python');from libstdcxx.v6.printers import register_libstdcxx_printers;register_libstdcxx_printers(None)",
+                    "ignoreFailures": false
+                },
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ],
+            "preLaunchTask": "CMake: build Benchmarks"
+        },
 
     ]
 }

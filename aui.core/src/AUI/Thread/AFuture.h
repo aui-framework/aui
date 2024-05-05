@@ -130,7 +130,11 @@ namespace aui::impl::future {
              */
             std::conditional_t<isVoid, bool, AOptional<Value>> value;
             AOptional<AInvocationTargetException> exception;
-            AMutex mutex;
+            /**
+             * Spinlock mutex is used here because AFuture makes frequent calls to mutex and never locks for a long
+             * time. Durations are small enough so it is worth to just busy wait instead of making syscalls.
+             */
+            ASpinlockMutex mutex;
             AConditionVariable cv;
             TaskCallback task;
             OnSuccessCallback onSuccess;
