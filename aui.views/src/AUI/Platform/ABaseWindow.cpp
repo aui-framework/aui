@@ -202,7 +202,6 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mPreventClickOnPointerRelease = false;
     mPerformDoubleClickOnPointerRelease = false;
     auto focusCopy = mFocusedView.lock();
-    mIgnoreTouchscreenKeyboardRequests = false;
 
     // handle touchscreen scroll
     if (event.pointerIndex.isFinger()) {
@@ -227,8 +226,8 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         }
     }
 
-    hideTouchscreenKeyboard(); // would do hide only if show is not requested on this particular frame
-    mIgnoreTouchscreenKeyboardRequests = false;
+    // would request hide only if show is not requested on this particular frame
+    hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy::DEFAULT);
 
     // check for double clicks
     using namespace std::chrono;
@@ -379,6 +378,8 @@ void ABaseWindow::render(ClipOptimizationContext context) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
+    processTouchscreenKeyboardRequest();
+
     mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
         auto delta = scroll.scroller.gatherKineticScrollValue();
         if (!delta) {
@@ -402,7 +403,6 @@ void ABaseWindow::render(ClipOptimizationContext context) {
     }), mScrolls.end());
 
     AViewContainer::render(context);
-    mIgnoreTouchscreenKeyboardRequests = false;
 
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
@@ -477,21 +477,25 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 }
 
 
-void ABaseWindow::requestTouchscreenKeyboard() {
-    if (mIgnoreTouchscreenKeyboardRequests) {
-        return;
-    }
-    mIgnoreTouchscreenKeyboardRequests = true;
-    requestTouchscreenKeyboardImpl();
-    emit touchscreenKeyboardShowRequested;
+void ABaseWindow::requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
+    mKeyboardRequest = ATouchscreenKeyboardRequest::SHOW;
 }
 
-void ABaseWindow::hideTouchscreenKeyboard() {
-    if (mIgnoreTouchscreenKeyboardRequests) {
-        return;
+void ABaseWindow::hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
+    switch (policy) {
+        case ATouchscreenKeyboardPolicy::DEFAULT:
+            if (mKeyboardRequest != ATouchscreenKeyboardRequest::SHOW) {
+                mKeyboardRequest = ATouchscreenKeyboardRequest::HIDE;
+            }
+            break;
+
+        case ATouchscreenKeyboardPolicy::FORCE:
+            mKeyboardRequest = ATouchscreenKeyboardRequest::HIDE;
+            break;
+
+        default:
+            AUI_ASSERTX(false, "shouldn't reach there");
     }
-    hideTouchscreenKeyboardImpl();
-    emit touchscreenKeyboardHideRequested;
 }
 
 bool ABaseWindow::shouldDisplayHoverAnimations() const {
@@ -531,4 +535,29 @@ bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event
         preventClickOnPointerRelease();
     }
     return v;
+}
+
+void ABaseWindow::processTouchscreenKeyboardRequest() {
+    switch (mKeyboardRequest) {
+        case ATouchscreenKeyboardRequest::SHOW:
+            if (mKeyboardState != ATouchscreenKeyboardState::SHOWN) {
+                requestTouchscreenKeyboardImpl();
+                mKeyboardState = ATouchscreenKeyboardState::SHOWN;
+                emit touchscreenKeyboardShow;
+            }
+            break;
+
+        case ATouchscreenKeyboardRequest::HIDE:
+            if (mKeyboardState != ATouchscreenKeyboardState::HIDDEN) {
+                hideTouchscreenKeyboardImpl();
+                mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
+                emit touchscreenKeyboardHide;
+            }
+            break;
+
+        default:
+            // no-op
+            break;
+    }
+    mKeyboardRequest = ATouchscreenKeyboardRequest::NONE;
 }

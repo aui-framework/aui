@@ -27,6 +27,9 @@
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
 #include "AUI/Util/ATouchScroller.h"
+#include "ATouchscreenKeyboardRequest.h"
+#include "ATouchscreenKeyboardPolicy.h"
+#include "ATouchscreenKeyboardState.h"
 #include <chrono>
 #include <optional>
 
@@ -269,16 +272,14 @@ public:
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
     /**
-     * @brief On a mobile touchscreen device, shows system virtual keyboard.
-     * @details
-     * On a desktop device does nothing.
+     * @brief On a mobile touchscreen device, requests system virtual keyboard.
      */
-    void requestTouchscreenKeyboard();
+    void requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy = ATouchscreenKeyboardPolicy::DEFAULT);
 
     /**
-     * @brief Hides virtual keyboard if visible
+     * @brief On a mobile touchscreen device, requests hiding system virtual keyboard.
      */
-    void hideTouchscreenKeyboard();
+    void hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy = ATouchscreenKeyboardPolicy::DEFAULT);
 
     /**
      * @brief Determines whether views should display hover animations.
@@ -314,15 +315,15 @@ signals:
     emits<AInput::Key> keyDown;
 
     /**
-     * @brief On touch screen keyboard show requested.
+     * @brief On touch screen keyboard show.
      */
-    emits<> touchscreenKeyboardShowRequested;
+    emits<> touchscreenKeyboardShow;
 
 
     /**
-     * @brief On touch screen keyboard hide requested.
+     * @brief On touch screen keyboard hide.
      */
-    emits<> touchscreenKeyboardHideRequested;
+    emits<> touchscreenKeyboardHide;
 
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
@@ -362,11 +363,13 @@ protected:
     virtual void hideTouchscreenKeyboardImpl();
 
 private:
+    void processTouchscreenKeyboardRequest();
+
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
-    bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
-
+    ATouchscreenKeyboardRequest mKeyboardRequest = ATouchscreenKeyboardRequest::NONE;
+    ATouchscreenKeyboardState mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
