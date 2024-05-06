@@ -553,7 +553,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             if (mKeyboardState != ATouchscreenKeyboardState::SHOWN) {
                 requestTouchscreenKeyboardImpl();
                 mKeyboardState = ATouchscreenKeyboardState::SHOWN;
-                emit touchscreenKeyboardShow;
+                emit touchscreenKeyboardShown;
             }
             break;
 
@@ -561,7 +561,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             if (mKeyboardState != ATouchscreenKeyboardState::HIDDEN) {
                 hideTouchscreenKeyboardImpl();
                 mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
-                emit touchscreenKeyboardHide;
+                emit touchscreenKeyboardHidden;
             }
             break;
 

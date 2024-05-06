@@ -316,13 +316,13 @@ signals:
     /**
      * @brief On touch screen keyboard show.
      */
-    emits<> touchscreenKeyboardShow;
+    emits<> touchscreenKeyboardShown;
 
 
     /**
      * @brief On touch screen keyboard hide.
      */
-    emits<> touchscreenKeyboardHide;
+    emits<> touchscreenKeyboardHidden;
 
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
