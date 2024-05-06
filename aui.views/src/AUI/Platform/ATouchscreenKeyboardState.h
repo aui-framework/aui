@@ -21,6 +21,10 @@
  */
 enum class ATouchscreenKeyboardState {
     /**
+     * @brief Unknown touchscreen keyboard state
+     */
+    UNKNOWN = -1,
+    /**
      * @brief Touchscreen keyboard is shown
      */
     SHOWN,

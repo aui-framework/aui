@@ -368,7 +368,7 @@ private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
-    ATouchscreenKeyboardRequest mKeyboardRequest = ATouchscreenKeyboardRequest::NONE;
+    ATouchscreenKeyboardState mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
     ATouchscreenKeyboardState mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
 
     glm::ivec2 mMousePos = {0, 0};

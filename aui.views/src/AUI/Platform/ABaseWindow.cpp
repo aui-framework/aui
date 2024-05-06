@@ -478,19 +478,19 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 
 void ABaseWindow::requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
-    mKeyboardRequest = ATouchscreenKeyboardRequest::SHOW;
+    mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
 }
 
 void ABaseWindow::hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
     switch (policy) {
         case ATouchscreenKeyboardPolicy::DEFAULT:
-            if (mKeyboardRequest != ATouchscreenKeyboardRequest::SHOW) {
-                mKeyboardRequest = ATouchscreenKeyboardRequest::HIDE;
+            if (mKeyboardRequestedState != ATouchscreenKeyboardState::SHOWN) {
+                mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
             }
             break;
 
         case ATouchscreenKeyboardPolicy::FORCE:
-            mKeyboardRequest = ATouchscreenKeyboardRequest::HIDE;
+            mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
             break;
 
         default:
@@ -538,8 +538,8 @@ bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event
 }
 
 void ABaseWindow::processTouchscreenKeyboardRequest() {
-    switch (mKeyboardRequest) {
-        case ATouchscreenKeyboardRequest::SHOW:
+    switch (mKeyboardRequestedState) {
+        case ATouchscreenKeyboardState::SHOWN:
             if (mKeyboardState != ATouchscreenKeyboardState::SHOWN) {
                 requestTouchscreenKeyboardImpl();
                 mKeyboardState = ATouchscreenKeyboardState::SHOWN;
@@ -547,7 +547,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             }
             break;
 
-        case ATouchscreenKeyboardRequest::HIDE:
+        case ATouchscreenKeyboardState::HIDDEN:
             if (mKeyboardState != ATouchscreenKeyboardState::HIDDEN) {
                 hideTouchscreenKeyboardImpl();
                 mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
@@ -559,5 +559,5 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             // no-op
             break;
     }
-    mKeyboardRequest = ATouchscreenKeyboardRequest::NONE;
+    mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
 }
