@@ -17,9 +17,16 @@
 #pragma once
 
 /**
- * @brief TODO
+ * @brief Determines how change touchscreen keyboard state will be performed
  */
 enum class ATouchscreenKeyboardPolicy {
+    /**
+     * @brief Default behaviour for touchscreen keyboard requests
+     * @see ABaseWindow::onPointerPressed
+     */
     DEFAULT,
+    /**
+     * @brief Touchscreen keyboard state will be guaranteed to be changed
+     */
     FORCE
 };

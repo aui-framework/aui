@@ -226,7 +226,11 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         }
     }
 
-    // would request hide only if show is not requested on this particular frame
+    /**
+     * By default, AUI doesn't hide touchscreen keyboard if ABaseWindow::requestTouchscreenKeyboard() has been called
+     * at least once after onPointerPressed event triggered, and hides it otherwise
+     * This behaviour can be overridden with ATouchscreenKeyboardPolicy::FORCE
+     */
     hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy::DEFAULT);
 
     // check for double clicks
@@ -479,18 +483,24 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 void ABaseWindow::requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
     mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
+    mKeyboardRequestForce = (policy == ATouchscreenKeyboardPolicy::FORCE);
 }
 
 void ABaseWindow::hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
     switch (policy) {
         case ATouchscreenKeyboardPolicy::DEFAULT:
-            if (mKeyboardRequestedState != ATouchscreenKeyboardState::SHOWN) {
-                mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
+            if (mKeyboardRequestForce) {
+                break;
             }
+            if (mKeyboardRequestedState == ATouchscreenKeyboardState::SHOWN) {
+                break;
+            }
+            mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
             break;
 
         case ATouchscreenKeyboardPolicy::FORCE:
             mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
+            mKeyboardRequestForce = true;
             break;
 
         default:

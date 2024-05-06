@@ -17,11 +17,11 @@
 #pragma once
 
 /**
- * @brief TODO
+ * @brief State of touchscreen keyboard
  */
 enum class ATouchscreenKeyboardState {
     /**
-     * @brief Unknown touchscreen keyboard state
+     * @brief Touchscreen keyboard state is unknown
      */
     UNKNOWN = -1,
     /**
