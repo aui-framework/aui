@@ -17,16 +17,18 @@
 #pragma once
 
 /**
- * @brief Determines how change touchscreen keyboard state will be performed
+ * @brief Determines how window handles showing/hiding touchscreen
  */
 enum class ATouchscreenKeyboardPolicy {
     /**
-     * @brief Default behaviour for touchscreen keyboard requests
-     * @see ABaseWindow::onPointerPressed
+     * @brief Touchscreen keyboard will be requested if a view that got focused wants a keyboard and will be hidden otherwise
+     * @note Default policy for touchscreen keyboard behaviour
+     * @see AView::wantsTouchscreenKeyboard()
      */
     SHOWN_IF_NEEDED,
     /**
-     * @brief Disables touchscreen keyboard management
+     * @brief If set, AUI will not send any show/hide touchscreen keyboard requests, user need to send these requests manually
+     * @see ABaseWindow::requestShowTouchscreenKeyboard(), ABaseWindow::requestHideTouchscreenKeyboard()
      */
     MANUAL
 };
