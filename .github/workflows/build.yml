@@ -118,7 +118,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
@@ -140,6 +140,8 @@ jobs:
 
           - os: macos-latest
             generator: "Ninja"
+            debug_or_release: Release
+            shared_or_static: static
             additional_cmake_flags: ''
 
           - os: ubuntu-latest

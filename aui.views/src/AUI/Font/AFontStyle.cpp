@@ -18,10 +18,6 @@
 
 #include "AUI/Platform/AFontManager.h"
 
-AFontStyle::AFontStyle() {
-    font = AFontManager::inst().getDefaultFont();
-}
-
 size_t AFontStyle::getWidth(const AString& text) const
 {
 	return font->length(*this, text);

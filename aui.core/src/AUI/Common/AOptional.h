@@ -21,6 +21,7 @@
 #include <utility>
 #include <optional>
 #include <stdexcept>
+#include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
 
 
@@ -274,6 +275,18 @@ public:
     [[nodiscard]]
     bool operator==(const std::nullopt_t& rhs) const noexcept {
         return !mInitialized;
+    }
+
+    /**
+     * @brief If a value is present, apply the provided mapper function to it.
+     */
+    template<aui::invocable<const T&> Mapper>
+    [[nodiscard]]
+    auto map(Mapper&& mapper) -> AOptional<decltype(mapper(std::declval<T>()))> {
+        if (hasValue()) {
+            return mapper(value());
+        }
+        return std::nullopt;
     }
 
 private:

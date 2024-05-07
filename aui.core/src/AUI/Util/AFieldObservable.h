@@ -17,7 +17,13 @@
 #pragma once
 
 #include <list>
+#include <utility>
 #include "AUI/Common/ASignal.h"
+#include "AUI/Traits/concepts.h"
+#include "AUI/Util/ADataBinding.h"
+
+template<typename T, aui::invocable<const T&> AdapterCallable>
+struct AFieldObservableAdapter;
 
 /**
  * @brief Stores a value and observes it's changes, notifying observers.
@@ -59,22 +65,22 @@ public:
     T& operator+=(T t) {
         mValue += t;
         notifyObservers();
-        return t;
+        return mValue;
     }
     T& operator-=(T t) {
         mValue -= t;
         notifyObservers();
-        return t;
+        return mValue;
     }
     T& operator*=(T t) {
         mValue *= t;
         notifyObservers();
-        return t;
+        return mValue;
     }
     T& operator/=(T t) {
         mValue /= t;
         notifyObservers();
-        return t;
+        return mValue;
     }
 
     operator const T&() const noexcept
@@ -119,7 +125,58 @@ public:
         return addObserver(std::forward<Observer_t>(observer));
     }
 
+
+    template<aui::invocable<const T&> AdapterCallable>
+    AFieldObservableAdapter<T, std::decay_t<AdapterCallable>> operator()(AdapterCallable&& callable) noexcept;
+
 private:
     T mValue;
     std::list<Observer> mObservers;
 };
+
+template<typename T, aui::invocable<const T&> AdapterCallable>
+struct AFieldObservableAdapter {
+    AFieldObservable<T>& field;
+    AdapterCallable callable;
+
+    using return_t = decltype(callable(std::declval<T>()));
+};
+
+template<typename T>
+template<aui::invocable<const T&> AdapterCallable>
+AFieldObservableAdapter<T, std::decay_t<AdapterCallable>> AFieldObservable<T>::operator()(AdapterCallable&& callable) noexcept {
+    return { .field = *this, .callable = std::forward<AdapterCallable>(callable) };
+}
+
+
+template<typename View, typename Data>
+_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
+    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    if (ADataBindingDefault<View, Data>::getSetter()) {
+        observerHandle = observable << [object = object.get()](const Data& newValue) {
+            (object->*ADataBindingDefault<View, Data>::getSetter())(newValue);
+        };
+    }
+    if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
+        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
+            observable.setValue(std::move(newValue), observerHandle);
+        });
+    }
+
+    return object;
+}
+
+template<typename View, typename ModelData, typename AdapterCallback>
+_<View> operator&&(const _<View>& object, AFieldObservableAdapter<ModelData, AdapterCallback> observableAdapter) {
+    using Data = AFieldObservableAdapter<ModelData, AdapterCallback>::return_t;
+    auto& observable = observableAdapter.field;
+    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    if (ADataBindingDefault<View, Data>::getSetter()) {
+        observerHandle = observable << [object = object.get(), transformer = std::move(observableAdapter.callable)](const ModelData& newValue) {
+            (object->*ADataBindingDefault<View, Data>::getSetter())(transformer(newValue));
+        };
+    }
+
+    return object;
+}
+
