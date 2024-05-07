@@ -24,9 +24,11 @@ enum class ATouchscreenKeyboardPolicy {
      * @brief Default behaviour for touchscreen keyboard requests
      * @see ABaseWindow::onPointerPressed
      */
-    DEFAULT,
+    SHOWN_IF_NEEDED,
     /**
-     * @brief Touchscreen keyboard state will be guaranteed to be changed
+     * @brief Disables touchscreen keyboard management
      */
-    FORCE
+    MANUAL,
+    ALWAYS_SHOWN,
+    ALWAYS_HIDDEN
 };

@@ -273,12 +273,12 @@ public:
     /**
      * @brief On a mobile touchscreen device, requests system virtual keyboard.
      */
-    void requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy = ATouchscreenKeyboardPolicy::DEFAULT);
+    void requestShowTouchscreenKeyboard();
 
     /**
      * @brief On a mobile touchscreen device, requests hiding system virtual keyboard.
      */
-    void hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy = ATouchscreenKeyboardPolicy::DEFAULT);
+    void requestHideTouchscreenKeyboard();
 
     /**
      * @brief Determines whether views should display hover animations.
@@ -306,6 +306,10 @@ public:
      */
     size_t getFps() {
         return mLastCapturedFps;
+    }
+
+    void setTouchscreenKeyboardPolicy(ATouchscreenKeyboardPolicy policy) noexcept {
+        mKeyboardPolicy = policy;
     }
 
 signals:
@@ -358,7 +362,7 @@ protected:
 
     virtual float fetchDpiFromSystem() const;
 
-    virtual void requestTouchscreenKeyboardImpl();
+    virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
 private:
@@ -368,8 +372,9 @@ private:
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
 
+    ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
+
     ATouchscreenKeyboardState mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
-    bool mKeyboardRequestForce = false;
     ATouchscreenKeyboardState mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
 
     glm::ivec2 mMousePos = {0, 0};

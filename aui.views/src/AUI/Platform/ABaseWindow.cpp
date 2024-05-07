@@ -75,9 +75,20 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
 
     mFocusedView = view;
 
-    if (view) {
-        if (!view->hasFocus()) {
-            view->onFocusAcquired();
+    if (!view) {
+        return;
+    }
+
+    if (!view->hasFocus()) {
+        view->onFocusAcquired();
+    }
+
+    if (mKeyboardPolicy == ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED) {
+        if (view->wantsTouchscreenKeyboard()) {
+            mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
+        }
+        else {
+            mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
         }
     }
 }
@@ -219,19 +230,11 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     }
 
     AViewContainer::onPointerPressed(event);
-
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {
             focusCopy->onFocusLost();
         }
     }
-
-    /**
-     * By default, AUI doesn't hide touchscreen keyboard if ABaseWindow::requestTouchscreenKeyboard() has been called
-     * at least once after onPointerPressed event triggered, and hides it otherwise
-     * This behaviour can be overridden with ATouchscreenKeyboardPolicy::FORCE
-     */
-    hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy::DEFAULT);
 
     // check for double clicks
     using namespace std::chrono;
@@ -481,26 +484,33 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 }
 
 
-void ABaseWindow::requestTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
-    mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
-    mKeyboardRequestForce = (policy == ATouchscreenKeyboardPolicy::FORCE);
+void ABaseWindow::requestShowTouchscreenKeyboard() {
+    switch (mKeyboardPolicy) {
+        case ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED:
+        case ATouchscreenKeyboardPolicy::MANUAL:
+            mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
+            break;
+
+        case ATouchscreenKeyboardPolicy::ALWAYS_HIDDEN:
+        case ATouchscreenKeyboardPolicy::ALWAYS_SHOWN:
+            // no-op
+            break;
+
+        default:
+            AUI_ASSERTX(false, "shouldn't reach there");
+    }
 }
 
-void ABaseWindow::hideTouchscreenKeyboard(ATouchscreenKeyboardPolicy policy) {
-    switch (policy) {
-        case ATouchscreenKeyboardPolicy::DEFAULT:
-            if (mKeyboardRequestForce) {
-                break;
-            }
-            if (mKeyboardRequestedState == ATouchscreenKeyboardState::SHOWN) {
-                break;
-            }
+void ABaseWindow::requestHideTouchscreenKeyboard() {
+    switch (mKeyboardPolicy) {
+        case ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED:
+        case ATouchscreenKeyboardPolicy::MANUAL:
             mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
             break;
 
-        case ATouchscreenKeyboardPolicy::FORCE:
-            mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
-            mKeyboardRequestForce = true;
+        case ATouchscreenKeyboardPolicy::ALWAYS_HIDDEN:
+        case ATouchscreenKeyboardPolicy::ALWAYS_SHOWN:
+            // no-op
             break;
 
         default:
@@ -520,7 +530,7 @@ bool ABaseWindow::shouldDisplayHoverAnimations() const {
 }
 
 
-void ABaseWindow::requestTouchscreenKeyboardImpl() {
+void ABaseWindow::showTouchscreenKeyboardImpl() {
     // stub
 }
 
@@ -551,7 +561,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
     switch (mKeyboardRequestedState) {
         case ATouchscreenKeyboardState::SHOWN:
             if (mKeyboardState != ATouchscreenKeyboardState::SHOWN) {
-                requestTouchscreenKeyboardImpl();
+                showTouchscreenKeyboardImpl();
                 mKeyboardState = ATouchscreenKeyboardState::SHOWN;
                 emit touchscreenKeyboardShown;
             }
@@ -569,5 +579,17 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             // no-op
             break;
     }
-    mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
+
+    switch (mKeyboardPolicy) {
+        case ATouchscreenKeyboardPolicy::ALWAYS_HIDDEN:
+            mKeyboardRequestedState = ATouchscreenKeyboardState::HIDDEN;
+            break;
+
+        case ATouchscreenKeyboardPolicy::ALWAYS_SHOWN:
+            mKeyboardRequestedState = ATouchscreenKeyboardState::SHOWN;
+            break;
+
+        default:
+            mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
+    }
 }

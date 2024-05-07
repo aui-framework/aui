@@ -200,7 +200,7 @@ public:
 
     void forceUpdateCursor() override;
 
-    void requestTouchscreenKeyboardImpl() override;
+    void showTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;
 
     /**
