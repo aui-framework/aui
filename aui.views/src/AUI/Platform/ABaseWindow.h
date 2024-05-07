@@ -27,6 +27,7 @@
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
 #include "AUI/Util/ATouchScroller.h"
+#include "ATouchscreenKeyboardPolicy.h"
 #include <chrono>
 #include <optional>
 
@@ -269,16 +270,14 @@ public:
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
     /**
-     * @brief On a mobile touchscreen device, shows system virtual keyboard.
-     * @details
-     * On a desktop device does nothing.
+     * @brief On a mobile touchscreen device, requests system virtual keyboard.
      */
-    void requestTouchscreenKeyboard();
+    void requestShowTouchscreenKeyboard();
 
     /**
-     * @brief Hides virtual keyboard if visible
+     * @brief On a mobile touchscreen device, requests hiding system virtual keyboard.
      */
-    void hideTouchscreenKeyboard();
+    void requestHideTouchscreenKeyboard();
 
     /**
      * @brief Determines whether views should display hover animations.
@@ -308,21 +307,25 @@ public:
         return mLastCapturedFps;
     }
 
+    void setTouchscreenKeyboardPolicy(ATouchscreenKeyboardPolicy policy) noexcept {
+        mKeyboardPolicy = policy;
+    }
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
     /**
-     * @brief On touch screen keyboard show requested.
+     * @brief On touch screen keyboard show.
      */
-    emits<> touchscreenKeyboardShowRequested;
+    emits<> touchscreenKeyboardShown;
 
 
     /**
-     * @brief On touch screen keyboard hide requested.
+     * @brief On touch screen keyboard hide.
      */
-    emits<> touchscreenKeyboardHideRequested;
+    emits<> touchscreenKeyboardHidden;
 
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
@@ -358,15 +361,25 @@ protected:
 
     virtual float fetchDpiFromSystem() const;
 
-    virtual void requestTouchscreenKeyboardImpl();
+    virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
 private:
+    void processTouchscreenKeyboardRequest();
+
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
-    bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
+    ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
+
+    enum class KeyboardRequest {
+        NO_OP,
+        SHOW,
+        HIDE
+    };
+
+    KeyboardRequest mKeyboardRequestedState = KeyboardRequest::NO_OP;
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;

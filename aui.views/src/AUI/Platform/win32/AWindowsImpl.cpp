@@ -543,8 +543,8 @@ void AWindow::allowDragNDrop() {
     AUI_ASSERT(r == S_OK);
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
-    ABaseWindow::requestTouchscreenKeyboardImpl();
+void AWindow::showTouchscreenKeyboardImpl() {
+    ABaseWindow::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
