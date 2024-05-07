@@ -28,7 +28,5 @@ enum class ATouchscreenKeyboardPolicy {
     /**
      * @brief Disables touchscreen keyboard management
      */
-    MANUAL,
-    ALWAYS_SHOWN,
-    ALWAYS_HIDDEN
+    MANUAL
 };
