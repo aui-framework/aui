@@ -374,8 +374,13 @@ private:
 
     ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
 
-    ATouchscreenKeyboardState mKeyboardRequestedState = ATouchscreenKeyboardState::UNKNOWN;
-    ATouchscreenKeyboardState mKeyboardState = ATouchscreenKeyboardState::HIDDEN;
+    enum class KeyboardRequest {
+        NO_OP,
+        SHOW,
+        HIDE
+    };
+
+    KeyboardRequest mKeyboardRequestedState = KeyboardRequest::NO_OP;
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
