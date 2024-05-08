@@ -70,7 +70,6 @@ public:
 class ASpinlockMutex {
 public:
     void lock() {
-        APerformanceSection section("Mutex", AColor::RED);
         while (!try_lock()) {
             // busy-wait
         }
