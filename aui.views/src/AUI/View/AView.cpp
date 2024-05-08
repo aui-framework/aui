@@ -49,12 +49,12 @@
 #undef min
 
 
-ABaseWindow* AView::getWindow()
+ABaseWindow* AView::getWindow() const
 {
 
     AView* parent = nullptr;
 
-    for (AView* target = this; target; target = target->mParent) {
+    for (AView* target = const_cast<AView*>(this); target; target = target->mParent) {
         parent = target;
     }
 

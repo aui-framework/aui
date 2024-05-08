@@ -299,7 +299,7 @@ public:
      * @brief Determines window which this AView belongs to.
      * @return window which this AView belongs to. Could be nullptr
      */
-    ABaseWindow* getWindow();
+    ABaseWindow* getWindow() const;
 
     virtual void drawStencilMask();
 
