@@ -1,6 +1,6 @@
 #include "ISoundInputStream.h"
 #include "AUI/Audio/Formats/wav/AWavSoundStream.h"
-#include "AUI/Audio/Formats/ogg/AOggSoundStream.h"
+#include "../../../../../../../.aui/repo/aui/as/87488ac/aui/aui.audio/src/AUI/Audio/Formats/ogg/AOggSoundStream.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 #include <vorbis/vorbisfile.h>
 #include "AUI/Audio/ABadFormatException.h"
@@ -33,7 +33,7 @@ ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
     return inst;
 }
 
-_<IInputStream> ISoundInputStream::getInputStream(const AUrl &key) {
+_<IInputStream> ISoundInputStream::loadSourceInputStream(const AUrl &key) {
     if (auto result = Cache::get(key)) {
         return _new<AByteBufferInputStream>(*result);
     }
