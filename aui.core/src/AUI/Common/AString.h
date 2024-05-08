@@ -316,6 +316,18 @@ public:
      * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
      * used.
      *
+     * If conversion to int is not possible, exception is thrown.
+     */
+    [[nodiscard]]
+    int toIntOrException() const {
+        return toInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
@@ -329,7 +341,31 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
+    int64_t toLongIntOrException() const {
+        return toLongInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
     AOptional<unsigned> toUInt() const noexcept;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
+    unsigned toUIntOrException() const {
+        return toUInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
 
     /**
      * @brief Converts the string to boolean value.

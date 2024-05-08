@@ -19,6 +19,7 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
 #include <thread>
+#include "AUI/Platform/Entry.h"
 
 AThreadPool::Worker::Worker(AThreadPool& tp, size_t index)
     : AThread([&, index]() {
@@ -160,10 +161,11 @@ AThreadPool::AThreadPool(size_t size) {
 	}
 }
 
-AThreadPool::AThreadPool() :
-	AThreadPool(glm::max(std::thread::hardware_concurrency() - 1, 2u))
-{
-}
+AThreadPool::AThreadPool()
+    : AThreadPool(aui::args()
+                      .value("aui-threadpool-size")
+                      .map(&AString::toLongIntOrException)
+                      .valueOr(glm::max(std::thread::hardware_concurrency() - 1, 2u))) {}
 
 AThreadPool::~AThreadPool() {
 	std::unique_lock lck(mQueueLock);

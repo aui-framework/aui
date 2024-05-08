@@ -13,3 +13,11 @@ Overrides render engine.
 | OpenGL    | `gl`                  | Windows<br/>Linux<br/>macOS      |
 | Software  | `soft`                | Windows<br/>Linux<br/>macOS      |
 | DirectX11 | `dx11`                |                                  |
+
+## aui-threadpool-size
+
+Overrides default thread pool size.
+
+```
+./your_app --aui-threadpool-size=8
+```

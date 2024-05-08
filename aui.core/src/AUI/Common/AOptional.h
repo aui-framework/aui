@@ -279,12 +279,14 @@ public:
 
     /**
      * @brief If a value is present, apply the provided mapper function to it.
+     * @param mapper mapper function to apply. The mapper is invoked as a STL projection (i.e., the mapper could be
+     * lambda, pointer-to-member function or field).
      */
     template<aui::invocable<const T&> Mapper>
     [[nodiscard]]
-    auto map(Mapper&& mapper) -> AOptional<decltype(mapper(std::declval<T>()))> {
+    auto map(Mapper&& mapper) -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> const {
         if (hasValue()) {
-            return mapper(value());
+            return std::invoke(std::forward<Mapper>(mapper), value());
         }
         return std::nullopt;
     }
