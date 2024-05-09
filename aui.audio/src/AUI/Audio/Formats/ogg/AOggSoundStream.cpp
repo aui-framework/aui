@@ -8,7 +8,7 @@
 #include "vorbis/vorbisfile.h"
 #include "AUI/Audio/ABadFormatException.h"
 
-AOggSoundStream::OggVorbisFileImpl::OggVorbisFileImpl(_<IInputStream> stream) : mSourceStream(std::move(stream)) {
+AOggSoundStream::OggVorbisFile::OggVorbisFile(_<IInputStream> stream) : mSourceStream(std::move(stream)) {
     AUI_ASSERTX(mSourceStream != nullptr, "provided OggVorbisFile source stream must be non-null");
     ov_callbacks callbacks = {
         .read_func = [](void *ptr, size_t size, size_t nmemb, void *datasource) -> size_t {
@@ -39,11 +39,11 @@ AOggSoundStream::OggVorbisFileImpl::OggVorbisFileImpl(_<IInputStream> stream) : 
     }
 }
 
-AOggSoundStream::OggVorbisFileImpl::~OggVorbisFileImpl() {
+AOggSoundStream::OggVorbisFile::~OggVorbisFile() {
     ov_clear(&file());
 }
 
-size_t AOggSoundStream::OggVorbisFileImpl::read(char* dst, size_t size) {
+size_t AOggSoundStream::OggVorbisFile::read(char* dst, size_t size) {
     size -= size % (aui::audio::bytesPerSample(AOggSoundStream::SAMPLE_FORMAT) * file().vi->channels);
     int currentSection;
     auto end = dst + size;
@@ -63,12 +63,12 @@ size_t AOggSoundStream::OggVorbisFileImpl::read(char* dst, size_t size) {
 }
 
 [[nodiscard]]
-OggVorbis_File& AOggSoundStream::OggVorbisFileImpl::file() noexcept {
+OggVorbis_File& AOggSoundStream::OggVorbisFile::file() noexcept {
     return mFile.value();
 }
 
 [[nodiscard]]
-const OggVorbis_File& AOggSoundStream::OggVorbisFileImpl::file() const noexcept {
+const OggVorbis_File& AOggSoundStream::OggVorbisFile::file() const noexcept {
     return mFile.value();
 }
 

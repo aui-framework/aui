@@ -38,11 +38,11 @@ public:
     static _<AOggSoundStream> fromUrl(AUrl url);
 
 private:
-    class OggVorbisFileImpl {
+    class OggVorbisFile {
     public:
-        explicit OggVorbisFileImpl(_<IInputStream> stream);
+        explicit OggVorbisFile(_<IInputStream> stream);
 
-        ~OggVorbisFileImpl();
+        ~OggVorbisFile();
 
         size_t read(char* dst, size_t size);
 
@@ -58,5 +58,5 @@ private:
     };
 
     AOptional<AUrl> mUrl;
-    AOptional<OggVorbisFileImpl> mVorbisFile;
+    AOptional<OggVorbisFile> mVorbisFile;
 };
