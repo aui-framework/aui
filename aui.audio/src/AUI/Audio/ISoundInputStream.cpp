@@ -1,6 +1,6 @@
 #include "ISoundInputStream.h"
 #include "AUI/Audio/Formats/wav/AWavSoundStream.h"
-#include "../../../../../../../.aui/repo/aui/as/87488ac/aui/aui.audio/src/AUI/Audio/Formats/ogg/AOggSoundStream.h"
+#include "AUI/Audio/Formats/ogg/AOggSoundStream.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 #include <vorbis/vorbisfile.h>
 #include "AUI/Audio/ABadFormatException.h"
