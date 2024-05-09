@@ -8,7 +8,7 @@
 #include "AUI/Audio/ABadFormatException.h"
 
 AWavSoundStream::AWavSoundStream(AUrl url) : mUrl(std::move(url)) {
-    mStream = getInputStream(*mUrl);
+    mStream = loadSourceInputStream(*mUrl);
     if (mStream == nullptr) {
         throw AException("Failed to get input source for wav file from {}"_format(mUrl->full()));
     }
@@ -31,7 +31,7 @@ void AWavSoundStream::rewind() {
     if (mUrl) {
         mChunkReadPos = 0;
         mStream.reset();
-        mStream = getInputStream(*mUrl);
+        mStream = loadSourceInputStream(*mUrl);
         if (mStream) {
             readHeader();
         }

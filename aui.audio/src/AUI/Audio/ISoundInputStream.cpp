@@ -33,7 +33,7 @@ ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
     return inst;
 }
 
-_<IInputStream> ISoundInputStream::getInputStream(const AUrl &key) {
+_<IInputStream> ISoundInputStream::loadSourceInputStream(const AUrl &key) {
     if (auto result = Cache::get(key)) {
         return _new<AByteBufferInputStream>(*result);
     }
