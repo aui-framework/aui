@@ -25,6 +25,8 @@
  * Thanks to https://github.com/barbieri/barbieri-playground/blob/master/curl-websocket/curl-websocket.c
  */
 
+using namespace std::chrono_literals;
+
 namespace {
     static std::default_random_engine gRandomEngine;
 
@@ -58,6 +60,7 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", 
         })
     .withHttpVersion(ACurl::Http::VERSION_1_1)
     .withUpload(true)
+    .withLowSpeedLimit(1)
     .withCustomRequest("GET")
     .withHeaderCallback([this](AByteBufferView v) {
         auto asStr = AString::fromUtf8(v);
