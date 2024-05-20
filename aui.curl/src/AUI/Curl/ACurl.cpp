@@ -167,6 +167,10 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
     return *this;
 }
 
+static size_t readStub(char* ptr, size_t size, size_t nmemb, void* userdata) {
+    return 0;
+}
+
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
 
@@ -217,7 +221,13 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
-    if (mReadCallback) {
+    if (builder.mMethod == Method::POST && !mReadCallback) {
+        // if read func is not set, curl would block.
+        res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        AUI_ASSERT(res == 0);
+        res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readStub);
+        AUI_ASSERT(res == 0);
+    } else if (mReadCallback) {
         res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
         AUI_ASSERT(res == 0);
         res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);

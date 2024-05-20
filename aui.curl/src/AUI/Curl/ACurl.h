@@ -16,10 +16,12 @@
 
 #pragma once
 
+#include <cstddef>
 #include <optional>
 #include <queue>
 #include <AUI/ACurl.h>
 
+#include "AUI/IO/AEOFException.h"
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
 #include "AFormMultipart.h"
