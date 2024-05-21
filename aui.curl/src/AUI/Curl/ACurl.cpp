@@ -201,12 +201,38 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
+        case Method::DELETE: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "DELETE");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
+        case Method::PUT: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "PUT");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
         case Method::POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             AUI_ASSERT(res == 0);
-            res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
-
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "POST");
             AUI_ASSERT(res == 0);
+
             if (!builder.mParams.empty()) {
                 mPostFieldsStorage = builder.mParams.toStdString();
                 res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());

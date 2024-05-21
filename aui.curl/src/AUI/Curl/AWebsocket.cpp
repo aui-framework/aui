@@ -111,6 +111,9 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
             switch (h.payload_len) {
                 case 126: {
                     auto payloadLength = *reinterpret_cast<const std::uint16_t*>(begin);
+                    if (begin + sizeof(payloadLength) > end) {
+                        return 0; // not enough
+                    }
                     myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
                     mLastPayloadLength = payloadLength;
                     begin += sizeof(payloadLength);
@@ -119,6 +122,9 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
 
                 case 127: {
                     auto payloadLength = *reinterpret_cast<const std::uint64_t*>(begin);
+                    if (begin + sizeof(payloadLength) > end) {
+                        return 0; // not enough
+                    }
                     myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
                     mLastPayloadLength = payloadLength;
                     begin += sizeof(payloadLength);
