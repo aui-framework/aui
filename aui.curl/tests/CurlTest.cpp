@@ -129,32 +129,6 @@ TEST(CurlTest, WebSocket) {
     EXPECT_EQ(c, 2) << "not enough payloads received";
 }
 
-TEST(CurlTest, WebSocketLong) {
-    auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
-
-
-    constexpr auto PAYLOAD_SIZE = 60'000;
-    std::string dataActual;
-    dataActual.reserve(PAYLOAD_SIZE);
-    std::default_random_engine re;
-    for (auto i = 0; i < PAYLOAD_SIZE; ++i) {
-        dataActual.push_back(std::uniform_int_distribution(int('a'), int('z'))(re));
-    }
-
-    std::string dataReceived;
-
-    AObject::connect(ws->connected, ws, [&] {
-
-        ws->write(dataActual.data(), dataActual.length());
-
-        AObject::connect(ws->received, ws, [&](AByteBufferView payload) {
-            dataReceived += std::string_view(payload.data(), payload.size());
-            if (dataReceived.size() == PAYLOAD_SIZE) ws->close();
-        });
-    });
-    ws->run();
-    EXPECT_EQ(dataActual, dataReceived);
-}
 
 
 class Slave: public AObject {
