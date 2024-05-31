@@ -86,27 +86,20 @@ public:
 
     template<typename... Args>
     constexpr AOptional<T>& emplace(Args&&... args) {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<Args>(args)...);
         mInitialized = true;
         return *this;
     }
 
     constexpr AOptional<T>& operator=(std::nullopt_t) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-            mInitialized = false;
-        }
+        reset();
         return *this;
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_convertible_v<U&&, T>, bool> = true>
     constexpr AOptional<T>& operator=(U&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<U>(rhs));
         mInitialized = true;
         return *this;
@@ -152,9 +145,7 @@ public:
 
     template<typename U = T>
     constexpr AOptional<T>& operator=(T&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::move(rhs));
         mInitialized = true;
         return *this;
