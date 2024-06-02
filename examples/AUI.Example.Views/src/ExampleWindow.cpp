@@ -18,6 +18,7 @@
 #include <AUI/View/ARadioGroup.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Audio/ASS/Property/Sound.h>
+#include "AUI/ASS/Property/Backdrop.h"
 #include "AUI/ASS/Property/BackgroundSolid.h"
 #include "AUI/ASS/Property/Border.h"
 #include "AUI/ASS/Property/TransformOffset.h"
@@ -506,18 +507,33 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 },
                 _new<ADragNDropView>(),
 
-                Label { "Custom cursor" } with_style {
-                        ACursor{ ":img/logo.svg", 64 },
-                },
                 Horizontal {
-                        Label{"github.com/aui-framework/aui"}.clicked(this, [] {
-                            APlatform::openUrl("https://github.com/aui-framework/aui");
-                        }) with_style{
-                                TextColor{AColor::BLUE},
-                                BorderBottom{1_px, AColor::BLUE},
-                                ACursor::POINTER,
+                    Vertical {
+                        Label { "Custom cursor" } with_style {
+                                ACursor{ ":img/logo.svg", 64 },
                         },
-                }
+                        Horizontal {
+                                Label{"github.com/aui-framework/aui"}.clicked(this, [] {
+                                APlatform::openUrl("https://github.com/aui-framework/aui");
+                                }) with_style{
+                                        TextColor{AColor::BLUE},
+                                        BorderBottom{1_px, AColor::BLUE},
+                                        ACursor::POINTER,
+                                },
+                        }
+                    },
+
+                    Stacked {
+                        Icon { ":img/logo.svg" } with_style { FixedSize(32_dp) } ,
+                        Centered {
+                            Label { "Blur" } with_style { Margin { 2_dp } },
+                        } with_style {
+                            Expanding(1, 0),
+                            Backdrop { Backdrop::GaussianBlur {} },
+                            BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
+                        },
+                    },
+                },
 
         } let { it->setExpanding(); }, "Others");
 

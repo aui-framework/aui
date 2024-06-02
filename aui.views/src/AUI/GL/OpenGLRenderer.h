@@ -155,6 +155,8 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
+
+    void drawBlur(glm::vec2 position, glm::vec2 size, int radius, int downscale, AArrayView<float> kernel) override;
 };
 
 

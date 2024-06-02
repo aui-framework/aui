@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <functional>
 #include <glm/glm.hpp>
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Common/ASide.h>
@@ -25,6 +26,8 @@
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Render/ABorderStyle.h"
+#include "AUI/Traits/concepts.h"
+#include "AUI/Traits/values.h"
 #include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
@@ -149,7 +152,7 @@ enum class Blending {
  *
  * @sa IRenderingContext
  */
-class IRenderer {
+class API_AUI_VIEWS IRenderer {
 public:
     class IPrerenderedString {
     public:
@@ -294,6 +297,18 @@ public:
                                        glm::vec2 size,
                                        float radius,
                                        int borderWidth) = 0;
+
+    /**
+     * @brief Draws rectangular blur effect.
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius blur radius (px)
+     * @param downscale downscale factor. =1 equals don't affect
+     * @param kernel pre-calculated gaussian kernel
+     */
+    virtual void drawBlur(glm::vec2 position, glm::vec2 size, int radius, int downscale, AArrayView<float> kernel) {
+        drawStub(position, size);
+    }
 
 
     /**
@@ -505,6 +520,14 @@ public:
     void setStencilDepth(uint8_t stencilDepth) {
         mStencilDepth = stencilDepth;
     }
+
+protected:
+    /**
+     * @brief Draws stub (i.e., gray rectangle)
+     * @details
+     * This can be used if implementation does not support or can't draw complex effects (i.e., drawBlur)
+     */
+    void drawStub(glm::vec2 position, glm::vec2 size);
 };
 
 

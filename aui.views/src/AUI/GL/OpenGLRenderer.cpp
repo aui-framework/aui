@@ -18,9 +18,11 @@
 // Created by Alex2772 on 11/19/2021.
 //
 
+#include <range/v3/range/conversion.hpp>
 #include <range/v3/view.hpp>
 #include "OpenGLRenderer.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/AMap.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLDebug.h"
@@ -30,6 +32,8 @@
 #include "AUI/GL/Vao.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/OpenGLRenderingContext.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Render/IRenderer.h"
@@ -146,6 +150,15 @@ struct CustomShaderHelper {
     }
 };
 
+static std::array<glm::vec2, 4> makeRectUvs(glm::vec2 uv1, glm::vec2 uv2) {
+    return {
+        glm::vec2{uv1.x, uv2.y},
+        glm::vec2{uv2.x, uv2.y},
+        glm::vec2{uv1.x, uv1.y},
+        glm::vec2{uv2.x, uv1.y},
+    };
+}
+
 struct TexturedShaderHelper {
     OpenGLRenderer& renderer;
     gl::Program& shader;
@@ -157,15 +170,7 @@ struct TexturedShaderHelper {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         if (brush.uv1 || brush.uv2) {
-            glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
-            glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
-
-            const glm::vec2 uvs[] = {
-                {uv1.x, uv2.y},
-                {uv2.x, uv2.y},
-                {uv1.x, uv1.y},
-                {uv2.x, uv1.y},
-            };
+            const auto uvs = makeRectUvs(brush.uv1.valueOr(glm::vec2{0, 0}), brush.uv2.valueOr(glm::vec2{1, 1}));
             tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
         } else {
             renderer.identityUv();
@@ -987,4 +992,83 @@ void OpenGLRenderer::bindTemporaryVao() const noexcept {
         return;
     }
     mRectangleVao.bind();
+}
+
+void OpenGLRenderer::drawBlur(glm::vec2 position, glm::vec2 size, int radius, int downscale, AArrayView<float> kernel) {
+    auto* ctx = dynamic_cast<OpenGLRenderingContext*>(AWindow::current()->getRenderingContext().get()); 
+    auto stub = [&] { drawStub(position, size); };
+        
+    if (!ctx) {
+        stub();
+        return;
+    }
+
+    auto offscreenRendering = ctx->getOffscreenRendering();
+    if (!offscreenRendering) {
+        stub();
+        return;
+    }
+
+    auto& renderTargetDefault = offscreenRendering->defaultRenderTarget;
+    auto& renderTarget0 = offscreenRendering->renderTarget0->get();
+    auto& renderTarget1 = offscreenRendering->renderTarget1->get();
+
+
+    glEnableVertexAttribArray(2);
+    AUI_DEFER { glDisableVertexAttribArray(2); };
+
+    static AUnorderedMap<int, _unique<gl::Program>> shaders;
+
+    auto& shader = shaders.getOrInsert(radius, [&]{
+        auto shader = std::make_unique<gl::Program>();
+        AString kernelValues = (kernel | ranges::views::transform([](float v) { return "{:1.4f}"_format(v); })
+                                       | ranges::to<AStringVector>()).join(',');
+        shader->loadRaw(R"(
+#version 100
+#define glsl120
+precision highp float;
+precision highp int;
+uniform mat4 SL_uniform_transform;
+/* 0 */ attribute vec4 SL_input_pos;
+/* 1 */ attribute vec2 SL_input_uv;
+varying vec4 SL_inter_vertex;
+varying vec2 SL_inter_uv;
+void main() {
+    gl_Position = (SL_uniform_transform*vec4(SL_input_pos.xy,0.0,1.0));
+    SL_inter_vertex = SL_input_pos;
+    SL_inter_uv = SL_input_uv;
+}
+)", R"(
+#version 100
+#define glsl120
+#define RADIUS )" + AString::number(radius) + R"(
+precision highp float;
+precision highp int;
+uniform sampler2D SL_uniform_albedo;
+uniform vec2 step_ratio;
+varying vec2 SL_inter_uv;
+
+const float KERNEL[RADIUS * 2 + 1] = { )" + kernelValues + R"( };
+
+void main() {
+    vec3 accumulator = vec3(0.0, 0.0, 0.0);
+    for (int i = 0; i < RADIUS * 2 + 1; ++i) {
+        int offset = i - RADIUS;
+        accumulator += texture2D(SL_uniform_albedo, SL_inter_uv + vec2(offset, offset) * step_ratio).rgb * KERNEL[i];
+    }
+    gl_FragColor = vec4(accumulator, 1);
+}
+)");
+        return shader;
+    });
+
+    const auto uvs = makeRectUvs(position / glm::vec2(offscreenRendering->windowSize),
+        (position + size) / glm::vec2(offscreenRendering->windowSize));
+    mRectangleVao.insert(1, AArrayView(uvs), "blur0");
+
+
+    uploadToShaderCommon();
+
+    // draw at the same pos as the sample so we don't need to reupload the uvs again.
+    drawRectImpl(position, size / float(downscale));
 }
