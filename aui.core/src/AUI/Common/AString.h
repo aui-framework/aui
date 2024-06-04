@@ -302,6 +302,17 @@ public:
     AOptional<double> toDouble() const noexcept;
 
     /**
+     * @brief Converts the string to a double number.
+     * @return The string converted to a double number.
+     *
+     * If conversion to int is not possible, exception is thrown.
+     */
+    [[nodiscard]]
+    double toDoubleOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
+    }
+
+    /**
      * @brief Converts the string to int value.
      * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
      * used.

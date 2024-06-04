@@ -88,6 +88,11 @@ public:
         return mValue;
     }
 
+    [[nodiscard]]
+    const T& value() const noexcept {
+        return mValue;
+    }
+
     T* operator->() noexcept {
         return &mValue;
     }
@@ -125,6 +130,21 @@ public:
         return addObserver(std::forward<Observer_t>(observer));
     }
 
+    /**
+     * @brief Removes an observer.
+     */
+    void operator>>(ObserverHandle h) {
+        removeObserver(h);
+    }
+
+    /**
+     * @brief Removes an observer.
+     */
+    void removeObserver(ObserverHandle h) {
+        mObservers.erase(std::remove_if(mObservers.begin(), mObservers.end(), [&](const Observer& o) {
+            return &o == h;
+        }), mObservers.end());
+    }
 
     template<aui::invocable<const T&> AdapterCallable>
     AFieldObservableAdapter<T, std::decay_t<AdapterCallable>> operator()(AdapterCallable&& callable) noexcept;
@@ -151,14 +171,19 @@ AFieldObservableAdapter<T, std::decay_t<AdapterCallable>> AFieldObservable<T>::o
 
 template<typename View, typename Data>
 _<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
-    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    using ObserverHandle = typename std::decay_t<decltype(observable)>::ObserverHandle;
+    auto observerHandle = _new<ObserverHandle>(nullptr);
     if (ADataBindingDefault<View, Data>::getSetter()) {
-        observerHandle = observable << [object = object.get()](const Data& newValue) {
-            (object->*ADataBindingDefault<View, Data>::getSetter())(newValue);
+        *observerHandle = observable << [weak = object.weak(), observerHandle, observable = &observable](const Data& newValue) {
+            auto object = weak.lock();
+            if (object == nullptr) {
+                observable->removeObserver(*observerHandle);
+            }
+            (object.get()->*ADataBindingDefault<View, Data>::getSetter())(newValue);
         };
     }
     if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
-        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
+        AObject::connect(object.get()->*getter, object, [&observable, observerHandle = *observerHandle](Data newValue) {
             observable.setValue(std::move(newValue), observerHandle);
         });
     }
@@ -170,10 +195,16 @@ template<typename View, typename ModelData, typename AdapterCallback>
 _<View> operator&&(const _<View>& object, AFieldObservableAdapter<ModelData, AdapterCallback> observableAdapter) {
     using Data = AFieldObservableAdapter<ModelData, AdapterCallback>::return_t;
     auto& observable = observableAdapter.field;
-    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    using ObserverHandle = typename std::decay_t<decltype(observable)>::ObserverHandle;
+    auto observerHandle = _new<ObserverHandle>(nullptr);
     if (ADataBindingDefault<View, Data>::getSetter()) {
-        observerHandle = observable << [object = object.get(), transformer = std::move(observableAdapter.callable)](const ModelData& newValue) {
-            (object->*ADataBindingDefault<View, Data>::getSetter())(transformer(newValue));
+        *observerHandle = observable << [weak = object.weak(), observable = &observable, observerHandle, transformer = std::move(observableAdapter.callable)](const ModelData& newValue) {
+            auto object = weak.lock();
+            if (object == nullptr) {
+                observable->removeObserver(*observerHandle);
+                return;
+            }
+            (object.get()->*ADataBindingDefault<View, Data>::getSetter())(transformer(newValue));
         };
     }
 

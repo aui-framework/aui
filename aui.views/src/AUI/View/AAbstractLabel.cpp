@@ -288,3 +288,14 @@ AString AAbstractLabel::toString() const {
     return mText;
 }
 
+void AAbstractLabel::setText(AString newText) {
+    AUI_ASSERT_UI_THREAD_ONLY();
+    if (mText == newText) {
+        return;
+    }
+    mText = std::move(newText);
+    mPrerendered = nullptr;
+
+    requestLayoutUpdate();
+    redraw();
+}

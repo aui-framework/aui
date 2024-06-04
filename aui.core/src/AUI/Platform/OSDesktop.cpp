@@ -86,7 +86,7 @@ protected:
                 ALogger::warn("Performance") << currentSize << " tasks for UI thread?";
             }
             if (currentSize > 1'000'000) {
-                throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
+                // throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
             }
         }
     }
