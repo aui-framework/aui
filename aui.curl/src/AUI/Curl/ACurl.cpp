@@ -190,7 +190,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
 
 
     switch (builder.mMethod) {
-        case Method::GET: {
+        case Method::HTTP_GET: {
             std::string url = builder.mUrl.toStdString();
             if (!builder.mParams.empty()) {
                 url += '?';
@@ -201,7 +201,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
-        case Method::DELETE: {
+        case Method::HTTP_DELETE: {
             std::string url = builder.mUrl.toStdString();
             if (!builder.mParams.empty()) {
                 url += '?';
@@ -214,7 +214,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
-        case Method::PUT: {
+        case Method::HTTP_PUT: {
             std::string url = builder.mUrl.toStdString();
             if (!builder.mParams.empty()) {
                 url += '?';
@@ -227,7 +227,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
-        case Method::POST: {
+        case Method::HTTP_POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             AUI_ASSERT(res == 0);
             res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "POST");
@@ -247,7 +247,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
-    if (builder.mMethod == Method::POST && !mReadCallback) {
+    if (builder.mMethod == Method::HTTP_POST && !mReadCallback) {
         // if read func is not set, curl would block.
         res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
         AUI_ASSERT(res == 0);

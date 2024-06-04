@@ -111,10 +111,10 @@ public:
     };
 
     enum class Method {
-        GET,
-        POST,
-        PUT,
-        DELETE,
+        HTTP_GET,
+        HTTP_POST,
+        HTTP_PUT,
+        HTTP_DELETE,
     };
 
     /**
@@ -127,11 +127,11 @@ public:
     };
 
 
-    struct ErrorDescription {
+    struct API_AUI_CURL ErrorDescription {
         int curlStatus;
         AString description;
 
-        API_AUI_CURL void throwException() const;
+        void throwException() const;
     };
 
     /**
@@ -189,7 +189,7 @@ public:
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
         AString mUrl, mParams;
-        Method mMethod = Method::GET;
+        Method mMethod = Method::HTTP_GET;
         std::function<void(ACurl&)> mOnSuccess;
 
     public:
