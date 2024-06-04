@@ -21,6 +21,7 @@
 #include <glm/glm.hpp>
 
 
+#include "AUI/Common/AException.h"
 #include "AUI/IO/IInputStream.h"
 #include "AUI/IO/AIOException.h"
 
@@ -138,6 +139,9 @@ uint8_t hexCharToNumber(char c) {
 }
 
 AByteBuffer AByteBuffer::fromHexString(const AString& string) {
+    if (string.length() % 2 != 0) {
+        throw AException("invalid string length");
+    }
     AByteBuffer result;
     result.reserve(string.length() / 2);
 
