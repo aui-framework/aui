@@ -233,7 +233,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     // windows sends resize event during window initialization but other platforms doesn't.
     // simulate the same behaviour here.
     ui_thread {
-        emit resized(getWidth(), getHeight());
+        emit sizeChanged(getSize());
     };
 #endif
 }
