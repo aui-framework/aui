@@ -1069,6 +1069,8 @@ void main() {
 
     uploadToShaderCommon();
 
+    renderTargetDefault.bind();
+
     // draw at the same pos as the sample so we don't need to reupload the uvs again.
     drawRectImpl(position, size / float(downscale));
 }
