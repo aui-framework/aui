@@ -230,7 +230,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         case Method::HTTP_POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             AUI_ASSERT(res == 0);
-            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "POST");
+            res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
             AUI_ASSERT(res == 0);
 
             if (!builder.mParams.empty()) {
