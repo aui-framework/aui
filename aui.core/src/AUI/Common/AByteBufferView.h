@@ -37,6 +37,10 @@ public:
     explicit AByteBufferView(const std::string& string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
     explicit AByteBufferView(std::string_view string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
 
+    static AByteBufferView fromRange(const char* begin, const char* end) noexcept {
+        return AByteBufferView(begin, std::distance(begin, end));
+    }
+
     /**
      * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
      * @tparam T data type
@@ -55,7 +59,7 @@ public:
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset) const noexcept {
+    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
         return slice(offset, size() - offset);
     }
 

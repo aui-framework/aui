@@ -212,7 +212,6 @@ public:
 
 signals:
     emits<> closed;
-    emits<int, int> resized;
     emits<> redrawn;
     emits<> shown;
 

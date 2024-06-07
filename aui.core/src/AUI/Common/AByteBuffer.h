@@ -16,9 +16,11 @@
 
 #pragma once
 
+#include "AUI/Util/Assert.h"
 #include "SharedPtr.h"
 
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <stdexcept>
 #include <cassert>
@@ -38,6 +40,8 @@ private:
     size_t mSize = 0;
 
 public:
+    using iterator = char*;
+
     AByteBuffer();
     AByteBuffer(const char* buffer, size_t size);
     explicit AByteBuffer(size_t initialCapacity);
@@ -59,6 +63,11 @@ public:
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
         return operator AByteBufferView().slice(offset, size);
+    }
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
+        return operator AByteBufferView().slice(offset);
     }
 
     /**
@@ -303,6 +312,19 @@ public:
     [[nodiscard]]
     AString toBase64String() const {
         return AByteBufferView(*this).toBase64String();
+    }
+
+    iterator erase(iterator begin, iterator end) noexcept {
+        AUI_ASSERT(ownsIterator(begin));
+        AUI_ASSERT(ownsIterator(end));
+        std::memmove(begin, end, std::distance(end, AByteBuffer::end()));
+        setSize(size() - std::distance(begin, end));
+        return begin;
+    }
+
+    [[nodiscard]]
+    bool ownsIterator(iterator i) const noexcept {
+        return i >= begin() && i <= end();
     }
 
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);

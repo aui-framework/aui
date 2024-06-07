@@ -262,7 +262,7 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                             if (n == '.') {
                                 // float
                                 AString d10 = mTokenizer.readStringWhile([](char c) -> bool { return isdigit(c); });
-                                auto v = (AString::number(i) + "." + d10).toDouble().valueOrException();
+                                auto v = (AString::number(i) + "." + d10).toDoubleOrException();
                                 result << FloatToken{v};
 
                                 if (mTokenizer.readChar() != 'f') {
