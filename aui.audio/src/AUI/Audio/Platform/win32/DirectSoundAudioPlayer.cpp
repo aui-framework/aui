@@ -175,31 +175,18 @@ private:
 };
 
 void DirectSoundAudioPlayer::playImpl() {
-    AUI_ASSERT(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<DirectSoundAudioPlayer>(sharedPtr()));
+    initializeIfNeeded();
     DirectSound::instance();
     ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    if (mResampled == nullptr) {
-        return;
-    }
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
-    mResampled.reset();
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    if (mResampled == nullptr) {
-        return;
-    }
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
-    mResampled.reset();
-    source()->rewind();
-}
-
-void DirectSoundAudioPlayer::onSourceSet() {
-
+    release();
 }
 
 void DirectSoundAudioPlayer::onLoopSet() {

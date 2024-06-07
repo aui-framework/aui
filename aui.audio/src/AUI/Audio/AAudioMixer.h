@@ -12,16 +12,12 @@ class API_AUI_AUDIO IAudioPlayer;
  * @ingroup audio
  */
 class API_AUI_AUDIO AAudioMixer {
-private:
-    AMutex mMutex;
-    std::list<_<IAudioPlayer>> mPlayers;
-
 public:
     /**
      * @brief Add new sound source for mixing
      * @param s New sound source
      */
-    void addSoundSource(_<IAudioPlayer> s);
+    void addSoundSource(_<IAudioPlayer> s) noexcept;
 
     /**
      * @brief Remove sound source if it is represented in list of added sound sources, otherwise do nothing
@@ -36,5 +32,9 @@ public:
      * @return Number of bytes written
      */
     std::size_t readSoundData(std::span<std::byte> destination);
+
+private:
+    AMutex mMutex;
+    std::list<_<IAudioPlayer>> mPlayers;
 };
 

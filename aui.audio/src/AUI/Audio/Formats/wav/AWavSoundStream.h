@@ -11,17 +11,11 @@ class ISeekableInputStream;
  */
 class API_AUI_AUDIO AWavSoundStream: public ISoundInputStream {
 public:
-    explicit AWavSoundStream(AUrl url);
-
     explicit AWavSoundStream(aui::non_null<_<IInputStream>> stream);
 
     AAudioFormat info() override;
 
-    void rewind() override;
-
     size_t read(char* dst, size_t size) override;
-
-    static _<AWavSoundStream> fromUrl(AUrl url);
 
 private:
     struct WavFileHeader {
@@ -46,7 +40,7 @@ private:
 
     _<IInputStream> mStream;
     AOptional<AUrl> mUrl;
-    WavFileHeader mHeader;
+    WavFileHeader mHeader{};
     size_t mChunkReadPos = 0;
 
     void readHeader();
