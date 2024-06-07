@@ -17,7 +17,7 @@ public:
      * @brief Add new sound source for mixing
      * @param s New sound source
      */
-    void addSoundSource(_<IAudioPlayer> s) noexcept;
+    void addSoundSource(_<IAudioPlayer> s);
 
     /**
      * @brief Remove sound source if it is represented in list of added sound sources, otherwise do nothing

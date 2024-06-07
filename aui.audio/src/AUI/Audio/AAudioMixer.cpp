@@ -4,7 +4,7 @@
 #include "AUI/Common/ASmallVector.h"
 #include "AUI/Logging/ALogger.h"
 
-void AAudioMixer::addSoundSource(_<IAudioPlayer> s) noexcept {
+void AAudioMixer::addSoundSource(_<IAudioPlayer> s) {
     std::unique_lock lock(mMutex);
     mPlayers.push_back(std::move(s));
 }
