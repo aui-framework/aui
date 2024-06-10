@@ -346,5 +346,15 @@ public:
     static void rotate(AAngleRadians angle) {
         rotate({0.f, 0.f, 1.f}, angle);
     }
+
+    /**
+     * @brief Draws rectangular blur effect.
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius blur radius (px)
+     * @param downscale downscale factor. =1 equals don't affect
+     * @param kernel pre-calculated gaussian kernel
+     */
+    void blur(glm::vec2 position, glm::vec2 size, int radius, int downscale = 1);
 };
 

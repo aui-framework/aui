@@ -18,6 +18,10 @@
 // Created by Alex2772 on 11/19/2021.
 //
 
+#include <range/v3/algorithm.hpp>
+#include <range/v3/numeric.hpp>
+
+
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Util/kAUI.h>
 #include "ARender.h"
@@ -30,4 +34,28 @@ void ARender::setRenderer(_<IRenderer> renderer) {
     do_once ACleanup::afterEntry([] {
         ourRenderer = nullptr;
     });
+}
+
+static float gaussian(float x, float mu, float sigma) {
+    const float a = ( x - mu ) / sigma;
+    return glm::exp(-0.5f * a * a);
+}
+
+void ARender::blur(glm::vec2 position, glm::vec2 size, int radius) {
+    using Kernel = AVector<float>;
+    static AUnorderedMap<int /* radius */, Kernel> kernels;
+    const auto& kernel = kernels.getOrInsert(radius, [radius]() {
+        const float sigma = float(radius) / 2.f;
+
+        // generate values by gaussian function
+        auto result = AVector<float>::generate(radius * 2 + 1, [&](int i) {
+            return gaussian(float(i), float(radius), sigma);
+        });
+
+        // normalize result
+        auto sum = ranges::accumulate(result, 0.f);
+        ranges::transform(result, result.begin(), [&](float i) { return i / sum; });
+        return result;
+    });
+    ourRenderer->drawBlur(position, size, radius, kernel);
 }

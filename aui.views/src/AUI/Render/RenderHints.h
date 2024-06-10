@@ -16,84 +16,83 @@
 
 #pragma once
 
-#include <glm/glm.hpp>
-#include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
+#include <AUI/Views.h>
+
+#include <glm/glm.hpp>
+
 #include "ARender.h"
+#include "AUI/Render/IRenderer.h"
+#include "AUI/Util/Assert.h"
+#include "AUI/Util/kAUI.h"
 
-namespace RenderHints
-{
-    /**
-     * @brief Increases mask stack. Used by AView.
-     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     *       wrapper class instead.
-     * @param maskRenderer function - mask renderer
-     */
-    template<aui::invocable Callable>
-    static void pushMask(Callable&& maskRenderer) {
-        ARender::getRenderer()->pushMaskBefore();
-        maskRenderer();
-        ARender::getRenderer()->pushMaskAfter();
+namespace RenderHints {
+/**
+ * @brief Increases mask stack. Used by AView.
+ * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+ *       wrapper class instead.
+ * @param maskRenderer function - mask renderer
+ */
+template <aui::invocable Callable>
+static void pushMask(Callable&& maskRenderer, IRenderer& renderer) {
+    renderer.pushMaskBefore();
+    AUI_DEFER { renderer.pushMaskAfter(); };
+    maskRenderer();
+}
+
+/**
+ * @brief Decreases mask stack. Used by AView.
+ * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+ *       wrapper class instead.
+ * @param maskRenderer function - mask renderer
+ */
+template <aui::invocable Callable>
+static void popMask(Callable&& maskRenderer, IRenderer& renderer) {
+    renderer.popMaskBefore();
+    AUI_DEFER { renderer.pushMaskAfter(); };
+    maskRenderer();
+}
+
+template <aui::invocable Callable>
+class PushMask {
+   private:
+    Callable mMaskRenderer;
+    IRenderer& mRenderer;
+
+   public:
+    inline explicit PushMask(Callable&& maskRenderer, IRenderer& renderer = *ARender::getRenderer())
+        : mMaskRenderer(std::forward<Callable>(maskRenderer)), mRenderer(renderer) {
+        pushMask(std::forward<Callable>(mMaskRenderer), renderer);
     }
-
-    /**
-     * @brief Decreases mask stack. Used by AView.
-     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     *       wrapper class instead.
-     * @param maskRenderer function - mask renderer
-     */
-    template<aui::invocable Callable>
-    static void popMask(Callable&& maskRenderer) {
-        ARender::getRenderer()->popMaskBefore();
-        maskRenderer();
-        ARender::getRenderer()->popMaskAfter();
-    }
-
-    template<aui::invocable Callable>
-    class PushMask
-    {
-    private:
-        Callable mMaskRenderer;
-
-    public:
-        inline explicit PushMask(Callable&& maskRenderer):
-                mMaskRenderer(std::forward<Callable>(maskRenderer))
-        {
-            pushMask(std::forward<Callable>(mMaskRenderer));
-        }
-        inline ~PushMask() {
-            popMask(std::forward<Callable>(mMaskRenderer));
-        }
-    };
-
-    class PushMatrix
-	{
-	private:
-		glm::mat4 mStored;
-		
-	public:
-        inline PushMatrix() {
-            mStored = ARender::getTransform();
-		}
-		inline ~PushMatrix() {
-            ARender::setTransformForced(mStored);
-		}
-	};
-	class PushColor
-	{
-	private:
-		AColor mStored;
-		
-	public:
-        inline PushColor() {
-            mStored = ARender::getColor();
-		}
-		inline ~PushColor() {
-            ARender::setColorForced(mStored);
-		}
-	};
-	class PushState: PushColor, PushMatrix
-	{
-	};
+    inline ~PushMask() { popMask(std::forward<Callable>(mMaskRenderer), mRenderer); }
 };
+
+class PushMatrix {
+   private:
+    glm::mat4 mStored;
+    IRenderer& mRenderer;
+
+   public:
+    inline PushMatrix(IRenderer& renderer = *ARender::getRenderer()) : mRenderer(renderer) {
+        mStored = mRenderer.getTransform();
+    }
+
+    inline ~PushMatrix() { mRenderer.setTransformForced(mStored); }
+};
+class PushColor {
+   private:
+    AColor mStored;
+    IRenderer& mRenderer;
+
+   public:
+    inline PushColor(IRenderer& renderer = *ARender::getRenderer()) : mRenderer(renderer) {
+        mStored = mRenderer.getColor();
+    }
+    inline ~PushColor() { mRenderer.setColorForced(mStored); }
+};
+class PushState : PushColor, PushMatrix {
+   public:
+    inline PushState(IRenderer& renderer = *ARender::getRenderer()) : PushColor(renderer), PushMatrix(renderer) {}
+};
+};   // namespace RenderHints

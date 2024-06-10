@@ -15,6 +15,11 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "OpenGLRenderingContext.h"
+#include <cstddef>
+#include <functional>
+#include <optional>
+#include "AUI/Common/AOptional.h"
+#include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
@@ -60,6 +65,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     } else {
         mViewportSize = windowSize;
     }
+    mWindowSize = windowSize;
     bindViewport();
 }
 
@@ -93,4 +99,34 @@ uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
         return fb->supersamlingRatio();
     }
     return 1;
+}
+
+AOptional<OpenGLRenderingContext::OffscreenRendering> OpenGLRenderingContext::getOffscreenRendering() {
+
+    if (auto defaultFb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        struct LazyHelper {
+            LazyHelper(OpenGLRenderingContext& ctx, AOptional<gl::Framebuffer>& fb): ctx(ctx), fb(fb) {
+
+            }
+            std::reference_wrapper<gl::Framebuffer> operator()() const {
+                if (!fb) {
+                    fb.emplace();
+                }
+                if (fb->size() != ctx.mWindowSize) {
+                    fb->resize(ctx.mWindowSize);
+                }
+                return *fb;
+            }
+            OpenGLRenderingContext& ctx;
+            AOptional<gl::Framebuffer>& fb;
+        };
+
+        return OffscreenRendering {
+            .defaultRenderTarget = *defaultFb,
+            .renderTarget0 = LazyHelper(*this, mHelperFramebuffer0),
+            .renderTarget1 = LazyHelper(*this, mHelperFramebuffer1),
+            .windowSize = mWindowSize,
+        };
+    }
+    return std::nullopt;
 }

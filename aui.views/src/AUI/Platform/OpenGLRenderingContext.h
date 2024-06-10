@@ -23,6 +23,8 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
+#include "AUI/Common/AOptional.h"
+#include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/OpenGLRenderer.h"
 
 class OpenGLRenderingContext: public CommonRenderingContext {
@@ -53,11 +55,34 @@ public:
     [[nodiscard]]
     uint32_t getSupersamplingRatio() const noexcept;
 
-private:
+    struct OffscreenRendering {
+        /**
+         * @brief Default render target where AUI normally renders to. Typically twice as big as the window size.
+         */
+        gl::Framebuffer& defaultRenderTarget;
+
+
+        /**
+         * @brief Helper render target. Typically matches window size.
+         */
+        aui::lazy<std::reference_wrapper<gl::Framebuffer>> renderTarget0;
+
+        /**
+         * @brief Helper render target. Typically matches window size.
+         */
+        aui::lazy<std::reference_wrapper<gl::Framebuffer>> renderTarget1;
+
+        glm::uvec2 windowSize;
+    };
+
+    AOptional<OffscreenRendering> getOffscreenRendering();
+
+   private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
+    AOptional<gl::Framebuffer> mHelperFramebuffer0, mHelperFramebuffer1; // mapped to OffscreenRendering
     _<OpenGLRenderer> mRenderer;
-    glm::uvec2 mViewportSize;
+    glm::uvec2 mViewportSize, mWindowSize;
 
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
