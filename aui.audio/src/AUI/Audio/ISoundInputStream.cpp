@@ -7,8 +7,9 @@
 #include "AUI/Logging/ALogger.h"
 
 _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
+
     try {
-        return AWavSoundStream::fromUrl(url);
+        return _new<AWavSoundStream>(loadSourceInputStream(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }
@@ -17,7 +18,7 @@ _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
     }
 
     try {
-        return AOggSoundStream::fromUrl(url);
+        return _new<AOggSoundStream>(loadSourceInputStream(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }

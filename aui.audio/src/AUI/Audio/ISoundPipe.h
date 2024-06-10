@@ -8,8 +8,4 @@
  * @note Pipe should decode audio on write() and give ready samples on read()
  */
 class ISoundPipe : public ISoundInputStream, public IOutputStream {
-public:
-    void rewind() override {
-        //no-op
-    }
 };

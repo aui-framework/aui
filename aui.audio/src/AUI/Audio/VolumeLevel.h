@@ -14,15 +14,8 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ARawSoundStream.h"
+#include <AUI/Traits/values.h>
 
-ARawSoundStream::ARawSoundStream(AAudioFormat format, _<IInputStream> stream) : mStream(std::move(stream)), mFormat(format) {
-}
-
-size_t ARawSoundStream::read(char *dst, size_t size) {
-    return mStream->read(dst, size);
-}
-
-AAudioFormat ARawSoundStream::info() {
-    return mFormat;
+namespace aui::audio {
+    using VolumeLevel = aui::ranged_number<uint32_t, 0, 256>;
 }

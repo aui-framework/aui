@@ -16,8 +16,9 @@
 
 #pragma once
 
-#include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Audio/ACompileTimeSoundResampler.h"
+#include <AUI/Audio/ISoundInputStream.h>
+#include <AUI/Audio/ACompileTimeSoundResampler.h>
+#include <AUI/Audio/VolumeLevel.h>
 
 class API_AUI_AUDIO IAudioPlayer;
 
@@ -25,7 +26,7 @@ namespace aui::audio::impl {
     class ResamplerBase {
     public:
         virtual ~ResamplerBase() = default;
-        virtual size_t resample(std::span<std::byte>, IAudioPlayer::VolumeLevel volume) = 0;
+        virtual size_t resample(std::span<std::byte>, aui::audio::VolumeLevel volume) = 0;
     };
 }
 
@@ -33,23 +34,23 @@ namespace aui::audio::impl {
  * @brief Implements audio mixing and resampling.
  * @ingroup audio
  */
-class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
+class API_AUI_AUDIO ASoundResampler final : public ISoundInputStream {
 public:
-    explicit ASoundResampler(const _<IAudioPlayer>& player) noexcept;
+    using IInputStream::read;
 
-    //unimplemented
-    //explicit ASoundResampler(const _<IAudioPlayer>& player, AAudioFormat format) noexcept;
+    explicit ASoundResampler(_<ISoundInputStream> sourceStream) noexcept;
 
     size_t read(char* dst, size_t size) override;
 
     AAudioFormat info() override;
 
-    void rewind() override;
+    void setVolume(aui::audio::VolumeLevel volume) noexcept;
 
 private:
-    _weak<IAudioPlayer> mParentPlayer;
-    _<ISoundInputStream> mSoundStream;
-//    AAudioFormat mOutputFormat;
-    AAudioFormat mInputFormat;
+    _<ISoundInputStream> mSourceStream;
     _unique<aui::audio::impl::ResamplerBase> mResampler;
+    /**
+     * @brief Volume level, integer from 0 to 256, works linear
+     */
+    aui::audio::VolumeLevel mVolume = 256;
 };

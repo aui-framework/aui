@@ -20,11 +20,6 @@ public:
      */
     virtual AAudioFormat info() = 0;
 
-    /**
-     * @brief Rewind audio stream to begin
-     */
-    virtual void rewind() = 0;
-
 protected:
     static _<IInputStream> loadSourceInputStream(const AUrl& key);
 

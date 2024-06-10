@@ -4,13 +4,13 @@
 
 namespace aui::audio::impl {
     template<ASampleFormat sample_in, AChannelFormat channels_in>
-    class Resampler : public ResamplerBase {
+    class Resampler final : public ResamplerBase {
     public:
         explicit Resampler(_<ISoundInputStream> source) : mResampler(std::move(source)) {
         }
 
-        size_t resample(std::span<std::byte> dst, IAudioPlayer::VolumeLevel volume) override {
-            if (volume != IAudioPlayer::VolumeLevel::MAX) {
+        size_t resample(std::span<std::byte> dst, aui::audio::VolumeLevel volume) override {
+            if (volume != aui::audio::VolumeLevel::MAX) {
                 mResampler.setVolume(volume);
             }
             mResampler.setDestination(dst);
@@ -74,27 +74,19 @@ namespace aui::audio::impl {
     }
 }
 
-ASoundResampler::ASoundResampler(const _<IAudioPlayer> &player) noexcept {
-    mParentPlayer = player;
-    mSoundStream = player->source();
-    mInputFormat = mSoundStream->info();
-    mResampler = aui::audio::impl::resolveResampler<>(mSoundStream);
+ASoundResampler::ASoundResampler(_<ISoundInputStream> sourceStream) noexcept : mSourceStream(std::move(sourceStream)) {
+    mResampler = aui::audio::impl::resolveResampler<>(mSourceStream);
 }
 
 size_t ASoundResampler::read(char *dst, size_t size) {
     std::span<std::byte> destination(reinterpret_cast<std::byte*>(dst), size);
-    IAudioPlayer::VolumeLevel volume = IAudioPlayer::VolumeLevel::MAX;
-    if (auto player = mParentPlayer.lock()) {
-        volume = player->volume();
-    }
-
-    return mResampler->resample(destination, volume);
+    return mResampler->resample(destination, mVolume);
 }
 
 AAudioFormat ASoundResampler::info() {
     return aui::audio::platform::requested_format;
 }
 
-void ASoundResampler::rewind() {
-    mSoundStream->rewind();
+void ASoundResampler::setVolume(aui::audio::VolumeLevel volume) noexcept {
+    mVolume = volume;
 }

@@ -28,16 +28,13 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                 size_t r = player->resampledStream()->read(destination);
                 if (r == 0) {
                     if (player->loop()) {
-                        player->resampledStream()->rewind();
+                        player->rewind();
                         return false;
                     }
                     itemsToRemove << std::move(player);
                     return true; // remove item
                 }
-                else {
-                    result = std::max(r, result);
-                }
-
+                result = std::max(r, result);
                 return false;
             }
             catch (const AException& e) {
