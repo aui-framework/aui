@@ -27,6 +27,7 @@ IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
 void IAudioPlayer::initialize() {
     mSourceStream = ISoundInputStream::fromUrl(mUrl);
     mResampledStream = _new<ASoundResampler>(mSourceStream);
+    mResampledStream->setVolume(mVolume);
 }
 
 void IAudioPlayer::play() {

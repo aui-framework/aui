@@ -78,6 +78,7 @@ public:
      */
     void setVolume(aui::audio::VolumeLevel volume) {
         mVolume = volume;
+        AUI_NULLSAFE(mResampledStream)->setVolume(volume);
         onVolumeSet();
     }
 
@@ -129,7 +130,7 @@ protected:
     void release();
 
 private:
-    aui::audio::VolumeLevel mVolume;
+    aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
     AUrl mUrl;
     _<ISoundInputStream> mSourceStream;
     _<ASoundResampler> mResampledStream;
