@@ -211,7 +211,7 @@ private:
 	/**
 	 * @brief true if interrupt requested for this thread.
 	 */
-	bool mInterrupted = false;
+	std::atomic_bool mInterrupted = false;
 
 public:
 

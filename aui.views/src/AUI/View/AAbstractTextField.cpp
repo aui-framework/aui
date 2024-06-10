@@ -280,4 +280,9 @@ void AAbstractTextField::setSize(glm::ivec2 size) {
     AView::setSize(size);
     updateTextAlignOffset();
 }
-
+void AAbstractTextField::onKeyDown(AInput::Key key) {
+    AAbstractTypeableView::onKeyDown(key);
+    if (key == AInput::Key::RETURN) {
+        emit actionButtonPressed;
+    }
+}
