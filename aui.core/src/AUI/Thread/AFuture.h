@@ -11,8 +11,10 @@
 
 #pragma once
 
+#include <exception>
 #include <thread>
 #include <utility>
+#include "AUI/Traits/concepts.h"
 #include "AUI/Util/ABitField.h"
 #if AUI_COROUTINES
 #include <coroutine>
@@ -35,7 +37,8 @@ class AThreadPool;
 class AInvocationTargetException: public AException {
 
 public:
-    AInvocationTargetException(const AString& message = {}): AException(message, std::current_exception(), AStacktrace::capture(3)) {}
+    AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
+        AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
 
 
     ~AInvocationTargetException() noexcept override = default;
@@ -49,6 +52,10 @@ public:
 AUI_ENUM_FLAG(AFutureWait) {
     JUST_WAIT = 0b00,
     ALLOW_STACKFUL_COROUTINES = 0b10,
+
+    /**
+     * @brief Use work stealing.
+     */
     ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP = 0b01,
     DEFAULT = ALLOW_STACKFUL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
 };
@@ -118,7 +125,11 @@ namespace aui::impl::future {
              */
             std::conditional_t<isVoid, bool, AOptional<Value>> value;
             AOptional<AInvocationTargetException> exception;
-            AMutex mutex;
+            /**
+             * Spinlock mutex is used here because AFuture makes frequent calls to mutex and never locks for a long
+             * time. Durations are small enough so it is worth to just busy wait instead of making syscalls.
+             */
+            ASpinlockMutex mutex;
             AConditionVariable cv;
             TaskCallback task;
             OnSuccessCallback onSuccess;
@@ -254,12 +265,12 @@ namespace aui::impl::future {
                 cv.notify_all();
             }
 
-            void reportException() noexcept {
+            void reportException(std::exception_ptr causedBy = std::current_exception()) noexcept {
                 if (cancelled) {
                     return;
                 }
                 std::unique_lock lock(mutex);
-                exception.emplace();
+                exception.emplace("exception reported", std::move(causedBy));
                 cv.notify_all();
                 if (!onError) {
                     return;
@@ -360,7 +371,7 @@ namespace aui::impl::future {
     public:
         /**
          * @param task a callback which will be executed by Future::Inner::tryExecute. Can be null. If null, the result
-         *        should be provided by AFuture::supplyResult function.
+         *        should be provided by AFuture::supplyValue function.
          */
         Future(TaskCallback task = nullptr): mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
 
@@ -378,7 +389,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @return true if the value or exception or interruption received.
+         * @return true if the value or exception or interruption was received.
          */
         [[nodiscard]]
         bool hasResult() const noexcept {
@@ -386,7 +397,8 @@ namespace aui::impl::future {
         }
 
         /**
-         * @return true if the value can be obtained without waiting.
+         * @return true if asynchronous operation was successfuly completed and supplied a value, which can be obtained
+         * without waiting.
          */
         [[nodiscard]]
         bool hasValue() const noexcept {
@@ -398,7 +410,7 @@ namespace aui::impl::future {
         }
 
         template<typename Callback>
-        void onSuccess(Callback&& callback) const noexcept {
+        void onSuccess(Callback&& callback) const {
             if (hasValue()) { // cheap lookahead
                 (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
                 return;
@@ -412,11 +424,21 @@ namespace aui::impl::future {
         }
 
         template<aui::invocable<const AException&> Callback>
-        void onError(Callback&& callback) const noexcept {
+        void onError(Callback&& callback) const {
             std::unique_lock lock((*mInner)->mutex);
             (*mInner)->addOnErrorCallback(std::forward<Callback>(callback));
         }
 
+        /**
+         * @brief Adds the callback to both onSuccess and onResult.
+         */
+        template<aui::invocable Callback>
+        void onFinally(Callback&& callback) const {
+            std::unique_lock lock((*mInner)->mutex);
+            (*mInner)->addOnSuccessCallback([callback](const auto&...) { callback(); });
+            (*mInner)->addOnErrorCallback([callback = std::move(callback)](const auto&...) { callback(); });
+            (*mInner)->notifyOnSuccessCallback(lock);
+        }
 
         /**
          * @brief Cancels the AFuture's task.
@@ -436,7 +458,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @brief Sleeps if the supplyResult is not currently available.
+         * @brief Sleeps if the supplyValue is not currently available.
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
          *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
@@ -445,7 +467,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -481,7 +503,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -493,7 +515,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -505,7 +527,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -521,7 +543,7 @@ namespace aui::impl::future {
 
 
 /**
- * @brief Represents a value that is not currently available.
+ * @brief Represents a value that will be available at some point in the future.
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
@@ -534,7 +556,8 @@ namespace aui::impl::future {
  *   AThread::sleep(1000); // long operation
  *   return 123;
  * };
- * cout << *theFuture; // 123
+ * ...
+ * cout << *theFuture; // waits for the task, outputs 123
  * @endcode
  *
  * If your operation consists of complex future sequences, you have multiple options:
@@ -558,13 +581,13 @@ namespace aui::impl::future {
  *
  * @code{cpp}
  *
- * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyResult() method:
+ * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyValue() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
  * AThread t([=] {
  *   AThread::sleep(1000); // long operation
- *   theFuture.supplyResult(123);
+ *   theFuture.supplyValue(123);
  * });
  * t.start();
  * cout << *theFuture; // 123
@@ -575,7 +598,10 @@ namespace aui::impl::future {
  *       Consider using one of suggested methods of usage instead.
  *
  * AFuture provides a set of functions for both "value emitting" side: supplyValue(), supplyException(), and "value
- * receiving" side:
+ * receiving" side: operator->(), operator*(), get().
+ *
+ * When AFuture's operation is completed it calls either onSuccess() or onError(). These callbacks are excepted to be
+ * called in any case. Use onFinally() to handle both.
  *
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *
@@ -586,8 +612,10 @@ namespace aui::impl::future {
  *
  * To manage multiple AFutures, use AAsyncHolder or AFutureSet classes.
  *
- * When waiting for result, AFuture may execute the task (if not default-constructed) on the caller thread instead of
- * waiting. See AFuture::wait for details.
+ * @note
+ * AFuture implements work-stealing algorithm to prevent deadlocks and optimizaze thread usage: when waiting for result,
+ * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
+ * for details.
  */
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {
@@ -608,13 +636,19 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    AFuture(const AFuture&) = default;
+    AFuture(AFuture&&) noexcept = default;
+
+    AFuture& operator=(const AFuture&) = default;
+    AFuture& operator=(AFuture&&) noexcept = default;
+
     /**
      * @brief Pushes the result to AFuture.
      * @param v value
      * @details
-     * After AFuture grabbed the value, supplyResult calls onSuccess listeners with the new value.
+     * After AFuture grabbed the value, supplyValue calls onSuccess listeners with the new value.
      */
-    void supplyResult(T v) const noexcept {
+    void supplyValue(T v) const noexcept {
         auto& inner = (*super::mInner);
         AUI_ASSERTX(inner->task == nullptr, "task is already provided");
 
@@ -627,9 +661,9 @@ public:
     /**
      * @brief Stores an exception from std::current_exception to the future.
      */
-    void supplyException() const noexcept {
+    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
         auto& inner = (*super::mInner);
-        inner->reportException();
+        inner->reportException(std::move(causedBy));
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
@@ -693,13 +727,22 @@ public:
     }
 
     /**
+     * @brief Adds the callback to both onSuccess and onResult.
+     */
+    template<aui::invocable Callback>
+    const AFuture& onFinally(Callback&& callback) const noexcept {
+        super::onFinally(std::forward<Callback>(callback));
+        return *this;
+    }
+
+    /**
      * @brief Maps this AFuture to another type of AFuture.
      */
     template<aui::invocable<const T&> Callback>
     auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
         AFuture<decltype(callback(std::declval<T>()))> result;
         onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
-            result.supplyResult(callback(v));
+            result.supplyValue(callback(v));
         });
         onError([result](const AException& v) {
             try {
@@ -728,20 +771,26 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    AFuture(const AFuture&) = default;
+    AFuture(AFuture&&) noexcept = default;
+
+    AFuture& operator=(const AFuture&) = default;
+    AFuture& operator=(AFuture&&) noexcept = default;
+
     /**
      * @brief Stores an exception from std::current_exception to the future.
      */
-    void supplyException() const noexcept {
+    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
         auto& inner = (*super::mInner);
-        inner->reportException();
+        inner->reportException(std::move(causedBy));
     }
 
     /**
      * @brief Pushes "success" result.
      * @details
-     * supplyResult calls onSuccess listeners with the new value.
+     * supplyValue calls onSuccess listeners with the new value.
      */
-    void supplyResult() const noexcept {
+    void supplyValue() const noexcept {
         auto& inner = (*super::mInner);
         AUI_ASSERTX(inner->task == nullptr, "task is already provided");
 
@@ -781,7 +830,7 @@ public:
      * @endcode
      */
     template<aui::invocable Callback>
-    const AFuture& onSuccess(Callback&& callback) const noexcept {
+    const AFuture& onSuccess(Callback&& callback) const {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
@@ -806,8 +855,17 @@ public:
      * @endcode
      */
     template<aui::invocable<const AException&> Callback>
-    const AFuture& onError(Callback&& callback) const noexcept {
+    const AFuture& onError(Callback&& callback) const {
         super::onError(std::forward<Callback>(callback));
+        return *this;
+    }
+
+    /**
+     * @brief Adds the callback to both onSuccess and onResult.
+     */
+    template<aui::invocable Callback>
+    const AFuture& onFinally(Callback&& callback) const {
+        super::onFinally(std::forward<Callback>(callback));
         return *this;
     }
 };
@@ -880,7 +938,7 @@ struct aui::impl::future::Future<Value>::CoPromiseType {
     }
 
     void return_value(Value v) const noexcept {
-        future.supplyResult(std::move(v));
+        future.supplyValue(std::move(v));
     }
 };
 

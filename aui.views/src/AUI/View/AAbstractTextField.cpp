@@ -216,6 +216,10 @@ void AAbstractTextField::prerenderStringIfNeeded() {
                 case ATextAlign::RIGHT:
                     canvas->addString({ 0, 0 }, text);
                     break;
+
+                case ATextAlign::JUSTIFY:
+                    // justify cannot be handled here
+                    break;
             }
             setTextLayoutHelper(canvas->getTextLayoutHelper());
             mPrerenderedString = canvas->finalize();
@@ -249,6 +253,9 @@ void AAbstractTextField::updateTextAlignOffset() {
         case ATextAlign::RIGHT:
             mTextAlignOffset = getContentWidth() - w;
             return;
+
+        default:
+            break;
     }
 }
 
@@ -268,4 +275,9 @@ void AAbstractTextField::setSize(glm::ivec2 size) {
     AView::setSize(size);
     updateTextAlignOffset();
 }
-
+void AAbstractTextField::onKeyDown(AInput::Key key) {
+    AAbstractTypeableView::onKeyDown(key);
+    if (key == AInput::Key::RETURN) {
+        emit actionButtonPressed;
+    }
+}

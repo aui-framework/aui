@@ -83,7 +83,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 auto w = rect->right - rect->left;
                 auto h = rect->bottom - rect->top;
                 wglMakeCurrent(mDC, context.hrc);
-                emit resized(w, h);
                 AViewContainer::setSize(w, h);
             }
             return true;
@@ -148,7 +147,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
                 AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
-                emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
                 switch (wParam) {
@@ -538,8 +536,8 @@ void AWindow::allowDragNDrop() {
     AUI_ASSERT(r == S_OK);
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
-    ABaseWindow::requestTouchscreenKeyboardImpl();
+void AWindow::showTouchscreenKeyboardImpl() {
+    ABaseWindow::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {

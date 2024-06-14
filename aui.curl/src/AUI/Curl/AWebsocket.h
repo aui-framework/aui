@@ -17,6 +17,9 @@
 
 
 #include "ACurl.h"
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AOptional.h"
+#include "AUI/Common/AString.h"
 #include "AUI/IO/ADynamicPipe.h"
 
 /**
@@ -24,6 +27,8 @@
  * @ingroup curl
  */
 class API_AUI_CURL AWebsocket: public ACurl, public IOutputStream {
+    friend class WebsocketTest_Receive1_Test;
+    friend class WebsocketTest_Receive2_Test;
 public:
     AWebsocket(const AString& url, AString key = generateKeyString());
     void write(const char* src, size_t size) override;
@@ -79,14 +84,11 @@ private:
 
         /* second byte: mask + payload length */
         uint8_t payload_len: 7; /* if 126, uses extra 2 bytes (uint16_t)
-                              * if 127, uses extra 8 bytes (uint64_t)
-                              * if <=125 is self-contained
-                              */
+                                 * if 127, uses extra 8 bytes (uint64_t)
+                                 * if <=125 is self-contained
+                                 */
         uint8_t mask: 1; /* if 1, uses 4 extra bytes */
     };
-    AOptional<Header> mLastHeader;
-    std::uint64_t mLastPayloadLength;
-    AByteBuffer mLastPayload;
 
     static AString generateKeyString();
 
@@ -95,7 +97,12 @@ private:
     void writeMessage(Opcode opcode, AByteBufferView message);
 
     std::size_t onDataReceived(AByteBufferView data);
+    std::size_t decodeOnePacket(AByteBufferView data);
     std::size_t onDataSend(char* dst, std::size_t maxLen);
+
+    AWebsocket(): ACurl(ACurl::Builder("localhost")) {} // for tests
+
+    AOptional<AByteBuffer> mTrailingBuffer;
 
 signals:
     emits<> connected;

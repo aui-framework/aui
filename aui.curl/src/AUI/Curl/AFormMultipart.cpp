@@ -2,8 +2,10 @@
 // Created by alex2772 on 9/4/23.
 //
 
+#include <random>
 #include <range/v3/view.hpp>
 #include <range/v3/action.hpp>
+#include "AUI/Common/AByteBufferView.h"
 #include <AUI/Crypt/Random.h>
 #include <AUI/IO/AConcatInputStream.h>
 #include <AUI/IO/AStringStream.h>
@@ -14,9 +16,12 @@
 _<IInputStream> AFormMultipart::makeInputStream() const {
     mBoundary = "----auiboundary";
     {
-        auto b = ACrypto::safeRandom();
-        b->resize(16);
-        mBoundary += b->toBase64String();
+        static std::default_random_engine re;
+        static std::uniform_int_distribution d(0, 255);
+        std::array<uint8_t, 16> buf;
+        ranges::generate(buf, []{ return uint8_t(d(re)); });
+
+        mBoundary += AByteBufferView((const char*)buf.data(), buf.size()).toBase64String();
     }
 
     auto result = *this

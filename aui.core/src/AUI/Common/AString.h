@@ -66,8 +66,8 @@ public:
     {
     }
 
-    AString(const basic_string& _Right, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Al)
+    AString(const basic_string& rhs, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, allocator)
     {
     }
 
@@ -93,58 +93,58 @@ public:
      */
     AString(std::string_view utf8) noexcept;
 
-    explicit AString(const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Al)
+    explicit AString(const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(allocator)
     {
     }
 
-    AString(const basic_string& _Right, size_type _Roff, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Roff, _Al)
+    AString(const basic_string& rhs, size_type offset, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, offset, allocator)
     {
     }
 
-    AString(const basic_string& _Right, size_type _Roff, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Roff, _Count, _Al)
+    AString(const basic_string& rhs, size_type offset, size_type count, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(rhs, offset, count, allocator)
     {
     }
 
-    AString(const wchar_t* _Ptr, size_type _Count) noexcept
-            : basic_string<wchar_t>(_Ptr, _Count)
+    AString(const wchar_t* cStyleString, size_type count) noexcept
+            : basic_string<wchar_t>(cStyleString, count)
     {
     }
 
-    AString(const wchar_t* _Ptr, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Ptr, _Count, _Al)
+    AString(const wchar_t* cStyleString, size_type count, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(cStyleString, count, allocator)
     {
     }
 
-    AString(const wchar_t* _Ptr) noexcept
-            : basic_string<wchar_t>(_Ptr)
+    AString(const wchar_t* cStyleString) noexcept
+            : basic_string<wchar_t>(cStyleString)
     {
     }
 
-    AString(const wchar_t* _Ptr, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Ptr, _Al)
+    AString(const wchar_t* cStyleString, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(cStyleString, allocator)
     {
     }
 
-    AString(size_type _Count, wchar_t _Ch) noexcept
-            : basic_string<wchar_t>(_Count, _Ch)
+    AString(size_type count, wchar_t _Ch) noexcept
+            : basic_string<wchar_t>(count, _Ch)
     {
     }
 
-    AString(size_type _Count, wchar_t _Ch, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Count, _Ch, _Al)
+    AString(size_type count, wchar_t _Ch, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(count, _Ch, allocator)
     {
     }
 
-    AString(basic_string&& _Right) noexcept
-            : basic_string<wchar_t>(_Right)
+    AString(basic_string&& rhs) noexcept
+            : basic_string<wchar_t>(std::move(rhs))
     {
     }
 
-    AString(basic_string&& _Right, const std::allocator<wchar_t>& _Al) noexcept
-            : basic_string<wchar_t>(_Right, _Al)
+    AString(basic_string&& rhs, const std::allocator<wchar_t>& allocator) noexcept
+            : basic_string<wchar_t>(std::move(rhs), allocator)
     {
     }
 
@@ -297,6 +297,17 @@ public:
     AOptional<double> toDouble() const noexcept;
 
     /**
+     * @brief Converts the string to a double number.
+     * @return The string converted to a double number.
+     *
+     * If conversion to int is not possible, exception is thrown.
+     */
+    [[nodiscard]]
+    double toDoubleOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
+    }
+
+    /**
      * @brief Converts the string to int value.
      * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
      * used.
@@ -305,6 +316,18 @@ public:
      */
     [[nodiscard]]
     AOptional<int> toInt() const noexcept;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, exception is thrown.
+     */
+    [[nodiscard]]
+    int toIntOrException() const {
+        return toInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
 
     /**
      * @brief Converts the string to int value.
@@ -324,7 +347,31 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
+    int64_t toLongIntOrException() const {
+        return toLongInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
     AOptional<unsigned> toUInt() const noexcept;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
+    unsigned toUIntOrException() const {
+        return toUInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+    }
 
     /**
      * @brief Converts the string to boolean value.

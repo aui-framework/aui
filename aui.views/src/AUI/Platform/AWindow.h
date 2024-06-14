@@ -195,7 +195,7 @@ public:
 
     void forceUpdateCursor() override;
 
-    void requestTouchscreenKeyboardImpl() override;
+    void showTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;
 
     /**
@@ -207,7 +207,6 @@ public:
 
 signals:
     emits<> closed;
-    emits<int, int> resized;
     emits<> redrawn;
     emits<> shown;
 

@@ -186,7 +186,7 @@ namespace aui::impl::slot {
  * @details
  * This example prints "Hello world\n":
  * @code{cpp}
- * AUI_DEFER { printf("world\n") };
+ * AUI_DEFER { printf(" world\n") };
  * printf("Hello");
  * @endcode
  * @sa ARaiiHelper

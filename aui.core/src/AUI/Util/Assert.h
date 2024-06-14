@@ -15,6 +15,8 @@
 #include "AUI/api.h"
 #include "AUI/Util/APreprocessor.h"
 
+//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
+
 namespace aui::assertion::detail {
     inline void checkArgs(bool cond, const char* what = nullptr) {}
 
@@ -67,3 +69,5 @@ namespace aui::assertion::detail {
  * @endcode
  */
 #define AUI_ASSERTX(condition, what) AUI_IMPL_ASSERTX(condition, what)
+
+//NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)

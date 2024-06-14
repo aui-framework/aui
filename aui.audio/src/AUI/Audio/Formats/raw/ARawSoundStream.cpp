@@ -26,7 +26,3 @@ size_t ARawSoundStream::read(char *dst, size_t size) {
 AAudioFormat ARawSoundStream::info() {
     return mFormat;
 }
-
-void ARawSoundStream::rewind() {
-    //no-op
-}

@@ -18,6 +18,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 {
 private:
     bool mDragging = false;
+    uint32_t mTitleHeight = 30;
 
 protected:
 	LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept override;
@@ -27,7 +28,12 @@ public:
 	ACustomWindow(const AString& name, int width, int height);
 	ACustomWindow();
 	~ACustomWindow() override;
-	void setSize(glm::ivec2 size) override;
+
+    void setTitleHeight(uint32_t height) {
+        mTitleHeight = height;
+    }
+
+    void setSize(glm::ivec2 size) override;
 
 	virtual bool isCaptionAt(const glm::ivec2& pos);
 
@@ -43,6 +49,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 private:
     bool mDragging = false;
     glm::ivec2 mDragPos;
+    uint32_t mTitleHeight = 30;
 
     void handleXConfigureNotify();
 
@@ -50,6 +57,10 @@ public:
     ACustomWindow(const AString& name, int width, int height);
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
+
+    void setTitleHeight(uint32_t height) {
+        mTitleHeight = height;
+    }
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

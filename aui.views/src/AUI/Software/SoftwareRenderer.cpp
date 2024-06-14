@@ -565,7 +565,7 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> poin
     }
 
     auto prevPoint = points[0];
-    for (auto point : points | ranges::view::drop(1)) {
+    for (auto point : points | ranges::views::drop(1)) {
         drawLine(brush, prevPoint, point, style, width);
         prevPoint = point;
     }

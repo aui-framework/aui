@@ -14,8 +14,6 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
-const int AUI_TITLE_HEIGHT = 30;
-
 
 void ACustomWindow::handleXConfigureNotify() {
 
@@ -35,7 +33,7 @@ void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
 
 
 bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
-    if (pos.y <= AUI_TITLE_HEIGHT) {
+    if (pos.y <= mTitleHeight) {
         if (auto v = getViewAtRecursive(pos)) {
             if (!(_cast<AButton>(v)) &&
                 !v->getAssNames().contains(".override-title-dragging")) {

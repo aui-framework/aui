@@ -7,8 +7,9 @@
 #include "AUI/Logging/ALogger.h"
 
 _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
+
     try {
-        return AWavSoundStream::fromUrl(url);
+        return _new<AWavSoundStream>(loadSourceInputStream(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }
@@ -17,7 +18,7 @@ _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
     }
 
     try {
-        return AOggSoundStream::fromUrl(url);
+        return _new<AOggSoundStream>(loadSourceInputStream(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }
@@ -25,8 +26,7 @@ _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
         throw;
     }
 
-
-    return nullptr;
+    throw AException("Failed to create ISoundInputStream from url = {}: unsupported format"_format(url.full()));
 }
 
 ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
@@ -34,7 +34,7 @@ ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
     return inst;
 }
 
-_<IInputStream> ISoundInputStream::getInputStream(const AUrl &key) {
+_<IInputStream> ISoundInputStream::loadSourceInputStream(const AUrl &key) {
     if (auto result = Cache::get(key)) {
         return _new<AByteBufferInputStream>(*result);
     }

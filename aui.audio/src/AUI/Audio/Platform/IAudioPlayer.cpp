@@ -16,16 +16,42 @@ using DefaultSystemPlayer = OboeAudioPlayer;
 using DefaultSystemPlayer = CoreAudioPlayer;
 #endif
 
-_<IAudioPlayer> IAudioPlayer::fromUrl(const AUrl& url) {
-    return IAudioPlayer::fromSoundStream(ISoundInputStream::fromUrl(url));
+_<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {
+    return _new<DefaultSystemPlayer>(std::move(url));
 }
 
-_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
-    if (!stream) {
-        return nullptr;
-    }
+IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
+    initialize();
+}
 
-    auto result = _new<DefaultSystemPlayer>();
-    result->setSource(std::move(stream));
-    return result;
+void IAudioPlayer::initialize() {
+    mSourceStream = ISoundInputStream::fromUrl(mUrl);
+    mResampledStream = _new<ASoundResampler>(mSourceStream);
+    mResampledStream->setVolume(mVolume);
+}
+
+void IAudioPlayer::play() {
+    if (mPlaybackStatus != PlaybackStatus::PLAYING) {
+        playImpl();
+        mPlaybackStatus = PlaybackStatus::PLAYING;
+    }
+}
+
+void IAudioPlayer::pause() {
+    if (mPlaybackStatus == PlaybackStatus::PLAYING) {
+        pauseImpl();
+        mPlaybackStatus = PlaybackStatus::PAUSED;
+    }
+}
+
+void IAudioPlayer::stop() {
+    if (mPlaybackStatus != PlaybackStatus::STOPPED) {
+        stopImpl();
+        mPlaybackStatus = PlaybackStatus::STOPPED;
+    }
+}
+
+void IAudioPlayer::release() {
+    mResampledStream.reset();
+    mSourceStream.reset();
 }

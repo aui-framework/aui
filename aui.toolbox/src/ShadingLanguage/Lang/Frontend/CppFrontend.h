@@ -16,7 +16,7 @@
 #include "ShadingLanguage/Lang/AST/AST.h"
 #include "CBasedFrontend.h"
 #include "ShadingLanguage/Lang/AST/INodeVisitor.h"
-#include "IFronted.h"
+#include "IFrontend.h"
 
 class CppFrontend: public CBasedFrontend {
 public:

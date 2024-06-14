@@ -18,7 +18,7 @@
 
 #include <AUI/IO/APath.h>
 #include "Auisl.h"
-#include "ShadingLanguage/Lang/Frontend/IFronted.h"
+#include "ShadingLanguage/Lang/Frontend/IFrontend.h"
 #include "ShadingLanguage/Lang/Frontend/CppFrontend.h"
 #include "ShadingLanguage/Lang/Frontend/GLSLFrontend.h"
 #include "AUI/IO/AStringStream.h"
@@ -55,8 +55,8 @@ AString Auisl::getName() {
 AString Auisl::getSignature() {
     using namespace ranges;
     return "<target_platform {}> <auisl_file> <output_cpp>"_format(targetPlatforms()
-                                                                   | view::keys
-                                                                   | view::join(',')
+                                                                   | views::keys
+                                                                   | views::join(',')
                                                                    | to<AString>());
 }
 

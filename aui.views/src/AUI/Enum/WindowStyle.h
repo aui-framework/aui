@@ -11,7 +11,8 @@
 
 #pragma once
 
-#include <AUI/Util/EnumUtil.h>
+
+#include "AUI/Reflect/AEnumerate.h"
 
 AUI_ENUM_FLAG(WindowStyle)
 {

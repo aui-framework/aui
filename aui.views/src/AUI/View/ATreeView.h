@@ -25,6 +25,8 @@
 /**
  * @brief Displays a tree model of strings.
  * @ingroup useful_views
+ * @details
+ * ATreeView provides view of string-capable ITreeModel objects.
  */
 class API_AUI_VIEWS ATreeView: public AViewContainer {
 private:
@@ -66,7 +68,7 @@ private:
     void handleMouseDoubleClicked(ItemView* v);
     void handleSelected(ItemView* v);
 
-    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index);
+    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
     void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
     _<ItemView> indexToView(const ATreeModelIndex& target);
 };

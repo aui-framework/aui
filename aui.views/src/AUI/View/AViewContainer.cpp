@@ -371,11 +371,12 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
     _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
-    while (auto parent = _cast<AViewContainer>(target)) {
-        pos -= parent->getPosition();
-        target = parent->getViewAt(pos, flags);
+    int depth = 0;
+    while (auto asContainer = _cast<AViewContainer>(target)) {
+        pos -= asContainer->getPosition();
+        target = asContainer->getViewAt(pos, flags);
         if (!target)
-            return parent;
+            return asContainer;
     }
     return target;
 }
@@ -543,4 +544,15 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
         return nullptr;
     }
     return it->targetView.lock();
+}
+
+void AViewContainer::setViews(AVector<_<AView>> views) {
+    views.removeIf([](const _<AView>& v) { return v == nullptr; });
+    mViews = std::move(views);
+
+    for (const auto& view : mViews) {
+        view->mParent = this;
+        if (mLayout)
+            mLayout->addView(view);
+    }
 }

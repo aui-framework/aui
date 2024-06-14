@@ -32,6 +32,21 @@ AUI_ENUM_FLAG(ARenderContextFlags) {
     NO_VSYNC = 0b10,
 };
 
+/**
+ * @brief Defines rendering API priority and options for your application.
+ * @ingroup views
+ * @details
+ * By default, AUI uses the following settings:
+ * @code{cpp}
+ * ARenderingContextOptions::set({
+ *    OpenGL {},
+ *    Software {},
+ * });
+ * @endcode{cpp}
+ * You may call this before initializating windows in order to define your own settings and priorities.
+ *
+ * The priority can be overridden by --aui-renderer=GRAPHICS_API argument passed to your application.
+ */
 struct API_AUI_VIEWS ARenderingContextOptions {
 public:
 

@@ -20,6 +20,7 @@
 #include <AUI/Core.h>
 #include <glm/gtx/norm.hpp>
 #include <ostream>
+#include "AUI/Traits/values.h"
 
 class AString;
 
@@ -114,7 +115,7 @@ public:
     /**
      * @brief Multiply all color components except alpha channel (rgb * d, a)
      * @param multiplier
-     * @return supplyResult color
+     * @return supplyValue color
      */
     inline AColor mul(float d) const {
         return glm::clamp(glm::vec4(r * d, g * d, b * d, a), glm::vec4(0.f), glm::vec4(1.f));
@@ -188,3 +189,14 @@ inline AColor operator"" _rgb(unsigned long long v)
 	assert(("_rgb literal should be in 0xrrggbb format, not 0xaarrggbb" && !(v & 0xff000000u)));
     return AColor::fromRRGGBB(unsigned(v));
 }
+
+
+struct API_AUI_CORE AColorHSV {
+    aui::float_within_0_1 hue = 0.f;
+    aui::float_within_0_1 saturation = 0.f;
+    aui::float_within_0_1 value = 0.f;
+
+    [[nodiscard]] static AColorHSV fromRGB(AColor color) noexcept;
+
+    [[nodiscard]] AColor toRGB() const noexcept;
+};

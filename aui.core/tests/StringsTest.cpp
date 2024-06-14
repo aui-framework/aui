@@ -55,6 +55,18 @@ TEST(Strings, ToFloat) {
     EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }
 
+TEST(Strings, Uppercase1) {
+    EXPECT_EQ("å"_as.uppercase(), "Å");
+}
+
+TEST(Strings, Uppercase2) {
+    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_as.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
+}
+
+TEST(Strings, Downcase1) {
+    EXPECT_EQ("Å"_as.lowercase(), "å");
+}
+
 TEST(Strings, ReplaceAll1) {
     EXPECT_EQ("abcdef"_as.replaceAll("ab", "12"), "12cdef");
 }

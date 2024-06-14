@@ -129,7 +129,7 @@ ACurlMulti& ACurlMulti::global() noexcept {
 
             AFuture<> cs;
             thread->enqueue([&] {
-                cs.supplyResult();
+                cs.supplyValue();
             });
             cs.wait();
         }

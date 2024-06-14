@@ -123,25 +123,18 @@ static PulseAudioInstance& pulse() {
 }
 
 void PulseAudioPlayer::playImpl() {
-    AUI_ASSERT(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<PulseAudioPlayer>(sharedPtr()));
+    initializeIfNeeded();
     ::loop().addSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
     pulse();
 }
 
 void PulseAudioPlayer::pauseImpl() {
     ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
-    mResampled.reset();
 }
 
 void PulseAudioPlayer::stopImpl() {
     ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
-    mResampled.reset();
-    source()->rewind();
-}
-
-void PulseAudioPlayer::onSourceSet() {
-
+    release();
 }
 
 void PulseAudioPlayer::onLoopSet() {

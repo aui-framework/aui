@@ -207,6 +207,14 @@ protected:
     /**
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
+     * @details
+     *
+     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
+     * for more info.
+     *
+     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
+     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
+     * such case.
      */
     glm::ivec2 mExpanding = {0, 0};
 
@@ -291,7 +299,7 @@ public:
      * @brief Determines window which this AView belongs to.
      * @return window which this AView belongs to. Could be nullptr
      */
-    ABaseWindow* getWindow();
+    ABaseWindow* getWindow() const;
 
     virtual void drawStencilMask();
 
@@ -567,6 +575,12 @@ public:
     {
         return mExpanding;
     }
+
+    /**
+     * @brief Changes the expanding of view.
+     * @sa mExpanding
+     * @sa ass::Expanding
+     */
     void setExpanding(const glm::ivec2& expanding)
     {
         mExpanding = expanding;
@@ -1003,3 +1017,5 @@ private:
 
     void notifyParentChildFocused(const _<AView> &view);
 };
+
+API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);

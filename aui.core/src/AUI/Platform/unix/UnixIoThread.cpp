@@ -14,6 +14,7 @@
 //
 
 #include "UnixIoThread.h"
+#include <range/v3/view.hpp>
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Thread/AThread.h"
 #include "UnixEventFd.h"
@@ -110,7 +111,7 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     mThread->start();
     AFuture<> cs;
     mThread->enqueue([&] {
-        cs.supplyResult();
+        cs.supplyValue();
     });
     cs.wait();
 }
@@ -132,13 +133,24 @@ public:
     void loop() override {
         for (;;) {
             AThread::processMessages();
-            auto r = poll(mParent.mPollFd.data(), mParent.mPollFd.size(), -1);
+            mParent.mMessageQueue.processMessages();
+            auto& pollFd = mParent.mPollFd;
+            auto& callbacks = mParent.mCallbacks;
+            /*
+            ALogger::info("UnixIoThread") << "poll:";
+            for (const auto& i : pollFd) {
+                ALogger::info("UnixIoThread") << i.fd;
+            }*/
+            auto r = poll(pollFd.data(), pollFd.size(), -1);
             AUI_ASSERT(r > 0);
-            for (auto it = mParent.mPollFd.begin(); it != mParent.mPollFd.end() && r > 0; ++it) {
-                if (it->revents) {
-                    mParent.mCallbacks[it - mParent.mPollFd.begin()](static_cast<UnixPollEvent>(it->revents));
+            for (const auto&[pollInfo, callback] : ranges::zip_view(pollFd, callbacks)) {
+                if (pollInfo.revents) {
+                    callback(static_cast<UnixPollEvent>(pollInfo.revents));
+                    pollInfo.revents = 0;
                     r -= 1;
-                    it->revents = 0;
+                    if (r == 0) {
+                        break;
+                    }
                 }
             }
         }
@@ -148,16 +160,20 @@ private:
 };
 
 void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept {
-    executeOnIoThreadBlocking([&]() mutable {
+    executeOnIoThreadBlocking([this, fd, flags, callback = std::move(callback)]() mutable {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
+        AUI_ASSERT(callback != nullptr);
         mCallbacks << std::move(callback);
         mPollFd << pollfd {
             fd, static_cast<short>(flags.value()), 0
         };
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
 void UnixIoThread::unregisterCallback(int fd) noexcept {
-    executeOnIoThreadBlocking([&] {
+    executeOnIoThreadBlocking([this, fd] {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
         std::size_t index = 0;
         mPollFd.removeIf([&](const pollfd& p) {
             if (p.fd == fd) {
@@ -167,6 +183,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
             ++index;
             return false;
         });
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
@@ -187,7 +204,7 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
 
     AFuture<> cs;
     mThread->enqueue([&] {
-        cs.supplyResult();
+        cs.supplyValue();
     });
     cs.wait();
 }

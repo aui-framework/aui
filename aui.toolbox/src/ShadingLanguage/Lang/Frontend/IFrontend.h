@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include "AUI/IO/APath.h"
 #include "ShadingLanguage/Lang/AST/AST.h"
 
 enum class ShaderType {

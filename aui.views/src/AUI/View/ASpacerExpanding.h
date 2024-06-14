@@ -18,7 +18,11 @@
  * @ingroup useful_views
  * @details
  *
- * AExpandingSpacer is expanding blank view which tries acquire space as much as possible.
+ * AExpandingSpacer is an expanding blank view which tries acquire space as much as possible.
+ *
+ * See expanding in @ref layout_managers "layout managers" for more info.
+ *
+ * @sa AView::setExpanding
  */
 class API_AUI_VIEWS ASpacerExpanding: public AView
 {

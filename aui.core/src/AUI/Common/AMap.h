@@ -34,7 +34,7 @@ public:
 
 	ValueType& operator[](KeyType&& k)
 	{
-		return Parent::operator[](std::forward<KeyType>(k));
+		return Parent::operator[](std::move(k));
 	}
 
 	ValueType& operator[](const KeyType& k)
@@ -44,7 +44,7 @@ public:
 
 	const ValueType& operator[](KeyType&& k) const
 	{
-		return Parent::at(std::forward<KeyType>(k));
+		return Parent::at(std::move(k));
 	}
 
 	const ValueType& operator[](const KeyType& k) const

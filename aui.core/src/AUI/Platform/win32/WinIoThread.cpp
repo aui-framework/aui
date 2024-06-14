@@ -62,7 +62,7 @@ WinIoThread::WinIoThread() noexcept: mThread(_new<AThread>([] {
 
     AFuture<> cs;
     mThread->enqueue([&] {
-        cs.supplyResult();
+        cs.supplyValue();
     });
     cs.wait();
 }

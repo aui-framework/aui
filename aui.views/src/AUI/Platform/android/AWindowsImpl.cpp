@@ -147,7 +147,7 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
+void AWindow::showTouchscreenKeyboardImpl() {
     ui_thread {
         ATextInputType type = ATextInputType::DEFAULT;
         ATextInputAction action = ATextInputAction::DEFAULT;

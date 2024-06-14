@@ -11,6 +11,7 @@
 
 #pragma once
 
+//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
 
 /**
  * @brief Forbids object from being optimized out by compiler.
@@ -47,3 +48,5 @@
  * Can be used to force [=] lambda to capture a variable.
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
+
+//NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)

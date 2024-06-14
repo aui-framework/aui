@@ -156,7 +156,7 @@ TEST(Threading, ParallelVoid) {
                     }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
-            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyResult";
+            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyValue";
         }
         watchdogTrigger = false;
     }
@@ -183,7 +183,7 @@ TEST(Threading, PararellWithResult) {
         for (auto& v : result) {
             accumulator += *v;
         }
-        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyResult";
+        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyValue";
     }
 }
 
@@ -333,7 +333,6 @@ TEST(Threading, FutureOnSuccess) {
     std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
         destructorCalled = true;                                                               //
     };                                                                                         //
-    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
 
     AAsyncHolder holder;
     bool called = false;
@@ -341,7 +340,8 @@ TEST(Threading, FutureOnSuccess) {
         auto future = localThreadPool * [] {
             return 322;
         };
-        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+        holder << future.onSuccess([&, destructorCallback = std::move(destructorCallback)](int i) {
+            ARaiiHelper raii = std::move(destructorCallback);
             ASSERT_EQ(i, 322);
             called = true;
         });

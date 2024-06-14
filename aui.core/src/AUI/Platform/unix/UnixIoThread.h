@@ -19,7 +19,6 @@
 #include <sys/poll.h>
 #include "UnixEventFd.h"
 #include <AUI/Thread/AFuture.h>
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Util/ABitField.h>
 #include <unordered_map>
 
@@ -38,6 +37,9 @@ AUI_ENUM_FLAG(UnixPollEvent) {
 #endif
 
 
+/**
+ * @brief Poll-based event loop to handle events of file descriptors.
+ */
 class API_AUI_CORE UnixIoThread {
 public:
     using Callback = std::function<void(ABitField<UnixPollEvent> triggeredFlags)>;
@@ -67,6 +69,7 @@ private:
     AVector<pollfd> mPollFd;
     AVector<Callback> mCallbacks;
 #endif
+    AMessageQueue mMessageQueue;
 
     template<aui::invocable Callback>
     void executeOnIoThreadBlocking(Callback&& callback) {
@@ -76,9 +79,11 @@ private:
         }
 
         AFuture<> cs;
-        mThread->enqueue([&] {
-            cs.supplyResult();
+        mMessageQueue.enqueue([&] {
+            callback();
+            cs.supplyValue();
         });
+        mNotifyEvent.set();
         cs.wait();
     }
 

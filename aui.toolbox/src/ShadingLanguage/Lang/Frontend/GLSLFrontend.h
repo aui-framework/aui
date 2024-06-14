@@ -16,7 +16,7 @@
 #include "ShadingLanguage/Lang/AST/INodeVisitor.h"
 #include "AUI/IO/IOutputStream.h"
 #include "ShadingLanguage/Lang/AST/AST.h"
-#include "IFronted.h"
+#include "IFrontend.h"
 
 class GLSLFrontend: public CBasedFrontend {
 public:

@@ -36,6 +36,9 @@ struct State {
 void AText::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
                      const AString& word,
                      const ParsedFlags& flags) {
+    if (!entries.empty()) {
+        entries << aui::ptr::fake(&mWhitespaceEntry);
+    }
     if (flags.wordBreak == WordBreak::NORMAL) {
         mWordEntries.emplace_back(this, word);
         entries << aui::ptr::fake(&mWordEntries.last());
@@ -45,7 +48,6 @@ void AText::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
             entries << aui::ptr::fake(&mCharEntries.last());
         }
     }
-    entries << aui::ptr::fake(&mWhitespaceEntry);
 }
 
 AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {

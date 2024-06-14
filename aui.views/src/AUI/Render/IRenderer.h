@@ -13,7 +13,6 @@
 
 #include <glm/glm.hpp>
 #include <AUI/Reflect/AEnumerate.h>
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>

@@ -170,3 +170,4 @@ The example above produces the following window:
 
 ![Label](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20210408_024201.jpg?raw=true)
 
+See @ref layout_managers "layout managers" for more info.

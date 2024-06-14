@@ -27,11 +27,11 @@
 class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
 {
 public:
-	AAbstractTextField();
-	virtual ~AAbstractTextField();
+    AAbstractTextField();
+    virtual ~AAbstractTextField();
 
-	int getContentMinimumHeight(ALayoutDirection layout) override;
-	void setText(const AString& t) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
+    void setText(const AString& t) override;
 
     void render(ClipOptimizationContext context) override;
 
@@ -61,11 +61,11 @@ public:
         setCopyable(!isPasswordMode);
     }
 
-	bool isPasswordMode() const {
-		return mIsPasswordTextField;
-	}
+    bool isPasswordMode() const {
+            return mIsPasswordTextField;
+    }
 
-	bool handlesNonMouseNavigation() override;
+    bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
     const AString& text() const override;
@@ -80,6 +80,14 @@ public:
     bool wantsTouchscreenKeyboard() override;
 
     void setSize(glm::ivec2 size) override;
+
+    void onKeyDown(AInput::Key key) override;
+
+signals:
+    /**
+     * @brief On action button of touchscreen keyboard pressed
+     */
+    emits<> actionButtonPressed;
 
 protected:
     ARender::PrerenderedString mPrerenderedString;

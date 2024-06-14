@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include "AUI/Core.h"
 #include <set>
 #include <ostream>
 #include <AUI/Traits/containers.h>
@@ -72,7 +71,7 @@ public:
      */
     inline self& operator<<(KeyType&& rhs) noexcept
     {
-        p::insert(std::forward<KeyType>(rhs));
+        p::insert(std::move(rhs));
         return *this;
     }
     /**

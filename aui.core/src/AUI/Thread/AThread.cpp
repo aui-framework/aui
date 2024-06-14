@@ -19,6 +19,7 @@
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
+#include "AUI/Util/AMessageQueue.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
@@ -100,9 +101,9 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		AFuture<AStacktrace> future;
 		payloads.value()[mId] = [future] {
 #if AUI_PLATFORM_WIN
-			  future.supplyResult(AStacktrace::capture(1));
+			  future.supplyValue(AStacktrace::capture(1));
 #else
-			  future.supplyResult(AStacktrace::capture(6));
+			  future.supplyValue(AStacktrace::capture(6));
 #endif
 		};
 		lock.unlock();
@@ -259,36 +260,23 @@ void AThread::join()
 	mThread->join();
 }
 
-void AAbstractThread::enqueue(std::function<void()> f)
+void AAbstractThread::enqueue(AMessageQueue::Message f)
 {
-	{
-		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ std::move(f) };
-	}
-	{
-		if (mCurrentEventLoop) {
-			std::unique_lock lock(mEventLoopLock);
-			if (mCurrentEventLoop)
-			{
-				mCurrentEventLoop->notifyProcessMessages();
-			}
-		}
-	}
+    mMessageQueue.enqueue(std::move(f));
+    if (mCurrentEventLoop) {
+        std::unique_lock lock(mEventLoopLock);
+        if (mCurrentEventLoop)
+        {
+            mCurrentEventLoop->notifyProcessMessages();
+        }
+    }
 }
 
 void AAbstractThread::processMessagesImpl()
 {
-    AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
-            mId == std::this_thread::get_id()));
-	std::unique_lock lock(mQueueLock);
-	while (!mMessageQueue.empty())
-	{
-        auto f = std::move(mMessageQueue.front());
-		mMessageQueue.pop_front();
-		lock.unlock();
-		f.proc();
-		lock.lock();
-	}
+    AUI_ASSERTX(mId == std::this_thread::get_id(),
+                "AAbstractThread::processMessages() should not be called from other thread");
+    mMessageQueue.processMessages();
 }
 
 AThread::~AThread()
@@ -338,6 +326,5 @@ AThread::AThread(std::function<void()> functor)
 }
 
 bool AAbstractThread::messageQueueEmpty() noexcept {
-	std::unique_lock lock(mQueueLock);
-	return mMessageQueue.empty();
+	return mMessageQueue.messages().empty();
 }

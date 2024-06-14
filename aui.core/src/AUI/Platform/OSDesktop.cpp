@@ -40,19 +40,18 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        AUI_ASSERT(("AAbstractThread::processMessages() should not be called from other thread",
-                mId == std::this_thread::get_id()));
-        std::unique_lock lock(mQueueLock, std::defer_lock);
+        AUI_ASSERTX(mId == std::this_thread::get_id(), "AAbstractThread::processMessages() should not be called from other thread");
+        std::unique_lock lock(mMessageQueue.sync(), std::defer_lock);
 
         using namespace std::chrono;
 
         auto beginTime = system_clock::now();
-        for (std::size_t i = 0; i <= MAX_PROCESSING_ITERATIONS_PER_FRAME && !mMessageQueue.empty() && lock.try_lock(); ++i)
+        for (std::size_t i = 0; i <= MAX_PROCESSING_ITERATIONS_PER_FRAME && !mMessageQueue.messages().empty() && lock.try_lock(); ++i)
         {
-            auto f = std::move(mMessageQueue.front());
-            mMessageQueue.pop_front();
+            auto f = std::move(mMessageQueue.messages().front());
+            mMessageQueue.messages().pop_front();
             lock.unlock();
-            auto time = util::measureExecutionTime<microseconds>(f.proc);
+            auto time = util::measureExecutionTime<microseconds>(f);
             // TODO dynamically enable/disable logging
             /*
             ALOG_DEBUG("Performance")
@@ -76,13 +75,13 @@ protected:
         lock.lock();
         {
             static std::size_t prevRecord = 1;
-            auto currentSize = mMessageQueue.size();
+            auto currentSize = mMessageQueue.messages().size();
             if (auto r = currentSize / 10000; r > prevRecord) {
                 prevRecord = r;
                 ALogger::warn("Performance") << currentSize << " tasks for UI thread?";
             }
             if (currentSize > 1'000'000) {
-                throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
+                // throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
             }
         }
     }

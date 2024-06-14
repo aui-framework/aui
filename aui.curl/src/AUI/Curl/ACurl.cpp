@@ -162,6 +162,10 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
     return *this;
 }
 
+static size_t readStub(char* ptr, size_t size, size_t nmemb, void* userdata) {
+    return 0;
+}
+
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
 
@@ -181,7 +185,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
 
 
     switch (builder.mMethod) {
-        case Method::GET: {
+        case Method::HTTP_GET: {
             std::string url = builder.mUrl.toStdString();
             if (!builder.mParams.empty()) {
                 url += '?';
@@ -192,12 +196,38 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
-        case Method::POST: {
+        case Method::HTTP_DELETE: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "DELETE");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
+        case Method::HTTP_PUT: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "PUT");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
+        case Method::HTTP_POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             AUI_ASSERT(res == 0);
             res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
-
             AUI_ASSERT(res == 0);
+
             if (!builder.mParams.empty()) {
                 mPostFieldsStorage = builder.mParams.toStdString();
                 res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
@@ -212,7 +242,13 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
-    if (mReadCallback) {
+    if (builder.mMethod == Method::HTTP_POST && !mReadCallback) {
+        // if read func is not set, curl would block.
+        res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        AUI_ASSERT(res == 0);
+        res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readStub);
+        AUI_ASSERT(res == 0);
+    } else if (mReadCallback) {
         res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
         AUI_ASSERT(res == 0);
         res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
@@ -406,7 +442,7 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
     auto body = _new<AByteBuffer>();
     withDestinationBuffer(*body);
     withOnSuccess([result, body = std::move(body)](ACurl& c) {
-        result.supplyResult(makeResponse(c, std::move(*body)));
+        result.supplyValue(makeResponse(c, std::move(*body)));
     });
     withErrorCallback([result](const ErrorDescription& error) {
         try {

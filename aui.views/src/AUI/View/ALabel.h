@@ -29,3 +29,12 @@ public:
 namespace declarative {
     using Label = aui::ui_building::view<ALabel>;
 }
+
+template<>
+struct ADataBindingDefault<ALabel, AString> {
+   public:
+    static void setup(const _<AString>& view) {
+    }
+
+    static auto getSetter() { return &ALabel::setText; }
+};

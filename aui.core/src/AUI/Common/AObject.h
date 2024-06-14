@@ -159,10 +159,11 @@ public:
 
     static void moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread);
 
-protected:
     void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {
         mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
     }
+
+protected:
 
     /**
      * @brief Set thread of the object.

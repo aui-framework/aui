@@ -52,7 +52,7 @@ public:
 
 	AQueue<StoredType>& operator<<(StoredType&& rhs)
 	{
-		super::push(std::forward<StoredType>(rhs));
+		super::push(std::move(rhs));
 		return *this;
 	}
 
@@ -80,7 +80,7 @@ public:
      */
     template<typename Factory>
     [[nodiscard]]
-    StoredType popOrGenerate(Factory&& factory) noexcept(noexcept(factory())) {
+    StoredType popOrGenerate(Factory factory) noexcept(noexcept(factory())) {
         if (super::empty()) {
             return factory();
         }

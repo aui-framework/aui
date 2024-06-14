@@ -23,5 +23,5 @@ namespace AIcmp {
      * @return echo response result
      */
     API_AUI_NETWORK AFuture<std::chrono::high_resolution_clock::duration> ping(AInet4Address destination,
-                                                                               std::chrono::milliseconds timeout = std::chrono::milliseconds(1000)) noexcept;
+                                                                               std::chrono::milliseconds timeout = std::chrono::seconds(5)) noexcept;
 };

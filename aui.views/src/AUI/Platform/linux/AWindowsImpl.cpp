@@ -502,7 +502,6 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->mRenderingContext)->beginResize(*window);
-                            AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
                             window->AViewContainer::setSize(size);
                             AUI_NULLSAFE(window->mRenderingContext)->endResize(*window);
                         }
@@ -733,8 +732,8 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
-    ABaseWindow::requestTouchscreenKeyboardImpl();
+void AWindow::showTouchscreenKeyboardImpl() {
+    ABaseWindow::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {

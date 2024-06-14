@@ -99,6 +99,58 @@ class AViewContainer;
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_041807.png" /></td>
  *   </tr>
  * </table>
+ *
+ * You can specify the expanding if you want the view to grow inside it's container (AView::setExpanding):
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Vertical {
+ *           _new<AButton>("Up"),
+ *           Horizontal {
+ *               _new<AButton>("Left"),
+ *               _new<AButton>("Center"),
+ *               _new<AButton>("Right") let { it->setExpanding(); },
+ *           },
+ *           _new<AButton>("Down"),
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_172900.png" /></td>
+ *   </tr>
+ * </table>
+ *
+ * Expanding views push other views in their container if necessary. This is how AExpandingSpacer works.
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Vertical {
+ *           _new<AButton>("Up"),
+ *           Horizontal {
+ *               _new<AButton>("Left"),
+ *               _new<AButton>("Center") let { it->setExpanding(); },
+ *               _new<AButton>("Right"),
+ *           },
+ *           _new<AButton>("Down"),
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_174121.png" /></td>
+ *   </tr>
+ * </table>
  */
 
 /**

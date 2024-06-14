@@ -33,8 +33,8 @@ private:
         switch (mDirection) {
             case ALayoutDirection::VERTICAL  : return v.y;
             case ALayoutDirection::HORIZONTAL: return v.x;
+            default: throw AException("invalid direction");
         }
-        throw;
     }
     template<typename T>
     [[nodiscard]]
@@ -42,8 +42,8 @@ private:
         switch (mDirection) {
             case ALayoutDirection::VERTICAL  : return v.y;
             case ALayoutDirection::HORIZONTAL: return v.x;
+            default: throw AException("invalid direction");
         }
-        throw;
     }
 
 

@@ -188,7 +188,7 @@ public:
      */
     self& operator<<(StoredType&& rhs) noexcept
     {
-        super::push_back(std::forward<StoredType>(rhs));
+        super::push_back(std::move(rhs));
         return *this;
     }
 
@@ -224,6 +224,7 @@ public:
      * </dl>
      * @return the first element.
      */
+    [[nodiscard]]
     StoredType& first() noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
@@ -237,6 +238,7 @@ public:
      * </dl>
      * @return the first element.
      */
+    [[nodiscard]]
     const StoredType& first() const noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
@@ -250,6 +252,7 @@ public:
      * </dl>
      * @return the last element.
      */
+    [[nodiscard]]
     StoredType& last() noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
@@ -263,6 +266,7 @@ public:
      * </dl>
      * @return the last element.
      */
+    [[nodiscard]]
     const StoredType& last() const noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
@@ -273,6 +277,7 @@ public:
      * @param value element to find.
      * @return index of the specified element. If element is not found, -1 is returned.
      */
+    [[nodiscard]]
     [[nodiscard]]
     size_t indexOf(const StoredType& value) const noexcept
     {
@@ -297,6 +302,7 @@ public:
      * @return Pointer to the value on which the predicate returned true, nullptr otherwise
      */
     template<aui::predicate<StoredType> Predicate>
+    [[nodiscard]]
     StoredType* findIf(Predicate&& predicate) noexcept
     {
         if (auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate)); i != super::end()) {
@@ -344,6 +350,7 @@ public:
     }
 
     template<aui::mapper<std::size_t, StoredType> Callable>
+    [[nodiscard]]
     inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
         AVector<StoredType, Allocator> s;
         s.reserve(size);
@@ -353,6 +360,7 @@ public:
         return s;
     }
 
+    [[nodiscard]]
     ASet<StoredType> toSet() const noexcept {
         return ASet<StoredType>(super::begin(), super::end());
     }
@@ -364,6 +372,7 @@ public:
      * @return A new vector.
      */
     template<aui::incrementable Iterator, aui::invocable<decltype(*std::declval<Iterator>())> UnaryOperation>
+    [[nodiscard]]
     static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
         AVector<decltype(transformer(range.first()))> result;
         result.reserve(range.size());
@@ -371,7 +380,17 @@ public:
         return result;
     }
 
+    template<aui::invocable<StoredType&> UnaryOperation>
+    [[nodiscard]]
+    auto map(UnaryOperation&& transformer) -> AVector<decltype(transformer(std::declval<StoredType&>()))> {
+        AVector<decltype(transformer(std::declval<StoredType&>()))> result;
+        result.reserve(super::size());
+        std::transform(super::begin(), super::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
+    }
+
     template<aui::invocable<const StoredType&> UnaryOperation>
+    [[nodiscard]]
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;
         result.reserve(super::size());
@@ -394,6 +413,7 @@ public:
     }
 
     template<aui::predicate<const StoredType&> Predicate>
+    [[nodiscard]]
     self filter(Predicate&& predicate) {
         self result;
         result.reserve(super::size());

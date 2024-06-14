@@ -36,6 +36,10 @@ public:
         mCloseOnClick = closeOnClick;
     }
 
+    ABaseWindow* getParentWindow() const {
+        return mParentWindow;
+    }
+
     virtual void setOverlappingSurfacePosition(glm::ivec2 position) = 0;
     virtual void setOverlappingSurfaceSize(glm::ivec2 size) = 0;
 };

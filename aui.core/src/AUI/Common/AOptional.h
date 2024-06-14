@@ -16,6 +16,7 @@
 #include <utility>
 #include <optional>
 #include <stdexcept>
+#include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
 
 
@@ -80,27 +81,20 @@ public:
 
     template<typename... Args>
     constexpr AOptional<T>& emplace(Args&&... args) {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<Args>(args)...);
         mInitialized = true;
         return *this;
     }
 
     constexpr AOptional<T>& operator=(std::nullopt_t) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-            mInitialized = false;
-        }
+        reset();
         return *this;
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_convertible_v<U&&, T>, bool> = true>
     constexpr AOptional<T>& operator=(U&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<U>(rhs));
         mInitialized = true;
         return *this;
@@ -129,21 +123,25 @@ public:
         return *this;
     }
 
+    // we want to move the U value, not the whole optional
+    // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
     template<typename U>
     constexpr AOptional<T>& operator=(AOptional<U>&& rhs) noexcept {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
+            return *this;
+        } else {
+            reset();
         }
         return *this;
     }
+    //NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
     template<typename U = T>
     constexpr AOptional<T>& operator=(T&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
-        new (ptrUnsafe()) T(std::forward<T>(rhs));
+        reset();
+        new (ptrUnsafe()) T(std::move(rhs));
         mInitialized = true;
         return *this;
     }
@@ -263,6 +261,20 @@ public:
     [[nodiscard]]
     bool operator==(const std::nullopt_t& rhs) const noexcept {
         return !mInitialized;
+    }
+
+    /**
+     * @brief If a value is present, apply the provided mapper function to it.
+     * @param mapper mapper function to apply. The mapper is invoked as a STL projection (i.e., the mapper could be
+     * lambda, pointer-to-member function or field).
+     */
+    template<aui::invocable<const T&> Mapper>
+    [[nodiscard]]
+    auto map(Mapper&& mapper) -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> const {
+        if (hasValue()) {
+            return std::invoke(std::forward<Mapper>(mapper), value());
+        }
+        return std::nullopt;
     }
 
 private:

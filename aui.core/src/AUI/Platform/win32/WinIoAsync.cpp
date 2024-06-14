@@ -28,7 +28,7 @@ public:
             self->mOverlapped.Pointer = self.get();
             self->mFileHandle = fileHandle;
             nextRead();
-            cs.supplyResult();
+            cs.supplyValue();
         });
         cs.wait();
     }

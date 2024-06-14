@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Util/ACleanup.h>
+#include "AUI/Util/AScheduler.h"
 #include "ATimer.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
@@ -33,8 +34,11 @@ void ATimer::start()
 {
     if (!mTimer) {
         ATimer::scheduler();
-        mTimer = scheduler().timer(mPeriod, [this] {
-            emit fired;
+        mTimer = scheduler().timer(mPeriod, [this, self = weakPtr()] {
+            if (auto v = self.lock()) {
+                // this is valid
+                emit fired;
+            }
         });
     }
 }
@@ -61,18 +65,32 @@ _<AThread>& ATimer::timerThread() {
                 ATimer::scheduler().loop();
             });
         t->start();
-#if !AUI_PLATFORM_WIN
-        std::atexit([] {
+        ACleanup::afterEntry([] {
             thread->interrupt();
+            thread->join();
+            thread = nullptr;
         });
-#endif
         return t;
     }();
     return thread;
 }
 
 AScheduler& ATimer::scheduler() {
-    static AScheduler scheduler;
-    ATimer::timerThread();
-    return scheduler;
+    static struct GlobalScheduler {
+        AScheduler scheduler;
+
+        // make sure scheduler thread is started.
+        _<AThread> thread = ATimer::timerThread();
+
+        GlobalScheduler() {
+        }
+        ~GlobalScheduler() {
+            scheduler.stop();
+
+            // wait for the thread before destructing the scheduler.
+            thread->interrupt();
+            thread->join();
+        }
+    } global;
+    return global.scheduler;
 }

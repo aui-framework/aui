@@ -69,7 +69,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
                 if (auto p = std::get_if<AVector<aui::dbus::Unknown>>(&c->second)) {
                     if (!p->empty()) {
                         AUrl result = p->first().as<AString>();
-                        f.supplyResult(result.path());
+                        f.supplyValue(result.path());
                         return;
                     }
                 }

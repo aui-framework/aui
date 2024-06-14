@@ -18,6 +18,7 @@
 #include <AUI/GL/gl.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/strings.h>
+#include <string_view>
 
 #ifndef GLAPIENTRY
 #define GLAPIENTRY
@@ -57,6 +58,15 @@ static void GLAPIENTRY debugProc(GLenum source,
                                  const GLchar* message,
                                  const void* userParam)
 {
+    // filter out repeated messages; they are spamming and annoying
+    const auto h = std::hash<std::string_view>{}(std::string_view(message));
+    static ASet<size_t> messages;
+    if (messages.contains(h)) {
+        return;
+    }
+    messages << h;
+
+
     if (gl::silenceDebug) {
         return;
     }

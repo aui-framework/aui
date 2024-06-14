@@ -11,6 +11,8 @@
 
 #include <curl/curl.h>
 #include "AWebsocket.h"
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AString.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Crypt/AHash.h"
 #include "AUI/Logging/ALogger.h"
@@ -19,6 +21,8 @@
 /*
  * Thanks to https://github.com/barbieri/barbieri-playground/blob/master/curl-websocket/curl-websocket.c
  */
+
+using namespace std::chrono_literals;
 
 namespace {
     static std::default_random_engine gRandomEngine;
@@ -53,6 +57,7 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", 
         })
     .withHttpVersion(ACurl::Http::VERSION_1_1)
     .withUpload(true)
+    .withLowSpeedLimit(1)
     .withCustomRequest("GET")
     .withHeaderCallback([this](AByteBufferView v) {
         auto asStr = AString::fromUtf8(v);
@@ -81,88 +86,37 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", 
 
 
 std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
-    auto begin = data.begin();
-    auto end = data.end();
-
-    while (begin != end) {
-        Header h;
-        if (!mLastHeader) {
-            if (std::distance(begin, end) < sizeof(Header)) {
-                return 0; // not enough
+    auto actuallyRead = [this](AByteBufferView data) -> size_t {
+        auto it = data.begin();
+        while (it != data.end()) {
+            auto o = decodeOnePacket(AByteBufferView::fromRange(it, data.end()));
+            if (o == 0) {
+                break;
             }
-            h = *reinterpret_cast<const Header*>(begin);
-
-            if (h.mask) { // 5.1 "client MUST close a connection if it detects a masked frame"
-                ALogger::err("websocket") << "Received masked frame, closing connection";
-                close();
-                return 0;
-            }
-
-            begin += sizeof(Header);
-
-            switch (h.payload_len) {
-                case 126: {
-                    auto payloadLength = *reinterpret_cast<const std::uint16_t*>(begin);
-                    myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
-                    mLastPayloadLength = payloadLength;
-                    begin += sizeof(payloadLength);
-                    break;
-                }
-
-                case 127: {
-                    auto payloadLength = *reinterpret_cast<const std::uint64_t*>(begin);
-                    myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
-                    mLastPayloadLength = payloadLength;
-                    begin += sizeof(payloadLength);
-                    break;
-                }
-                default:
-                    mLastPayloadLength = h.payload_len;
-            }
-
-            mLastHeader = h;
-            switch (h.opcode) {
-                case int(Opcode::BINARY):
-                case int(Opcode::TEXT):
-                case int(Opcode::CONTINUATION):
-                    break;
-
-                case int(Opcode::CLOSE): {
-                    emit websocketClosed(std::string_view(begin + 2, h.payload_len - 2));
-                    close();
-                    return 0;
-                }
-
-                case int(Opcode::PING):
-                    writeMessage(Opcode::PONG, {});
-                    break;
-
-                case int(Opcode::PONG):
-                    break;
-
-                default:
-                    ALogger::err("websocket") << "Unknown opcode: " << AString::numberHex(h.opcode) << ", closing connection";
-                    close();
-                    return 0;
-            }
+            it += o;
         }
+        return std::distance(data.begin(), it);
+    };
 
-
-        std::size_t dataToRead = glm::min(std::size_t(std::distance(begin, end)),
-                                          std::size_t(mLastPayloadLength - mLastPayload.size()));
-        mLastPayload << AByteBufferView(begin, dataToRead);
-        begin += dataToRead;
-        AUI_ASSERT(begin <= end);
-
-        AUI_ASSERT(mLastPayload.size() <= mLastPayloadLength);
-
-        if (mLastPayload.size() == mLastPayloadLength) {
-            emit received(mLastPayload);
-            mLastPayload.clear();
-            mLastHeader.reset();
+    if (mTrailingBuffer) {
+        *mTrailingBuffer << data;
+        auto r = actuallyRead(*mTrailingBuffer);
+        if (r == mTrailingBuffer->size()) {
+            mTrailingBuffer.reset();
+        } else {
+            mTrailingBuffer->erase(mTrailingBuffer->begin(), mTrailingBuffer->begin() + r);
+        }
+    } else {
+        auto r = actuallyRead(data);
+        if (r != data.size()) {
+            mTrailingBuffer.emplace(data.slice(r));
         }
     }
 
+    // (https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html) Your callback should return the number of bytes actually
+    // taken care of. If that amount differs from the amount passed to your callback function, it signals an error
+    // condition to the [libcurl] library. This causes the transfer to get aborted and the libcurl function used returns
+    // CURLE_WRITE_ERROR.
     return data.size();
 }
 
@@ -239,3 +193,75 @@ void AWebsocket::close() {
     writeMessage(Opcode::CLOSE, {nullptr, 0});
     ACurl::close();
 }
+
+std::size_t AWebsocket::decodeOnePacket(AByteBufferView data) {
+    Header h;
+    if (data.size() < sizeof(Header)) {
+        return 0; // not enough
+    }
+
+    const char* it = data.begin();
+    h = *reinterpret_cast<const Header*>(it);
+
+    if (h.mask) { // 5.1 "client MUST close a connection if it detects a masked frame"
+        ALogger::err("websocket") << "Received masked frame, closing connection";
+        close();
+        return data.size();
+    }
+
+    it += sizeof(Header);
+
+    uint16_t payloadLength;
+
+    switch (h.payload_len) {
+        case 126:
+        case 127: {
+            if (it + sizeof(payloadLength) > data.end()) {
+                return 0; // not enough
+            }
+            payloadLength = *reinterpret_cast<const std::uint64_t*>(it);
+            myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
+            it += sizeof(payloadLength);
+            break;
+        }
+        default:
+            payloadLength = h.payload_len;
+    }
+
+    switch (h.opcode) {
+        case int(Opcode::BINARY):
+        case int(Opcode::TEXT):
+        case int(Opcode::CONTINUATION):
+            break;
+
+        case int(Opcode::CLOSE): {
+            emit websocketClosed(std::string_view(it + 2, h.payload_len - 2));
+            close();
+            return 0;
+        }
+
+        case int(Opcode::PING):
+            writeMessage(Opcode::PONG, {});
+            break;
+
+        case int(Opcode::PONG):
+            break;
+
+        default:
+            ALogger::err("AWebsocket") << "Unknown opcode: " << AString::numberHex(h.opcode) << ", closing connection";
+            close();
+            return 0;
+    }
+
+    if (std::distance(it, data.end()) < payloadLength) {
+        // not enough
+        return 0;
+    }
+
+    emit received(AByteBuffer(it, payloadLength));
+
+    it += payloadLength;
+
+    return std::distance(data.begin(), it);
+}
+

@@ -89,9 +89,10 @@ void AWindow::redraw() {
         ARaiiHelper endPaintCaller = [&] {
             mRenderingContext->endPaint(*this);
         };
-        AUI_REPEAT(2) { // AText may trigger extra layout update
-            if (mUpdateLayoutFlag) {
-                mUpdateLayoutFlag = false;
+
+        if (mUpdateLayoutFlag) {
+            mUpdateLayoutFlag = false;
+            AUI_REPEAT(2) { // AText may trigger extra layout update
                 updateLayout();
             }
         }
@@ -223,13 +224,9 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     setWindowStyle(ws);
 
-#if !AUI_PLATFORM_WIN
-    // windows sends resize event during window initialization but other platforms doesn't.
-    // simulate the same behaviour here.
     ui_thread {
-        emit resized(getWidth(), getHeight());
+        emit sizeChanged(getSize());
     };
-#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {

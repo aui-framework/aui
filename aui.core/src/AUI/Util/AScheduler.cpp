@@ -31,6 +31,7 @@ bool AScheduler::iteration(ABitField<ASchedulerIteration> flag) {
     }
 
     while (!mTasks.empty()) {
+        AThread::interruptionPoint();
         auto now = currentTime();
         if (now < mTasks.front().executionTime) {
             if (flag & ASchedulerIteration::DONT_BLOCK_TIMED) {
@@ -57,7 +58,8 @@ void AScheduler::notifyProcessMessages() {
 }
 
 void AScheduler::loop() {
-    for (;;) {
+    mIsRunning = true;
+    while (mIsRunning) {
         iteration();
     }
 }

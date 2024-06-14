@@ -13,6 +13,7 @@
 
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
+#include "AUI/Platform/ABaseWindow.h"
 #include "AView.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Common/AString.h"
@@ -97,16 +98,7 @@ public:
 
     void onDpiChanged() override;
 
-    void setText(AString newText) {
-        if (mText == newText) {
-            return;
-        }
-        mText = std::move(newText);
-        mPrerendered = nullptr;
-
-        requestLayoutUpdate();
-        redraw();
-    }
+    void setText(AString newText);
 
     [[nodiscard]]
     const AString& text() const

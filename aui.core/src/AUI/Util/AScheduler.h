@@ -12,14 +12,13 @@
 #pragma once
 
 #include <chrono>
-#include <memory>
 #include <functional>
 #include <list>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AConditionVariable.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Util/ABitField.h>
-#include "EnumUtil.h"
 
 
 /**
@@ -129,10 +128,16 @@ public:
         return mTasks.empty();
     }
 
+    void stop() {
+        mIsRunning = false;
+        mCV.notify_all();
+    }
+
 
 private:
     AMutex mSync;
     AConditionVariable mCV;
+    bool mIsRunning = false;
 
     std::list<Task> mTasks;
     std::list<_<Timer>> mTimers;

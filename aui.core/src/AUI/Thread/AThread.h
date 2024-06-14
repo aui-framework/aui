@@ -16,6 +16,7 @@
 #include "AMutex.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Util/AMessageQueue.h"
 #include <AUI/Platform/AStacktrace.h>
 #include <functional>
 
@@ -53,7 +54,7 @@ public:
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
-	void enqueue(std::function<void()> f);
+	void enqueue(AMessageQueue::Message f);
 
 	virtual ~AAbstractThread();
 
@@ -127,19 +128,7 @@ protected:
 
     AString mThreadName;
 
-    /**
-     * @brief Message queue mutex.
-     */
-    AMutex mQueueLock;
-
-    struct Message {
-        std::function<void()> proc;
-    };
-
-    /**
-     * @brief Message queue.
-     */
-    ADeque<Message> mMessageQueue;
+    AMessageQueue mMessageQueue;
 
     AAbstractThread(const id& id) noexcept;
     void updateThreadName() noexcept;
@@ -217,7 +206,7 @@ private:
 	/**
 	 * @brief true if interrupt requested for this thread.
 	 */
-	bool mInterrupted = false;
+	std::atomic_bool mInterrupted = false;
 
 public:
 

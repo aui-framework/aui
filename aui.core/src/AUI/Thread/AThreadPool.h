@@ -86,7 +86,7 @@ class API_AUI_CORE AThreadPool {
     AThreadPool(size_t size);
 
     /**
-     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads.
+     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads or --aui-threadpool-size=SIZE passed to your application.
      */
     AThreadPool();
     ~AThreadPool();
@@ -104,7 +104,7 @@ class API_AUI_CORE AThreadPool {
     }
 
     /**
-     * @return a global thread pool created with the default constructor.
+     * @brief Global thread pool created with the default constructor.
      */
     static AThreadPool& global();
 

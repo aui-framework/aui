@@ -16,7 +16,6 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
-#include <AUI/Util/AFieldObservable.h>
 
 
 template<typename View, typename FieldType>
@@ -349,24 +348,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
     using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
 
     object && (*linker.getBinder())(linker.getField(),
-                                    static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
+                                    (ASignal<Data>(View::*))(ADataBindingDefault<View, Data>::getGetter()),
                                     static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
-    return object;
-}
-
-template<typename View, typename Data>
-_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
-    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
-    if (ADataBindingDefault<View, Data>::getSetter()) {
-        observerHandle = observable << [object = object.get()](Data newValue) {
-            (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
-        };
-    }
-    if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
-        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
-            observable.setValue(std::move(newValue), observerHandle);
-        });
-    }
-
     return object;
 }
