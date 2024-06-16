@@ -10,6 +10,7 @@
  */
 
 #include "AJson.h"
+#include <range/v3/algorithm/find.hpp>
 #include "AUI/IO/AStringStream.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AByteBufferInputStream.h"
@@ -38,4 +39,26 @@ AJson AJson::mergedWith(const AJson &other) {
     }
 
     return thisCopy;
+}
+
+std::pair<AString, AJson>* aui::impl::JsonObject::contains(const AString& key) noexcept {
+    if (auto it = ranges::find(*this, key, &std::pair<AString, AJson>::first); it != end()) {
+        return &(*it);
+    }
+    return nullptr;
+}
+
+AJson& aui::impl::JsonObject::operator[](const AString& key) {
+    if (auto v = contains(key)) {
+        return v->second;
+    }
+    emplace_back(key, AJson{});
+    return back().second;
+}
+
+const AJson& aui::impl::JsonObject::operator[](const AString& key) const {
+    if (auto v = contains(key)) {
+        return v->second;
+    }
+    throw AException("no such key: {}"_format(key));
 }
