@@ -36,7 +36,7 @@ TEST(Json, ObjectAssignValue)
     o["girlfriend"] = nullptr;
 
     // check for resulting json
-    ASSERT_EQ(AJson::toString(o), R"({"girlfriend":null,"name":"Alex2772","year":2020})");
+    ASSERT_EQ(AJson::toString(o), R"({"name":"Alex2772","year":2020,"girlfriend":null})");
     check_girlfriend(o);
 }
 

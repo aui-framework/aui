@@ -51,7 +51,7 @@ TEST(Json, FieldsTestBasic)
 
     // check for serialization
     auto jsonObject = aui::to_json(d);
-    ASSERT_EQ(AJson::toString(jsonObject), R"({"i":228,"values":[1,2,3]})");
+    ASSERT_EQ(AJson::toString(jsonObject), R"({"values":[1,2,3],"i":228})");
 
     auto d2 = aui::from_json<Data2>(jsonObject);
     ASSERT_EQ(d, d2);

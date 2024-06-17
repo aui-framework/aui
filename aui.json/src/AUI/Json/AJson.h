@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/IO/IOutputStream.h>
+#include "AUI/Common/AException.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
@@ -27,7 +28,29 @@
 
 class AJson;
 namespace aui::impl {
-    using JsonObject = AMap<AString, AJson>;
+    struct JsonObject: AVector<std::pair<AString, AJson>> {
+    public:
+        using AVector<std::pair<AString, AJson>>::AVector;
+
+        /**
+         * @brief If container contains key, returns pointer to the element. nullptr otherwise.
+         */
+        [[nodiscard]]
+        API_AUI_JSON std::pair<AString, AJson>* contains(const AString& key) noexcept;
+
+        /**
+         * @brief If container contains key, returns pointer to the element. nullptr otherwise.
+         */
+        [[nodiscard]]
+        const std::pair<AString, AJson>* contains(const AString& key) const noexcept {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            return const_cast<JsonObject&>(*this).contains(key);
+        }
+
+        [[nodiscard]] API_AUI_JSON AJson& operator[](const AString& key);
+
+        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const;
+    };
     using JsonArray = AVector<AJson>;
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
@@ -78,7 +101,7 @@ public:
     using Array = aui::impl::JsonArray;
     using Object = aui::impl::JsonObject;
 
-    AJson(std::initializer_list<std::pair<const AString, AJson>> elems): aui::impl::JsonVariant(aui::impl::JsonObject(std::move(elems))) {
+    AJson(std::initializer_list<std::pair<AString, AJson>> elems): aui::impl::JsonVariant(aui::impl::JsonObject(std::move(elems))) {
 
     }
 
@@ -218,10 +241,11 @@ public:
     }
 
     AJson& operator[](const AString& mapKey) {
-        return as<Object>()[mapKey];
+        return asObject()[mapKey];
     }
 
     const AJson& operator[](const AString& mapKey) const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         return const_cast<AJson&>(*this)[mapKey];
     }
 
@@ -265,7 +289,7 @@ public:
      * }
      * @endcode
      */
-    AJson mergedWith(const AJson& other);
+    API_AUI_JSON AJson mergedWith(const AJson& other);
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);

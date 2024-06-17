@@ -61,7 +61,7 @@ static AJson read(ATokenizer& t) {
                                     if (!isspace(c))
                                         unexpectedCharacter();
                                 }
-                                result[key] = read(t);
+                                result.emplace_back(std::make_pair(std::move(key), read(t)));
                             } else if (t.getLastCharacter() != ',') {
                                 unexpectedCharacter();
                             }
