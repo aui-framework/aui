@@ -28,7 +28,7 @@
 
 class AJson;
 namespace aui::impl {
-    struct API_AUI_JSON JsonObject: AVector<std::pair<AString, AJson>> {
+    struct JsonObject: AVector<std::pair<AString, AJson>> {
     public:
         using AVector<std::pair<AString, AJson>>::AVector;
 
@@ -36,7 +36,7 @@ namespace aui::impl {
          * @brief If container contains key, returns pointer to the element. nullptr otherwise.
          */
         [[nodiscard]]
-        std::pair<AString, AJson>* contains(const AString& key) noexcept;
+        API_AUI_JSON std::pair<AString, AJson>* contains(const AString& key) noexcept;
 
         /**
          * @brief If container contains key, returns pointer to the element. nullptr otherwise.
@@ -47,9 +47,9 @@ namespace aui::impl {
             return const_cast<JsonObject&>(*this).contains(key);
         }
 
-        [[nodiscard]] AJson& operator[](const AString& key);
+        [[nodiscard]] API_AUI_JSON AJson& operator[](const AString& key);
 
-        [[nodiscard]] const AJson& operator[](const AString& key) const;
+        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const;
     };
     using JsonArray = AVector<AJson>;
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
@@ -289,7 +289,7 @@ public:
      * }
      * @endcode
      */
-    AJson mergedWith(const AJson& other);
+    API_AUI_JSON AJson mergedWith(const AJson& other);
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
