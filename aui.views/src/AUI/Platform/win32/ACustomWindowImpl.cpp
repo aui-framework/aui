@@ -1,25 +1,18 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/ADesktop.h"
 #include <cstring>
 #include <AUI/View/AButton.h>
-
-const int AUI_TITLE_HEIGHT = 30;
 
 #if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
@@ -214,7 +207,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
+    if (pos.y < mTitleHeight && button == AInput::LBUTTON) {
         if (isCaptionAt(pos)) {
             // TODO apple
 
@@ -250,7 +243,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
+    if (pos.y < mTitleHeight && button == AInput::LBUTTON) {
         if (isCaptionAt(pos)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
@@ -294,7 +287,7 @@ void ACustomWindow::handleXConfigureNotify() {
 
 
 bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
-    if (pos.y <= AUI_TITLE_HEIGHT) {
+    if (pos.y <= mTitleHeight) {
         if (auto v = getViewAtRecursive(pos)) {
             if (!(_cast<AButton>(v)) &&
                 !v->getAssNames().contains(".override-title-dragging")) {

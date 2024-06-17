@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -59,11 +54,53 @@ private:
 public:
     using super::weak_ptr;
 
+    _weak(const _weak<T>& v) noexcept: std::weak_ptr<T>(v) {}
+    _weak(_weak<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
     _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
-    _weak(std::weak_ptr<T>&& v): std::weak_ptr<T>(std::forward<std::weak_ptr<T>>(v)) {}
+    _weak(std::weak_ptr<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
 
     _<T> lock() const noexcept {
         return static_cast<_<T>>(super::lock());
+    }
+
+    _weak& operator=(const std::weak_ptr<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(std::weak_ptr<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const _weak<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(_weak<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const std::shared_ptr<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(std::shared_ptr<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
+    }
+
+    _weak& operator=(const _<T>& v) noexcept {
+        super::weak_ptr::operator=(v);
+        return *this;
+    }
+
+    _weak& operator=(_<T>&& v) noexcept {
+        super::weak_ptr::operator=(std::move(v));
+        return *this;
     }
 };
 
@@ -193,31 +230,12 @@ public:
     }
 #endif
 
-    class SafeCallWrapper
-    {
-    private:
-        _<T>& mPtr;
-
-    public:
-        SafeCallWrapper(_<T>& ptr)
-                : mPtr(ptr)
-        {
-        }
-
-        template<typename MemberFunction, typename... Args>
-        SafeCallWrapper& operator()(MemberFunction memberFunction, Args&& ... args) {
-            if (mPtr)
-                (mPtr.get()->*memberFunction)(std::forward<Args>(args)...);
-            return *this;
-        }
-    };
-
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
-    _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(v)) {}
+    _(std::shared_ptr<T>&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     _(const _& v): std::shared_ptr<T>(v) {}
-    _(_&& v): std::shared_ptr<T>(std::forward<_>(v)) {}
+    _(_&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
@@ -258,19 +276,6 @@ public:
         functor(*this);
         return *this;
     }
-
-    /**
-     * @brief Guarantees that further builder calls will be executed if and only if this pointer
-     *        not equal to null.
-     * @return safe builder
-     * @deprecated use AUI_NULLSAFE() instead
-     */
-    [[deprecated]]
-    inline auto safe()
-    {
-        return SafeCallWrapper(*this);
-    }
-
     // forward ranged-for loops
     auto begin() const {
         return super::operator->()->begin();

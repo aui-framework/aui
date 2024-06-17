@@ -35,7 +35,9 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     if (auto s = std::get_if<ScrollingState>(&mState)) {
         auto direction = glm::normalize(s->currentVelocity);
-        auto velocity = glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
+        auto velocity = glm::max(glm::length(s->prevPrevVelocity),
+                                 glm::length(s->prevVelocity),
+                                 glm::length(s->currentVelocity));
         auto fps = static_cast<float>(AWindow::current()->getFps());
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
@@ -73,6 +75,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
     s.lastFrameTime = now;
 
     auto delta = s.previousPosition - pos;
+    s.prevPrevVelocity = s.prevVelocity;
     s.prevVelocity = s.currentVelocity;
     s.currentVelocity = delta * INITIAL_ACCELERATION_COEFFICIENT;
 

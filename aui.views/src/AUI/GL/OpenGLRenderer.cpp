@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 11/19/2021.
@@ -32,6 +27,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/Brush/Gradient.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Util/AArrayView.h"
 #include "ShaderUniforms.h"
@@ -479,6 +475,14 @@ void OpenGLRenderer::setBlending(Blending blending) {
         case Blending::INVERSE_DST:
             glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
             break;
+
+        case Blending::ADDITIVE:
+            glBlendFunc(GL_ONE, GL_ONE);
+            break;
+
+        case Blending::INVERSE_SRC:
+            glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ZERO);
+            break;
     }
 }
 
@@ -843,7 +847,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
     positions << LineVertex{ points[0], 0.f, 1.f };
 
     float distanceAccumulator = 0.f;
-    for (const auto& point : points | ranges::view::drop(1)) {
+    for (const auto& point : points | ranges::views::drop(1)) {
         if (computeDistances) {
             distanceAccumulator += glm::distance(positions.last().position, point);
         }

@@ -30,8 +30,6 @@ public:
 
     AAudioFormat info() override;
 
-    void rewind() override;
-
 private:
     AAudioFormat mFormat;
     _<IInputStream> mStream;

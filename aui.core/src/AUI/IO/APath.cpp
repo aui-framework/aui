@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 9/10/20.
@@ -143,12 +138,14 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
     WIN32_FIND_DATA fd;
     HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
 
-    if (dir == INVALID_HANDLE_VALUE)
+    if (dir == INVALID_HANDLE_VALUE) {
 #else
     DIR* dir = opendir(toStdString().c_str());
-    if (!dir)
+    if (!dir) {
 #endif
         aui::impl::lastErrorToException("could not list " + *this);
+        return {};
+    }
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -156,8 +153,8 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
         bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
         bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
-    for (dirent* i; (i = readdir(dir));) {
-        auto& filename = i->d_name;
+    for (dirent* i = nullptr; (i = readdir(dir));) {
+        const auto* filename = i->d_name;
         bool isFile = i->d_type & DT_REG;
         bool isDirectory = i->d_type & DT_DIR;
 #endif

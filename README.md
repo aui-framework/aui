@@ -99,22 +99,22 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 
 | Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
 |-------------------|--------------------------|------------|-------|---------|-------|-----|
-| aui.core          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.crypt         |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.curl          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.data          |             #            |     #      |   #   |    #    |   #   |  ?  |
+| aui.core          |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.crypt         |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.curl          |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.data          |             #            |     #      |   #   |    #    |   #   |  #  |
 | aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
-| aui.image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.image         |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.json          |             #            |     #      |   #   |    #    |   #   |  #  |
 | aui.mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
-| aui.views         |             #            |     ?      |   +   |    +    |   +   |  ?  |
-| aui.xml           |             #            |     #      |   #   |    #    |   #   |  ?  |
-| Assets            |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
+| aui.network       |             #            |     #      |   #   |    #    |   +   |  +  |
+| aui.sqlite        |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.svg           |             #            |     #      |   #   |    #    |   #   |  #  |
+| aui.toolbox       |             #            |     #      |   #   |    -    |   #   |  -  |
+| aui.views         |             #            |     ?      |   +   |    +    |   +   |  +  |
+| aui.xml           |             #            |     #      |   #   |    #    |   #   |  #  |
+| Assets            |             #            |     #      |   #   |    #    |   +   |  +  |
+| Filesystem        |             #            |     #      |   #   |    #    |   +   |  +  |
 | Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |
 
 | Compiler                     | Support |

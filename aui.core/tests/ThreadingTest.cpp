@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 30.08.2020.
@@ -161,7 +156,7 @@ TEST(Threading, ParallelVoid) {
                     }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
-            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyResult";
+            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyValue";
         }
         watchdogTrigger = false;
     }
@@ -188,7 +183,7 @@ TEST(Threading, PararellWithResult) {
         for (auto& v : result) {
             accumulator += *v;
         }
-        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyResult";
+        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyValue";
     }
 }
 
@@ -338,7 +333,6 @@ TEST(Threading, FutureOnSuccess) {
     std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
         destructorCalled = true;                                                               //
     };                                                                                         //
-    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
 
     AAsyncHolder holder;
     bool called = false;
@@ -346,7 +340,8 @@ TEST(Threading, FutureOnSuccess) {
         auto future = localThreadPool * [] {
             return 322;
         };
-        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+        holder << future.onSuccess([&, destructorCallback = std::move(destructorCallback)](int i) {
+            ARaiiHelper raii = std::move(destructorCallback);
             ASSERT_EQ(i, 322);
             called = true;
         });

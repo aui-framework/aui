@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AViewContainer.h"
 #include "AView.h"
@@ -376,11 +371,12 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
     _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
-    while (auto parent = _cast<AViewContainer>(target)) {
-        pos -= parent->getPosition();
-        target = parent->getViewAt(pos, flags);
+    int depth = 0;
+    while (auto asContainer = _cast<AViewContainer>(target)) {
+        pos -= asContainer->getPosition();
+        target = asContainer->getViewAt(pos, flags);
         if (!target)
-            return parent;
+            return asContainer;
     }
     return target;
 }
@@ -548,4 +544,15 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
         return nullptr;
     }
     return it->targetView.lock();
+}
+
+void AViewContainer::setViews(AVector<_<AView>> views) {
+    views.removeIf([](const _<AView>& v) { return v == nullptr; });
+    mViews = std::move(views);
+
+    for (const auto& view : mViews) {
+        view->mParent = this;
+        if (mLayout)
+            mLayout->addView(view);
+    }
 }

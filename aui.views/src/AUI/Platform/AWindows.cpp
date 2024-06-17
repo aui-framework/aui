@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 
 #include "AUI/Common/AObject.h"
@@ -94,9 +89,10 @@ void AWindow::redraw() {
         ARaiiHelper endPaintCaller = [&] {
             mRenderingContext->endPaint(*this);
         };
-        AUI_REPEAT(2) { // AText may trigger extra layout update
-            if (mUpdateLayoutFlag) {
-                mUpdateLayoutFlag = false;
+
+        if (mUpdateLayoutFlag) {
+            mUpdateLayoutFlag = false;
+            AUI_REPEAT(2) { // AText may trigger extra layout update
                 updateLayout();
             }
         }
@@ -228,13 +224,9 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     setWindowStyle(ws);
 
-#if !AUI_PLATFORM_WIN
-    // windows sends resize event during window initialization but other platforms doesn't.
-    // simulate the same behaviour here.
     ui_thread {
-        emit resized(getWidth(), getHeight());
+        emit sizeChanged(getSize());
     };
-#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {

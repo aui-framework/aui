@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 6/9/2021.
@@ -27,6 +22,7 @@
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
 #include "AUI/Util/ATouchScroller.h"
+#include "ATouchscreenKeyboardPolicy.h"
 #include <chrono>
 #include <optional>
 
@@ -269,16 +265,14 @@ public:
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
     /**
-     * @brief On a mobile touchscreen device, shows system virtual keyboard.
-     * @details
-     * On a desktop device does nothing.
+     * @brief On a mobile touchscreen device, requests system virtual keyboard.
      */
-    void requestTouchscreenKeyboard();
+    void requestShowTouchscreenKeyboard();
 
     /**
-     * @brief Hides virtual keyboard if visible
+     * @brief On a mobile touchscreen device, requests hiding system virtual keyboard.
      */
-    void hideTouchscreenKeyboard();
+    void requestHideTouchscreenKeyboard();
 
     /**
      * @brief Determines whether views should display hover animations.
@@ -308,21 +302,25 @@ public:
         return mLastCapturedFps;
     }
 
+    void setTouchscreenKeyboardPolicy(ATouchscreenKeyboardPolicy policy) noexcept {
+        mKeyboardPolicy = policy;
+    }
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
     /**
-     * @brief On touch screen keyboard show requested.
+     * @brief On touch screen keyboard show.
      */
-    emits<> touchscreenKeyboardShowRequested;
+    emits<> touchscreenKeyboardShown;
 
 
     /**
-     * @brief On touch screen keyboard hide requested.
+     * @brief On touch screen keyboard hide.
      */
-    emits<> touchscreenKeyboardHideRequested;
+    emits<> touchscreenKeyboardHidden;
 
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> performanceFrameComplete;
@@ -358,15 +356,25 @@ protected:
 
     virtual float fetchDpiFromSystem() const;
 
-    virtual void requestTouchscreenKeyboardImpl();
+    virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
 private:
+    void processTouchscreenKeyboardRequest();
+
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
-    bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
+    ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
+
+    enum class KeyboardRequest {
+        NO_OP,
+        SHOW,
+        HIDE
+    };
+
+    KeyboardRequest mKeyboardRequestedState = KeyboardRequest::NO_OP;
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
@@ -387,7 +395,9 @@ private:
 
 #if AUI_SHOW_TOUCHES
     struct ShowTouches {
-        AVector<glm::vec2> positions;
+        glm::vec2 press;
+        AVector<glm::vec2> moves;
+        AOptional<glm::vec2> release;
     };
     AMap<APointerIndex, ShowTouches> mShowTouches;
 #endif

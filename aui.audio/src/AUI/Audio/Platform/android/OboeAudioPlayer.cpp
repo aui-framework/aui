@@ -18,6 +18,11 @@ public:
         mMixer->removeSoundSource(source);
     }
 
+    [[nodiscard]]
+    const _<oboe::AudioStream>& stream() const noexcept {
+        return mStream;
+    }
+
 private:
     OboeSoundOutput() : mMixer(_new<AAudioMixer>()) {
         oboe::AudioStreamBuilder builder;
@@ -46,24 +51,17 @@ private:
 };
 
 void OboeAudioPlayer::playImpl() {
-    AUI_ASSERT(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<OboeAudioPlayer>(sharedPtr()));
+    initializeIfNeeded();
     OboeSoundOutput::instance().addSource(_cast<OboeAudioPlayer>(sharedPtr()));
 }
 
 void OboeAudioPlayer::pauseImpl() {
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
-    mResampled.reset();
 }
 
 void OboeAudioPlayer::stopImpl() {
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
-    mResampled.reset();
-    source()->rewind();
-}
-
-void OboeAudioPlayer::onSourceSet() {
-
+    release();
 }
 
 void OboeAudioPlayer::onLoopSet() {
@@ -72,4 +70,14 @@ void OboeAudioPlayer::onLoopSet() {
 
 void OboeAudioPlayer::onVolumeSet() {
 
+}
+
+namespace aui::oboe {
+    void onResume() {
+        OboeSoundOutput::instance().stream()->requestStart();
+    }
+
+    void onPause() {
+        OboeSoundOutput::instance().stream()->requestPause();
+    }
 }

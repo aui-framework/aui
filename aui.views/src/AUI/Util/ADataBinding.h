@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -21,7 +16,6 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
-#include <AUI/Util/AFieldObservable.h>
 
 
 template<typename View, typename FieldType>
@@ -354,24 +348,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
     using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
 
     object && (*linker.getBinder())(linker.getField(),
-                                    static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
+                                    (ASignal<Data>(View::*))(ADataBindingDefault<View, Data>::getGetter()),
                                     static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
-    return object;
-}
-
-template<typename View, typename Data>
-_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
-    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
-    if (ADataBindingDefault<View, Data>::getSetter()) {
-        observerHandle = observable << [object = object.get()](Data newValue) {
-            (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
-        };
-    }
-    if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
-        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
-            observable.setValue(std::move(newValue), observerHandle);
-        });
-    }
-
     return object;
 }

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -87,11 +82,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, Others...)
         {
-            l(std::forward<A1>(a1));
+            l(std::move(a1));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
     template<typename Lambda, typename A1, typename A2>
@@ -107,11 +102,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, A2&& a2, Others...)
         {
-            l(std::forward<A1>(a1), std::forward<A2>(a2));
+            l(std::move(a1), std::move(a2));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
 
@@ -128,11 +123,11 @@ private:
         template<typename... Others>
         void call(A1&& a1, A2&& a2, A3&& a3, Others...)
         {
-            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
+            l(std::move(a1), std::move(a2), std::move<A3>(a3));
         }
 
         void operator()(Args&&... args) {
-            call(std::forward<Args>(args)...);
+            call(std::move(args)...);
         }
     };
 
@@ -168,7 +163,7 @@ public:
         std::tuple<Args...> args;
 
         void invokeSignal(AObject* emitter) {
-            signal.invokeSignal(emitter, args);
+            signal.invokeSignal(emitter, std::move(args));
         }
     };
 
@@ -177,7 +172,8 @@ public:
     }
 
     ASignal() = default;
-    ASignal(ASignal&&) = default;
+    ASignal(ASignal&&) noexcept = default;
+    ASignal(const ASignal&) = delete;
 
     virtual ~ASignal() noexcept
     {

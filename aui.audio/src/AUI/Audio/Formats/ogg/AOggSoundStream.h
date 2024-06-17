@@ -12,7 +12,7 @@
 class ISeekableInputStream;
 class AUrl;
 
-struct OggVorbis_File;
+class OggVorbis_File;
 
 
 /**
@@ -23,24 +23,31 @@ class API_AUI_AUDIO AOggSoundStream: public ISoundInputStream {
 public:
     static constexpr ASampleFormat SAMPLE_FORMAT = ASampleFormat::I16;
 
-    explicit AOggSoundStream(AUrl url);
-
-    explicit AOggSoundStream(_<IInputStream> stream);
-
-    ~AOggSoundStream() override;
+    explicit AOggSoundStream(aui::non_null<_<IInputStream>> stream);
 
     AAudioFormat info() override;
 
     size_t read(char* dst, size_t size) override;
 
-    void rewind() override;
-
-    static _<AOggSoundStream> fromUrl(AUrl url);
-
 private:
-    void initialize();
+    class OggVorbisFile {
+    public:
+        explicit OggVorbisFile(_<IInputStream> stream);
 
-    AOptional<AUrl> mUrl;
-    _<IInputStream> mStream;
-    aui::fast_pimpl<OggVorbis_File, 944> mVorbisFile;
+        ~OggVorbisFile();
+
+        size_t read(char* dst, size_t size);
+
+        [[nodiscard]]
+        OggVorbis_File& file() noexcept;
+
+        [[nodiscard]]
+        const OggVorbis_File& file() const noexcept;
+
+    private:
+        _<IInputStream> mSourceStream;
+        aui::fast_pimpl<OggVorbis_File, 944> mFile;
+    };
+
+    OggVorbisFile mVorbisFile;
 };

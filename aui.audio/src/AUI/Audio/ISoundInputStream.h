@@ -20,13 +20,8 @@ public:
      */
     virtual AAudioFormat info() = 0;
 
-    /**
-     * @brief Rewind audio stream to begin
-     */
-    virtual void rewind() = 0;
-
 protected:
-    static _<IInputStream> getInputStream(const AUrl& key);
+    static _<IInputStream> loadSourceInputStream(const AUrl& key);
 
 private:
     static constexpr size_t MAX_FILE_SIZE_TO_CACHE = 1 << 24;

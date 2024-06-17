@@ -1,26 +1,22 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <iterator>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Common/AString.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
-#include <AUI/Util/EnumUtil.h>
+#include <AUI/Traits/serializable.h>
 
 /**
  * @brief Flag enum for APath::find
@@ -123,7 +119,7 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(other) {
+    APath(AString&& other) noexcept: AString(std::move(other)) {
         removeBackSlashes();
     }
     APath(const AString& other) noexcept: AString(other) {
@@ -349,7 +345,7 @@ public:
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
      * @endcode
-     * Which would supplyResult into "path/to/your/file.txt"
+     * Which would supplyValue into "path/to/your/file.txt"
      * @return path to child file relatively to this folder
      */
     [[nodiscard]]
@@ -363,3 +359,6 @@ public:
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
 }
+
+template<>
+struct ASerializable<APath>: ASerializable<AString> {};

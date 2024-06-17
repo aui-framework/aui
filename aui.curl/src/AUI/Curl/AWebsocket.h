@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 9/5/22.
@@ -22,6 +17,9 @@
 
 
 #include "ACurl.h"
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AOptional.h"
+#include "AUI/Common/AString.h"
 #include "AUI/IO/ADynamicPipe.h"
 
 /**
@@ -29,6 +27,8 @@
  * @ingroup curl
  */
 class API_AUI_CURL AWebsocket: public ACurl, public IOutputStream {
+    friend class WebsocketTest_Receive1_Test;
+    friend class WebsocketTest_Receive2_Test;
 public:
     AWebsocket(const AString& url, AString key = generateKeyString());
     void write(const char* src, size_t size) override;
@@ -84,14 +84,11 @@ private:
 
         /* second byte: mask + payload length */
         uint8_t payload_len: 7; /* if 126, uses extra 2 bytes (uint16_t)
-                              * if 127, uses extra 8 bytes (uint64_t)
-                              * if <=125 is self-contained
-                              */
+                                 * if 127, uses extra 8 bytes (uint64_t)
+                                 * if <=125 is self-contained
+                                 */
         uint8_t mask: 1; /* if 1, uses 4 extra bytes */
     };
-    AOptional<Header> mLastHeader;
-    std::uint64_t mLastPayloadLength;
-    AByteBuffer mLastPayload;
 
     static AString generateKeyString();
 
@@ -100,7 +97,12 @@ private:
     void writeMessage(Opcode opcode, AByteBufferView message);
 
     std::size_t onDataReceived(AByteBufferView data);
+    std::size_t decodeOnePacket(AByteBufferView data);
     std::size_t onDataSend(char* dst, std::size_t maxLen);
+
+    AWebsocket(): ACurl(ACurl::Builder("localhost")) {} // for tests
+
+    AOptional<AByteBuffer> mTrailingBuffer;
 
 signals:
     emits<> connected;

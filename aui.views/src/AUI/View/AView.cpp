@@ -16,6 +16,7 @@
 
 #include "AView.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/IStringable.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
@@ -48,12 +49,12 @@
 #undef min
 
 
-ABaseWindow* AView::getWindow()
+ABaseWindow* AView::getWindow() const
 {
 
     AView* parent = nullptr;
 
-    for (AView* target = this; target; target = target->mParent) {
+    for (AView* target = const_cast<AView*>(this); target; target = target->mParent) {
         parent = target;
     }
 
@@ -356,19 +357,6 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
         mPressed << event.pointerIndex;
         emit pressedState(true, event.pointerIndex);
         emit pressed(event.pointerIndex);
-    }
-
-    /**
-     * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
-     * this view and even the mouse outside the window so we can guarantee that if we got a mouse press event, we will
-     * get a mouse release event too.
-     */
-    if (auto w = AWindow::current())
-    {
-        // handle touchscreen keyboard visibility
-        if (wantsTouchscreenKeyboard()) {
-            w->requestTouchscreenKeyboard();
-        }
     }
 }
 
@@ -700,4 +688,9 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+}
+std::ostream& operator<<(std::ostream& os, const AView& view) {
+    os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
+       << ", size = " << view.getSize() << " }";
+    return os;
 }

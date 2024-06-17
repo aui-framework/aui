@@ -1,38 +1,44 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 1/27/2023.
 //
 
+#include <exception>
+#include "AUI/Common/ATimer.h"
+extern "C" {
+#include <sys/socket.h>
+#include <unistd.h>
+#include <netinet/in.h>
+#include <fcntl.h>
+#include <netinet/ip_icmp.h>
+#include <sys/time.h>
+}
+
 #include <AUI/Network/AIcmp.h>
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AException.h"
+#include "AUI/Common/AOptional.h"
 #include "AUI/IO/AIOException.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/unix/UnixIoThread.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
-
-#if !AUI_PLATFORM_APPLE
-#include <sys/socket.h>
-#include <unistd.h>
-#include <netinet/in.h>
+#include <chrono>
 #include <csignal>
 
-#include <netinet/ip_icmp.h>
-#include <sys/time.h>
+
+namespace {
+    static constexpr auto MESSAGE_BUFFER_SIZE = 192;
 
 class IcmpImpl: public aui::noncopyable {
 public:
@@ -51,135 +57,42 @@ public:
 #endif
     }
 
-    IcmpImpl(const AInet4Address& mDestination) : mDestination(mDestination) {
-        setUid();
-        setEUid();
-        constexpr int SOCKET_TYPE = SOCK_DGRAM;
-        mSocket = socket(AF_INET, SOCKET_TYPE, IPPROTO_ICMP);
-        setUid();
-
+    IcmpImpl(const AInet4Address& mDestination) : mSocket(socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP)), mDestination(mDestination) {
         if (mSocket < 0) {
             throw AIOException(aui::impl::formatSystemError().description);
         }
     }
 
-    static inline void tvsub(struct timeval *out, struct timeval *in)
+    static uint16_t calculateCheckum(AByteBufferView buffer)
     {
-        if ((out->tv_usec -= in->tv_usec) < 0) {
-            --out->tv_sec;
-            out->tv_usec += 1000000;
+        /* RFC 1071 - http://tools.ietf.org/html/rfc1071 */
+
+        size_t i;
+        uint64_t sum = 0;
+        const char* buf = buffer.data();
+
+        for (i = 0; i < buffer.size(); i += 2) {
+            sum += *(uint16_t *)buf;
+            buf += 2;
         }
-        out->tv_sec -= in->tv_sec;
-    }
+        if (buffer.size() - i > 0)
+            sum += *(uint8_t *)buf;
 
-    int isOurs(uint16_t id)
-    {
-        return SOCKET_TYPE == SOCK_DGRAM || id == mId;
-    }
+        while ((sum >> 16) != 0)
+            sum = (sum & 0xffff) + (sum >> 16);
 
-    static unsigned short calculateCheckum(const unsigned short *addr, int len, unsigned short csum) // iputils/ping/ping.c
-    {
-        int nleft = len;
-        const unsigned short *w = addr;
-        unsigned short answer;
-        int sum = csum;
-
-        /*
-         *  Our algorithm is simple, using a 32 bit accumulator (sum),
-         *  we add sequential 16 bit words to it, and at the end, fold
-         *  back all the carry bits from the top 16 bits into the lower
-         *  16 bits.
-         */
-        while (nleft > 1) {
-            sum += *w++;
-            nleft -= 2;
-        }
-
-        /* mop up an odd byte, if necessary */
-        if (nleft == 1)
-            sum += le16toh(*(unsigned char *)w); /* le16toh() may be unavailable on old systems */
-
-        /*
-         * add back carry outs from top 16 bits to low 16 bits
-         */
-        sum = (sum >> 16) + (sum & 0xffff);	/* add hi 16 to low 16 */
-        sum += (sum >> 16);			/* add carry */
-        answer = ~sum;				/* truncate to 16 bits */
-        return (answer);
-    }
-    int ping4ParseReply(msghdr *msg, int cc, void *addr,
-                        timeval *tv)
-    {
-        sockaddr_in* from = static_cast<sockaddr_in*>(addr);
-        uint8_t* buf = static_cast<uint8_t*>(msg->msg_iov->iov_base);
-        icmphdr *icp;
-        iphdr *ip;
-        int hlen;
-        int csfailed;
-        cmsghdr *cmsgh;
-        int reply_ttl;
-        uint8_t *opts, *tmp_ttl;
-        int olen;
-        int wrong_source = 0;
-
-        /* Check the IP header */
-        ip = (iphdr *)buf;
-        if (SOCKET_TYPE == SOCK_RAW) {
-            hlen = ip->ihl * 4;
-            if (cc < hlen + 8 || ip->ihl < 5) {
-                return 1;
-            }
-            reply_ttl = ip->ttl;
-            opts = buf + sizeof(iphdr);
-            olen = hlen - sizeof(iphdr);
-        } else {
-            hlen = 0;
-            reply_ttl = 0;
-            opts = buf;
-            olen = 0;
-            for (cmsgh = CMSG_FIRSTHDR(msg); cmsgh; cmsgh = CMSG_NXTHDR(msg, cmsgh)) {
-                if (cmsgh->cmsg_level != SOL_IP)
-                    continue;
-                if (cmsgh->cmsg_type == IP_TTL) {
-                    if (cmsgh->cmsg_len < sizeof(int))
-                        continue;
-                    tmp_ttl = (uint8_t *)CMSG_DATA(cmsgh);
-                    reply_ttl = (int)*tmp_ttl;
-                } else if (cmsgh->cmsg_type == IP_RETOPTS) {
-                    opts = (uint8_t *)CMSG_DATA(cmsgh);
-                    olen = cmsgh->cmsg_len;
-                }
-            }
-        }
-
-        /* Now the ICMP part */
-        cc -= hlen;
-        icp = (icmphdr *)(buf + hlen);
-        csfailed = calculateCheckum((unsigned short*) icp, cc, 0);
-
-        if (icp->type == ICMP_ECHOREPLY) {
-            if (!isOurs(icp->un.echo.id))
-                return 1;
-            if (csfailed) {
-                return 1;
-            }
-
-            if (from->sin_addr.s_addr != mDestination.addr().sin_addr.s_addr)
-                return 0;
-
-            mResult.supplyResult(std::chrono::floor<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - mTime));
-        }
-
-        return 0;
+        return (uint16_t)~sum;
     }
 
     AFuture<std::chrono::high_resolution_clock::duration> send(std::chrono::milliseconds timeout) {
         try {
             {
                 int hold = 1;
+#if !AUI_PLATFORM_APPLE
                 setsockopt(mSocket, SOL_IP, IP_RECVERR, &hold, sizeof(hold));
                 setsockopt(mSocket, SOL_IP, IP_RECVTTL, &hold, sizeof(hold));
                 setsockopt(mSocket, SOL_IP, IP_RETOPTS, &hold, sizeof(hold));
+#endif
                 setsockopt(mSocket, SOL_SOCKET, SO_TIMESTAMP, &hold, sizeof(hold));
 
                 hold = 512;
@@ -199,34 +112,18 @@ public:
             }
 
             const auto socketAddress = mDestination.addr();
-            auto r = ::connect(mSocket, reinterpret_cast<const sockaddr*>(&socketAddress), sizeof(sockaddr_in));
-
-            if (r != 0) {
-                throw AIOException(aui::impl::formatSystemError().description);
-            }
-
             {
-                char data[64];
-                aui::zero(data);
-                auto icp = (icmphdr*)data;
-                icp->type = ICMP_ECHO;
-                icp->code = 0;
-                icp->checksum = 0;
-                icp->un.echo.sequence = htons(1);
-                icp->un.echo.id = -1;
+                icmp icp;
+                aui::zero(icp);
+                icp.icmp_type = ICMP_ECHO;
+                icp.icmp_seq = htons(1);
 
-                icp->checksum = calculateCheckum((unsigned short*) &icp, 64, 0);
+                icp.icmp_cksum = calculateCheckum(AByteBufferView::fromRaw(icp));
 
-                timeval tmp_tv;
-                aui::zero(tmp_tv);
-                gettimeofday(&tmp_tv, NULL);
-                memcpy(icp + 1, &tmp_tv, sizeof(tmp_tv));
-                icp->checksum = calculateCheckum((unsigned short*) &tmp_tv, sizeof(tmp_tv), ~icp->checksum);
-
-                r = sendto(mSocket, data, sizeof(data), 0, reinterpret_cast<const sockaddr*>(&socketAddress),
-                           sizeof(socketAddress));
+                auto r = sendto(mSocket, reinterpret_cast<const char *>(&icp), sizeof(icp), 0,
+                                reinterpret_cast<const sockaddr *>(&socketAddress), sizeof(socketAddress));
                 mTime = std::chrono::high_resolution_clock::now();
-                if (r != sizeof(data)) {
+                if (r != sizeof(icp)) {
                     throw AIOException("ping send error: {}"_format(aui::impl::formatSystemError().description));
                 }
             }
@@ -239,32 +136,78 @@ public:
 
     bool receive() {
         try {
-            mIov.iov_base = mIovBuffer;
-            mIov.iov_len = sizeof(mIovBuffer);
-            memset(&mMsg, 0, sizeof(mMsg));
-            mMsg.msg_name = mAddressBuffer;
-            mMsg.msg_namelen = sizeof(mAddressBuffer);
-            mMsg.msg_iov = &mIov;
-            mMsg.msg_iovlen = 1;
-            mMsg.msg_control = mAnsData;
-            mMsg.msg_controllen = sizeof(mAnsData);
+            char messageBuffer[MESSAGE_BUFFER_SIZE];
+            char packetInfoBuffer[MESSAGE_BUFFER_SIZE];
+            iovec messageBufferIov = {
+                messageBuffer,
+                sizeof(messageBuffer)
+            };
+            char addrBuf[128];
+            msghdr msg = {
+                addrBuf,
+                sizeof(addrBuf),
+                &messageBufferIov,
+                1,
+                packetInfoBuffer,
+                sizeof(packetInfoBuffer),
+                0
+            };
 
-            int cc = recvmsg(mSocket, &mMsg, MSG_WAITALL);
-            if (cc < 0) {
+            const auto messageLength = (int)recvmsg(mSocket, &msg, 0);
+            if (messageLength < 0) {
+                aui::impl::lastErrorToException("recvmsg failed");
+            }
+
+            /*
+             * For IPv4, we must take the length of the IP header into
+             * account.
+             *
+             * Header length is stored in the lower 4 bits of the VHL field
+             * (VHL = Version + Header Length).
+             */
+            const auto ipHeaderLength = ((*(uint8_t *)messageBuffer) & 0x0F) * 4;
+
+            const auto reply = (icmp*)(messageBuffer + ipHeaderLength);
+            const auto replySeq = ntohs(reply->icmp_seq);
+
+            /*
+             * Verify that this is indeed an echo reply packet.
+             */
+            if (reply->icmp_type != 0 /* ICMP_ECHO_REPLY */) {
                 return false;
             }
-            cmsghdr* c;
 
-            timeval* recv_timep = NULL;
-            for (c = CMSG_FIRSTHDR(&mMsg); c; c = CMSG_NXTHDR(&mMsg, c)) {
-                if (c->cmsg_level != SOL_SOCKET ||
-                    c->cmsg_type != SO_TIMESTAMP)
-                    continue;
-                if (c->cmsg_len < CMSG_LEN(sizeof(struct timeval)))
-                    continue;
-                recv_timep = (struct timeval*) CMSG_DATA(c);
+            /**
+             * Compare the source with mDestination. Actually, on Linux the check is not required as the kernel
+             * does ID checking for us. On FreeBSD/Apple, however, it doesn't.
+             */
+            const auto& from = *reinterpret_cast<sockaddr_in*>(msg.msg_name);
+            const auto expectedFrom = mDestination.addr();
+            if (std::memcmp(&from.sin_addr, &expectedFrom.sin_addr, sizeof(from.sin_addr)) != 0) {
+                return false;
             }
-            ping4ParseReply(&mMsg, cc, mAddressBuffer, recv_timep);
+
+            /*
+             * Verify the sequence number to make sure that the reply
+             * is associated with the current request.
+             */
+            if (replySeq != 1) {
+                return false;
+            }
+
+            const auto replyChecksum = reply->icmp_cksum;
+            reply->icmp_cksum = 0;
+
+            /*
+             * Verify the checksum.
+             */
+            if (replyChecksum != calculateCheckum(AByteBufferView::fromRaw(*reply))) {
+                throw AException("bad checksum");
+            }
+            mResult.supplyValue(std::chrono::high_resolution_clock::now() - mTime);
+
+            return true;
+
         } catch (...) {
             mResult.supplyException();
         }
@@ -272,41 +215,37 @@ public:
     }
 
     ~IcmpImpl() {
-        shutdown(mSocket, 0);
+        close(mSocket);
     }
 
     int mSocket;
 
+    const AFuture<std::chrono::high_resolution_clock::duration>& result() const noexcept {
+        return mResult;
+    }
+
 private:
-    uint16_t mId = 0;
     AInet4Address mDestination;
     AFuture<std::chrono::high_resolution_clock::duration> mResult;
 
-    iovec mIov;
-    msghdr mMsg;
-    char mIovBuffer[192];
-    char mAddressBuffer[128];
-    char mAnsData[4096];
-
     std::chrono::high_resolution_clock::time_point mTime;
 };
-
-#endif
+}
 
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
-#if AUI_PLATFORM_APPLE
-    // not implemented
-    return AFuture<std::chrono::high_resolution_clock::duration>();
-#else
     auto impl = _new<IcmpImpl>(destination);
+    auto timer = _new<ATimer>(timeout);
+    AObject::connect(timer->fired, timer, [impl]() {
+        impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
+        UnixIoThread::inst().unregisterCallback(impl->mSocket);
+    });
 
-    UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl](ABitField<UnixPollEvent>) mutable {
+    UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl, timer](ABitField<UnixPollEvent>) mutable {
         if (impl->receive()) {
             UnixIoThread::inst().unregisterCallback(impl->mSocket);
         }
     });
-
+    timer->start();
 
     return impl->send(timeout);
-#endif
 }

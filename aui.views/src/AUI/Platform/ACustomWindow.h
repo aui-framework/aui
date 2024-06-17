@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 #include <AUI/Platform/AWindow.h>
@@ -23,6 +18,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 {
 private:
     bool mDragging = false;
+    uint32_t mTitleHeight = 30;
 
 protected:
 	LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept override;
@@ -32,7 +28,12 @@ public:
 	ACustomWindow(const AString& name, int width, int height);
 	ACustomWindow();
 	~ACustomWindow() override;
-	void setSize(glm::ivec2 size) override;
+
+    void setTitleHeight(uint32_t height) {
+        mTitleHeight = height;
+    }
+
+    void setSize(glm::ivec2 size) override;
 
 	virtual bool isCaptionAt(const glm::ivec2& pos);
 
@@ -48,6 +49,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 private:
     bool mDragging = false;
     glm::ivec2 mDragPos;
+    uint32_t mTitleHeight = 30;
 
     void handleXConfigureNotify();
 
@@ -55,6 +57,10 @@ public:
     ACustomWindow(const AString& name, int width, int height);
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
+
+    void setTitleHeight(uint32_t height) {
+        mTitleHeight = height;
+    }
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

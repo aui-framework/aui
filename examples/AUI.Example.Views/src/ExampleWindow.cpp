@@ -24,6 +24,7 @@
 #include "AUI/ASS/Selector/on_state.h"
 #include "ExampleWindow.h"
 #include "AUI/Layout/AVerticalLayout.h"
+#include "AUI/Model/ATreeModel.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
@@ -40,7 +41,6 @@
 #include "AUI/View/ASpacerExpanding.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
-#include "DemoTreeModel.h"
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
 
@@ -308,12 +308,25 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
                         // tree view
                         GroupBox {
-                                Label { "Tree view" },
-                                [] { // lambda style inlining
-                                    auto model = _new<DemoTreeModel>();
-
-                                    return _new<ATreeView>(model);
-                                }(),
+                          Label { "Tree view" },
+                          [] { // lambda style inlining
+                            return _new<ATreeView>(_new<ATreeModel<AString>>(AVector<ATreeModel<AString>::Item>{
+                              {
+                                .value = "dir1",
+                                .children = {
+                                  { .value = "file1" },
+                                  { .value = "file2" },
+                                }
+                              },
+                              {
+                                .value = "dir2",
+                                .children = {
+                                  { .value = "file3" },
+                                  { .value = "file4" },
+                                }
+                              },
+                            }));
+                          }(),
                         },
                 },
                 Vertical::Expanding {

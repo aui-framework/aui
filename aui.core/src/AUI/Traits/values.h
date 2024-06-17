@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -138,6 +133,8 @@ namespace aui {
         no_escape(T& value): value(&value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }
+        // referring to a temporary value; no_escape should never be used anything else than as argument
+        // NOLINTNEXTLINE(cppcoreguidelines-rvalue-reference-param-not-moved)
         no_escape(T&& value): value(&value) {
             AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
         }
@@ -224,7 +221,7 @@ namespace aui {
         }
 
         lazy<T>& operator=(T&& t) {
-            value = std::forward<T>(t);
+            value = std::move(t);
             return *this;
         }
         lazy<T>& operator=(const T& t) {
@@ -348,7 +345,7 @@ namespace aui {
 
         atomic_lazy<T>& operator=(T&& t) {
             std::unique_lock lock(sync);
-            value = std::forward<T>(t);
+            value = std::move(t);
             return *this;
         }
 
@@ -413,7 +410,7 @@ namespace aui {
             move_only(T&& rhs): value(std::move(rhs)) {
 
             }
-            move_only(move_only&& rhs): value(std::move(rhs.value)) {
+            move_only(move_only&& rhs) noexcept: value(std::move(rhs.value)) {
 
             }
             move_only(const move_only&) = delete;

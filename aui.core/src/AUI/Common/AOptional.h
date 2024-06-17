@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -21,6 +16,7 @@
 #include <utility>
 #include <optional>
 #include <stdexcept>
+#include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
 
 
@@ -85,27 +81,20 @@ public:
 
     template<typename... Args>
     constexpr AOptional<T>& emplace(Args&&... args) {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<Args>(args)...);
         mInitialized = true;
         return *this;
     }
 
     constexpr AOptional<T>& operator=(std::nullopt_t) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-            mInitialized = false;
-        }
+        reset();
         return *this;
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_convertible_v<U&&, T>, bool> = true>
     constexpr AOptional<T>& operator=(U&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
+        reset();
         new (ptrUnsafe()) T(std::forward<U>(rhs));
         mInitialized = true;
         return *this;
@@ -134,21 +123,25 @@ public:
         return *this;
     }
 
+    // we want to move the U value, not the whole optional
+    // NOLINTBEGIN(cppcoreguidelines-rvalue-reference-param-not-moved)
     template<typename U>
     constexpr AOptional<T>& operator=(AOptional<U>&& rhs) noexcept {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
+            return *this;
+        } else {
+            reset();
         }
         return *this;
     }
+    //NOLINTEND(cppcoreguidelines-rvalue-reference-param-not-moved)
 
     template<typename U = T>
     constexpr AOptional<T>& operator=(T&& rhs) noexcept {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
-        new (ptrUnsafe()) T(std::forward<T>(rhs));
+        reset();
+        new (ptrUnsafe()) T(std::move(rhs));
         mInitialized = true;
         return *this;
     }
@@ -268,6 +261,20 @@ public:
     [[nodiscard]]
     bool operator==(const std::nullopt_t& rhs) const noexcept {
         return !mInitialized;
+    }
+
+    /**
+     * @brief If a value is present, apply the provided mapper function to it.
+     * @param mapper mapper function to apply. The mapper is invoked as a STL projection (i.e., the mapper could be
+     * lambda, pointer-to-member function or field).
+     */
+    template<aui::invocable<const T&> Mapper>
+    [[nodiscard]]
+    auto map(Mapper&& mapper) -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> const {
+        if (hasValue()) {
+            return std::invoke(std::forward<Mapper>(mapper), value());
+        }
+        return std::nullopt;
     }
 
 private:

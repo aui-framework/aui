@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -193,7 +188,7 @@ public:
      */
     self& operator<<(StoredType&& rhs) noexcept
     {
-        super::push_back(std::forward<StoredType>(rhs));
+        super::push_back(std::move(rhs));
         return *this;
     }
 
@@ -229,6 +224,7 @@ public:
      * </dl>
      * @return the first element.
      */
+    [[nodiscard]]
     StoredType& first() noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
@@ -242,6 +238,7 @@ public:
      * </dl>
      * @return the first element.
      */
+    [[nodiscard]]
     const StoredType& first() const noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
@@ -255,6 +252,7 @@ public:
      * </dl>
      * @return the last element.
      */
+    [[nodiscard]]
     StoredType& last() noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
@@ -268,6 +266,7 @@ public:
      * </dl>
      * @return the last element.
      */
+    [[nodiscard]]
     const StoredType& last() const noexcept
     {
         AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
@@ -278,6 +277,7 @@ public:
      * @param value element to find.
      * @return index of the specified element. If element is not found, -1 is returned.
      */
+    [[nodiscard]]
     [[nodiscard]]
     size_t indexOf(const StoredType& value) const noexcept
     {
@@ -302,6 +302,7 @@ public:
      * @return Pointer to the value on which the predicate returned true, nullptr otherwise
      */
     template<aui::predicate<StoredType> Predicate>
+    [[nodiscard]]
     StoredType* findIf(Predicate&& predicate) noexcept
     {
         if (auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate)); i != super::end()) {
@@ -349,6 +350,7 @@ public:
     }
 
     template<aui::mapper<std::size_t, StoredType> Callable>
+    [[nodiscard]]
     inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
         AVector<StoredType, Allocator> s;
         s.reserve(size);
@@ -358,6 +360,7 @@ public:
         return s;
     }
 
+    [[nodiscard]]
     ASet<StoredType> toSet() const noexcept {
         return ASet<StoredType>(super::begin(), super::end());
     }
@@ -369,6 +372,7 @@ public:
      * @return A new vector.
      */
     template<aui::incrementable Iterator, aui::invocable<decltype(*std::declval<Iterator>())> UnaryOperation>
+    [[nodiscard]]
     static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
         AVector<decltype(transformer(range.first()))> result;
         result.reserve(range.size());
@@ -376,7 +380,17 @@ public:
         return result;
     }
 
+    template<aui::invocable<StoredType&> UnaryOperation>
+    [[nodiscard]]
+    auto map(UnaryOperation&& transformer) -> AVector<decltype(transformer(std::declval<StoredType&>()))> {
+        AVector<decltype(transformer(std::declval<StoredType&>()))> result;
+        result.reserve(super::size());
+        std::transform(super::begin(), super::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
+    }
+
     template<aui::invocable<const StoredType&> UnaryOperation>
+    [[nodiscard]]
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;
         result.reserve(super::size());
@@ -399,6 +413,7 @@ public:
     }
 
     template<aui::predicate<const StoredType&> Predicate>
+    [[nodiscard]]
     self filter(Predicate&& predicate) {
         self result;
         result.reserve(super::size());
