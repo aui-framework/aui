@@ -47,12 +47,16 @@ If needed, downloads and compiles project. Adds an `IMPORTED` target. Built on t
 ### Signature
 ```cmake
 auib_import(<PackageName> <URL>
-            [VERSION version]
-            [COMPONENTS components...]
-            [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
             [ADD_SUBDIRECTORY]
+            [ARCHIVE]
+            [COMPONENTS components...]
+            [CONFIG_ONLY]
+            [CMAKE_WORKING_DIR workingdir.txt]
+            [CMAKELISTS_CUSTOM cmakelist]
+            [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
             [LINK <STATIC|SHARED>]
-            [REQUIRES dependencies...])
+            [REQUIRES dependencies...]
+            [VERSION version])
 ```
 
 ### PackageName
@@ -61,6 +65,21 @@ Specifies the package name which will be passed to `find_package`.
 ### URL
 URL to the git repository of the project you want to import.
 
+### ADD_SUBDIRECTORY
+
+Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
+
+### ARCHIVE
+
+The provided URL is pointing to zip archive instead of a git repository.
+
+For large dependencies, this might be faster than pulling whole repository.
+
+### CONFIG_ONLY
+
+Forces `find_package` to use the config mode only.
+
+
 ### VERSION
 Commit hash, tag or branch name to `checkout`.
 
@@ -68,15 +87,18 @@ Commit hash, tag or branch name to `checkout`.
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
 dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
 
-### ADD_SUBDIRECTORY
+### CMAKE_WORKING_DIR
+Run cmake in specified directory, in relation to the pulled repo's root directory.
 
-Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
+### CMAKELISTS_CUSTOM
+Replace/put the specified file from your project to the pulled repo's root directory as `CMakeLists.txt`.
 
-### CONFIG_ONLY
+This way you can customize the behavior of dependency's cmake.
 
-Forces `find_package` to use the config mode only.
+### PRECOMPILED_URL_PREFIX
+Instead of building the dependency from sources, try to import the precompiled binaries first.
 
-### PrecompiledUrlPrefix
+#### PrecompiledUrlPrefix
 
 Specifies url prefix where the precompiled binaries downloaded from.
 
