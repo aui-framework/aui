@@ -26,6 +26,8 @@ auib_import(sentry https://github.com/getsentry/sentry-native
 target_link_libraries(YOUR_APP PUBLIC sentry::sentry)
 ```
 
+For more libraries, please visit https://github.com/aui-framework/boot.
+
 # Importing project as a subdirectory
 
 ```
