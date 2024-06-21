@@ -56,7 +56,7 @@ AJson& aui::impl::JsonObject::operator[](const AString& key) {
     return back().second;
 }
 
-const AJson& aui::impl::JsonObject::operator[](const AString& key) const {
+AJson& aui::impl::JsonObject::at(const AString& key) {
     if (auto v = contains(key)) {
         return v->second;
     }
