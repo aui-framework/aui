@@ -49,7 +49,24 @@ namespace aui::impl {
 
         [[nodiscard]] API_AUI_JSON AJson& operator[](const AString& key);
 
-        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const;
+        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const {
+            return at(key);
+        }
+
+        /**
+         * @brief If container contains key, returns reference to the element.
+         * @throws AException if key is not found.
+         */
+        [[nodiscard]] API_AUI_JSON AJson& at(const AString& key);
+
+        /**
+         * @brief If container contains key, returns reference to the element.
+         * @throws AException if key is not found.
+         */
+        [[nodiscard]] API_AUI_JSON const AJson& at(const AString& key) const {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            return const_cast<JsonObject&>(*this).at(key);
+        }
     };
     using JsonArray = AVector<AJson>;
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
