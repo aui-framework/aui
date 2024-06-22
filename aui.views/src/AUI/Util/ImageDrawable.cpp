@@ -42,10 +42,11 @@ void AImageDrawable::draw(const IDrawable::Params& params) {
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
     ARender::rect(ATexturedBrush{
-            texture,
-            params.cropUvTopLeft,
-            params.cropUvBottomRight,
-            params.imageRendering,
+            .texture = texture,
+            .uv1 = params.cropUvTopLeft,
+            .uv2 = params.cropUvBottomRight,
+            .imageRendering = params.imageRendering,
+            .repeat = params.repeat,
     }, params.offset, params.size);
 }
 

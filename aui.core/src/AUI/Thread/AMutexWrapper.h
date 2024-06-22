@@ -28,7 +28,7 @@ public:
         mMutex.lock();
 
 #if AUI_DEBUG
-        mOwnerThread = std::this_thread::get_id();
+        mOwnerThread = AThread::current();
 #endif
     }
 
@@ -49,14 +49,14 @@ public:
 
     void unlock() {
 #if AUI_DEBUG
-        aui::zero(mOwnerThread);
+        mOwnerThread = nullptr;
 #endif
         mMutex.unlock();
     }
 
     T& value() noexcept {
 #if AUI_DEBUG
-        AUI_ASSERTX(mOwnerThread == std::this_thread::get_id(), "AMutexWrapper should be locked by this thread in order to get access to the underlying object");
+        AUI_ASSERTX(mOwnerThread == AThread::current(), "AMutexWrapper should be locked by this thread in order to get access to the underlying object");
 #endif
         return mValue;
     }
@@ -70,6 +70,6 @@ private:
     AMutex mMutex;
 
 #if AUI_DEBUG
-    std::thread::id mOwnerThread;
+    _<AAbstractThread> mOwnerThread;
 #endif
 };

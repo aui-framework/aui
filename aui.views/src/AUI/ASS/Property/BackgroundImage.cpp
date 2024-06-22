@@ -50,6 +50,18 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     drawableDrawWrapper(view->getSize());
                     break;
                 }
+                case Sizing::TILE: {
+                    RenderHints::PushColor c;
+                    ARender::setColor(info.overlayColor.or_default(0xffffff_rgb));
+                    IDrawable::Params p;
+                    p.offset = {0, 0};
+                    p.size = glm::vec2(view->getSize());
+                    p.repeat = info.rep.or_default(Repeat::NONE);
+                    p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
+                    p.imageRendering = imageRendering;
+                    drawable->draw(p);
+                    break;
+                }
                 case Sizing::COVER: {
                     glm::ivec2 viewSize = view->getSize();
                     if (viewSize.y == 0 || viewSize.x == 0) {

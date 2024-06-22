@@ -26,6 +26,8 @@ namespace ass {
      */
     struct TextShadow {
         AColor shadowColor;
+        AMetric offsetX = 1_dp;
+        AMetric offsetY = 1_dp;
     };
 
     namespace prop {
