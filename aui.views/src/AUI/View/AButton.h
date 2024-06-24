@@ -62,7 +62,7 @@ namespace declarative {
     struct Button: aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx> {
         using aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>::layouted_container_factory;
         Button(AString text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
-        Button(const char* text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
+        Button(const char* text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { text }}) {}
     };
 }
 

@@ -17,6 +17,7 @@ namespace gl {
     constexpr uint32_t TEXTURE_1D = 0x0DE1;
     constexpr uint32_t TEXTURE_2D = 0x0DE1;
     constexpr uint32_t TEXTURE_3D = 0x806F;
+    constexpr uint32_t TEXTURE_2D_ARRAY = 0x8C1A;
 
 
     template<unsigned TEXTURE_TARGET>
