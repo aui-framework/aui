@@ -169,3 +169,7 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 void AWindow::moveToCenter() {
 
 }
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+    com::github::aui::android::Platform::setMobileScreenOrientation(static_cast<int>(screenOrientation));
+}
