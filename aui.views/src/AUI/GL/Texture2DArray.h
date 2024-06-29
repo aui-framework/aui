@@ -11,16 +11,18 @@
 
 #pragma once
 
-#include "AUI/Views.h"
+#include "AUI/Common/SharedPtr.h"
+#include "AUI/Image/AImage.h"
+#include "Texture.h"
+#include "GLEnums.h"
 
-class AString;
+namespace gl {
+	class API_AUI_VIEWS Texture2DArray: public Texture<gl::TEXTURE_2D_ARRAY> {
+	public:
+        void tex3D(const AVector<AImageView>& images);
+        virtual ~Texture2DArray() = default;
 
-/**
- * @brief System-specific functions.
- */
-namespace APlatform
-{
-    API_AUI_VIEWS AString getFontPath(const AString& font);
-    API_AUI_VIEWS void openUrl(const AUrl& url);
-    API_AUI_VIEWS float getDpiRatio();
-};
+      private:
+          glm::u32vec3 mSize = {0, 0, 0};
+	};
+}

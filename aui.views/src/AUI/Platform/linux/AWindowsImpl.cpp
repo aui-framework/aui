@@ -743,3 +743,7 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 void AWindow::moveToCenter() {
 
 }
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+
+}

@@ -157,3 +157,10 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 void AWindow::moveToCenter() {
 
 }
+
+extern "C" void _aui_ios_setMobileScreenOrientation(AScreenOrientation orientation);
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+    _aui_ios_setMobileScreenOrientation(screenOrientation);
+}
+

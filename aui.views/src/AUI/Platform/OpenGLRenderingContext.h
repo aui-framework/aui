@@ -48,6 +48,14 @@ public:
     [[nodiscard]]
     uint32_t getSupersamplingRatio() const noexcept;
 
+    [[nodiscard]]
+    AOptional<gl::Framebuffer*> framebuffer() noexcept {
+        if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+            return fb;
+        }
+        return std::nullopt;
+    }
+
 private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;

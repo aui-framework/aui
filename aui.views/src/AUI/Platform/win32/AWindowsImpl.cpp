@@ -553,3 +553,7 @@ void AWindow::moveToCenter() {
     glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
     setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
 }
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+
+}

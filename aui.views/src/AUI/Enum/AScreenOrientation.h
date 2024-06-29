@@ -9,8 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 7/11/23.
-//
+#pragma once
 
-#include "AStaticVector.h"
+#include <AUI/Reflect/AEnumerate.h>
+
+/**
+ * @brief Controls screen orientation.
+ * @ingroup ass
+ */
+enum class AScreenOrientation {
+    UNDEFINED = 0,
+    PORTRAIT = 1,
+    LANDSCAPE = 2,
+};
+
+AUI_ENUM_VALUES(AScreenOrientation,
+                AScreenOrientation::PORTRAIT,
+                AScreenOrientation::LANDSCAPE)
