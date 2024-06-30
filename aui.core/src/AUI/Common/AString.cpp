@@ -23,33 +23,51 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     // parse utf8
     for (; length && *str; --length)
     {
-        if (*str & 0x80)
-        {
-            // utf8 symbol
-            if (*str & 0b00100000)
-            {
-                // 3-byte symbol
-                wchar_t t = *(str++) & 0b1111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                destination.push_back(t);
-                length -= 2;
-            } else
-            {
-                // 2-byte symbol
-                wchar_t t = *(str++) & 0b11111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                destination.push_back(t);
-                length -= 1;
-            }
-        } else
-        {
+        if ((*str & 0b1000'0000) == 0) {
             // ascii symbol
             destination.push_back(*(str++));
+            continue;
         }
+        // utf8 symbol
+
+        if ((*str & 0b1110'0000) == 0b1100'0000) {
+            // 2-byte symbol
+            wchar_t t = *(str++) & 0b11111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.push_back(t);
+            length -= 1;
+            continue;
+        }
+
+        if ((*str & 0b1111'0000) == 0b1110'0000) {
+            // 3-byte symbol
+            wchar_t t = *(str++) & 0b1111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.push_back(t);
+            length -= 2;
+            continue;
+        }
+
+        if ((*str & 0b1111'1000) == 0b1111'0000) {
+            // 4-byte symbol
+            char32_t t = *(str++) & 0b111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.push_back(t);
+            length -= 3;
+            continue;
+        }
+
+
+        str++; // bad entity?
     }
 }
 
@@ -84,30 +102,40 @@ AByteBuffer AString::toUtf8() const noexcept
     AByteBuffer buf;
     for (wchar_t c : *this)
     {
-        if (c >= 0x80)
-        {
-            if (c >= 0x800)
-            {
-                char b[] = {
-                        static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
-                        static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
-                        static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
-                };
-                buf << b;
-            } else if (c >= 0x80)
-            {
-                char b[] = {
-                        static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
-                        static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
-                };
-                buf << b;
-            }
-        } else
-        {
+        if (c < 0x80) {
             buf << *reinterpret_cast<char*>(&c);
+            continue;
         }
+
+        if (c < 0x800) {
+            char b[] = {
+                static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
+                static_cast<char>(0b10000000 | (c      & 0b111111)),
+                0,
+            };
+            buf << b;
+            continue;
+        }
+
+        if (c < 0x10000) {
+            char b[] = {
+                static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
+                static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
+                static_cast<char>(0b10000000 | (c       & 0b111111)),
+                0,
+            };
+            buf << b;
+            continue;
+        }
+
+        char b[] = {
+            static_cast<char>(0b11110000 | (c >> 18 & 0b111)),
+            static_cast<char>(0b10000000 | (c >> 12 & 0b111111)),
+            static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
+            static_cast<char>(0b10000000 | (c       & 0b111111)),
+            0,
+        };
+        buf << b;
     }
     return buf;
 }
