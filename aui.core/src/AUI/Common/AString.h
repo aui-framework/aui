@@ -24,8 +24,13 @@ class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
 /**
- * @brief Represents a wide char string.
+ * @brief Represents a Unicode character string.
  * @ingroup core
+ * @details
+ * AString stores a string of 16-bit chars, where each char corresponds to one UTF-16 code unit. Unicode characters with
+ * code values above 65535 are stored using two consecutive chars.
+ *
+ * Unicode is an international standard that supports most of the writing systems in use today.
  */
 class API_AUI_CORE AString: std::wstring
 {
