@@ -47,6 +47,9 @@ public:
         insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
         rhs.clear();
     }
+    constexpr AStaticVector(std::initializer_list<StoredType> rhs) noexcept: AStaticVector() {
+        insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
+    }
     constexpr ~AStaticVector() {
         for (auto& v : *this) {
             v.~StoredType();

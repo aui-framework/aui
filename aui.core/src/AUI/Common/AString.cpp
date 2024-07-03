@@ -12,10 +12,39 @@
 #include <cstring>
 #include "AString.h"
 #include "AStringVector.h"
+#include "AStaticVector.h"
 #include <AUI/Common/AByteBuffer.h>
 
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+
+inline static AStaticVector<wchar_t, 4> toUtf16(char32_t i) {
+    if (i <= 0xffff) {
+        return { wchar_t(i) };
+    }
+
+    i -= 0x10000;
+    return { wchar_t((i >> 10) + 0xD800),
+             wchar_t((i & 0x3FF) + 0xDC00) };
+}
+
+template<typename T>
+inline static char32_t fromUtf16(T& iterator) {
+    auto c1 = *(iterator++);
+    if (*iterator < 0xD800) {
+        return static_cast<char32_t >(c1);
+    }
+    auto c2 = *(iterator++);
+
+    if (c2 < 0xDC00) {
+        // bad entity
+    }
+
+    c1 -= 0xD800;
+    c2 -= 0xDC00;
+
+    return (char32_t(c1) << 10 | char32_t(c2 & 0x3FF)) + 0x10000;
+}
 
 inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
     destination.reserve(length);
@@ -61,7 +90,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
             t |= *(str++) & 0b111111;
             t <<= 6;
             t |= *(str++) & 0b111111;
-            destination.push_back(t);
+            destination.insertAll(toUtf16(t));
             length -= 3;
             continue;
         }
@@ -100,10 +129,12 @@ AString AString::fromUtf8(const char* buffer, size_t length) {
 AByteBuffer AString::toUtf8() const noexcept
 {
     AByteBuffer buf;
-    for (wchar_t c : *this)
+    for (auto it = begin(); it != end();)
     {
+        auto c = *it;
         if (c < 0x80) {
-            buf << *reinterpret_cast<char*>(&c);
+            buf << static_cast<char>(c);
+            ++it;
             continue;
         }
 
@@ -114,10 +145,11 @@ AByteBuffer AString::toUtf8() const noexcept
                 0,
             };
             buf << b;
+            ++it;
             continue;
         }
 
-        if (c < 0x10000) {
+        if (c < 0xD800) {
             char b[] = {
                 static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
                 static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
@@ -125,17 +157,22 @@ AByteBuffer AString::toUtf8() const noexcept
                 0,
             };
             buf << b;
+            ++it;
             continue;
         }
 
-        char b[] = {
-            static_cast<char>(0b11110000 | (c >> 18 & 0b111)),
-            static_cast<char>(0b10000000 | (c >> 12 & 0b111111)),
-            static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
-            static_cast<char>(0b10000000 | (c       & 0b111111)),
-            0,
-        };
-        buf << b;
+        {
+            const auto c = fromUtf16(it);
+
+            char b[] = {
+                    static_cast<char>(0b11110000 | (c >> 18 & 0b111)),
+                    static_cast<char>(0b10000000 | (c >> 12 & 0b111111)),
+                    static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
+                    static_cast<char>(0b10000000 | (c & 0b111111)),
+                    0,
+            };
+            buf << b;
+        }
     }
     return buf;
 }
