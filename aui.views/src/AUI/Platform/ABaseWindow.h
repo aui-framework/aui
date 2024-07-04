@@ -122,6 +122,11 @@ public:
 
     void updateDpi();
 
+    /**
+     * @brief Returns current dpi ratio
+     * @see ScalingParams, scaling params affects dpi ratio
+     * @note dpi ratio value is rounded to 0.25
+     */
     float getDpiRatio()
     {
         return mDpiRatio;
