@@ -341,6 +341,22 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 },
                         },
                         GroupBox {
+                            Label { "Scaling factor" },
+                            Horizontal {
+                                _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, [](int64_t x) {
+                                    AWindow::current()->setScalingParams({
+                                        .scalingFactor = x * 0.25f,
+                                        .maximalWindowSizeDp = std::nullopt
+                                    });
+                                }) let {
+                                    it->setMin(1);
+                                    it->setMax(12);
+                                    it->setValue(4);
+                                },
+                                Label{ "x0.25"}
+                            }
+                        },
+                        GroupBox {
                                 Label { "Fields" },
                                 Vertical::Expanding {
                                         Label { "Text field" },
