@@ -346,7 +346,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, [](int64_t x) {
                                     AWindow::current()->setScalingParams({
                                         .scalingFactor = x * 0.25f,
-                                        .minimalWindowSizeDp = std::nullopt
+                                        .maximalWindowSizeDp = std::nullopt
                                     });
                                 }) let {
                                     it->setMin(1);

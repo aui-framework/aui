@@ -320,7 +320,7 @@ public:
          * @brief If set, DPI ratio will be adjusted to be small enough for proper displaying layout of given size.
          * @note Size in dp
          */
-        AOptional<glm::uvec2> minimalWindowSizeDp = std::nullopt;
+        AOptional<glm::uvec2> maximalWindowSizeDp = std::nullopt;
     };
 
     /**
