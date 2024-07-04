@@ -306,6 +306,24 @@ public:
         mKeyboardPolicy = policy;
     }
 
+    struct ScalingParams {
+        /**
+         * @brief DPI ratio will be multiplied by this factor
+         */
+        float scalingFactor = 1.f;
+        /**
+         * @brief If set, DPI ratio will be adjusted to be small enough for proper displaying layout of given size.
+         * @note Size in dp
+         */
+        AOptional<glm::uvec2> minimalWindowSizeDp = std::nullopt;
+    };
+
+    /**
+     * @brief Sets scaling params
+     * @see ScalingParams
+     */
+    void setScalingParams(ScalingParams params);
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -365,6 +383,7 @@ private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
+    ScalingParams mScalingParams;
 
     ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
 
