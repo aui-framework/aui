@@ -11,19 +11,17 @@
 
 #pragma once
 
+#include "AUI/Util/ADataBinding.h"
 #include "AUI/View/ATreeView.h"
 #include "AUI/Platform/ABaseWindow.h"
 #include "ViewPropertiesView.h"
+#include <variant>
 
-class DevtoolsLayoutTab: public AViewContainer {
+class DevtoolsPointerInspect: public AViewContainer {
 public:
-    DevtoolsLayoutTab(ABaseWindow* targetWindow);
+    DevtoolsPointerInspect(ABaseWindow* targetWindow);
 
 private:
     ABaseWindow* mTargetWindow;
 
-    _<ATreeView> mViewHierarchyTree;
-    _<ViewPropertiesView> mViewPropertiesView;
-
-    void forceLayoutUpdate();
 };

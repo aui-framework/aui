@@ -10,6 +10,7 @@
  */
 
 #include "AViewContainer.h"
+#include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
 #include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -67,6 +68,7 @@ AViewContainer::AViewContainer() {
 }
 
 AViewContainer::~AViewContainer() {
+    mLayout = nullptr;
     for (auto& view: mViews) {
         view->mParent = nullptr;
     }
@@ -138,9 +140,8 @@ void AViewContainer::setLayout(_<ALayout> layout) {
 void AViewContainer::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
     if (!index) return;
-    if (!mLayout) return;
-    mLayout->removeView(view, *index);
     view->mParent = nullptr;
+    AUI_NULLSAFE(mLayout)->removeView(view, *index);
     invalidateCaches();
     emit childrenChanged;
 }

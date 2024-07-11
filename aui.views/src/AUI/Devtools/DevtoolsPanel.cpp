@@ -14,6 +14,7 @@
 #include "DevtoolsPanel.h"
 #include "AUI/Devtools/DevtoolsLayoutTab.h"
 #include "AUI/Devtools/DevtoolsPerformanceTab.h"
+#include "AUI/Devtools/DevtoolsPointerInspect.h"
 #include "AUI/Platform/ABaseWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/ATabView.h"
@@ -24,6 +25,7 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow) {
 
     tabs->addTab(_new<DevtoolsLayoutTab>(targetWindow), "Layout");
     tabs->addTab(_new<DevtoolsPerformanceTab>(targetWindow), "Performance");
+    tabs->addTab(_new<DevtoolsPointerInspect>(targetWindow), "Pointer inspect");
 
     setContents(Centered { tabs });
 }
