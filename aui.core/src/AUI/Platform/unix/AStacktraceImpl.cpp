@@ -44,18 +44,22 @@ static BacktraceService& backtraceService() noexcept {
 }
 
 AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
-    void* buffer[256];
-    maxFrames += skipFrames + 1;
-    AUI_ASSERTX(maxFrames <= 256, "too many");
-    std::size_t entryCount = backtrace(buffer, maxFrames);
+    try {
+        void* buffer[256];
+        maxFrames += skipFrames + 1;
+        AUI_ASSERTX(maxFrames <= 256, "too many");
+        std::size_t entryCount = backtrace(buffer, maxFrames);
 
-    AVector<Entry> entries;
-    entries.reserve(entryCount);
-    for (std::size_t i = skipFrames + 1; i < entryCount; ++i) {
-        entries << Entry{buffer[i]};
+        AVector<Entry> entries;
+        entries.reserve(entryCount);
+        for (std::size_t i = skipFrames + 1; i < entryCount; ++i) {
+            entries << Entry{buffer[i]};
+        }
+
+        return AStacktrace(std::move(entries));
+    } catch (...) {
+        return AStacktrace({});
     }
-
-    return AStacktrace(std::move(entries));
 }
 
 
