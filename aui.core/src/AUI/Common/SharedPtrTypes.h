@@ -14,6 +14,7 @@
 #include <memory>
 #include <functional>
 #include <optional>
+#include <type_traits>
 
 class AObject;
 
@@ -29,7 +30,7 @@ class API_AUI_CORE AStacktrace;
 
 namespace aui::impl::shared_ptr {
     struct InstancesDict {
-        ARecursiveMutex sync;
+        std::recursive_mutex sync;
         std::map<void*, std::set<void*>> map;
     };
 
@@ -323,7 +324,7 @@ public:
     }
 
     [[nodiscard]]
-    T& operator*() const noexcept {
+    std::add_lvalue_reference_t<T> operator*() const noexcept {
         return super::operator*();
     }
 
