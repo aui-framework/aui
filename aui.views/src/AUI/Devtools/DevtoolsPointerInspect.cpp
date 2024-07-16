@@ -26,6 +26,7 @@
 #include "AUI/ASS/Property/FixedSize.h"
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AOptional.h"
+#include "AUI/Common/AStringVector.h"
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Enum/Visibility.h"
 #include "AUI/Image/AImage.h"
@@ -119,6 +120,8 @@ public:
         auto v = mFake->view();
         mButton->setEnabled(!(v == nullptr || v->getParent() == nullptr));
     }
+signals:
+    emits<AView*> reinflate;
 
 private:
     _<FakeContainer> mFake;
@@ -135,47 +138,56 @@ private:
             return;
         }
 
-        mFake->setView(parent->sharedPtr());
+        emit reinflate(dynamic_cast<AView*>(parent));
     }
 };
 }
 
+using namespace declarative;
 
 DevtoolsPointerInspect::DevtoolsPointerInspect(ABaseWindow* targetWindow) : mTargetWindow(targetWindow) {
-    using namespace declarative;
 
-    auto address = _new<ATextField>();
-    auto resultView = _new<AViewContainer>();
 
     setContents(Vertical {
         Centered {
           Horizontal {
             Label { "Address (AView*):" },
-            address,
-            Button { "Inspect" }.clicked(this, [address, resultView] {
+            mAddress,
+            Button { "Inspect" }.clicked(this, [this] {
                 try {
                     auto ptr = [&] {
-                        auto ptr = address->text().toStdString();
+                        auto ptr = mAddress->text().toStdString();
                         char* end = nullptr;
                         return (AView*)uintptr_t(std::strtoull(ptr.data(), &end, 16));
                     }();
                     if (!ptr) {
-                        ALayoutInflater::inflate(resultView, Label { "nullptr" });
+                        ALayoutInflater::inflate(mResultView, Label { "nullptr" });
                         return;
                     }
-                    resultView->setLayout(_new<AVerticalLayout>());
-                    resultView->addView(Horizontal { Label { "AReflect::name = " }, Label { AReflect::name(ptr) } });
-                    auto fake = _new<FakeContainer>(ptr->sharedPtr());
-                    resultView->addView(_new<ParentHelper>(fake));
-                    resultView->addView(std::move(fake));
-                    AWindow::current()->flagUpdateLayout();
+                    inspect(ptr);
                 } catch (const AException& e) {
-                    ALayoutInflater::inflate(resultView, Label { e.getMessage() });
+                    ALayoutInflater::inflate(mResultView, Label { e.getMessage() });
                     ALogger::err(LOG_TAG) << "Unable to inspect: " << e;
                 }
             }),
           },
         },
-        Centered { resultView },
+        Centered { mResultView },
     });
+}
+
+void DevtoolsPointerInspect::inspect(AView* ptr) {
+    ALogger::info(LOG_TAG) << "Inspecting: " << ptr;
+    mResultView->setLayout(_new<AVerticalLayout>());
+    mResultView->addView(Horizontal { Label { "AReflect::name = " }, Label { AReflect::name(ptr) } });
+    mResultView->addView(Horizontal { Label { "Ass names = " }, Label { AStringVector(ptr->getAssNames()).join(", ") } });
+    auto fake = _new<FakeContainer>(ptr->sharedPtr());
+    auto parentHelper = _new<ParentHelper>(fake);
+    connect(parentHelper->reinflate, [this](AView* ptr) {
+        mAddress->setText("{}"_format((void*)ptr));
+        inspect(ptr);
+    });
+    mResultView->addView(parentHelper);
+    mResultView->addView(std::move(fake));
+    AWindow::current()->flagUpdateLayout();
 }

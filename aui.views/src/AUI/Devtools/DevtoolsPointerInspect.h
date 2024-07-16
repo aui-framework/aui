@@ -12,8 +12,10 @@
 #pragma once
 
 #include "AUI/Util/ADataBinding.h"
+#include "AUI/View/ATextField.h"
 #include "AUI/View/ATreeView.h"
 #include "AUI/Platform/ABaseWindow.h"
+#include "AUI/View/AViewContainer.h"
 #include "ViewPropertiesView.h"
 #include <variant>
 
@@ -23,5 +25,8 @@ public:
 
 private:
     ABaseWindow* mTargetWindow;
+    _<ATextField> mAddress = _new<ATextField>();
+    _<AViewContainer> mResultView = _new<AViewContainer>();
 
+    void inspect(AView* ptr);
 };
