@@ -45,6 +45,7 @@ namespace ass {
             }
 
             void applyFor(AView* view) override {
+                mInfo.sound->stop();
                 mInfo.sound->play();
             }
 
