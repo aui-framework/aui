@@ -231,7 +231,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                             AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
                                         }),
                                         _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
-                                            AUI_ASSERTX(false, "assertion fail");
+                                            AUI_ASSERT_NO_CONDITION("assertion fail");
                                         }),
                                         _new<AButton>("Cause hang").connect(&AView::clicked, this, [&] {
                                             for (;;);
