@@ -44,7 +44,7 @@ void CommonRenderingContext::init(const Init& init) {
     ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = mWindowClass.c_str();
+        winClass.lpszClassName = aui::win32::toWchar(mWindowClass);
         winClass.cbSize = sizeof(WNDCLASSEX);
         winClass.style = CS_HREDRAW | CS_VREDRAW;
         winClass.lpfnWndProc = WindowProc;
@@ -56,7 +56,7 @@ void CommonRenderingContext::init(const Init& init) {
         winClass.hIconSm = icon;
         winClass.hbrBackground = nullptr;
         winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = mWindowClass.c_str();
+        winClass.lpszMenuName = aui::win32::toWchar(mWindowClass);
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
         if (RegisterClassEx(&winClass)) {
@@ -66,7 +66,7 @@ void CommonRenderingContext::init(const Init& init) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
 
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), init.name.c_str(), style,
+    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, aui::win32::toWchar(mWindowClass), aui::win32::toWchar(init.name), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -95,7 +95,7 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 
         DestroyWindow(w->mHandle);
     }
-    UnregisterClass(mWindowClass.c_str(), GetModuleHandle(nullptr));
+    UnregisterClass(aui::win32::toWchar(mWindowClass), GetModuleHandle(nullptr));
 }
 
 void CommonRenderingContext::beginPaint(ABaseWindow& window) {

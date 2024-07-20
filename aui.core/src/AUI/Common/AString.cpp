@@ -29,8 +29,12 @@ inline static AStaticVector<char16_t, 4> toUtf16(char32_t i) {
 }
 
 template<typename T>
-inline static char32_t fromUtf16(T& iterator) {
+inline static char32_t fromUtf16(T& iterator, T last) {
     auto c1 = *(iterator++);
+    if (iterator == last) {
+        // incomplete sequence?
+        return static_cast<char32_t >(c1);
+    }
     if (*iterator < 0xD800) {
         return static_cast<char32_t >(c1);
     }
@@ -162,7 +166,7 @@ AByteBuffer AString::toUtf8() const noexcept
         }
 
         {
-            const auto c = fromUtf16(it);
+            const auto c = fromUtf16(it, end());
 
             char b[] = {
                     static_cast<char>(0b11110000 | (c >> 18 & 0b111)),

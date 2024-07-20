@@ -771,6 +771,34 @@ namespace std
     };
 }
 
+#if AUI_PLATFORM_WIN
+namespace aui::win32 {
+    /*
+     * On Windows, char16_t == wchar_t. WinAPI interfaces use wchar_t widely, so we have some handy functions to
+     * convert AString to wchar_t* and back.
+     */
+
+    inline const wchar_t* toWchar(const AString& string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return reinterpret_cast<const wchar_t *const>(string.data());
+    }
+
+    inline wchar_t* toWchar(AString& string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return reinterpret_cast<wchar_t*>(string.data());
+    }
+
+    inline std::wstring_view toWcharView(const AString& string) {
+        return {toWchar(string), string.length() };
+    }
+
+    inline AString fromWchar(std::wstring_view string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return {reinterpret_cast<const char16_t *>(string.data()), string.size()};
+    }
+}
+#endif
+
 template <> struct fmt::detail::is_string<AString>: std::false_type {};
 
 template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {

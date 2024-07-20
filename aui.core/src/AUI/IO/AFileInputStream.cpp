@@ -19,7 +19,7 @@ AFileInputStream::AFileInputStream(const AString& path)
 {
 #if AUI_PLATFORM_WIN
     // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-    _wfopen_s(&mFile, path.c_str(), L"rb");
+    _wfopen_s(&mFile, aui::win32::toWchar(path), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif

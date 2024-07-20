@@ -33,21 +33,15 @@ void AClipboard::copyToClipboard(const AString& text) {
 AString AClipboard::pasteFromClipboard() {
     OpenClipboard(nullptr);
     HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
-    auto azaza = (const wchar_t*)GlobalLock(hMem);
-
-	if (azaza) {
-        size_t length = 0;
-        for (; azaza[length] && length < 50'000; ++length) {
-
-        }
-        if (length >= 50'000) {
-            GlobalUnlock(hMem);
-            CloseClipboard();
-            return {};
-        }
-        AString s = azaza;
+    std::wstring_view memView = (const wchar_t*)GlobalLock(hMem);
+    AUI_DEFER {
         GlobalUnlock(hMem);
         CloseClipboard();
+    };
+
+	if (memView.data()) {
+        AString s = aui::win32::fromWchar({memView.data(), std::min(0x10000llu, memView.length())});
+
         return s;
     }
     return {};
