@@ -568,7 +568,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             break;
 
         default:
-            AUI_ASSERTX(false, "shouldn't reach there");
+            AUI_ASSERT_NO_CONDITION("shouldn't reach there");
     }
 
     mKeyboardRequestedState = KeyboardRequest::NO_OP;

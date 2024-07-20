@@ -178,7 +178,7 @@ struct TexturedShaderHelper {
                 break;
             case Repeat::X:
             case Repeat::Y: {
-                AUI_ASSERTX(false, "Repeat::X and Repeat::Y are deprecated");
+                AUI_ASSERT_NO_CONDITION("Repeat::X and Repeat::Y are deprecated");
             }
         }
         switch (brush.imageRendering) {

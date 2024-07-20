@@ -28,9 +28,11 @@ namespace aui::assertion::detail {
 #if AUI_DEBUG
 #define AUI_IMPL_ASSERT(cond) assert(cond); ::aui::assertion::detail::checkArgs(cond)
 #define AUI_IMPL_ASSERTX(cond, what) assert((cond) && what); ::aui::assertion::detail::checkArgs(cond, what)
+#define AUI_IMPL_FAIL(what) assert(false && what); ::aui::assertion::detail::checkArgs(false, what)
 #else
 #define AUI_IMPL_ASSERT(cond) if (!(cond)) ::aui::assertion::detail::triggerAssertion("assertion failed: " AUI_PP_STRINGIZE(cond))
 #define AUI_IMPL_ASSERTX(cond, what) if (!(cond)) ::aui::assertion::detail::triggerAssertion("assertion failed: " AUI_PP_STRINGIZE(cond) ": " what); ::aui::assertion::detail::checkArgs(cond, what)
+#define AUI_IMPL_FAIL(what) ::aui::assertion::detail::triggerAssertion(what); ::aui::assertion::detail::checkArgs(false, what)
 #endif
 
 /**
@@ -42,6 +44,7 @@ namespace aui::assertion::detail {
  * build or throws AAssertionFailedException on release builds, so it can be handled and reported properly in production
  * applications.
  * @sa AUI_ASSERTX
+ * @sa AUI_ASSERT_NO_CONDITION
  *
  * @code{cpp}
  * int v = 2 + 2;
@@ -69,5 +72,25 @@ namespace aui::assertion::detail {
  * @endcode
  */
 #define AUI_ASSERTX(condition, what) AUI_IMPL_ASSERTX(condition, what)
+
+/**
+ * @brief Always triggers assertion fail.
+ * @param what string literal which will be appended to the error message
+ * @ingroup useful_macros
+ * @details
+ * Triggers default C++ assert behavior (that is, program termination) on debug build or throws
+ * AAssertionFailedException on release builds, so it can be handled and reported properly in production
+ * applications.
+ * @sa AUI_ASSERT
+ *
+ * @code{cpp}
+ * switch (i) {
+ *   case 0: // ...
+ *   default:
+ *     AUI_ASSERT_NO_CONDITION("invalid i");
+ * }
+ * @endcode
+ */
+#define AUI_ASSERT_NO_CONDITION(what) AUI_IMPL_FAIL(what)
 
 //NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
