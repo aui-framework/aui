@@ -23,7 +23,7 @@ class AString;
  * @brief Represents a 4-component floating point color.
  * @ingroup core
  */
-class API_AUI_CORE AColor: public glm::vec4
+class AColor: public glm::vec4
 {
 public:
 	AColor(): glm::vec4(0, 0, 0, 1.f)
@@ -31,7 +31,7 @@ public:
 	}
 	AColor(const glm::vec4& v): glm::vec4(v){}
 
-    AColor(const AString& s);
+    API_AUI_CORE AColor(const AString& s);
 	AColor(float scalar) : glm::vec4(scalar) {}
 	AColor(float r, float g, float b) : glm::vec4(r, g, b, 1.f) {}
 	AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
