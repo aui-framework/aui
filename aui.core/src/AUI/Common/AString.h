@@ -658,7 +658,7 @@ public:
         if (size() != other.size()) {
             return false;
         }
-        return std::memcmp(data(), other.data(), size()) == 0;
+        return std::memcmp(data(), other.data(), sizeInBytes()) == 0;
     }
     bool operator==(const char16_t* other) const noexcept
     {
@@ -667,12 +667,16 @@ public:
             if (*it != *other) {
                 return false;
             }
+            if (*other == '\0') {
+                return false;
+            }
         }
         return *other == '\0';
     }
-    bool operator==(const char* other) const noexcept
-    {
-        return *this == AString(other);
+
+    [[nodiscard]]
+    size_t sizeInBytes() const noexcept {
+        return size() * sizeof(super::value_type);
     }
 
     bool operator!=(const AString& other) const noexcept
@@ -683,6 +687,12 @@ public:
     {
         return !operator==(other);
     }
+
+    bool operator==(const char* other) const noexcept
+    {
+        return *this == AString(other);
+    }
+
     bool operator!=(const char* other) const noexcept
     {
         return *this != AString(other);
