@@ -40,7 +40,7 @@ AString AClipboard::pasteFromClipboard() {
     };
 
 	if (memView.data()) {
-        AString s = aui::win32::fromWchar({memView.data(), std::min(0x10000llu, memView.length())});
+        AString s = aui::win32::fromWchar({memView.data(), std::min(size_t(0x10000), memView.length())});
 
         return s;
     }
