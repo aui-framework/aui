@@ -35,7 +35,7 @@
 #endif
 
 APath APath::parent() const {
-    auto c = ensureNonSlashEnding().rfind(L'/');
+    auto c = ensureNonSlashEnding().rfind('/');
     if (c != NPOS) {
         return substr(0, c);
     }
@@ -43,7 +43,7 @@ APath APath::parent() const {
 }
 
 APath APath::filename() const {
-     auto i = rfind(L'/');
+     auto i = rfind('/');
      if (i == NPOS) {
          return *this;
      }

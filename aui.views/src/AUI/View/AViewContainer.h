@@ -306,7 +306,7 @@ public:
 
     void onKeyUp(AInput::Key key) override;
 
-    void onCharEntered(wchar_t c) override;
+    void onCharEntered(char16_t c) override;
 
     bool capturesFocus() override;
 

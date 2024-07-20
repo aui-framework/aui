@@ -14,6 +14,7 @@
 #include <string>
 #include <iostream>
 #include "AUI/Core.h"
+#include "AUI/Traits/values.h"
 #include <AUI/Common/ASet.h>
 #include <optional>
 #include <AUI/Common/AOptional.h>
@@ -364,7 +365,7 @@ public:
      */
     [[nodiscard]]
     int64_t toLongIntOrException() const {
-        return toLongInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+        return toLongInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
     }
 
     /**
@@ -372,7 +373,7 @@ public:
      * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
      * used.
      *
-     * If conversion to int is not possible, nullopt is returned.
+     * If conversion to int is not possible, exception is thrown.
      */
     [[nodiscard]]
     AOptional<unsigned> toUInt() const noexcept;
@@ -382,11 +383,11 @@ public:
      * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
      * used.
      *
-     * If conversion to int is not possible, nullopt is returned.
+     * If conversion to int is not possible, exception is thrown.
      */
     [[nodiscard]]
     unsigned toUIntOrException() const {
-        return toUInt().valueOrException(fmt::format("bad int: {}", toStdString()).c_str());
+        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
     }
 
     /**
@@ -432,8 +433,27 @@ public:
             return v;
         }
     }
-    int toNumberDec() const noexcept;
-    int toNumberHex() const noexcept;
+
+    static constexpr auto TO_NUMBER_BASE_BIN = 2;
+    static constexpr auto TO_NUMBER_BASE_OCT = 8;
+    static constexpr auto TO_NUMBER_BASE_DEC = 10;
+    static constexpr auto TO_NUMBER_BASE_HEX = 16;
+
+
+    /**
+     * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
+     * @sa toNumberOrException
+     */
+    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const noexcept;
+
+    /**
+     * @brief Returns the string converted to an int using base. Throws an exception if the conversion fails.
+     * @sa toNumber
+     */
+    int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
+        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
 
     /**
      * @return utf8-encoded std::string.
@@ -642,9 +662,13 @@ public:
     }
     bool operator==(const char16_t* other) const noexcept
     {
-        for (auto it = begin(); it != end(); ++it) {
-
+        auto it = begin();
+        for (; it != end(); ++it, ++other) {
+            if (*it != *other) {
+                return false;
+            }
         }
+        return *other == '\0';
     }
     bool operator==(const char* other) const noexcept
     {
@@ -653,11 +677,11 @@ public:
 
     bool operator!=(const AString& other) const noexcept
     {
-        return wcscmp(c_str(), other.c_str()) != 0;
+        return !operator==(other);
     }
     bool operator!=(const char16_t* other) const noexcept
     {
-        return wcscmp(c_str(), other) != 0;
+        return !operator==(other);
     }
     bool operator!=(const char* other) const noexcept
     {

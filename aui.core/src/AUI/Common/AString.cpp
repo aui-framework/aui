@@ -18,14 +18,14 @@
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-inline static AStaticVector<wchar_t, 4> toUtf16(char32_t i) {
+inline static AStaticVector<char16_t, 4> toUtf16(char32_t i) {
     if (i <= 0xffff) {
-        return { wchar_t(i) };
+        return { char16_t(i) };
     }
 
     i -= 0x10000;
-    return { wchar_t((i >> 10) + 0xD800),
-             wchar_t((i & 0x3FF) + 0xDC00) };
+    return { char16_t((i >> 10) + 0xD800),
+             char16_t((i & 0x3FF) + 0xDC00) };
 }
 
 template<typename T>
@@ -61,7 +61,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
 
         if ((*str & 0b1110'0000) == 0b1100'0000) {
             // 2-byte symbol
-            wchar_t t = *(str++) & 0b11111;
+            char16_t t = *(str++) & 0b11111;
             t <<= 6;
             t |= *(str++) & 0b111111;
             destination.push_back(t);
@@ -71,7 +71,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
 
         if ((*str & 0b1111'0000) == 0b1110'0000) {
             // 3-byte symbol
-            wchar_t t = *(str++) & 0b1111;
+            char16_t t = *(str++) & 0b1111;
             t <<= 6;
             t |= *(str++) & 0b111111;
             t <<= 6;
@@ -177,7 +177,7 @@ AByteBuffer AString::toUtf8() const noexcept
     return buf;
 }
 
-AStringVector AString::split(wchar_t c) const noexcept
+AStringVector AString::split(char16_t c) const noexcept
 {
     if (empty()) {
         return {};
@@ -186,7 +186,7 @@ AStringVector AString::split(wchar_t c) const noexcept
     result.reserve(length() / 10);
     for (size_type s = 0;;)
     {
-        auto next = std::wstring::find(c, s);
+        auto next = super::find(c, s);
         if (next == npos)
         {
             result << substr(s);
@@ -199,7 +199,7 @@ AStringVector AString::split(wchar_t c) const noexcept
     return result;
 }
 
-AString AString::trimLeft(wchar_t symbol) const noexcept
+AString AString::trimLeft(char16_t symbol) const noexcept
 {
     for (auto i = begin(); i != end(); ++i)
     {
@@ -211,7 +211,7 @@ AString AString::trimLeft(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::trimRight(wchar_t symbol) const noexcept
+AString AString::trimRight(char16_t symbol) const noexcept
 {
     for (auto i = rbegin(); i != rend(); ++i)
     {
@@ -223,7 +223,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+AString& AString::replaceAll(char16_t from, char16_t to) noexcept {
     for (auto& s : *this) {
         if (s == from)
             s = to;
@@ -303,22 +303,32 @@ AString AString::fromLatin1(const char* buffer) {
 }
 
 
-int AString::toNumberDec() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%d", &n) < 0)
-        return -1;
+AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
+    int result = 0;
+    const auto NUMBER_LAST = std::min(int('0' + int(base) - 1), int('9'));
+    const auto LETTER_LAST = 'a' + int(base) - 11;
+    const auto LETTER_LAST_CAPITAL = 'A' + int(base) - 11;
+    for (auto c : *this) {
+        if (c >= '0' && c <= NUMBER_LAST) {
+            result = result * base + (c - '0');
+            continue;
+        }
 
-    return n;
-}
+        if (int(base) > 10) {
+            if (c >= 'a' && c <= LETTER_LAST) {
+                result = result * base + (c - 'a' + 10);
+                continue;
+            }
 
-int AString::toNumberHex() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%x", &n) < 0)
-        return -1;
+            if (c >= 'A' && c <= LETTER_LAST_CAPITAL) {
+                result = result * base + (c - 'A' + 10);
+                continue;
+            }
+        }
+        return std::nullopt;
+    }
 
-    return n;
+    return result;
 }
 
 std::string AString::toStdString() const noexcept
@@ -1145,7 +1155,7 @@ AString AString::lowercase() const {
 }
 
 void AString::resizeToNullTerminator() {
-    wchar_t* i = data();
+    char16_t* i = data();
     for (; *i; ++i);
     resize(i - data());
 }
