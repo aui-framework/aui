@@ -642,11 +642,9 @@ public:
     }
     bool operator==(const char16_t* other) const noexcept
     {
-        if (size() != other.size()) {
-            return false;
+        for (auto it = begin(); it != end(); ++it) {
+
         }
-        return std::memcmp(data(), other.data(), size()) == 0;
-        return wcscmp(c_str(), other) == 0;
     }
     bool operator==(const char* other) const noexcept
     {
