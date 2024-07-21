@@ -35,7 +35,7 @@
 #endif
 
 APath APath::parent() const {
-    auto c = ensureNonSlashEnding().rfind(L'/');
+    auto c = ensureNonSlashEnding().rfind('/');
     if (c != NPOS) {
         return substr(0, c);
     }
@@ -43,7 +43,7 @@ APath APath::parent() const {
 }
 
 APath APath::filename() const {
-     auto i = rfind(L'/');
+     auto i = rfind('/');
      if (i == NPOS) {
          return *this;
      }
@@ -102,11 +102,11 @@ bool APath::isDirectoryExists() const {
 const APath& APath::removeFile() const {
 #if AUI_PLATFORM_WIN
     if (isRegularFileExists()) {
-        if (!DeleteFile(c_str())) {
+        if (!DeleteFile(aui::win32::toWchar(*this))) {
             aui::impl::lastErrorToException("could not remove file " + *this);
         }
     } else if (isDirectoryExists()) {
-        if (!RemoveDirectory(c_str())) {
+        if (!RemoveDirectory(aui::win32::toWchar(*this))) {
             aui::impl::lastErrorToException("could not remove directory " + *this);
         }
     } else {
@@ -136,7 +136,7 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;
-    HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
+    HANDLE dir = FindFirstFile(aui::win32::toWchar(file("*")), &fd);
 
     if (dir == INVALID_HANDLE_VALUE) {
 #else
@@ -149,7 +149,7 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
-        auto& filename = fd.cFileName;
+        auto filename = reinterpret_cast<char16_t*>(fd.cFileName); // NOLINT(*-pro-type-reinterpret-cast)
         bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
         bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
@@ -201,12 +201,13 @@ APath APath::absolute() const {
         throw AFileNotFoundException("could not find absolute file " +*this);
     }
 #ifdef WIN32
-    wchar_t buf[0x1000];
-    if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {
+    APath buf;
+    buf.resize(0x1000);
+    if (_wfullpath(aui::win32::toWchar(buf), aui::win32::toWchar(*this), buf.length()) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
-
-    return APath(buf);
+    buf.resizeToNullTerminator();
+    return buf;
 #else
     auto rawPath = aui::ptr::make_unique_with_deleter(realpath(toStdString().c_str(), nullptr), free);
     if (!rawPath) {
@@ -218,7 +219,7 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    if (CreateDirectory(c_str(), nullptr)) return *this;
+    if (CreateDirectory(aui::win32::toWchar(*this), nullptr)) return *this;
 #else
     if (::mkdir(toStdString().c_str(), 0755) == 0) {
         return *this;
@@ -262,7 +263,7 @@ size_t APath::fileSize() const {
 #if AUI_PLATFORM_WIN
 struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
+    _wstat64(aui::win32::toWchar(*this), &s);
     return s;
 }
 #else
@@ -286,15 +287,15 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     result.resize(MAX_PATH);
     switch (path) {
         case APPDATA:
-            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
             break;
 
         case TEMP:
-            GetTempPath(result.length(), result.data());
+            GetTempPath(result.length(), aui::win32::toWchar(result));
             break;
 
         case HOME:
-            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, result.data());
+            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
             break;
 
         default:
@@ -316,7 +317,8 @@ APath APath::withoutUppermostFolder() const {
 APath APath::workingDir() {
     APath p;
     p.resize(0x800);
-    p.resize(GetCurrentDirectory(0x800, p.data()));
+    p.resize(GetCurrentDirectory(p.length(), aui::win32::toWchar(p)));
+    p.replaceAll('\\', '/');
     return p;
 }
 
@@ -413,7 +415,7 @@ time_t APath::fileModifyTime() const {
 
 void APath::move(const APath& source, const APath& destination) {
 #if AUI_PLATFORM_WIN
-    if (MoveFile(source.c_str(), destination.c_str()) == 0) {
+    if (MoveFile(aui::win32::toWchar(source.c_str()), aui::win32::toWchar(destination.c_str())) == 0) {
 #else
     if (rename(source.toStdString().c_str(), destination.toStdString().c_str())) {
 #endif
@@ -438,7 +440,7 @@ const APath& APath::touch() const {
 
 const APath& APath::chmod(int newMode) const {
 #if AUI_PLATFORM_WIN
-    if (::_wchmod(c_str(), newMode) != 0)
+    if (::_wchmod(aui::win32::toWchar(*this), newMode) != 0)
 #else
     if (::chmod(toStdString().c_str(), newMode) != 0)
 #endif

@@ -65,7 +65,7 @@ AMimedData Ole::toMime(IDataObject* dataObject) {
                 if (medium.tymed != TYMED_HGLOBAL) break;
 
                 ScopedHGlobal accessor(medium.hGlobal);
-                std::wstring text((const wchar_t*)accessor.data(), accessor.size());
+                AString text((const char16_t*)accessor.data(), accessor.size());
 
                 result.setText(text);
                 break;
@@ -90,7 +90,7 @@ AMimedData Ole::toMime(IDataObject* dataObject) {
                 for (auto current = reinterpret_cast<const wchar_t*>(begin); current < end;) {
                     auto nullTerminator = std::find(current, end, wchar_t('\0'));
                     if (nullTerminator == end || current == nullTerminator) break;
-                    pathList << AUrl::file(APath(current, nullTerminator - current));
+                    pathList << AUrl::file(APath((char16_t*)current, nullTerminator - current));
                     current = nullTerminator + 1;
                 }
 

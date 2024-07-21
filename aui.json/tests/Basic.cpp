@@ -143,3 +143,10 @@ TEST(Json, Utf8Sequence1)
     auto v = AJson::fromString(R"(["\u0425\u0443\u0439"])");
     EXPECT_EQ(v.asArray()[0].asString(), "Хуй");
 }
+
+TEST(Json, Utf8Sequence2)
+{
+    auto v = AJson::fromString(R"(["\ud83e\udd21"])");
+    EXPECT_EQ(v.asArray()[0].asString(), "🤡");
+}
+

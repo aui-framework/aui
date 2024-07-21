@@ -92,9 +92,10 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
 #include <windows.h>
 
 ALanguageCode AI18n::userLanguage() {
-    wchar_t buf[64];
-    GetUserDefaultLocaleName(buf, sizeof(buf) / 2);
-    return AString(buf);
+    AString result;
+    result.resize(64);
+    result.resize(GetUserDefaultLocaleName(aui::win32::toWchar(result), result.length()));
+    return result;
 }
 
 #else

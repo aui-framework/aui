@@ -93,3 +93,8 @@ TEST(Strings, ReplaceAll7) {
 TEST(Strings, ReplaceAll8) {
     EXPECT_EQ("abcdef"_as.replaceAll("bcd", ""), "aef");
 }
+
+TEST(Strings, Utf8) {
+    EXPECT_EQ("🤡"_as, "🤡");
+    EXPECT_EQ("🤡"_as.toStdString(), "🤡");
+}

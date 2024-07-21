@@ -264,7 +264,7 @@ void AAbstractTypeableView::copyToClipboard() const {
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
-void AAbstractTypeableView::enterChar(wchar_t c)
+void AAbstractTypeableView::enterChar(char16_t c)
 {
     if (AInput::isKeyDown(AInput::LBUTTON) ||
         AInput::isKeyDown(AInput::LCONTROL) ||

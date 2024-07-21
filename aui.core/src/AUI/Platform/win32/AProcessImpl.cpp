@@ -34,9 +34,9 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 
 
     sei.lpVerb = L"runas";
-    sei.lpFile = applicationFile.c_str();
-    sei.lpParameters = args.c_str();
-    sei.lpDirectory = workingDirectory.c_str();
+    sei.lpFile = aui::win32::toWchar(applicationFile.c_str());
+    sei.lpParameters = aui::win32::toWchar(args.c_str());
+    sei.lpDirectory = aui::win32::toWchar(workingDirectory.c_str());
     sei.hwnd = NULL;
     sei.nShow = SW_NORMAL;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -64,9 +64,11 @@ public:
     }
 
     APath getPathToExecutable() override {
-        wchar_t buf[0x800];
-        auto length = GetModuleFileNameEx(mHandle, nullptr, buf, sizeof(buf));
-        return APath(buf, length);
+        APath result;
+        result.resize(0x1000);
+        result.resize(GetModuleFileNameEx(mHandle, nullptr, aui::win32::toWchar(result), result.length()));
+        result.replaceAll('\\', '/');
+        return result;
     }
 
     int waitForExitCode() override {
@@ -79,9 +81,11 @@ public:
     }
 
     APath getModuleName() override {
-        wchar_t buf[0x800];
-        auto length = GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return APath(buf, length).filename();
+        APath result;
+        result.resize(0x1000);
+        result.resize(GetProcessImageFileName(mHandle, aui::win32::toWchar(result), result.length()));
+        result.replaceAll('\\', '/');
+        return result;
     }
 
     uint32_t getPid() const noexcept override {
@@ -173,13 +177,13 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     });
 
     if (!CreateProcess(nullptr,
-                       const_cast<wchar_t*>(commandLine.c_str()),
+                       const_cast<wchar_t*>(aui::win32::toWchar(commandLine.c_str())),
                        nullptr,
                        nullptr,
                        true,
                        0,
                        nullptr,
-                       mWorkingDirectory.empty() ? nullptr : mWorkingDirectory.c_str(),
+                       mWorkingDirectory.empty() ? nullptr : aui::win32::toWchar(mWorkingDirectory),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mApplicationFile;

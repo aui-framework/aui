@@ -128,14 +128,16 @@ public:
     APath(const char* utf8) noexcept: AString(utf8) {
         removeBackSlashes();
     }
+
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-pointer-arithmetic)
     APath(const char* utf8, std::size_t length) noexcept: AString(utf8, utf8 + length) {
         removeBackSlashes();
     }
-    APath(const wchar_t * str) noexcept: AString(str) {
+    APath(const char16_t * str) noexcept: AString(str) {
         removeBackSlashes();
     }
 
-    APath(const wchar_t * str, std::size_t length) noexcept: AString(str, str + length) {
+    APath(const char16_t * str, std::size_t length) noexcept: AString(str, str + length) {
         removeBackSlashes();
     }
 
