@@ -124,7 +124,6 @@ private:
     _<ASoundResampler> mResampledStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
-    AMutex mSync;
 
     virtual void playImpl() = 0;
     virtual void pauseImpl() = 0;
