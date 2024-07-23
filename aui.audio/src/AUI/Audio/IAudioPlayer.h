@@ -59,10 +59,7 @@ public:
      * sound stream would be rewind.
      * @param loop New loop flag
      */
-    void setLoop(bool loop) {
-        mLoop = loop;
-        onLoopSet();
-    }
+    void setLoop(bool loop);
 
     /**
      * @return Current loop flag
@@ -76,11 +73,7 @@ public:
      * @brief Set level of volume.
      * @param volume Integer number from 0 to 256 inclusively, works linear
      */
-    void setVolume(aui::audio::VolumeLevel volume) {
-        mVolume = volume;
-        AUI_NULLSAFE(mResampledStream)->setVolume(volume);
-        onVolumeSet();
-    }
+    void setVolume(aui::audio::VolumeLevel volume);
 
     /**
      * @return Current volume level.
@@ -95,18 +88,13 @@ public:
      * @details
      * See IAudioPlayer::finished for listening for this event.
      */
-    void onFinished() {
-        emit finished;
-    }
+    void onFinished();
 
     const AUrl& url() const noexcept {
         return mUrl;
     }
 
-    void rewind() {
-        release();
-        initialize();
-    }
+    void rewind();
 
 signals:
     /**
@@ -136,6 +124,7 @@ private:
     _<ASoundResampler> mResampledStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
+    AMutex mSync;
 
     virtual void playImpl() = 0;
     virtual void pauseImpl() = 0;

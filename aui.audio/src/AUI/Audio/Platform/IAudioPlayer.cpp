@@ -31,6 +31,7 @@ void IAudioPlayer::initialize() {
 }
 
 void IAudioPlayer::play() {
+    std::unique_lock lock(mSync);
     if (mPlaybackStatus != PlaybackStatus::PLAYING) {
         playImpl();
         mPlaybackStatus = PlaybackStatus::PLAYING;
@@ -38,6 +39,7 @@ void IAudioPlayer::play() {
 }
 
 void IAudioPlayer::pause() {
+    std::unique_lock lock(mSync);
     if (mPlaybackStatus == PlaybackStatus::PLAYING) {
         pauseImpl();
         mPlaybackStatus = PlaybackStatus::PAUSED;
@@ -45,6 +47,7 @@ void IAudioPlayer::pause() {
 }
 
 void IAudioPlayer::stop() {
+    std::unique_lock lock(mSync);
     if (mPlaybackStatus != PlaybackStatus::STOPPED) {
         stopImpl();
         mPlaybackStatus = PlaybackStatus::STOPPED;
@@ -54,4 +57,30 @@ void IAudioPlayer::stop() {
 void IAudioPlayer::release() {
     mResampledStream.reset();
     mSourceStream.reset();
+}
+
+void IAudioPlayer::setLoop(bool loop) {
+    mLoop = loop;
+    onLoopSet();
+}
+
+void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
+    mVolume = volume;
+    AUI_NULLSAFE(mResampledStream)->setVolume(volume);
+    onVolumeSet();
+}
+
+void IAudioPlayer::onFinished() {
+    if (!loop()) {
+        std::unique_lock lock(mSync);
+        mPlaybackStatus = PlaybackStatus::STOPPED;
+        release();
+    }
+    emit finished;
+}
+
+void IAudioPlayer::rewind() {
+    std::unique_lock lock(mSync);
+    release();
+    initialize();
 }
