@@ -55,3 +55,27 @@ void IAudioPlayer::release() {
     mResampledStream.reset();
     mSourceStream.reset();
 }
+
+void IAudioPlayer::setLoop(bool loop) {
+    mLoop = loop;
+    onLoopSet();
+}
+
+void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
+    mVolume = volume;
+    AUI_NULLSAFE(mResampledStream)->setVolume(volume);
+    onVolumeSet();
+}
+
+void IAudioPlayer::onFinished() {
+    if (!loop()) {
+        mPlaybackStatus = PlaybackStatus::STOPPED;
+        release();
+    }
+    emit finished;
+}
+
+void IAudioPlayer::rewind() {
+    release();
+    initialize();
+}
