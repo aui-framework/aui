@@ -164,11 +164,11 @@ private:
     bool mMouseEntered = false;
 
     /**
-     * @brief If set to true, allows triggering click on other views while holding pointer on view
+     * @brief Determines if pressing the view allows triggering click on other views
      * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
-     *       setting this to true flag this flag allows to click on others views without releasing pointer from this view
+     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
      */
-    bool mBlockClicksWhenPressed = false;
+    bool mBlockClicksWhenPressed = true;
 
 protected:
     /**
