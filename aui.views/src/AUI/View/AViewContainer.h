@@ -67,6 +67,11 @@ public:
     struct PointerEventsMapping {
         APointerIndex pointerIndex;
         _weak<AView> targetView;
+        /**
+         * @brief true if the view or any child (direct or indirect) of the view blocks clicks when pressed
+         * @see mBlockClicksWhenPressed
+         */
+        bool isBlockClicksWhenPressed = true;
     };
 
     AViewContainer();

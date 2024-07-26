@@ -284,8 +284,13 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
     APointerReleasedEvent copy = event;
+    auto nonBlockingClicksPointers = std::count_if(pointerEventsMapping().begin(), pointerEventsMapping().end(),
+                                                   [](const auto &event) {
+                                                       return !event.isBlockClicksWhenPressed;
+                                                   });
     // in case of multitouch, we should not treat pointer release event as a click.
-    copy.triggerClick = pointerEventsMapping().size() < 2 && !mPreventClickOnPointerRelease.valueOr(true);
+    copy.triggerClick = pointerEventsMapping().size() - nonBlockingClicksPointers < 2 &&
+                        !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
 
 #if AUI_SHOW_TOUCHES

@@ -163,6 +163,13 @@ private:
      */
     bool mMouseEntered = false;
 
+    /**
+     * @brief Determines if pressing the view allows triggering click on other views
+     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     */
+    bool mBlockClicksWhenPressed = true;
+
 protected:
     /**
      * @brief Parent AView.
@@ -631,6 +638,13 @@ public:
         setGeometry(position.x, position.y, size.x, size.y);
     }
 
+    bool isBlockClicksWhenPressed() const noexcept {
+        return mBlockClicksWhenPressed;
+    }
+
+    void setBlockClicksWhenPressed(bool value) noexcept {
+        mBlockClicksWhenPressed = value;
+    }
 
     /**
      * @brief Fixed size.
