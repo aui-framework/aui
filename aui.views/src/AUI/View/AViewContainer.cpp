@@ -236,7 +236,9 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
-        mPointerEventsMapping.push_back({event.pointerIndex, p});
+        mPointerEventsMapping.push_back({event.pointerIndex, p, isBlockClicksWhenPressed() && p->isBlockClicksWhenPressed()});
+        auto& pointerEvent = mPointerEventsMapping.back();
+        pointerEvent.isBlockClicksWhenPressed &= isBlockClicksWhenPressed();
         if (p->capturesFocus()) {
             p->focus(false);
 
@@ -253,6 +255,16 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
+        pointerEvent.isBlockClicksWhenPressed &= p->isBlockClicksWhenPressed();
+        if (auto parent = getParent(); parent && !pointerEvent.isBlockClicksWhenPressed) {
+            auto it = std::find_if(parent->mPointerEventsMapping.begin(), parent->mPointerEventsMapping.end(),
+                                   [&](const auto &parentPointerEvent) {
+                                       return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
+                                   });
+            if (it != parent->mPointerEventsMapping.end()) {
+                it->isBlockClicksWhenPressed = false;
+            }
+        }
     }
 }
 
