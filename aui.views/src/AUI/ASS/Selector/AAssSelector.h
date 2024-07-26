@@ -17,6 +17,7 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/kAUI.h>
+#include <type_traits>
 #include <utility>
 
 class AView;
@@ -32,7 +33,7 @@ namespace ass {
         virtual ~IAssSubSelector() = default;
     };
 
-    class API_AUI_VIEWS AAssSelector {
+    class API_AUI_VIEWS AAssSelector final: public IAssSubSelector {
     private:
         AVector<_<IAssSubSelector>> mSubSelectors;
 
@@ -59,7 +60,7 @@ namespace ass {
         AAssSelector(SubSelectors&&... subSelectors) {
             processSubSelectors(std::forward<SubSelectors>(subSelectors)...);
         }
-        AAssSelector(AAssSelector&& move): mSubSelectors(std::move(move.mSubSelectors)) {
+        AAssSelector(AAssSelector&& move) noexcept: mSubSelectors(std::move(move.mSubSelectors)) {
 
         }
         explicit AAssSelector(std::nullptr_t) {}
@@ -79,6 +80,11 @@ namespace ass {
             }
             return false;
         }
+
+        bool isPossiblyApplicable(AView* view) override {
+            return constMe()->isPossiblyApplicable(view);
+        }
+
         bool isStateApplicable(AView* view) const {
             for (const auto& s : mSubSelectors) {
                 if (s->isStateApplicable(view)) {
@@ -87,7 +93,13 @@ namespace ass {
             }
             return false;
         }
+        bool isStateApplicable(AView* view) override {
+            return constMe()->isStateApplicable(view);
+        }
         void setupConnections(AView* view, const _<AAssHelper>& helper) const;
+        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+            constMe()->setupConnections(view, helper);
+        }
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void addSubSelector(SubSelector&& subSelector) {
             processSubSelector(std::forward<SubSelector>(subSelector));
@@ -96,6 +108,18 @@ namespace ass {
         [[nodiscard]]
         const AVector<_<IAssSubSelector>>& getSubSelectors() const {
             return mSubSelectors;
+        }
+
+        static AAssSelector makeCopy(const AAssSelector& from) {
+            AAssSelector result;
+            result.mSubSelectors = from.mSubSelectors;
+            return result;
+        }
+
+    private:
+        const AAssSelector* constMe() {
+            // NOLINTNEXTLINE(*-const-cast)
+            return const_cast<const AAssSelector*>(this);
         }
     };
 

@@ -17,9 +17,9 @@ namespace ass {
     struct Rule : PropertyList {
     public:
         template<typename... Declarations>
-        Rule(ass::AAssSelector&& selector, Declarations&& ... declarations):
+        Rule(ass::AAssSelector selector, Declarations&& ... declarations):
                 PropertyList(std::forward<Declarations>(declarations)...),
-                mSelector(std::forward<ass::AAssSelector>(selector)) {
+                mSelector(std::move(selector)) {
         }
 
         [[nodiscard]] const ass::AAssSelector& getSelector() const {
