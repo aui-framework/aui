@@ -115,6 +115,21 @@ public:
         return advance;
     }
 
+    AString trimStringToWidth(const FontEntry &charset, AString::iterator begin, AString::iterator end, float maxWidth) {
+        float width = 0;
+        for (auto i = begin; i != end; i++) {
+            if (*i == '\n') {
+                return AString(begin, i);
+            }
+            float charWidth = length(charset, i, std::next(i));
+            if (width + charWidth > maxWidth) {
+                return AString(begin, i);
+            }
+            width += charWidth;
+        }
+        return AString(begin, end);
+    }
+
 
 	bool isHasKerning();
 
