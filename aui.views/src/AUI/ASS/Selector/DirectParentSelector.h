@@ -55,8 +55,8 @@ namespace ass {
     };
 
     template <typename L, typename R, std::enable_if_t<std::is_base_of_v<IAssSubSelector, L> && std::is_base_of_v<IAssSubSelector, R>, bool> = true>
-    DirectParentSubSelector<L, R> operator>(L&& l, R&& r) {
-        return DirectParentSubSelector<L, R>(std::forward<L>(l), std::forward<R>(r));
+    DirectParentSubSelector<L, R> operator>(L l, R r) {
+        return DirectParentSubSelector<L, R>(std::move(l), std::move(r));
     }
 }
 

@@ -675,7 +675,7 @@ AString AWindowManager::xClipboardPasteImpl() {
                       CurrentTime);
 
     XEvent ev;
-    for (;;)
+    for (int i = 0; i < 30; ++i)
     {
         XNextEvent(CommonRenderingContext::ourDisplay, &ev);
         switch (ev.type)
@@ -713,6 +713,7 @@ AString AWindowManager::xClipboardPasteImpl() {
                 };
         }
     }
+    return "";
 }
 
 void AWindowManager::xClipboardCopyImpl(const AString& text) {
