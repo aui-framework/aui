@@ -54,11 +54,11 @@ void ABaseWindow::updateDpi() {
     mDpiRatio = [&]() -> float {
         float systemDpi = fetchDpiFromSystem();
         float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
-        if (!mScalingParams.maximalWindowSizeDp) {
+        if (!mScalingParams.minimalWindowSizeDp) {
             return ratio;
         }
 
-        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.maximalWindowSizeDp);
+        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
         float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
         maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
         return glm::min(ratio, maxDpiRatio);
