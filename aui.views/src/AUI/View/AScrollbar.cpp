@@ -156,6 +156,8 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     int handlePos = max > 0 ? float(mCurrentScroll) / max * availableSpace
                             : 0;
 
+    handlePos = glm::max(handlePos, 0);
+
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
             mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
