@@ -748,6 +748,7 @@ public:
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
+//    ALOG_DEBUG("OpenGL") << "prerenderString: " << text;
     if (text.empty()) return nullptr;
 
     OpenGLMultiStringCanvas c(this, fs);

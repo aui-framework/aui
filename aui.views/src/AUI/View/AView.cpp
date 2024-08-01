@@ -467,6 +467,7 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }
@@ -475,6 +476,7 @@ void AView::setPosition(glm::ivec2 position) {
 }
 void AView::setSize(glm::ivec2 size)
 {
+    mSkipUntilLayoutUpdate = false;
     auto newSize = mSize;
     if (mFixedSize.x != 0)
     {
@@ -506,6 +508,7 @@ void AView::setSize(glm::ivec2 size)
 }
 
 void AView::setGeometry(int x, int y, int width, int height) {
+    mSkipUntilLayoutUpdate = false;
     auto oldPosition = mPosition;
     auto oldSize = mSize;
     setPosition({ x, y });
@@ -518,6 +521,9 @@ void AView::setGeometry(int x, int y, int width, int height) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
+    if (mSkipUntilLayoutUpdate) {
+        return false;
+    }
     return true;
 }
 

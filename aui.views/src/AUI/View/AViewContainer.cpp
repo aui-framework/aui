@@ -26,17 +26,22 @@
 static constexpr auto LOG_TAG = "AViewContainer";
 
 void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
-    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) {
+    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) [[unlikely]] {
         return;
     }
 
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) {
+    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) [[unlikely]] {
         return;
     }
 
     auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
-    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) {
+    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) [[unlikely]] {
+        return;
+    }
+
+    if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
+        view->mSkipUntilLayoutUpdate = false;
         return;
     }
 
@@ -78,6 +83,7 @@ AViewContainer::~AViewContainer() {
 void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
         view->onViewGraphSubtreeChanged();
     }
@@ -93,6 +99,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 
 void AViewContainer::addView(const _<AView>& view) {
     AUI_NULLSAFE(view->mParent)->removeView(view);
+    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
@@ -102,6 +109,7 @@ void AViewContainer::addView(const _<AView>& view) {
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
+    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
@@ -112,6 +120,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
+    view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view, index);
@@ -565,6 +574,7 @@ void AViewContainer::setViews(AVector<_<AView>> views) {
 
     for (const auto& view : mViews) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         if (mLayout)
             mLayout->addView(view);
     }

@@ -252,6 +252,15 @@ protected:
      */
     AVector<AString> mAssNames;
 
+    /**
+     * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
+     * AView::setGeometry.
+     * @details
+     * This flag addresses the issue when some container is filled with views by addView during several frames, causing
+     * to draw them then their layout is not processed yet.
+     */
+    bool mSkipUntilLayoutUpdate = true;
+
     void requestLayoutUpdate();
 
     /**
@@ -277,7 +286,6 @@ protected:
      * @return menu model
      */
     virtual AMenuModel composeContextMenu();
-
 
     /**
      * @brief Called when direct or indirect parent has changed.
