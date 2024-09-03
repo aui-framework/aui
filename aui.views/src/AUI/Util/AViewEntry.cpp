@@ -16,6 +16,9 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
+    if (mView->getVisibility() == Visibility::GONE) {
+        return {0, 0};
+    }
     return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
             ALayoutDirection::NONE) + mView->getMargin().vertical() };
 }
