@@ -409,8 +409,12 @@ void AWindowManager::loop() {
             }
         }
 
-        if (poll(ps, std::size(ps), -1) < 0) {
+        // [1000 ms timeout] sometimes, leaving an always rerendering window (game) work a long time deadlocks the loop
+        // in infinite poll.
+        if (int p = poll(ps, std::size(ps), 1000); p < 0) {
             aui::impl::unix_based::lastErrorToException("eventloop poll failed");
+        } else if (p == 0) {
+            continue;
         }
         mFastPathNotify = false;
         if (ps[1].revents & POLLIN) {
