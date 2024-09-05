@@ -66,6 +66,8 @@ public:
 
     void invalidateFont() override;
 
+    void updateLayout() override;
+
 
 private:
     class CharEntry: public AWordWrappingEngine::Entry {
