@@ -54,7 +54,7 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
             break;
     }
 
-    switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {
+    switch (::MessageBox(window, aui::win32::toWchar(message), aui::win32::toWchar(title), flags)) {
         case IDOK:
             return ResultButton::OK;
         case IDCANCEL:

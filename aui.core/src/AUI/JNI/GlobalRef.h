@@ -30,7 +30,7 @@ namespace aui::jni {
                 mObject(nullptr) {
 
         }
-        GlobalRef(const jobject object):
+        GlobalRef(jobject object):
                 mObject(object ? aui::jni::env()->NewGlobalRef(object) : nullptr) {
 
         }

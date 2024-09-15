@@ -106,8 +106,6 @@ namespace aui::impl::json {
 
     template<typename... Items>
     struct my_tuple: std::tuple<Items...> {
-        using std::tuple<Items...>::tuple;
-
         my_tuple(Items... items): std::tuple<Items...>(std::move(items)...) {}
 
         template<typename T>

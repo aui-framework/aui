@@ -50,6 +50,6 @@ IDrawable::Cache& IDrawable::Cache::inst() {
 }
 
 AImage IDrawable::rasterize(glm::ivec2 imageSize) {
-    AUI_ASSERTX(false, "unimplemented");
+    AUI_ASSERT_NO_CONDITION("unimplemented");
     throw AException("unimplemented");
 }

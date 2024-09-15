@@ -37,13 +37,22 @@ MacosApp& MacosApp::inst() {
 MacosApp::MacosApp() {
     AUI_ASSERTX([NSThread isMainThread], "MacosApp should be used only in main thread");
     auto pool = [[NSAutoreleasePool alloc] init];
+    // NSString *d = [[[NSBundle mainBundle] bundleIdentifier];
     auto nsApp = [AUINSApplication sharedApplication];
-    //[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    auto menuBar = [[NSMenu alloc] initWithTitle:(@"AUI Application")];
     [nsApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    [nsApp setMainMenu:menuBar];
+    //[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+    auto mainMenu = [NSMenu new];
+    [nsApp setMainMenu:mainMenu];
 
-    [menuBar release];
+    auto appMenu = [NSMenu new];
+    auto appMenuItem = [NSMenuItem new];
+    [appMenu addItemWithTitle: @"About" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
+    [appMenu addItem: [NSMenuItem separatorItem]];
+    // [appMenu addItemWithTitle: @"Preferences…" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@","];
+    [appMenu addItemWithTitle: @"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+    [appMenuItem setSubmenu:appMenu];
+    [mainMenu addItem:appMenuItem];
+
     [pool release];
     mNsApp = nsApp;
 }

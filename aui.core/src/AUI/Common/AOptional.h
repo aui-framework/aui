@@ -238,7 +238,7 @@ public:
         } else if constexpr(isInvocable) {
             if constexpr (std::is_same_v<std::invoke_result_t<F>, void>) {
                 alternative();
-                AUI_ASSERTX(false, "should not have reached here");
+                AUI_ASSERT_NO_CONDITION("should not have reached here");
                 throw std::runtime_error("should not have reached here"); // stub exception
             } else {
                 return alternative();

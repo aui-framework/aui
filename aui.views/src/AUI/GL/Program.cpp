@@ -28,7 +28,14 @@ gl::Program::Program() {
 void gl::Program::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version)
 {
 #if AUI_PLATFORM_ANDROID
-	AString prefix = "precision mediump float;"
+	AString prefix;
+
+    if (version.empty()) {
+    } else {
+        prefix = "#version " + version + "\n";
+    }
+
+    prefix += "precision mediump float;"
 					 "precision mediump int;"
 					 ;
 #elif AUI_PLATFORM_APPLE

@@ -24,7 +24,7 @@ void ass::prop::Property<ass::TextShadow>::renderFor(AView* view) {
 
         {
             RenderHints::PushMatrix m;
-            ARender::translate({1, 1});
+            ARender::translate({mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
             label->doRenderText();
         }
     }

@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/View/ARadioButton.h>
 #include <AUI/View/ARadioGroup.h>
@@ -236,7 +231,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                             AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
                                         }),
                                         _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
-                                            AUI_ASSERTX(false, "assertion fail");
+                                            AUI_ASSERT_NO_CONDITION("assertion fail");
                                         }),
                                         _new<AButton>("Cause hang").connect(&AView::clicked, this, [&] {
                                             for (;;);
@@ -344,6 +339,22 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                 }
                                         },
                                 },
+                        },
+                        GroupBox {
+                            Label { "Scaling factor" },
+                            Horizontal {
+                                _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, [](int64_t x) {
+                                    AWindow::current()->setScalingParams({
+                                        .scalingFactor = x * 0.25f,
+                                        .minimalWindowSizeDp = std::nullopt
+                                    });
+                                }) let {
+                                    it->setMin(1);
+                                    it->setMax(12);
+                                    it->setValue(4);
+                                },
+                                Label{ "x0.25"}
+                            }
                         },
                         GroupBox {
                                 Label { "Fields" },

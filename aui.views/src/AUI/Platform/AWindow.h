@@ -22,6 +22,7 @@
 #include "AUI/Util/AMetric.h"
 #include "AWindowNativePtr.h"
 #include <AUI/Enum/WindowStyle.h>
+#include <AUI/Enum/AScreenOrientation.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -204,6 +205,13 @@ public:
      * When using in series with setSize(), do the setSize() first, when moveToCenter().
      */
     void moveToCenter();
+
+    /**
+     * @brief Controls mobile device's screen orientation when this window is on the foreground.
+     * @details
+     * Affects only mobile OSes. On window-based interfaces (desktop) does nothing.
+     */
+    void setMobileScreenOrientation(AScreenOrientation screenOrientation);
 
 signals:
     emits<> closed;

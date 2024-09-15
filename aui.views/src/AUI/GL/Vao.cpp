@@ -76,6 +76,9 @@ void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
 	{
 		newFlag = false;
 	}
+    if (dataSize == 0 || data == nullptr) {
+        return;
+    }
 	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index].handle);
 
 	// You can use the glBufferSubData function to update buffer contents, but doing so incurs a performance penalty

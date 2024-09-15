@@ -13,12 +13,13 @@
 // Created by alex2 on 07.11.2020.
 //
 
+#include "AI18n.h"
+
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Traits/strings.h>
 #include <AUI/Url/AUrl.h>
 #include <AUI/Util/ATokenizer.h>
-#include "AI18n.h"
-#include <AUI/Traits/strings.h>
-#include <AUI/Logging/ALogger.h>
-
+#include <AUI/Platform/ErrorToException.h>
 
 AI18n::AI18n() {
     // TODO hardcoded
@@ -92,9 +93,14 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
 #include <windows.h>
 
 ALanguageCode AI18n::userLanguage() {
-    wchar_t buf[64];
-    GetUserDefaultLocaleName(buf, sizeof(buf) / 2);
-    return AString(buf);
+    AString result;
+    result.resize(LOCALE_NAME_MAX_LENGTH);
+    int len = GetUserDefaultLocaleName(aui::win32::toWchar(result), result.length());
+    if (len == 0) {
+        aui::impl::lastErrorToException("could not get user language");
+    }
+    result.resize(len - 1);
+    return result;
 }
 
 #else

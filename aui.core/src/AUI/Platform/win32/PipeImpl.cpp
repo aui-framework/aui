@@ -29,7 +29,7 @@ Pipe::Pipe() {
 
     constexpr auto BUFFER_SIZE = 4096;
     auto pipeName = R"(\\.\Pipe\AuiAnonPipe.{}.{})"_format(GetCurrentProcessId(), nextUniqueId());
-    mOut = CreateNamedPipe(pipeName.c_str(),
+    mOut = CreateNamedPipe(aui::win32::toWchar(pipeName),
                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                            PIPE_TYPE_BYTE | PIPE_WAIT,
                            1,
@@ -41,7 +41,7 @@ Pipe::Pipe() {
     if (!mOut) {
         throw AException("CreateNamedPipe failed");
     }
-    mIn = CreateFile(pipeName.c_str(),
+    mIn = CreateFile(aui::win32::toWchar(pipeName),
                      GENERIC_WRITE | FILE_FLAG_OVERLAPPED,
                      false, // no sharing
                      &securityAttributes,

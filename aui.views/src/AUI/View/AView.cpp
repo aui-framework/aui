@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AView.h"
 #include "AUI/Common/AException.h"
@@ -429,7 +424,7 @@ void AView::onFocusLost()
     mHasFocus.set(this, false);
 }
 
-void AView::onCharEntered(wchar_t c)
+void AView::onCharEntered(char16_t c)
 {
 
 }
@@ -472,6 +467,7 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }
@@ -480,6 +476,7 @@ void AView::setPosition(glm::ivec2 position) {
 }
 void AView::setSize(glm::ivec2 size)
 {
+    mSkipUntilLayoutUpdate = false;
     auto newSize = mSize;
     if (mFixedSize.x != 0)
     {
@@ -511,6 +508,7 @@ void AView::setSize(glm::ivec2 size)
 }
 
 void AView::setGeometry(int x, int y, int width, int height) {
+    mSkipUntilLayoutUpdate = false;
     auto oldPosition = mPosition;
     auto oldSize = mSize;
     setPosition({ x, y });
@@ -523,6 +521,9 @@ void AView::setGeometry(int x, int y, int width, int height) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
+    if (mSkipUntilLayoutUpdate) {
+        return false;
+    }
     return true;
 }
 

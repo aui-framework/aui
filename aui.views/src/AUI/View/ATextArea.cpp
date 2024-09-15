@@ -177,7 +177,7 @@ public:
         }
     }
 
-    void onCharEntered(wchar_t c) override {
+    void onCharEntered(char16_t c) override {
         AView::onCharEntered(c);
         if (mTextArea.mEditable) {
             enterChar(c);
@@ -273,7 +273,7 @@ protected:
         return true;
     }
 
-    bool typeableInsert(size_t at, wchar_t toInsert) override {
+    bool typeableInsert(size_t at, char16_t toInsert) override {
         if (!mTextArea.mEditable) {
             return false;
         }
@@ -312,7 +312,7 @@ protected:
         return false;
     }
 
-    size_t typeableFind(wchar_t c, size_t startPos) override {
+    size_t typeableFind(char16_t c, size_t startPos) override {
         size_t s = 0;
         for (auto& l : mLines) {
             size_t absoluteEnd = s + l.text.length();
@@ -334,7 +334,7 @@ protected:
         return AString::NPOS;
     }
 
-    size_t typeableReverseFind(wchar_t c, size_t startPos) override {
+    size_t typeableReverseFind(char16_t c, size_t startPos) override {
         return AString::NPOS;
     }
 

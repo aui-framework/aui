@@ -17,6 +17,7 @@
 #include "AUI/IO/AEOFException.h"
 #include "AUI/IO/AIOException.h"
 #include "AUI/Thread/AThread.h"
+#include "AUI/Platform/ErrorToException.h"
 
 
 #if AUI_PLATFORM_WIN
@@ -81,22 +82,7 @@ AString AAbstractSocket::getErrorString()
 {
 #if AUI_PLATFORM_WIN
 	int error = WSAGetLastError();
-	wchar_t* str;
-	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(error), 0,
-	               (LPWSTR)&str, 0, nullptr);
-	AString s;
-	switch (error)
-	{
-	case WSAETIMEDOUT:
-		s = "ETIMEDOUT (connection timeout)";
-		break;
-	case WSAECONNRESET:
-		s = "ECONNRESET (connection reset)";
-		break;
-	default:
-		s = AString::number(error);
-	}
-	return s + ": " + AString(str);
+	return aui::impl::formatSystemError(error).description;
 #else
 	return strerror(errno);
 #endif

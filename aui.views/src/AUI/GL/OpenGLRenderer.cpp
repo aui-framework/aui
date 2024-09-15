@@ -168,6 +168,19 @@ struct TexturedShaderHelper {
 
         auto tex = _cast<OpenGLTexture2D>(brush.texture);
         tex->bind();
+        tex->texture().setupRepeat();
+        switch (brush.repeat) {
+            case Repeat::NONE:
+                tex->texture().setupClampToEdge();
+                break;
+            case Repeat::X_Y:
+                tex->texture().setupRepeat();
+                break;
+            case Repeat::X:
+            case Repeat::Y: {
+                AUI_ASSERT_NO_CONDITION("Repeat::X and Repeat::Y are deprecated");
+            }
+        }
         switch (brush.imageRendering) {
             case ImageRendering::PIXELATED:
                 tex->texture().setupNearest();
@@ -735,6 +748,7 @@ public:
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
+//    ALOG_DEBUG("OpenGL") << "prerenderString: " << text;
     if (text.empty()) return nullptr;
 
     OpenGLMultiStringCanvas c(this, fs);

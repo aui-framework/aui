@@ -10,6 +10,7 @@
  */
 
 #include "AViewContainer.h"
+#include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
 #include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
@@ -25,17 +26,22 @@
 static constexpr auto LOG_TAG = "AViewContainer";
 
 void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
-    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) {
+    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) [[unlikely]] {
         return;
     }
 
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) {
+    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) [[unlikely]] {
         return;
     }
 
     auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
-    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) {
+    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) [[unlikely]] {
+        return;
+    }
+
+    if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
+        view->mSkipUntilLayoutUpdate = false;
         return;
     }
 
@@ -67,6 +73,7 @@ AViewContainer::AViewContainer() {
 }
 
 AViewContainer::~AViewContainer() {
+    mLayout = nullptr;
     for (auto& view: mViews) {
         view->mParent = nullptr;
     }
@@ -76,6 +83,7 @@ AViewContainer::~AViewContainer() {
 void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
         view->onViewGraphSubtreeChanged();
     }
@@ -91,6 +99,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 
 void AViewContainer::addView(const _<AView>& view) {
     AUI_NULLSAFE(view->mParent)->removeView(view);
+    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
@@ -100,6 +109,7 @@ void AViewContainer::addView(const _<AView>& view) {
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
+    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
@@ -110,6 +120,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
+    view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view, index);
@@ -138,9 +149,8 @@ void AViewContainer::setLayout(_<ALayout> layout) {
 void AViewContainer::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
     if (!index) return;
-    if (!mLayout) return;
-    mLayout->removeView(view, *index);
     view->mParent = nullptr;
+    AUI_NULLSAFE(mLayout)->removeView(view, *index);
     invalidateCaches();
     emit childrenChanged;
 }
@@ -235,7 +245,9 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
-        mPointerEventsMapping.push_back({event.pointerIndex, p});
+        mPointerEventsMapping.push_back({event.pointerIndex, p, isBlockClicksWhenPressed() && p->isBlockClicksWhenPressed()});
+        auto& pointerEvent = mPointerEventsMapping.back();
+        pointerEvent.isBlockClicksWhenPressed &= isBlockClicksWhenPressed();
         if (p->capturesFocus()) {
             p->focus(false);
 
@@ -252,6 +264,16 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
+        pointerEvent.isBlockClicksWhenPressed &= p->isBlockClicksWhenPressed();
+        if (auto parent = getParent(); parent && !pointerEvent.isBlockClicksWhenPressed) {
+            auto it = std::find_if(parent->mPointerEventsMapping.begin(), parent->mPointerEventsMapping.end(),
+                                   [&](const auto &parentPointerEvent) {
+                                       return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
+                                   });
+            if (it != parent->mPointerEventsMapping.end()) {
+                it->isBlockClicksWhenPressed = false;
+            }
+        }
     }
 }
 
@@ -494,7 +516,7 @@ void AViewContainer::onKeyUp(AInput::Key key) {
     AUI_NULLSAFE(focusChainTarget())->onKeyUp(key);
 }
 
-void AViewContainer::onCharEntered(wchar_t c) {
+void AViewContainer::onCharEntered(char16_t c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
 }
@@ -552,6 +574,7 @@ void AViewContainer::setViews(AVector<_<AView>> views) {
 
     for (const auto& view : mViews) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         if (mLayout)
             mLayout->addView(view);
     }

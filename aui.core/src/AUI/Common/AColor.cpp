@@ -30,34 +30,34 @@ AColor::AColor(const AString& s)
 
 			// #fff
 			case 4:
-				r = static_cast<float>(s.substr(1, 1).toNumberHex()) / 15.f;
-				g = static_cast<float>(s.substr(2, 1).toNumberHex()) / 15.f;
-				b = static_cast<float>(s.substr(3, 1).toNumberHex()) / 15.f;
+				r = static_cast<float>(s.substr(1, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				g = static_cast<float>(s.substr(2, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				b = static_cast<float>(s.substr(3, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
 				a = 1.f;
 				break;
 
 			// #ffff
 			case 5:
-				r = static_cast<float>(s.substr(1, 1).toNumberHex()) / 15.f;
-				g = static_cast<float>(s.substr(2, 1).toNumberHex()) / 15.f;
-				b = static_cast<float>(s.substr(3, 1).toNumberHex()) / 15.f;
-				a = static_cast<float>(s.substr(4, 1).toNumberHex()) / 15.f;
+				r = static_cast<float>(s.substr(1, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				g = static_cast<float>(s.substr(2, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				b = static_cast<float>(s.substr(3, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				a = static_cast<float>(s.substr(4, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
 				break;
 				
 			// #ffffff
 			case 7:
-				r = static_cast<float>(s.substr(1, 2).toNumberHex()) / 255.f;
-				g = static_cast<float>(s.substr(3, 2).toNumberHex()) / 255.f;
-				b = static_cast<float>(s.substr(5, 2).toNumberHex()) / 255.f;
+				r = static_cast<float>(s.substr(1, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				g = static_cast<float>(s.substr(3, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				b = static_cast<float>(s.substr(5, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
 				a = 1.f;
 				break;
 				
 			// #ffffffff
 			case 9:
-				r = static_cast<float>(s.substr(1, 2).toNumberHex()) / 255.f;
-				g = static_cast<float>(s.substr(3, 2).toNumberHex()) / 255.f;
-				b = static_cast<float>(s.substr(5, 2).toNumberHex()) / 255.f;
-				a = static_cast<float>(s.substr(7, 2).toNumberHex()) / 255.f;
+				r = static_cast<float>(s.substr(1, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				g = static_cast<float>(s.substr(3, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				b = static_cast<float>(s.substr(5, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				a = static_cast<float>(s.substr(7, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
 				break;
 			}
 		}

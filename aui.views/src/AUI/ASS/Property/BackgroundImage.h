@@ -41,6 +41,11 @@ namespace ass {
         CENTER,
 
         /**
+         * @brief Tile texture. Use with Repeat::X_y.
+         */
+        TILE,
+
+        /**
          * @brief Resize image to view's content area without keeping aspect ratio.
          */
         FIT_PADDING,

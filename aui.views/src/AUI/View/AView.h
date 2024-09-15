@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -168,6 +163,13 @@ private:
      */
     bool mMouseEntered = false;
 
+    /**
+     * @brief Determines if pressing the view allows triggering click on other views
+     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     */
+    bool mBlockClicksWhenPressed = true;
+
 protected:
     /**
      * @brief Parent AView.
@@ -250,6 +252,15 @@ protected:
      */
     AVector<AString> mAssNames;
 
+    /**
+     * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
+     * AView::setGeometry.
+     * @details
+     * This flag addresses the issue when some container is filled with views by addView during several frames, causing
+     * to draw them then their layout is not processed yet.
+     */
+    bool mSkipUntilLayoutUpdate = true;
+
     void requestLayoutUpdate();
 
     /**
@@ -275,7 +286,6 @@ protected:
      * @return menu model
      */
     virtual AMenuModel composeContextMenu();
-
 
     /**
      * @brief Called when direct or indirect parent has changed.
@@ -636,6 +646,13 @@ public:
         setGeometry(position.x, position.y, size.x, size.y);
     }
 
+    bool isBlockClicksWhenPressed() const noexcept {
+        return mBlockClicksWhenPressed;
+    }
+
+    void setBlockClicksWhenPressed(bool value) noexcept {
+        mBlockClicksWhenPressed = value;
+    }
 
     /**
      * @brief Fixed size.
@@ -847,7 +864,7 @@ public:
     virtual void onKeyUp(AInput::Key key);
     virtual void onFocusAcquired();
     virtual void onFocusLost();
-    virtual void onCharEntered(wchar_t c);
+    virtual void onCharEntered(char16_t c);
     /**
      * @return true if this AView accepts tab focus
      */

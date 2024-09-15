@@ -27,7 +27,7 @@ AString AByteBufferView::toBase64String() const {
     size_t resultLength = 4 * ((size() + 2) / 3);
     AString result(resultLength, '\0');
     size_t i;
-    auto p = const_cast<wchar_t *>(result.c_str());
+    auto p = const_cast<char16_t*>(result.c_str());
 
     for (i = 0; i < size() - 2; i += 3) {
         *p++ = BASE64_CHARS[(data()[i] >> 2) & 0x3F];

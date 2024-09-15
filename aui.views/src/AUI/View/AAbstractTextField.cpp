@@ -151,7 +151,7 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     return true;
 }
 
-bool AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert
@@ -160,11 +160,11 @@ bool AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
     return true;
 }
 
-size_t AAbstractTextField::typeableFind(wchar_t c, size_t startPos) {
+size_t AAbstractTextField::typeableFind(char16_t c, size_t startPos) {
     return mContents.find(c, startPos);
 }
 
-size_t AAbstractTextField::typeableReverseFind(wchar_t c, size_t startPos) {
+size_t AAbstractTextField::typeableReverseFind(char16_t c, size_t startPos) {
     return mContents.rfind(c, startPos);
 }
 
@@ -180,7 +180,7 @@ void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextField::onCharEntered(wchar_t c) {
+void AAbstractTextField::onCharEntered(char16_t c) {
     mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;

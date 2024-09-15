@@ -25,7 +25,7 @@ aui::impl::Error aui::impl::formatSystemError(int errorCode) {
     size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                 NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
 
-    AString message(messageBuffer, size);
+    AString message = aui::win32::fromWchar({messageBuffer, size});
 
     //Free the buffer.
     LocalFree(messageBuffer);

@@ -51,8 +51,24 @@ float ABaseWindow::fetchDpiFromSystem() const {
 
 void ABaseWindow::updateDpi() {
     emit dpiChanged;
-    mDpiRatio = UITestState::isTesting() ? 1.f : fetchDpiFromSystem();
+    mDpiRatio = [&]() -> float {
+        float systemDpi = fetchDpiFromSystem();
+        float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
+        if (!mScalingParams.minimalWindowSizeDp) {
+            return ratio;
+        }
+
+        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
+        float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
+        maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
+        return glm::min(ratio, maxDpiRatio);
+    }();
     onDpiChanged();
+}
+
+void ABaseWindow::setScalingParams(ScalingParams params) {
+    mScalingParams = std::move(params);
+    updateDpi();
 }
 
 _unique<AWindowManager>& ABaseWindow::getWindowManagerImpl() {
@@ -268,8 +284,13 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
     APointerReleasedEvent copy = event;
+    auto nonBlockingClicksPointers = std::count_if(pointerEventsMapping().begin(), pointerEventsMapping().end(),
+                                                   [](const auto &event) {
+                                                       return !event.isBlockClicksWhenPressed;
+                                                   });
     // in case of multitouch, we should not treat pointer release event as a click.
-    copy.triggerClick = pointerEventsMapping().size() < 2 && !mPreventClickOnPointerRelease.valueOr(true);
+    copy.triggerClick = pointerEventsMapping().size() - nonBlockingClicksPointers < 2 &&
+                        !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
 
 #if AUI_SHOW_TOUCHES
@@ -552,7 +573,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
             break;
 
         default:
-            AUI_ASSERTX(false, "shouldn't reach there");
+            AUI_ASSERT_NO_CONDITION("shouldn't reach there");
     }
 
     mKeyboardRequestedState = KeyboardRequest::NO_OP;

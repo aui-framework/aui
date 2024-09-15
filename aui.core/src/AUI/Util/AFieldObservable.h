@@ -188,7 +188,7 @@ _<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
 
 template<typename View, typename ModelData, typename AdapterCallback>
 _<View> operator&&(const _<View>& object, AFieldObservableAdapter<ModelData, AdapterCallback> observableAdapter) {
-    using Data = AFieldObservableAdapter<ModelData, AdapterCallback>::return_t;
+    using Data = typename AFieldObservableAdapter<ModelData, AdapterCallback>::return_t;
     auto& observable = observableAdapter.field;
     using ObserverHandle = typename std::decay_t<decltype(observable)>::ObserverHandle;
     auto observerHandle = _new<ObserverHandle>(nullptr);

@@ -216,4 +216,19 @@ extern "C" void _aui_ios_redraw() {
     });
 }
 
+extern "C" void _aui_ios_setMobileScreenOrientation(AScreenOrientation orientation) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+        NSNumber *value = [&] {
+            switch (orientation) {
+                case AScreenOrientation::PORTRAIT: return [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
+                case AScreenOrientation::LANDSCAPE: return [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
+                default: return [NSNumber numberWithInt:UIInterfaceOrientationUnknown];
+            }
+        }();
+        [[UIDevice currentDevice] setValue:value forKey:@"orientation"];    
+        [UIViewController attemptRotationToDeviceOrientation];
+    });
+}
+
 @end
