@@ -246,6 +246,12 @@ jobs:
             generator: "Ninja"
             additional_cmake_flags: ''
 
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
