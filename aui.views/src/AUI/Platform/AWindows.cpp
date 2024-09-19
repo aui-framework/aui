@@ -42,6 +42,7 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
+    APerformanceSection s("AWindow::doDrawWindow");
     render({.position = glm::ivec2(0), .size = getSize()});
 }
 
@@ -78,6 +79,7 @@ void AWindow::redraw() {
     APerformanceFrame frame([&](APerformanceSection::Datas sections) {
         emit performanceFrameComplete(sections);
     });
+    APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
 #endif
 
     {
@@ -85,8 +87,12 @@ void AWindow::redraw() {
             return;
         }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        mRenderingContext->beginPaint(*this);
+        {
+            APerformanceSection s("IRenderingContext::beginPaint");
+            mRenderingContext->beginPaint(*this);
+        }
         ARaiiHelper endPaintCaller = [&] {
+            APerformanceSection s("IRenderingContext::endPaint");
             mRenderingContext->endPaint(*this);
         };
 
@@ -119,8 +125,10 @@ void AWindow::redraw() {
             }
         }
     }
-
-    emit redrawn();
+    {
+        APerformanceSection s2("emit redrawn");
+        emit redrawn();
+    }
 }
 
 _<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
