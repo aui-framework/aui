@@ -40,6 +40,7 @@
     mWindow->getRenderingContext()->beginResize(*mWindow);
     mWindow->AViewContainer::setSize({contentFrame.size.width * s, contentFrame.size.height * s});
     mWindow->getRenderingContext()->endResize(*mWindow);
+    mWindow->redraw();
 }
 
 - (BOOL)windowShouldClose:(NSWindow*)sender {
