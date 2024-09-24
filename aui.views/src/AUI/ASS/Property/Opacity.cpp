@@ -20,7 +20,7 @@
 
 
 void ass::prop::Property<ass::Opacity>::applyFor(AView* view) {
-    view->setOpacity(mInfo.opacity);
+    view->setOpacity(glm::clamp(mInfo.opacity, 0.f, 1.f));
 }
 
 

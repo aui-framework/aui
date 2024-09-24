@@ -30,6 +30,10 @@ void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext cont
         return;
     }
 
+    if (view->getOpacity() < 0.0001f) {
+        return;
+    }
+
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
     if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) [[unlikely]] {
         return;
