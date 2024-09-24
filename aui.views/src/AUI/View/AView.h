@@ -43,6 +43,7 @@
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
+#include <AUI/Render/ITexture.h>
 
 
 class ARender;
@@ -887,6 +888,11 @@ public:
         setEnabled(false);
     }
 
+    void enableRenderToTexture() {
+        mRenderToTexture.emplace();
+    }
+
+
     /**
      * @brief Helper function for kAUI.h:with_style
      */
@@ -1031,6 +1037,11 @@ private:
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
+
+    struct RenderToTexture {
+        _unique<ITexture> texture;
+    };
+    AOptional<RenderToTexture> mRenderToTexture;
 
     void notifyParentChildFocused(const _<AView> &view);
 };
