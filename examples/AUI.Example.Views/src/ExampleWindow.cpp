@@ -190,7 +190,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         GroupBox {
                                 Label { "Window factory" },
                                 Vertical {
-                                        CheckBoxWrapper { Label { "Resizeable" } },
+                                        // CheckBoxWrapper { Label { "Resizeable" } }, TODO
                                         _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
                                             auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                                             fillWindow(w);

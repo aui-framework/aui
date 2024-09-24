@@ -208,6 +208,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 }
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -280,6 +281,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 }
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -337,6 +339,7 @@ void ABaseWindow::onScroll(const AScrollEvent& event) {
 }
 
 void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -407,6 +410,7 @@ void ABaseWindow::updateLayout() {
 }
 
 void ABaseWindow::render(ClipOptimizationContext context) {
+    currentWindowStorage() = this;
     APerformanceSection root("render");
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {

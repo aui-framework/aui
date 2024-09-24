@@ -82,7 +82,7 @@ private:
 #elif AUI_PLATFORM_LINUX
     static GLXContext ourContext;
 #elif AUI_PLATFORM_MACOS
-    void* mContext;
+    static void* ourContext;
 #endif
 
 };
