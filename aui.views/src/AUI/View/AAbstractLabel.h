@@ -68,7 +68,7 @@ public:
     AAbstractLabel();
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
     void doRenderText();
 
     int getContentMinimumWidth(ALayoutDirection layout) override;

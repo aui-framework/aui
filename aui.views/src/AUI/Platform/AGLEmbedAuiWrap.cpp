@@ -17,7 +17,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/GL/OpenGLRenderer.h"
 
-void AGLEmbedAuiWrap::render(ClipOptimizationContext context) {
+void AGLEmbedAuiWrap::render(ARenderContext context) {
     windowMakeCurrent();
     AThread::processMessages();
 

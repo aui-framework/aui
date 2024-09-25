@@ -45,7 +45,7 @@ void ASelectableLabel::doRedraw() {
     redraw();
 }
 
-void ASelectableLabel::render(ClipOptimizationContext context) {
+void ASelectableLabel::render(ARenderContext context) {
     AView::render(context);
 
     if (hasFocus()) {

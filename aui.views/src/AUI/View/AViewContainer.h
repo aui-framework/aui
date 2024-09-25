@@ -21,7 +21,7 @@
 #include "AUI/Common/AVector.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Render/RenderHints.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "glm/fwd.hpp"
 
 
@@ -89,9 +89,9 @@ public:
     void removeView(size_t index);
     void removeAllViews();
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
-    void renderChildren(ClipOptimizationContext contextPassedToContainer) {
+    void renderChildren(ARenderContext contextPassedToContainer) {
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
@@ -331,10 +331,10 @@ protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
 
-    void drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer);
+    void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 
     template<typename Iterator>
-    void drawViews(Iterator begin, Iterator end, ClipOptimizationContext contextPassedToContainer) {
+    void drawViews(Iterator begin, Iterator end, ARenderContext contextPassedToContainer) {
         switch (mOverflow) {
             case AOverflow::VISIBLE: break;
             case AOverflow::HIDDEN:

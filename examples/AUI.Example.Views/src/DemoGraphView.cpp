@@ -26,7 +26,7 @@ DemoGraphView::DemoGraphView()
     }
 }
 
-void DemoGraphView::render(ClipOptimizationContext context) {
+void DemoGraphView::render(ARenderContext context) {
     AView::render(context);
 
     ARender::lines(ASolidBrush{0xff0000_rgb }, mPoints, ABorderStyle::Dashed{}, 4_dp);

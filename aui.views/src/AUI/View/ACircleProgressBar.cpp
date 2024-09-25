@@ -32,7 +32,7 @@ ACircleProgressBar::~ACircleProgressBar() {
 
 }
 
-void ACircleProgressBar::render(ClipOptimizationContext context) {
+void ACircleProgressBar::render(ARenderContext context) {
     AView::render(context);
     RenderHints::PushMask mask([&] {
         ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));

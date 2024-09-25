@@ -40,7 +40,7 @@ void AProgressBar::updateInnerWidth() {
                         getContentHeight() - mPadding.vertical());
 }
 
-void AProgressBar::render(ClipOptimizationContext context) {
+void AProgressBar::render(ARenderContext context) {
     AViewContainer::render(context);
 }
 

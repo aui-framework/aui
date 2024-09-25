@@ -73,7 +73,7 @@ void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
     mVerticalRuler->setOffsetPx(pos.y);
 }
 
-void ARulerArea::render(ClipOptimizationContext context) {
+void ARulerArea::render(ARenderContext context) {
     AViewContainer::render(context);
 
 

@@ -75,7 +75,7 @@ FractalView::FractalView():
     mTexture->tex2D(*AImage::fromUrl(":img/color_scheme_wikipedia.png"));
 }
 
-void FractalView::render(ClipOptimizationContext context) {
+void FractalView::render(ARenderContext context) {
     AView::render(context);
 
     mShader.use();

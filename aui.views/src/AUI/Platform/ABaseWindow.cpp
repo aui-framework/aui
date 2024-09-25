@@ -406,7 +406,7 @@ void ABaseWindow::updateLayout() {
     AViewContainer::updateLayout();
 }
 
-void ABaseWindow::render(ClipOptimizationContext context) {
+void ABaseWindow::render(ARenderContext context) {
     APerformanceSection root("render");
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
@@ -437,7 +437,7 @@ void ABaseWindow::render(ClipOptimizationContext context) {
 
     AViewContainer::render(context);
 
-    if (auto v = mProfiledView.lock()) {
+    if (auto v = profiling().highlightView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
     }
 

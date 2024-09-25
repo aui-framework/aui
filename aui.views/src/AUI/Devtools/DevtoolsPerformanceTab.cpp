@@ -40,7 +40,7 @@
 #include "AUI/Render/ARender.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -64,7 +64,7 @@ namespace {
             mFrames.resize(DEFAULT_SIZE);
         }
 
-        void render(ClipOptimizationContext c) override {
+        void render(ARenderContext c) override {
             AView::render(c);
 
             ARender::rect(ATexturedBrush {
@@ -235,7 +235,7 @@ namespace {
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
-        static constexpr auto MAX_DEPTH = 7;
+        static constexpr auto MAX_DEPTH = 20;
         PerformanceSectionsTreeView() {
         }
 

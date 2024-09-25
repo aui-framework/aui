@@ -105,7 +105,7 @@ public:
         return length;
     }
 
-    void render(ClipOptimizationContext context) override {
+    void render(ARenderContext context) override {
         // TODO stub
         /*
         if (mLines.empty() && !mFullText->empty()) {

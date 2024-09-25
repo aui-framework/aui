@@ -25,7 +25,7 @@
 
 static constexpr auto LOG_TAG = "AViewContainer";
 
-void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
+void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
     if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) [[unlikely]] {
         return;
     }
@@ -51,11 +51,27 @@ void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext cont
 
     const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
 
+    bool showRedraw = false;
+    if (view->mRedrawRequested) {
+        if (auto w = AWindow::current()) {
+            if (w->profiling().displayRedrawRequests) {
+                showRedraw = true;
+            }
+        }
+    }
+    AUI_DEFER {
+        if (showRedraw) {
+            auto c = ARender::getColor();
+            AUI_DEFER { ARender::setColorForced(c); };
+            ARender::rect(ASolidBrush { 0x80ff00ff_argb }, view->getPosition(), view->getSize());
+        }
+    };
+
     RenderHints::PushState s;
     glm::mat4 t(1.f);
     view->getTransform(t);
-    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
     ARender::setTransform(t);
+    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
 
     try {
         view->render(contextOfTheView);
@@ -186,7 +202,7 @@ void AViewContainer::removeView(size_t index) {
     emit childrenChanged;
 }
 
-void AViewContainer::render(ClipOptimizationContext context) {
+void AViewContainer::render(ARenderContext context) {
     AView::render(context);
     renderChildren(context);
 }

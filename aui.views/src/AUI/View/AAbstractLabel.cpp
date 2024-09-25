@@ -27,7 +27,7 @@ AAbstractLabel::AAbstractLabel()
 }
 
 
-void AAbstractLabel::render(ClipOptimizationContext context)
+void AAbstractLabel::render(ARenderContext context)
 {
 	AView::render(context);
 

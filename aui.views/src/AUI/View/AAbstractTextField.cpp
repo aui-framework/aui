@@ -48,7 +48,7 @@ int AAbstractTextField::getContentMinimumHeight(ALayoutDirection layout)
 }
 
 
-void AAbstractTextField::render(ClipOptimizationContext context)
+void AAbstractTextField::render(ARenderContext context)
 {
 	AView::render(context);
 

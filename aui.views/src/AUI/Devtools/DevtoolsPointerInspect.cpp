@@ -47,7 +47,7 @@
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ALayoutInflater.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -67,7 +67,7 @@ public:
 
     }
 
-    void render(ClipOptimizationContext context) override {
+    void render(ARenderContext context) override {
         AViewContainer::render(context);
         auto view = mView.lock();
         if (!view) {
@@ -114,7 +114,7 @@ public:
         connect(mButton->clicked, me::reinflateToParent);
     }
 
-    void render(ClipOptimizationContext context) override {
+    void render(ARenderContext context) override {
         AViewContainer::render(context);
         
         auto v = mFake->view();

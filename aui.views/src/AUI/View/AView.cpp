@@ -123,7 +123,7 @@ void AView::popStencilIfNeeded() {
         });
     }
 }
-void AView::render(ClipOptimizationContext context)
+void AView::render(ARenderContext context)
 {
     if (mAnimator)
         mAnimator->animate(this);
@@ -286,7 +286,10 @@ void AView::addAssName(const AString& assName)
     invalidateAssHelper();
 }
 
-void AView::invalidateAssHelper() { mAssHelper = nullptr; }
+void AView::invalidateAssHelper() {
+    mAssHelper = nullptr;
+    redraw();
+}
 
 void AView::removeAssName(const AString& assName)
 {

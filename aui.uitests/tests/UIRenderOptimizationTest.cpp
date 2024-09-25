@@ -12,7 +12,7 @@
 #include "AUI/ASS/Property/FixedSize.h"
 #include "AUI/Event/AScrollEvent.h"
 #include "AUI/UITest.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/AScrollAreaInner.h"
 #include "glm/fwd.hpp"
 #include <gmock/gmock-cardinalities.h>
@@ -31,7 +31,7 @@
 namespace {
 class ViewMock: public AView {
 public:
-    MOCK_METHOD(void, render, (ClipOptimizationContext), ());
+    MOCK_METHOD(void, render, (ARenderContext), ());
 };
 }
 

@@ -32,7 +32,7 @@ int CellView::getContentMinimumWidth()
 }
 
 
-void CellView::render(ClipOptimizationContext context)
+void CellView::render(ARenderContext context)
 {
 	if (mCell != mCellValueCopy)
 	{

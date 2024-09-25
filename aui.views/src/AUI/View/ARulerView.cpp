@@ -29,7 +29,7 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
     }
 }
 
-void ARulerView::render(ClipOptimizationContext context) {
+void ARulerView::render(ARenderContext context) {
     AView::render(context);
 
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
