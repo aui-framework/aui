@@ -68,7 +68,7 @@ public:
         AView::setSize(size);
 
         if (widthChanged) {
-            updateWordWrap(text());
+            mLines.clear();
         } else if (heightChanged) {
             updateScrollDimensions();
         }
@@ -106,21 +106,18 @@ public:
     }
 
     void render(ClipOptimizationContext context) override {
-        // TODO stub
-        /*
         if (mLines.empty() && !mFullText->empty()) {
             size_t wordWrappingPos = 0;
             while (wordWrappingPos < mFullText->length()) {
-                AString line = getFontStyle().font->trimStringToWidth(mFullText->begin() + wordWrappingPos,
+                AString line = getFontStyle().font->trimStringToWidth(getFontStyle(),
+                                                                      mFullText->begin() + wordWrappingPos,
                                                                       mFullText->end(),
-                                                                      getContentWidth(),
-                                                                      getFontStyle().size,
-                                                                      getFontStyle().fontRendering);
-                wordWrappingPos += line.length() + 1;
+                                                                      getContentWidth());
+                wordWrappingPos += glm::max(line.length(), size_t(1));
                 mLines.push_back(Line{ std::move(line), {} });
             }
             updateScrollDimensions();
-        }*/
+        }
         AView::render(context);
 
         auto drawText = [&] {
@@ -129,6 +126,10 @@ public:
             for (size_t i = mScroll / getFontStyle().getLineHeight(); i < mLines.size(); ++i) {
                 if (i * lineHeight > viewHeight + mScroll) {
                     return;
+                }
+
+                if (mLines[i].text.empty()) {
+                    continue;
                 }
 
                 if (!mLines[i].prerendered) {
