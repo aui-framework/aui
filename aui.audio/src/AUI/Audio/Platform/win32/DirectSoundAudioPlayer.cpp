@@ -5,10 +5,6 @@
 #include "AUI/Traits/memory.h"
 #include <dsound.h>
 
-#pragma comment(lib, "dsound.lib")
-#pragma comment(lib, "dxguid.lib")
-#pragma comment(lib, "Winmm" )
-
 
 static AAudioMixer& loop() {
     static AAudioMixer l;

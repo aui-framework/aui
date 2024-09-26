@@ -14,6 +14,10 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/ErrorToException.h"
 
+#if AUI_PLATFORM_WIN
+#include <share.h>
+#endif
+
 AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path)), mFile(nullptr)
 {
     open(append);
