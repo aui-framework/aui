@@ -16,13 +16,13 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderLeft.h"
 
-void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view) {
-    RenderHints::PushColor x;
+void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderContext& ctx) {
+    RenderHints::PushColor x(ctx.render);
     int w = mInfo.width;
 
-    ARender::rect(ASolidBrush{mInfo.color},
-                  {0, 0},
-                  {w, view->getHeight()});
+    ctx.render.rectangle(ASolidBrush{mInfo.color},
+                         {0, 0},
+                         {w, view->getHeight()});
 
 }
 

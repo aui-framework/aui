@@ -32,8 +32,8 @@ void AGLEmbedAuiWrap::render(ARenderContext context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    ARender::setColorForced(1.f);
-    ARender::setTransformForced(glm::ortho(0.f,
+    context.render.setColorForced(1.f);
+    context.render.setTransformForced(glm::ortho(0.f,
                                            static_cast<float>(mSize.x),
                                            static_cast<float>(mSize.y),
                                            0.f));
@@ -55,5 +55,4 @@ AGLEmbedAuiWrap::AGLEmbedAuiWrap() {
     auto r = glewInit();
     AUI_ASSERT(r == 0);
 #endif
-    ARender::setRenderer(std::make_unique<OpenGLRenderer>());
 }

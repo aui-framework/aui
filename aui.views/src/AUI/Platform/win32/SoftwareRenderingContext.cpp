@@ -22,8 +22,8 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
-    if (ARender::getRenderer() == nullptr) {
-        ARender::setRenderer(std::make_unique<SoftwareRenderer>());
+    if (ctx.render.getRenderer() == nullptr) {
+        ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
     }
 }
 

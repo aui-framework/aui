@@ -69,7 +69,7 @@ int ACursorSelectable::drawSelectionPre() {
         mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
         RenderHints::PushColor c;
-        ARender::setColor(AColor(1.f) - AColor(0x0078d700u));
+        ctx.render.setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
         drawSelectionRects();
@@ -82,7 +82,7 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    ARender::setBlending(Blending::INVERSE_DST);
+    ctx.render.setBlending(Blending::INVERSE_DST);
     if (hasSelection())
     {
         drawSelectionRects();
@@ -113,9 +113,9 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        ARender::rect(ASolidBrush{},
-                      {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
-                      {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
+        ctx.render.rectangle(ASolidBrush{},
+                             {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
+                             {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
     };
 
     auto t = getDisplayText();

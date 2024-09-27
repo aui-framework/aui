@@ -30,6 +30,7 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         return;
     }
 
+    // consider anything below this value as effectively "zero" or negligible in terms of opacity.
     if (view->getOpacity() < 0.0001f) {
         return;
     }
@@ -49,7 +50,7 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         return;
     }
 
-    const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
+    const auto prevStencilLevel = ctx.render.getRenderer()->getStencilDepth();
 
     bool showRedraw = false;
     if (view->mRedrawRequested) {
@@ -61,17 +62,17 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
     AUI_DEFER {
         if (showRedraw) {
-            auto c = ARender::getColor();
-            AUI_DEFER { ARender::setColorForced(c); };
-            ARender::rect(ASolidBrush { 0x80ff00ff_argb }, view->getPosition(), view->getSize());
+            auto c = ctx.render.getColor();
+            AUI_DEFER { ctx.render.setColorForced(c); };
+            ctx.render.rectangle(ASolidBrush{0x80ff00ff_argb}, view->getPosition(), view->getSize());
         }
     };
 
     RenderHints::PushState s;
     glm::mat4 t(1.f);
     view->getTransform(t);
-    ARender::setTransform(t);
-    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
+    ctx.render.setTransform(t);
+    ctx.render.setColor(AColor(1, 1, 1, view->getOpacity()));
 
     try {
         view->render(contextOfTheView);
@@ -79,11 +80,11 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
     catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        ARender::getRenderer()->setStencilDepth(prevStencilLevel);
+        ctx.render.getRenderer()->setStencilDepth(prevStencilLevel);
         return;
     }
 
-    auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
+    auto currentStencilLevel = ctx.render.getRenderer()->getStencilDepth();
     AUI_ASSERT(currentStencilLevel == prevStencilLevel);
 }
 

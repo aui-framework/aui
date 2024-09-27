@@ -80,7 +80,7 @@ void FractalView::render(ARenderContext context) {
 
     mShader.use();
     mTexture->bind();
-    ARender::rect(ACustomShaderBrush{}, {0, 0}, getSize());
+    ctx.render.rect(ACustomShaderBrush{}, {0, 0}, getSize());
 }
 
 void FractalView::setSize(glm::ivec2 size) {

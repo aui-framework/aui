@@ -148,7 +148,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info("OpenGL context is ready");
     }
 
-    ARender::setRenderer(mRenderer = ourRenderer());
+    ctx.render.setRenderer(mRenderer = ourRenderer());
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }

@@ -92,8 +92,8 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (!mXImage) {
         throw AException("unable to create XImage");
     }
-    if (ARender::getRenderer() == nullptr) {
-        ARender::setRenderer(std::make_unique<SoftwareRenderer>());
+    if (ctx.render.getRenderer() == nullptr) {
+        ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
     }
     SoftwareRenderingContext::endResize(init.window);
 }

@@ -15,6 +15,7 @@
 #include <AUI/Core.h>
 #include <glm/glm.hpp>
 
+class IRenderer;
 
 /**
  * @brief Render context passed to AView::render.
@@ -43,6 +44,8 @@ struct API_AUI_VIEWS ARenderContext
 {
     glm::ivec2 position;
     glm::ivec2 size;
+
+    IRenderer& render;
 
     [[nodiscard]]
     ARenderContext withShiftedPosition(glm::ivec2 by) const noexcept{

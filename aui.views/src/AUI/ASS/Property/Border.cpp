@@ -18,20 +18,20 @@
 #include <AUI/Render/RenderHints.h>
 
 
-void ass::prop::Property<ass::Border>::renderFor(AView* view) {
+void ass::prop::Property<ass::Border>::renderFor(AView* view, const ARenderContext& ctx) {
     /*
     if (view->getBorderRadius() < 0.1f) {
-        ARender::drawRectBorder(ASolidBrush{mInfo.color},
+        ctx.render.drawRectBorder(ASolidBrush{mInfo.color},
                                {0, 0},
                                view->getSize(),
                                mInfo.width);
     } else {
         */
-    ARender::roundedRectBorder(ASolidBrush{mInfo.color},
-                               {0, 0},
-                               view->getSize(),
-                               view->getBorderRadius(),
-                               mInfo.width);
+    ctx.render.roundedRectangleBorder(ASolidBrush{mInfo.color},
+                                      {0, 0},
+                                      view->getSize(),
+                                      view->getBorderRadius(),
+                                      mInfo.width);
     //}
 }
 

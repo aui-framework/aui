@@ -41,7 +41,7 @@ namespace ass {
 
         public:
             Property(const TransformScale& info) : mInfo(info) {}
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             PropertySlot getPropertySlot() const override;
 

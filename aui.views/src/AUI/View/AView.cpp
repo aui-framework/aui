@@ -84,14 +84,14 @@ void AView::drawStencilMask()
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                ARender::roundedRect(ASolidBrush{},
+                ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      mBorderRadius);
             } else {
-                ARender::rect(ASolidBrush{},
-                              {mPadding.left, mPadding.top},
-                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 

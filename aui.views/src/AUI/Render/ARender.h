@@ -63,7 +63,7 @@ public:
     static void rect(const ABrush& brush,
                      const glm::vec2& position,
                      const glm::vec2& size) {
-        ourRenderer->drawRect(brush, position, size);
+        ourRenderer->rectangle(brush, position, size);
     }
 
 
@@ -74,11 +74,11 @@ public:
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
-    static void roundedRect(const ABrush& brush,
+    static void roundedRectangle(const ABrush& brush,
                             const glm::vec2& position,
                             const glm::vec2& size,
                             float radius) {
-        ourRenderer->drawRoundedRect(brush, position, size, radius);
+        ourRenderer->roundedRectangle(brush, position, size, radius);
     }
 
     /**
@@ -88,11 +88,11 @@ public:
      * @param size rectangle size (px)
      * @param lineWidth border line width (px)
      */
-    static void rectBorder(const ABrush& brush,
+    static void rectangleBorder(const ABrush& brush,
                            const glm::vec2& position,
                            const glm::vec2& size,
                            float lineWidth = 1.f) {
-        ourRenderer->drawRectBorder(brush, position, size, lineWidth);
+        ourRenderer->rectangleBorder(brush, position, size, lineWidth);
     }
 
     /**
@@ -108,7 +108,7 @@ public:
                                   const glm::vec2& size,
                                   float radius,
                                   int borderWidth) {
-        ourRenderer->drawRoundedRectBorder(brush, position, size, radius, borderWidth);
+        ourRenderer->roundedRectangleBorder(brush, position, size, radius, borderWidth);
     }
 
     /**
@@ -121,12 +121,12 @@ public:
      * @details
      * <dl>
      *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>ctx.render.lines</code> function instead.</dd>
      * </dl>
      */
     static void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
         glm::vec2 points[] = { p1, p2 };
-        ourRenderer->drawLines(brush, points, style, width);
+        ourRenderer->lines(brush, points, style, width);
     }
 
     /**
@@ -137,7 +137,7 @@ public:
      * @param width line width
      */
     static void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
-        ourRenderer->drawLines(brush, points, style, width);
+        ourRenderer->lines(brush, points, style, width);
     }
 
     /**
@@ -147,7 +147,7 @@ public:
      * @param size point size
      */
     static void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size = 1_dp) {
-        ourRenderer->drawPoints(brush, points, size);
+        ourRenderer->points(brush, points, size);
     }
 
     /**
@@ -158,7 +158,7 @@ public:
      * @param width line width
      */
     static void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
-        ourRenderer->drawLines(brush, points, style, width);
+        ourRenderer->lines(brush, points, style, width);
     }
 
     /**
@@ -172,7 +172,7 @@ public:
                           const glm::vec2& size,
                           float blurRadius,
                           const AColor& color) {
-        ourRenderer->drawBoxShadow(position, size, blurRadius, color);
+        ourRenderer->boxShadow(position, size, blurRadius, color);
     }
 
     /**
@@ -183,7 +183,7 @@ public:
      * @param spreadRadius spread (offset) radius
      * @param borderRadius border radius of the rectangle.
      * @param color shadow color
-     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     * @param offset shadow offset. Unlike outer shadow (ctx.render.boxShadow), the offset is passed to the shader instead
      *               of a simple rectangle position offset.
      */
     static void boxShadowInner(glm::vec2 position,
@@ -193,7 +193,7 @@ public:
                                float borderRadius,
                                const AColor& color,
                                glm::vec2 offset) {
-        ourRenderer->drawBoxShadowInner(position, size, blurRadius, spreadRadius, borderRadius, color, offset);
+        ourRenderer->boxShadowInner(position, size, blurRadius, spreadRadius, borderRadius, color, offset);
     }
 
 
@@ -216,7 +216,7 @@ public:
     static void string(const glm::vec2& position,
                        const AString& string,
                        const AFontStyle& fs = {}) {
-        ourRenderer->drawString(position, string, fs);
+        ourRenderer->string(position, string, fs);
     }
 
     /**
@@ -238,14 +238,14 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @details
-     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
      */
     static void squareSector(const ABrush& brush,
                              const glm::vec2& position,
                              const glm::vec2& size,
                              AAngleRadians begin,
                              AAngleRadians end) {
-        ourRenderer->drawSquareSector(brush, position, size, begin, end);
+        ourRenderer->squareSector(brush, position, size, begin, end);
     }
 
     /**
@@ -315,31 +315,6 @@ public:
     static const glm::mat4& getTransform()
     {
         return ourRenderer->getTransform();
-    }
-
-    /**
-     * @brief Wrapper for setTransform applying matrix translate transformation.
-     * @param offset offset in pixels to translate.
-     */
-    static void translate(const glm::vec2& offset) {
-        ourRenderer->setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
-    }
-
-    /**
-     * @brief wrapper for setTransform applying matrix rotation along the specified axis.
-     * @param axis axis
-     * @param angle angle to rotate
-     */
-    static void rotate(const glm::vec3& axis, AAngleRadians angle) {
-        ourRenderer->setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
-    }
-
-    /**
-     * @brief wrapper for setTransform applying matrix rotation along z axis.
-     * @param angle angle to rotate
-     */
-    static void rotate(AAngleRadians angle) {
-        rotate({0.f, 0.f, 1.f}, angle);
     }
 };
 

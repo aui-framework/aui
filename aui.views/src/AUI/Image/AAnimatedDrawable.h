@@ -27,7 +27,7 @@ public:
     explicit AAnimatedDrawable(_<IAnimatedImageFactory> factory);
     ~AAnimatedDrawable() override = default;
 
-    void draw(const Params &params) override;
+    void draw(const IDrawable::Params& params, IRenderer& render) override;
     glm::ivec2 getSizeHint() override;
 
 signals:

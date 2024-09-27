@@ -153,7 +153,7 @@ void AAbstractLabel::doPrerender() {
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
         processTextOverflow(transformedText);
-        mPrerendered = ARender::prerenderString({0, 0}, transformedText, fs);
+        mPrerendered = ctx.render.prerenderString({0, 0}, transformedText, fs);
     }
 }
 
@@ -173,12 +173,12 @@ void AAbstractLabel::doRenderText() {
             if (mIcon) {
                 requiredSpace *= getHeight() / requiredSpace.y;
                 RenderHints::PushState s;
-                ARender::setColor(mIconColor);
-                ARender::setTransform(glm::translate(glm::mat4(1.f),
+                ctx.render.setColor(mIconColor);
+                ctx.render.setTransform(glm::translate(glm::mat4(1.f),
                                                      glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
                 p.size = requiredSpace;
-                mIcon->draw(p);
+                mIcon->draw(p, <#initializer#>);
                 mTextLeftOffset += requiredSpace.x + 4_dp;
             }
         };
@@ -195,15 +195,15 @@ void AAbstractLabel::doRenderText() {
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
                         RenderHints::PushState s;
-                        ARender::setColor(mIconColor);
-                        ARender::setTransform(glm::translate(glm::mat4(1.f),
+                        ctx.render.setColor(mIconColor);
+                        ctx.render.setTransform(glm::translate(glm::mat4(1.f),
                                                              glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
                                                                       requiredSpace.x,
                                                                       iconY, 0)));
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(p);
+                        mIcon->draw(p, <#initializer#>);
                     }
 
                     break;
@@ -212,8 +212,8 @@ void AAbstractLabel::doRenderText() {
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s;
-                        ARender::setColor(mIconColor);
-                        ARender::setTransform(glm::translate(glm::mat4(1.f),
+                        ctx.render.setColor(mIconColor);
+                        ctx.render.setTransform(glm::translate(glm::mat4(1.f),
                                                              glm::vec3(mPadding.left + mTextLeftOffset -
                                                                       (mPrerendered ? mPrerendered->getWidth() : 0) -
                                                                       requiredSpace.x / 2,
@@ -221,7 +221,7 @@ void AAbstractLabel::doRenderText() {
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(p);
+                        mIcon->draw(p, <#initializer#>);
                     }
 
                     break;
@@ -237,8 +237,8 @@ void AAbstractLabel::doRenderText() {
                 y = (glm::max)(y, y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
             }
             RenderHints::PushMatrix m;
-            ARender::translate({mTextLeftOffset + mPadding.left, y });
-            mPrerendered->draw();
+            ctx.render.translate({mTextLeftOffset + mPadding.left, y });
+            mPrerendered->draw(<#initializer#>, <#initializer#>);
         }
     }
 }

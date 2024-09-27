@@ -18,13 +18,13 @@
 #include "IProperty.h"
 
 
-void ass::prop::Property<ass::BackgroundEffect>::renderFor(AView* view) {
+void ass::prop::Property<ass::BackgroundEffect>::renderFor(AView* view, const ARenderContext& ctx) {
     for (auto& e : mInfo.mEffects)
     {
         e->draw(view);
     }
 
-    IPropertyBase::renderFor(view);
+    IPropertyBase::renderFor(view, ctx);
 }
 
 bool ass::prop::Property<ass::BackgroundEffect>::isNone() {

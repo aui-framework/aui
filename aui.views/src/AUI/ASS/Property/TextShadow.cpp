@@ -17,14 +17,14 @@
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Render/RenderHints.h>
 
-void ass::prop::Property<ass::TextShadow>::renderFor(AView* view) {
+void ass::prop::Property<ass::TextShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         RenderHints::PushColor c;
-        ARender::setColor(mInfo.shadowColor);
+        ctx.render.setColor(mInfo.shadowColor);
 
         {
             RenderHints::PushMatrix m;
-            ARender::translate({mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
+            ctx.render.translate({mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
             label->doRenderText();
         }
     }

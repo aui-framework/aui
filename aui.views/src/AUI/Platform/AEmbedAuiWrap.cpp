@@ -117,7 +117,7 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    ARender::setWindow(mContainer.get());
+    ctx.render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();

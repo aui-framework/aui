@@ -32,9 +32,9 @@ namespace {
 
             RenderHints::PushMatrix transform;
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            ARender::rect(ASolidBrush{},
-                          d,
-                          mTitle->getSize());
+            ctx.render.rectangle(ASolidBrush{},
+                                 d,
+                                 mTitle->getSize());
         }
 
     private:

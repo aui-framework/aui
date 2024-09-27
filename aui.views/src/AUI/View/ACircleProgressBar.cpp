@@ -33,9 +33,9 @@ ACircleProgressBar::~ACircleProgressBar() {
 }
 
 void ACircleProgressBar::render(ARenderContext context) {
-    AView::render(context);
-    RenderHints::PushMask mask([&] {
-        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));
+    AView::render(context); // NOLINT(*-parent-virtual-call)
+    RenderHints::PushMask mask(context.render, [&] {
+        context.render.squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));
 
     });
     AViewContainer::renderChildren(context);

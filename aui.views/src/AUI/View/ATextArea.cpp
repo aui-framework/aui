@@ -49,7 +49,7 @@ private:
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
     void pushScrollMatrix() {
-        ARender::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+        ctx.render.setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -132,12 +132,12 @@ public:
                 }
 
                 if (!mLines[i].prerendered) {
-                    mLines[i].prerendered = ARender::prerenderString({0, 0}, mLines[i].text, getFontStyle());
+                    mLines[i].prerendered = ctx.render.prerenderString({0, 0}, mLines[i].text, getFontStyle());
                 }
                 RenderHints::PushMatrix m;
-                ARender::translate({mPadding.left - mHorizontalScroll,
+                ctx.render.translate({mPadding.left - mHorizontalScroll,
                                     mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
-                mLines[i].prerendered->draw();
+                mLines[i].prerendered->draw(<#initializer#>, <#initializer#>);
             }
         };
 
@@ -166,9 +166,9 @@ public:
                     redraw();
                 }
 
-                ARender::rect(ASolidBrush{},
-                              {mPadding.left + absoluteCursorPos, mPadding.top},
-                              {glm::ceil(1_dp), getFontStyle().size + 3});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mPadding.left + absoluteCursorPos, mPadding.top},
+                                     {glm::ceil(1_dp), getFontStyle().size + 3});
             }
             // TODO STUB
             // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

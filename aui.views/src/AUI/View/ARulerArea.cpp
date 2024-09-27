@@ -87,32 +87,32 @@ void ARulerArea::render(ARenderContext context) {
 
         AFontStyle fs = getFontStyle();
         fs.color = 0x0_rgb;
-        auto prX = ARender::prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
-        auto prY = ARender::prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
+        auto prX = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
+        auto prY = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
 
         glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX->getWidth(), fs.size) - glm::vec2(4_dp);
 
         {
             RenderHints::PushMatrix m;
-            ARender::translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
-            prX->draw();
+            ctx.render.translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
+            prX->draw(<#initializer#>, <#initializer#>);
         }
         {
             RenderHints::PushMatrix m;
-            ARender::translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
-            prY->draw();
+            ctx.render.translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
+            prY->draw(<#initializer#>, <#initializer#>);
         }
 
-        ARender::setBlending(Blending::INVERSE_DST);
-        ARender::rect(ASolidBrush{},
-                      {mMousePos.x, 0.f},
-                      {1, mMousePos.y});
-        ARender::rect(ASolidBrush{},
-                      {0.f, mMousePos.y},
-                      {mMousePos.x, 1});
+        ctx.render.setBlending(Blending::INVERSE_DST);
+        ctx.render.rectangle(ASolidBrush{},
+                             {mMousePos.x, 0.f},
+                             {1, mMousePos.y});
+        ctx.render.rectangle(ASolidBrush{},
+                             {0.f, mMousePos.y},
+                             {mMousePos.x, 1});
 
 
-        ARender::setBlending(Blending::NORMAL);
+        ctx.render.setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);

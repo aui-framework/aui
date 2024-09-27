@@ -19,16 +19,16 @@
 
 
 
-void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view) {
+void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
     if (!mInfo.gradient) { return; }
-    RenderHints::PushColor x;
+    RenderHints::PushColor x(ctx.render);
 
     if (view->getBorderRadius() > 0) {
-        ARender::roundedRect(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
+        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        ARender::rect(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
+        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
     }
-    IPropertyBase::renderFor(view);
+    IPropertyBase::renderFor(view, ctx);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::BackgroundGradient>::getPropertySlot() const {

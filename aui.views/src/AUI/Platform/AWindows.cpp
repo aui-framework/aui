@@ -101,7 +101,7 @@ void AWindow::redraw() {
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        ARender::setWindow(this);
+        ctx.render.setWindow(this);
         doDrawWindow();
 
         // measure frame time

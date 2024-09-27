@@ -157,7 +157,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         AUI_ASSERT(k);
     }
 
-    ARender::setRenderer(mRenderer = ourRenderer());
+    ctx.render.setRenderer(mRenderer = ourRenderer());
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));

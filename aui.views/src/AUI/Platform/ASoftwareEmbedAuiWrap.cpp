@@ -18,7 +18,7 @@
 
 ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
     windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContext));
-    ARender::setRenderer(std::make_unique<SoftwareRenderer>());
+//    ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
 }
 
 AImage ASoftwareEmbedAuiWrap::render(ARenderContext context) {

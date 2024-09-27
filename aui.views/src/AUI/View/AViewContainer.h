@@ -339,7 +339,8 @@ protected:
             case AOverflow::VISIBLE: break;
             case AOverflow::HIDDEN:
             case AOverflow::HIDDEN_FROM_THIS:
-                contextPassedToContainer = { .position = glm::ivec2(0), .size = getSize() };
+                contextPassedToContainer.position = glm::ivec2(0);
+                contextPassedToContainer.size = getSize();
         }
         
         for (auto i = begin; i != end; ++i) {

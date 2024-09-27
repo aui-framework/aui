@@ -15,6 +15,7 @@
 
 class API_AUI_VIEWS AView;
 class API_AUI_VIEWS AAssHelper;
+struct ARenderContext;
 
 namespace ass::prop {
     enum class PropertySlot {
@@ -40,7 +41,7 @@ namespace ass::prop {
     struct API_AUI_VIEWS IPropertyBase {
     public:
         virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
+        virtual void renderFor(AView* view, const ARenderContext& ctx) {};
         virtual bool isNone() { return false; }
         [[nodiscard]] virtual PropertySlot getPropertySlot() const {
             return PropertySlot::NONE;

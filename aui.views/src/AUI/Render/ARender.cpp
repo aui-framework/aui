@@ -18,11 +18,6 @@
 #include "ARender.h"
 
 
-_<IRenderer> ARender::ourRenderer;
 
 void ARender::setRenderer(_<IRenderer> renderer) {
-    ourRenderer = std::move(renderer);
-    do_once ACleanup::afterEntry([] {
-        ourRenderer = nullptr;
-    });
 }

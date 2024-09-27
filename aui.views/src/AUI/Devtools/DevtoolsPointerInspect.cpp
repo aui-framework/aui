@@ -71,7 +71,7 @@ public:
         AViewContainer::render(context);
         auto view = mView.lock();
         if (!view) {
-            ARender::string({0, 0}, "Expired");
+            ctx.render.string({0, 0}, "Expired");
             return;
         }
 

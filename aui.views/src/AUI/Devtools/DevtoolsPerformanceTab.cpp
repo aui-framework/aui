@@ -59,7 +59,7 @@ namespace {
         static constexpr auto DEFAULT_SIZE = 256;
         GraphView(): mImage({DEFAULT_SIZE, DEFAULT_SIZE}) {
             setExpanding();
-            mTexture = ARender::getNewTexture();
+            mTexture = ctx.render.getNewTexture();
             mImage.fill({0, 0, 0, 0});
             mFrames.resize(DEFAULT_SIZE);
         }
@@ -67,7 +67,7 @@ namespace {
         void render(ARenderContext c) override {
             AView::render(c);
 
-            ARender::rect(ATexturedBrush {
+            ctx.render.rect(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -77,11 +77,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 

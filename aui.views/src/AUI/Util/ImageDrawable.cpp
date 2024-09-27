@@ -33,15 +33,15 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 }
 
 
-void AImageDrawable::draw(const IDrawable::Params& params) {
+void AImageDrawable::draw(const IDrawable::Params& params, IRenderer& render) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
-        auto texture = ARender::getNewTexture();
+        auto texture = ctx.render.getNewTexture();
         texture->setImage(**asImage);
         mStorage = std::move(texture);
     }
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
-    ARender::rect(ATexturedBrush{
+    ctx.render.rectangle(ATexturedBrush{
             .texture = texture,
             .uv1 = params.cropUvTopLeft,
             .uv2 = params.cropUvBottomRight,

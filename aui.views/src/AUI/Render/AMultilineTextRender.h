@@ -52,7 +52,7 @@ friend class TextEntry;
 
 
 public:
-    ARender::PrerenderedString updateText(const AString& text, const glm::ivec2& size);
+    ARender::PrerenderedString updateText(const AString& text, const glm::ivec2& size, IRenderer& render);
 
     void setFontStyle(const AFontStyle& fontStyle) {
         mFontStyle = fontStyle;

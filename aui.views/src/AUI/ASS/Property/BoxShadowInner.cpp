@@ -17,8 +17,8 @@
 #include "AUI/Render/ARender.h"
 
 
-void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view) {
-    ARender::boxShadowInner({0, 0},
+void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
+    ctx.render.boxShadowInner({0, 0},
                              glm::vec2(view->getSize()),
                              mInfo.blurRadius,
                              mInfo.spreadRadius,

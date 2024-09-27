@@ -438,7 +438,7 @@ void ABaseWindow::render(ARenderContext context) {
     AViewContainer::render(context);
 
     if (auto v = profiling().highlightView.lock()) {
-        AViewProfiler::displayBoundsOn(*v);
+        AViewProfiler::displayBoundsOn(*v, context);
     }
 
 #if AUI_SHOW_TOUCHES
@@ -451,15 +451,15 @@ void ABaseWindow::render(ARenderContext context) {
             if (data.release) {
                 lines << *data.release;
             }
-            ARender::lines(ASolidBrush{AColor::BLUE}, lines);
+            ctx.render.lines(ASolidBrush{AColor::BLUE}, lines);
         }
-        ARender::points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
+        ctx.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
         glm::vec2 p[1] = { data.press };
-        ARender::points(ASolidBrush{AColor::GREEN}, p, 6_dp);
+        ctx.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
 
         if (data.release) {
             glm::vec2 p[1] = { *data.release };
-            ARender::points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
+            ctx.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
         }
     }
 #endif

@@ -18,8 +18,8 @@
 #include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view) {
-    ARender::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
+void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view, const ARenderContext& ctx) {
+    ctx.render.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformOffset>::getPropertySlot() const {

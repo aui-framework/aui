@@ -15,11 +15,12 @@
 
 #pragma once
 
+#include <AUI/Render/IRenderer.h>
 #include "AAnimator.h"
 
 class API_AUI_VIEWS AFocusAnimator: public AAnimator {
 public:
     AFocusAnimator();
-    void doAnimation(AView* view, float theta) override;
+    void doAnimation(AView* view, float theta, IRenderer& render) override;
 };
 

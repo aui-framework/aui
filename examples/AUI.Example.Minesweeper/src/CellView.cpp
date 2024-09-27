@@ -78,7 +78,7 @@ void CellView::render(ARenderContext context)
 				break;
 			}
 			
-			ARender::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
+			ctx.render.drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
 		}
 	}
 }

@@ -38,19 +38,19 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
     return mFactory->getSizeHint();
 }
 
-void AVectorDrawable::draw(const Params& params) {
+void AVectorDrawable::draw(const IDrawable::Params& params, IRenderer& render) {
     auto& size = params.size;
     auto key = asKey(size);
     auto doDraw = [&](const ARender::Texture& texture) {
-        ARender::rect(ATexturedBrush{
-                         .texture = texture,
-                         .uv1 = params.cropUvTopLeft,
-                         .uv2 = params.cropUvBottomRight,
-                         .imageRendering = ImageRendering::PIXELATED,
-                         .repeat = params.repeat,
-                     },
-                      params.offset,
-                      size);
+        render.rectangle(ATexturedBrush{
+                                     .texture = texture,
+                                     .uv1 = params.cropUvTopLeft,
+                                     .uv2 = params.cropUvBottomRight,
+                                     .imageRendering = ImageRendering::PIXELATED,
+                                     .repeat = params.repeat,
+                             },
+                             params.offset,
+                             size);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {
@@ -72,7 +72,7 @@ void AVectorDrawable::draw(const Params& params) {
     }
 
     // rasterization
-    auto texture = ARender::getNewTexture();
+    auto texture = render.getNewTexture();
     texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
     mRasterized.push_back({key, texture});
     doDraw(texture);

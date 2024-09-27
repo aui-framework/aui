@@ -19,9 +19,9 @@
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(const IDrawable::Params &params) {
+void AAnimatedDrawable::draw(const IDrawable::Params& params, IRenderer& render) {
     if (!mTexture)
-        mTexture = ARender::getNewTexture();
+        mTexture = render.getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
         auto img = mFactory->provideImage(params.size);
@@ -31,7 +31,7 @@ void AAnimatedDrawable::draw(const IDrawable::Params &params) {
         mTexture->setImage(img);
     }
 
-    ARender::rect(ATexturedBrush{
+    render.rectangle(ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

@@ -190,7 +190,7 @@ void AText::render(ARenderContext context) {
     AViewContainer::render(context);
 
     if (mPrerenderedString) {
-        mPrerenderedString->draw();
+        mPrerenderedString->draw(<#initializer#>, <#initializer#>);
     }
 }
 
@@ -199,7 +199,7 @@ void AText::prerenderString() {
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
     {
-        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
+        auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
 
         if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
             for (auto& wordEntry: mWordEntries) {

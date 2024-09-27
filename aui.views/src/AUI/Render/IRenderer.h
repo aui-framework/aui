@@ -136,7 +136,7 @@ enum class Blending {
 };
 
 /**
- * @brief Base class for rendering (for drawing use ARender facade instead).
+ * @brief Base class for rendering.
  * @ingroup views
  * @details
  * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
@@ -216,15 +216,6 @@ public:
         }
     };
 
-protected:
-    AColor mColor;
-    glm::mat4 mTransform;
-    ABaseWindow* mWindow = nullptr;
-    APool<ITexture> mTexturePool;
-    uint8_t mStencilDepth = 0;
-
-    virtual ITexture* createNewTexture() = 0;
-
 public:
     IRenderer(): mTexturePool([this] { return createNewTexture(); }) {}
     virtual ~IRenderer() = default;
@@ -248,9 +239,9 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      */
-    virtual void drawRect(const ABrush& brush,
-                          glm::vec2 position,
-                          glm::vec2 size) = 0;
+    virtual void rectangle(const ABrush& brush,
+                           glm::vec2 position,
+                           glm::vec2 size) = 0;
 
 
     /**
@@ -260,10 +251,10 @@ public:
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
-    virtual void drawRoundedRect(const ABrush& brush,
-                                 glm::vec2 position,
-                                 glm::vec2 size,
-                                 float radius) = 0;
+    virtual void roundedRectangle(const ABrush& brush,
+                                  glm::vec2 position,
+                                  glm::vec2 size,
+                                  float radius) = 0;
 
     /**
      * @brief Draws rectangle's border.
@@ -272,10 +263,10 @@ public:
      * @param size rectangle size (px)
      * @param lineWidth border line width (px)
      */
-    virtual void drawRectBorder(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size,
-                                float lineWidth = 1.f) = 0;
+    virtual void rectangleBorder(const ABrush& brush,
+                                 glm::vec2 position,
+                                 glm::vec2 size,
+                                 float lineWidth = 1.f) = 0;
     /**
      * @brief Draws rounded rectangle's border.
      * @param brush brush to use
@@ -284,11 +275,11 @@ public:
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    virtual void drawRoundedRectBorder(const ABrush& brush,
-                                       glm::vec2 position,
-                                       glm::vec2 size,
-                                       float radius,
-                                       int borderWidth) = 0;
+    virtual void roundedRectangleBorder(const ABrush& brush,
+                                        glm::vec2 position,
+                                        glm::vec2 size,
+                                        float radius,
+                                        int borderWidth) = 0;
 
 
     /**
@@ -298,10 +289,10 @@ public:
      * @param blurRadius blur radius
      * @param color shadow color
      */
-    virtual void drawBoxShadow(glm::vec2 position,
-                               glm::vec2 size,
-                               float blurRadius,
-                               const AColor& color) = 0;
+    virtual void boxShadow(glm::vec2 position,
+                           glm::vec2 size,
+                           float blurRadius,
+                           const AColor& color) = 0;
 
     /**
      * @brief Draws inner (inset) rectangle-shaped shadow.
@@ -311,16 +302,16 @@ public:
      * @param spreadRadius spread (offset) radius
      * @param borderRadius border radius of the rectangle.
      * @param color shadow color
-     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     * @param offset shadow offset. Unlike outer shadow (ctx.render.boxShadow), the offset is passed to the shader instead
      *               of a simple rectangle position offset.
      */
-    virtual void drawBoxShadowInner(glm::vec2 position,
-                                    glm::vec2 size,
-                                    float blurRadius,
-                                    float spreadRadius,
-                                    float borderRadius,
-                                    const AColor& color,
-                                    glm::vec2 offset) = 0;
+    virtual void boxShadowInner(glm::vec2 position,
+                                glm::vec2 size,
+                                float blurRadius,
+                                float spreadRadius,
+                                float borderRadius,
+                                const AColor& color,
+                                glm::vec2 offset) = 0;
 
     /**
      * @brief Draws string.
@@ -338,9 +329,9 @@ public:
      *     </dd>
      * </dl>
      */
-    virtual void drawString(glm::vec2 position,
-                            const AString& string,
-                            const AFontStyle& fs = {}) = 0;
+    virtual void string(glm::vec2 position,
+                        const AString& string,
+                        const AFontStyle& fs = {}) = 0;
 
     /**
      * @brief Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
@@ -359,7 +350,7 @@ public:
      * @param style style
      * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
 
     /**
      * @brief Draws points list.
@@ -367,7 +358,7 @@ public:
      * @param points points
      * @param size point size
      */
-    virtual void drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
+    virtual void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
 
     /**
      * @brief Draws multiple individual lines in a batch.
@@ -376,7 +367,7 @@ public:
      * @param style style
      * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
 
     /**
      * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
@@ -384,13 +375,13 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @details
-     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
      */
-    virtual void drawSquareSector(const ABrush& brush,
-                                  const glm::vec2& position,
-                                  const glm::vec2& size,
-                                  AAngleRadians begin,
-                                  AAngleRadians end) = 0;
+    virtual void squareSector(const ABrush& brush,
+                              const glm::vec2& position,
+                              const glm::vec2& size,
+                              AAngleRadians begin,
+                              AAngleRadians end) = 0;
  
     /**
      * @brief Sets the color which is multiplied with any brush.
@@ -500,6 +491,42 @@ public:
     void setStencilDepth(uint8_t stencilDepth) {
         mStencilDepth = stencilDepth;
     }
+
+
+    /**
+     * @brief Wrapper for setTransform applying matrix translate transformation.
+     * @param offset offset in pixels to translate.
+     */
+    void translate(const glm::vec2& offset) {
+        setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+    }
+
+    /**
+     * @brief wrapper for setTransform applying matrix rotation along the specified axis.
+     * @param axis axis
+     * @param angle angle to rotate
+     */
+    void rotate(const glm::vec3& axis, AAngleRadians angle) {
+        setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
+    }
+
+    /**
+     * @brief wrapper for setTransform applying matrix rotation along z axis.
+     * @param angle angle to rotate
+     */
+    void rotate(AAngleRadians angle) {
+        rotate({0.f, 0.f, 1.f}, angle);
+    }
+
+protected:
+    AColor mColor;
+    glm::mat4 mTransform;
+    ABaseWindow* mWindow = nullptr;
+    APool<ITexture> mTexturePool;
+    uint8_t mStencilDepth = 0;
+
+    virtual _unique<ITexture> createNewTexture() = 0;
+
 };
 
 

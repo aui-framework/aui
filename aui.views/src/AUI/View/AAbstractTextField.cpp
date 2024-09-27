@@ -72,12 +72,12 @@ void AAbstractTextField::render(ARenderContext context)
             }
 
             auto p = getMouseSelectionPadding();
-            ARender::rect(ASolidBrush{},
-                          {p.x + absoluteCursorPos, p.y - 1},
-                          {1, getMouseSelectionFont().size + 2});
+            ctx.render.rectangle(ASolidBrush{},
+                                 {p.x + absoluteCursorPos, p.y - 1},
+                                 {1, getMouseSelectionFont().size + 2});
         }
 
-        ARender::setBlending(Blending::NORMAL);
+        ctx.render.setBlending(Blending::NORMAL);
     } else {
         doDrawString();
 	}
@@ -92,8 +92,8 @@ glm::ivec2 AAbstractTextField::getMouseSelectionPadding() {
 
 void AAbstractTextField::doDrawString() {
     RenderHints::PushMatrix m;
-    ARender::translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
-    if (mPrerenderedString) mPrerenderedString->draw();
+    ctx.render.translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
+    if (mPrerenderedString) mPrerenderedString->draw(<#initializer#>, <#initializer#>);
 }
 
 
@@ -203,7 +203,7 @@ void AAbstractTextField::prerenderStringIfNeeded() {
         auto text = getContentsPasswordWrap();
         updateTextAlignOffset();
         if (!text.empty()) {
-            auto canvas = ARender::newMultiStringCanvas(getFontStyle());
+            auto canvas = ctx.render.newMultiStringCanvas(getFontStyle());
             canvas->enableCachingForTextLayoutHelper();
             switch (getFontStyle().align) {
                 case ATextAlign::LEFT:
