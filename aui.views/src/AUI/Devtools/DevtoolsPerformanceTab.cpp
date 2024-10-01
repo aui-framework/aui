@@ -59,15 +59,17 @@ namespace {
         static constexpr auto DEFAULT_SIZE = 256;
         GraphView(): mImage({DEFAULT_SIZE, DEFAULT_SIZE}) {
             setExpanding();
-            mTexture = ctx.render.getNewTexture();
             mImage.fill({0, 0, 0, 0});
             mFrames.resize(DEFAULT_SIZE);
         }
 
-        void render(ARenderContext c) override {
-            AView::render(c);
+        void render(ARenderContext ctx) override {
+            AView::render(ctx);
+            if (mTexture == nullptr) {
+                mTexture = ctx.render.getNewTexture();
+            }
 
-            ctx.render.rect(ATexturedBrush {
+            ctx.render.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -77,11 +79,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ctx.render.rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ctx.render.rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 
