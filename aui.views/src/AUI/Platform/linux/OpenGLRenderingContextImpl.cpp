@@ -148,10 +148,10 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info("OpenGL context is ready");
     }
 
-    ctx.render.setRenderer(mRenderer = ourRenderer());
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
+    mRenderer = ourRenderer();
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -192,4 +192,8 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 
 AImage OpenGLRenderingContext::makeScreenshot() {
     return AImage();
+}
+
+IRenderer& OpenGLRenderingContext::renderer() {
+    return *mRenderer;
 }

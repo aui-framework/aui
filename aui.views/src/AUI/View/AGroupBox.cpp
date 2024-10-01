@@ -27,10 +27,10 @@ namespace {
             setContents(contents);
         }
 
-        void drawStencilMask() override {
-            AView::drawStencilMask();
+        void drawStencilMask(ARenderContext ctx) override {
+            AView::drawStencilMask(ctx);
 
-            RenderHints::PushMatrix transform;
+            RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
             ctx.render.rectangle(ASolidBrush{},
                                  d,

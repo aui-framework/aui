@@ -79,7 +79,7 @@ void AView::requestLayoutUpdate()
     AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
-void AView::drawStencilMask()
+void AView::drawStencilMask(ARenderContext ctx)
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
@@ -97,19 +97,19 @@ void AView::drawStencilMask()
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
             if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
-                s->renderFor(this);
+                s->renderFor(this, ctx);
             }
             break;
     }
 }
 
-void AView::postRender() {
+void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
-        mAnimator->postRender(this);
-    popStencilIfNeeded();
+        mAnimator->postRender(this, ctx.render);
+    popStencilIfNeeded(ctx);
 }
 
-void AView::popStencilIfNeeded() {
+void AView::popStencilIfNeeded(ARenderContext ctx) {
     if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
     {
         /*
@@ -118,23 +118,23 @@ void AView::popStencilIfNeeded() {
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::popMask([&]() {
-            drawStencilMask();
+        RenderHints::popMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 }
-void AView::render(ARenderContext context)
+void AView::render(ARenderContext ctx)
 {
     if (mAnimator)
-        mAnimator->animate(this);
+        mAnimator->animate(this, ctx.render);
 
     ensureAssUpdated();
 
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
@@ -142,20 +142,20 @@ void AView::render(ARenderContext context)
     for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
         if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
         if (auto w = mAss[i]) {
-            w->renderFor(this);
+            w->renderFor(this, ctx);
         }
     }
 
     //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
     if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
-        w->renderFor(this);
+        w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
 }

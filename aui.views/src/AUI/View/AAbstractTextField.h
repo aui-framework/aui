@@ -33,7 +33,7 @@ public:
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void setText(const AString& t) override;
 
-    void render(ARenderContext context) override;
+    void render(ARenderContext ctx) override;
 
     AString toString() const override;
 
@@ -94,7 +94,7 @@ protected:
     AString mContents;
     virtual bool isValidText(const AString& text);
 
-    void prerenderStringIfNeeded();
+    void prerenderStringIfNeeded(IRenderer& render);
 
     void typeableErase(size_t begin, size_t end) override;
     bool typeableInsert(size_t at, const AString& toInsert) override;
@@ -109,7 +109,7 @@ protected:
     void doRedraw() override;
 
 
-    void doDrawString();
+    void doDrawString(IRenderer& render);
 
     glm::ivec2 getMouseSelectionPadding() override;
 

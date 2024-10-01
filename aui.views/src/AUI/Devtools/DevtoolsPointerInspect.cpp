@@ -67,15 +67,15 @@ public:
 
     }
 
-    void render(ARenderContext context) override {
-        AViewContainer::render(context);
+    void render(ARenderContext ctx) override {
+        AViewContainer::render(ctx);
         auto view = mView.lock();
         if (!view) {
             ctx.render.string({0, 0}, "Expired");
             return;
         }
 
-        drawView(view, context);
+        drawView(view, ctx);
     }
 
 

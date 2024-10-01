@@ -62,7 +62,7 @@ public:
     void setSize(glm::ivec2 size) override;
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
-    void prerenderString();
+    void prerenderString(ARenderContext ctx);
 
     void invalidateFont() override;
 

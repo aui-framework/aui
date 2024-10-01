@@ -101,7 +101,7 @@ struct GradientShaderHelper {
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, ctx.render.getColor());
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
         aui::render::brush::gradient::Helper h(brush);
         shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
 
@@ -123,13 +123,14 @@ struct GradientShaderHelper {
 };
 
 struct SolidShaderHelper {
+    OpenGLRenderer& renderer;
     gl::Program& shader;
 
-    SolidShaderHelper(gl::Program& shader) : shader(shader) {}
+    SolidShaderHelper(OpenGLRenderer& renderer, gl::Program& shader) : renderer(renderer), shader(shader) {}
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, ctx.render.getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor() * brush.solidColor);
     }
 };
 
@@ -150,7 +151,7 @@ struct TexturedShaderHelper {
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, ctx.render.getColor());
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
         if (brush.uv1 || brush.uv2) {
             glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
             glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
@@ -295,7 +296,7 @@ void OpenGLRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
             TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-            SolidShaderHelper(*mSolidShader),
+            SolidShaderHelper(*this, *mSolidShader),
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
@@ -328,7 +329,7 @@ void OpenGLRenderer::roundedRectangle(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(*this, *mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*mRoundedSolidShader),
+            SolidShaderHelper(*this, *mRoundedSolidShader),
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
@@ -345,7 +346,7 @@ void OpenGLRenderer::rectangleBorder(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*mSolidShader),
+            SolidShaderHelper(*this, *mSolidShader),
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
@@ -386,7 +387,7 @@ void OpenGLRenderer::roundedRectangleBorder(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*mRoundedSolidShaderBorder),
+            SolidShaderHelper(*this, *mRoundedSolidShaderBorder),
             CustomShaderHelper{},
     }, brush);
 
@@ -569,7 +570,7 @@ public:
             setupVertexAttribs();
         }
 
-        auto finalColor = ctx.render.getColor() * mColor;
+        auto finalColor = mRenderer->getColor() * mColor;
         if (mFontRendering == FontRendering::SUBPIXEL) {
             mRenderer->mSymbolShaderSubPixel->use();
             mRenderer->mSymbolShaderSubPixel->set(aui::ShaderUniforms::UV_SCALE, uvScale);
@@ -813,7 +814,7 @@ bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& st
             std::visit(aui::lambda_overloaded {
                     GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
                     TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-                    SolidShaderHelper(*mSolidShader),
+                    SolidShaderHelper(*this, *mSolidShader),
                     CustomShaderHelper{},
             }, brush);
 
@@ -823,7 +824,7 @@ bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& st
             std::visit(aui::lambda_overloaded {
                     GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
                     TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-                    SolidShaderHelper(*mLineSolidDashedShader),
+                    SolidShaderHelper(*this, *mLineSolidDashedShader),
                     CustomShaderHelper{},
             }, brush);
             float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx; 
@@ -908,7 +909,7 @@ void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, A
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
             TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-            SolidShaderHelper(*mSolidShader),
+            SolidShaderHelper(*this, *mSolidShader),
             CustomShaderHelper{},
     }, brush);
 
@@ -938,7 +939,7 @@ void OpenGLRenderer::squareSector(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*mSquareSectorShader),
+            SolidShaderHelper(*this, *mSquareSectorShader),
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();

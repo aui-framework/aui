@@ -122,11 +122,11 @@ protected:
     /**
      * @return absoluteCursorPos
      */
-    int drawSelectionPre();
+    int drawSelectionPre(IRenderer& render);
 
-    void drawSelectionPost();
+    void drawSelectionPost(IRenderer& render);
 
-    void drawSelectionRects();
+    void drawSelectionRects(IRenderer& render);
 
     void setTextLayoutHelper(ATextLayoutHelper textLayoutHelper) {
         mTextLayoutHelper = std::move(textLayoutHelper);

@@ -69,7 +69,7 @@ public:
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
     void render(ARenderContext context) override;
-    void doRenderText();
+    void doRenderText(IRenderer& render);
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
@@ -92,7 +92,7 @@ public:
         mIconColor = iconColor;
     }
 
-    void doPrerender();
+    void doPrerender(IRenderer& render);
 
     bool consumesClick(const glm::ivec2& pos) override;
 

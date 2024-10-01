@@ -64,7 +64,7 @@ public:
 	 * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
 	 *        desired state (coordinates, color, etc.)
 	 */
-	virtual void draw(const IDrawable::Params& params, IRenderer& render) = 0;
+	virtual void draw(IRenderer& render, const IDrawable::Params& params) = 0;
 
 	
 	/**

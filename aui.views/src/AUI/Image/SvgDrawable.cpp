@@ -38,7 +38,7 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
     return mFactory->getSizeHint();
 }
 
-void AVectorDrawable::draw(const IDrawable::Params& params, IRenderer& render) {
+void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     auto& size = params.size;
     auto key = asKey(size);
     auto doDraw = [&](const ARender::Texture& texture) {

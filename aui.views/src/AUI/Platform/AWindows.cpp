@@ -42,7 +42,9 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
-    render({.position = glm::ivec2(0), .size = getSize()});
+    auto& renderer = mRenderingContext->renderer();
+    renderer.setWindow(this);
+    render({.position = glm::ivec2(0), .size = getSize(), .render = renderer});
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -101,7 +103,6 @@ void AWindow::redraw() {
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        ctx.render.setWindow(this);
         doDrawWindow();
 
         // measure frame time

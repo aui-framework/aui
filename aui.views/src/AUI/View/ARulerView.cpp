@@ -29,8 +29,8 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
     }
 }
 
-void ARulerView::render(ARenderContext context) {
-    AView::render(context);
+void ARulerView::render(ARenderContext ctx) {
+    AView::render(ctx);
 
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
         ctx.render.setTransform(glm::translate(
@@ -51,7 +51,7 @@ void ARulerView::render(ARenderContext context) {
      *
      */
     {
-        RenderHints::PushColor c;
+        RenderHints::PushColor c(ctx.render);
         ctx.render.setColor(getFontStyle().color);
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
             // large dashes

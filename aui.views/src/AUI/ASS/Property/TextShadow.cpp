@@ -19,13 +19,13 @@
 
 void ass::prop::Property<ass::TextShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
-        RenderHints::PushColor c;
+        RenderHints::PushColor c(ctx.render);
         ctx.render.setColor(mInfo.shadowColor);
 
         {
-            RenderHints::PushMatrix m;
+            RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
-            label->doRenderText();
+            label->doRenderText(ctx.render);
         }
     }
 }

@@ -25,22 +25,22 @@ void ass::prop::Property<ass::TextBorder>::renderFor(AView* view, const ARenderC
         {
             RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({-1, 0});
-            label->doRenderText();
+            label->doRenderText(ctx.render);
         }
         {
             RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({1, 0});
-            label->doRenderText();
+            label->doRenderText(ctx.render);
         }
         {
             RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({0, -1});
-            label->doRenderText();
+            label->doRenderText(ctx.render);
         }
         {
             RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({0, 1});
-            label->doRenderText();
+            label->doRenderText(ctx.render);
         }
     }
 }

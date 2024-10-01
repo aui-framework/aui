@@ -344,13 +344,25 @@ public:
     virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
     /**
+    * @details
+    * <dl>
+    *   <dt><b>Performance note</b></dt>
+    *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
+    * </dl>
+    */
+    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        glm::vec2 points[] = { p1, p2 };
+        lines(brush, points, style, width);
+    }
+
+    /**
      * @brief Draws polyline (non-loop line strip).
      * @param brush brush
      * @param points polyline points
      * @param style style
      * @param width line width
      */
-    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) = 0;
 
     /**
      * @brief Draws points list.

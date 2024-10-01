@@ -56,6 +56,8 @@ public:
         return std::nullopt;
     }
 
+    IRenderer& renderer() override;
+
 private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;

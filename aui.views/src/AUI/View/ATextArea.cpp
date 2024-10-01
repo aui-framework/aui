@@ -48,8 +48,8 @@ private:
         mTextArea.mScrollbar->setScrollDimensions(getContentHeight(),
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
-    void pushScrollMatrix() {
-        ctx.render.setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+    void pushScrollMatrix(IRenderer& render) {
+        render.setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -105,7 +105,7 @@ public:
         return length;
     }
 
-    void render(ARenderContext context) override {
+    void render(ARenderContext ctx) override {
         // TODO stub
         /*
         if (mLines.empty() && !mFullText->empty()) {
@@ -121,7 +121,7 @@ public:
             }
             updateScrollDimensions();
         }*/
-        AView::render(context);
+        AView::render(ctx);
 
         auto drawText = [&] {
             size_t lineHeight = getFontStyle().getLineHeight();
@@ -134,26 +134,26 @@ public:
                 if (!mLines[i].prerendered) {
                     mLines[i].prerendered = ctx.render.prerenderString({0, 0}, mLines[i].text, getFontStyle());
                 }
-                RenderHints::PushMatrix m;
+                RenderHints::PushMatrix m(ctx.render);
                 ctx.render.translate({mPadding.left - mHorizontalScroll,
                                     mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
-                mLines[i].prerendered->draw(<#initializer#>, <#initializer#>);
+                mLines[i].prerendered->draw();
             }
         };
 
         if (hasFocus() && mTextArea.mEditable) {
             int absoluteCursorPos;
             {
-                RenderHints::PushMatrix m;
-                pushScrollMatrix();
-                absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+                RenderHints::PushMatrix m(ctx.render);
+                pushScrollMatrix(ctx.render);
+                absoluteCursorPos = ACursorSelectable::drawSelectionPre(ctx.render);
             }
 
             drawText();
 
             {
-                RenderHints::PushMatrix m;
-                ACursorSelectable::drawSelectionPost();
+                RenderHints::PushMatrix m(ctx.render);
+                ACursorSelectable::drawSelectionPost(ctx.render);
             }
 
             // cursor

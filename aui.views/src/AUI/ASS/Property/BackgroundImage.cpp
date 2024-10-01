@@ -42,7 +42,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
                 p.size = glm::vec2(size) * scale;
                 p.repeat = info.rep.or_default(Repeat::NONE);
                 p.imageRendering = imageRendering;
-                drawable->draw(p, ctx.render);
+                drawable->draw(ctx.render, p);
             };
 
             switch (info.sizing.or_default(Sizing::FIT_PADDING)) {
@@ -59,7 +59,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
                     p.repeat = info.rep.or_default(Repeat::NONE);
                     p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
                     p.imageRendering = imageRendering;
-                    drawable->draw(p, ctx.render);
+                    drawable->draw(ctx.render, p);
                     break;
                 }
                 case Sizing::COVER: {
@@ -151,7 +151,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
                     p.size = view->getSize();
                     p.imageRendering = imageRendering;
 
-                    drawable->draw(p, ctx.render);
+                    drawable->draw(ctx.render, p);
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
@@ -173,7 +173,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
                         p.renderingSize = {textureWidth, textureHeight};
-                        drawable->draw(p, ctx.render);
+                        drawable->draw(ctx.render, p);
                     };
 
 

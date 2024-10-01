@@ -19,7 +19,7 @@
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(const IDrawable::Params& params, IRenderer& render) {
+void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     if (!mTexture)
         mTexture = render.getNewTexture();
 

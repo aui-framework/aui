@@ -115,7 +115,7 @@ struct RoundedRect {
     glm::ivec2 transformedPosition;
     glm::ivec2 center;
 
-    roundedRectangle(int radius, const glm::ivec2& size, const glm::ivec2& transformedPosition):
+    RoundedRect(int radius, const glm::ivec2& size, const glm::ivec2& transformedPosition):
         radius(radius),
         radius2(radius * radius),
         size(size),

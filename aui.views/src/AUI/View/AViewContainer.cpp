@@ -50,7 +50,7 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         return;
     }
 
-    const auto prevStencilLevel = ctx.render.getRenderer()->getStencilDepth();
+    const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
 
     bool showRedraw = false;
     if (view->mRedrawRequested) {
@@ -62,29 +62,29 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
     AUI_DEFER {
         if (showRedraw) {
-            auto c = ctx.render.getColor();
-            AUI_DEFER { ctx.render.setColorForced(c); };
-            ctx.render.rectangle(ASolidBrush{0x80ff00ff_argb}, view->getPosition(), view->getSize());
+            auto c = contextOfTheView.render.getColor();
+            AUI_DEFER { contextOfTheView.render.setColorForced(c); };
+            contextOfTheView.render.rectangle(ASolidBrush{0x80ff00ff_argb}, view->getPosition(), view->getSize());
         }
     };
 
-    RenderHints::PushState s;
+    RenderHints::PushState s(contextOfTheView.render);
     glm::mat4 t(1.f);
     view->getTransform(t);
-    ctx.render.setTransform(t);
-    ctx.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    contextOfTheView.render.setTransform(t);
+    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
 
     try {
         view->render(contextOfTheView);
-        view->postRender();
+        view->postRender(contextOfTheView);
     }
     catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        ctx.render.getRenderer()->setStencilDepth(prevStencilLevel);
+        contextOfTheView.render.setStencilDepth(prevStencilLevel);
         return;
     }
 
-    auto currentStencilLevel = ctx.render.getRenderer()->getStencilDepth();
+    auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
     AUI_ASSERT(currentStencilLevel == prevStencilLevel);
 }
 

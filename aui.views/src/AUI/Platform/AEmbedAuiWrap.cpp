@@ -117,14 +117,15 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    ctx.render.setWindow(mContainer.get());
+    auto& render = mContainer->getRenderingContext()->renderer();
+    render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
+    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize(), .render = render });
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 

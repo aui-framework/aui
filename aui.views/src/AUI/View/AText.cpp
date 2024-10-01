@@ -161,18 +161,10 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
     return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
     auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
     auto engineHeight = mEngine.getHeight();
     if (engineHeight.has_value()) {
@@ -183,18 +175,14 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
 }
 
 void AText::render(ARenderContext context) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
     AViewContainer::render(context);
 
     if (mPrerenderedString) {
-        mPrerenderedString->draw(<#initializer#>, <#initializer#>);
+        mPrerenderedString->draw();
     }
 }
 
-void AText::prerenderString() {
+void AText::prerenderString(ARenderContext ctx) {
     mEngine.setTextAlign(getFontStyle().align);
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
@@ -224,7 +212,7 @@ void AText::setSize(glm::ivec2 size) {
     int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
     AViewContainer::setSize(size);
     if (widthDiffers) {
-        prerenderString();
+        mPrerenderedString = nullptr;
         AWindow::current()->flagUpdateLayout();
     }
 }

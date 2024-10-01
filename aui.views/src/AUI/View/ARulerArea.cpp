@@ -73,8 +73,8 @@ void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
     mVerticalRuler->setOffsetPx(pos.y);
 }
 
-void ARulerArea::render(ARenderContext context) {
-    AViewContainer::render(context);
+void ARulerArea::render(ARenderContext ctx) {
+    AViewContainer::render(ctx);
 
 
     glDisable(GL_STENCIL_TEST);
@@ -93,14 +93,14 @@ void ARulerArea::render(ARenderContext context) {
         glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX->getWidth(), fs.size) - glm::vec2(4_dp);
 
         {
-            RenderHints::PushMatrix m;
+            RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
-            prX->draw(<#initializer#>, <#initializer#>);
+            prX->draw();
         }
         {
-            RenderHints::PushMatrix m;
+            RenderHints::PushMatrix m(ctx.render);
             ctx.render.translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
-            prY->draw(<#initializer#>, <#initializer#>);
+            prY->draw();
         }
 
         ctx.render.setBlending(Blending::INVERSE_DST);

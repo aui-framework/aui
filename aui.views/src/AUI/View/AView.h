@@ -312,22 +312,22 @@ public:
      */
     ABaseWindow* getWindow() const;
 
-    virtual void drawStencilMask();
+    virtual void drawStencilMask(ARenderContext ctx);
 
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
      */
-    virtual void render(ARenderContext context);
+    virtual void render(ARenderContext ctx);
 
     /**
      * @brief Performs post-draw routines of this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
      */
-    virtual void postRender();
+    virtual void postRender(ARenderContext ctx);
 
-    void popStencilIfNeeded();
+    void popStencilIfNeeded(ARenderContext ctx);
 
     [[nodiscard]]
     const AVector<AString>& getAssNames() const noexcept {

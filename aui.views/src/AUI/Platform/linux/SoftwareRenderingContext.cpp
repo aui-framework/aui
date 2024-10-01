@@ -92,9 +92,6 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (!mXImage) {
         throw AException("unable to create XImage");
     }
-    if (ctx.render.getRenderer() == nullptr) {
-        ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
-    }
     SoftwareRenderingContext::endResize(init.window);
 }
 
@@ -139,4 +136,9 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob, s);
     return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
+}
+
+IRenderer& SoftwareRenderingContext::renderer() {
+    static SoftwareRenderer r;
+    return r;
 }
