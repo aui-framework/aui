@@ -14,7 +14,7 @@
 //
 
 #include "ARotationAnimator.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 void ARotationAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
     translateToCenter(view, render);

@@ -19,7 +19,7 @@
 #include <AUI/Util/ACursorSelectable.h>
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 
 /**

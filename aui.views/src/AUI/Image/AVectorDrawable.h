@@ -16,7 +16,7 @@
 #include "AUI/Common/ADeque.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Image/IImageFactory.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 
 class API_AUI_VIEWS AVectorDrawable: public IDrawable
@@ -24,7 +24,7 @@ class API_AUI_VIEWS AVectorDrawable: public IDrawable
 private:
     struct Pair {
         uint64_t key;
-        ARender::Texture texture;
+        _<ITexture> texture;
     };
 
     ADeque<Pair> mRasterized;

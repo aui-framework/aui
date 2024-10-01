@@ -15,7 +15,7 @@
 
 #include <iostream>
 #include "ADrawableView.h"
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
 

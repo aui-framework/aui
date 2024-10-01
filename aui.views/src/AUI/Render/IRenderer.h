@@ -197,7 +197,7 @@ public:
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
-         * @return instance of <code>ARender::PrerenderedString</code> to drawElements with.
+         * @return instance of <code>_<IRenderer::IPrerenderedString></code> to drawElements with.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 

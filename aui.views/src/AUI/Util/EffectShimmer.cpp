@@ -14,7 +14,7 @@
 //
 
 #include "EffectShimmer.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 void EffectShimmer::draw(AView* view) {
     using namespace std::chrono;

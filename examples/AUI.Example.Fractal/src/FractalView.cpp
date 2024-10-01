@@ -14,7 +14,7 @@
 //
 
 #include "FractalView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 static gl::Shader::Uniform UNIFORM_TR("tr");

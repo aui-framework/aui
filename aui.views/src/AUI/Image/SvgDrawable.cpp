@@ -17,7 +17,7 @@
 #include "AUI/Image/IImageFactory.h"
 
 #include <AUI/Common/AString.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 
 inline uint64_t asKey(const glm::ivec2 size) {
@@ -41,7 +41,7 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
 void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     auto& size = params.size;
     auto key = asKey(size);
-    auto doDraw = [&](const ARender::Texture& texture) {
+    auto doDraw = [&](const _<ITexture>& texture) {
         render.rectangle(ATexturedBrush{
                                      .texture = texture,
                                      .uv1 = params.cropUvTopLeft,

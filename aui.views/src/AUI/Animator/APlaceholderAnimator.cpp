@@ -16,7 +16,7 @@
 #include "APlaceholderAnimator.h"
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 APlaceholderAnimator::APlaceholderAnimator() {
 

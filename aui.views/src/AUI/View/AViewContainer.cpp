@@ -12,7 +12,7 @@
 #include "AViewContainer.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 

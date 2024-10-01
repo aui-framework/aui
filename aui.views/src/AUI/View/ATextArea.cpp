@@ -27,7 +27,7 @@ private:
     ATextArea& mTextArea;
     struct Line {
         AString text;
-        ARender::PrerenderedString prerendered;
+        _<IRenderer::IPrerenderedString> prerendered;
     };
 
     AVector<Line> mLines;

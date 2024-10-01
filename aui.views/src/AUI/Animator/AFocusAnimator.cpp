@@ -14,7 +14,7 @@
 //
 
 #include "AFocusAnimator.h"
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/View/AView.h>
 #include <AUI/Render/RenderHints.h>
 #include <AUI/Platform/AWindow.h>

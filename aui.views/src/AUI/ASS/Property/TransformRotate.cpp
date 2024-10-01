@@ -15,7 +15,7 @@
 
 
 #include "TransformRotate.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformRotate>::renderFor(AView* view, const ARenderContext& ctx) {

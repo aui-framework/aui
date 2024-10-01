@@ -31,7 +31,7 @@
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Util/AArrayView.h"
 #include "ShaderUniforms.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "glm/fwd.hpp"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>

@@ -19,12 +19,12 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 class AImageDrawable: public IDrawable {
 private:
     glm::ivec2 mSize;
-    std::variant<ARender::Texture, _<AImage>> mStorage;
+    std::variant<_<ITexture>, _<AImage>> mStorage;
 
 public:
     explicit AImageDrawable(_<AImage> image);

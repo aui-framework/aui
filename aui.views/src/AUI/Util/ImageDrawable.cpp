@@ -15,7 +15,7 @@
 //
 
 #include "AUI/Common/AException.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AImageDrawable.h"
 #include "AUI/Render/ITexture.h"
 #include <AUI/Platform/AWindow.h>

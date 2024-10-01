@@ -14,7 +14,7 @@
 //
 
 #include <AUI/Platform/AInput.h>
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <AUI/Render/RenderHints.h>
 #include "ACursorSelectable.h"
 

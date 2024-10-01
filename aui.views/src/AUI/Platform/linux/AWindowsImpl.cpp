@@ -20,7 +20,7 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "AUI/Platform/ErrorToException.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

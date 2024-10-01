@@ -16,7 +16,7 @@
 
 #include "IDrawable.h"
 #include "AUI/Image/IAnimatedImageFactory.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Common/ASignal.h"
 
 class API_AUI_VIEWS AAnimatedDrawable : public IDrawable, public AObject {

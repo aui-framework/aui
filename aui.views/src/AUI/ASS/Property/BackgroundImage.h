@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 

@@ -12,7 +12,7 @@
 #pragma once
 
 
-#include "ARender.h"
+#include "IRenderer.h"
 #include <AUI/Util/AWordWrappingEngine.h>
 #include "AUI/Font/AFontStyle.h"
 
@@ -52,7 +52,7 @@ friend class TextEntry;
 
 
 public:
-    ARender::PrerenderedString updateText(const AString& text, const glm::ivec2& size, IRenderer& render);
+    _<IRenderer::IPrerenderedString> updateText(const AString& text, const glm::ivec2& size, IRenderer& render);
 
     void setFontStyle(const AFontStyle& fontStyle) {
         mFontStyle = fontStyle;

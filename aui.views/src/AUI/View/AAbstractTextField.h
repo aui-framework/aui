@@ -17,7 +17,7 @@
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 /**
  * @brief Text field implementation
@@ -90,7 +90,7 @@ signals:
     emits<> actionButtonPressed;
 
 protected:
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
     virtual bool isValidText(const AString& text);
 

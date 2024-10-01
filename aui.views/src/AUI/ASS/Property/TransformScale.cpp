@@ -15,7 +15,7 @@
 
 
 #include "TransformScale.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformScale>::renderFor(AView* view, const ARenderContext& ctx) {

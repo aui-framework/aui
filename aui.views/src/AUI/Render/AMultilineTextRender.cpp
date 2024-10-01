@@ -28,7 +28,7 @@ Float AMultilineTextRender::TextEntry::getFloat() const {
 }
 
 
-ARender::PrerenderedString AMultilineTextRender::updateText(const AString& text, const glm::ivec2& size, IRenderer& render) {
+_<IRenderer::IPrerenderedString> AMultilineTextRender::updateText(const AString& text, const glm::ivec2& size, IRenderer& render) {
     AVector<TextEntry> textEntries;
 
     auto lastWordBegin = text.begin();

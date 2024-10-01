@@ -15,7 +15,7 @@
 #include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
-#include "ARender.h"
+#include "IRenderer.h"
 
 namespace RenderHints {
     /**

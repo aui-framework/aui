@@ -12,7 +12,7 @@
 #include "AView.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/IStringable.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"

@@ -12,7 +12,7 @@
 #pragma once
 #include "AView.h"
 #include "AUI/Common/AString.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "ALabel.h"
 #include "AViewContainer.h"

@@ -43,7 +43,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/ABrush.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ALayoutInflater.h"

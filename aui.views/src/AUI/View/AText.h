@@ -140,7 +140,7 @@ private:
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;
 
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     ParsedFlags mParsedFlags;
 
 

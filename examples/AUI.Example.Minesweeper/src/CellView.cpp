@@ -12,7 +12,7 @@
 #include "CellView.h"
 
 #include "AUI/Image/Drawables.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 CellView::CellView(FieldCell& cell)
 	: mCell(cell), mCellValueCopy(cell)
