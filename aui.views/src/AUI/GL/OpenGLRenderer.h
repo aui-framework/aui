@@ -64,7 +64,6 @@ private:
 
     void uploadToShaderCommon();
 
-    void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
     /**
