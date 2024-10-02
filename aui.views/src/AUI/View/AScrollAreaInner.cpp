@@ -30,4 +30,5 @@ void AScrollAreaInner::updateLayout() {
 }
 void AScrollAreaInner::updateContentsScroll() {
     AUI_NULLSAFE(mContents)->setPosition(-glm::ivec2(mScroll));
+    redraw();
 }
