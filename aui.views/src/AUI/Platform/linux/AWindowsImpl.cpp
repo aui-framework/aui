@@ -514,6 +514,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         }
                         window->mRedrawFlag = false;
                         window->redraw();
+                        window->mRedrawFlag = false;
 
                         XSyncValue syncValue;
                         XSyncIntsToValue(&syncValue,
