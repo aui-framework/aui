@@ -26,8 +26,8 @@ DemoGraphView::DemoGraphView()
     }
 }
 
-void DemoGraphView::render(ARenderContext context) {
-    AView::render(context);
+void DemoGraphView::render(ARenderContext ctx) {
+    AView::render(ctx);
 
     ctx.render.lines(ASolidBrush{0xff0000_rgb }, mPoints, ABorderStyle::Dashed{}, 4_dp);
 

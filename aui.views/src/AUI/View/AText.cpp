@@ -161,13 +161,19 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        performLayout();
+    }
     return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        performLayout();
+    }
     auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
-    auto engineHeight = mEngine.getHeight();
-    if (engineHeight.has_value()) {
+
+    if (auto engineHeight = mEngine.height()) {
         height = std::max(height, *engineHeight);
     }
 
@@ -177,15 +183,16 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
 void AText::render(ARenderContext context) {
     AViewContainer::render(context);
 
+    if (!mPrerenderedString) {
+        prerenderString(context);
+    }
     if (mPrerenderedString) {
         mPrerenderedString->draw();
     }
 }
 
 void AText::prerenderString(ARenderContext ctx) {
-    mEngine.setTextAlign(getFontStyle().align);
-    mEngine.setLineHeight(getFontStyle().lineSpacing);
-    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
+    performLayout();
     {
         auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
 
@@ -205,6 +212,12 @@ void AText::prerenderString(ARenderContext ctx) {
         }
         mPrerenderedString = multiStringCanvas->finalize();
     }
+}
+
+void AText::performLayout() {
+    mEngine.setTextAlign(getFontStyle().align);
+    mEngine.setLineHeight(getFontStyle().lineSpacing);
+    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
 }
 
 void AText::setSize(glm::ivec2 size) {

@@ -149,6 +149,8 @@ private:
                   const ParsedFlags& flags);
 
     static ParsedFlags parseFlags(const Flags& flags);
+
+    void performLayout();
 };
 
 
