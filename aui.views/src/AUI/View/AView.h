@@ -324,6 +324,9 @@ public:
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
+     * @details
+     * AView::render is not guaranteed to be called on per-frame basis. Moreover, this method can be called multiple
+     * times if render-to-texture caching decides to do so.
      */
     virtual void render(ARenderContext ctx);
 
