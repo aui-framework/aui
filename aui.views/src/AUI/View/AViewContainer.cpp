@@ -66,7 +66,7 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         if (showRedraw) [[unlikely]] {
             auto c = contextOfTheView.render.getColor();
             AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-            contextOfTheView.render.rectangle(ASolidBrush{0x80ff00ff_argb}, view->getPosition(), view->getSize());
+            contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
         }
     };
 

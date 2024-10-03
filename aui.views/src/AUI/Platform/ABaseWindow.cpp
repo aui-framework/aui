@@ -417,7 +417,7 @@ void ABaseWindow::render(ARenderContext context) {
 #endif
     {
         APerformanceSection root("before frame");
-        mBeforeFrameQueue.processMessages(context.render);
+        std::exchange(mBeforeFrameQueue, {}).processMessages(context.render);
     }
     processTouchscreenKeyboardRequest();
 

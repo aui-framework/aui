@@ -72,6 +72,7 @@ void AView::redraw()
         return;
     }
     markPixelDataInvalid({0, 0}, getSize());
+    mRedrawRequested = true;
 }
 void AView::requestLayoutUpdate()
 {
@@ -735,7 +736,7 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
         return;
     }
 
-    if (!mRedrawRequested) {
+    if (mRedrawRequested) {
         // this view already requested a redraw.
         return;
     }
