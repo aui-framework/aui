@@ -415,6 +415,10 @@ void ABaseWindow::render(ARenderContext context) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
+    {
+        APerformanceSection root("before frame");
+        mBeforeFrameQueue.processMessages(context.render);
+    }
     processTouchscreenKeyboardRequest();
 
     mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {

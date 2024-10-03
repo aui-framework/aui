@@ -191,7 +191,7 @@ namespace aui::impl::slot {
  * @endcode
  * @sa ARaiiHelper
  */
-#define AUI_DEFER ARaiiHelper auiDeffer ## __LINE__ = [&]
+#define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_,  __LINE__) = [&]
 
 
 /**

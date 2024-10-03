@@ -71,7 +71,6 @@ void AView::redraw()
     if (mRedrawRequested) {
         return;
     }
-    mRedrawRequested = true;
     markPixelDataInvalid({0, 0}, getSize());
 }
 void AView::requestLayoutUpdate()
@@ -646,6 +645,7 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;
+    redraw();
 }
 
 
@@ -703,10 +703,34 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
                 .size = size,
             };
         }
-        if (!mRedrawRequested) {
+        if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.
             return;
         }
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+                // dead interface?
+                return;
+            }
+            APerformanceSection s("Render-to-texture rasterization", {}, IStringable::toString(this).toStdString());
+            mRenderToTexture->rendererInterface->begin(renderer, getSize());
+            AUI_DEFER { mRenderToTexture->rendererInterface->end(renderer); };
+
+            ARenderContext contextOfTheView {
+                .position = { 0, 0 },
+                .size = getSize(),
+                .render = renderer,
+            };
+            RenderHints::PushState state(renderer);
+            try {
+                render(contextOfTheView);
+                postRender(contextOfTheView);
+            }
+            catch (const AException& e) {
+                ALogger::err("AView") << "Unable to render view: " << e;
+                return;
+            }
+        });
         AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition(), getSize());
         return;
     }

@@ -36,6 +36,7 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend struct IRenderingContext::Init;
 
 public:
+    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
     ABaseWindow();
 
@@ -135,6 +136,11 @@ public:
 
     const _unique<IRenderingContext>& getRenderingContext() const {
         return mRenderingContext;
+    }
+
+    [[nodiscard]]
+    BeforeFrameQueue& beforeFrameQueue() noexcept {
+        return mBeforeFrameQueue;
     }
 
     void updateDpi();
@@ -409,6 +415,8 @@ private:
     Profiling mProfiling{};
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
+
+    BeforeFrameQueue mBeforeFrameQueue;
 
     ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
 

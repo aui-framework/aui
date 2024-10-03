@@ -54,7 +54,7 @@ public:
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
-	void enqueue(AMessageQueue::Message f);
+	void enqueue(AMessageQueue<>::Message f);
 
 	virtual ~AAbstractThread();
 
@@ -128,7 +128,7 @@ protected:
 
     AString mThreadName;
 
-    AMessageQueue mMessageQueue;
+    AMessageQueue<> mMessageQueue;
 
     AAbstractThread(const id& id) noexcept;
     void updateThreadName() noexcept;

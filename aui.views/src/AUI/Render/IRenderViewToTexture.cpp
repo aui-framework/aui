@@ -20,4 +20,5 @@ void IRenderViewToTexture::enableForView(IRenderer& renderer, AView& view) {
     }
     view.mRenderToTexture.emplace();
     view.mRenderToTexture->rendererInterface = std::move(renderViewToTexture);
+    view.redraw();
 }

@@ -302,7 +302,7 @@ protected:
     /**
      * @brief A view requests to redraw it and passes it's coords relative to this.
      */
-    virtual void markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size);
+    virtual void markPixelDataInvalid(glm::ivec2 renderer, glm::ivec2 size);
 
 public:
     AView();

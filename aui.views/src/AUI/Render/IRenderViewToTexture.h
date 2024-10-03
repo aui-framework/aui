@@ -30,13 +30,21 @@ public:
      * @param surfaceSize framebuffer size. Adjusts this value to achieve supersampling. Resizes the surface if
      * mismatched with surfaceSize.
      * @details
-     * If needed, adjusts renderer's transform matrix. The caller is obligated to recover matrix/color state prior to
-     * begin anyway.
+     * If needed, adjusts renderer's transform matrix.
      */
     virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize) = 0;
 
     /**
-     * @brief Finishes drawing operation started with begin method (if was). Draws contents of the surface.
+     * @brief Finishes drawing operation started with begin method.
+     * @param renderer renderer to draw with. IRenderViewToTexture is expected to be associated with the renderer
+     * it's created with and normally this parameter is used to assert check the used renderer is the same.
+     * @details
+     * The caller is obligated to recover renderer's state prior to begin method call.
+     */
+    virtual void end(IRenderer& renderer) = 0;
+
+    /**
+     * @brief Draws contents of the surface.
      * @param renderer renderer to draw with. IRenderViewToTexture is expected to be associated with the renderer
      * it's created with and normally this parameter is used to assert check the used renderer is the same.
      */

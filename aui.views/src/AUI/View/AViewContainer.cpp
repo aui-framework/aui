@@ -71,24 +71,15 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     };
 
     RenderHints::PushState s(contextOfTheView.render);
-    auto applyTransform = [&] {
-        glm::mat4 t(1.f);
-        view->getTransform(t);
-        contextOfTheView.render.setTransform(t);
-        contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
-    };
+    glm::mat4 t(1.f);
+    view->getTransform(t);
+    contextOfTheView.render.setTransform(t);
+    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
     if (view->mRenderToTexture) [[unlikely]] {
-        auto invalidAreas = std::exchange(view->mRenderToTexture->invalidAreas, {});
-        if (invalidAreas.empty()) {
-//            goto drawRenderToTexture;
-        }
-        view->mRenderToTexture->rendererInterface->begin(contextOfTheContainer.render, view->getSize());
-        contextOfTheView.render.setStencilDepth(0);
-        contextOfTheView.render.setColor(AColor(1, 1, 1, 1));
-    } else {
-        applyTransform();
+        // view was prerendered to texture; see AView::markPixelDataInvalid
+        view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+        return;
     }
-
     try {
         view->render(contextOfTheView);
         view->postRender(contextOfTheView);
@@ -102,11 +93,6 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     {
         auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
         AUI_ASSERT(currentStencilLevel == prevStencilLevel);
-    }
-
-    if (view->mRenderToTexture) {
-        drawRenderToTexture:
-        view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
     }
 }
 
@@ -138,6 +124,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     }
     invalidateCaches();
     emit childrenChanged;
+    redraw();
 }
 
 void AViewContainer::addView(const _<AView>& view) {
@@ -511,6 +498,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     mCustomStyleRule = std::move(container->mCustomStyleRule);
     mAssNames.insertAll(container->mAssNames);
     mAssHelper = nullptr;
+    invalidateCaches();
 }
 
 void AViewContainer::setEnabled(bool enabled) {
@@ -592,6 +580,7 @@ void AViewContainer::onClickPrevented() {
 
 void AViewContainer::invalidateCaches() {
     mConsumesClickCache.reset();
+    redraw();
 }
 
 void AViewContainer::onViewGraphSubtreeChanged() {

@@ -93,7 +93,7 @@ void AWindow::redraw() {
             APerformanceSection s("IRenderingContext::beginPaint");
             mRenderingContext->beginPaint(*this);
         }
-        ARaiiHelper endPaintCaller = [&] {
+        AUI_DEFER {
             APerformanceSection s("IRenderingContext::endPaint");
             mRenderingContext->endPaint(*this);
         };

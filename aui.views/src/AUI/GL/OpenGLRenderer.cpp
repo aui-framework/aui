@@ -57,6 +57,7 @@
 #include <AUISL/Generated/square_sector.fsh.glsl120.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#include <AUI/GL/RenderTarget/TextureRenderTarget.h>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
 
@@ -1014,44 +1015,61 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
     try {
         class OpenGLRenderViewToTexture : public IRenderViewToTexture {
         public:
-            explicit OpenGLRenderViewToTexture(OpenGLRenderer& renderer) : mRenderer(renderer) {}
+            explicit OpenGLRenderViewToTexture(OpenGLRenderer& renderer) : mRenderer(renderer) {
+                auto prevFramebuffer = gl::Framebuffer::current();
+                AUI_ASSERT(prevFramebuffer != nullptr);
+                AUI_DEFER { prevFramebuffer->bind(); };
+
+                mFramebuffer.setSupersamplingRatio(1);
+                mFramebuffer.resize({1, 1});
+                auto albedo = _new<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>>();
+                mFramebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+                mTexture = std::move(albedo);
+            }
 
             void begin(IRenderer& renderer, glm::ivec2 surfaceSize) override {
                 AUI_ASSERT(&mRenderer == &renderer);
-                mDstFramebuffer = gl::Framebuffer::current();
+                auto prevFramebuffer = gl::Framebuffer::current();
+                AUI_ASSERT(prevFramebuffer != nullptr);
+                AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(surfaceSize), prevFramebuffer->size())));
+                AUI_DEFER { prevFramebuffer->bind(); };
                 mFramebuffer.resize(surfaceSize);
-                mFramebuffer.bind();
+                mRenderer.setTransformForced(mRenderer.getProjectionMatrix());
+            }
 
-                renderer.setTransformForced(glm::ortho(0.0f, static_cast<float>(surfaceSize.x) - 0.0f,
-                                  static_cast<float>(surfaceSize.y) - 0.0f, 0.0f, -1.f, 1.f));
-                resetStencil();
+            void end(IRenderer& renderer) override {
+                AUI_ASSERT(&mRenderer == &renderer);
+                auto prevFramebuffer = gl::Framebuffer::current();
+                AUI_ASSERT(prevFramebuffer != nullptr);
+                AUI_DEFER {
+                    prevFramebuffer->bind();
+                    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                };
+
+                prevFramebuffer->bindForRead();
+                mFramebuffer.bindForWrite();
+                const auto supersampledSrcSize = mFramebuffer.size() * prevFramebuffer->supersamlingRatio();
+                glBlitFramebuffer(0, supersampledSrcSize.y, supersampledSrcSize.x, 0, 0, 0, mFramebuffer.size().x,
+                                  mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
             }
 
             void draw(IRenderer& renderer) override {
                 AUI_ASSERT(&mRenderer == &renderer);
-                auto parentFramebuffer = std::exchange(mDstFramebuffer, nullptr);
-                if (parentFramebuffer == nullptr) {
-                    parentFramebuffer = gl::Framebuffer::current();
-                    if (parentFramebuffer == nullptr) {
-                        // could not complete operation.
-                        return;
-                    }
-                }
-                mFramebuffer.bindForRead();
-                parentFramebuffer->bindForWrite();
-                glBlitFramebuffer(0, 0, mFramebuffer.supersampledSize().x, mFramebuffer.supersampledSize().y, 0, 0,
-                                  mFramebuffer.supersampledSize().x, mFramebuffer.supersampledSize().y,
-                                  GL_COLOR_BUFFER_BIT, GL_NEAREST);
-                parentFramebuffer->bind();
+                mRenderer.mTexturedShader->use();
+                mTexture->bindAsTexture(0);
+                mRenderer.identityUv();
+                mRenderer.uploadToShaderCommon();
+                mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
             }
 
         private:
             OpenGLRenderer& mRenderer;
-            gl::Framebuffer mFramebuffer = OpenGLRenderingContext::newOffscreenRenderingFramebuffer({1, 1});
-            gl::Framebuffer* mDstFramebuffer = nullptr;
+            gl::Framebuffer mFramebuffer;
+            _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> mTexture;
         };
         return std::make_unique<OpenGLRenderViewToTexture>(*this);
-    } catch (...) {
+    } catch (const AException& e) {
+        ALogger::warn(LOG_TAG) << "Failed to initialize newRenderViewToTexture: " << e;
         return nullptr;
     }
 }
