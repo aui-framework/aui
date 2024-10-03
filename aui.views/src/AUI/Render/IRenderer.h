@@ -23,6 +23,7 @@
 #include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
+#include "IRenderViewToTexture.h"
 
 class AColor;
 class ABaseWindow;
@@ -476,6 +477,14 @@ public:
      */
     virtual void setBlending(Blending blending) = 0;
 
+
+    /**
+     * @brief Returns a new instance of IRenderViewToTexture interface associated with this renderer.
+     * @return A new instance. Can return null if unsupported.
+     */
+    [[nodiscard]]
+    virtual _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept = 0;
+
     /**
      * @brief Sets the window to render on.
      * @param window target window
@@ -486,6 +495,11 @@ public:
         setColorForced(1.f);
         setTransformForced(getProjectionMatrix());
         mStencilDepth = 0;
+    }
+
+    [[nodiscard]]
+    ABaseWindow* getWindow() const noexcept {
+        return mWindow;
     }
 
     virtual glm::mat4 getProjectionMatrix() const = 0;

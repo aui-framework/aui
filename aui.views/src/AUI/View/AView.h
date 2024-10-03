@@ -46,14 +46,13 @@
 #include <AUI/Render/ITexture.h>
 
 
-class ARender;
 class AWindow;
 class ABaseWindow;
 class AViewContainer;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
-
+class IRenderViewToTexture;
 
 /**
  * @defgroup useful_views Views
@@ -76,6 +75,7 @@ class AStylesheet;
 class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainer;
+    friend class IRenderViewToTexture;
 private:
     /**
      * @brief Animation.
@@ -298,9 +298,15 @@ protected:
      */
     virtual void onViewGraphSubtreeChanged();
 
+
+    /**
+     * @brief A view requests to redraw it and passes it's coords relative to this.
+     */
+    virtual void markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size);
+
 public:
     AView();
-    virtual ~AView() = default;
+    ~AView() override;
     /**
      * @brief Request window manager to redraw this AView.
      */
@@ -337,8 +343,8 @@ public:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-    const glm::ivec2& getPosition() const
-
+    [[nodiscard]]
+    glm::ivec2 getPosition() const noexcept
     {
         return mPosition;
     }
@@ -352,7 +358,7 @@ public:
      * @endcode
      */
     [[nodiscard]]
-    glm::ivec2 getCenterPointInWindow() const
+    glm::ivec2 getCenterPointInWindow() const noexcept
     {
         return getPositionInWindow() + getSize() / 2;
     }
@@ -360,7 +366,8 @@ public:
     /**
      * @brief Size, including content area, border and padding.
      */
-    const glm::ivec2& getSize() const
+    [[nodiscard]]
+    glm::ivec2 getSize() const noexcept
     {
         return mSize;
     }
@@ -368,11 +375,11 @@ public:
     /**
      * @return minSize (ignoring fixedSize)
      */
-    const glm::ivec2& getMinSize() const {
+    glm::ivec2 getMinSize() const noexcept {
         return mMinSize;
     }
 
-    void setMinSize(const glm::ivec2& minSize) {
+    void setMinSize(glm::ivec2 minSize) noexcept {
         mMinSize = minSize;
     }
 
@@ -888,10 +895,6 @@ public:
         setEnabled(false);
     }
 
-    void enableRenderToTexture() {
-        mRenderToTexture.emplace();
-    }
-
 
     /**
      * @brief Helper function for kAUI.h:with_style
@@ -1039,11 +1042,16 @@ private:
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
 
     struct RenderToTexture {
-        _unique<ITexture> texture;
+        _unique<IRenderViewToTexture> rendererInterface;
+        struct InvalidArea {
+            glm::ivec2 position;
+            glm::ivec2 size;
+        };
+        AStaticVector<InvalidArea, 8> invalidAreas;
     };
     AOptional<RenderToTexture> mRenderToTexture;
 
-    void notifyParentChildFocused(const _<AView> &view);
+    void notifyParentChildFocused(const _<AView>& view);
 };
 
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);

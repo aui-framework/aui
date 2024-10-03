@@ -63,6 +63,8 @@ AView::AView()
     setSlotsCallsOnlyOnMyThread(true);
 }
 
+AView::~AView() = default;
+
 void AView::redraw()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
@@ -70,8 +72,7 @@ void AView::redraw()
         return;
     }
     mRedrawRequested = true;
-    AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
-
+    markPixelDataInvalid({0, 0}, getSize());
 }
 void AView::requestLayoutUpdate()
 {
@@ -693,6 +694,27 @@ void AView::setVisibility(Visibility visibility) noexcept
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
+
+void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+    if (mRenderToTexture) {
+        if (!mRenderToTexture->invalidAreas.full()) {
+            mRenderToTexture->invalidAreas << RenderToTexture::InvalidArea{
+                .position = relativePosition,
+                .size = size,
+            };
+        }
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition(), getSize());
+        return;
+    }
+
+    if (!mRedrawRequested) {
+        // this view already requested a redraw.
+        return;
+    }
+
+    AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition() + relativePosition, size);
+}
+
 std::ostream& operator<<(std::ostream& os, const AView& view) {
     os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
        << ", size = " << view.getSize() << " }";

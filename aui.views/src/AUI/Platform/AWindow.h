@@ -270,6 +270,9 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+
+    void markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) override;
+
     float fetchDpiFromSystem() const override;
 
     /**

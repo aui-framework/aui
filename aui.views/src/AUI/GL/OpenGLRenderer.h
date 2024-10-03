@@ -142,6 +142,9 @@ public:
     void pushMaskBefore() override;
     void pushMaskAfter() override;
     void popMaskBefore() override;
+
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
+
     void popMaskAfter() override;
 
     void beginPaint(glm::uvec2 windowSize);

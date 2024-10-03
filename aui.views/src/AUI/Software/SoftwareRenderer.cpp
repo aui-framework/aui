@@ -586,3 +586,7 @@ void SoftwareRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points,
 
 void SoftwareRenderer::squareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size,
                                     AAngleRadians begin, AAngleRadians end) {}
+
+_unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept {
+    return nullptr;
+}

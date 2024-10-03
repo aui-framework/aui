@@ -153,13 +153,11 @@ public:
     glm::mat4 getProjectionMatrix() const override;
 
     void pushMaskBefore() override;
-
     void pushMaskAfter() override;
-
     void popMaskBefore() override;
-
     void popMaskAfter() override;
 
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
 
     void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
     void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;

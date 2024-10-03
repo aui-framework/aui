@@ -512,9 +512,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         if (auto w = _cast<ACustomWindow>(window)) {
                             w->handleXConfigureNotify();
                         }
-                        window->mRedrawFlag = false;
-                        window->redraw();
-                        window->mRedrawFlag = false;
+                        window->mRedrawFlag = true;
 
                         XSyncValue syncValue;
                         XSyncIntsToValue(&syncValue,
@@ -752,4 +750,8 @@ void AWindow::moveToCenter() {
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
+}
+
+void AWindow::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+    flagRedraw();
 }

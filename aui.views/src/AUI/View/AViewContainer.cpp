@@ -31,7 +31,12 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
 
     // consider anything below this value as effectively "zero" or negligible in terms of opacity.
-    if (view->getOpacity() < 0.0001f) {
+    if (view->getOpacity() < 0.0001f) [[unlikely]] {
+        return;
+    }
+
+    if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
+        view->mSkipUntilLayoutUpdate = false;
         return;
     }
 
@@ -45,23 +50,20 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         return;
     }
 
-    if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
-        view->mSkipUntilLayoutUpdate = false;
-        return;
-    }
-
     const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
 
-    bool showRedraw = false;
-    if (view->mRedrawRequested) {
-        if (auto w = AWindow::current()) {
-            if (w->profiling().displayRedrawRequests) {
-                showRedraw = true;
+    const bool showRedraw = [&] {
+        if (view->mRedrawRequested) [[unlikely]] {
+            if (auto w = AWindow::current()) [[unlikely]] {
+                if (w->profiling().displayRedrawRequests) {
+                    return true;
+                }
             }
         }
-    }
+        return false;
+    }();
     AUI_DEFER {
-        if (showRedraw) {
+        if (showRedraw) [[unlikely]] {
             auto c = contextOfTheView.render.getColor();
             AUI_DEFER { contextOfTheView.render.setColorForced(c); };
             contextOfTheView.render.rectangle(ASolidBrush{0x80ff00ff_argb}, view->getPosition(), view->getSize());
@@ -69,10 +71,23 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     };
 
     RenderHints::PushState s(contextOfTheView.render);
-    glm::mat4 t(1.f);
-    view->getTransform(t);
-    contextOfTheView.render.setTransform(t);
-    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    auto applyTransform = [&] {
+        glm::mat4 t(1.f);
+        view->getTransform(t);
+        contextOfTheView.render.setTransform(t);
+        contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    };
+    if (view->mRenderToTexture) [[unlikely]] {
+        auto invalidAreas = std::exchange(view->mRenderToTexture->invalidAreas, {});
+        if (invalidAreas.empty()) {
+//            goto drawRenderToTexture;
+        }
+        view->mRenderToTexture->rendererInterface->begin(contextOfTheContainer.render, view->getSize());
+        contextOfTheView.render.setStencilDepth(0);
+        contextOfTheView.render.setColor(AColor(1, 1, 1, 1));
+    } else {
+        applyTransform();
+    }
 
     try {
         view->render(contextOfTheView);
@@ -84,8 +99,15 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
         return;
     }
 
-    auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
-    AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    {
+        auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
+        AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    }
+
+    if (view->mRenderToTexture) {
+        drawRenderToTexture:
+        view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+    }
 }
 
 
