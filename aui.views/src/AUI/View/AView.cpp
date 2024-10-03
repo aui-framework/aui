@@ -703,6 +703,10 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
                 .size = size,
             };
         }
+        if (!mRedrawRequested) {
+            // this view already requested a redraw.
+            return;
+        }
         AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition(), getSize());
         return;
     }
