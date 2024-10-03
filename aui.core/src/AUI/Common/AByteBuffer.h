@@ -247,6 +247,7 @@ public:
             return *this;
         }
 
+        delete[] mBuffer;
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;
@@ -262,8 +263,10 @@ public:
             return *this;
         }
 
-        mBuffer = other.mBuffer;
-        mCapacity = other.mCapacity;
+        if (mCapacity < other.size()) {
+            reallocate(other.size());
+        }
+        std::memcpy(mBuffer, other.data(), other.size());
         mSize = other.mSize;
 
         return *this;

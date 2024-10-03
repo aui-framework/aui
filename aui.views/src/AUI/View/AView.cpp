@@ -340,7 +340,7 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
 {
-    AWindow::current()->setCursor(mCursor);
+    AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
 }
 
 void AView::onMouseLeave()
