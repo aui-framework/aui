@@ -56,7 +56,9 @@ public:
         return std::nullopt;
     }
 
-    IRenderer& renderer() override;
+    IRenderer& renderer() override {
+        return *mRenderer;
+    }
 
     static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
 

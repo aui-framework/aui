@@ -193,7 +193,3 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 AImage OpenGLRenderingContext::makeScreenshot() {
     return AImage();
 }
-
-IRenderer& OpenGLRenderingContext::renderer() {
-    return *mRenderer;
-}

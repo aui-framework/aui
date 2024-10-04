@@ -751,7 +751,3 @@ void AWindow::moveToCenter() {
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
 }
-
-void AWindow::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
-    flagRedraw();
-}

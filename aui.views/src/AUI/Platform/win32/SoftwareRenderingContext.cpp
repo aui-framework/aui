@@ -22,9 +22,6 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
-    if (ctx.render.getRenderer() == nullptr) {
-        ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
-    }
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -89,4 +86,9 @@ AImage SoftwareRenderingContext::makeScreenshot() {
         data.at<std::uint8_t>(i + 3) = ptr[3];
     }
     return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
+}
+
+IRenderer& SoftwareRenderingContext::renderer() {
+    static SoftwareRenderer r;
+    return r;
 }

@@ -145,7 +145,7 @@ enum class Blending {
  *
  * @sa IRenderingContext
  */
-class IRenderer {
+class IRenderer: public aui::noncopyable {
 public:
     class IPrerenderedString {
     public:

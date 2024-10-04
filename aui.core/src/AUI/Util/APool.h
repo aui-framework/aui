@@ -16,7 +16,7 @@
 #include <AUI/Common/SharedPtrTypes.h>
 
 template<typename T>
-class APool {
+class APool: public aui::noncopyable {
 private:
     using Factory = std::function<_unique<T>()>;
     Factory mFactory;

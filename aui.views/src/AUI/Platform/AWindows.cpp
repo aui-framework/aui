@@ -321,3 +321,7 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 bool AWindow::isClosed() const noexcept {
     return mSelfHolder == nullptr;
 }
+
+void AWindow::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+    flagRedraw();
+}
