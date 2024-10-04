@@ -54,7 +54,7 @@ public:
         /**
          * @brief Highlight redraw requests.
          */
-        bool displayRedrawRequests = true;
+        bool displayRedrawRequests = false;
     };
 
 

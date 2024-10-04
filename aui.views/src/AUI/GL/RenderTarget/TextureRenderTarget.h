@@ -29,6 +29,11 @@ namespace gl {
             }
         }
 
+        [[nodiscard]]
+        Texture2D& texture() noexcept {
+            return mTexture;
+        }
+
         void onFramebufferResize(glm::u32vec2 size) override {
             mTexture.framebufferTex2D(size, type);
         }

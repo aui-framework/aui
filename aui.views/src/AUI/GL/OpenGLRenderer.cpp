@@ -1024,6 +1024,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mFramebuffer.resize({1, 1});
                 auto albedo = _new<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>>();
                 mFramebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+                albedo->texture().setupClampToEdge();
+                albedo->texture().setupNearest();
                 mTexture = std::move(albedo);
             }
 
@@ -1046,11 +1048,13 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
                 };
 
+                // copy render results from prevFramebuffer (main render buffer) to our texture render target.
+                // GL_LINEAR resolves supersampling.
                 prevFramebuffer->bindForRead();
                 mFramebuffer.bindForWrite();
                 const auto supersampledSrcSize = mFramebuffer.size() * prevFramebuffer->supersamlingRatio();
                 glBlitFramebuffer(0, supersampledSrcSize.y, supersampledSrcSize.x, 0, 0, 0, mFramebuffer.size().x,
-                                  mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                                  mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
             }
 
             void draw(IRenderer& renderer) override {
