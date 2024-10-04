@@ -57,6 +57,7 @@ private:
 
     ADeque<CharacterData> mCharData;
     ADeque<FontEntryData> mFontEntryData;
+    IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
 
     std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,

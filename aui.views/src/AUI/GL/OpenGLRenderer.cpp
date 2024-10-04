@@ -491,22 +491,43 @@ void OpenGLRenderer::string(glm::vec2 position,
 }
 
 void OpenGLRenderer::setBlending(Blending blending) {
+    if (mRenderToTextureTarget && glBlendFuncSeparate) {
+        switch (blending) {
+            case Blending::NORMAL: {
+                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+                return;
+            }
+
+            case Blending::INVERSE_DST:
+                glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+                return;
+
+            case Blending::ADDITIVE:
+                glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+                return;
+
+            case Blending::INVERSE_SRC:
+                glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+                return;
+        }
+    }
+//    glBlendEquation(GL_FUNC_ADD);
     switch (blending) {
         case Blending::NORMAL:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            break;
+            return;
 
         case Blending::INVERSE_DST:
             glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-            break;
+            return;
 
         case Blending::ADDITIVE:
             glBlendFunc(GL_ONE, GL_ONE);
-            break;
+            return;
 
         case Blending::INVERSE_SRC:
             glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ZERO);
-            break;
+            return;
     }
 }
 
@@ -593,9 +614,9 @@ public:
             mIndexBuffer.drawWithoutBind(GL_TRIANGLES);
 
             // reset blending
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            mRenderer->setBlending(Blending::NORMAL);
         } else {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            mRenderer->setBlending(Blending::NORMAL);
             mRenderer->mSymbolShader->use();
             mRenderer->mSymbolShader->set(aui::ShaderUniforms::UV_SCALE, uvScale);
             mRenderer->mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
@@ -994,7 +1015,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClearColor(1.f, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    setBlending(Blending::NORMAL);
 
     resetStencil();
 }
@@ -1012,6 +1033,9 @@ void OpenGLRenderer::bindTemporaryVao() const noexcept {
 }
 
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept {
+    if (!glBlendFuncSeparate) {
+        return nullptr;
+    }
     try {
         class OpenGLRenderViewToTexture : public IRenderViewToTexture {
         public:
@@ -1037,10 +1061,15 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 AUI_DEFER { prevFramebuffer->bind(); };
                 mFramebuffer.resize(surfaceSize);
                 mRenderer.setTransformForced(mRenderer.getProjectionMatrix());
+                AUI_ASSERT(mRenderer.mRenderToTextureTarget == nullptr);
+                mRenderer.mRenderToTextureTarget = this;
+                mRenderer.setBlending(Blending::NORMAL);
             }
 
             void end(IRenderer& renderer) override {
                 AUI_ASSERT(&mRenderer == &renderer);
+                AUI_ASSERT(mRenderer.mRenderToTextureTarget == this);
+                mRenderer.mRenderToTextureTarget = nullptr;
                 auto prevFramebuffer = gl::Framebuffer::current();
                 AUI_ASSERT(prevFramebuffer != nullptr);
                 AUI_DEFER {
