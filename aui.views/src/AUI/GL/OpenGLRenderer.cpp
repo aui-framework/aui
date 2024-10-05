@@ -49,6 +49,7 @@
 #include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
 #include <AUISL/Generated/rect_gradient_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/rect_textured.fsh.glsl120.h>
+#include <AUISL/Generated/rect_unblend.fsh.glsl120.h>
 #include <AUISL/Generated/border_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/symbol.vsh.glsl120.h>
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
@@ -250,6 +251,8 @@ OpenGLRenderer::OpenGLRenderer() {
             aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
             aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+            aui::sl_gen::rect_unblend::fsh::glsl120::Shader>(mUnblendShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
             aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
 
@@ -1088,7 +1091,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
 
             void draw(IRenderer& renderer) override {
                 AUI_ASSERT(&mRenderer == &renderer);
-                mRenderer.mTexturedShader->use();
+                mRenderer.mUnblendShader->use();
+                mRenderer.mUnblendShader->set(aui::ShaderUniforms::COLOR, renderer.getColor());
                 mTexture->bindAsTexture(0);
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();

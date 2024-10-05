@@ -42,6 +42,7 @@ private:
     AOptional<gl::Program> mBoxShadowShader;
     AOptional<gl::Program> mBoxShadowInnerShader;
     AOptional<gl::Program> mTexturedShader;
+    AOptional<gl::Program> mUnblendShader;
     AOptional<gl::Program> mSymbolShader;
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mSquareSectorShader;
