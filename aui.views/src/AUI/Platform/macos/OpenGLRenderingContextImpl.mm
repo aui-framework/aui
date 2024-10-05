@@ -85,7 +85,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
     }
-    ctx.render.setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
     ALogger::info("OpenGL context is ready");
 }
 

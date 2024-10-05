@@ -26,7 +26,7 @@
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
-    ctx.render.setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
