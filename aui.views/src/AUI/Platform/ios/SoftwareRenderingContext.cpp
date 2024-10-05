@@ -39,9 +39,6 @@ void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
-    if (ctx.render.getRenderer() == nullptr) {
-        ctx.render.setRenderer(std::make_unique<SoftwareRenderer>());
-    }
 }
 
 void SoftwareRenderingContext::endResize(ABaseWindow &window) {

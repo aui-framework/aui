@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
