@@ -55,7 +55,7 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     const bool showRedraw = [&] {
         if (view->mRedrawRequested) [[unlikely]] {
             if (auto w = AWindow::current()) [[unlikely]] {
-                if (w->profiling().displayRedrawRequests) {
+                if (w->profiling().highlightRedrawRequests) {
                     return true;
                 }
             }

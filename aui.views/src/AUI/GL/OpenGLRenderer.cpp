@@ -1097,6 +1097,27 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
+
+                if (AWindow::current()->profiling().renderToTextureDecay) {
+                    auto prevFramebuffer = gl::Framebuffer::current();
+                    AUI_ASSERT(prevFramebuffer != nullptr);
+                    AUI_DEFER {
+                        // restore.
+                        prevFramebuffer->bind();
+                        mRenderer.setBlending(Blending::NORMAL);
+                        glBlendEquation(GL_FUNC_ADD);
+                        glEnable(GL_STENCIL_TEST);
+                    };
+                    mFramebuffer.bind();
+                    glBlendFunc(GL_ONE, GL_ONE);
+                    glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
+                    glDisable(GL_STENCIL_TEST);
+                    auto& shader = mRenderer.mSolidShader;
+                    shader->use();
+                    shader->set(aui::ShaderUniforms::TRANSFORM, glm::mat4(1.f));
+                    shader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f / 255.f, 1.f / 255.f, 1.f / 255.f, 0));
+                    mRenderer.drawRectImpl({-1, -1}, {2, 2}); // offscreen
+                }
             }
 
         private:
