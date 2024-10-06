@@ -18,7 +18,7 @@
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
 
-class OpenGLRenderer: public IRenderer {
+class OpenGLRenderer final: public IRenderer {
 friend class OpenGLPrerenderedString;
 friend class OpenGLMultiStringCanvas;
 public:
@@ -61,8 +61,7 @@ private:
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
 
-    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
-                                          glm::vec2 size);
+    static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
 
     void uploadToShaderCommon();
 

@@ -12,6 +12,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <AUI/Common/AStaticVector.h>
+#include <AUI/Geometry2D/ARect.h>
 
 class IRenderer;
 class AView;
@@ -22,6 +24,62 @@ class AView;
  */
 class IRenderViewToTexture {
 public:
+
+    /**
+     * @brief Defines areas to invalidate (redraw).
+     */
+    struct InvalidArea {
+        /**
+         * @brief No redraw.
+         */
+        struct Empty {};
+
+        /**
+         * @brief Full redraw.
+         */
+        struct Full {};
+
+        /**
+         * @brief Specific areas redraw.
+         */
+        using Rectangles = AStaticVector<ARect<int>, 8>;
+
+        using Underlying = std::variant<Empty, Rectangles, Full>;
+
+        template<aui::convertible_to<Underlying> F>
+        InvalidArea(F&& u) noexcept: mUnderlying(std::forward<F>(u)) {}
+        InvalidArea() noexcept: mUnderlying(Empty{}) {}
+
+        [[nodiscard]]
+        bool empty() const noexcept {
+            return std::holds_alternative<Empty>(mUnderlying);
+        }
+
+        [[nodiscard]]
+        bool full() const noexcept {
+            return std::holds_alternative<Full>(mUnderlying);
+        }
+
+        /**
+         * @brief Adds rectangle as an invalid area. If needed, switches to full redraw.
+         */
+        void addRectangle(ARect<int> rhs);
+
+        Rectangles* rectangles() noexcept {
+            return std::get_if<Rectangles>(&mUnderlying);
+        }
+
+        const Rectangles* rectangles() const noexcept {
+            return std::get_if<Rectangles>(&mUnderlying);
+        }
+
+    private:
+        Underlying mUnderlying;
+    };
+
+
+
+
     /**
      * @brief Instructs the renderer to begin drawing to the surface (framebuffer) stored in IRenderViewToTexture.
      *
@@ -29,10 +87,12 @@ public:
      * it's created with and normally this parameter is used to assert check the used renderer is the same.
      * @param surfaceSize framebuffer size. Adjusts this value to achieve supersampling. Resizes the surface if
      * mismatched with surfaceSize.
+     * @param invalidArea invalid areas to update. Should not be empty.
+     *
      * @details
      * If needed, adjusts renderer's transform matrix.
      */
-    virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize) = 0;
+    virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize, const IRenderViewToTexture::InvalidArea& invalidArea) = 0;
 
     /**
      * @brief Finishes drawing operation started with begin method.

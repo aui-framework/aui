@@ -698,12 +698,10 @@ void AView::setVisibility(Visibility visibility) noexcept
 
 void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
     if (mRenderToTexture) {
-        if (!mRenderToTexture->invalidAreas.full()) {
-            mRenderToTexture->invalidAreas << RenderToTexture::InvalidArea{
-                .position = relativePosition,
-                .size = size,
-            };
-        }
+        mRenderToTexture->invalidArea.addRectangle({
+            .p1 = relativePosition,
+            .p2 = relativePosition + size,
+        });
         if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.
             return;
@@ -713,9 +711,18 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
                 // dead interface?
                 return;
             }
+            if (mRenderToTexture->invalidArea.empty()) {
+                // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
+                // but why not safe check?
+                return;
+            }
+
             APerformanceSection s("Render-to-texture rasterization", {}, IStringable::toString(this).toStdString());
-            mRenderToTexture->rendererInterface->begin(renderer, getSize());
-            AUI_DEFER { mRenderToTexture->rendererInterface->end(renderer); };
+            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
+            mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea);
+            AUI_DEFER {
+                mRenderToTexture->rendererInterface->end(renderer);
+            };
 
             ARenderContext contextOfTheView {
                 .position = { 0, 0 },

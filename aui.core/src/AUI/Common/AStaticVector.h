@@ -50,10 +50,19 @@ public:
     constexpr AStaticVector(std::initializer_list<StoredType> rhs) noexcept: AStaticVector() {
         insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
     }
+    template<typename Iterator>
+    constexpr AStaticVector(Iterator begin, Iterator end) noexcept: AStaticVector() {
+        insert(mBegin, begin, end);
+    }
     constexpr ~AStaticVector() {
         for (auto& v : *this) {
             v.~StoredType();
         }
+    }
+
+    [[nodiscard]]
+    static constexpr size_t capacity() noexcept {
+        return MaxSize;
     }
 
     AStaticVector& operator=(const AStaticVector& rhs) {

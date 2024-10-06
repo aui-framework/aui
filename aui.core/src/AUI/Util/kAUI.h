@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>

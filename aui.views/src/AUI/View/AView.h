@@ -44,6 +44,7 @@
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
 #include <AUI/Render/ITexture.h>
+#include <AUI/Render/IRenderViewToTexture.h>
 
 
 class AWindow;
@@ -52,7 +53,6 @@ class AViewContainer;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
-class IRenderViewToTexture;
 
 /**
  * @defgroup useful_views Views
@@ -1046,11 +1046,7 @@ private:
 
     struct RenderToTexture {
         _unique<IRenderViewToTexture> rendererInterface;
-        struct InvalidArea {
-            glm::ivec2 position;
-            glm::ivec2 size;
-        };
-        AStaticVector<InvalidArea, 8> invalidAreas;
+        IRenderViewToTexture::InvalidArea invalidArea;
     };
     AOptional<RenderToTexture> mRenderToTexture;
 

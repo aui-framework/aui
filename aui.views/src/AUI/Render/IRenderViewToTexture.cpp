@@ -20,6 +20,29 @@ void IRenderViewToTexture::enableForView(IRenderer& renderer, AView& view) {
     }
     view.mRenderToTexture.emplace();
     view.mRenderToTexture->rendererInterface = std::move(renderViewToTexture);
+    view.mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
     view.mRedrawRequested = false;
     view.redraw();
+}
+
+void IRenderViewToTexture::InvalidArea::addRectangle(ARect<int> rhs) {
+    if (empty()) {
+        mUnderlying = Rectangles{};
+    }
+    if (auto rectanglez = rectangles()) {
+        for (auto& lhs : *rectanglez)  {
+            if (lhs.isIntersects(rhs)) {
+                lhs = {
+                    .p1 = glm::min(lhs.p1, lhs.p2, rhs.p1, rhs.p2),
+                    .p2 = glm::max(lhs.p1, lhs.p2, rhs.p1, rhs.p2),
+                };
+                return;
+            }
+        }
+        if (!rectanglez->full()) {
+            *rectanglez << rhs;
+            return;
+        }
+    }
+    mUnderlying = Full{};
 }

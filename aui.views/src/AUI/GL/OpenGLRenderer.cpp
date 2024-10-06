@@ -289,11 +289,6 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
     float w = x + size.x;
     float h = y + size.y;
 
-    auto apply = [&](glm::vec4 v) {
-        auto result = mTransform * v;
-        return glm::vec3(result) / result.w;
-    };
-
     return
             {
                     glm::vec2{x, h,},
@@ -1056,7 +1051,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mTexture = std::move(albedo);
             }
 
-            void begin(IRenderer& renderer, glm::ivec2 surfaceSize) override {
+            void begin(IRenderer& renderer, glm::ivec2 surfaceSize, const IRenderViewToTexture::InvalidArea& invalidArea) override {
+                AUI_ASSERT(!invalidArea.empty()); // if invalid areas are empty, what should we redraw then?
                 AUI_ASSERT(&mRenderer == &renderer);
                 auto mainRenderingFB = gl::Framebuffer::current();
                 AUI_ASSERT(mainRenderingFB != nullptr);
@@ -1064,17 +1060,46 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mFramebuffer.resize(surfaceSize);
                 mRenderer.setTransformForced(mRenderer.getProjectionMatrix());
                 AUI_ASSERT(mRenderer.mRenderToTextureTarget == nullptr);
+
                 mRenderer.mRenderToTextureTarget = this;
                 mRenderer.setBlending(Blending::NORMAL);
-                if (/* not full redraw */ true) {
-                    // copy "cached" pixel data from our framebuffer to main rendering fb
-                    AUI_DEFER { mainRenderingFB->bind(); };
-                    mFramebuffer.bindForRead();
-                    mainRenderingFB->bindForWrite();
-                    const auto supersampledRenderingFBSize = mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
-                    glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
-                                      0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
-                                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                mRenderer.setStencilDepth(0);
+
+                if (auto rectangles = invalidArea.rectangles()) {
+                    // partial update.
+                    // 1. copy "cached" pixel data from our framebuffer to main rendering fb
+                    {
+                        AUI_DEFER { mainRenderingFB->bind(); };
+                        mFramebuffer.bindForRead();
+                        mainRenderingFB->bindForWrite();
+                        const auto supersampledRenderingFBSize =
+                                mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
+                        glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
+                                          0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
+                                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                    }
+
+                    // 2. mark invalidated rectangles with stencil mask.
+                    glStencilFunc(GL_ALWAYS, 0, 0xff);
+                    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+                    glStencilMask(0xff);
+                    // also temporarily disable GL_BLEND; we'll draw rects of color (0, 0, 0, 0) effectively resetting
+                    // pixels.
+                    glDisable(GL_BLEND);
+                    AUI_DEFER {
+                        glEnable(GL_BLEND);
+                        glStencilMask(0x00);
+                        glStencilFunc(GL_EQUAL, ++mRenderer.mStencilDepth, 0xff);
+                    };
+                    using Vertices = AStaticVector<glm::vec2, std::decay_t<decltype(*rectangles)>::capacity() * 4>;
+                    auto vertices =  ranges::view::transform(*rectangles, [&](const ARect<int>& r) {
+                        return getVerticesForRect(r.p1, r.size());
+                    }) | ranges::view::join | ranges::to<Vertices>();
+                    mRenderer.mRectangleVao.insert(0, AArrayView(vertices), "render-to-texture invalid areas");
+                    mRenderer.mSolidShader->use();
+                    mRenderer.uploadToShaderCommon();
+                    mRenderer.mSolidShader->set(aui::ShaderUniforms::COLOR, glm::vec4(0.f));
+                    mRenderer.mRectangleVao.drawElements();
                 }
             }
 
@@ -1086,7 +1111,10 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 AUI_ASSERT(mainRenderingFB != nullptr);
                 AUI_DEFER {
                     mainRenderingFB->bind();
+                    glStencilMask(0xff);
                     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    glStencilMask(0);
+                    mRenderer.setStencilDepth(0);
                 };
 
                 // copy render results from mainRenderingFB (main render buffer) to our texture render target.
