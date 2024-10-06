@@ -60,7 +60,7 @@ public:
          * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
          * this frame. This effect may help to debug AView::redraw issues.
          */
-        bool renderToTextureDecay = true;
+        bool renderToTextureDecay = false;
     };
 
 

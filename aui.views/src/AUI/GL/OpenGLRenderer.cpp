@@ -1058,35 +1058,44 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
 
             void begin(IRenderer& renderer, glm::ivec2 surfaceSize) override {
                 AUI_ASSERT(&mRenderer == &renderer);
-                auto prevFramebuffer = gl::Framebuffer::current();
-                AUI_ASSERT(prevFramebuffer != nullptr);
-                AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(surfaceSize), prevFramebuffer->size())));
-                AUI_DEFER { prevFramebuffer->bind(); };
+                auto mainRenderingFB = gl::Framebuffer::current();
+                AUI_ASSERT(mainRenderingFB != nullptr);
+                AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(surfaceSize), mainRenderingFB->size())));
                 mFramebuffer.resize(surfaceSize);
                 mRenderer.setTransformForced(mRenderer.getProjectionMatrix());
                 AUI_ASSERT(mRenderer.mRenderToTextureTarget == nullptr);
                 mRenderer.mRenderToTextureTarget = this;
                 mRenderer.setBlending(Blending::NORMAL);
+                if (/* not full redraw */ true) {
+                    // copy "cached" pixel data from our framebuffer to main rendering fb
+                    AUI_DEFER { mainRenderingFB->bind(); };
+                    mFramebuffer.bindForRead();
+                    mainRenderingFB->bindForWrite();
+                    const auto supersampledRenderingFBSize = mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
+                    glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
+                                      0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
+                                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+                }
             }
 
             void end(IRenderer& renderer) override {
                 AUI_ASSERT(&mRenderer == &renderer);
                 AUI_ASSERT(mRenderer.mRenderToTextureTarget == this);
                 mRenderer.mRenderToTextureTarget = nullptr;
-                auto prevFramebuffer = gl::Framebuffer::current();
-                AUI_ASSERT(prevFramebuffer != nullptr);
+                auto mainRenderingFB = gl::Framebuffer::current();
+                AUI_ASSERT(mainRenderingFB != nullptr);
                 AUI_DEFER {
-                    prevFramebuffer->bind();
+                    mainRenderingFB->bind();
                     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
                 };
 
-                // copy render results from prevFramebuffer (main render buffer) to our texture render target.
+                // copy render results from mainRenderingFB (main render buffer) to our texture render target.
                 // GL_LINEAR resolves supersampling.
-                prevFramebuffer->bindForRead();
+                mainRenderingFB->bindForRead();
                 mFramebuffer.bindForWrite();
-                const auto supersampledSrcSize = mFramebuffer.size() * prevFramebuffer->supersamlingRatio();
-                glBlitFramebuffer(0, supersampledSrcSize.y, supersampledSrcSize.x, 0, 0, 0, mFramebuffer.size().x,
-                                  mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                const auto supersampledRenderingFBSize = mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
+                glBlitFramebuffer(0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
+                                  0, 0, mFramebuffer.size().x, mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
             }
 
             void draw(IRenderer& renderer) override {
@@ -1099,11 +1108,11 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
 
                 if (AWindow::current()->profiling().renderToTextureDecay) {
-                    auto prevFramebuffer = gl::Framebuffer::current();
-                    AUI_ASSERT(prevFramebuffer != nullptr);
+                    auto mainRenderingFB = gl::Framebuffer::current();
+                    AUI_ASSERT(mainRenderingFB != nullptr);
                     AUI_DEFER {
                         // restore.
-                        prevFramebuffer->bind();
+                        mainRenderingFB->bind();
                         mRenderer.setBlending(Blending::NORMAL);
                         glBlendEquation(GL_FUNC_ADD);
                         glEnable(GL_STENCIL_TEST);
