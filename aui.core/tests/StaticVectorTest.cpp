@@ -165,3 +165,20 @@ TEST_F(StaticVector, EraseFromMiddle) {
     EXPECT_EQ(*vector[1], 2);
     EXPECT_EQ(*vector[2], 3);
 }
+
+TEST_F(StaticVector, RemoveIf) {
+    auto isEven = [&](int i) {
+        return i % 2 == 0;
+    };
+
+    AStaticVector<int, 8> vector {
+        0, 1, 2, 3, 4, 5, 6, 7,
+    };
+    vector.erase(std::remove_if(vector.begin(), vector.end(), isEven), vector.end());
+
+    AStaticVector<int, 8> expected {
+        1, 3, 5, 7,
+    };
+
+    EXPECT_EQ(aui::range(vector), aui::range(expected));
+}
