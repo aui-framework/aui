@@ -52,7 +52,9 @@ public:
     }
     template<typename Iterator>
     constexpr AStaticVector(Iterator begin, Iterator end) noexcept: AStaticVector() {
-        insert(mBegin, begin, end);
+        for (auto it = begin; it != end; ++it) { // range-v3 fix: basic range traversal instead of insert
+            push_back(*it);
+        }
     }
     constexpr ~AStaticVector() {
         for (auto& v : *this) {

@@ -1091,11 +1091,32 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                         glStencilMask(0x00);
                         glStencilFunc(GL_EQUAL, ++mRenderer.mStencilDepth, 0xff);
                     };
-                    using Vertices = AStaticVector<glm::vec2, std::decay_t<decltype(*rectangles)>::capacity() * 4>;
+                    static constexpr auto MAX_RECTANGLE_COUNT = std::decay_t<decltype(*rectangles)>::capacity();
+                    using Vertices = AStaticVector<glm::vec2, MAX_RECTANGLE_COUNT * 4>;
+                    using Indices = AStaticVector<GLuint, MAX_RECTANGLE_COUNT * 6>;
                     auto vertices =  ranges::view::transform(*rectangles, [&](const ARect<int>& r) {
                         return getVerticesForRect(r.p1, r.size());
                     }) | ranges::view::join | ranges::to<Vertices>();
                     mRenderer.mRectangleVao.insert(0, AArrayView(vertices), "render-to-texture invalid areas");
+                    auto indices = ranges::view::generate([i = 0]() mutable {
+                        int offset = 4 * i++;
+                        return std::array<GLuint, 6>{GLuint(offset + 0),
+                                                     GLuint(offset + 1),
+                                                     GLuint(offset + 2),
+                                                     GLuint(offset + 2),
+                                                     GLuint(offset + 1),
+                                                     GLuint(offset + 3)};
+                    }) | ranges::view::take_exactly(rectangles->size())
+                       | ranges::view::join
+                       | ranges::to<Indices>()
+                               ;
+                    static constexpr auto DEFAULT_INDICES_SIZE = 6;
+                    if (indices.size() != DEFAULT_INDICES_SIZE) mRenderer.mRectangleVao.indices(AArrayView(indices));
+                    AUI_DEFER {
+                        if (indices.size() != DEFAULT_INDICES_SIZE) {
+                            mRenderer.mRectangleVao.indices(AArrayView(indices.data(), 6));
+                        }
+                    };
                     mRenderer.mSolidShader->use();
                     mRenderer.uploadToShaderCommon();
                     mRenderer.mSolidShader->set(aui::ShaderUniforms::COLOR, glm::vec4(0.f));
@@ -1134,8 +1155,19 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-
+                AWindow::current()->profiling().renderToTextureDecay = true;
                 if (AWindow::current()->profiling().renderToTextureDecay) {
+                    // decays to fast. attach it to time
+                    using namespace std::chrono;
+                    using namespace std::chrono_literals;
+                    static auto lastDecayUpdate = high_resolution_clock::now();
+                    if (auto now = high_resolution_clock::now(); now - lastDecayUpdate < 50ms) {
+                        return;
+                    } else {
+                        lastDecayUpdate = now;
+                    }
+
+                    // bind our framebuffer and draw transparent blend which decreases pixel value by 1.
                     auto mainRenderingFB = gl::Framebuffer::current();
                     AUI_ASSERT(mainRenderingFB != nullptr);
                     AUI_DEFER {
