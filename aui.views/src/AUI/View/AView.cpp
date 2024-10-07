@@ -717,7 +717,7 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
                 return;
             }
 
-            APerformanceSection s("Render-to-texture rasterization", {}, IStringable::toString(this).toStdString());
+            APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
             auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
             mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea);
             AUI_DEFER {
@@ -751,8 +751,11 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
     AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition() + relativePosition, size);
 }
 
+AString AView::debugString() const {
+    return "{} at {}"_format(mAssNames.empty() ? IStringable::toString(this) : mAssNames.last(), getPositionInWindow());
+}
+
 std::ostream& operator<<(std::ostream& os, const AView& view) {
-    os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
-       << ", size = " << view.getSize() << " }";
+    os << view.debugString();
     return os;
 }

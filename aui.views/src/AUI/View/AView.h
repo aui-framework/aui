@@ -517,6 +517,10 @@ public:
         mPadding = padding;
     }
 
+    /**
+     * @brief String which helps to identify this object in debug string output (i.e., for logging)
+     */
+    virtual AString debugString() const;
 
 
     /**

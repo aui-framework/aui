@@ -1156,7 +1156,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
                 AWindow::current()->profiling().renderToTextureDecay = true;
-                if (AWindow::current()->profiling().renderToTextureDecay) {
+                if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
                     using namespace std::chrono_literals;
