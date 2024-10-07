@@ -146,7 +146,8 @@ namespace {
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(16'600us) - 1}, AFormattedColorConverter(AColor::RED)); // 60 fps
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
 
-            mTexture->setImage(mImage);
+            // nullsafe lol?
+            AUI_NULLSAFE(mTexture)->setImage(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
             redraw();

@@ -1039,8 +1039,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
         public:
             explicit OpenGLRenderViewToTexture(OpenGLRenderer& renderer) : mRenderer(renderer) {
                 auto prevFramebuffer = gl::Framebuffer::current();
-                AUI_ASSERT(prevFramebuffer != nullptr);
-                AUI_DEFER { prevFramebuffer->bind(); };
+                AUI_DEFER { AUI_NULLSAFE(prevFramebuffer)->bind(); else gl::Framebuffer::unbind(); };
 
                 mFramebuffer.setSupersamplingRatio(1);
                 mFramebuffer.resize({1, 1});
@@ -1051,11 +1050,16 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mTexture = std::move(albedo);
             }
 
+            static gl::Framebuffer* getMainRenderingFramebuffer(IRenderer& renderer) {
+                return dynamic_cast<OpenGLRenderingContext*>(renderer.getWindow()->getRenderingContext().get())->framebuffer().valueOr(nullptr);
+            }
+
             void begin(IRenderer& renderer, glm::ivec2 surfaceSize, const IRenderViewToTexture::InvalidArea& invalidArea) override {
                 AUI_ASSERT(!invalidArea.empty()); // if invalid areas are empty, what should we redraw then?
                 AUI_ASSERT(&mRenderer == &renderer);
-                auto mainRenderingFB = gl::Framebuffer::current();
+                auto mainRenderingFB = getMainRenderingFramebuffer(renderer);
                 AUI_ASSERT(mainRenderingFB != nullptr);
+                surfaceSize = glm::min(surfaceSize, glm::ivec2(mainRenderingFB->size())); // TODO debug purposes
                 AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(surfaceSize), mainRenderingFB->size())));
                 mFramebuffer.resize(surfaceSize);
                 mRenderer.setTransformForced(mRenderer.getProjectionMatrix());

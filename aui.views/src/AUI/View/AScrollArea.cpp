@@ -16,7 +16,7 @@
 #include "AScrollArea.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #include "AUI/View/AView.h"
 #include "AUI/View/AViewContainer.h"
 #include "glm/fwd.hpp"
@@ -29,12 +29,14 @@
 AScrollArea::AScrollArea():
     AScrollArea(Builder{})
 {
+    addAssName("AScrollArea");
 }
 
 AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
+    addAssName("AScrollArea");
     setLayout(_new<AAdvancedGridLayout>(2, 2));
 
-    addView(mInner = _new<AScrollAreaInner>());
+    addView(mInner = _new<AScrollAreaViewport>());
     if (!builder.mExternalVerticalScrollbar) {
         addView(mVerticalScrollbar = _new<AScrollbar>(ALayoutDirection::VERTICAL));
     } else {

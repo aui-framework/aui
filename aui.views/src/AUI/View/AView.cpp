@@ -707,6 +707,12 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
             return;
         }
         AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+                // unable to render to zero-area texture
+                mRedrawRequested = false;
+                mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
+                return;
+            }
             if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
                 // dead interface?
                 return;

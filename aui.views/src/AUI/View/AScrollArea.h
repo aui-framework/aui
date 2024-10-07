@@ -13,7 +13,7 @@
 
 
 #include "AViewContainer.h"
-#include "AScrollAreaInner.h"
+#include "AScrollAreaViewport.h"
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
@@ -177,7 +177,7 @@ protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
-    _<AScrollAreaInner> mInner;
+    _<AScrollAreaViewport> mInner;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
 
