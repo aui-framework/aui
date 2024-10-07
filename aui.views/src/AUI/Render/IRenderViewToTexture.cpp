@@ -30,15 +30,16 @@ void IRenderViewToTexture::InvalidArea::addRectangle(ARect<int> rhs) {
         mUnderlying = Rectangles{};
     }
     if (auto rectanglez = rectangles()) {
-        for (auto& lhs : *rectanglez)  {
+        rectanglez->erase(std::remove_if(rectanglez->begin(), rectanglez->end(), [&](const auto& lhs) {
             if (lhs.isIntersects(rhs)) {
-                lhs = {
+                rhs = {
                     .p1 = glm::min(lhs.p1, lhs.p2, rhs.p1, rhs.p2),
                     .p2 = glm::max(lhs.p1, lhs.p2, rhs.p1, rhs.p2),
                 };
-                return;
+                return true;
             }
-        }
+            return false;
+        }), rectanglez->end());
         if (!rectanglez->full()) {
             *rectanglez << rhs;
             return;

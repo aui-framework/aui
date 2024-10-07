@@ -1092,8 +1092,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     }
 
                     // 2. mark invalidated rectangles with stencil mask.
-                    glStencilFunc(GL_ALWAYS, 0, 0xff);
-                    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+                    glStencilFunc(GL_ALWAYS, 1, 0xff);
+                    glStencilOp(GL_KEEP, GL_REPLACE, GL_REPLACE);
                     glStencilMask(0xff);
                     // also temporarily disable GL_BLEND; we'll draw rects of color (0, 0, 0, 0) effectively resetting
                     // pixels.
