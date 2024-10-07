@@ -1173,18 +1173,14 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     AUI_DEFER {
                         // restore.
                         mainRenderingFB->bind();
-                        mRenderer.setBlending(Blending::NORMAL);
-                        glBlendEquation(GL_FUNC_ADD);
                         glEnable(GL_STENCIL_TEST);
                     };
                     mFramebuffer.bind();
-                    glBlendFunc(GL_ONE, GL_ONE);
-                    glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
                     glDisable(GL_STENCIL_TEST);
                     auto& shader = mRenderer.mSolidShader;
                     shader->use();
                     shader->set(aui::ShaderUniforms::TRANSFORM, glm::mat4(1.f));
-                    shader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f / 255.f, 1.f / 255.f, 1.f / 255.f, 0));
+                    shader->set(aui::ShaderUniforms::COLOR, glm::vec4(0.5, 0.5, 0.5, 0.01));
                     mRenderer.drawRectImpl({-1, -1}, {2, 2}); // offscreen
                 }
             }
