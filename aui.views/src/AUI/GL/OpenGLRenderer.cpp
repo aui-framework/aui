@@ -1054,20 +1054,28 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 return dynamic_cast<OpenGLRenderingContext*>(renderer.getWindow()->getRenderingContext().get())->framebuffer().valueOr(nullptr);
             }
 
-            void begin(IRenderer& renderer, glm::ivec2 surfaceSize, const IRenderViewToTexture::InvalidArea& invalidArea) override {
+            void begin(IRenderer& renderer, glm::ivec2 surfaceSize, IRenderViewToTexture::InvalidArea& invalidArea) override {
                 AUI_ASSERT(!invalidArea.empty()); // if invalid areas are empty, what should we redraw then?
                 AUI_ASSERT(&mRenderer == &renderer);
                 auto mainRenderingFB = getMainRenderingFramebuffer(renderer);
                 AUI_ASSERT(mainRenderingFB != nullptr);
                 surfaceSize = glm::min(surfaceSize, glm::ivec2(mainRenderingFB->size())); // TODO debug purposes
                 AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(surfaceSize), mainRenderingFB->size())));
-                mFramebuffer.resize(surfaceSize);
                 mRenderer.setTransformForced(mRenderer.getProjectionMatrix());
                 AUI_ASSERT(mRenderer.mRenderToTextureTarget == nullptr);
-
                 mRenderer.mRenderToTextureTarget = this;
                 mRenderer.setBlending(Blending::NORMAL);
                 mRenderer.setStencilDepth(0);
+
+                {
+                    auto prevSize = mFramebuffer.size();
+                    mFramebuffer.resize(surfaceSize);
+                    if (prevSize != mFramebuffer.size()) [[unlikely]] {
+                        // switching to full redraw - we have lost previous data.
+                        invalidArea = InvalidArea::Full{};
+                        return; // omit partial update checks
+                    }
+                }
 
                 if (auto rectangles = invalidArea.rectangles()) {
                     // partial update.
@@ -1159,7 +1167,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-                AWindow::current()->profiling().renderToTextureDecay = true;
+//                AWindow::current()->profiling().renderToTextureDecay = true; // TODO debug purposes
                 if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;

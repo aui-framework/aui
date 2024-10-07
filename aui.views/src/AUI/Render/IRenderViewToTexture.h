@@ -87,12 +87,13 @@ public:
      * it's created with and normally this parameter is used to assert check the used renderer is the same.
      * @param surfaceSize framebuffer size. Adjusts this value to achieve supersampling. Resizes the surface if
      * mismatched with surfaceSize.
-     * @param invalidArea invalid areas to update. Should not be empty.
+     * @param invalidArea invalid areas to update. Should not be empty. Can be changed to InvalidArea::Full{} by
+     * implementation and caller is expected to react accordingly.
      *
      * @details
-     * If needed, adjusts renderer's transform matrix.
+     * If needed, implementation may adjust renderer's transform matrix.
      */
-    virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize, const IRenderViewToTexture::InvalidArea& invalidArea) = 0;
+    virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize, IRenderViewToTexture::InvalidArea& invalidArea) = 0;
 
     /**
      * @brief Finishes drawing operation started with begin method.
