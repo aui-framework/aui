@@ -41,7 +41,7 @@ namespace aui::view::impl {
 }
 
 void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
-    if (aui::view::impl::isDefinitelyInvisible(*view)) {
+    if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
 
