@@ -16,6 +16,7 @@
 #include "AUI/Render/RenderHints.h"
 #include "AUI/View/AView.h"
 
+static constexpr auto RENDER_TO_TEXTURE_THRESHOLD_AREA = 128 * 128;
 
 class AScrollAreaViewport::Inner: public AViewContainer {
 public:
@@ -27,11 +28,6 @@ public:
 AScrollAreaViewport::AScrollAreaViewport() {
     addAssName("AScrollAreaViewport");
     addView(mInner = _new<Inner>());
-    auto w = AWindow::current();
-    if (!w) {
-        return;
-    }
-    IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
 }
 
 AScrollAreaViewport::~AScrollAreaViewport() {
@@ -48,6 +44,18 @@ void AScrollAreaViewport::setContents(_<AView> content) {
 void AScrollAreaViewport::updateLayout() {
     AViewContainer::updateLayout();
     mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
+    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
+        if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
+            auto w = AWindow::current();
+            if (!w) {
+                return;
+            }
+
+            IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
+        }
+    } else {
+        IRenderViewToTexture::disableForView(*mInner);
+    }
 }
 void AScrollAreaViewport::updateContentsScroll() {
     mInner->setPosition(-glm::ivec2(mScroll));

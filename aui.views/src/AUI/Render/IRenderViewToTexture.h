@@ -116,4 +116,8 @@ public:
     virtual ~IRenderViewToTexture() = default;
 
     static void enableForView(IRenderer& renderer, AView& view);
+    static void disableForView(AView& view);
+
+    [[nodiscard]]
+    static bool isEnabledForView(AView& view);
 };

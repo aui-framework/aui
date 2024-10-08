@@ -14,6 +14,9 @@
 #include <AUI/Render/IRenderer.h>
 
 void IRenderViewToTexture::enableForView(IRenderer& renderer, AView& view) {
+    if (view.mRenderToTexture) {
+        return;
+    }
     auto renderViewToTexture = renderer.newRenderViewToTexture();
     if (!renderViewToTexture) {
         return;
@@ -22,6 +25,14 @@ void IRenderViewToTexture::enableForView(IRenderer& renderer, AView& view) {
     view.mRenderToTexture->rendererInterface = std::move(renderViewToTexture);
     view.mRedrawRequested = false;
     view.redraw();
+}
+
+void IRenderViewToTexture::disableForView(AView& view) {
+    view.mRenderToTexture.reset();
+}
+
+bool IRenderViewToTexture::isEnabledForView(AView& view) {
+    return view.mRenderToTexture.hasValue();
 }
 
 void IRenderViewToTexture::InvalidArea::addRectangle(ARect<int> rhs) {
