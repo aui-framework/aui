@@ -125,7 +125,7 @@ void AEmbedAuiWrap::windowRender() {
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize(), .render = render });
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 

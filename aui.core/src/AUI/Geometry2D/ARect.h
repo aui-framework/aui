@@ -49,6 +49,21 @@ struct ARect {
         };
     }
 
+    [[nodiscard]]
+    APoint2D<T> min() const noexcept {
+        return glm::min(p1, p2);
+    }
+
+    [[nodiscard]]
+    APoint2D<T> max() const noexcept {
+        return glm::max(p1, p2);
+    }
+
+    [[nodiscard]]
+    T area() const noexcept {
+        return size().x * size().y;
+    }
+
     /**
      * @return true if other intersects with this (even if intersection area =0!)
      */
@@ -109,5 +124,11 @@ struct ARect {
     [[nodiscard]]
     APoint2D<T> size() const noexcept {
         return p2 - p1;
+    }
+
+    ARect& translate(glm::ivec2 by) noexcept {
+        p1 += by;
+        p2 += by;
+        return *this;
     }
 };

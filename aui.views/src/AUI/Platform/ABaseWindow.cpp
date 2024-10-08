@@ -586,3 +586,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
 
     mKeyboardRequestedState = KeyboardRequest::NO_OP;
 }
+
+void ABaseWindow::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+    flagRedraw();
+}

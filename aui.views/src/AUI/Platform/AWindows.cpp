@@ -45,7 +45,7 @@ void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
     auto& renderer = mRenderingContext->renderer();
     renderer.setWindow(this);
-    render({.position = glm::ivec2(0), .size = getSize(), .render = renderer});
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -320,8 +320,4 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 
 bool AWindow::isClosed() const noexcept {
     return mSelfHolder == nullptr;
-}
-
-void AWindow::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
-    flagRedraw();
 }

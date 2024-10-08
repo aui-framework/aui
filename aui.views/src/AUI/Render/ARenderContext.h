@@ -11,21 +11,20 @@
 
 #pragma once
 
-#include "glm/fwd.hpp"
 #include <AUI/Core.h>
 #include <glm/glm.hpp>
+#include <AUI/Geometry2D/ARect.h>
+#include <AUI/Common/AStaticVector.h>
 
 class IRenderer;
 
 /**
  * @brief Render context passed to AView::render.
  * @details
- * Contains axis aligned bounding box where the rendering is performed in, used for optimization.
- *
- * View containers are responsible to modify and passthrough clip optimization context in order to determine which views
- * do not affect actual renderbuffer image and thus should not be rendered either. It's applicable for AScrollArea in
- * the first place, or any other container with AOverflow::HIDDEN and a possibility to either direct or indirect
- * children to run out (render outside) of that container.
+ * View containers are responsible to modify (by withShiftedPosition) and passthrough clip optimization context in order
+ * to determine which views do not affect actual renderbuffer image and thus should not be rendered either. It's
+ * applicable for AScrollArea in the first place, or any other container with AOverflow::HIDDEN and a possibility to
+ * either direct or indirect children to run out (render outside) of that container.
  *
  * View containers are also responsible to skip rendering of views that are outside of the clipping.
  *
@@ -42,15 +41,20 @@ class IRenderer;
  */
 struct API_AUI_VIEWS ARenderContext
 {
-    glm::ivec2 position;
-    glm::ivec2 size;
+    using Rectangles = AStaticVector<ARect<int>, 8>;
 
+    /**
+     * @brief Axis aligned bounding boxes where the rendering is performed in, used for optimization.
+     */
+    Rectangles clippingRects;
     IRenderer& render;
+
+    void clip(ARect<int> clipping);
 
     [[nodiscard]]
     ARenderContext withShiftedPosition(glm::ivec2 by) const noexcept{
         auto copy = *this;
-        copy.position += by;
+        for (auto& r : copy.clippingRects) r.translate(by);
         return copy;
     }
 };

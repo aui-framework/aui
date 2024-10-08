@@ -25,13 +25,23 @@
 
 static constexpr auto LOG_TAG = "AViewContainer";
 
-void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
-    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) [[unlikely]] {
-        return;
-    }
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view) {
+        if (view.getVisibility() == Visibility::INVISIBLE || view.getVisibility() == Visibility::GONE) [[unlikely]] {
+            return true;
+        }
 
-    // consider anything below this value as effectively "zero" or negligible in terms of opacity.
-    if (view->getOpacity() < 0.0001f) [[unlikely]] {
+        // consider anything below this value as effectively "zero" or negligible in terms of opacity.
+        if (view.getOpacity() < 0.0001f) [[unlikely]] {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+    if (aui::view::impl::isDefinitelyInvisible(*view)) {
         return;
     }
 
@@ -41,12 +51,10 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
 
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) [[unlikely]] {
-        return;
-    }
-
-    auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
-    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) [[unlikely]] {
+    ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
+    if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
+        return rectOfTheView.isIntersects(r);
+    })) {
         return;
     }
 
@@ -77,6 +85,10 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
     if (view->mRenderToTexture) [[unlikely]] {
         // view was prerendered to texture; see AView::markPixelDataInvalid
+        if (!view->mRenderToTexture->invalidArea.empty()) {
+            // incomplete frame; force redraw
+            view->markPixelDataInvalid({0, 0}, view->getSize());
+        }
         view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
         return;
     }

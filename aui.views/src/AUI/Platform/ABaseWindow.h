@@ -414,6 +414,8 @@ protected:
     virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
+    void markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) override;
+
 private:
     void processTouchscreenKeyboardRequest();
 

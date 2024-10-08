@@ -696,6 +696,10 @@ void AView::setVisibility(Visibility visibility) noexcept
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view);
+}
+
 void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
     if (mRenderToTexture) {
         mRenderToTexture->invalidArea.addRectangle({
@@ -731,10 +735,19 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
             };
 
             ARenderContext contextOfTheView {
-                .position = { 0, 0 },
-                .size = getSize(),
+                .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
+                                                                                       invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
                 .render = renderer,
             };
+            ARect<int> initialRect {
+                .p1 = { 0, 0 },
+                .p2 = getSize(),
+            };
+            if (contextOfTheView.clippingRects.empty()) {
+                contextOfTheView.clippingRects << initialRect;
+            } else {
+                contextOfTheView.clip(initialRect);
+            }
             RenderHints::PushState state(renderer);
             try {
                 render(contextOfTheView);

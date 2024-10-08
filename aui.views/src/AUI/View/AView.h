@@ -301,6 +301,7 @@ protected:
 
     /**
      * @brief A view requests to redraw it and passes it's coords relative to this.
+     * @return A window that manages this invalidation event.
      */
     virtual void markPixelDataInvalid(glm::ivec2 renderer, glm::ivec2 size);
 

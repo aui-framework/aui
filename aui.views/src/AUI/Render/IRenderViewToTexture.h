@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Common/AStaticVector.h>
 #include <AUI/Geometry2D/ARect.h>
+#include <AUI/Render/ARenderContext.h>
 
 class IRenderer;
 class AView;
@@ -42,13 +43,14 @@ public:
         /**
          * @brief Specific areas redraw.
          */
-        using Rectangles = AStaticVector<ARect<int>, 8>;
+        using Rectangles = AStaticVector<ARect<int>, ARenderContext::Rectangles::capacity() - 1>;
 
         using Underlying = std::variant<Empty, Rectangles, Full>;
 
         template<aui::convertible_to<Underlying> F>
         InvalidArea(F&& u) noexcept: mUnderlying(std::forward<F>(u)) {}
         InvalidArea() noexcept: mUnderlying(Empty{}) {}
+
 
         [[nodiscard]]
         bool empty() const noexcept {
