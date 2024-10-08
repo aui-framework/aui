@@ -262,8 +262,6 @@ protected:
      */
     bool mSkipUntilLayoutUpdate = true;
 
-    void requestLayoutUpdate();
-
     /**
      * @brief Converts touch screen events to desktop.
      * @param origin position where the event(s) started to occur from.
@@ -387,6 +385,7 @@ public:
         mMinSize = minSize;
     }
 
+    void requestLayoutUpdate();
 
     /**
      * @see mExtraStylesheet
@@ -1052,6 +1051,11 @@ private:
     struct RenderToTexture {
         _unique<IRenderViewToTexture> rendererInterface;
         IRenderViewToTexture::InvalidArea invalidArea;
+
+        /**
+         * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
+         */
+        bool skipRedrawUntilTextureIsPresented = false;
     };
     AOptional<RenderToTexture> mRenderToTexture;
 

@@ -692,8 +692,10 @@ void AView::setVisibility(Visibility visibility) noexcept
     if (mVisibility == visibility) {
         return;
     }
-    mVisibility = visibility;
-    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    auto prev = std::exchange(mVisibility, visibility);
+    if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
+        requestLayoutUpdate();
+    }
 }
 
 namespace aui::view::impl {
@@ -711,6 +713,14 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
             return;
         }
         AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
+                // last frame we draw here was not used.
+                // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
+                // results are actually displayed.
+                mRedrawRequested = false;
+                return;
+            }
+
             if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
                 // unable to render to zero-area texture
                 mRedrawRequested = false;
@@ -757,6 +767,7 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
                 ALogger::err("AView") << "Unable to render view: " << e;
                 return;
             }
+            mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
         });
         AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition(), getSize());
         return;

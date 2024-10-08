@@ -83,12 +83,8 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     view->getTransform(t);
     contextOfTheView.render.setTransform(t);
     contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
-    if (view->mRenderToTexture) [[unlikely]] {
-        // view was prerendered to texture; see AView::markPixelDataInvalid
-        if (!view->mRenderToTexture->invalidArea.empty()) {
-            // incomplete frame; force redraw
-            view->markPixelDataInvalid({0, 0}, view->getSize());
-        }
+    if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
+        view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
         view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
         return;
     }
@@ -136,7 +132,6 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     }
     invalidateCaches();
     emit childrenChanged;
-    redraw();
 }
 
 void AViewContainer::addView(const _<AView>& view) {
@@ -459,12 +454,6 @@ void AViewContainer::invalidateAllStyles() {
 }
 
 void AViewContainer::updateLayout() {
-    /*
-    if (getContentMinimumWidth() > getContentWidth() ||
-        getContentMinimumHeight() > getContentHeight()) {
-        //AWindow::current()->flagUpdateLayout();
-    } else {
-    }*/
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());

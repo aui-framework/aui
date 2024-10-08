@@ -100,7 +100,7 @@ public:
 
     void setView(_weak<AView> view) {
         mView = std::move(view);
-        AWindow::current()->flagUpdateLayout();
+        requestLayoutUpdate();
     }
 
 private:
@@ -189,5 +189,5 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     });
     mResultView->addView(parentHelper);
     mResultView->addView(std::move(fake));
-    AWindow::current()->flagUpdateLayout();
+    requestLayoutUpdate();
 }

@@ -1167,13 +1167,13 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-//                AWindow::current()->profiling().renderToTextureDecay = true; // TODO debug purposes
+                AWindow::current()->profiling().renderToTextureDecay = true; // TODO debug purposes
                 if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
                     using namespace std::chrono_literals;
                     static auto lastDecayUpdate = high_resolution_clock::now();
-                    if (auto now = high_resolution_clock::now(); now - lastDecayUpdate < 50ms) {
+                    if (auto now = high_resolution_clock::now(); now - lastDecayUpdate < 20ms) {
                         return;
                     } else {
                         lastDecayUpdate = now;
