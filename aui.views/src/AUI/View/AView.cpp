@@ -703,6 +703,13 @@ namespace aui::view::impl {
 }
 
 void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+    if (getOverflow() != AOverflow::VISIBLE) {
+        // clip by overflow
+        auto newRelativePosition = glm::max(relativePosition, glm::ivec2(0, 0));
+        size -= newRelativePosition - relativePosition;
+        relativePosition = newRelativePosition;
+        size = glm::min(size, getSize());
+    }
     if (mRenderToTexture) {
         mRenderToTexture->invalidArea.addRectangle({
             .p1 = relativePosition,
