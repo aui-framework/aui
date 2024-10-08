@@ -1173,7 +1173,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     using namespace std::chrono;
                     using namespace std::chrono_literals;
                     static auto lastDecayUpdate = high_resolution_clock::now();
-                    if (auto now = high_resolution_clock::now(); now - lastDecayUpdate < 20ms) {
+                    if (auto now = high_resolution_clock::now(); now - lastDecayUpdate < 50ms) {
                         return;
                     } else {
                         lastDecayUpdate = now;
@@ -1184,15 +1184,17 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     AUI_ASSERT(mainRenderingFB != nullptr);
                     AUI_DEFER {
                         // restore.
+                        glColorMask(true, true, true, true);
                         mainRenderingFB->bind();
                         glEnable(GL_STENCIL_TEST);
                     };
                     mFramebuffer.bind();
                     glDisable(GL_STENCIL_TEST);
+                    glColorMask(true, true, true, false);
                     auto& shader = mRenderer.mSolidShader;
                     shader->use();
                     shader->set(aui::ShaderUniforms::TRANSFORM, glm::mat4(1.f));
-                    shader->set(aui::ShaderUniforms::COLOR, glm::vec4(0.5, 0.5, 0.5, 0.01));
+                    shader->set(aui::ShaderUniforms::COLOR, glm::vec4(0.5, 0.5, 0.5, 0.1));
                     mRenderer.drawRectImpl({-1, -1}, {2, 2}); // offscreen
                 }
             }
