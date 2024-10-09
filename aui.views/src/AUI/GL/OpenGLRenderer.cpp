@@ -1145,7 +1145,9 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 AUI_DEFER {
                     mainRenderingFB->bind();
                     glStencilMask(0xff);
+                    glClearColor(0, 0, 0, 0);
                     glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                    glStencilFunc(GL_EQUAL, 0x00, 0xff);
                     glStencilMask(0);
                     mRenderer.setStencilDepth(0);
                 };
