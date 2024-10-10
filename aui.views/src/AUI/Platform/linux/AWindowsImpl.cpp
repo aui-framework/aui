@@ -263,9 +263,8 @@ void AWindow::show() {
     }
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
         AThread::current() << [&]() {
-            redraw();
+            XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
         };
-        XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
     emit shown();

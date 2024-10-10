@@ -1010,7 +1010,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-    glClearColor(1.f, 0, 0, 1);
+    glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     setBlending(Blending::NORMAL);
@@ -1068,6 +1068,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.setBlending(Blending::NORMAL);
                 mRenderer.setStencilDepth(0);
 
+                AUI_DEFER { mainRenderingFB->bind(); };
+
                 {
                     auto prevSize = mFramebuffer.size();
                     mFramebuffer.resize(surfaceSize);
@@ -1082,7 +1084,6 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     // partial update.
                     // 1. copy "cached" pixel data from our framebuffer to main rendering fb
                     {
-                        AUI_DEFER { mainRenderingFB->bind(); };
                         mFramebuffer.bindForRead();
                         mainRenderingFB->bindForWrite();
                         const auto supersampledRenderingFBSize =
