@@ -73,6 +73,8 @@ namespace ass {
 
             PropertySlot getPropertySlot() const override;
 
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
+
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;

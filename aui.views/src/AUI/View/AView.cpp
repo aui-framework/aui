@@ -71,7 +71,11 @@ void AView::redraw()
     if (mRedrawRequested) {
         return;
     }
-    auto invalidRect = ARect<int>::fromPositionAndSize({0, 0}, getSize());
+    static constexpr auto EXTRA_OFFSET = 8;
+    auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
+    for (auto s : mAss) {
+        AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
+    }
     markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
@@ -772,7 +776,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             }
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
         });
-        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromPositionAndSize(getPosition(), getSize()));
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
         return;
     }
 

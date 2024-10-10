@@ -49,6 +49,8 @@ namespace ass {
             const auto& value() const noexcept {
                 return mInfo;
             }
+
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
         };
     }
 }

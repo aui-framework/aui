@@ -25,3 +25,7 @@ void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view, const ARe
 ass::prop::PropertySlot ass::prop::Property<ass::TransformOffset>::getPropertySlot() const {
     return ass::prop::PropertySlot::TRANSFORM_OFFSET;
 }
+
+void ass::prop::Property<ass::TransformOffset>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    invalidRect.translate(glm::ivec2{mInfo.offsetX, mInfo.offsetY});
+}

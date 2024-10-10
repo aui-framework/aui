@@ -30,3 +30,7 @@ void ass::prop::Property<ass::TransformScale>::renderFor(AView* view, const ARen
 ass::prop::PropertySlot ass::prop::Property<ass::TransformScale>::getPropertySlot() const {
     return ass::prop::PropertySlot::TRANSFORM_SCALE;
 }
+
+void ass::prop::Property<ass::TransformScale>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    invalidRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * mInfo.scale);
+}

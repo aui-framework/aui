@@ -23,8 +23,12 @@ template<typename T>
 struct ARect {
     APoint2D<T> p1, p2;
 
-    static ARect fromPositionAndSize(APoint2D<T> position, APoint2D<T> size) {
+    static ARect fromTopLeftPositionAndSize(APoint2D<T> position, APoint2D<T> size) {
         return { .p1 = position, .p2 = position + size };
+    }
+
+    static ARect fromCenterPositionAndSize(APoint2D<T> position, APoint2D<T> size) {
+        return { .p1 = position - size / 2, .p2 = position + size / 2 };
     }
 
     bool operator==(const ARect&) const noexcept = default;
@@ -47,6 +51,11 @@ struct ARect {
             APoint2D<T>(p2.x, p1.y),
             p2
         };
+    }
+
+    [[nodiscard]]
+    APoint2D<T> center() const noexcept {
+        return (p1 + p2) / 2;
     }
 
     [[nodiscard]]

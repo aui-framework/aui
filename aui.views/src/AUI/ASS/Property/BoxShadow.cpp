@@ -32,3 +32,10 @@ ass::prop::PropertySlot ass::prop::Property<ass::BoxShadow>::getPropertySlot() c
 bool ass::prop::Property<ass::BoxShadow>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
+
+void ass::prop::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    auto shadowRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * float(mInfo.spreadRadius));
+    shadowRect.translate({mInfo.offsetX, mInfo.offsetY});
+    invalidRect.p1 = glm::min(invalidRect.p1, shadowRect.p1);
+    invalidRect.p2 = glm::max(invalidRect.p2, shadowRect.p2);
+}
