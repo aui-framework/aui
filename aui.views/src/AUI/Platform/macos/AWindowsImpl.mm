@@ -10,10 +10,10 @@
  */
 
 #include "AUI/GL/gl.h"
+#include "AUI/Platform/AWindow.h"
 #import <Cocoa/Cocoa.h>
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
-#include "AUI/Platform/AWindow.h"
 #include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>

@@ -14,8 +14,8 @@
 //
 
 #include <AUI/GL/gl.h>
-#import <Cocoa/Cocoa.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#import <Cocoa/Cocoa.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/GL/GLDebug.h>
