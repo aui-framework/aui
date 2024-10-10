@@ -71,7 +71,8 @@ void AView::redraw()
     if (mRedrawRequested) {
         return;
     }
-    markPixelDataInvalid({0, 0}, getSize());
+    auto invalidRect = ARect<int>::fromPositionAndSize({0, 0}, getSize());
+    markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
 void AView::requestLayoutUpdate()
@@ -702,19 +703,14 @@ namespace aui::view::impl {
     bool isDefinitelyInvisible(AView& view);
 }
 
-void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
+void AView::markPixelDataInvalid(ARect<int> invalidArea) {
     if (getOverflow() != AOverflow::VISIBLE) {
         // clip by overflow
-        auto newRelativePosition = glm::max(relativePosition, glm::ivec2(0, 0));
-        size -= newRelativePosition - relativePosition;
-        relativePosition = newRelativePosition;
-        size = glm::min(size, getSize());
+        invalidArea.p1 = glm::max(invalidArea.p1, glm::ivec2(0));
+        invalidArea.p2 = glm::min(invalidArea.p2, getSize());
     }
     if (mRenderToTexture) {
-        mRenderToTexture->invalidArea.addRectangle({
-            .p1 = relativePosition,
-            .p2 = relativePosition + size,
-        });
+        mRenderToTexture->invalidArea.addRectangle(invalidArea);
         if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.
             return;
@@ -776,7 +772,7 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
             }
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
         });
-        AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition(), getSize());
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromPositionAndSize(getPosition(), getSize()));
         return;
     }
 
@@ -785,7 +781,7 @@ void AView::markPixelDataInvalid(glm::ivec2 relativePosition, glm::ivec2 size) {
         return;
     }
 
-    AUI_NULLSAFE(mParent)->markPixelDataInvalid(getPosition() + relativePosition, size);
+    AUI_NULLSAFE(mParent)->markPixelDataInvalid(invalidArea.translate(getPosition()));
 }
 
 AString AView::debugString() const {

@@ -299,9 +299,10 @@ protected:
 
     /**
      * @brief A view requests to redraw it and passes it's coords relative to this.
+     * @param invalidArea area to invalidate. Must be in this view's coordinate space.
      * @return A window that manages this invalidation event.
      */
-    virtual void markPixelDataInvalid(glm::ivec2 renderer, glm::ivec2 size);
+    virtual void markPixelDataInvalid(ARect<int> invalidArea);
 
 public:
     AView();
