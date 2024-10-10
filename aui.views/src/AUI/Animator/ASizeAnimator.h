@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <AUI/Render/IRenderer.h>
 #include "AAnimator.h"
 
 class API_AUI_VIEWS ASizeAnimator: public AAnimator {
@@ -25,6 +26,6 @@ private:
 public:
     ASizeAnimator(const glm::ivec2& beginSize = {0, 0}, const glm::ivec2& endSize = {0, 0});
 
-    void doAnimation(AView* view, float theta) override;
+    void doAnimation(AView* view, float theta, IRenderer& render) override;
 };
 

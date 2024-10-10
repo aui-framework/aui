@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "IProperty.h"
 
 namespace ass {

@@ -23,7 +23,7 @@
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Util/AImageDrawable.h>
 
-void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
+void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARenderContext& ctx) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     ass::BackgroundCropping& cropping = view->getAssHelper()->state.backgroundCropping;
     auto imageRendering = view->getAssHelper()->state.imageRendering;
@@ -35,14 +35,14 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
         if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
-                RenderHints::PushColor c;
-                ARender::setColor(info.overlayColor.or_default(0xffffff_rgb));
+                RenderHints::PushColor c(ctx.render);
+                ctx.render.setColor(info.overlayColor.or_default(0xffffff_rgb));
                 IDrawable::Params p;
                 p.offset = {0, 0};
                 p.size = glm::vec2(size) * scale;
                 p.repeat = info.rep.or_default(Repeat::NONE);
                 p.imageRendering = imageRendering;
-                drawable->draw(p);
+                drawable->draw(ctx.render, p);
             };
 
             switch (info.sizing.or_default(Sizing::FIT_PADDING)) {
@@ -51,15 +51,15 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
                 case Sizing::TILE: {
-                    RenderHints::PushColor c;
-                    ARender::setColor(info.overlayColor.or_default(0xffffff_rgb));
+                    RenderHints::PushColor c(ctx.render);
+                    ctx.render.setColor(info.overlayColor.or_default(0xffffff_rgb));
                     IDrawable::Params p;
                     p.offset = {0, 0};
                     p.size = glm::vec2(view->getSize());
                     p.repeat = info.rep.or_default(Repeat::NONE);
                     p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
                     p.imageRendering = imageRendering;
-                    drawable->draw(p);
+                    drawable->draw(ctx.render, p);
                     break;
                 }
                 case Sizing::COVER: {
@@ -67,7 +67,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     if (viewSize.y == 0 || viewSize.x == 0) {
                         return;
                     }
-                    RenderHints::PushMatrix m;
+                    RenderHints::PushMatrix m(ctx.render);
                     glm::ivec2 imageSize = drawable->getSizeHint();
                     glm::ivec2 size;
 
@@ -79,14 +79,14 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    ARender::setTransform(
+                    ctx.render.setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
                     break;
                 }
                 case Sizing::CONTAIN: {
-                    RenderHints::PushMatrix m;
+                    RenderHints::PushMatrix m(ctx.render);
                     glm::ivec2 viewSize = view->getSize();
                     if (viewSize.x == 0 || viewSize.y == 0) {
                         break;
@@ -102,14 +102,14 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    ARender::setTransform(
+                    ctx.render.setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
                     break;
                 }
                 case Sizing::CONTAIN_PADDING: {
-                    RenderHints::PushMatrix m;
+                    RenderHints::PushMatrix m(ctx.render);
                     glm::ivec2 viewSize = view->getSize() - view->getPadding().occupiedSize();
                     if (viewSize.x == 0 || viewSize.y == 0) {
                         break;
@@ -125,15 +125,15 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    ARender::setTransform(
+                    ctx.render.setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f + glm::vec2(view->getPadding().leftTop()), 0.f}));
                     drawableDrawWrapper(size);
                     break;
                 }
                 case Sizing::FIT_PADDING: {
-                    RenderHints::PushMatrix m;
-                    ARender::setTransform(
+                    RenderHints::PushMatrix m(ctx.render);
+                    ctx.render.setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{view->getPadding().left, view->getPadding().top, 0.f}));
                     drawableDrawWrapper(
@@ -151,7 +151,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     p.size = view->getSize();
                     p.imageRendering = imageRendering;
 
-                    drawable->draw(p);
+                    drawable->draw(ctx.render, p);
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
@@ -173,7 +173,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
                         p.renderingSize = {textureWidth, textureHeight};
-                        drawable->draw(p);
+                        drawable->draw(ctx.render, p);
                     };
 
 
@@ -288,7 +288,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                 }
 
                 case Sizing::CENTER: {
-                    RenderHints::PushMatrix m;
+                    RenderHints::PushMatrix m(ctx.render);
                     glm::vec2 viewSize = view->getSize();
                     glm::vec2 imageSize = drawable->getSizeHint();
 
@@ -297,20 +297,20 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         imageSize *= AWindow::current()->getDpiRatio();
 
 
-                    ARender::setTransform(
+                    ctx.render.setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - imageSize) / 2.f, 0.f}));
 
-                    RenderHints::PushMask mask([&] {
-                        ARender::rect(ASolidBrush{}, {0, 0}, view->getSize());
+                    RenderHints::PushMask mask(ctx.render, [&] {
+                        ctx.render.rectangle(ASolidBrush{}, {0, 0}, view->getSize());
                     });
 
                     drawableDrawWrapper(imageSize);
                     break;
                 }
                 case Sizing::NONE: {
-                    RenderHints::PushMask mask([&] {
-                        ARender::rect(ASolidBrush{}, {0, 0}, view->getSize());
+                    RenderHints::PushMask mask(ctx.render, [&] {
+                        ctx.render.rectangle(ASolidBrush{}, {0, 0}, view->getSize());
                     });
                     glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 

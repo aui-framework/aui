@@ -28,7 +28,7 @@ Float AMultilineTextRender::TextEntry::getFloat() const {
 }
 
 
-ARender::PrerenderedString AMultilineTextRender::updateText(const AString& text, const glm::ivec2& size) {
+_<IRenderer::IPrerenderedString> AMultilineTextRender::updateText(const AString& text, const glm::ivec2& size, IRenderer& render) {
     AVector<TextEntry> textEntries;
 
     auto lastWordBegin = text.begin();
@@ -55,7 +55,7 @@ ARender::PrerenderedString AMultilineTextRender::updateText(const AString& text,
     mEngine.performLayout({0, 0}, size);
 
 
-    auto multiStringCanvas = ARender::newMultiStringCanvas(mFontStyle);
+    auto multiStringCanvas = render.newMultiStringCanvas(mFontStyle);
 
     for (auto& entry : textEntries) {
         multiStringCanvas->addString(entry.getPosition(), entry.getText());

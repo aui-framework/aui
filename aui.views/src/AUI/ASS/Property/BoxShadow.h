@@ -67,11 +67,13 @@ namespace ass {
 
             }
 
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             bool isNone() override;
 
             PropertySlot getPropertySlot() const override;
+
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
 
             [[nodiscard]]
             const auto& value() const noexcept {

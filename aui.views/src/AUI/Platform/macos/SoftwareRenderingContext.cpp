@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
@@ -47,4 +48,9 @@ AImage SoftwareRenderingContext::makeScreenshot() {
 }
 void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
     mBitmapSize = window.getSize();
+}
+
+IRenderer& SoftwareRenderingContext::renderer() {
+    static SoftwareRenderer r;
+    return r;
 }

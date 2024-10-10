@@ -29,7 +29,7 @@
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
@@ -43,16 +43,16 @@
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
+#include <AUI/Render/ITexture.h>
+#include <AUI/Render/IRenderViewToTexture.h>
 
 
-class ARender;
 class AWindow;
 class ABaseWindow;
 class AViewContainer;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
-
 
 /**
  * @defgroup useful_views Views
@@ -75,6 +75,7 @@ class AStylesheet;
 class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainer;
+    friend class IRenderViewToTexture;
 private:
     /**
      * @brief Animation.
@@ -114,7 +115,7 @@ private:
     /**
      * @brief opacity, specified in ASS.
      */
-    float mOpacity = 1;
+    aui::float_within_0_1 mOpacity = 1;
 
     /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
@@ -150,7 +151,7 @@ private:
     /**
      * @brief Redraw requested flag for this particular view/
      * @details
-     * This flag is set in redraw() method and reset in AView::render(ClipOptimizationContext context). redraw() method does not actually requests
+     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
      * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
      * drawn.
      */
@@ -261,8 +262,6 @@ protected:
      */
     bool mSkipUntilLayoutUpdate = true;
 
-    void requestLayoutUpdate();
-
     /**
      * @brief Converts touch screen events to desktop.
      * @param origin position where the event(s) started to occur from.
@@ -297,9 +296,17 @@ protected:
      */
     virtual void onViewGraphSubtreeChanged();
 
+
+    /**
+     * @brief A view requests to redraw it and passes it's coords relative to this.
+     * @param invalidArea area to invalidate. Must be in this view's coordinate space.
+     * @return A window that manages this invalidation event.
+     */
+    virtual void markPixelDataInvalid(ARect<int> invalidArea);
+
 public:
     AView();
-    virtual ~AView() = default;
+    ~AView() override;
     /**
      * @brief Request window manager to redraw this AView.
      */
@@ -311,22 +318,25 @@ public:
      */
     ABaseWindow* getWindow() const;
 
-    virtual void drawStencilMask();
+    virtual void drawStencilMask(ARenderContext ctx);
 
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
+     * @details
+     * AView::render is not guaranteed to be called on per-frame basis. Moreover, this method can be called multiple
+     * times if render-to-texture caching decides to do so.
      */
-    virtual void render(ClipOptimizationContext context);
+    virtual void render(ARenderContext ctx);
 
     /**
      * @brief Performs post-draw routines of this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
      */
-    virtual void postRender();
+    virtual void postRender(ARenderContext ctx);
 
-    void popStencilIfNeeded();
+    void popStencilIfNeeded(ARenderContext ctx);
 
     [[nodiscard]]
     const AVector<AString>& getAssNames() const noexcept {
@@ -336,8 +346,8 @@ public:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-    const glm::ivec2& getPosition() const
-
+    [[nodiscard]]
+    glm::ivec2 getPosition() const noexcept
     {
         return mPosition;
     }
@@ -351,7 +361,7 @@ public:
      * @endcode
      */
     [[nodiscard]]
-    glm::ivec2 getCenterPointInWindow() const
+    glm::ivec2 getCenterPointInWindow() const noexcept
     {
         return getPositionInWindow() + getSize() / 2;
     }
@@ -359,7 +369,8 @@ public:
     /**
      * @brief Size, including content area, border and padding.
      */
-    const glm::ivec2& getSize() const
+    [[nodiscard]]
+    glm::ivec2 getSize() const noexcept
     {
         return mSize;
     }
@@ -367,14 +378,15 @@ public:
     /**
      * @return minSize (ignoring fixedSize)
      */
-    const glm::ivec2& getMinSize() const {
+    glm::ivec2 getMinSize() const noexcept {
         return mMinSize;
     }
 
-    void setMinSize(const glm::ivec2& minSize) {
+    void setMinSize(glm::ivec2 minSize) noexcept {
         mMinSize = minSize;
     }
 
+    void requestLayoutUpdate();
 
     /**
      * @see mExtraStylesheet
@@ -506,6 +518,10 @@ public:
         mPadding = padding;
     }
 
+    /**
+     * @brief String which helps to identify this object in debug string output (i.e., for logging)
+     */
+    virtual AString debugString() const;
 
 
     /**
@@ -623,10 +639,10 @@ public:
     }
     AFontStyle& getFontStyle();
 
-    [[nodiscard]] float getOpacity() const {
+    [[nodiscard]] aui::float_within_0_1 getOpacity() const {
         return mOpacity;
     }
-    void setOpacity(float opacity) {
+    void setOpacity(aui::float_within_0_1 opacity) {
         mOpacity = opacity;
     }
 
@@ -887,6 +903,7 @@ public:
         setEnabled(false);
     }
 
+
     /**
      * @brief Helper function for kAUI.h:with_style
      */
@@ -1032,7 +1049,20 @@ private:
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
 
-    void notifyParentChildFocused(const _<AView> &view);
+    struct RenderToTexture {
+        _unique<IRenderViewToTexture> rendererInterface;
+        IRenderViewToTexture::InvalidArea invalidArea;
+
+        bool drawFromTexture = true;
+
+        /**
+         * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
+         */
+        bool skipRedrawUntilTextureIsPresented = false;
+    };
+    AOptional<RenderToTexture> mRenderToTexture;
+
+    void notifyParentChildFocused(const _<AView>& view);
 };
 
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);

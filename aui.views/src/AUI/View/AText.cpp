@@ -162,44 +162,39 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
     if (!mPrerenderedString) {
-        prerenderString();
+        performLayout();
     }
-
     return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
     if (!mPrerenderedString) {
-        prerenderString();
+        performLayout();
     }
-
     auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
-    auto engineHeight = mEngine.getHeight();
-    if (engineHeight.has_value()) {
+
+    if (auto engineHeight = mEngine.height()) {
         height = std::max(height, *engineHeight);
     }
 
     return height;
 }
 
-void AText::render(ClipOptimizationContext context) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
+void AText::render(ARenderContext context) {
     AViewContainer::render(context);
 
+    if (!mPrerenderedString) {
+        prerenderString(context);
+    }
     if (mPrerenderedString) {
         mPrerenderedString->draw();
     }
 }
 
-void AText::prerenderString() {
-    mEngine.setTextAlign(getFontStyle().align);
-    mEngine.setLineHeight(getFontStyle().lineSpacing);
-    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
+void AText::prerenderString(ARenderContext ctx) {
+    performLayout();
     {
-        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
+        auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
 
         if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
             for (auto& wordEntry: mWordEntries) {
@@ -219,13 +214,19 @@ void AText::prerenderString() {
     }
 }
 
+void AText::performLayout() {
+    mEngine.setTextAlign(getFontStyle().align);
+    mEngine.setLineHeight(getFontStyle().lineSpacing);
+    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
+}
+
 void AText::setSize(glm::ivec2 size) {
     bool widthDiffers = size.x != getWidth();
     int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
     AViewContainer::setSize(size);
     if (widthDiffers) {
-        prerenderString();
-        AWindow::current()->flagUpdateLayout();
+        mPrerenderedString = nullptr;
+        requestLayoutUpdate();
     }
 }
 

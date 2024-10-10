@@ -12,7 +12,7 @@
 #include "AView.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/IStringable.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
@@ -63,15 +63,21 @@ AView::AView()
     setSlotsCallsOnlyOnMyThread(true);
 }
 
+AView::~AView() = default;
+
 void AView::redraw()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
     if (mRedrawRequested) {
         return;
     }
+    static constexpr auto EXTRA_OFFSET = 8;
+    auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
+    for (auto s : mAss) {
+        AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
+    }
+    markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
-    AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
-
 }
 void AView::requestLayoutUpdate()
 {
@@ -79,37 +85,37 @@ void AView::requestLayoutUpdate()
     AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
-void AView::drawStencilMask()
+void AView::drawStencilMask(ARenderContext ctx)
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                ARender::roundedRect(ASolidBrush{},
+                ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      mBorderRadius);
             } else {
-                ARender::rect(ASolidBrush{},
-                              {mPadding.left, mPadding.top},
-                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
             if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
-                s->renderFor(this);
+                s->renderFor(this, ctx);
             }
             break;
     }
 }
 
-void AView::postRender() {
+void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
-        mAnimator->postRender(this);
-    popStencilIfNeeded();
+        mAnimator->postRender(this, ctx.render);
+    popStencilIfNeeded(ctx);
 }
 
-void AView::popStencilIfNeeded() {
+void AView::popStencilIfNeeded(ARenderContext ctx) {
     if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
     {
         /*
@@ -118,23 +124,23 @@ void AView::popStencilIfNeeded() {
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::popMask([&]() {
-            drawStencilMask();
+        RenderHints::popMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 }
-void AView::render(ClipOptimizationContext context)
+void AView::render(ARenderContext ctx)
 {
     if (mAnimator)
-        mAnimator->animate(this);
+        mAnimator->animate(this, ctx.render);
 
     ensureAssUpdated();
 
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
@@ -142,20 +148,20 @@ void AView::render(ClipOptimizationContext context)
     for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
         if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
         if (auto w = mAss[i]) {
-            w->renderFor(this);
+            w->renderFor(this, ctx);
         }
     }
 
     //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
     if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
-        w->renderFor(this);
+        w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
 }
@@ -286,7 +292,10 @@ void AView::addAssName(const AString& assName)
     invalidateAssHelper();
 }
 
-void AView::invalidateAssHelper() { mAssHelper = nullptr; }
+void AView::invalidateAssHelper() {
+    mAssHelper = nullptr;
+    redraw();
+}
 
 void AView::removeAssName(const AString& assName)
 {
@@ -642,6 +651,7 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;
+    redraw();
 }
 
 
@@ -687,11 +697,109 @@ void AView::setVisibility(Visibility visibility) noexcept
     if (mVisibility == visibility) {
         return;
     }
-    mVisibility = visibility;
-    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    auto prev = std::exchange(mVisibility, visibility);
+    if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
+        requestLayoutUpdate();
+    }
 }
+
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view);
+}
+
+void AView::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (getOverflow() != AOverflow::VISIBLE) {
+        // clip by overflow
+        invalidArea.p1 = glm::max(invalidArea.p1, glm::ivec2(0));
+        invalidArea.p2 = glm::min(invalidArea.p2, getSize());
+    }
+    if (mRenderToTexture) {
+        mRenderToTexture->invalidArea.addRectangle(invalidArea);
+        if (std::exchange(mRedrawRequested, true)) {
+            // this view already requested a redraw.
+            return;
+        }
+        // temporary disable drawing from texture. this will be set back to true by the callback below.
+        mRenderToTexture->drawFromTexture = false;
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
+                // last frame we draw here was not used.
+                // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
+                // results are actually displayed.
+                mRedrawRequested = false;
+                return;
+            }
+
+            if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+                // unable to render to zero-area texture
+                mRedrawRequested = false;
+                mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
+                return;
+            }
+            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+                // dead interface?
+                return;
+            }
+            if (mRenderToTexture->invalidArea.empty()) {
+                // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
+                // but why not safe check?
+                return;
+            }
+
+            APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
+            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
+            if (!mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea)) {
+                // unsuccessful
+                mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+                return;
+            }
+            AUI_DEFER {
+                mRenderToTexture->rendererInterface->end(renderer);
+            };
+
+            ARenderContext contextOfTheView {
+                .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
+                                                                                       invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
+                .render = renderer,
+            };
+            ARect<int> initialRect {
+                .p1 = { 0, 0 },
+                .p2 = getSize(),
+            };
+            if (contextOfTheView.clippingRects.empty()) {
+                contextOfTheView.clippingRects << initialRect;
+            } else {
+                contextOfTheView.clip(initialRect);
+            }
+            RenderHints::PushState state(renderer);
+            try {
+                render(contextOfTheView);
+                postRender(contextOfTheView);
+            }
+            catch (const AException& e) {
+                ALogger::err("AView") << "Unable to render view: " << e;
+                return;
+            }
+            mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+            mRenderToTexture->drawFromTexture = true;
+        });
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
+        return;
+    }
+
+    if (mRedrawRequested) {
+        // this view already requested a redraw.
+        return;
+    }
+
+    AUI_NULLSAFE(mParent)->markPixelDataInvalid(invalidArea.translate(getPosition()));
+}
+
+AString AView::debugString() const {
+    return "{} at {}"_format(mAssNames.empty() ? IStringable::toString(this) : mAssNames.last(), getPositionInWindow());
+}
+
 std::ostream& operator<<(std::ostream& os, const AView& view) {
-    os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
-       << ", size = " << view.getSize() << " }";
+    os << view.debugString();
     return os;
 }

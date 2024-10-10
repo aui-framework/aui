@@ -12,7 +12,7 @@
 #include "AViewContainer.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
@@ -25,18 +25,23 @@
 
 static constexpr auto LOG_TAG = "AViewContainer";
 
-void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
-    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) [[unlikely]] {
-        return;
-    }
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view) {
+        if (view.getVisibility() == Visibility::INVISIBLE || view.getVisibility() == Visibility::GONE) [[unlikely]] {
+            return true;
+        }
 
-    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) [[unlikely]] {
-        return;
-    }
+        // consider anything below this value as effectively "zero" or negligible in terms of opacity.
+        if (view.getOpacity() < 0.0001f) [[unlikely]] {
+            return true;
+        }
 
-    auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
-    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) [[unlikely]] {
+        return false;
+    }
+}
+
+void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+    if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
 
@@ -45,26 +50,64 @@ void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext cont
         return;
     }
 
-    const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
-
-    RenderHints::PushState s;
-    glm::mat4 t(1.f);
-    view->getTransform(t);
-    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
-    ARender::setTransform(t);
-
-    try {
-        view->render(contextOfTheView);
-        view->postRender();
-    }
-    catch (const AException& e) {
-        ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        ARender::getRenderer()->setStencilDepth(prevStencilLevel);
+    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
+    ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
+    if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
+        return rectOfTheView.isIntersects(r);
+    })) {
         return;
     }
 
-    auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
-    AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
+
+    const bool showRedraw = [&] {
+        if (view->mRedrawRequested) [[unlikely]] {
+            if (auto w = AWindow::current()) [[unlikely]] {
+                if (w->profiling().highlightRedrawRequests) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }();
+    AUI_DEFER {
+        if (showRedraw) [[unlikely]] {
+            auto c = contextOfTheView.render.getColor();
+            AUI_DEFER { contextOfTheView.render.setColorForced(c); };
+            contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+        }
+    };
+
+    RenderHints::PushState s(contextOfTheView.render);
+    glm::mat4 t(1.f);
+    view->getTransform(t);
+    contextOfTheView.render.setTransform(t);
+    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
+        view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
+        // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture
+        // optimizations.
+        // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
+        // and contains uncommited data.
+        if (view->mRenderToTexture->drawFromTexture) {
+            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+            return;
+        }
+    }
+    try {
+        view->render(contextOfTheView);
+        view->postRender(contextOfTheView);
+    }
+    catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Unable to render view: " << e;
+        contextOfTheView.render.setStencilDepth(prevStencilLevel);
+        return;
+    }
+
+    {
+        auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
+        AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    }
 }
 
 
@@ -182,7 +225,7 @@ void AViewContainer::removeView(size_t index) {
     emit childrenChanged;
 }
 
-void AViewContainer::render(ClipOptimizationContext context) {
+void AViewContainer::render(ARenderContext context) {
     AView::render(context);
     renderChildren(context);
 }
@@ -417,12 +460,6 @@ void AViewContainer::invalidateAllStyles() {
 }
 
 void AViewContainer::updateLayout() {
-    /*
-    if (getContentMinimumWidth() > getContentWidth() ||
-        getContentMinimumHeight() > getContentHeight()) {
-        //AWindow::current()->flagUpdateLayout();
-    } else {
-    }*/
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
@@ -468,6 +505,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     mCustomStyleRule = std::move(container->mCustomStyleRule);
     mAssNames.insertAll(container->mAssNames);
     mAssHelper = nullptr;
+    invalidateCaches();
 }
 
 void AViewContainer::setEnabled(bool enabled) {
@@ -549,6 +587,7 @@ void AViewContainer::onClickPrevented() {
 
 void AViewContainer::invalidateCaches() {
     mConsumesClickCache.reset();
+    redraw();
 }
 
 void AViewContainer::onViewGraphSubtreeChanged() {

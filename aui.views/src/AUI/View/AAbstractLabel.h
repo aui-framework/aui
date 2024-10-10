@@ -15,7 +15,7 @@
 #include <AUI/Enum/TextTransform.h>
 #include "AUI/Platform/ABaseWindow.h"
 #include "AView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Enum/WordBreak.h"
@@ -49,11 +49,11 @@ private:
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
 
 protected:
-    ARender::PrerenderedString mPrerendered;
+    _<IRenderer::IPrerenderedString> mPrerendered;
 
     AFontStyle getFontStyleLabel();
 
-    const ARender::PrerenderedString& getPrerendered() {
+    const _<IRenderer::IPrerenderedString>& getPrerendered() {
         return mPrerendered;
     }
 
@@ -68,8 +68,8 @@ public:
     AAbstractLabel();
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
-    void render(ClipOptimizationContext context) override;
-    void doRenderText();
+    void render(ARenderContext context) override;
+    void doRenderText(IRenderer& render);
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
@@ -92,7 +92,7 @@ public:
         mIconColor = iconColor;
     }
 
-    void doPrerender();
+    void doPrerender(IRenderer& render);
 
     bool consumesClick(const glm::ivec2& pos) override;
 

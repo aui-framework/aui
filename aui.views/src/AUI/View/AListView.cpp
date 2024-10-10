@@ -151,7 +151,7 @@ void AListView::updateItem(size_t at, const AString& value) {
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() { AUI_NULLSAFE(AWindow::current())->flagUpdateLayout(); }
+void AListView::onDataCountChanged() { requestLayoutUpdate(); }
 
 void AListView::onDataChanged() { redraw(); }
 

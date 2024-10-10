@@ -26,9 +26,10 @@ class AScrollAreaContainer;
  *
  * This view does not handle scroll events and tocuh events related to scroll. Use AScrollArea for such case.
  */
-class API_AUI_VIEWS AScrollAreaInner: public AViewContainer {
+class API_AUI_VIEWS AScrollAreaViewport: public AViewContainer {
 public:
-    AScrollAreaInner() = default;
+    AScrollAreaViewport();
+    ~AScrollAreaViewport() override;
 
     void setContents(_<AView> content);
 
@@ -40,16 +41,25 @@ public:
     void updateLayout() override;
   
     void setScroll(glm::uvec2 scroll) {
+        if (mScroll == scroll) {
+            return;
+        }
         mScroll = scroll;
         updateContentsScroll();
     }
 
     void setScrollX(unsigned scroll) {
+        if (mScroll.x == scroll) {
+            return;
+        }
         mScroll.x = scroll;
         updateContentsScroll();
     }
 
     void setScrollY(unsigned scroll) {
+        if (mScroll.y == scroll) {
+            return;
+        }
         mScroll.y = scroll;
         updateContentsScroll();
     }
@@ -60,7 +70,10 @@ public:
     }
 
 private:
+    class Inner;
+    _<Inner> mInner;
     _<AView> mContents;
+
     glm::uvec2 mScroll = {0, 0};
 
     void updateContentsScroll();

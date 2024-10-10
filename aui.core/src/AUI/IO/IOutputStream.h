@@ -16,7 +16,7 @@
 #include "AEOFException.h"
 
 
-class IOutputStream: public aui::noncopyable
+class IOutputStream
 {
 public:
 	virtual ~IOutputStream() = default;

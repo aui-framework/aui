@@ -36,8 +36,32 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend struct IRenderingContext::Init;
 
 public:
+    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
     ABaseWindow();
+
+    /**
+     * @brief Profiling (debugging) settings for this window.
+     * @details
+     * Can be controlled with devtools window.
+     */
+    struct Profiling {
+        /**
+         * @brief View to highlight.
+         */
+        _weak<AView> highlightView;
+
+        /**
+         * @brief Highlight redraw requests.
+         */
+        bool highlightRedrawRequests = false;
+
+        /**
+         * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
+         * this frame. This effect may help to debug AView::redraw issues.
+         */
+        bool renderToTextureDecay = false;
+    };
 
 
     /**
@@ -120,6 +144,11 @@ public:
         return mRenderingContext;
     }
 
+    [[nodiscard]]
+    BeforeFrameQueue& beforeFrameQueue() noexcept {
+        return mBeforeFrameQueue;
+    }
+
     void updateDpi();
 
     /**
@@ -135,10 +164,6 @@ public:
     _<AView> getFocusedView() const
     {
         return mFocusedView.lock();
-    }
-
-    void setProfiledView(const _<AView>& view) {
-        mProfiledView = view;
     }
 
     void setFocusedView(const _<AView>& view);
@@ -249,7 +274,7 @@ public:
     }
 
     void onFocusLost() override;
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
     void updateLayout() override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
@@ -329,6 +354,13 @@ public:
      */
     void setScalingParams(ScalingParams params);
 
+    /**
+     * @brief Get profiling settings (mutable).
+     */
+    Profiling& profiling() {
+        return mProfiling;
+    }
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -382,13 +414,17 @@ protected:
     virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
+    void markPixelDataInvalid(ARect<int> invalidArea) override;
+
 private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
-    _weak<AView> mProfiledView;
+    Profiling mProfiling{};
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
+
+    BeforeFrameQueue mBeforeFrameQueue;
 
     ATouchscreenKeyboardPolicy mKeyboardPolicy = ATouchscreenKeyboardPolicy::SHOWN_IF_NEEDED;
 

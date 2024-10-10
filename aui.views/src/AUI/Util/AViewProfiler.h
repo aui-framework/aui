@@ -21,7 +21,7 @@
 
 class API_AUI_VIEWS AViewProfiler {
 public:
-    static void displayBoundsOn(const AView& v);
+    static void displayBoundsOn(const AView& v, ARenderContext ctx);
 };
 
 

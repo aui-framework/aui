@@ -344,7 +344,31 @@ namespace glm {
 
         return o;
     }
+
 }
+
+template<glm::length_t L, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::vec<L, T, Q>> {
+    constexpr auto parse (format_parse_context& ctx) { return ctx.begin(); }
+
+    template <typename Context>
+    constexpr auto format(glm::vec<L, T, Q> vec, Context& ctx) const {
+        auto out = ctx.out();
+        out = format_to(out, FMT_STRING("{{ "));
+        for (glm::length_t i = 0; i < L; ++i) {
+            if (i == 0) {
+                out = format_to(out, FMT_STRING("{}"), vec[i]);
+            } else {
+                out = format_to(out, FMT_STRING(", {}"), vec[i]);
+            }
+        }
+        out = format_to(out, FMT_STRING(" }}"));
+        return out;
+    }
+
+private:
+};
+
 #define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

@@ -14,7 +14,7 @@
 //
 
 #include <AUI/Platform/AInput.h>
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <AUI/Render/RenderHints.h>
 #include "ACursorSelectable.h"
 
@@ -57,7 +57,7 @@ void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) 
     }
 }
 
-int ACursorSelectable::drawSelectionPre() {
+int ACursorSelectable::drawSelectionPre(IRenderer& render) {
     auto absoluteCursorPos = getPosByIndex(mCursorIndex);
     
     // selection
@@ -68,11 +68,11 @@ int ACursorSelectable::drawSelectionPre() {
         mAbsoluteBegin = mCursorIndex < mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
         mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
-        RenderHints::PushColor c;
-        ARender::setColor(AColor(1.f) - AColor(0x0078d700u));
+        RenderHints::PushColor c(render);
+        render.setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
-        drawSelectionRects();
+        drawSelectionRects(render);
     }
     return absoluteCursorPos;
 }
@@ -81,11 +81,11 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
     return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().substr(begin, end - begin)));
 }
 
-void ACursorSelectable::drawSelectionPost() {
-    ARender::setBlending(Blending::INVERSE_DST);
+void ACursorSelectable::drawSelectionPost(IRenderer& render) {
+    render.setBlending(Blending::INVERSE_DST);
     if (hasSelection())
     {
-        drawSelectionRects();
+        drawSelectionRects(render);
     }
 }
 
@@ -103,7 +103,7 @@ void ACursorSelectable::clearSelection() {
 }
 
 
-void ACursorSelectable::drawSelectionRects() {
+void ACursorSelectable::drawSelectionRects(IRenderer& render) {
     auto p = getMouseSelectionPadding();
 
     int absoluteBeginPos = mAbsoluteBegin;
@@ -113,9 +113,9 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        ARender::rect(ASolidBrush{},
-                      {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
-                      {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
+        render.rectangle(ASolidBrush{},
+                             {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
+                             {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
     };
 
     auto t = getDisplayText();

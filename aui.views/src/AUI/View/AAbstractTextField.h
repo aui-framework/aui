@@ -17,7 +17,7 @@
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 /**
  * @brief Text field implementation
@@ -33,7 +33,7 @@ public:
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void setText(const AString& t) override;
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext ctx) override;
 
     AString toString() const override;
 
@@ -90,11 +90,11 @@ signals:
     emits<> actionButtonPressed;
 
 protected:
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
     virtual bool isValidText(const AString& text);
 
-    void prerenderStringIfNeeded();
+    void prerenderStringIfNeeded(IRenderer& render);
 
     void typeableErase(size_t begin, size_t end) override;
     bool typeableInsert(size_t at, const AString& toInsert) override;
@@ -109,7 +109,7 @@ protected:
     void doRedraw() override;
 
 
-    void doDrawString();
+    void doDrawString(IRenderer& render);
 
     glm::ivec2 getMouseSelectionPadding() override;
 

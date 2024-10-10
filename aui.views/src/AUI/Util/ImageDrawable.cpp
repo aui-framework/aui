@@ -15,7 +15,7 @@
 //
 
 #include "AUI/Common/AException.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AImageDrawable.h"
 #include "AUI/Render/ITexture.h"
 #include <AUI/Platform/AWindow.h>
@@ -33,15 +33,15 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 }
 
 
-void AImageDrawable::draw(const IDrawable::Params& params) {
+void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
-        auto texture = ARender::getNewTexture();
+        auto texture = render.getNewTexture();
         texture->setImage(**asImage);
         mStorage = std::move(texture);
     }
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
-    ARender::rect(ATexturedBrush{
+    render.rectangle(ATexturedBrush{
             .texture = texture,
             .uv1 = params.cropUvTopLeft,
             .uv2 = params.cropUvBottomRight,

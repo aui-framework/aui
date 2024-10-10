@@ -19,7 +19,6 @@
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
-#include "AUI/Util/AMessageQueue.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
@@ -260,7 +259,7 @@ void AThread::join()
 	mThread->join();
 }
 
-void AAbstractThread::enqueue(AMessageQueue::Message f)
+void AAbstractThread::enqueue(AMessageQueue<>::Message f)
 {
     mMessageQueue.enqueue(std::move(f));
     if (mCurrentEventLoop) {

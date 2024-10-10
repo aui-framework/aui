@@ -16,31 +16,32 @@
 #include <AUI/Common/SharedPtrTypes.h>
 
 template<typename T>
-class APool {
+class APool: public aui::noncopyable {
 private:
-    std::function<T*()> mFactory;
-    AQueue<T*> mQueue;
+    using Factory = std::function<_unique<T>()>;
+    Factory mFactory;
+    AQueue<_unique<T>> mQueue;
     std::shared_ptr<bool> mPoolAlive = std::make_shared<bool>(true);
 
 
     template <typename Ptr = _<T>>
     Ptr getImpl() noexcept {
-        T* t;
+        _unique<T> t;
         if (mQueue.empty()) {
             t = mFactory();
         } else {
-            t = mQueue.front();
+            t = std::move(mQueue.front());
             mQueue.pop();
         }
         if constexpr (std::is_same_v<Ptr, _<T>>) {
-            return aui::ptr::manage(t, APoolDeleter(this));
+            return aui::ptr::manage(t.release(), APoolDeleter(this));
         } else {
-            return std::unique_ptr<T, APoolDeleter>(t, APoolDeleter(this));
+            return std::unique_ptr<T, APoolDeleter>(t.release(), APoolDeleter(this));
         }
     }
 
 public:
-    explicit APool(const std::function<T*()>& factory) noexcept : mFactory(factory) {}
+    explicit APool(Factory factory) noexcept : mFactory(std::move(factory)) {}
 
     struct APoolDeleter {
         APool<T>* pool;
@@ -50,7 +51,7 @@ public:
 
         void operator()(T* t) {
             if (*poolAlive) {
-                pool->mQueue.push(t);
+                pool->mQueue.push(_unique<T>(t));
             } else {
                 delete t;
             }
@@ -59,10 +60,6 @@ public:
 
     ~APool() {
         *mPoolAlive = false;
-        while (!mQueue.empty()) {
-            delete mQueue.front();
-            mQueue.pop();
-        }
     }
     auto get() noexcept {
         return getImpl<_<T>>();

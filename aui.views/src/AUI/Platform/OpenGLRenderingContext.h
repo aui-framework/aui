@@ -56,6 +56,12 @@ public:
         return std::nullopt;
     }
 
+    IRenderer& renderer() override {
+        return *mRenderer;
+    }
+
+    static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
+
 private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;

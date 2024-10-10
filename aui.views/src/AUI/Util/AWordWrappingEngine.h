@@ -45,7 +45,7 @@ private:
     AVector<_<Entry>> mEntries;
     float mLineHeight = 1.f;
     ATextAlign mTextAlign = ATextAlign::LEFT;
-    std::optional<int> mHeight;
+    AOptional<int> mHeight;
 
 public:
     void setLineHeight(float lineHeight) {
@@ -60,7 +60,8 @@ public:
         mEntries = std::move(entries);
     }
 
-    std::optional<int> getHeight() {
+    [[nodiscard]]
+    AOptional<int> height() const {
         return mHeight;
     }
 

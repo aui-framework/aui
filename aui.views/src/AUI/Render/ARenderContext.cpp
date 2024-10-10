@@ -9,20 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 11/19/2021.
-//
+#include "ARenderContext.h"
 
-#include <AUI/Util/ACleanup.h>
-#include <AUI/Util/kAUI.h>
-#include "ARender.h"
+void ARenderContext::clip(ARect<int> clipping) {
+    for (auto& r : clippingRects) {
+        r.p1 = glm::max(r.min(), clipping.min());
+        r.p2 = glm::min(r.max(), clipping.max());
+    }
 
-
-_<IRenderer> ARender::ourRenderer;
-
-void ARender::setRenderer(_<IRenderer> renderer) {
-    ourRenderer = std::move(renderer);
-    do_once ACleanup::afterEntry([] {
-        ourRenderer = nullptr;
-    });
+    clippingRects.removeIf([](auto r) { return r.area() == 0; });
 }

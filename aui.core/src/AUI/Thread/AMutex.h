@@ -87,3 +87,16 @@ private:
     enum State { UNLOCKED, LOCKED };
     std::atomic<State> mState = UNLOCKED;
 };
+
+/**
+ * @brief Implements mutex interface but does nothing, useful for mocking a mutex.
+ */
+class AFakeMutex {
+public:
+    void lock() {}
+    void try_lock() {}
+    void unlock() {}
+    void shared_lock() {}
+    void try_shared_lock() {}
+    void shared_unlock() {}
+};

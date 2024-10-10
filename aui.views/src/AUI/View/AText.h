@@ -58,11 +58,11 @@ public:
     void setHtml(const AString& html, const Flags& flags = {});
     void setString(const AString& string, const Flags& flags = {});
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
-    void prerenderString();
+    void prerenderString(ARenderContext ctx);
 
     void invalidateFont() override;
 
@@ -140,7 +140,7 @@ private:
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;
 
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     ParsedFlags mParsedFlags;
 
 
@@ -149,6 +149,8 @@ private:
                   const ParsedFlags& flags);
 
     static ParsedFlags parseFlags(const Flags& flags);
+
+    void performLayout();
 };
 
 

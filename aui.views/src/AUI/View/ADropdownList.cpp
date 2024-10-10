@@ -62,14 +62,14 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void ADropdownList::render(ClipOptimizationContext context) {
+void ADropdownList::render(ARenderContext context) {
     AAbstractLabel::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
         p.size = size;
         p.offset = { getWidth() - size.x - getPadding().right, (getHeight() - size.y) / 2 };
-        arrow->draw(p);
+        arrow->draw(context.render, p);
     }
 }
 

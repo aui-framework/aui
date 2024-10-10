@@ -14,8 +14,8 @@
 //
 
 #include <AUI/GL/gl.h>
-#import <Cocoa/Cocoa.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#import <Cocoa/Cocoa.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/GL/GLDebug.h>
@@ -85,7 +85,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
     }
-    ARender::setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
     ALogger::info("OpenGL context is ready");
 }
 

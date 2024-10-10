@@ -31,7 +31,7 @@ TEST_F(DynamicVector, PushBack) {
 
 
     vector.pop_back();
-    EXPECT_DEATH({ vector[3];}, "");
+    EXPECT_DEATH({ auto& unused = vector[3];}, "");
 
     vector.pop_back();
     vector.pop_back();

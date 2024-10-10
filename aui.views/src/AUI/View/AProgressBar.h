@@ -55,7 +55,7 @@ public:
     AProgressBar();
 
     void setSize(glm::ivec2 size) override;
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

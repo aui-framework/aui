@@ -25,6 +25,8 @@ public:
     void beginResize(ABaseWindow& window) override;
     void init(const Init& init) override;
 
+    IRenderer& renderer() override;
+
     AImage makeScreenshot() override;
 
     inline uint8_t& stencil(const glm::uvec2& position) {

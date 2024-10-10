@@ -14,7 +14,7 @@
 //
 
 #include "AUI/Enum/AOverflow.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
@@ -475,7 +475,7 @@ AStylesheet::AStylesheet() {
         },
         // scrollbar
         {
-            t<AScrollAreaInner>(),
+            t<AScrollAreaViewport>(),
             AOverflow::HIDDEN,
             Expanding(),
         },

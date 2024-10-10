@@ -43,7 +43,9 @@ void AWindow::onClosed() {
 
 void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
-    render({.position = glm::ivec2(0), .size = getSize()});
+    auto& renderer = mRenderingContext->renderer();
+    renderer.setWindow(this);
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -91,7 +93,7 @@ void AWindow::redraw() {
             APerformanceSection s("IRenderingContext::beginPaint");
             mRenderingContext->beginPaint(*this);
         }
-        ARaiiHelper endPaintCaller = [&] {
+        AUI_DEFER {
             APerformanceSection s("IRenderingContext::endPaint");
             mRenderingContext->endPaint(*this);
         };
@@ -107,7 +109,6 @@ void AWindow::redraw() {
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time

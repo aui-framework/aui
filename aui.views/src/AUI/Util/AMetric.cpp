@@ -15,7 +15,7 @@
 #include "AUI/IO/AStringStream.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Common/AMap.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/APlatform.h"
 

@@ -45,8 +45,8 @@ void ASelectableLabel::doRedraw() {
     redraw();
 }
 
-void ASelectableLabel::render(ClipOptimizationContext context) {
-    AView::render(context);
+void ASelectableLabel::render(ARenderContext ctx) {
+    AView::render(ctx);
 
     if (hasFocus()) {
         auto x =  mTextLeftOffset;
@@ -54,20 +54,20 @@ void ASelectableLabel::render(ClipOptimizationContext context) {
             x -= mPrerendered->getWidth() / 2.f;
         }
         {
-            RenderHints::PushMatrix m;
+            RenderHints::PushMatrix m(ctx.render);
 
-            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
-            drawSelectionPre();
+            ctx.render.setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            drawSelectionPre(ctx.render);
         }
-        doRenderText();
+        doRenderText(ctx.render);
 
         {
-            RenderHints::PushMatrix m;
-            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
-            drawSelectionPost();
+            RenderHints::PushMatrix m(ctx.render);
+            ctx.render.setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            drawSelectionPost(ctx.render);
         }
     } else {
-        doRenderText();
+        doRenderText(ctx.render);
     }
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

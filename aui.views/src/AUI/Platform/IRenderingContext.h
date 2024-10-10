@@ -20,6 +20,7 @@
 
 class ABaseWindow;
 class AWindow;
+class IRenderer;
 
 /**
  * @brief Glue between AWindow and IRenderer.
@@ -54,4 +55,6 @@ public:
     virtual void endPaint(ABaseWindow& window) = 0;
     virtual void beginResize(ABaseWindow& window) = 0;
     virtual void endResize(ABaseWindow& window) = 0;
+
+    virtual IRenderer& renderer() = 0;
 };

@@ -45,7 +45,7 @@ public:
     ~ADropdownList() override;
 
     void setModel(const _<IListModel<AString>>& model);
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
     [[nodiscard]] int getSelectionId() const {
         return mSelectionId;

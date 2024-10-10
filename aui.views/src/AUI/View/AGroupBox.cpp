@@ -27,14 +27,16 @@ namespace {
             setContents(contents);
         }
 
-        void drawStencilMask() override {
-            AView::drawStencilMask();
+        void drawStencilMask(ARenderContext ctx) override {
+            AView::drawStencilMask(ctx);
 
-            RenderHints::PushMatrix transform;
+            RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            ARender::rect(ASolidBrush{},
-                          d,
-                          mTitle->getSize());
+            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
+                ctx.render.rectangle(ASolidBrush{},
+                                     d,
+                                     mTitle->getSize());
+            }
         }
 
     private:

@@ -18,10 +18,9 @@
 
 ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
     windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContext));
-    ARender::setRenderer(std::make_unique<SoftwareRenderer>());
 }
 
-AImage ASoftwareEmbedAuiWrap::render(ClipOptimizationContext context) {
+AImage ASoftwareEmbedAuiWrap::render(ARenderContext context) {
     windowMakeCurrent();
     AThread::processMessages();
     windowRender();

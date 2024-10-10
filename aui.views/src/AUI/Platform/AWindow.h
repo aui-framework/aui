@@ -47,7 +47,6 @@ class API_AUI_VIEWS AWindow: public ABaseWindow
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
-        ARender::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -271,6 +270,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+
     float fetchDpiFromSystem() const override;
 
     /**

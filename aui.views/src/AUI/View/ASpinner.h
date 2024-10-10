@@ -16,7 +16,7 @@
 
 class API_AUI_VIEWS ASpinner: public AView {
 public:
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext ctx) override;
 };
 
 
