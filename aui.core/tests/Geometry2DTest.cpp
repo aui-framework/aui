@@ -34,10 +34,10 @@ TEST(Geometry2D, RectIntersect) {
     // |                                               |
     // |                                               |
     // +-----------------------------------------------+
-    ARect r100(glm::ivec2(0), glm::ivec2(100));
-    ARect r10(glm::ivec2(0), glm::ivec2(10));
-    ARect r2030(glm::ivec2(20), glm::ivec2(30));
-    ARect outside(glm::ivec2(110), glm::ivec2(115));
+    ARect<int> r100{glm::ivec2(0), glm::ivec2(100)};
+    ARect<int> r10{glm::ivec2(0), glm::ivec2(10)};
+    ARect<int> r2030{glm::ivec2(20), glm::ivec2(30)};
+    ARect<int> outside{glm::ivec2(110), glm::ivec2(115)};
 
     // inside
     EXPECT_TRUE(r100.isIntersects(r2030));
