@@ -32,9 +32,11 @@ namespace {
 
             RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            ctx.render.rectangle(ASolidBrush{},
-                                 d,
-                                 mTitle->getSize());
+            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
+                ctx.render.rectangle(ASolidBrush{},
+                                     d,
+                                     mTitle->getSize());
+            }
         }
 
     private:
