@@ -1053,6 +1053,8 @@ private:
         _unique<IRenderViewToTexture> rendererInterface;
         IRenderViewToTexture::InvalidArea invalidArea;
 
+        bool drawFromTexture = true;
+
         /**
          * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
          */

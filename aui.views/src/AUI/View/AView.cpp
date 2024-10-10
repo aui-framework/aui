@@ -719,6 +719,8 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             // this view already requested a redraw.
             return;
         }
+        // temporary disable drawing from texture. this will be set back to true by the callback below.
+        mRenderToTexture->drawFromTexture = false;
         AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
             if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
                 // last frame we draw here was not used.
@@ -775,6 +777,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 return;
             }
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+            mRenderToTexture->drawFromTexture = true;
         });
         AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
         return;

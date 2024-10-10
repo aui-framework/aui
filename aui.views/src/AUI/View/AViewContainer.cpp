@@ -85,8 +85,14 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
     if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
         view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
-        view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
-        return;
+        // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture
+        // optimizations.
+        // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
+        // and contains uncommited data.
+        if (view->mRenderToTexture->drawFromTexture) {
+            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+            return;
+        }
     }
     try {
         view->render(contextOfTheView);

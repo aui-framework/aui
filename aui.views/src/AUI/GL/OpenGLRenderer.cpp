@@ -1087,7 +1087,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                         const auto supersampledRenderingFBSize =
                                 mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
                         glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
-                                          0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
+                                          0, mainRenderingFB->supersampledSize().y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y,
                                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
                     }
 
@@ -1157,7 +1157,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mainRenderingFB->bindForRead();
                 mFramebuffer.bindForWrite();
                 const auto supersampledRenderingFBSize = mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
-                glBlitFramebuffer(0, supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, 0,
+                glBlitFramebuffer(0, mainRenderingFB->supersampledSize().y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y,
                                   0, 0, mFramebuffer.size().x, mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
             }
 
@@ -1169,7 +1169,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-                AWindow::current()->profiling().renderToTextureDecay = true; // TODO debug purposes
+//                AWindow::current()->profiling().renderToTextureDecay = true; // TODO debug purposes
                 if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
