@@ -748,7 +748,11 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
             APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
             auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
-            mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea);
+            if (!mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea)) {
+                // unsuccessful
+                mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+                return;
+            }
             AUI_DEFER {
                 mRenderToTexture->rendererInterface->end(renderer);
             };

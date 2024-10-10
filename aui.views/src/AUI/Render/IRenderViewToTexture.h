@@ -91,11 +91,12 @@ public:
      * mismatched with surfaceSize.
      * @param invalidArea invalid areas to update. Should not be empty. Can be changed to InvalidArea::Full{} by
      * implementation and caller is expected to react accordingly.
+     * @return true on success, false otherwise
      *
      * @details
      * If needed, implementation may adjust renderer's transform matrix.
      */
-    virtual void begin(IRenderer& renderer, glm::ivec2 surfaceSize, IRenderViewToTexture::InvalidArea& invalidArea) = 0;
+    virtual bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, IRenderViewToTexture::InvalidArea& invalidArea) = 0;
 
     /**
      * @brief Finishes drawing operation started with begin method.
