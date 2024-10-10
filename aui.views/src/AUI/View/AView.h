@@ -115,7 +115,7 @@ private:
     /**
      * @brief opacity, specified in ASS.
      */
-    float mOpacity = 1;
+    aui::float_within_0_1 mOpacity = 1;
 
     /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
@@ -639,10 +639,10 @@ public:
     }
     AFontStyle& getFontStyle();
 
-    [[nodiscard]] float getOpacity() const {
+    [[nodiscard]] aui::float_within_0_1 getOpacity() const {
         return mOpacity;
     }
-    void setOpacity(float opacity) {
+    void setOpacity(aui::float_within_0_1 opacity) {
         mOpacity = opacity;
     }
 

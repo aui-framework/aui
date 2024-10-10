@@ -68,6 +68,9 @@ public:
     }
 
     AStaticVector& operator=(const AStaticVector& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
         clear();
         insert(mBegin, rhs.begin(), rhs.end());
         return *this;

@@ -15,6 +15,7 @@
 
 
 #include <AUI/Util/AMetric.h>
+#include <AUI/Traits/values.h>
 #include "IProperty.h"
 
 namespace ass {
@@ -24,7 +25,7 @@ namespace ass {
      * @ingroup ass
      */
     struct Opacity {
-        float opacity;
+        aui::float_within_0_1 opacity;
 
         explicit Opacity(float opacity) : opacity(opacity) {}
     };
