@@ -294,6 +294,7 @@ void AView::addAssName(const AString& assName)
 
 void AView::invalidateAssHelper() {
     mAssHelper = nullptr;
+    aui::zero(mAss);
     redraw();
 }
 
