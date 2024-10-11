@@ -652,6 +652,7 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;
+    aui::zero(mAss);
     redraw();
 }
 
@@ -723,6 +724,11 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
         AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+                // dead interface?
+                return;
+            }
+
             if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
                 // last frame we draw here was not used.
                 // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
@@ -737,10 +743,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
                 return;
             }
-            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
-                // dead interface?
-                return;
-            }
+
             if (mRenderToTexture->invalidArea.empty()) {
                 // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
                 // but why not safe check?
