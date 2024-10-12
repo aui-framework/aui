@@ -12,11 +12,12 @@
 #pragma once
 
 #include "APoint2D.h"
+#include "ALineSegment.h"
 #include <array>
 #include <range/v3/algorithm/any_of.hpp>
 
 /**
- * @brief 2D rectangle.
+ * @brief Axis aligned 2D rectangle.
  * @ingroup core
  */
 template<typename T>
@@ -73,6 +74,27 @@ struct ARect {
         return size().x * size().y;
     }
 
+    [[nodiscard]]
+    ALineSegment<T> topLineSegment() const noexcept {
+        return { .p1 = APoint2D<T>(p1.x, p1.y), .p2 = APoint2D<T>(p2.x, p1.y) };
+    }
+
+    [[nodiscard]]
+    ALineSegment<T> leftLineSegment() const noexcept {
+        return { .p1 = APoint2D<T>(p1.x, p1.y), .p2 = APoint2D<T>(p1.x, p2.y) };
+    }
+
+    [[nodiscard]]
+    ALineSegment<T> rightLineSegment() const noexcept {
+        return { .p1 = APoint2D<T>(p2.x, p1.y), .p2 = APoint2D<T>(p2.x, p2.y) };
+    }
+
+
+    [[nodiscard]]
+    ALineSegment<T> bottomLineSegment() const noexcept {
+        return { .p1 = APoint2D<T>(p1.x, p2.y), .p2 = APoint2D<T>(p2.x, p2.y) };
+    }
+
     /**
      * @return true if other intersects with this (even if intersection area =0!)
      */
@@ -93,36 +115,47 @@ struct ARect {
             return true;
         }
 
-        //       other
-        //      +------+
-        //      |      |
-        //+-----a------+-----+
-        //|     |      |     |
-        //|     |      |     | this
-        //|     |      |     |
-        //+-----+------+-----+
-        //      |      |
-        //      +------+
         {
-            const auto a = APoint2D<T>(p2.x, other.p1.y);
-            if (isIntersects(a) && other.isIntersects(a)) {
+            auto verticalLines = [](const ARect& r) {
+                return std::array<ALineSegment<T>, 2>{ r.leftLineSegment(), r.rightLineSegment() };
+            };
+            auto horizontalLines = [](const ARect& r) {
+                return std::array<ALineSegment<T>, 2>{ r.topLineSegment(), r.bottomLineSegment() };
+            };
+
+            //        this
+            //      +------+
+            //      |      |
+            //+-----+------+-----+
+            //|     |      |     |
+            //|     |      |     | other
+            //|     |      |     |
+            //+-----+------+-----+
+            //      |      |
+            //      +------+
+            if (ranges::any_of(verticalLines(*this), [&](const ALineSegment<T>& l) {
+                return ranges::any_of(horizontalLines(other), [&](const ALineSegment<T>& r) {
+                    return l.isIntersects(r);
+                });
+            })) {
                 return true;
             }
-        }
 
-        //       this
-        //      +------+
-        //      |      |
-        //+-----a------+-----+
-        //|     |      |     |
-        //|     |      |     | other
-        //|     |      |     |
-        //+-----+------+-----+
-        //      |      |
-        //      +------+
-        {
-            const auto a = APoint2D<T>(p1.x, other.p2.y);
-            if (isIntersects(a) && other.isIntersects(a)) {
+            //       other
+            //      +------+
+            //      |      |
+            //+-----+------+-----+
+            //|     |      |     |
+            //|     |      |     | this
+            //|     |      |     |
+            //+-----+------+-----+
+            //      |      |
+            //      +------+
+            if (ranges::any_of(horizontalLines(*this), [&](const ALineSegment<T>& l) {
+                return ranges::any_of(verticalLines(other), [&](const ALineSegment<T>& r) {
+                    return l.isIntersects(r);
+                });
+            })) {
                 return true;
             }
         }
