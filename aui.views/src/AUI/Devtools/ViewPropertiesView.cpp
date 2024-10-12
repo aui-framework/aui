@@ -64,7 +64,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             },
             Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(ALayoutDirection::NONE), targetView->getMinimumHeight(ALayoutDirection::NONE)) },
             CheckBoxWrapper {
-                Label { "Enabled "},
+                Label { "Enabled"},
             } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
@@ -73,6 +73,15 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                 });
             },
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+            Horizontal{
+                Button{"Add \"DevtoolsTest\" stylesheet name"} let {
+                    it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
+                    connect(it->clicked, [=] {
+                        targetView->addAssName("DevtoolsTest");
+                        setTargetView(targetView);
+                    });
+                },
+            },
             CheckBoxWrapper {
                 Label {"Expanding"},
             } let {

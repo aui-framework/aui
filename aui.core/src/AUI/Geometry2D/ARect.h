@@ -165,7 +165,7 @@ struct ARect {
 
     [[nodiscard]]
     APoint2D<T> size() const noexcept {
-        return p2 - p1;
+        return glm::abs(p2 - p1);
     }
 
     ARect& translate(glm::ivec2 by) noexcept {
