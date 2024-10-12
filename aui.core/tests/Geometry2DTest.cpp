@@ -12,7 +12,7 @@
 #include <gtest/gtest.h>
 #include "AUI/Geometry2D/ARect.h"
 
-TEST(Geometry2D, RectIntersect) {
+TEST(Geometry2D, RectIntersect1) {
     //  r10                  r100
     // +---+-------------------------------------------+
     // |   |                                           |  outside
@@ -49,4 +49,11 @@ TEST(Geometry2D, RectIntersect) {
     // outside
     EXPECT_FALSE(r100.isIntersects(outside));
     EXPECT_FALSE(outside.isIntersects(r100));
+}
+
+TEST(Geometry2D, RectIntersect2) {
+    ARect<int> r1{glm::ivec2(0), glm::ivec2(84, 54)};
+    ARect<int> r2{glm::ivec2(7, -8), glm::ivec2(77, 62)};
+    EXPECT_TRUE(r1.isIntersects(r2));
+    EXPECT_TRUE(r2.isIntersects(r1));
 }
