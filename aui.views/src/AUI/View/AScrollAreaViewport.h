@@ -41,7 +41,7 @@ public:
     void updateLayout() override;
   
     void setScroll(glm::uvec2 scroll) {
-        if (mScroll == scroll) {
+        if (mScroll == scroll) [[unlikely]] {
             return;
         }
         mScroll = scroll;
@@ -49,7 +49,7 @@ public:
     }
 
     void setScrollX(unsigned scroll) {
-        if (mScroll.x == scroll) {
+        if (mScroll.x == scroll) [[unlikely]] {
             return;
         }
         mScroll.x = scroll;
@@ -57,7 +57,7 @@ public:
     }
 
     void setScrollY(unsigned scroll) {
-        if (mScroll.y == scroll) {
+        if (mScroll.y == scroll) [[unlikely]] {
             return;
         }
         mScroll.y = scroll;

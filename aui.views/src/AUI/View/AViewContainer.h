@@ -319,7 +319,7 @@ public:
         mScrollbarAppearance = scrollbarAppearance;
         emit scrollbarAppearanceSet(scrollbarAppearance);
     }
-    
+
     /**
      * @see mPointerEventsMapping
      */
@@ -327,9 +327,12 @@ public:
         return mPointerEventsMapping;
     }
 
+    void markMinContentSizeInvalid() override;
+
 protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
+    bool mWantsLayoutUpdate = true;
 
     void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 
@@ -357,11 +360,6 @@ protected:
     void invalidateAssHelper() override;
 
     /**
-     * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
-     */
-    virtual void updateParentsLayoutIfNecessary();
-
-    /**
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
      * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
      * @note If access to this function is restricted or you want to pass an object derived from AViewContainer, you
@@ -379,7 +377,7 @@ signals:
 private:
     _<ALayout> mLayout;
     bool mSizeSet = false;
-    glm::ivec2 mPreviousSize = mSize;
+    glm::ivec2 mLastLayoutUpdateSize;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

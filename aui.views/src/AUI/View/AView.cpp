@@ -82,11 +82,12 @@ void AView::redraw()
 void AView::markMinContentSizeInvalid()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
-    if (!mCachedMinContentSize) {
+    mCachedMinContentSize.reset();
+    if (mMarkedMinContentSizeInvalid) {
         // already marked.
         return;
     }
-    mPrevCachedMinContentSize = *std::exchange(mCachedMinContentSize, std::nullopt);
+    mMarkedMinContentSizeInvalid = true;
     AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
@@ -136,6 +137,7 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 }
 void AView::render(ARenderContext ctx)
 {
+    mMarkedMinContentSizeInvalid = false;
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
@@ -482,6 +484,7 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mMarkedMinContentSizeInvalid = false;
     mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
@@ -491,6 +494,7 @@ void AView::setPosition(glm::ivec2 position) {
 }
 void AView::setSize(glm::ivec2 size)
 {
+    mMarkedMinContentSizeInvalid = false;
     mSkipUntilLayoutUpdate = false;
     auto newSize = mSize;
     if (mFixedSize.x != 0)
@@ -721,6 +725,10 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         invalidArea.p2 = glm::min(invalidArea.p2, getSize());
     }
     if (mRenderToTexture) {
+        if (glm::all(glm::lessThanEqual(invalidArea.p1, glm::ivec2(0, 0))) &&
+            glm::all(glm::greaterThanEqual(invalidArea.p2, getSize()))) {
+            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
+        }
         mRenderToTexture->invalidArea.addRectangle(invalidArea);
         if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.

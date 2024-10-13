@@ -98,8 +98,7 @@ void AWindow::redraw() {
             mRenderingContext->endPaint(*this);
         };
 
-        if (mUpdateLayoutFlag) {
-            mUpdateLayoutFlag = false;
+        if (!mCachedMinContentSize) {
             AUI_REPEAT(2) { // AText may trigger extra layout update
                 updateLayout();
             }
@@ -183,7 +182,6 @@ ABaseWindow* AWindow::current() {
 void AWindow::markMinContentSizeInvalid() {
     ABaseWindow::markMinContentSizeInvalid();
     flagRedraw();
-    mUpdateLayoutFlag = true;
 }
 
 void AWindow::onCloseButtonClicked() {

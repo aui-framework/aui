@@ -31,7 +31,6 @@ class AListViewContainer : public AViewContainer {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {

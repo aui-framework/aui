@@ -300,7 +300,6 @@ private:
 #else
     bool mRedrawFlag = true;
 #endif
-    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
 

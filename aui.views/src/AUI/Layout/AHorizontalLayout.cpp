@@ -25,7 +25,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		int expanding;
 		int minSpace;
 	};
-	AVector<cache_t> cache;
+	AVector<cache_t> cache; // todo heap allocation bruh
 	cache.reserve(mViews.size());
 	
 	int sum = 0;

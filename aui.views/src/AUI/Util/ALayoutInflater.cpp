@@ -23,5 +23,5 @@ void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView
         view->setExpanding();
         root->addView(view);
     }
-    root->markMinContentSizeInvalid();
+    static_cast<AView*>(root.ptr())->markMinContentSizeInvalid();
 }

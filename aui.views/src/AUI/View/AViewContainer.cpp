@@ -460,10 +460,22 @@ void AViewContainer::invalidateAllStyles() {
 }
 
 void AViewContainer::updateLayout() {
-    if (mLayout)
-        mLayout->onResize(mPadding.left, mPadding.top,
-                          getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-    invalidateCaches();
+    if (!mLayout) {
+        // no layout = no update.
+        return;
+    }
+    if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
+        if (mLastLayoutUpdateSize == getSize()) {
+            // no need to go deeper.
+            return;
+        }
+    }
+    mWantsLayoutUpdate = false;
+    mLastLayoutUpdateSize = getSize();
+    mLayout->onResize(mPadding.left, mPadding.top,
+                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    mConsumesClickCache.reset();
+    redraw();
 }
 
 void AViewContainer::removeAllViews() {
@@ -476,15 +488,6 @@ void AViewContainer::removeAllViews() {
     }
     mViews.clear();
     invalidateCaches();
-}
-
-void AViewContainer::updateParentsLayoutIfNecessary() {
-    if (mPreviousSize != mSize) {
-        mPreviousSize = mSize;
-        if (mParent) {
-            mParent->updateLayout();
-        }
-    }
 }
 
 void AViewContainer::onDpiChanged() {
@@ -509,6 +512,9 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
 }
 
 void AViewContainer::setEnabled(bool enabled) {
+    if (isEnabled() == enabled) [[unlikely]] {
+        return;
+    }
     AView::setEnabled(enabled);
     notifyParentEnabledStateChanged(enabled);
 }
@@ -587,6 +593,7 @@ void AViewContainer::onClickPrevented() {
 
 void AViewContainer::invalidateCaches() {
     mConsumesClickCache.reset();
+    markMinContentSizeInvalid();
     redraw();
 }
 
@@ -617,4 +624,9 @@ void AViewContainer::setViews(AVector<_<AView>> views) {
         if (mLayout)
             mLayout->addView(view);
     }
+}
+
+void AViewContainer::markMinContentSizeInvalid() {
+    AView::markMinContentSizeInvalid();
+    mWantsLayoutUpdate = true;
 }
