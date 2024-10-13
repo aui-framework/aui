@@ -85,10 +85,6 @@ void AGroupBox::updateLayout() {
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
 }
 
-int AGroupBox::getContentMinimumHeight(ALayoutDirection layout) {
-    return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE) + mFrame->getPosition().y - getFrameForcedPosition();
-}
-
 int AGroupBox::getFrameForcedPosition() const noexcept {
     return mTitle->getPosition().y + mTitle->getSize().y / 2;
 }

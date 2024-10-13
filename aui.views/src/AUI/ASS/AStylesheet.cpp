@@ -133,7 +133,7 @@ AStylesheet::AStylesheet() {
             Padding { 0 },
         },
         {
-            { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
+            { button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
@@ -151,7 +151,6 @@ AStylesheet::AStylesheet() {
         },
         {
             { t<AButton>::active(), c::active(".btn")},
-            Padding { 4_dp, {}, 2_dp },
             BoxShadow { nullptr },
         },
         {

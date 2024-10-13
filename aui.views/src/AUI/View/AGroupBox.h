@@ -37,8 +37,6 @@ public:
 
     void updateLayout() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
-
 private:
     _<AView> mTitle;
     _<AView> mContent;

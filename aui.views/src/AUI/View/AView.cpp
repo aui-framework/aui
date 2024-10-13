@@ -232,6 +232,7 @@ void AView::invalidateStateStyles() {
     }
     applyAssRule(mCustomStyleRule);
 
+    markMinContentSizeInvalid();
     redraw();
 }
 

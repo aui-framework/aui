@@ -262,6 +262,7 @@ void AAbstractLabel::onDpiChanged() {
 
 void AAbstractLabel::invalidateFont() {
     mPrerendered = nullptr;
+    markMinContentSizeInvalid();
     redraw();
 }
 
