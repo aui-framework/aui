@@ -333,6 +333,7 @@ protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
     bool mWantsLayoutUpdate = true;
+    glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
     void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 
@@ -377,7 +378,6 @@ signals:
 private:
     _<ALayout> mLayout;
     bool mSizeSet = false;
-    glm::ivec2 mLastLayoutUpdateSize;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

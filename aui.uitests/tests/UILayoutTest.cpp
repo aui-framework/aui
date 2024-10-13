@@ -166,15 +166,20 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     // forcing two layout updates.
 
     testing::InSequence s;
-    auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(2);
+    auto l1 = _new<LabelMock>("test");
+    auto l2 = _new<ALabel>("test");
+    EXPECT_CALL(*l1, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(2);
     inflate(Centered { Horizontal {
-            l,
+        l1,
+        l2,
     }});
-    l->getWindow()->updateLayout();
-    l->setText("test2");
-    l->getWindow()->updateLayout();
+    l1->getWindow()->updateLayout();
+    auto prevPosX = l2->getPositionInWindow().x;
+    l1->setText("test2");
+    l1->getWindow()->updateLayout();
+
+    EXPECT_GE(l2->getPositionInWindow().x, prevPosX); // l2 is expected to shift to right.
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l->getWindow()->updateLayout();
+    l1->getWindow()->updateLayout();
 }

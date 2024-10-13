@@ -137,7 +137,7 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 }
 void AView::render(ARenderContext ctx)
 {
-    mMarkedMinContentSizeInvalid = false;
+    mMarkedMinContentSizeInvalid = false; // TODO govnocode
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
@@ -710,6 +710,7 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     auto prev = std::exchange(mVisibility, visibility);
     if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
+        mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
 }
