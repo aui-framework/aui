@@ -221,6 +221,9 @@ protected:
      */
     glm::ivec2 mExpanding = {0, 0};
 
+    AOptional<glm::ivec2> mCachedMinContentSize;
+    glm::ivec2 mPrevCachedMinContentSize = {0, 0};
+
     /**
      * @brief Minimal size.
      */
@@ -386,7 +389,7 @@ public:
         mMinSize = minSize;
     }
 
-    void requestLayoutUpdate();
+    virtual void markMinContentSizeInvalid();
 
     /**
      * @see mExtraStylesheet
@@ -564,6 +567,19 @@ public:
      * @return minimal content-area height.
      */
     virtual int getContentMinimumHeight(ALayoutDirection layout);
+
+    /**
+     * @return minimal content-area size.
+     */
+    glm::ivec2 getContentMinimumSize(ALayoutDirection layout) noexcept {
+        if (!mCachedMinContentSize) {
+            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(layout), getContentMinimumHeight(layout));
+            mCachedMinContentSize = minContentSize;
+            return minContentSize;
+        }
+        // TODO ignore layout?
+        return *mCachedMinContentSize;
+    }
 
     bool hasFocus() const;
 

@@ -188,7 +188,6 @@ public:
 
     virtual void focusNextView();
     virtual void flagRedraw();
-    virtual void flagUpdateLayout();
 
     void makeCurrent() {
         currentWindowStorage() = this;

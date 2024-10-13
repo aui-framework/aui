@@ -226,7 +226,7 @@ void AText::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
     if (widthDiffers) {
         mPrerenderedString = nullptr;
-        requestLayoutUpdate();
+        markMinContentSizeInvalid();
     }
 }
 

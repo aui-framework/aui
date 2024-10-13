@@ -180,11 +180,11 @@ ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
-void AWindow::flagUpdateLayout() {
+void AWindow::markMinContentSizeInvalid() {
+    ABaseWindow::markMinContentSizeInvalid();
     flagRedraw();
     mUpdateLayoutFlag = true;
 }
-
 
 void AWindow::onCloseButtonClicked() {
     close();

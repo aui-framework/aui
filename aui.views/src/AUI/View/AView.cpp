@@ -79,10 +79,15 @@ void AView::redraw()
     markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
-void AView::requestLayoutUpdate()
+void AView::markMinContentSizeInvalid()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
-    AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    if (!mCachedMinContentSize) {
+        // already marked.
+        return;
+    }
+    mPrevCachedMinContentSize = *std::exchange(mCachedMinContentSize, std::nullopt);
+    AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
 void AView::drawStencilMask(ARenderContext ctx)
@@ -257,13 +262,13 @@ bool AView::hasFocus() const
 int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize(layout).x, mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize(layout).y, mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -701,7 +706,7 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     auto prev = std::exchange(mVisibility, visibility);
     if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
-        requestLayoutUpdate();
+        markMinContentSizeInvalid();
     }
 }
 

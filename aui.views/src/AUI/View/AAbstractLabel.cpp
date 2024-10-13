@@ -288,6 +288,6 @@ void AAbstractLabel::setText(AString newText) {
     mText = std::move(newText);
     mPrerendered = nullptr;
 
-    requestLayoutUpdate();
+    markMinContentSizeInvalid();
     redraw();
 }
