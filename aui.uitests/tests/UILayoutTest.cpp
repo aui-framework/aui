@@ -132,3 +132,26 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
         .check(sameWidth(), "widths of the buttons are not equal")
         ;
 }
+
+TEST_F(UILayoutTest, GetContentMinimumWidthPerformance) {
+    // checks how many times getContentMinimumWidth is called.
+    // in this test, it should call be exactly once.
+
+    class LabelMock: public ALabel {
+    public:
+        LabelMock(AString text): ALabel(std::move(text)) {
+            ON_CALL(*this, getContentMinimumWidth).WillByDefault([this](const auto& a) {
+                return ALabel::getContentMinimumWidth(a);
+            });
+        }
+        MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override));
+    };
+
+    testing::InSequence s;
+    auto l = _new<LabelMock>("test");
+    EXPECT_CALL(*l, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(1);
+    inflate(Centered { Horizontal {
+        l,
+    }});
+    l->getWindow()->updateLayout();
+}
