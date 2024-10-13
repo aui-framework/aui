@@ -133,19 +133,21 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
         ;
 }
 
-TEST_F(UILayoutTest, GetContentMinimumWidthPerformance) {
+namespace {
+class LabelMock: public ALabel {
+public:
+    LabelMock(AString text): ALabel(std::move(text)) {
+        ON_CALL(*this, getContentMinimumWidth).WillByDefault([this](const auto& a) {
+            return ALabel::getContentMinimumWidth(a);
+        });
+    }
+    MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override));
+};
+}
+
+TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
     // checks how many times getContentMinimumWidth is called.
     // in this test, it should call be exactly once.
-
-    class LabelMock: public ALabel {
-    public:
-        LabelMock(AString text): ALabel(std::move(text)) {
-            ON_CALL(*this, getContentMinimumWidth).WillByDefault([this](const auto& a) {
-                return ALabel::getContentMinimumWidth(a);
-            });
-        }
-        MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override));
-    };
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
@@ -153,5 +155,26 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance) {
     inflate(Centered { Horizontal {
         l,
     }});
+    l->getWindow()->updateLayout();
+
+    // extra layout update that should call LabelMock::getContentMinimumWidth one more time
+    l->getWindow()->updateLayout();
+}
+
+TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
+    // in contract to GetContentMinimumWidthPerformance1, here we additionaly change text of the label, effectively
+    // forcing two layout updates.
+
+    testing::InSequence s;
+    auto l = _new<LabelMock>("test");
+    EXPECT_CALL(*l, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(2);
+    inflate(Centered { Horizontal {
+            l,
+    }});
+    l->getWindow()->updateLayout();
+    l->setText("test2");
+    l->getWindow()->updateLayout();
+
+    // extra layout update that should call LabelMock::getContentMinimumWidth one more time
     l->getWindow()->updateLayout();
 }
