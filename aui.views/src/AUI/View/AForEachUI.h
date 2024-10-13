@@ -58,7 +58,7 @@ public:
     }
 
     void onDataCountChanged() override {
-        requestLayoutUpdate();
+        markMinContentSizeInvalid();
     }
 
     void onDataChanged() override {

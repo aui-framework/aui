@@ -48,7 +48,7 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
         });
     }
 
-    requestLayoutUpdate();
+    markMinContentSizeInvalid();
 }
 
 void ARadioGroup::setSelectedId(int id) const {

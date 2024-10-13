@@ -32,13 +32,29 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        updateLayout();
+        applyResizeOnLayout();
     }
 
     void updateLayout() override {
-        if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
-                                  getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+        if (!getLayout()) {
+            // no layout = no update.
+            return;
+        }
+        if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
+            if (mLastLayoutUpdateSize == getSize()) {
+                // no need to go deeper.
+                return;
+            }
+        }
+        mWantsLayoutUpdate = false;
+        mLastLayoutUpdateSize = getSize();
+        applyResizeOnLayout();
+        redraw();
+    }
+
+    void applyResizeOnLayout() const {
+        getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
+                              getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
     }
 
     size_t getIndex() const {

@@ -100,7 +100,7 @@ public:
 
     void setView(_weak<AView> view) {
         mView = std::move(view);
-        requestLayoutUpdate();
+        markMinContentSizeInvalid();
     }
 
 private:
@@ -189,5 +189,5 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     });
     mResultView->addView(parentHelper);
     mResultView->addView(std::move(fake));
-    requestLayoutUpdate();
+    markMinContentSizeInvalid();
 }

@@ -221,6 +221,9 @@ protected:
      */
     glm::ivec2 mExpanding = {0, 0};
 
+    AOptional<glm::ivec2> mCachedMinContentSize;
+    bool mMarkedMinContentSizeInvalid = false;
+
     /**
      * @brief Minimal size.
      */
@@ -386,7 +389,7 @@ public:
         mMinSize = minSize;
     }
 
-    void requestLayoutUpdate();
+    virtual void markMinContentSizeInvalid();
 
     /**
      * @see mExtraStylesheet
@@ -557,13 +560,35 @@ public:
     /**
      * @return minimal content-area width.
      */
+    [[nodiscard]]
     virtual int getContentMinimumWidth(ALayoutDirection layout);
 
 
     /**
      * @return minimal content-area height.
      */
+    [[nodiscard]]
     virtual int getContentMinimumHeight(ALayoutDirection layout);
+
+    /**
+     * @return minimal content-area size.
+     */
+    [[nodiscard]]
+    glm::ivec2 getContentMinimumSize(ALayoutDirection layout) noexcept {
+        if (!mCachedMinContentSize) {
+            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(layout), getContentMinimumHeight(layout));
+            mCachedMinContentSize = minContentSize;
+            return minContentSize;
+        }
+        // TODO ignore layout?
+        return *mCachedMinContentSize;
+    }
+
+    [[nodiscard]]
+    bool isContentMinimumSizeInvalidated() noexcept {
+        return !mCachedMinContentSize.hasValue();
+    }
+
 
     bool hasFocus() const;
 
@@ -607,17 +632,21 @@ public:
      * @sa mExpanding
      * @sa ass::Expanding
      */
-    void setExpanding(const glm::ivec2& expanding)
+    void setExpanding(glm::ivec2 expanding)
     {
+        if (mExpanding == expanding) [[unlikely]] {
+            return;
+        }
         mExpanding = expanding;
+        markMinContentSizeInvalid();
     }
     void setExpanding(int expanding)
     {
-        mExpanding = { expanding, expanding };
+        setExpanding({expanding, expanding});
     }
     void setExpanding()
     {
-        mExpanding = glm::ivec2(2);
+        setExpanding(2);
     }
 
     const _<AAnimator>& getAnimator() const {
@@ -679,7 +708,11 @@ public:
     }
     void setFixedSize(glm::ivec2 size) {
         AUI_ASSERTX(glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000))), "abnormal fixed size");
+        if (size == mFixedSize) [[unlikely]] {
+            return;
+        }
         mFixedSize = size;
+        markMinContentSizeInvalid();
     }
 
     [[nodiscard]]

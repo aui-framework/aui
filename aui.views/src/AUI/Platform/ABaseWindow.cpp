@@ -400,10 +400,6 @@ void ABaseWindow::flagRedraw() {
 
 }
 
-void ABaseWindow::flagUpdateLayout() {
-
-}
-
 void ABaseWindow::updateLayout() {
     APerformanceSection updateLayout("layout update");
     AViewContainer::updateLayout();

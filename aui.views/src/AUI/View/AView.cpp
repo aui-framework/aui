@@ -79,10 +79,16 @@ void AView::redraw()
     markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
-void AView::requestLayoutUpdate()
+void AView::markMinContentSizeInvalid()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
-    AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    mCachedMinContentSize.reset();
+    if (mMarkedMinContentSizeInvalid) {
+        // already marked.
+        return;
+    }
+    mMarkedMinContentSizeInvalid = true;
+    AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
 void AView::drawStencilMask(ARenderContext ctx)
@@ -131,6 +137,7 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 }
 void AView::render(ARenderContext ctx)
 {
+    mMarkedMinContentSizeInvalid = false; // TODO govnocode
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
@@ -257,13 +264,13 @@ bool AView::hasFocus() const
 int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize(layout).x, mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize(layout).y, mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -477,6 +484,7 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mMarkedMinContentSizeInvalid = false;
     mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
@@ -486,6 +494,7 @@ void AView::setPosition(glm::ivec2 position) {
 }
 void AView::setSize(glm::ivec2 size)
 {
+    mMarkedMinContentSizeInvalid = false;
     mSkipUntilLayoutUpdate = false;
     auto newSize = mSize;
     if (mFixedSize.x != 0)
@@ -701,7 +710,8 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     auto prev = std::exchange(mVisibility, visibility);
     if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
-        requestLayoutUpdate();
+        mMarkedMinContentSizeInvalid = false; // force
+        markMinContentSizeInvalid();
     }
 }
 
@@ -716,6 +726,10 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         invalidArea.p2 = glm::min(invalidArea.p2, getSize());
     }
     if (mRenderToTexture) {
+        if (glm::all(glm::lessThanEqual(invalidArea.p1, glm::ivec2(0, 0))) &&
+            glm::all(glm::greaterThanEqual(invalidArea.p2, getSize()))) {
+            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
+        }
         mRenderToTexture->invalidArea.addRectangle(invalidArea);
         if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.

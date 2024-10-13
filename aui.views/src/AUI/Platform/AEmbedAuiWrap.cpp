@@ -80,7 +80,7 @@ public:
         removeView(surface);
     }
 
-    void flagUpdateLayout() override {
+    void markMinContentSizeInvalid() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
@@ -134,7 +134,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
     mContainer->makeCurrent();
-    mContainer->flagUpdateLayout();
+    mContainer->markMinContentSizeInvalid();
     mContainer->flagRedraw();
 }
 

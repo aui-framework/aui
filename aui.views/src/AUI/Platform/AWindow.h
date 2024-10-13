@@ -242,7 +242,7 @@ signals:
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void flagUpdateLayout() override;
+    void markMinContentSizeInvalid() override;
 protected:
 #if AUI_PLATFORM_WIN
     HICON mIcon = nullptr;
@@ -300,7 +300,6 @@ private:
 #else
     bool mRedrawFlag = true;
 #endif
-    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
 

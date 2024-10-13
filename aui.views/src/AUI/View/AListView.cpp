@@ -31,7 +31,6 @@ class AListViewContainer : public AViewContainer {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
@@ -151,7 +150,7 @@ void AListView::updateItem(size_t at, const AString& value) {
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() { requestLayoutUpdate(); }
+void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
 
 void AListView::onDataChanged() { redraw(); }
 
