@@ -476,6 +476,11 @@ public:
         return mVisibility == Visibility::GONE ? 0 : mSize.y + getTotalFieldVertical();
     }
 
+    [[nodiscard]]
+    glm::ivec2 getMinimumSizePlusField() {
+        return getMinimumSize() + getTotalFieldSize();
+    }
+
     /**
      * @brief Returns the @ref AView::mMargin "margin".
      * @return margin
@@ -531,13 +536,25 @@ public:
      * @return pixel count which this AView's margin and padding acquired by width.
      */
     [[nodiscard]]
-    float getTotalFieldHorizontal() const;
+    int getTotalFieldHorizontal() const {
+        return mPadding.horizontal() + mMargin.horizontal();
+    }
 
     /**
      * @return pixel count which this AView's margin and padding acquired by height.
      */
     [[nodiscard]]
-    float getTotalFieldVertical() const;
+    int getTotalFieldVertical() const {
+        return mPadding.vertical() + mMargin.vertical();
+    }
+
+    /**
+     * @return pixel count which this AView's margin and padding acquired.
+     */
+    [[nodiscard]]
+    glm::ivec2 getTotalFieldSize() const {
+        return { getTotalFieldHorizontal(), getTotalFieldVertical() };
+    }
 
 
     /**
@@ -919,6 +936,8 @@ public:
      */
     virtual bool handlesNonMouseNavigation();
 
+    virtual void forceUpdateLayoutRecursively();
+
     virtual void setEnabled(bool enabled = true);
 
     void setDisabled(bool disabled = true) {
@@ -977,7 +996,9 @@ public:
      *   <li>Changed state (hover, active, focus) of this view</li>
      * </ul>
      */
-    void invalidateStateStyles();
+    void invalidateStateStyles() {
+        invalidateStateStylesImpl(getMinimumSizePlusField());
+    }
 
 
     /**
@@ -1095,6 +1116,7 @@ private:
     };
     AOptional<RenderToTexture> mRenderToTexture;
 
+    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
     void notifyParentChildFocused(const _<AView>& view);
 };
 

@@ -175,6 +175,7 @@ void AView::render(ARenderContext ctx)
 
 void AView::invalidateAllStyles()
 {
+    auto prevMinSize = getMinimumSizePlusField();
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
@@ -209,12 +210,12 @@ void AView::invalidateAllStyles()
         viewTree.pop();
     }
 
-    invalidateStateStyles();
+    invalidateStateStylesImpl(prevMinSize);
 }
 
-void AView::invalidateStateStyles() {
-    aui::zero(mAss);
+void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     if (!mAssHelper) return;
+    aui::zero(mAss);
     mAssHelper->state.backgroundCropping.size.reset();
     mAssHelper->state.backgroundCropping.offset.reset();
     mAssHelper->state.backgroundImage.reset();
@@ -232,20 +233,13 @@ void AView::invalidateStateStyles() {
     }
     applyAssRule(mCustomStyleRule);
 
-    markMinContentSizeInvalid();
+    if (prevMinimumSizePlusField != getMinimumSizePlusField()) {
+        mMarkedMinContentSizeInvalid = true;
+        AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
+    }
     redraw();
 }
 
-
-float AView::getTotalFieldHorizontal() const
-{
-    return mPadding.horizontal() + mMargin.horizontal();
-}
-
-float AView::getTotalFieldVertical() const
-{
-    return mPadding.vertical() + mMargin.vertical();
-}
 
 int AView::getContentMinimumWidth(ALayoutDirection layout)
 {
@@ -816,6 +810,14 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
 AString AView::debugString() const {
     return "{} at {}"_format(mAssNames.empty() ? IStringable::toString(this) : mAssNames.last(), getPositionInWindow());
+}
+
+void AView::forceUpdateLayoutRecursively() {
+    do_once {
+        ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
+    }
+    mMarkedMinContentSizeInvalid = true;
+    mCachedMinContentSize.reset();
 }
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {

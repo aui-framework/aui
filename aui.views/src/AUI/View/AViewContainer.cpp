@@ -630,3 +630,12 @@ void AViewContainer::markMinContentSizeInvalid() {
     AView::markMinContentSizeInvalid();
     mWantsLayoutUpdate = true;
 }
+
+void AViewContainer::forceUpdateLayoutRecursively() {
+    AView::forceUpdateLayoutRecursively();
+    mWantsLayoutUpdate = true;
+    for (const auto& view: mViews) {
+        view->forceUpdateLayoutRecursively();
+    }
+    updateLayout();
+}

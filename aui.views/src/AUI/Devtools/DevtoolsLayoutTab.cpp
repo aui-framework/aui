@@ -162,5 +162,5 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
 }
 
 void DevtoolsLayoutTab::forceLayoutUpdate() {
-    mTargetWindow->updateLayout();
+    mTargetWindow->forceUpdateLayoutRecursively();
 }

@@ -54,7 +54,7 @@ namespace ass {
             AUI_ASSERT(bool(*this));
             return &stored;
         }
-        T or_default(const T& def) {
+        T orDefault(const T& def) const {
             if (set) {
                 return stored;
             }
@@ -62,7 +62,7 @@ namespace ass {
         }
 
         template<typename Destination>
-        void bind_to(Destination& destination) {
+        void bindTo(Destination& destination) const {
             if (set) {
                 destination = stored;
             }

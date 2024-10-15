@@ -327,6 +327,8 @@ public:
         return mPointerEventsMapping;
     }
 
+    void forceUpdateLayoutRecursively() override;
+
     void markMinContentSizeInvalid() override;
 
 protected:

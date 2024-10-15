@@ -111,7 +111,14 @@ int AVerticalLayout::getMinimumHeight()
 
 void AVerticalLayout::setSpacing(int spacing)
 {
-	mSpacing = spacing;
+    if (mSpacing == spacing) [[unlikely]] {
+        return;
+    }
+    mSpacing = spacing;
+    if (mViews.empty()) {
+        return;
+    }
+    AUI_NULLSAFE(mViews.first()->getParent())->markMinContentSizeInvalid();
 }
 
 ALayoutDirection AVerticalLayout::getLayoutDirection() {

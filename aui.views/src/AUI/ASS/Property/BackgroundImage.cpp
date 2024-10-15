@@ -33,30 +33,30 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
             view->getAssHelper()->state.backgroundImage = IDrawable::fromUrl(*info.url);
         }
         if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
-            auto scale = info.scale.or_default(glm::vec2{1, 1});
+            auto scale = info.scale.orDefault(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c(ctx.render);
-                ctx.render.setColor(info.overlayColor.or_default(0xffffff_rgb));
+                ctx.render.setColor(info.overlayColor.orDefault(0xffffff_rgb));
                 IDrawable::Params p;
                 p.offset = {0, 0};
                 p.size = glm::vec2(size) * scale;
-                p.repeat = info.rep.or_default(Repeat::NONE);
+                p.repeat = info.rep.orDefault(Repeat::NONE);
                 p.imageRendering = imageRendering;
                 drawable->draw(ctx.render, p);
             };
 
-            switch (info.sizing.or_default(Sizing::FIT_PADDING)) {
+            switch (info.sizing.orDefault(Sizing::FIT_PADDING)) {
                 case Sizing::FIT: {
                     drawableDrawWrapper(view->getSize());
                     break;
                 }
                 case Sizing::TILE: {
                     RenderHints::PushColor c(ctx.render);
-                    ctx.render.setColor(info.overlayColor.or_default(0xffffff_rgb));
+                    ctx.render.setColor(info.overlayColor.orDefault(0xffffff_rgb));
                     IDrawable::Params p;
                     p.offset = {0, 0};
                     p.size = glm::vec2(view->getSize());
-                    p.repeat = info.rep.or_default(Repeat::NONE);
+                    p.repeat = info.rep.orDefault(Repeat::NONE);
                     p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
                     p.imageRendering = imageRendering;
                     drawable->draw(ctx.render, p);
@@ -143,11 +143,11 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
 
                 case Sizing::CROPPED: {
                     // upper left
-                    auto offset = cropping.offset.or_default({0, 0});
+                    auto offset = cropping.offset.orDefault({0, 0});
 
                     IDrawable::Params p;
                     p.cropUvTopLeft = offset;
-                    p.cropUvBottomRight = offset + cropping.size.or_default({1, 1});
+                    p.cropUvBottomRight = offset + cropping.size.orDefault({1, 1});
                     p.size = view->getSize();
                     p.imageRendering = imageRendering;
 
@@ -155,7 +155,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
-                    auto ratio = APlatform::getDpiRatio() / info.dpiMargin.or_default(1.f);
+                    auto ratio = APlatform::getDpiRatio() / info.dpiMargin.orDefault(1.f);
                     auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;
