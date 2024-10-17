@@ -7,7 +7,7 @@
 #include "AUI/Url/AUrl.h"
 #include "AUI/Audio/ABadFormatException.h"
 
-AWavSoundStream::AWavSoundStream(aui::non_null<_<IInputStream>> stream) : mStream(std::move(stream.value)) {
+AWavSoundStream::AWavSoundStream(aui::non_null<_unique<IInputStream>> stream) : mStream(std::move(stream.value)) {
     readHeader();
 }
 

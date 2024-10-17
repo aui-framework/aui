@@ -11,7 +11,7 @@ class ISeekableInputStream;
  */
 class API_AUI_AUDIO AWavSoundStream: public ISoundInputStream {
 public:
-    explicit AWavSoundStream(aui::non_null<_<IInputStream>> stream);
+    explicit AWavSoundStream(aui::non_null<_unique<IInputStream>> stream);
 
     AAudioFormat info() override;
 
@@ -38,7 +38,7 @@ private:
 
     static_assert(sizeof(WavFileHeader) == 44);
 
-    _<IInputStream> mStream;
+    _unique<IInputStream> mStream;
     AOptional<AUrl> mUrl;
     WavFileHeader mHeader{};
     size_t mChunkReadPos = 0;

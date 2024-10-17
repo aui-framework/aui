@@ -410,7 +410,7 @@ public:
          * @throws AIOException
          * @return input stream
          */
-        _<IInputStream> toInputStream();
+        _unique<IInputStream> toInputStream();
 
         /**
          * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if

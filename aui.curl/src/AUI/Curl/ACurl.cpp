@@ -105,7 +105,7 @@ ACurl::Builder::~Builder() {
 	assert(mCURL == nullptr);
 }
 
-_<IInputStream> ACurl::Builder::toInputStream() {
+_unique<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
         _<ACurl> mCurl;
@@ -131,7 +131,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
         }
     };
 
-    return _new<CurlInputStream>(_new<ACurl>(*this));
+    return std::make_unique<CurlInputStream>(_new<ACurl>(*this));
 }
 
 
