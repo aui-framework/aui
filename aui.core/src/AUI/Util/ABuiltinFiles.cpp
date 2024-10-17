@@ -15,36 +15,11 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 
-void ABuiltinFiles::loadBuffer(AByteBuffer& data)
-{
-	AByteBuffer unpacked;
-	LZ::decompress(data, unpacked);
-    AByteBufferInputStream bis(unpacked);
-	while (bis.available())
-	{
-		std::string file;
-        AByteBuffer b;
-        bis >> aui::serialize_sized(file);
-        bis >> aui::serialize_sized(b);
-        inst().mBuffers[AString(file)] = std::move(b);
-	}
-}
-
-_<IInputStream> ABuiltinFiles::open(const AString& file)
-{
-	if (auto c = inst().mBuffers.contains(file))
-	{
-		return _new<AByteBufferInputStream>(c->second);
-	}
-	return nullptr;
-}
-
-AOptional<AByteBufferView> ABuiltinFiles::getBuffer(const AString& file) {
-    if (auto c = inst().mBuffers.contains(file))
-    {
-        return AByteBufferView(c->second);
+_<IInputStream> ABuiltinFiles::open(const AString& file) {
+    if (auto c = inst().mBuffers.contains(file.toStdString())) {
+        return aui::zlib::decompressToStream(c->second);
     }
-    return std::nullopt;
+    return nullptr;
 }
 
 ABuiltinFiles& ABuiltinFiles::inst() {
@@ -52,11 +27,11 @@ ABuiltinFiles& ABuiltinFiles::inst() {
     return f;
 }
 
-void ABuiltinFiles::load(const unsigned char* data, size_t size) {
-    AByteBuffer b(data, size);
-    inst().loadBuffer(b);
+void ABuiltinFiles::registerAsset(std::string_view path, const unsigned char* data, size_t size,
+                                  std::string_view programModule) {
+    inst().mBuffers[path] = AByteBufferView(reinterpret_cast<const char*>(data), size);
 }
 
 bool ABuiltinFiles::contains(const AString& file) {
-    return inst().mBuffers.contains(file);
+    return inst().mBuffers.contains(file.toStdString());
 }

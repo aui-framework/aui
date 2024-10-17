@@ -62,9 +62,6 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
     try
     {
 
-        AByteBuffer buffer;
-
-        buffer << aui::serialize_sized(assetPath.toStdString());
         auto fis = _new<AFileInputStream>(inputFile);
 
         AByteBuffer data;
@@ -110,10 +107,8 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
 
         }
 
-        buffer << aui::serialize_sized(data);
-
         AByteBuffer packed;
-        LZ::compress(buffer, packed);
+        aui::zlib::compress(data, packed);
 
         auto cppObjectName = outputCpp.filenameWithoutExtension();
 
@@ -147,7 +142,9 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
 
         out << "struct Assets" << cppObjectName << " {\n"
              << "    Assets" << cppObjectName << "(){\n"
-                     "        ABuiltinFiles::load(AUI_PACKED_asset"
+                     "        ABuiltinFiles::registerAsset(\""
+             << assetPath
+             << "\", AUI_PACKED_asset"
              << cppObjectName
              << ", sizeof(AUI_PACKED_asset"
              << cppObjectName << "));\n    }\n};\n"
