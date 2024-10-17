@@ -388,6 +388,8 @@ function(aui_common AUI_MODULE_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
+
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
     endif()
