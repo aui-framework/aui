@@ -175,7 +175,7 @@ void AView::render(ARenderContext ctx)
 
 void AView::invalidateAllStyles()
 {
-    auto prevMinSize = getMinimumSizePlusField();
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusField() : glm::ivec2(std::numeric_limits<int>::min() / 2);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;

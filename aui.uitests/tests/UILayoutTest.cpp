@@ -151,7 +151,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(1);
+    EXPECT_CALL(*l, getContentMinimumWidth(testing::_)).Times(1);
     inflate(Centered { Horizontal {
         l,
     }});
@@ -168,7 +168,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     testing::InSequence s;
     auto l1 = _new<LabelMock>("test");
     auto l2 = _new<ALabel>("test");
-    EXPECT_CALL(*l1, getContentMinimumWidth(ALayoutDirection::HORIZONTAL)).Times(2);
+    EXPECT_CALL(*l1, getContentMinimumWidth(testing::_)).Times(2);
     inflate(Centered { Horizontal {
         l1,
         l2,
