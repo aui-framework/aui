@@ -15,7 +15,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 
-_<IInputStream> ABuiltinFiles::open(const AString& file) {
+_unique<IInputStream> ABuiltinFiles::open(const AString& file) {
     if (auto c = inst().mBuffers.contains(file.toStdString())) {
         return aui::zlib::decompressToStream(c->second);
     }

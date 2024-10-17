@@ -32,7 +32,7 @@ public:
     static void registerAsset(std::string_view path, const unsigned char* data, size_t size,
                               std::string_view programModule = AUI_PP_STRINGIZE(AUI_MODULE_NAME));
 
-    static _<IInputStream> open(const AString& file);
+    static _unique<IInputStream> open(const AString& file);
 
     static bool contains(const AString& file);
 };
