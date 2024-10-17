@@ -8,7 +8,7 @@
 #include "vorbis/vorbisfile.h"
 #include "AUI/Audio/ABadFormatException.h"
 
-AOggSoundStream::OggVorbisFile::OggVorbisFile(_<IInputStream> stream) : mSourceStream(std::move(stream)) {
+AOggSoundStream::OggVorbisFile::OggVorbisFile(_unique<IInputStream> stream) : mSourceStream(std::move(stream)) {
     AUI_ASSERTX(mSourceStream != nullptr, "provided OggVorbisFile source stream must be non-null");
     ov_callbacks callbacks = {
         .read_func = [](void *ptr, size_t size, size_t nmemb, void *datasource) -> size_t {
@@ -72,7 +72,7 @@ const OggVorbis_File& AOggSoundStream::OggVorbisFile::file() const noexcept {
     return mFile.value();
 }
 
-AOggSoundStream::AOggSoundStream(aui::non_null<_<IInputStream>> stream) : mVorbisFile(std::move(stream.value)) {
+AOggSoundStream::AOggSoundStream(aui::non_null<_unique<IInputStream>> stream) : mVorbisFile(std::move(stream.value)) {
 }
 
 AAudioFormat AOggSoundStream::info() {

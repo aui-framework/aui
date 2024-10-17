@@ -21,53 +21,49 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AStringStream.h"
 
-AUrl::AUrl(AString full)
-{
-	auto posColon = full.find(':');
-	if (posColon == AString::NPOS)
-	{
-		mPath = std::move(full);
-		if (mPath.startsWith("./")) {
-			mPath = mPath.substr(2);
-		}
+AUrl::AUrl(AString full) {
+    auto posColon = full.find(':');
+    if (posColon == AString::NPOS) {
+        mPath = std::move(full);
+        if (mPath.startsWith("./")) {
+            mPath = mPath.substr(2);
+        }
         mSchema = "file";
-	} else
-	{
+    } else {
         mSchema = full.substr(0, posColon);
-		if (mSchema.empty())
-		{
+        if (mSchema.empty()) {
             mSchema = "builtin";
-			mPath = full.substr(posColon + 1);
-		} else
-		{
+            mPath = full.substr(posColon + 1);
+        } else {
             mPath = full.substr(posColon + 3);
-		}
-	}
+        }
+    }
 }
 
 AMap<AString, AVector<AUrl::Resolver>>& AUrl::resolvers() {
     static AMap<AString, AVector<Resolver>> storage = {
-        {"builtin", {[](const AUrl& u) {
-            return ABuiltinFiles::open(u.path());
-        }}},
-        {"file",    {[](const AUrl& u) {
-            return _new<AFileInputStream>(u.path());
-        }}},
-        {"base64", {[](const AUrl& u) {
-            auto decoded = AByteBuffer::fromBase64String(u.path());
-            return _new<AStringStream>(std::string(decoded.data(), decoded.size()));
-        }}},
+            {"builtin", {[](const AUrl& u) {
+                return ABuiltinFiles::open(u.path());
+            }}},
+            {"file",    {[](const AUrl& u) {
+                return std::make_unique<AFileInputStream>(u.path());
+            }}},
+            {"base64",  {[](const AUrl& u) {
+                auto decoded = AByteBuffer::fromBase64String(u.path());
+                return std::make_unique<AStringStream>(std::string(decoded.data(), decoded.size()));
+            }}},
     };
     return storage;
 }
-_<IInputStream> AUrl::open() const {
-	if (const auto& resolverSet = resolvers().contains(mSchema)) {
-		for (const auto& resolver : aui::reverse_iterator_wrap(resolverSet->second)) {
-			if (auto is = resolver(*this))
-				return is;
-		}
-	}
-	throw AIOException("could not open url: " + full());
+
+_unique<IInputStream> AUrl::open() const {
+    if (const auto& resolverSet = resolvers().contains(mSchema)) {
+        for (const auto& resolver: aui::reverse_iterator_wrap(resolverSet->second)) {
+            if (auto is = resolver(*this))
+                return is;
+        }
+    }
+    throw AIOException("could not open url: " + full());
 }
 
 

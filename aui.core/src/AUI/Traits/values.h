@@ -91,7 +91,7 @@ namespace aui {
 
         }
 
-        non_null_lateinit(T value): value(value) {
+        non_null_lateinit(T value): value(std::move(value)) {
             checkForNull();
         }
 
@@ -107,7 +107,7 @@ namespace aui {
 
     template<typename T>
     struct non_null: non_null_lateinit<T> {
-        non_null(T value): non_null_lateinit<T>(value) {}
+        non_null(T value): non_null_lateinit<T>(std::move(value)) {}
     };
 
     /**
