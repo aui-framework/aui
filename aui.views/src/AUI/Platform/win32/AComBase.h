@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <shlobj.h>
