@@ -1031,6 +1031,7 @@ void OpenGLRenderer::bindTemporaryVao() const noexcept {
 }
 
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept {
+    return nullptr;
     if (!glBlendFuncSeparate) {
         return nullptr;
     }
