@@ -96,8 +96,13 @@ AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is, size_t size
     for (size_t last; (last = is->read(buf.end(), buf.getAvailableToWrite())) > 0;)
     {
         buf.mSize += last;
-        if (buf.getAvailableToWrite() == 0) {
-            break;
+
+        if (buf.getAvailableToWrite() < 0x100) {
+            auto newCapacity = glm::min(buf.capacity() * 2, sizeRestriction);
+            if (buf.capacity() == newCapacity && buf.getAvailableToWrite()) {
+                break;
+            }
+            buf.reserve(newCapacity);
         }
     }
     return buf;
