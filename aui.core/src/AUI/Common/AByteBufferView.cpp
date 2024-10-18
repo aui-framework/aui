@@ -27,7 +27,7 @@ AString AByteBufferView::toHexString() const {
     return result;
 }
 
-_<IInputStream> AByteBufferView::toStream() const {
+_unique<IInputStream> AByteBufferView::toStream() const {
     class ByteBufferStream: public IInputStream {
     private:
         AByteBuffer mData;
@@ -41,7 +41,9 @@ _<IInputStream> AByteBufferView::toStream() const {
         size_t read(char* dst, size_t size) override {
             return mIs.read(dst, size);
         }
+
+        ~ByteBufferStream() override = default;
     };
 
-    return _new<ByteBufferStream>(*this);
+    return std::make_unique<ByteBufferStream>(*this);
 }
