@@ -544,6 +544,15 @@ public:
         rotate({0.f, 0.f, 1.f}, angle);
     }
 
+    void setAllowRenderToTexture(bool allowRenderToTexture) {
+        mAllowRenderToTexture = allowRenderToTexture;
+    }
+
+    [[nodiscard]]
+    bool allowRenderToTexture() const noexcept {
+        return mAllowRenderToTexture;
+    }
+
 protected:
     AColor mColor;
     glm::mat4 mTransform;
@@ -552,6 +561,9 @@ protected:
     uint8_t mStencilDepth = 0;
 
     virtual _unique<ITexture> createNewTexture() = 0;
+
+private:
+    bool mAllowRenderToTexture = true;
 
 };
 

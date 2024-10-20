@@ -14,6 +14,9 @@
 #include <AUI/Render/IRenderer.h>
 
 void IRenderViewToTexture::enableForView(IRenderer& renderer, AView& view) {
+    if (!renderer.allowRenderToTexture()) {
+        return;
+    }
     if (view.mRenderToTexture) {
         return;
     }
