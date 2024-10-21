@@ -472,10 +472,19 @@ void AViewContainer::updateLayout() {
     }
     mWantsLayoutUpdate = false;
     mLastLayoutUpdateSize = getSize();
+    AUI_ASSERT(!mRepaintTrap.hasValue());
+    mRepaintTrap.emplace();
+    AUI_DEFER {
+        mRepaintTrap.reset();
+    };
     mLayout->onResize(mPadding.left, mPadding.top,
                       getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    if (mRepaintTrap->triggerred) {
+        // if the trap is triggerred during resize, it means at least one view has changed its position or size hence
+        // we would like to repaint whole container
+        redraw();
+    }
     mConsumesClickCache.reset();
-    redraw();
 }
 
 void AViewContainer::removeAllViews() {
@@ -638,4 +647,12 @@ void AViewContainer::forceUpdateLayoutRecursively() {
         view->forceUpdateLayoutRecursively();
     }
     updateLayout();
+}
+
+void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mRepaintTrap) {
+        mRepaintTrap->triggerred = true;
+        return;
+    }
+    AView::markPixelDataInvalid(invalidArea);
 }

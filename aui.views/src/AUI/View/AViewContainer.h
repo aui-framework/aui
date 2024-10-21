@@ -330,6 +330,7 @@ public:
     void forceUpdateLayoutRecursively() override;
 
     void markMinContentSizeInvalid() override;
+    void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
     AVector<_<AView>> mViews;
@@ -380,6 +381,12 @@ signals:
 private:
     _<ALayout> mLayout;
     bool mSizeSet = false;
+
+
+    struct RepaintTrap {
+        bool triggerred = false;
+    };
+    AOptional<RepaintTrap> mRepaintTrap;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

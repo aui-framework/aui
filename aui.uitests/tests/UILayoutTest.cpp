@@ -162,7 +162,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
 }
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
-    // in contract to GetContentMinimumWidthPerformance1, here we additionaly change text of the label, effectively
+    // in contract to GetContentMinimumWidthPerformance1, here we additionally change text of the label, effectively
     // forcing two layout updates.
 
     testing::InSequence s;
