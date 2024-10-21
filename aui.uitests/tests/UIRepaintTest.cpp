@@ -59,7 +59,7 @@ namespace {
 
 static constexpr auto BASE_REPAINT_COUNT = 2;
 
-TEST_F(UIRepaintTest, ContainerRepaintTest1) {
+TEST_F(UIRepaintTest, ContainerRepaint1) {
     auto label = _new<ALabel>("test");
     auto container = _new<ViewContainerMock>();
 
@@ -73,7 +73,7 @@ TEST_F(UIRepaintTest, ContainerRepaintTest1) {
     }
 }
 
-TEST_F(UIRepaintTest, ContainerRepaintTest2) {
+TEST_F(UIRepaintTest, ContainerRepaint2) {
     testing::InSequence s;
     auto label = _new<ALabel>("test");
     auto container = _new<ViewContainerMock>();
@@ -94,7 +94,7 @@ TEST_F(UIRepaintTest, ContainerRepaintTest2) {
     }
 }
 
-TEST_F(UIRepaintTest, ContainerRepaintTest3) {
+TEST_F(UIRepaintTest, ContainerRepaint3) {
     auto label = _new<ALabel>("test");
     auto container = _new<ViewContainerMock>();
 
@@ -122,7 +122,7 @@ TEST_F(UIRepaintTest, ContainerRepaintTest3) {
     }
 }
 
-TEST_F(UIRepaintTest, ContainerRepaintTest4) {
+TEST_F(UIRepaintTest, ContainerRepaint4) {
     testing::InSequence s;
     auto label = _new<ALabel>("test");
     auto container = _new<ViewContainerMock>();
@@ -151,7 +151,7 @@ TEST_F(UIRepaintTest, ContainerRepaintTest4) {
     }
 }
 
-TEST_F(UIRepaintTest, ContainerRepaintTest5) {
+TEST_F(UIRepaintTest, ContainerRepaint5) {
     testing::InSequence s;
     auto label = _new<ALabel>("test");
     auto container = _new<ViewContainerMock>();
@@ -176,6 +176,65 @@ TEST_F(UIRepaintTest, ContainerRepaintTest5) {
         // random layout update request should not trigger repaint event
         EXPECT_CALL(*container, markPixelDataInvalid).Times(0);
         label->markMinContentSizeInvalid();
+        AUI_REPEAT(10) { uitest::frame(); }
+    }
+}
+
+namespace {
+    class LabelMock: public ALabel {
+    public:
+        using ALabel::ALabel;
+        MOCK_METHOD(void, renderMock, (), ());
+        void render(ARenderContext context) override {
+            if (mRedrawRequested) renderMock();
+            ALabel::render(context);
+        }
+
+    protected:
+        void markPixelDataInvalid(ARect<int> invalidArea) override {
+            // place for breakpoint
+            AView::markPixelDataInvalid(invalidArea);
+        }
+    };
+}
+
+TEST_F(UIRepaintTest, SurroundingRepaint1) {
+    testing::InSequence s;
+    auto labelLeft = _new<ALabel>("left");
+    auto labelRight = _new<LabelMock>("right");
+
+    {
+        testing::InSequence s;
+        EXPECT_CALL(*labelRight, renderMock).Times(testing::Between(1, 3));
+        _<AViewContainer> c = Horizontal { labelLeft, labelRight };
+        inflate(Centered{c});
+        AUI_REPEAT(10) { uitest::frame(); }
+    }
+    {
+        testing::InSequence s;
+        EXPECT_CALL(*labelRight, renderMock).Times(testing::AtLeast(1));
+        // arbitrary mark min size case
+        labelLeft->setText("ololo");
+        AUI_REPEAT(10) { uitest::frame(); }
+    }
+}
+
+TEST_F(UIRepaintTest, SurroundingRepaint2) {
+    testing::InSequence s;
+    auto labelRight = _new<LabelMock>("right");
+
+    {
+        testing::InSequence s;
+        EXPECT_CALL(*labelRight, renderMock).Times(testing::Between(1, 3));
+        _<AViewContainer> c = Horizontal { labelRight };
+        inflate(Centered{c});
+        AUI_REPEAT(10) { uitest::frame(); }
+    }
+    {
+        testing::InSequence s;
+        EXPECT_CALL(*labelRight, renderMock).Times(testing::AtLeast(1));
+        // arbitrary addView case
+        labelRight->getParent()->addView(0, _new<ALabel>("olol"));
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }
