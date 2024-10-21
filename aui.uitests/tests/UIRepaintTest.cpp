@@ -66,7 +66,7 @@ TEST_F(UIRepaintTest, ContainerRepaint1) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(BASE_REPAINT_COUNT);
-        container->setLayout(_new<AHorizontalLayout>());
+        container->setLayout(std::make_unique<AHorizontalLayout>());
         container->addView(label);
         inflate(Centered { container });
         AUI_REPEAT(10) { uitest::frame(); }
@@ -81,7 +81,7 @@ TEST_F(UIRepaintTest, ContainerRepaint2) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(BASE_REPAINT_COUNT);
-        container->setLayout(_new<AHorizontalLayout>());
+        container->setLayout(std::make_unique<AHorizontalLayout>());
         container->addView(label);
         inflate(Centered { container });
         AUI_REPEAT(10) { uitest::frame(); }
@@ -102,7 +102,7 @@ TEST_F(UIRepaintTest, ContainerRepaint3) {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(BASE_REPAINT_COUNT);
 
-        container->setLayout(_new<AHorizontalLayout>());
+        container->setLayout(std::make_unique<AHorizontalLayout>());
         container->addView(label);
         inflate(Centered{container});
         AUI_REPEAT(10) { uitest::frame(); }
@@ -131,7 +131,7 @@ TEST_F(UIRepaintTest, ContainerRepaint4) {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(BASE_REPAINT_COUNT);
 
-        container->setLayout(_new<AHorizontalLayout>());
+        container->setLayout(std::make_unique<AHorizontalLayout>());
         container->addView(label);
         inflate(Centered{container});
         AUI_REPEAT(10) { uitest::frame(); }
@@ -160,7 +160,7 @@ TEST_F(UIRepaintTest, ContainerRepaint5) {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(BASE_REPAINT_COUNT);
 
-        container->setLayout(_new<AHorizontalLayout>());
+        container->setLayout(std::make_unique<AHorizontalLayout>());
         container->addView(label);
         inflate(Centered{container});
         AUI_REPEAT(10) { uitest::frame(); }

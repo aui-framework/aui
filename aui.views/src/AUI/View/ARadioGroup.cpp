@@ -44,7 +44,7 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
                 mGroup->addRadioButton(r);
                 addView(r);
             }
-            updateLayout();
+            applyGeometryToChildrenIfNecessary();
         });
     }
 

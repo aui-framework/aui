@@ -32,27 +32,10 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        applyResizeOnLayout();
+        applyGeometryToChildren();
     }
 
-    void updateLayout() override {
-        if (!getLayout()) {
-            // no layout = no update.
-            return;
-        }
-        if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
-            if (mLastLayoutUpdateSize == getSize()) {
-                // no need to go deeper.
-                return;
-            }
-        }
-        mWantsLayoutUpdate = false;
-        mLastLayoutUpdateSize = getSize();
-        applyResizeOnLayout();
-        redraw();
-    }
-
-    void applyResizeOnLayout() const {
+    void applyGeometryToChildren() override {
         getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                               getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
     }
@@ -297,7 +280,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
             }
         });
     }
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
@@ -322,7 +305,7 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
                 wrapper->setVisibility(Visibility::GONE);
             }
 
-            updateLayout();
+            applyGeometryToChildrenIfNecessary();
             updateScrollbarDimensions();
             redraw();
         });

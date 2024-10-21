@@ -131,7 +131,7 @@ void ADragArea::handleMouseMove() {
     }
 }
 
-void ADragArea::updateLayout() {
+void ADragArea::applyGeometryToChildren() {
     const auto x = getPadding().left;
     const auto y = getPadding().top;
     const auto width = getWidth() - mPadding.horizontal();
@@ -157,7 +157,7 @@ void ADragArea::updateLayout() {
             setValidPositionFor(v, v->getPosition());
         }
     }
-    AViewContainer::updateLayout();
+    AViewContainer::applyGeometryToChildren();
 }
 
 void ADragArea::endDragging() {
@@ -182,6 +182,6 @@ _<AViewContainer> ADragArea::convertToDraggableContainer(const _<AViewContainer>
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setContents(view);
     v->setExpanding(view->getExpanding());
-    v->updateLayout();
+    v->applyGeometryToChildrenIfNecessary();
     return v;
 }

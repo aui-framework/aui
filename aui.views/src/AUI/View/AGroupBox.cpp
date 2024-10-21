@@ -79,9 +79,8 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     }
 }
 
-void AGroupBox::updateLayout() {
-    AViewContainer::updateLayout();
-
+void AGroupBox::applyGeometryToChildren() {
+    AViewContainer::applyGeometryToChildren();
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
 }
 

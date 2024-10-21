@@ -18,6 +18,8 @@
 #include "AUI/ASS/Property/LayoutSpacing.h"
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
+#include "AUI/View/AListView.h"
+#include "AUI/Model/AListModel.h"
 
 using namespace declarative;
 
@@ -155,10 +157,10 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
     inflate(Centered { Horizontal {
         l,
     }});
-    l->getWindow()->updateLayout();
+    l->getWindow()->applyGeometryToChildrenIfNecessary();
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l->getWindow()->updateLayout();
+    l->getWindow()->applyGeometryToChildrenIfNecessary();
 }
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
@@ -173,13 +175,13 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
         l1,
         l2,
     }});
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
     auto prevPosX = l2->getPositionInWindow().x;
     l1->setText("test2");
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
 
     EXPECT_GE(l2->getPositionInWindow().x, prevPosX); // l2 is expected to shift to right.
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
 }

@@ -62,7 +62,7 @@ public:
     }
 
     void onDataChanged() override {
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
     }
 
     void operator-(const Factory& f) {

@@ -120,7 +120,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     dst->addView( _new<ALabel>("}") << ".declaration_br");
     AScrollArea::setContents(dst);
 
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
     redraw();
 }
 
@@ -141,7 +141,7 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
 void ViewPropertiesView::requestTargetUpdate() {
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
-            targetWindow->updateLayout();
+            targetWindow->applyGeometryToChildrenIfNecessary();
             targetWindow->redraw();
         }
     }

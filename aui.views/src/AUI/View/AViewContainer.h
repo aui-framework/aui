@@ -300,7 +300,7 @@ public:
     }
 
 
-    virtual void updateLayout();
+    void applyGeometryToChildrenIfNecessary();
 
     const AVector<_<AView>>& getViews() const {
         return mViews;
@@ -373,6 +373,8 @@ protected:
      * should use ALayoutInflater::inflate instead.
      */
     void setContents(const _<AViewContainer>& container);
+
+    virtual void applyGeometryToChildren();
 
 signals:
     emits<ScrollbarAppearance> scrollbarAppearanceSet;

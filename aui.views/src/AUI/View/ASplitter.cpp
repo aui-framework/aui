@@ -30,7 +30,7 @@ void ASplitter::setSize(glm::ivec2 size) {
 void ASplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AViewContainer::onPointerMove(pos, event);
     if (mHelper.mouseDrag(pos)) {
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
         redraw();
     }
 }

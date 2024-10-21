@@ -166,7 +166,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
             break;
     }
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
     redraw();
 }
 

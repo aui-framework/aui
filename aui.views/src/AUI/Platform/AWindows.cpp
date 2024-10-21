@@ -100,7 +100,7 @@ void AWindow::redraw() {
 
         if (!mCachedMinContentSize) {
             AUI_REPEAT(2) { // AText may trigger extra layout update
-                updateLayout();
+                applyGeometryToChildrenIfNecessary();
             }
         }
 #if AUI_PLATFORM_WIN

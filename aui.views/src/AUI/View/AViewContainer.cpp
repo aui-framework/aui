@@ -446,20 +446,25 @@ void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
     adjustContentSize();
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
 }
 
 void AViewContainer::invalidateAllStyles() {
     AView::invalidateAllStyles();
     if (mSizeSet)
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::updateLayout() {
+void AViewContainer::applyGeometryToChildren() {
     if (!mLayout) {
         // no layout = no update.
         return;
     }
+    mLayout->onResize(mPadding.left, mPadding.top,
+                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+}
+
+void AViewContainer::applyGeometryToChildrenIfNecessary() {
     if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
         if (mLastLayoutUpdateSize == getSize()) {
             // no need to go deeper.
@@ -473,8 +478,7 @@ void AViewContainer::updateLayout() {
     AUI_DEFER {
         mRepaintTrap.reset();
     };
-    mLayout->onResize(mPadding.left, mPadding.top,
-                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    applyGeometryToChildren();
     if (mRepaintTrap->triggerred) {
         // if the trap is triggerred during resize, it means at least one view has changed its position or size hence
         // we would like to repaint whole container
@@ -642,7 +646,7 @@ void AViewContainer::forceUpdateLayoutRecursively() {
     for (const auto& view: mViews) {
         view->forceUpdateLayoutRecursively();
     }
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
 }
 
 void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {

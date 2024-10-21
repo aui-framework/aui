@@ -37,7 +37,7 @@ public:
 
     void endDragging();
 
-    void updateLayout() override;
+    void applyGeometryToChildren() override;
 
     class API_AUI_VIEWS ADraggableHandle: public AViewContainer {
         friend class ADragArea;
