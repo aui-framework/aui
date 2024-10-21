@@ -85,13 +85,13 @@ class AListItem : public ALabel, public ass::ISelectable {
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 

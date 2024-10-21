@@ -275,11 +275,6 @@ void AText::invalidateFont() {
     mPrerenderedString.reset();
 }
 
-void AText::updateLayout() {
-    AViewContainer::updateLayout();
-    mPrerenderedString.reset();
-}
-
 void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();

@@ -485,6 +485,7 @@ void AView::setPosition(glm::ivec2 position) {
         return;
     }
     mPosition = position;
+    redraw();
     emit positionChanged(position);
 }
 void AView::setSize(glm::ivec2 size)
@@ -518,6 +519,7 @@ void AView::setSize(glm::ivec2 size)
         return;
     }
     mSize = newSize;
+    redraw();
     emit sizeChanged(newSize);
 }
 
