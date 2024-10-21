@@ -297,6 +297,7 @@ void AView::addAssName(const AString& assName)
 void AView::invalidateAssHelper() {
     mAssHelper = nullptr;
     aui::zero(mAss);
+    mOpacity = 1;
     redraw();
 }
 
@@ -655,9 +656,7 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
-    mAssHelper = nullptr;
-    aui::zero(mAss);
-    redraw();
+    invalidateAssHelper();
 }
 
 
