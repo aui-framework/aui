@@ -85,7 +85,8 @@ void AView::markMinContentSizeInvalid()
     mCachedMinContentSize.reset();
     if (mMarkedMinContentSizeInvalid) {
         // already marked.
-        return;
+        // TODO uncomment this
+        // return;
     }
     mMarkedMinContentSizeInvalid = true;
     AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
@@ -137,7 +138,6 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 }
 void AView::render(ARenderContext ctx)
 {
-    mMarkedMinContentSizeInvalid = false; // TODO govnocode
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 

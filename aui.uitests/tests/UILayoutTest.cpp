@@ -18,8 +18,6 @@
 #include "AUI/ASS/Property/LayoutSpacing.h"
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
-#include "AUI/View/AListView.h"
-#include "AUI/Model/AListModel.h"
 
 using namespace declarative;
 
