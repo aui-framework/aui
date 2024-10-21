@@ -102,7 +102,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
                         (glm::max)(getWidth(), list->getMinimumWidth()),
                         listHeight
                 });
-        comboWindow->setLayout(_new<AVerticalLayout>());
+        comboWindow->setLayout(std::make_unique<AVerticalLayout>());
         comboWindow->addView(list);
         mComboWindow = comboWindow;
 

@@ -29,7 +29,7 @@ public:
     {
         addAssName(".menu");
         addAssName(".menu-background");
-        setLayout(_new<AVerticalLayout>());
+        setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
             _<AView> view;
 

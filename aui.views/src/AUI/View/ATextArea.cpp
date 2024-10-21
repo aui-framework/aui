@@ -351,7 +351,7 @@ protected:
 
 ATextArea::ATextArea() {
     addAssName(".input-field");
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
     mScrollbar = _new<AScrollbar>();
     addView(mTextField = _new<TextAreaField>(*this) let {
         it->setExpanding();

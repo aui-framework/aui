@@ -37,7 +37,7 @@ private:
 public:
     template<typename... RadioButtons>
     explicit ARadioGroup(RadioButtons&&... radioButtons): ARadioGroup() {
-        setLayout(_new<AVerticalLayout>());
+        setLayout(std::make_unique<AVerticalLayout>());
         setViews({ std::forward<RadioButtons>(radioButtons)... });
     }
     ARadioGroup();

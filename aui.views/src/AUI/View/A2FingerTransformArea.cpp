@@ -16,7 +16,7 @@
 
 A2FingerTransformArea::A2FingerTransformArea() {
     setExpanding();
-    setLayout(_new<AStackedLayout>());
+    setLayout(std::make_unique<AStackedLayout>());
 }
 
 void A2FingerTransformArea::onPointerPressed(const APointerPressedEvent& event) {

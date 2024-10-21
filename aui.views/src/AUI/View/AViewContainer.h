@@ -142,9 +142,12 @@ public:
     /**
      * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
      */
-    void setLayout(_<ALayout> layout);
+    void setLayout(_unique<ALayout> layout);
 
-    _<ALayout> getLayout() const;
+    [[nodiscard]]
+    const _unique<ALayout>& getLayout() const noexcept {
+        return mLayout;
+    }
 
     /**
      * @brief Finds first direct child view under position.
@@ -379,7 +382,7 @@ signals:
     emits<> childrenChanged;
 
 private:
-    _<ALayout> mLayout;
+    _unique<ALayout> mLayout;
     bool mSizeSet = false;
 
 

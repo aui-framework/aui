@@ -32,7 +32,7 @@ private:
 public:
     AForEachUI(const List& list):
         mObserver(_new<AListModelObserver<T>>(this)) {
-        setLayout(_new<Layout>());
+        setLayout(std::make_unique<Layout>());
         setModel(list);
     }
 

@@ -106,7 +106,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     horizontalScrollbar()->setAppearance(ScrollbarAppearance::GONE);
     setContents(mContent = _new<AListViewContainer>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     mObserver->setModel(model);

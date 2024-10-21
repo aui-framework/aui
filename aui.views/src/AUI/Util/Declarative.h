@@ -140,7 +140,7 @@ namespace aui::ui_building {
         _<Container> operator()() {
             auto c = _new<Container>();
             if constexpr(!std::is_same_v<Layout, std::nullopt_t>) {
-                c->setLayout(_new<Layout>());
+                c->setLayout(std::make_unique<Layout>());
             }
             c->setViews(std::move(mViews));
             return c;

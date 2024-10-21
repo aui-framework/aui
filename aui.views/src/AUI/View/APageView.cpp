@@ -19,7 +19,7 @@
 #include <AUI/Logging/ALogger.h>
 
 APageView::APageView() {
-    setLayout(_new<AStackedLayout>());
+    setLayout(std::make_unique<AStackedLayout>());
 }
 
 void APageView::setPageId(unsigned int pageId) {

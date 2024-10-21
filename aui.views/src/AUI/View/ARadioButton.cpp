@@ -17,7 +17,7 @@ ARadioButton::ARadioButton()
 {
 
 
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
 
     mText = _new<ALabel>();
     auto checkbox = _new<ARadioButtonInner>();

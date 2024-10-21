@@ -53,7 +53,7 @@ namespace {
 }
 
 ADragArea::ADragArea() {
-    setLayout(_new<DragAreaLayout>());
+    setLayout(std::make_unique<DragAreaLayout>());
     setExpanding({1, 1});
 }
 
@@ -172,7 +172,7 @@ void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2
 
 _<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
-    v->setLayout(_new<AStackedLayout>());
+    v->setLayout(std::make_unique<AStackedLayout>());
     v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
     v->addView(view);
     return v;

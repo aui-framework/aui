@@ -66,7 +66,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 {
 	setWindowStyle(WindowStyle::DIALOG);
 
-	setLayout(_new<AVerticalLayout>());
+	setLayout(std::make_unique<AVerticalLayout>());
 
 	// form
 	addView(_form({

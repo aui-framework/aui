@@ -34,7 +34,7 @@ AScrollArea::AScrollArea():
 
 AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     addAssName("AScrollArea");
-    setLayout(_new<AAdvancedGridLayout>(2, 2));
+    setLayout(std::make_unique<AAdvancedGridLayout>(2, 2));
 
     addView(mInner = _new<AScrollAreaViewport>());
     if (!builder.mExternalVerticalScrollbar) {

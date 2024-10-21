@@ -79,7 +79,7 @@ public:
               mTreeView(treeView)
     {
         addAssName(".list-item");
-        setLayout(_new<AHorizontalLayout>());
+        setLayout(std::make_unique<AHorizontalLayout>());
 
         if (hasChildren) {
             addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) let {
@@ -230,12 +230,12 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         clearSignals();
     }
     mModel = model;
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
 
     addView(mContent = _new<ContainerView>());
     addView(mScrollbar = _new<AScrollbar>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);

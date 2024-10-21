@@ -49,7 +49,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     mContent(std::move(contentView)) {
 
 
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     using namespace declarative;
     setContents(Vertical {

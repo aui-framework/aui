@@ -172,7 +172,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::setLayout(_<ALayout> layout) {
+void AViewContainer::setLayout(_unique<ALayout> layout) {
     for (const auto& v : mViews) {
         v->mParent = nullptr;
     }
@@ -388,10 +388,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
         return result = true;
     }
     return false;
-}
-
-_<ALayout> AViewContainer::getLayout() const {
-    return mLayout;
 }
 
 
