@@ -96,3 +96,24 @@ TEST_F(UIStyleTest, MouseMoveWithClick) {
     mWindow->onPointerReleased({.position = { 100, 100 }, .triggerClick = false }); // somewhere outside the view
     By::type<View>().check(averageColor(AColor::BLACK));
 }
+
+/**
+ * Checks click with release outside the view.
+ */
+TEST_F(UIStyleTest, Opacity) {
+    testing::InSequence s;
+    using namespace ass;
+
+    mView with_style {
+        FixedSize(50_dp),
+        BackgroundSolid(AColor::RED),
+        Opacity(0),
+    };
+    By::type<View>().check(averageColor(AColor::WHITE), "view should disappear");
+    mView with_style {
+        FixedSize(50_dp),
+        BackgroundSolid(AColor::RED),
+        Opacity(1),
+    };
+    By::type<View>().check(averageColor(AColor::RED), "view should appear");
+}
