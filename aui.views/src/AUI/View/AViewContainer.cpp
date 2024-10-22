@@ -32,6 +32,7 @@ namespace aui::view::impl {
         }
 
         // consider anything below this value as effectively "zero" or negligible in terms of opacity.
+        view.ensureAssUpdated();
         if (view.getOpacity() < 0.0001f) [[unlikely]] {
             return true;
         }
