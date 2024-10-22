@@ -187,6 +187,7 @@ void AView::invalidateAllStyles()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    mOpacity = 1;
     mFontStyle = {};
 
     auto applyStylesheet = [this](const AStylesheet& sh) {
@@ -300,7 +301,6 @@ void AView::addAssName(const AString& assName)
 void AView::invalidateAssHelper() {
     mAssHelper = nullptr;
     aui::zero(mAss);
-    mOpacity = 1;
     redraw();
 }
 
