@@ -86,6 +86,9 @@ void AView::markMinContentSizeInvalid()
     if (mMarkedMinContentSizeInvalid) {
         // already marked.
         // TODO uncomment this
+//        for (auto i = getParent(); i; i = i->getParent()) {
+//            AUI_ASSERT(i->mMarkedMinContentSizeInvalid);
+//        }
         // return;
     }
     mMarkedMinContentSizeInvalid = true;
@@ -480,8 +483,6 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
-    mMarkedMinContentSizeInvalid = false;
-    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }

@@ -74,6 +74,9 @@ void AScrollbar::setOffset(size_t o) {
 }
 
 void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
+    if (std::tie(mViewportSize, mFullSize) == std::tie(viewportSize, fullSize)) {
+        return;
+    }
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
@@ -166,7 +169,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
             break;
     }
-    applyGeometryToChildrenIfNecessary();
+    applyGeometryToChildren();
     redraw();
 }
 

@@ -213,7 +213,7 @@ protected:
     glm::ivec2 mExpanding = {0, 0};
 
     AOptional<glm::ivec2> mCachedMinContentSize;
-    bool mMarkedMinContentSizeInvalid = true;
+    bool mMarkedMinContentSizeInvalid = false;
 
     /**
      * @brief Redraw requested flag for this particular view/

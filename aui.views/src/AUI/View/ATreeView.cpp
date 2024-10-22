@@ -280,7 +280,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
             }
         });
     }
-    applyGeometryToChildrenIfNecessary();
+    markMinContentSizeInvalid();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
