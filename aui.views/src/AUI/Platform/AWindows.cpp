@@ -98,10 +98,11 @@ void AWindow::redraw() {
             mRenderingContext->endPaint(*this);
         };
 
-        if (!mCachedMinContentSize) {
+        if (mMarkedMinContentSizeInvalid) {
             AUI_REPEAT(2) { // AText may trigger extra layout update
                 applyGeometryToChildrenIfNecessary();
             }
+            mMarkedMinContentSizeInvalid = false;
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
