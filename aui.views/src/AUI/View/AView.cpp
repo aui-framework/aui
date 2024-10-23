@@ -189,7 +189,6 @@ void AView::invalidateAllStyles()
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mOpacity = 1;
-    mFontStyle = {};
 
     auto applyStylesheet = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {

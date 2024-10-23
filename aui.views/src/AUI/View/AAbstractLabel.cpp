@@ -196,6 +196,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
+            render.setColor(getTextColor());
             mPrerendered->draw();
         }
     }
@@ -254,10 +255,12 @@ void AAbstractLabel::setText(AString newText) {
     redraw();
 }
 
+void AAbstractLabel::invalidateAllStyles() {
+    invalidateAllStylesFont();
+    AView::invalidateAllStyles();
+}
+
 void AAbstractLabel::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    if (mPrevFontStyle != getFontStyle()) {
-        mPrevFontStyle = getFontStyle();
-        invalidateFont();
-    }
+    invalidateStateStylesFont();
 }

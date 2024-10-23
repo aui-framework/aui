@@ -86,7 +86,6 @@ void ARulerArea::render(ARenderContext ctx) {
         glm::ivec2 tp = mMousePos - (getTargetPosition() + rulerOffset);
 
         AFontStyle fs = getFontStyle();
-//        fs.color = 0x0_rgb;
         auto prX = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
         auto prY = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
 
@@ -130,4 +129,8 @@ void ARulerArea::updatePosition() {
 
 glm::ivec2 ARulerArea::getTargetPosition() const {
     return (getSize() - mWrappedView->getSize()) / 2;
+}
+
+void ARulerArea::invalidateFont() {
+
 }

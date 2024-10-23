@@ -9,14 +9,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 01.01.2021.
-//
+#include "IFontView.h"
 
-#include <AUI/View/AText.h>
-#include "TextAlign.h"
+IFontView::~IFontView() = default;
 
+void IFontView::invalidateAllStylesFont() {
+    mColor = AColor::BLACK;
+    mFontStyle = {};
+}
 
-void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
-    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().align = mInfo;
+void IFontView::invalidateStateStylesFont() {
+    if (mPrevFontStyle != getFontStyle()) {
+        mPrevFontStyle = getFontStyle();
+        invalidateFont();
+    }
 }

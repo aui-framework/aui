@@ -19,6 +19,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Enum/WordBreak.h"
+#include "AUI/Font/IFontView.h"
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Common/IStringable.h>
 #include <AUI/Util/Declarative.h>
@@ -26,7 +27,7 @@
 /**
  * @brief Represents an abstract text display view.
  */
-class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable {
+class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable, public IFontView {
 public:
     AAbstractLabel();
 
@@ -65,7 +66,7 @@ public:
         return mText;
     }
 
-    void invalidateFont();
+    void invalidateFont() override;
 
     void setVerticalAlign(VerticalAlign verticalAlign) {
         if (mVerticalAlign == verticalAlign) {
@@ -84,6 +85,8 @@ public:
     }
 
     void setSize(glm::ivec2 size) override;
+
+    void invalidateAllStyles() override;
 
 protected:
     _<IRenderer::IPrerenderedString> mPrerendered;
@@ -106,7 +109,6 @@ private:
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
     AColor mIconColor = {1, 1, 1, 1};
-    AFontStyle mPrevFontStyle{ .font = nullptr };
 
     glm::ivec2 getIconSize() const;
 

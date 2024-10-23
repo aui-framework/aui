@@ -14,7 +14,8 @@
 //
 
 #include "TextColor.h"
+#include "AUI/Font/IFontView.h"
 
 void ass::prop::Property<ass::TextColor>::applyFor(AView* view) {
-//    view->getFontStyle().color = mInfo.color;
+    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->setTextColor(mInfo.color);
 }

@@ -14,6 +14,7 @@
 
 #include <AUI/Util/AWordWrappingEngine.h>
 #include "AViewContainer.h"
+#include "AUI/Font/IFontView.h"
 #include <initializer_list>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
@@ -27,7 +28,7 @@
  *
  * Unlike ALabel, AText is optimized to store, render, word break large texts.
  */
-class API_AUI_VIEWS AText: public AViewContainer {
+class API_AUI_VIEWS AText: public AViewContainer, public IFontView {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
@@ -64,8 +65,12 @@ public:
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void prerenderString(ARenderContext ctx);
 
+    void invalidateFont() override;
+
 protected:
     void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
+
+    void invalidateAllStyles() override;
 
 private:
     class CharEntry: public AWordWrappingEngine::Entry {
@@ -137,7 +142,6 @@ private:
     AWordWrappingEngine mEngine;
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;
-    AFontStyle mPrevFontStyle{ .font = nullptr };
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;
     ParsedFlags mParsedFlags;

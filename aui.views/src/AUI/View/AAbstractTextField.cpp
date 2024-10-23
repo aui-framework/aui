@@ -91,9 +91,13 @@ glm::ivec2 AAbstractTextField::getMouseSelectionPadding() {
 }
 
 void AAbstractTextField::doDrawString(IRenderer& render) {
-    RenderHints::PushMatrix m(render);
+    if (!mPrerenderedString) {
+        return;
+    }
+    RenderHints::PushState m(render);
     render.translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
-    if (mPrerenderedString) mPrerenderedString->draw();
+    render.setColor(getTextColor());
+    mPrerenderedString->draw();
 }
 
 
@@ -108,7 +112,7 @@ void AAbstractTextField::setText(const AString& t)
     mCursorIndex = t.size();
 	updateCursorBlinking();
 
-    invalidatePrerenderedString();
+    invalidateFont();
 	emit textChanged(t);
 }
 
@@ -172,7 +176,7 @@ size_t AAbstractTextField::length() const {
     return mContents.length();
 }
 
-void AAbstractTextField::invalidatePrerenderedString() {
+void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
 
@@ -275,13 +279,5 @@ void AAbstractTextField::onKeyDown(AInput::Key key) {
     AAbstractTypeableView::onKeyDown(key);
     if (key == AInput::Key::RETURN) {
         emit actionButtonPressed;
-    }
-}
-
-void AAbstractTextField::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    if (mPrevFontStyle != getFontStyle()) {
-        mPrevFontStyle = getFontStyle();
-        invalidatePrerenderedString();
     }
 }

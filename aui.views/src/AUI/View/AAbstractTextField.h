@@ -112,16 +112,13 @@ protected:
 
     glm::ivec2 getMouseSelectionPadding() override;
 
-    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
-
 private:
-    AFontStyle mPrevFontStyle{.font = nullptr};
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
 
-    void invalidatePrerenderedString() override;
+    void invalidateFont() override;
     AString getContentsPasswordWrap();
 
     void updateTextAlignOffset();

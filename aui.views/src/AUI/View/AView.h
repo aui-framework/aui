@@ -108,11 +108,6 @@ private:
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
     /**
-     * @brief Font style for this AView.
-     */
-    AFontStyle mFontStyle;
-
-    /**
      * @brief opacity, specified in ASS.
      */
     aui::float_within_0_1 mOpacity = 1;
@@ -690,11 +685,6 @@ public:
     int getExpandingVertical() const
     {
         return mExpanding.y;
-    }
-
-    [[nodiscard]]
-    AFontStyle& getFontStyle() {
-        return mFontStyle;
     }
 
     [[nodiscard]] aui::float_within_0_1 getOpacity() const {

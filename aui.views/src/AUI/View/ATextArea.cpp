@@ -185,7 +185,7 @@ public:
     }
 
 protected:
-    void invalidatePrerenderedString() override {
+    void invalidateFont() override {
         for (auto& l : mLines) {
             l.prerendered = nullptr;
         }

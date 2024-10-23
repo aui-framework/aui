@@ -14,8 +14,9 @@
 //
 
 #include "FontSize.h"
+#include "AUI/Font/IFontView.h"
 
 
 void ass::prop::Property<ass::FontSize>::applyFor(AView* view) {
-    view->getFontStyle().size = mInfo.size.getValuePx();
+    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().size = mInfo.size.getValuePx();
 }

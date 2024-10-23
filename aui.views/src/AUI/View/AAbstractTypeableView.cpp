@@ -126,7 +126,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             if (hasSelection()) {
                 auto sel = selection();
                 typeableErase(sel.begin, sel.end);
-                invalidatePrerenderedString();
+                invalidateFont();
                 mCursorSelection = -1;
                 mCursorIndex = sel.begin;
             } else
@@ -134,7 +134,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
                 if (mCursorIndex < length())
                 {
                     typeableErase(mCursorIndex, mCursorIndex + 1);
-                    invalidatePrerenderedString();
+                    invalidateFont();
                 }
             }
             break;
@@ -235,7 +235,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
         mCursorIndex = pastePos + toPaste.length();
         mCursorSelection = -1;
 
-        invalidatePrerenderedString();
+        invalidateFont();
         updateCursorPos();
         emit textChanged;
     } else if (prevContents) {
@@ -252,7 +252,7 @@ void AAbstractTypeableView::cutToClipboard() {
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
-    invalidatePrerenderedString();
+    invalidateFont();
 }
 
 void AAbstractTypeableView::copyToClipboard() const {
@@ -314,7 +314,7 @@ void AAbstractTypeableView::enterChar(char16_t c)
 
         }
     }
-    invalidatePrerenderedString();
+    invalidateFont();
     updateCursorBlinking();
     updateCursorPos();
 
@@ -380,7 +380,7 @@ void AAbstractTypeableView::setText(const AString& t)
     updateSelectionOnTextSet(t);
     updateCursorBlinking();
 
-    invalidatePrerenderedString();
+    invalidateFont();
     emit textChanged(t);
 }
 
@@ -418,4 +418,14 @@ void AAbstractTypeableView::doRedraw() {
 
 void AAbstractTypeableView::onSelectionChanged() {
     if (selectionChanged) emit selectionChanged(selection());
+}
+
+void AAbstractTypeableView::invalidateAllStyles() {
+    invalidateAllStylesFont();
+    AView::invalidateAllStyles();
+}
+
+void AAbstractTypeableView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
+    invalidateStateStylesFont();
 }

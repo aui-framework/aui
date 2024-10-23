@@ -187,6 +187,7 @@ void AText::render(ARenderContext context) {
         prerenderString(context);
     }
     if (mPrerenderedString) {
+        context.render.setColor(getTextColor());
         mPrerenderedString->draw();
     }
 }
@@ -278,11 +279,17 @@ void AText::clearContent() {
     mPrerenderedString = nullptr;
 }
 
+void AText::invalidateAllStyles() {
+    invalidateAllStylesFont();
+    AViewContainer::invalidateAllStyles();
+}
+
 void AText::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    if (mPrevFontStyle != getFontStyle()) {
-        mPrevFontStyle = getFontStyle();
-        mPrerenderedString.reset();
-        markMinContentSizeInvalid();
-    }
+    invalidateStateStylesFont();
+}
+
+void AText::invalidateFont() {
+    mPrerenderedString.reset();
+    markMinContentSizeInvalid();
 }
