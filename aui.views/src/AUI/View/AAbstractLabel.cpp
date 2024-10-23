@@ -21,39 +21,35 @@
 #include <AUI/Util/kAUI.h>
 
 
-AAbstractLabel::AAbstractLabel()
-{
+AAbstractLabel::AAbstractLabel() {
 
 }
 
 
-void AAbstractLabel::render(ARenderContext context)
-{
-	AView::render(context);
+void AAbstractLabel::render(ARenderContext context) {
+    AView::render(context);
 
-	doRenderText(context.render);
+    doRenderText(context.render);
 }
 
 
-int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
-{
+int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout) {
     if (mTextOverflow != ATextOverflow::NONE)
         return 0;
 
-	int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyleLabel().getWidth(mText);
-	if (mIcon) {
-	    acc += getIconSize().x * 2;
-	}
+    int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
+    if (mIcon) {
+        acc += getIconSize().x * 2;
+    }
     return acc;
 }
 
-int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout)
-{	if (mText.empty())
-		return 0;
+int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout) {
+    if (mText.empty())
+        return 0;
 
-    return getFontStyleLabel().size;
+    return getFontStyle().size;
 }
-
 
 
 void AAbstractLabel::setSize(glm::ivec2 size) {
@@ -61,47 +57,13 @@ void AAbstractLabel::setSize(glm::ivec2 size) {
     AView::setSize(size);
 }
 
-AFontStyle AAbstractLabel::getFontStyleLabel() {
-    auto fs = getFontStyle();
-    if (mFontOverride)
-        fs.font = mFontOverride;
-    if (mFontSizeOverride)
-        fs.size = mFontSizeOverride;
-    return fs;
-}
-
-/*
-void AAbstractLabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
-    mPrerendered.mVao = nullptr;
-    mVerticalAlign = Align::LEFT;
-    processor(css::T_VERTICAL_ALIGN, [&](property p)
-    {
-        if (p->getArgs().size() == 1) {
-            if (p->getArgs()[0] == "middle")
-                mVerticalAlign = Align::CENTER;
-            else
-                mVerticalAlign = Align::LEFT;
-        }
-    });
-    mTextTransform = TT_NORMAL;
-    processor(css::T_TEXT_TRANSFORM, [&](property p)
-    {
-        if (p->getArgs().size() == 1) {
-            if (p->getArgs()[0] == "uppercase")
-                mTextTransform = TT_UPPERCASE;
-            else if (p->getArgs()[0] == "lowercase")
-                mTextTransform = TT_LOWERCASE;
-        }
-    });
-}*/
-
-template < class Iterator >
+template<class Iterator>
 size_t AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
-                                             const Iterator& end,
-                                             int overflowingWidth) {
+                                                const Iterator& end,
+                                                int overflowingWidth) {
     size_t gotWidth = 0;
     for (Iterator it = begin; it != end; ++it) {
-        gotWidth += getFontStyleLabel().getWidth(it, it + 1);
+        gotWidth += getFontStyle().getWidth(it, it + 1);
         if (gotWidth <= overflowingWidth)
             continue;
 
@@ -111,7 +73,7 @@ size_t AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
     return end - begin;
 }
 
-template < class Iterator >
+template<class Iterator>
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
     size_t firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
@@ -138,7 +100,7 @@ void AAbstractLabel::processTextOverflow(AString& text) {
 
     overflowingWidth = std::min(overflowingWidth, mSize.x);
 
-    mIsTextTooLarge = getFontStyleLabel().getWidth(text) > overflowingWidth;
+    mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
     if (!mIsTextTooLarge)
         return;
 
@@ -146,7 +108,7 @@ void AAbstractLabel::processTextOverflow(AString& text) {
 }
 
 void AAbstractLabel::doPrerender(IRenderer& render) {
-    auto fs = getFontStyleLabel();
+    auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
         processTextOverflow(transformedText);
@@ -155,14 +117,12 @@ void AAbstractLabel::doPrerender(IRenderer& render) {
 }
 
 void AAbstractLabel::doRenderText(IRenderer& render) {
-    if (!mPrerendered)
-    {
+    if (!mPrerendered) {
         doPrerender(render);
     }
 
 
-    if (mPrerendered)
-    {
+    if (mPrerendered) {
         mTextLeftOffset = 0;
         auto requiredSpace = getIconSize();
         auto iconY = glm::ceil((getHeight() - requiredSpace.y) / 2.0);
@@ -172,7 +132,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                 RenderHints::PushState s(render);
                 render.setColor(mIconColor);
                 render.setTransform(glm::translate(glm::mat4(1.f),
-                                                     glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
+                                                   glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
                 p.size = requiredSpace;
                 mIcon->draw(render, p);
@@ -183,7 +143,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         if (mIsTextTooLarge) {
             alignLeft();
         } else {
-            switch (getFontStyleLabel().align) {
+            switch (getFontStyle().align) {
                 case ATextAlign::LEFT:
                     alignLeft();
                     break;
@@ -194,9 +154,9 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                         RenderHints::PushState s(render);
                         render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
-                                                             glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
-                                                                      requiredSpace.x,
-                                                                      iconY, 0)));
+                                                           glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
+                                                                     requiredSpace.x,
+                                                                     iconY, 0)));
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
@@ -211,10 +171,10 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                         RenderHints::PushState s(render);
                         render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
-                                                             glm::vec3(mPadding.left + mTextLeftOffset -
-                                                                      (mPrerendered ? mPrerendered->getWidth() : 0) -
-                                                                      requiredSpace.x / 2,
-                                                                      iconY, 0)));
+                                                           glm::vec3(mPadding.left + mTextLeftOffset -
+                                                                     (mPrerendered ? mPrerendered->getWidth() : 0) -
+                                                                     requiredSpace.x / 2,
+                                                                     iconY, 0)));
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
@@ -229,12 +189,13 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
             int y = mPadding.top;
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                auto ascenderHeight = getFontStyleLabel().font->getAscenderHeight(getFontStyleLabel().size);
-                auto descenderHeight = getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
-                y = (glm::max)(y, y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
+                auto ascenderHeight = getFontStyle().font->getAscenderHeight(getFontStyle().size);
+                auto descenderHeight = getFontStyle().font->getDescenderHeight(getFontStyle().size);
+                y = (glm::max)(y,
+                               y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
             }
             RenderHints::PushMatrix m(render);
-            render.translate({mTextLeftOffset + mPadding.left, y });
+            render.translate({mTextLeftOffset + mPadding.left, y});
             mPrerendered->draw();
         }
     }
@@ -291,4 +252,12 @@ void AAbstractLabel::setText(AString newText) {
 
     markMinContentSizeInvalid();
     redraw();
+}
+
+void AAbstractLabel::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
+    if (mPrevFontStyle != getFontStyle()) {
+        mPrevFontStyle = getFontStyle();
+        invalidateFont();
+    }
 }

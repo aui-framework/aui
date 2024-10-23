@@ -19,5 +19,4 @@
 
 void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
     view->getFontStyle().align = mInfo;
-    view->invalidateFont();
 }

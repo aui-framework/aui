@@ -278,12 +278,6 @@ void AView::getTransform(glm::mat4& transform) const
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
-AFontStyle& AView::getFontStyle()
-{
-    return mFontStyle;
-}
-
-
 void AView::pack()
 {
     setSize({getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection())});
@@ -598,9 +592,6 @@ void AView::onDpiChanged() {
     mAssHelper = nullptr;
 }
 
-void AView::invalidateFont() {
-
-}
 void AView::notifyParentEnabledStateChanged(bool enabled) {
     mParentEnabled = enabled;
     updateEnableState();
@@ -821,6 +812,10 @@ void AView::forceUpdateLayoutRecursively() {
     }
     mMarkedMinContentSizeInvalid = true;
     mCachedMinContentSize.reset();
+}
+
+void AView::setFontStyle(const AFontStyle& fontStyle) {
+    mFontStyle = fontStyle;
 }
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {

@@ -176,10 +176,6 @@ void AAbstractTextField::invalidatePrerenderedString() {
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextField::invalidateFont() {
-    mPrerenderedString = nullptr;
-}
-
 void AAbstractTextField::onCharEntered(char16_t c) {
     mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
@@ -279,5 +275,13 @@ void AAbstractTextField::onKeyDown(AInput::Key key) {
     AAbstractTypeableView::onKeyDown(key);
     if (key == AInput::Key::RETURN) {
         emit actionButtonPressed;
+    }
+}
+
+void AAbstractTextField::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
+    if (mPrevFontStyle != getFontStyle()) {
+        mPrevFontStyle = getFontStyle();
+        invalidatePrerenderedString();
     }
 }

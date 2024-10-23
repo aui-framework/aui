@@ -22,5 +22,4 @@ void ass::prop::Property<FontRendering>::applyFor(AView* view){
         view->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
     }
 #endif
-    view->invalidateFont();
 }

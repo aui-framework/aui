@@ -73,7 +73,6 @@ public:
     size_t textLength() const override;
 
     void onCharEntered(char16_t c) override;
-    void invalidateFont() override;
 
     void onFocusLost() override;
 
@@ -113,7 +112,10 @@ protected:
 
     glm::ivec2 getMouseSelectionPadding() override;
 
+    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
+
 private:
+    AFontStyle mPrevFontStyle{.font = nullptr};
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
@@ -123,4 +125,5 @@ private:
     AString getContentsPasswordWrap();
 
     void updateTextAlignOffset();
+
 };

@@ -10,6 +10,7 @@
  */
 
 #pragma once
+
 #include "AUI/Enum/ATextAlign.h"
 #include "AFont.h"
 #include "AUI/Platform/AFontManager.h"
@@ -21,35 +22,34 @@ class AString;
 
 
 struct API_AUI_VIEWS AFontStyle {
-	mutable _<AFont> font = AFontManager::inst().getDefaultFont();
-	unsigned size = 12;
-	bool formatting = false;
-	ATextAlign align = ATextAlign::LEFT;
-	AColor color;
+    mutable _<AFont> font = AFontManager::inst().getDefaultFont();
+    unsigned size = 12;
+    bool formatting = false;
+    ATextAlign align = ATextAlign::LEFT;
     bool bold = false;
     bool italic = false;
 
-	FontRendering fontRendering = FontRendering::SUBPIXEL;
-	float lineSpacing = 0.5f;
+    FontRendering fontRendering = FontRendering::SUBPIXEL;
+    float lineSpacing = 0.5f;
 
 
-	size_t getWidth(const AString& text) const;
+    size_t getWidth(const AString& text) const;
 
-    template < class Iterator >
-    size_t getWidth(Iterator begin, Iterator end) const
-    {
+    template<class Iterator>
+    size_t getWidth(Iterator begin, Iterator end) const {
         return font->length(*this, std::move(begin), std::move(end));
     }
 
-	AFont::Character& getCharacter(char32_t c) {
-		return font->getCharacter(getFontEntry(), c);
-	}
+    AFont::Character& getCharacter(char32_t c) {
+        return font->getCharacter(getFontEntry(), c);
+    }
+
     [[nodiscard]]
     size_t getSpaceWidth() const {
         return font->getSpaceWidth(size);
     }
 
-	size_t getLineHeight() const;
+    size_t getLineHeight() const;
 
     AFont::FontEntry getFontEntry() const {
         return font->getFontEntry({size, fontRendering});
@@ -58,4 +58,7 @@ struct API_AUI_VIEWS AFontStyle {
     operator AFont::FontEntry() const {
         return getFontEntry();
     }
+
+    bool operator==(const AFontStyle&) const noexcept = default;
+    bool operator!=(const AFontStyle&) const noexcept = default;
 };

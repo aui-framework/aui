@@ -64,7 +64,8 @@ public:
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void prerenderString(ARenderContext ctx);
 
-    void invalidateFont() override;
+protected:
+    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
 
 private:
     class CharEntry: public AWordWrappingEngine::Entry {
@@ -136,6 +137,7 @@ private:
     AWordWrappingEngine mEngine;
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;
+    AFontStyle mPrevFontStyle{ .font = nullptr };
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;
     ParsedFlags mParsedFlags;

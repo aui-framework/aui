@@ -271,13 +271,18 @@ Float AText::CharEntry::getFloat() const {
     return Float::NONE;
 }
 
-void AText::invalidateFont() {
-    mPrerenderedString.reset();
-}
-
 void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
     removeAllViews();
     mPrerenderedString = nullptr;
+}
+
+void AText::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
+    if (mPrevFontStyle != getFontStyle()) {
+        mPrevFontStyle = getFontStyle();
+        mPrerenderedString.reset();
+        markMinContentSizeInvalid();
+    }
 }

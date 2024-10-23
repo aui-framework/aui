@@ -20,5 +20,4 @@ void ass::prop::Property<ass::Font>::applyFor(AView* view) {
     auto font = AFontManager::inst().getFont(mInfo.url);
     if (!font) font = AFontManager::inst().getDefaultFont();
     view->getFontStyle().font = std::move(font);
-    view->invalidateFont();
 }
