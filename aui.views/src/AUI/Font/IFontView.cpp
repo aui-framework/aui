@@ -18,7 +18,7 @@ void IFontView::invalidateAllStylesFont() {
     mFontStyle = {};
 }
 
-void IFontView::invalidateStateStylesFont() {
+void IFontView::commitStyleFont() {
     if (mPrevFontStyle != getFontStyle()) {
         mPrevFontStyle = getFontStyle();
         invalidateFont();

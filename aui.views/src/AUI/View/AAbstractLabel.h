@@ -95,7 +95,7 @@ protected:
         return mPrerendered;
     }
 
-    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
+    void commitStyle() override;
     //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
 
 

@@ -260,7 +260,7 @@ void AAbstractLabel::invalidateAllStyles() {
     AView::invalidateAllStyles();
 }
 
-void AAbstractLabel::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    invalidateStateStylesFont();
+void AAbstractLabel::commitStyle() {
+    AView::commitStyle();
+    commitStyleFont();
 }

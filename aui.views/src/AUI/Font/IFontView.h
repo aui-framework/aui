@@ -38,7 +38,7 @@ public:
 
 protected:
     void invalidateAllStylesFont();
-    void invalidateStateStylesFont();
+    void commitStyleFont();
 
 private:
     AColor mColor;

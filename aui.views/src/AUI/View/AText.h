@@ -68,7 +68,7 @@ public:
     void invalidateFont() override;
 
 protected:
-    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
+    void commitStyle() override;
 
     void invalidateAllStyles() override;
 

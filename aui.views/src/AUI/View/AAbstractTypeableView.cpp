@@ -425,7 +425,7 @@ void AAbstractTypeableView::invalidateAllStyles() {
     AView::invalidateAllStyles();
 }
 
-void AAbstractTypeableView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    invalidateStateStylesFont();
+void AAbstractTypeableView::commitStyle() {
+    AView::commitStyle();
+    commitStyleFont();
 }

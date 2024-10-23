@@ -284,9 +284,9 @@ void AText::invalidateAllStyles() {
     AViewContainer::invalidateAllStyles();
 }
 
-void AText::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    AView::invalidateStateStylesImpl(prevMinimumSizePlusField);
-    invalidateStateStylesFont();
+void AText::commitStyle() {
+    AView::commitStyle();
+    commitStyleFont();
 }
 
 void AText::invalidateFont() {

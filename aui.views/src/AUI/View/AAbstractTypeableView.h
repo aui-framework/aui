@@ -99,7 +99,7 @@ protected:
 
     AMenuModel composeContextMenu() override;
 
-    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) override;
+    void commitStyle() override;
 
 public:
     AAbstractTypeableView();
