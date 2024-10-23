@@ -814,10 +814,6 @@ void AView::forceUpdateLayoutRecursively() {
     mCachedMinContentSize.reset();
 }
 
-void AView::setFontStyle(const AFontStyle& fontStyle) {
-    mFontStyle = fontStyle;
-}
-
 std::ostream& operator<<(std::ostream& os, const AView& view) {
     os << view.debugString();
     return os;

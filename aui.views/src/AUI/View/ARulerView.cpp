@@ -52,7 +52,7 @@ void ARulerView::render(ARenderContext ctx) {
      */
     {
         RenderHints::PushColor c(ctx.render);
-        ctx.render.setColor(getFontStyle().color);
+//        ctx.render.setColor(getFontStyle().color);
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
             // large dashes
             ctx.render.rectangle(ASolidBrush{},

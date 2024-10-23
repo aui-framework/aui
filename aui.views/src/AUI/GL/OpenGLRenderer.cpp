@@ -542,7 +542,6 @@ public:
     int mTextWidth;
     int mTextHeight;
     OpenGLRenderer::FontEntryData* mEntryData;
-    AColor mColor;
     FontRendering mFontRendering;
 
     OpenGLPrerenderedString(OpenGLRenderer* renderer,
@@ -551,7 +550,6 @@ public:
                             int textWidth,
                             int textHeight,
                             OpenGLRenderer::FontEntryData* entryData,
-                            AColor color,
                             FontRendering fontRendering) :
             mRenderer(renderer),
             mVertexBuffer(std::move(vertexBuffer)),
@@ -559,7 +557,6 @@ public:
             mTextWidth(textWidth),
             mTextHeight(textHeight),
             mEntryData(entryData),
-            mColor(color),
             mFontRendering(fontRendering) {
         if (mRenderer->isVaoAvailable()) {
             mVao.emplace();
@@ -598,7 +595,7 @@ public:
             setupVertexAttribs();
         }
 
-        auto finalColor = mRenderer->getColor() * mColor;
+        auto finalColor = mRenderer->getColor();
         if (mFontRendering == FontRendering::SUBPIXEL) {
             mRenderer->mSymbolShaderSubPixel->use();
             mRenderer->mSymbolShaderSubPixel->set(aui::ShaderUniforms::UV_SCALE, uvScale);
@@ -765,7 +762,6 @@ public:
                                              mAdvanceX,
                                              mAdvanceY,
                                              mEntryData,
-                                             mFontStyle.color,
                                              mFontStyle.fontRendering);
     }
 

@@ -375,7 +375,6 @@ class SoftwarePrerenderedString: public IRenderer::IPrerenderedString {
 private:
     SoftwareRenderer* mRenderer;
     AVector<CharEntry> mCharEntries;
-    AColor mColor;
     int mWidth = 0;
     int mHeight = 0;
     FontRendering mFontRendering;
@@ -383,17 +382,16 @@ private:
 public:
     SoftwarePrerenderedString(SoftwareRenderer* renderer,
                               AVector<CharEntry> charEntries,
-                              const AColor& color,
                               int width,
                               int height,
                               FontRendering fontRendering) : mRenderer(renderer),
                                                              mCharEntries(std::move(charEntries)),
-                                                             mColor(color), mWidth(width),
+                                                             mWidth(width),
                                                              mHeight(height),
                                                              mFontRendering(fontRendering) {}
 
     void draw() override {
-        auto finalColor = AColor(mRenderer->getColor() * mColor);
+        auto finalColor = AColor(mRenderer->getColor());
         if (finalColor.isFullyTransparent()) return;
         switch (mFontRendering) {
             case FontRendering::SUBPIXEL:
@@ -507,7 +505,6 @@ public:
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<SoftwarePrerenderedString>(mRenderer,
                                                std::move(mCharEntries),
-                                               mFontStyle.color,
                                                mAdvanceX,
                                                mAdvanceY,
                                                mFontStyle.fontRendering);
