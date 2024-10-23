@@ -60,6 +60,10 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ABaseWindow* targetWindow): m
                               "color. From perspective of performance it's good that whole screen transformed to gray "
                               "color and thus no redraw is performed."
                                 }),
+            CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } && mModel(&ABaseWindow::Profiling::breakpointOnMarkMinContentSizeInvalid),
+            AText::fromItems({"Stops the attached debugger at the point when window's update layout flag is set. This "
+                              "can be used to walk through stacktrace and find which view and why triggered layout "
+                              "update. When breakpoint is triggered, checkbox is unset. Note: when debugger is not attached, behaviour is undefined."}),
         } with_style {
             MaxSize { 700_dp, {} },
         }
@@ -78,5 +82,8 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ABaseWindow* targetWindow): m
            Margin { 4_dp, 24_dp, 8_dp },
            Opacity { 0.5f },
        }
+    });
+    connect(targetWindow->redrawn, [this] {
+        mModel.notifyUpdate();
     });
 }
