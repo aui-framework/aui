@@ -180,11 +180,6 @@ ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
-void AWindow::markMinContentSizeInvalid() {
-    ABaseWindow::markMinContentSizeInvalid();
-    flagRedraw();
-}
-
 void AWindow::onCloseButtonClicked() {
     close();
 }

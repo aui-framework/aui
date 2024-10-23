@@ -61,6 +61,12 @@ public:
          * this frame. This effect may help to debug AView::redraw issues.
          */
         bool renderToTextureDecay = false;
+
+        /**
+         * @brief When set to true, the next time window's markMinContentSizeInvalid, debugger is invoked. Value is
+         * reset to false.
+         */
+        bool breakpointOnMarkMinContentSizeInvalid = false;
     };
 
 
@@ -360,10 +366,13 @@ public:
         return mProfiling;
     }
 
+    void markMinContentSizeInvalid() override;
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
+    emits<>            redrawn;
 
     /**
      * @brief On touch screen keyboard show.
