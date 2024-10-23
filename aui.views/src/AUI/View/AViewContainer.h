@@ -389,7 +389,7 @@ private:
 
 
     struct RepaintTrap {
-        bool triggerred = false;
+        bool triggered = false;
     };
     AOptional<RepaintTrap> mRepaintTrap;
 

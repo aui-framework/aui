@@ -480,8 +480,8 @@ void AViewContainer::applyGeometryToChildrenIfNecessary() {
         mRepaintTrap.reset();
     };
     applyGeometryToChildren();
-    if (mRepaintTrap->triggerred) {
-        // if the trap is triggerred during resize, it means at least one view has changed its position or size hence
+    if (mRepaintTrap->triggered) {
+        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
         // we would like to repaint whole container
         redraw();
     }
@@ -652,7 +652,7 @@ void AViewContainer::forceUpdateLayoutRecursively() {
 
 void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {
     if (mRepaintTrap) {
-        mRepaintTrap->triggerred = true;
+        mRepaintTrap->triggered = true;
         return;
     }
     AView::markPixelDataInvalid(invalidArea);
