@@ -17,10 +17,14 @@
 #include "AUI/Font/IFontView.h"
 
 void ass::prop::Property<FontRendering>::applyFor(AView* view){
-    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().fontRendering = mInfo;
+    auto fontView = dynamic_cast<IFontView*>(view);
+    if (!fontView) {
+        return;
+    }
+    fontView->getFontStyle().fontRendering = mInfo;
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-    if (AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
-        AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
+    if (fontView->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
+        fontView->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
     }
 #endif
 }
