@@ -302,10 +302,7 @@ protected:
      */
     virtual void markPixelDataInvalid(ARect<int> invalidArea);
 
-    /**
-     * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
-     */
-    virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
+    virtual void commitStyle();
 
 public:
     AView();
@@ -1116,6 +1113,11 @@ private:
         bool skipRedrawUntilTextureIsPresented = false;
     };
     AOptional<RenderToTexture> mRenderToTexture;
+
+    /**
+     * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
+     */
+    virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
 
     void notifyParentChildFocused(const _<AView>& view);
 };

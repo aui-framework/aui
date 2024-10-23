@@ -37,7 +37,6 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
-#include "glm/common.hpp"
 
 // windows.h
 #undef max
@@ -236,6 +235,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
         }
     }
     applyAssRule(mCustomStyleRule);
+    commitStyle();
 
     if (prevMinimumSizePlusField != getMinimumSizePlusField()) {
         mMarkedMinContentSizeInvalid = true;
@@ -811,6 +811,10 @@ void AView::forceUpdateLayoutRecursively() {
     }
     mMarkedMinContentSizeInvalid = true;
     mCachedMinContentSize.reset();
+}
+
+void AView::commitStyle() {
+
 }
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {
