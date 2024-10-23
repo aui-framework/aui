@@ -157,8 +157,8 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
     }});
     l->getWindow()->applyGeometryToChildrenIfNecessary();
 
-    // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l->getWindow()->applyGeometryToChildrenIfNecessary();
+    // extra layout update that should not call LabelMock::getContentMinimumWidth one more time
+    AUI_REPEAT(10) { l->getWindow()->applyGeometryToChildrenIfNecessary(); }
 }
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
