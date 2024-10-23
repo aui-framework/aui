@@ -55,9 +55,9 @@ private:
 
 
            if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
-               splitter->setLayout(_new<AVerticalLayout>());
+               splitter->setLayout(std::make_unique<AVerticalLayout>());
            } else {
-               splitter->setLayout(_new<AHorizontalLayout>());
+               splitter->setLayout(std::make_unique<AHorizontalLayout>());
            }
 
            bool atLeastOneItemHasExpanding = false;

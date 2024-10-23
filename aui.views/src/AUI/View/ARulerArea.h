@@ -20,7 +20,7 @@
  * @details
  * Consists of vertical and horizontal @ref ARulerView "rulers".
  */
-class API_AUI_VIEWS ARulerArea: public AViewContainer {
+class API_AUI_VIEWS ARulerArea: public AViewContainer, public IFontView {
 private:
     _<AView> mWrappedView;
     _<ARulerView> mHorizontalRuler;
@@ -38,6 +38,9 @@ public:
     ARulerArea(const _<AView>& wrappedView);
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+
+    void invalidateFont() override;
+
     void render(ARenderContext ctx) override;
 };
 

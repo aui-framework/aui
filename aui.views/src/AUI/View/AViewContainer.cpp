@@ -173,7 +173,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::setLayout(_<ALayout> layout) {
+void AViewContainer::setLayout(_unique<ALayout> layout) {
     for (const auto& v : mViews) {
         v->mParent = nullptr;
     }
@@ -391,10 +391,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-_<ALayout> AViewContainer::getLayout() const {
-    return mLayout;
-}
-
 
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
@@ -451,20 +447,25 @@ void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
     adjustContentSize();
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
 }
 
 void AViewContainer::invalidateAllStyles() {
     AView::invalidateAllStyles();
     if (mSizeSet)
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::updateLayout() {
+void AViewContainer::applyGeometryToChildren() {
     if (!mLayout) {
         // no layout = no update.
         return;
     }
+    mLayout->onResize(mPadding.left, mPadding.top,
+                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+}
+
+void AViewContainer::applyGeometryToChildrenIfNecessary() {
     if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
         if (mLastLayoutUpdateSize == getSize()) {
             // no need to go deeper.
@@ -473,10 +474,18 @@ void AViewContainer::updateLayout() {
     }
     mWantsLayoutUpdate = false;
     mLastLayoutUpdateSize = getSize();
-    mLayout->onResize(mPadding.left, mPadding.top,
-                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    AUI_ASSERT(!mRepaintTrap.hasValue());
+    mRepaintTrap.emplace();
+    AUI_DEFER {
+        mRepaintTrap.reset();
+    };
+    applyGeometryToChildren();
+    if (mRepaintTrap->triggered) {
+        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
+        // we would like to repaint whole container
+        redraw();
+    }
     mConsumesClickCache.reset();
-    redraw();
 }
 
 void AViewContainer::removeAllViews() {
@@ -638,5 +647,13 @@ void AViewContainer::forceUpdateLayoutRecursively() {
     for (const auto& view: mViews) {
         view->forceUpdateLayoutRecursively();
     }
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
+}
+
+void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mRepaintTrap) {
+        mRepaintTrap->triggered = true;
+        return;
+    }
+    AView::markPixelDataInvalid(invalidArea);
 }

@@ -38,7 +38,7 @@ public:
         return mContents;
     }
 
-    void updateLayout() override;
+    void applyGeometryToChildren() override;
   
     void setScroll(glm::uvec2 scroll) {
         if (mScroll == scroll) [[unlikely]] {

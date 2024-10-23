@@ -56,10 +56,10 @@ void AViewProfiler::displayBoundsOn(const AView& v, ARenderContext ctx) {
         int x = -v.getMargin().left;
         int y = v.getHeight() + v.getMargin().bottom + 2_dp;
 
-        AFontStyle fs;
-        fs.color = 0xffffffffu;
-        fs.fontRendering = FontRendering::ANTIALIASING;
-        fs.size = 9_pt;
+        AFontStyle fs {
+            .size = static_cast<unsigned int>(9_pt),
+            .fontRendering = FontRendering::ANTIALIASING,
+        };
 
         auto s = ctx.render.prerenderString({x + 2_dp, y + 1_dp },
                                          v.getAssNames().empty()

@@ -9,19 +9,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 1/3/21.
-//
+#include "IFontView.h"
 
-#include "LayoutSpacing.h"
-#include <AUI/View/AViewContainer.h>
+IFontView::~IFontView() = default;
 
+void IFontView::invalidateAllStylesFont() {
+    mColor = AColor::BLACK;
+    mFontStyle = {};
+}
 
-void ass::prop::Property<ass::LayoutSpacing>::applyFor(AView* view) {
-    auto container = dynamic_cast<AViewContainer*>(view);
-    if (container) {
-        if (const auto& l = container->getLayout()) {
-            l->setSpacing(mInfo.spacing);
-        }
+void IFontView::commitStyleFont() {
+    if (mPrevFontStyle != getFontStyle()) {
+        mPrevFontStyle = getFontStyle();
+        invalidateFont();
     }
 }

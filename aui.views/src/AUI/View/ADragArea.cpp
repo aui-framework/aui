@@ -53,7 +53,7 @@ namespace {
 }
 
 ADragArea::ADragArea() {
-    setLayout(_new<DragAreaLayout>());
+    setLayout(std::make_unique<DragAreaLayout>());
     setExpanding({1, 1});
 }
 
@@ -131,7 +131,7 @@ void ADragArea::handleMouseMove() {
     }
 }
 
-void ADragArea::updateLayout() {
+void ADragArea::applyGeometryToChildren() {
     const auto x = getPadding().left;
     const auto y = getPadding().top;
     const auto width = getWidth() - mPadding.horizontal();
@@ -157,7 +157,7 @@ void ADragArea::updateLayout() {
             setValidPositionFor(v, v->getPosition());
         }
     }
-    AViewContainer::updateLayout();
+    AViewContainer::applyGeometryToChildren();
 }
 
 void ADragArea::endDragging() {
@@ -172,7 +172,7 @@ void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2
 
 _<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
-    v->setLayout(_new<AStackedLayout>());
+    v->setLayout(std::make_unique<AStackedLayout>());
     v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
     v->addView(view);
     return v;
@@ -182,6 +182,6 @@ _<AViewContainer> ADragArea::convertToDraggableContainer(const _<AViewContainer>
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setContents(view);
     v->setExpanding(view->getExpanding());
-    v->updateLayout();
+    v->applyGeometryToChildrenIfNecessary();
     return v;
 }

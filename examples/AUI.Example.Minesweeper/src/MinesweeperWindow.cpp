@@ -20,7 +20,7 @@
 MinesweeperWindow::MinesweeperWindow(): AWindow("Minesweeper", 100_dp, 100_dp)
 {
     // root layout manager
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     // top frame
     addView(_container<AHorizontalLayout>({
@@ -179,7 +179,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs)
 	mFieldRows = rows;
 	mDead = false;
 	mBombsPlanted = false;
-	mGrid->setLayout(_new<AGridLayout>(columns, rows));
+	mGrid->setLayout(std::make_unique<AGridLayout>(columns, rows));
 	mField.clear();
 	mField.resize(columns * rows);
 	

@@ -80,7 +80,7 @@ struct MyModel {
 
 void fillWindow(_<AViewContainer> t)
 {
-    t->setLayout(_new<AStackedLayout>());
+    t->setLayout(std::make_unique<AStackedLayout>());
     t->addView(_new<ALabel>("Window contents"));
 }
 
@@ -102,7 +102,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
     allowDragNDrop();
 
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
     AStylesheet::global().addRules({
                                            {
                                                    c(".all_views_wrap") > t<AViewContainer>(),

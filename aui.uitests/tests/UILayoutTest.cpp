@@ -155,14 +155,14 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
     inflate(Centered { Horizontal {
         l,
     }});
-    l->getWindow()->updateLayout();
+    l->getWindow()->applyGeometryToChildrenIfNecessary();
 
-    // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l->getWindow()->updateLayout();
+    // extra layout update that should not call LabelMock::getContentMinimumWidth one more time
+    AUI_REPEAT(10) { l->getWindow()->applyGeometryToChildrenIfNecessary(); }
 }
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
-    // in contract to GetContentMinimumWidthPerformance1, here we additionaly change text of the label, effectively
+    // in contract to GetContentMinimumWidthPerformance1, here we additionally change text of the label, effectively
     // forcing two layout updates.
 
     testing::InSequence s;
@@ -173,13 +173,13 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
         l1,
         l2,
     }});
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
     auto prevPosX = l2->getPositionInWindow().x;
     l1->setText("test2");
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
 
     EXPECT_GE(l2->getPositionInWindow().x, prevPosX); // l2 is expected to shift to right.
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
-    l1->getWindow()->updateLayout();
+    l1->getWindow()->applyGeometryToChildrenIfNecessary();
 }

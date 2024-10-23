@@ -18,7 +18,7 @@
 
 
 ATabView::ATabView() {
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     addView(mRow = _new<ATabButtonRow>());
     addView(mPageView = _new<APageView>());

@@ -280,7 +280,7 @@ public:
 
     void onFocusLost() override;
     void render(ARenderContext context) override;
-    void updateLayout() override;
+    void applyGeometryToChildren() override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**

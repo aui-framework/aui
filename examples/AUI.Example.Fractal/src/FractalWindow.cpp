@@ -27,7 +27,7 @@ using namespace ass;
 FractalWindow::FractalWindow():
     AWindow("Mandelbrot set")
 {
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
 
     auto centerPosDisplay = _new<ALabel>("-");
     {

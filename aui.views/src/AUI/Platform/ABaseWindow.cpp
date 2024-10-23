@@ -401,9 +401,9 @@ void ABaseWindow::flagRedraw() {
 
 }
 
-void ABaseWindow::updateLayout() {
+void ABaseWindow::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
-    AViewContainer::updateLayout();
+    AViewContainer::applyGeometryToChildren();
 }
 
 void ABaseWindow::render(ARenderContext context) {

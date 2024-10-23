@@ -40,13 +40,13 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
 
     switch (direction) {
         case ALayoutDirection::HORIZONTAL:
-            setLayout(_new<AHorizontalLayout>());
+            setLayout(std::make_unique<AHorizontalLayout>());
 
             mForwardButton << ".scrollbar_right";
             mBackwardButton << ".scrollbar_left";
             break;
         case ALayoutDirection::VERTICAL:
-            setLayout(_new<AVerticalLayout>());
+            setLayout(std::make_unique<AVerticalLayout>());
             mForwardButton << ".scrollbar_down";
             mBackwardButton << ".scrollbar_up";
             break;
@@ -74,6 +74,9 @@ void AScrollbar::setOffset(size_t o) {
 }
 
 void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
+    if (std::tie(mViewportSize, mFullSize) == std::tie(viewportSize, fullSize)) {
+        return;
+    }
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
@@ -166,7 +169,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
             break;
     }
-    updateLayout();
+    applyGeometryToChildren();
     redraw();
 }
 

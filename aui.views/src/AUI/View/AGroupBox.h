@@ -35,7 +35,7 @@ class API_AUI_VIEWS AGroupBox: public AViewContainer {
 public:
     AGroupBox(_<AView> titleView, _<AView> contentView);
 
-    void updateLayout() override;
+    void applyGeometryToChildren() override;
 
 private:
     _<AView> mTitle;

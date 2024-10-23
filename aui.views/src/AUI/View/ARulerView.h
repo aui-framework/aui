@@ -19,12 +19,13 @@
 #include <AUI/View/AView.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/GL/Vao.h>
+#include "AUI/Font/IFontView.h"
 
 /**
  * @brief A Photoshop-like ruler for measuring display units.
  * @ingroup userful_views
  */
-class API_AUI_VIEWS ARulerView: public AView {
+class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:
     ALayoutDirection mLayoutDirection;
     _<gl::Vao> mPrecompiledLines;
@@ -38,6 +39,8 @@ private:
 
 public:
     explicit ARulerView(ALayoutDirection layoutDirection);
+
+    void invalidateFont() override;
 
     void render(ARenderContext ctx) override;
 

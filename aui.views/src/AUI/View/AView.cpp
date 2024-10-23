@@ -37,7 +37,6 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
-#include "glm/common.hpp"
 
 // windows.h
 #undef max
@@ -85,7 +84,11 @@ void AView::markMinContentSizeInvalid()
     mCachedMinContentSize.reset();
     if (mMarkedMinContentSizeInvalid) {
         // already marked.
-        return;
+        // TODO uncomment this
+//        for (auto i = getParent(); i; i = i->getParent()) {
+//            AUI_ASSERT(i->mMarkedMinContentSizeInvalid);
+//        }
+        // return;
     }
     mMarkedMinContentSizeInvalid = true;
     AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
@@ -137,7 +140,6 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 }
 void AView::render(ARenderContext ctx)
 {
-    mMarkedMinContentSizeInvalid = false; // TODO govnocode
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
@@ -175,7 +177,8 @@ void AView::render(ARenderContext ctx)
 
 void AView::invalidateAllStyles()
 {
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusField() : glm::ivec2(std::numeric_limits<int>::min() / 2);
+    static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusField() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
@@ -185,7 +188,6 @@ void AView::invalidateAllStyles()
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mOpacity = 1;
-    mFontStyle = {};
 
     auto applyStylesheet = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {
@@ -233,6 +235,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
         }
     }
     applyAssRule(mCustomStyleRule);
+    commitStyle();
 
     if (prevMinimumSizePlusField != getMinimumSizePlusField()) {
         mMarkedMinContentSizeInvalid = true;
@@ -273,12 +276,6 @@ void AView::getTransform(glm::mat4& transform) const
 {
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
-
-AFontStyle& AView::getFontStyle()
-{
-    return mFontStyle;
-}
-
 
 void AView::pack()
 {
@@ -480,12 +477,11 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
-    mMarkedMinContentSizeInvalid = false;
-    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }
     mPosition = position;
+    redraw();
     emit positionChanged(position);
 }
 void AView::setSize(glm::ivec2 size)
@@ -519,6 +515,7 @@ void AView::setSize(glm::ivec2 size)
         return;
     }
     mSize = newSize;
+    redraw();
     emit sizeChanged(newSize);
 }
 
@@ -594,9 +591,6 @@ void AView::onDpiChanged() {
     mAssHelper = nullptr;
 }
 
-void AView::invalidateFont() {
-
-}
 void AView::notifyParentEnabledStateChanged(bool enabled) {
     mParentEnabled = enabled;
     updateEnableState();
@@ -817,6 +811,10 @@ void AView::forceUpdateLayoutRecursively() {
     }
     mMarkedMinContentSizeInvalid = true;
     mCachedMinContentSize.reset();
+}
+
+void AView::commitStyle() {
+
 }
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {

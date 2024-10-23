@@ -72,7 +72,7 @@ void AGridSplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
     mHorizontalHelper.mouseDrag(pos);
 
     if (mVerticalHelper.isDragging() || mHorizontalHelper.isDragging()) {
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
         redraw();
     }
 }
@@ -84,7 +84,7 @@ void AGridSplitter::onPointerReleased(const APointerReleasedEvent& event) {
 }
 
 void AGridSplitter::updateSplitterItems() {
-    setLayout(_new<AAdvancedGridLayout>(mItems.first().size(), mItems.size()));
+    setLayout(std::make_unique<AAdvancedGridLayout>(mItems.first().size(), mItems.size()));
     AVector<_<AView>> horizontal;
     AVector<_<AView>> vertical;
 

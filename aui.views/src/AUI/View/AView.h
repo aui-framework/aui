@@ -108,11 +108,6 @@ private:
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
     /**
-     * @brief Font style for this AView.
-     */
-    AFontStyle mFontStyle;
-
-    /**
      * @brief opacity, specified in ASS.
      */
     aui::float_within_0_1 mOpacity = 1;
@@ -147,15 +142,6 @@ private:
      */
     [[nodiscard]]
     ALayoutDirection parentLayoutDirection() const noexcept;
-
-    /**
-     * @brief Redraw requested flag for this particular view/
-     * @details
-     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
-     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
-     * drawn.
-     */
-    bool mRedrawRequested = false;
 
 
     /**
@@ -223,6 +209,15 @@ protected:
 
     AOptional<glm::ivec2> mCachedMinContentSize;
     bool mMarkedMinContentSizeInvalid = false;
+
+    /**
+     * @brief Redraw requested flag for this particular view/
+     * @details
+     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
+     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
+     * drawn.
+     */
+    bool mRedrawRequested = false;
 
     /**
      * @brief Minimal size.
@@ -306,6 +301,8 @@ protected:
      * @return A window that manages this invalidation event.
      */
     virtual void markPixelDataInvalid(ARect<int> invalidArea);
+
+    virtual void commitStyle();
 
 public:
     AView();
@@ -675,15 +672,17 @@ public:
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
 
+    [[nodiscard]]
     int getExpandingHorizontal() const
     {
         return mExpanding.x;
     }
+
+    [[nodiscard]]
     int getExpandingVertical() const
     {
         return mExpanding.y;
     }
-    AFontStyle& getFontStyle();
 
     [[nodiscard]] aui::float_within_0_1 getOpacity() const {
         return mOpacity;
@@ -692,7 +691,6 @@ public:
         mOpacity = opacity;
     }
 
-    virtual void invalidateFont();
     virtual void setPosition(glm::ivec2 position);
 
     /**
@@ -1116,7 +1114,11 @@ private:
     };
     AOptional<RenderToTexture> mRenderToTexture;
 
-    void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
+    /**
+     * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
+     */
+    virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
+
     void notifyParentChildFocused(const _<AView>& view);
 };
 

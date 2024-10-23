@@ -73,7 +73,6 @@ public:
     size_t textLength() const override;
 
     void onCharEntered(char16_t c) override;
-    void invalidateFont() override;
 
     void onFocusLost() override;
 
@@ -119,8 +118,9 @@ private:
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
 
-    void invalidatePrerenderedString() override;
+    void invalidateFont() override;
     AString getContentsPasswordWrap();
 
     void updateTextAlignOffset();
+
 };

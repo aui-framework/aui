@@ -20,7 +20,7 @@
 #include "AUI/Util/AAngleRadians.h"
 
 ACircleProgressBar::ACircleProgressBar() : mInner(_new<Inner>()) {
-    setLayout(_new<AStackedLayout>());
+    setLayout(std::make_unique<AStackedLayout>());
     addView(mInner);
 }
 

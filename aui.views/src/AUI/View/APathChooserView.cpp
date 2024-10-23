@@ -22,7 +22,7 @@
 #include <AUI/ASS/ASS.h>
 
 APathChooserView::APathChooserView(const APath& defaultPath) {
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
     addView(mPathField = _new<ATextField>());
     mPathField->setExpanding({2, 0});
     addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {

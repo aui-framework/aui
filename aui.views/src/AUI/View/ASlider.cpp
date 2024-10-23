@@ -58,8 +58,8 @@ void ASlider::updateSliderWithPosition(glm::ivec2 pointerPosition) {
     setValue(float(pointerPosition.x) / float(getContentWidth()));
 }
 
-void ASlider::updateLayout() {
-    AViewContainer::updateLayout();
+void ASlider::applyGeometryToChildren() {
+    AViewContainer::applyGeometryToChildren();
     updateHandlePosition();
 }
 

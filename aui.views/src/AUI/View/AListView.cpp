@@ -27,7 +27,7 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
-    void updateLayout() override {
+    void applyGeometryToChildren() override {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
@@ -56,7 +56,7 @@ class AListViewContainer : public AViewContainer {
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
     }
 
     size_t getIndex() const { return mIndex; }
@@ -85,13 +85,13 @@ class AListItem : public ALabel, public ass::ISelectable {
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 
@@ -106,7 +106,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     horizontalScrollbar()->setAppearance(ScrollbarAppearance::GONE);
     setContents(mContent = _new<AListViewContainer>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     mObserver->setModel(model);

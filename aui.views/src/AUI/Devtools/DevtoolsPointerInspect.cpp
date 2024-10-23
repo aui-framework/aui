@@ -178,7 +178,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(ABaseWindow* targetWindow) : mTar
 
 void DevtoolsPointerInspect::inspect(AView* ptr) {
     ALogger::info(LOG_TAG) << "Inspecting: " << ptr;
-    mResultView->setLayout(_new<AVerticalLayout>());
+    mResultView->setLayout(std::make_unique<AVerticalLayout>());
     mResultView->addView(Horizontal { Label { "AReflect::name = " }, Label { AReflect::name(ptr) } });
     mResultView->addView(Horizontal { Label { "Ass names = " }, Label { AStringVector(ptr->getAssNames()).join(", ") } });
     auto fake = _new<FakeContainer>(ptr->sharedPtr());

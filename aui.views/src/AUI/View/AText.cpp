@@ -187,6 +187,7 @@ void AText::render(ARenderContext context) {
         prerenderString(context);
     }
     if (mPrerenderedString) {
+        context.render.setColor(getTextColor());
         mPrerenderedString->draw();
     }
 }
@@ -271,18 +272,24 @@ Float AText::CharEntry::getFloat() const {
     return Float::NONE;
 }
 
-void AText::invalidateFont() {
-    mPrerenderedString.reset();
-}
-
-void AText::updateLayout() {
-    AViewContainer::updateLayout();
-    mPrerenderedString.reset();
-}
-
 void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
     removeAllViews();
     mPrerenderedString = nullptr;
+}
+
+void AText::invalidateAllStyles() {
+    invalidateAllStylesFont();
+    AViewContainer::invalidateAllStyles();
+}
+
+void AText::commitStyle() {
+    AView::commitStyle();
+    commitStyleFont();
+}
+
+void AText::invalidateFont() {
+    mPrerenderedString.reset();
+    markMinContentSizeInvalid();
 }

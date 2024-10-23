@@ -48,7 +48,7 @@ ANumberPicker::ANumberPicker()
 {
 
 	
-	setLayout(_new<AHorizontalLayout>());
+	setLayout(std::make_unique<AHorizontalLayout>());
 	addView(mTextField = _new<ANumberPickerField>(*this));
     addAssName(".input-field");
     addAssName(".number-picker");
@@ -66,7 +66,7 @@ ANumberPicker::ANumberPicker()
     c->addAssName(".up-down-wrapper");
 	auto up = _new<AButton>() let { it->setDefault(); it  << ".up"; };
 	auto down = _new<AButton>() let { it->setDefault(); it  << ".down"; };
-	c->setLayout(_new<AVerticalLayout>());
+	c->setLayout(std::make_unique<AVerticalLayout>());
 	c->setExpanding({ 0, 0 });
 	c->addView(up);
 	c->addView(down);

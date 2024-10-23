@@ -32,27 +32,10 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        applyResizeOnLayout();
+        applyGeometryToChildren();
     }
 
-    void updateLayout() override {
-        if (!getLayout()) {
-            // no layout = no update.
-            return;
-        }
-        if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
-            if (mLastLayoutUpdateSize == getSize()) {
-                // no need to go deeper.
-                return;
-            }
-        }
-        mWantsLayoutUpdate = false;
-        mLastLayoutUpdateSize = getSize();
-        applyResizeOnLayout();
-        redraw();
-    }
-
-    void applyResizeOnLayout() const {
+    void applyGeometryToChildren() override {
         getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                               getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
     }
@@ -79,7 +62,7 @@ public:
               mTreeView(treeView)
     {
         addAssName(".list-item");
-        setLayout(_new<AHorizontalLayout>());
+        setLayout(std::make_unique<AHorizontalLayout>());
 
         if (hasChildren) {
             addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) let {
@@ -230,12 +213,12 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         clearSignals();
     }
     mModel = model;
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
 
     addView(mContent = _new<ContainerView>());
     addView(mScrollbar = _new<AScrollbar>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
@@ -297,7 +280,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
             }
         });
     }
-    updateLayout();
+    markMinContentSizeInvalid();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
@@ -322,7 +305,7 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
                 wrapper->setVisibility(Visibility::GONE);
             }
 
-            updateLayout();
+            applyGeometryToChildrenIfNecessary();
             updateScrollbarDimensions();
             redraw();
         });

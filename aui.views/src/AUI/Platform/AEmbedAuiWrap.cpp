@@ -121,7 +121,7 @@ void AEmbedAuiWrap::windowRender() {
     render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
-        mContainer->updateLayout();
+        mContainer->applyGeometryToChildrenIfNecessary();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;

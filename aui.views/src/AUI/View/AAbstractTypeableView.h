@@ -20,13 +20,14 @@
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include "AUI/Render/IRenderer.h"
+#include "AUI/Font/IFontView.h"
 
 
 /**
  * @brief Basic implementation of type shortcuts and selection for editable text fields.
  * @details Used as base in ATextArea and ATextField, both of them using own way of text handling and rendering.
  */
-class API_AUI_VIEWS AAbstractTypeableView: public AView, public ACursorSelectable {
+class API_AUI_VIEWS AAbstractTypeableView: public AView, public ACursorSelectable, public IFontView {
 private:
     static _<ATimer> blinkTimer();
 
@@ -51,7 +52,6 @@ protected:
     void updateCursorBlinking();
     void updateCursorPos();
 
-    virtual void invalidatePrerenderedString() = 0;
     virtual void typeableErase(size_t begin, size_t end) = 0;
 
     /**
@@ -99,6 +99,8 @@ protected:
 
     AMenuModel composeContextMenu() override;
 
+    void commitStyle() override;
+
 public:
     AAbstractTypeableView();
     virtual ~AAbstractTypeableView();
@@ -141,6 +143,8 @@ public:
     void copyToClipboard() const;
     void cutToClipboard();
     void pasteFromClipboard();
+
+    void invalidateAllStyles() override;
 
 signals:
     /**

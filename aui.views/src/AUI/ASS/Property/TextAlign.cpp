@@ -18,6 +18,5 @@
 
 
 void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
-    view->getFontStyle().align = mInfo;
-    view->invalidateFont();
+    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().align = mInfo;
 }
