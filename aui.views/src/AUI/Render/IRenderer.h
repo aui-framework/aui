@@ -363,7 +363,17 @@ public:
      * @param style style
      * @param width line width
      */
-    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
 
     /**
      * @brief Draws points list.
@@ -381,6 +391,16 @@ public:
      * @param width line width
      */
     virtual void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
 
     /**
      * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
