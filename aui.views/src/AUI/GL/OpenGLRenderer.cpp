@@ -1086,7 +1086,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                         const auto supersampledRenderingFBSize =
                                 mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
                         glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
-                                          0, mainRenderingFB->supersampledSize().y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y,
+                                          0, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y,
                                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
                     }
 
@@ -1158,7 +1158,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mainRenderingFB->bindForRead();
                 mFramebuffer.bindForWrite();
                 const auto supersampledRenderingFBSize = mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
-                glBlitFramebuffer(0, mainRenderingFB->supersampledSize().y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y,
+                glBlitFramebuffer(0, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y,
                                   0, 0, mFramebuffer.size().x, mFramebuffer.size().y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
             }
 
@@ -1169,6 +1169,14 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mTexture->bindAsTexture(0);
                 mRenderer.identityUv();
                 mRenderer.uploadToShaderCommon();
+
+                const glm::vec2 uvs[] = {
+                        {0, 0},
+                        {1, 0},
+                        {0, 1},
+                        {1, 1}
+                };
+                mRenderer.mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "OpenGLRenderViewToTexture");
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
                 if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
