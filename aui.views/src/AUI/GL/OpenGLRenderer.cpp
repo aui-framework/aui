@@ -1189,6 +1189,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                         glColorMask(true, true, true, true);
                         mainRenderingFB->bind();
                         glEnable(GL_STENCIL_TEST);
+                        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                        renderer.setStencilDepth(0);
                     };
                     mFramebuffer.bind();
                     glDisable(GL_STENCIL_TEST);
