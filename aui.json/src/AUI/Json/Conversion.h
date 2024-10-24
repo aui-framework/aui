@@ -171,6 +171,13 @@ struct AJsonConvFieldDescriptor;
  *     (value1, "value1")
  *     (value2, "value2")
  * )
+ *
+ * // or
+ *
+ * AJSON_FIELDS(SomeModel,
+ *     AJSON_FIELDS_ENTRY(value1)
+ *     AJSON_FIELDS_ENTRY(value2)
+ * )
  * @endcode
  */
 #define AJSON_FIELDS(N, ...) \
@@ -182,6 +189,11 @@ template<> struct AJsonConvFieldDescriptor<N>: N { \
     } \
 };
 
+/**
+ * @brief Json entry of the same C++ and JSON field name.
+ * @see AJSON_FIELDS
+ */
+#define AJSON_FIELDS_ENTRY(name) (name, AUI_PP_STRINGIZE(name))
 
 /**
  * Simplified conversion for class fields.
