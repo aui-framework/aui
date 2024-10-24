@@ -368,6 +368,50 @@ TEST(Threading, FutureExecuteOnCallingThread) {
     ASSERT_TRUE(called) << "callback has not called";
 }
 
+TEST(Threading, FutureSelfLock1) {
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<int> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            *future;
+            return 1;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            *future;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+}
+
+TEST(Threading, FutureSelfLock2) {
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<int> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            future.wait();
+            return 1;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            future.wait();
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+}
+
 TEST(Threading, AsyncHolder) {
 
     bool holderDestroyed = false;
