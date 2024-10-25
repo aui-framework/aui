@@ -273,6 +273,21 @@ struct AJsonConv<double> {
     }
 };
 
+template<aui::arithmetic UnderlyingType, auto min, auto max>
+    requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+struct AJsonConv<aui::ranged_number<UnderlyingType, min, max>> {
+    static AJson toJson(aui::ranged_number<UnderlyingType, min, max> v) {
+        return (UnderlyingType) v;
+    }
+    static void fromJson(const AJson& json, aui::ranged_number<UnderlyingType, min, max>& dst) {
+        if constexpr (aui::same_as<UnderlyingType, float> || aui::same_as<UnderlyingType, double>) {
+            dst = (UnderlyingType) json.asNumber();
+        } else {
+            dst = (UnderlyingType) json.asLongInt();
+        }
+    }
+};
+
 template<>
 struct AJsonConv<bool> {
     static AJson toJson(bool v) {
