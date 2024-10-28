@@ -116,8 +116,13 @@ else()
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
+# checking if custom cache dir is set for the system
+if(DEFINED ENV{AUIB_CACHE_DIR})
+    string(REPLACE "\\" "/" _tmp $ENV{AUIB_CACHE_DIR}) # little hack to handle Windows paths
+else()
+    set(_tmp ${HOME_DIR}/.aui)
+endif()
 
-set(_tmp ${HOME_DIR}/.aui)
 if(AUIB_LOCAL_CACHE)
     set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
 endif()
