@@ -127,29 +127,29 @@ if(AUIB_LOCAL_CACHE)
     set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
 endif()
 
-set(AUI_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
-message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
+set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
+message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 
 
 
 set(AUI_BOOT_SOURCEDIR_COMPAT OFF)
 if(${CMAKE_VERSION} VERSION_LESS "3.21.0")
-    message(STATUS "Dependencies will be cloned to build directory, not to ${AUI_CACHE_DIR} because you're using CMake older"
+    message(STATUS "Dependencies will be cloned to build directory, not to ${AUIB_CACHE_DIR} because you're using CMake older"
             " than 3.21. See https://github.com/aui-framework/aui/issues/6 for details.")
     set(AUI_BOOT_SOURCEDIR_COMPAT ON)
 endif()
 
 
 # create all required dirs
-if (NOT EXISTS ${AUI_CACHE_DIR})
-    file(MAKE_DIRECTORY ${AUI_CACHE_DIR})
+if (NOT EXISTS ${AUIB_CACHE_DIR})
+    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR})
 endif()
-if (NOT EXISTS ${AUI_CACHE_DIR}/prefix)
-    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/prefix)
+if (NOT EXISTS ${AUIB_CACHE_DIR}/prefix)
+    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR}/prefix)
 endif()
-if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
-    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/repo)
+if (NOT EXISTS ${AUIB_CACHE_DIR}/repo)
+    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR}/repo)
 endif()
 
 
@@ -469,7 +469,7 @@ function(auib_import AUI_MODULE_NAME URL)
     # append module name to build specifier in order to distinguish modules in prefix/ dir
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
 
-    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
     #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
@@ -482,11 +482,11 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
     else()
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
+        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
     endif()
-    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -523,7 +523,7 @@ function(auib_import AUI_MODULE_NAME URL)
             if (NOT _locked)
                 set(_locked TRUE)
                 message(STATUS "Waiting for repository...")
-                file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+                file(LOCK "${AUIB_CACHE_DIR}/repo.lock")
             endif()
         endif()
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
@@ -692,7 +692,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         AUIB_NO_PRECOMPILED
                         AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
-                        AUI_CACHE_DIR
+                        AUIB_CACHE_DIR
                         CMAKE_C_FLAGS
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
@@ -808,7 +808,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (_locked)
         set(_locked FALSE)
-        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+        file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RELEASE)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})

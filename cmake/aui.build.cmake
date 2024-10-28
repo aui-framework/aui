@@ -711,7 +711,7 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
@@ -752,7 +752,7 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUI_CACHE_DIR}/crosscompile-host
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
