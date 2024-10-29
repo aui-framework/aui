@@ -583,7 +583,7 @@ protected:
     virtual _unique<ITexture> createNewTexture() = 0;
 
 private:
-    bool mAllowRenderToTexture = true;
+    bool mAllowRenderToTexture = false;
 
 };
 
