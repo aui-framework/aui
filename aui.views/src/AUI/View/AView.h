@@ -256,7 +256,7 @@ protected:
      * AView::setGeometry.
      * @details
      * This flag addresses the issue when some container is filled with views by addView during several frames, causing
-     * to draw them then their layout is not processed yet.
+     * to draw them in wrong place (then their layout is not processed yet).
      */
     bool mSkipUntilLayoutUpdate = true;
 
@@ -1009,6 +1009,13 @@ public:
      */
     [[nodiscard]]
     virtual bool wantsTouchscreenKeyboard();
+
+    /**
+     * @see AView::mSkipUntilLayoutUpdate
+     */
+    void setSkipUntilLayoutUpdate(bool skipUntilLayoutUpdate) {
+        mSkipUntilLayoutUpdate = skipUntilLayoutUpdate;
+    }
 
 signals:
     /**

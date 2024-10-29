@@ -477,6 +477,7 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }
