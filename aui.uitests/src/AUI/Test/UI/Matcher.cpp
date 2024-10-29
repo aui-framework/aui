@@ -34,7 +34,7 @@ UIMatcher*& UIMatcher::currentImpl() {
 
 void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
     for (auto& view : container) {
-        if (mIncludeInvisibleViews || view->getVisibility() == Visibility::VISIBLE) {
+        if (mIncludeInvisibleViews || (view->getVisibility() == Visibility::VISIBLE)) {
             if (mMatcher->matches(view)) {
                 destination << view;
             }

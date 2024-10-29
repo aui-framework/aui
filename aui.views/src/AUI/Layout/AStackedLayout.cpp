@@ -47,7 +47,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height) {
 int ::AStackedLayout::getMinimumWidth() {
     int m = 0;
     for (auto& v: mViews)
-        if (v->getVisibility() != Visibility::GONE)
+        if (!(v->getVisibility() & Visibility::CONSUMES_SPACE))
             m = glm::max(int(v->getMinimumWidth() + v->getMargin().horizontal()), m);
     return m;
 }
@@ -55,7 +55,7 @@ int ::AStackedLayout::getMinimumWidth() {
 int ::AStackedLayout::getMinimumHeight() {
     int m = 0;
     for (auto& v: mViews) {
-        if (v->getVisibility() != Visibility::GONE)
+        if (!(v->getVisibility() & Visibility::CONSUMES_SPACE))
             m = glm::max(int(v->getMinimumHeight() + v->getMargin().vertical()), m);
     }
     return m;

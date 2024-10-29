@@ -26,8 +26,8 @@
 static constexpr auto LOG_TAG = "AViewContainer";
 
 namespace aui::view::impl {
-    bool isDefinitelyInvisible(AView& view) {
-        if (view.getVisibility() == Visibility::INVISIBLE || view.getVisibility() == Visibility::GONE) [[unlikely]] {
+    bool isDefinitelyInvisible(AView& view) { // TODO
+        if (!(view.getVisibility() & Visibility::RENDER_NEEDED)) [[unlikely]] {
             return true;
         }
 
@@ -415,7 +415,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
         }
 
         if (hitTest) {
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::CONSUMES_CLICKS)) {
                 if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }

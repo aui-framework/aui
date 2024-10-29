@@ -12,6 +12,7 @@
 #include "AView.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/IStringable.h"
+#include "AUI/Enum/Visibility.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
@@ -698,7 +699,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         return;
     }
     auto prev = std::exchange(mVisibility, visibility);
-    if (mVisibility == Visibility::GONE || prev == Visibility::GONE) {
+    if ((mVisibility & Visibility::CONSUMES_SPACE) != (prev & Visibility::CONSUMES_SPACE)) {
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
