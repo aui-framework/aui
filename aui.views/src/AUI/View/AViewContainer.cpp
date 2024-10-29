@@ -47,7 +47,6 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
     }
 
     if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
-        view->mSkipUntilLayoutUpdate = false;
         return;
     }
 
@@ -153,10 +152,10 @@ void AViewContainer::addView(const _<AView>& view) {
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
-    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
+    view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();

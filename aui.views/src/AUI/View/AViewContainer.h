@@ -306,6 +306,14 @@ public:
         return mViews;
     }
 
+
+    /**
+     * @brief Adds view to container without exposing it to the layout manager.
+     * @details
+     * User is obligated to manage view's layout by themselves. Implement applyGeometryToChildren() to do so.
+     *
+     * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
+     */
     void addViewCustomLayout(const _<AView>& view);
 
     void onKeyDown(AInput::Key key) override;
