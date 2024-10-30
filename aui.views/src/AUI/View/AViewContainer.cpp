@@ -26,8 +26,8 @@
 static constexpr auto LOG_TAG = "AViewContainer";
 
 namespace aui::view::impl {
-    bool isDefinitelyInvisible(AView& view) { // TODO
-        if (!(view.getVisibility() & Visibility::RENDER_NEEDED)) [[unlikely]] {
+    bool isDefinitelyInvisible(AView& view) {
+        if (!(view.getVisibility() & Visibility::FLAG_RENDER_NEEDED)) [[unlikely]] {
             return true;
         }
 

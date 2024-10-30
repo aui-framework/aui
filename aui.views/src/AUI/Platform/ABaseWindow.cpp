@@ -137,7 +137,7 @@ void ABaseWindow::focusNextView() {
                 continue;
             }
         }
-        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) { // TODO
+        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
             // we should jump to the next element
             if (target->getParent()) {
                 // up though hierarchy
