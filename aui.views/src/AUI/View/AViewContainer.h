@@ -198,12 +198,12 @@ public:
             if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x || targetPos.y >= view->getSize().y) {
                 continue;
             }
-            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY) && !(view->getVisibility() & Visibility::CONSUMES_CLICKS)) {
+            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY) && !(view->getVisibility() & Visibility::FLAG_CONSUMES_CLICKS)) {
                 continue;
             }
 
             if (view->consumesClick(targetPos)) {
-                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::CONSUMES_CLICKS)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUMES_CLICKS)) {
                     if (process(view)) {
                         return true;
                     }
@@ -235,7 +235,7 @@ public:
     bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::CONSUMES_CLICKS)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUMES_CLICKS)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainer>(view)) {

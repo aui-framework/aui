@@ -462,7 +462,7 @@ public:
      */
     float getTotalOccupiedWidth() const
     {
-        return !(mVisibility & Visibility::CONSUMES_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
+        return !(mVisibility & Visibility::FLAG_CONSUMES_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
 
     /**
@@ -470,7 +470,7 @@ public:
      */
     float getTotalOccupiedHeight() const
     {
-        return !(mVisibility & Visibility::CONSUMES_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
+        return !(mVisibility & Visibility::FLAG_CONSUMES_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }
 
     [[nodiscard]]

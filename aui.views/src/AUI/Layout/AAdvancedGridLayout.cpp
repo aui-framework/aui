@@ -102,7 +102,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     // preparation
     for (auto& v : mCells) {
         v.view->ensureAssUpdated();
-        if (!(v.view->getVisibility() & Visibility::CONSUMES_SPACE)) continue;
+        if (!(v.view->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
 
         glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
         auto fixed = v.view->getFixedSize();
@@ -222,7 +222,7 @@ int AAdvancedGridLayout::getMinimumWidth()
         int minForColumn = 0;
         for (auto& view : getColumn(x))
         {
-            if (!(view->getVisibility() & Visibility::CONSUMES_SPACE)) continue;
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
             minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
         }
         min += minForColumn + mSpacing;
@@ -238,7 +238,7 @@ int AAdvancedGridLayout::getMinimumHeight()
         int minForRow = 0;
         for (auto& view : getRow(y))
         {
-            if (!(view->getVisibility() & Visibility::CONSUMES_SPACE)) continue;
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
             minForRow = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForRow);
         }
         min += minForRow + mSpacing;

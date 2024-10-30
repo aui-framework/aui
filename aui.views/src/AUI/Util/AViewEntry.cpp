@@ -16,7 +16,7 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
-    if (!(mView->getVisibility() & Visibility::CONSUMES_SPACE)) {
+    if (!(mView->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) {
         return {0, 0};
     }
     return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
