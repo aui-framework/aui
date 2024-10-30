@@ -57,5 +57,3 @@ AUI_ENUM_FLAG(Visibility) {
      */
     GONE = 0,
 };
-
-// AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::UNREACHABLE, Visibility::GONE)
