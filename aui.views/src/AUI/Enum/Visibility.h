@@ -30,28 +30,28 @@ AUI_ENUM_FLAG(Visibility) {
     /**
      * @brief If set, view interacts to the mouse
      */
-    FLAG_CONSUMES_CLICKS = 1 << 1,
+    FLAG_CONSUME_CLICKS = 1 << 1,
     /**
      * @brief If set, view occupies space in layout
      */
-    FLAG_CONSUMES_SPACE = 1 << 2,
+    FLAG_CONSUME_SPACE = 1 << 2,
 
     /**
      * @brief AView is visible and active
      */
-    VISIBLE = FLAG_RENDER_NEEDED | FLAG_CONSUMES_CLICKS | FLAG_CONSUMES_SPACE,
+    VISIBLE = FLAG_RENDER_NEEDED | FLAG_CONSUME_CLICKS | FLAG_CONSUME_SPACE,
     /**
      * @brief AView is invisible but still interacting to the mouse
      */
-    INVISIBLE = FLAG_CONSUMES_CLICKS | FLAG_CONSUMES_SPACE,
+    INVISIBLE = FLAG_CONSUME_CLICKS | FLAG_CONSUME_SPACE,
     /**
      * @brief AView is visible but not interacting to the mouse
      */
-    UNREACHABLE = FLAG_RENDER_NEEDED | FLAG_CONSUMES_SPACE,
+    UNREACHABLE = FLAG_RENDER_NEEDED | FLAG_CONSUME_SPACE,
     /**
      * @brief AView is invisible, do not interacts to the mouse, but occupy some space in layout
      */
-    CONSUME_SPACE_ONLY = FLAG_CONSUMES_SPACE,
+    CONSUME_SPACE_ONLY = FLAG_CONSUME_SPACE,
     /**
      * @brief AView is invisible and does not interact with the mouse
      */

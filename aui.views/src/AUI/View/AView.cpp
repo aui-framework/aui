@@ -699,7 +699,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         return;
     }
     auto prev = std::exchange(mVisibility, visibility);
-    if ((mVisibility & Visibility::FLAG_CONSUMES_SPACE) != (prev & Visibility::FLAG_CONSUMES_SPACE)) {
+    if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }

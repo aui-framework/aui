@@ -29,7 +29,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height) {
 
     for (auto& view: mViews) {
         view->ensureAssUpdated();
-        if (!(view->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
+        if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         int expanding = view->getExpandingVertical();
         int minSpace = view->getMinimumHeight(ALayoutDirection::VERTICAL);
         sum += expanding;
@@ -47,7 +47,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height) {
     int posY = y;
     auto last = mViews.back();
     for (auto& view: mViews) {
-        if (!(view->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
+        if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         auto margins = view->getMargin();
         auto maxSize = view->getMaxSize();
 
@@ -80,7 +80,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height) {
 int AVerticalLayout::getMinimumWidth() {
     int minWidth = 0;
     for (auto& v: mViews) {
-        if (!(v->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
+        if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         minWidth = glm::max(minWidth,
                             int(v->getMinimumWidth(ALayoutDirection::VERTICAL) + v->getMargin().horizontal()));
     }
@@ -91,7 +91,7 @@ int AVerticalLayout::getMinimumHeight() {
     int minHeight = -mSpacing;
 
     for (auto& v: mViews) {
-        if (!(v->getVisibility() & Visibility::FLAG_CONSUMES_SPACE)) continue;
+        if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         minHeight += v->getMinimumHeight(ALayoutDirection::VERTICAL) + mSpacing + v->getMargin().vertical();
     }
 

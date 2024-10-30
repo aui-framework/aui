@@ -415,7 +415,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
         }
 
         if (hitTest) {
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUMES_CLICKS)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
