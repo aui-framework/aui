@@ -51,7 +51,7 @@ AUI_ENUM_FLAG(Visibility) {
     /**
      * @brief AView is invisible, do not interacts to the mouse, but occupy some space in layout
      */
-    ONLY_CONSUMES_SPACE = FLAG_CONSUMES_SPACE,
+    CONSUMES_SPACE_ONLY = FLAG_CONSUMES_SPACE,
     /**
      * @brief AView is invisible and does not interact with the mouse
      */
