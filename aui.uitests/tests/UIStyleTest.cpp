@@ -117,3 +117,36 @@ TEST_F(UIStyleTest, Opacity) {
     };
     By::type<View>().check(averageColor(AColor::RED), "view should appear");
 }
+
+TEST_F(UIStyleTest, ZIndex) {
+    testing::InSequence s;
+    using namespace ass;
+
+
+    class ViewMock: public AView {
+    public:
+        MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& event), (override));
+        MOCK_METHOD(void, onPointerPressed, (const APointerPressedEvent&), (override));
+        MOCK_METHOD(void, onPointerReleased, (const APointerReleasedEvent&), (override));
+    };
+
+    auto below = _new<ViewMock>() with_style {
+        FixedSize(100_dp),
+        BackgroundSolid(AColor::GREEN),
+    };
+    ALayoutInflater::inflate(mWindow, mView = Stacked {
+        below,
+        _new<AView>() with_style {
+            FixedSize(100_dp),
+            BackgroundSolid(AColor::RED),
+        },
+    } << ".root");
+
+    EXPECT_CALL(*below, onPointerMove(testing::_, testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*below, onPointerPressed(testing::_)).Times(1);
+    EXPECT_CALL(*below, onPointerReleased(testing::_)).Times(1);
+
+    By::name(".root")
+        .check(averageColor(AColor::GREEN), "first element should be visible")
+        .perform(click());
+}
