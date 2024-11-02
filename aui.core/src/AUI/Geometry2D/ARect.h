@@ -29,7 +29,7 @@ struct ARect {
     }
 
     static ARect fromCenterPositionAndSize(APoint2D<T> position, APoint2D<T> size) {
-        return { .p1 = position - size / 2, .p2 = position + size / 2 };
+        return { .p1 = position - size / static_cast<T>(2), .p2 = position + size / static_cast<T>(2) };
     }
 
     bool operator==(const ARect&) const noexcept = default;
@@ -56,7 +56,7 @@ struct ARect {
 
     [[nodiscard]]
     APoint2D<T> center() const noexcept {
-        return (p1 + p2) / 2;
+        return (p1 + p2) / static_cast<T>(2);
     }
 
     [[nodiscard]]
