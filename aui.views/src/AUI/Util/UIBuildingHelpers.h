@@ -106,6 +106,17 @@ using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayou
 using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
 
 /**
+ * Places views according to specified xy coordinates.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AAbsoluteLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Absolute = aui::ui_building::layouted_container_factory<AAbsoluteLayout>;
+
+/**
  * Does not actually set the layout. The views' geometry is determined manually.
  * @deprecated Use AAbsoluteLayout instead.
  * <p>
