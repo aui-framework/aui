@@ -103,6 +103,11 @@ private:
     float mBorderRadius = 0;
 
     /**
+     * @brief z-index property.
+     */
+    int mZIndex = 0;
+
+    /**
      * @brief Mouse collision policy. See MouseCollisionPolicy.
      */
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
@@ -445,6 +450,10 @@ public:
     }
     void setBorderRadius(float radius) {
         mBorderRadius = radius;
+    }
+
+    void setZIndex(int zIndex) {
+        mZIndex = zIndex;
     }
 
     int getWidth() const

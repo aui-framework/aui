@@ -149,6 +149,7 @@
  */
 
 // Declarations
+#include "Property/ATextOverflow.h"
 #include "Property/BackgroundImage.h"
 #include "Property/BackgroundSolid.h"
 #include "Property/BackgroundGradient.h"
@@ -175,6 +176,7 @@
 #include "Property/Opacity.h"
 #include "Property/Overflow.h"
 #include "Property/Padding.h"
+#include "Property/ScrollbarAppearance.h"
 #include "Property/TextAlign.h"
 #include "Property/TextBorder.h"
 #include "Property/TextColor.h"
@@ -185,8 +187,7 @@
 #include "Property/TransformScale.h"
 #include "Property/VerticalAlign.h"
 #include "Property/Visibility.h"
-#include "Property/ATextOverflow.h"
-#include "Property/ScrollbarAppearance.h"
+#include "Property/ZIndex.h"
 
 #include <AUI/ASS/AAssHelper.h>
 

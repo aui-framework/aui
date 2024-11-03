@@ -133,6 +133,7 @@ TEST_F(UIStyleTest, ZIndex) {
     auto below = _new<ViewMock>() with_style {
         FixedSize(100_dp),
         BackgroundSolid(AColor::GREEN),
+        ZIndex(100),
     };
     ALayoutInflater::inflate(mWindow, mView = Stacked {
         below,
