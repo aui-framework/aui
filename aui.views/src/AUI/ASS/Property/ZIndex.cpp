@@ -14,6 +14,6 @@
 
 
 void ass::prop::Property<ass::ZIndex>::applyFor(AView* view) {
-    view->setZIndex(view);
+    view->setZIndex(mInfo.value);
 
 }
