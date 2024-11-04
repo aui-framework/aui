@@ -194,6 +194,7 @@
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
+#include "Selector/CombinedSelector.h"
 #include "Selector/type_of.h"
 #include "Selector/activated.h"
 #include "Selector/disabled.h"
