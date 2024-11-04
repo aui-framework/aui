@@ -21,6 +21,38 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+function(_auib_fix_multiconfiguration)
+    get_property(_tmp GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    if (NOT _tmp)
+        return()
+    endif()
+    message(STATUS "\nMulti configuration generator detected (https://github.com/aui-framework/aui/issues/133)"
+    "\nPlease use ninja generator if possible")
+
+    if (CMAKE_BUILD_TYPE)
+        message(WARN "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+        set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+        return()
+    endif()
+    list(LENGTH CMAKE_CONFIGURATION_TYPES _tmp)
+    if (_tmp EQUAL 1)
+        # CMAKE_CONFIGURATION_TYPES is set to one configuration - it is perfect for us. Just initialize CMAKE_BUILD_TYPE
+        # for compatibility
+        set(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES} PARENT_SCOPE)
+        return()
+    endif()
+    if (CMAKE_DEFAULT_BUILD_TYPE)
+        message(WARNING "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_DEFAULT_BUILD_TYPE = ${CMAKE_DEFAULT_BUILD_TYPE}")
+        set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
+        set(CMAKE_BUILD_TYPE ${CMAKE_DEFAULT_BUILD_TYPE} PARENT_SCOPE)
+        return()
+    endif()
+    message(WARNING "CMAKE_CONFIGURATION_TYPES overridden to Debug")
+    set(CMAKE_CONFIGURATION_TYPES Debug PARENT_SCOPE)
+    set(CMAKE_BUILD_TYPE Debug PARENT_SCOPE)
+    return()
+endfunction()
+
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 
@@ -37,6 +69,10 @@ define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
+endif()
+
+if (NOT AUIB_DISABLE)
+    _auib_fix_multiconfiguration()
 endif()
 
 if (DEFINED BUILD_SHARED_LIBS)
@@ -698,6 +734,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_GENERATOR_PLATFORM
                         CMAKE_VS_PLATFORM_NAME
                         CMAKE_BUILD_TYPE
+                        CMAKE_CONFIGURATION_TYPES
                         CMAKE_CROSSCOMPILING
                         CMAKE_MACOSX_RPATH
                         CMAKE_INSTALL_NAME_DIR
