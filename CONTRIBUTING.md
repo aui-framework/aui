@@ -11,7 +11,9 @@ all tests on all supported platforms.
 Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
 `master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
 and tests.
-Merges to `feat/`
+
+Merges from `feat/` branch are allowed only to `develop` branch. `develop` is the branch were our actual development
+work happen. When we consider `develop` branch stable enough, we merge `develop` and `master` and create a release.
 
 ## Code style
 
