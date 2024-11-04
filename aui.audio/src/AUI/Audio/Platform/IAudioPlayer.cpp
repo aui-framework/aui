@@ -68,8 +68,8 @@ void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
 }
 
 void IAudioPlayer::onFinished() {
-    PlaybackStatus desired = PlaybackStatus::PLAYING;
-    mPlaybackStatus.compare_exchange_strong(desired, PlaybackStatus::STOPPED);
+    release();
+    mPlaybackStatus = PlaybackStatus::STOPPED;
     getThread()->enqueue([this, self = _cast<IAudioPlayer>(sharedPtr())]() {
         emit finished;
     });
