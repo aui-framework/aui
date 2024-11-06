@@ -122,7 +122,7 @@ private:
     AUrl mUrl;
     _<ISoundInputStream> mSourceStream;
     _<ASoundResampler> mResampledStream;
-    std::atomic<PlaybackStatus> mPlaybackStatus = PlaybackStatus::STOPPED;
+    PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
 
     virtual void playImpl() = 0;
