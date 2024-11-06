@@ -52,9 +52,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
         }), mPlayers.end());
     }
     for (auto& player: itemsToRemove) {
-        player->getThread()->enqueue([player = std::move(player)]() {
-            player->onFinished();
-        });
+        player->onFinished();
     }
 
     return result;
