@@ -42,7 +42,7 @@ if (AUI_PLATFORM_MACOS)
 					   "-framework QuartzCore")
 endif()
 
-auib_import(soxr https://github.com/IlyaZavalov/soxr
+auib_import(soxr https://github.com/aui-framework/soxr
             ADD_SUBDIRECTORY
             VERSION adacc686124ac3568432f3dca388878963a005ee
             )
