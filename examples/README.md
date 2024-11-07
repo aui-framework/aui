@@ -5,3 +5,4 @@ templates:
 
 - Minimal UI boilerplate: https://github.com/aui-framework/example_minimal_ui
 - Minimal UI boilerplate with assets: https://github.com/aui-framework/example_assets_ui
+- Prometheus exporter: https://github.com/aui-framework/example_prometheus
