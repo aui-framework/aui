@@ -105,6 +105,11 @@ void ADoubleNumberPicker::setValue(double v)
     redraw();
 }
 
+void ADoubleNumberPicker::setSuffix(const AString& suffix)
+{
+    mTextField->setSuffix(suffix);
+    redraw();
+}
 
 void ADoubleNumberPicker::setMin(double min)
 {
