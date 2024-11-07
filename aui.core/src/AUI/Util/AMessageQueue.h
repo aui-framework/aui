@@ -48,11 +48,13 @@ public:
         }
         std::unique_lock lock(mSync);
         while (!mMessages.empty()) {
-            auto queue = std::move(mMessages);
-            lock.unlock();
-            for (auto& message : queue) {
-                message(args...);
-            }
+            {
+                auto queue = std::move(mMessages);
+                lock.unlock();
+                for (auto &message: queue) {
+                    message(args...);
+                }
+            } // destroy queue before mutex lock
 
             // cheap lookahead that does not require mutex lock.
             if (mMessages.empty()) {
