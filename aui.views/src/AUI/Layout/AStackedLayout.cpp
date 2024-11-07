@@ -25,7 +25,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height) {
             finalWidth = width;
         }
         if (v->getExpandingVertical() == 0) {
-            finalHeight = glm::min(v->getMinimumHeight() + margins.vertical(), width);
+            finalHeight = glm::min(v->getMinimumHeight() + margins.vertical(), height);
             finalY = (height - finalHeight) / 2;
         } else {
             finalY = 0;
