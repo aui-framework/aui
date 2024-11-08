@@ -20,7 +20,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <AUI/Util/AMetric.h>
 
-void AViewProfiler::displayBoundsOn(const AView& v, ARenderContext ctx) {
+void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
 
     RenderHints::PushMatrix m(ctx.render);
     ctx.render.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));

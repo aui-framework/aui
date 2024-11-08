@@ -483,8 +483,9 @@ public:
      * @return margin
      */
     [[nodiscard]]
-    const ABoxFields& getMargin() const
+    const ABoxFields& getMargin()
     {
+        ensureAssUpdated();
         return mMargin;
     }
 
@@ -510,8 +511,9 @@ public:
      * @return padding
      */
     [[nodiscard]]
-    const ABoxFields& getPadding() const
+    const ABoxFields& getPadding()
     {
+        ensureAssUpdated();
         return mPadding;
     }
 
