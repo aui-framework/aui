@@ -30,7 +30,7 @@ function(_auib_fix_multiconfiguration)
     "\nPlease use ninja generator if possible")
 
     if (CMAKE_BUILD_TYPE)
-        message(WARN "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
+        message(STATUS "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
         set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
         return()
     endif()
