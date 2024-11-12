@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <array>
 #include <type_traits>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
@@ -71,6 +72,7 @@ namespace aui::enumerate {
 
 /**
  * @brief Enum trait to transform enum to name, name to enum, list all enums and vise versa.
+ * @ingroup core
  * @see AUI_ENUM_VALUES
  */
 template<typename enum_t>
@@ -165,8 +167,13 @@ const AMap<AString, enum_t>& AEnumerate<enum_t>::nameToValueMap() {
 }
 
 namespace aui::enumerate {
+    /**
+     * @brief constexpr std::array of all possible enum values is the order they've been passed to AUI_ENUM_VALUES.
+     * @ingroup core
+     * @see AUI_ENUM_VALUES
+     */
     template<typename enum_t> requires aui::is_complete<AEnumerateAllValues<enum_t>>
-    inline constexpr auto ALL_VALUES = []<enum_t... values>(AEnumerate<enum_t>::template Values<values...>) {
+    inline constexpr auto ALL_VALUES = []<enum_t... values>(typename AEnumerate<enum_t>::template Values<values...>) {
         constexpr enum_t ITEMS[] = {values...};
         return std::to_array(ITEMS);
     }(AEnumerateAllValues<enum_t>::get());
