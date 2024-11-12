@@ -359,6 +359,12 @@ function(_auib_dump_with_prefix PREFIX PATH)
     endforeach ()
 endfunction()
 
+function(_auib_find_git)
+    auib_use_system_libs_begin()
+    find_package(Git QUIET)
+    set(GIT_EXECUTABLE ${GIT_EXECUTABLE} PARENT_SCOPE)
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -558,8 +564,11 @@ function(auib_import AUI_MODULE_NAME URL)
         if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
-                message(STATUS "Waiting for repository...")
-                file(LOCK "${AUIB_CACHE_DIR}/repo.lock")
+                file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 1) # try lock without the message
+                if (_error)
+                    message(STATUS "Waiting for repository... (simultaneous configure processes may break something!)")
+                    file(LOCK "${AUIB_CACHE_DIR}/repo.lock")
+                endif()
             endif()
         endif()
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
@@ -613,7 +622,26 @@ function(auib_import AUI_MODULE_NAME URL)
 
         message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
-        file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
+        set(_skip_fetch FALSE)
+        if (EXISTS "${DEP_SOURCE_DIR}/.git")
+            # let's try to checkout a local repository
+            _auib_find_git()
+            if(GIT_EXECUTABLE)
+                execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
+                        WORKING_DIRECTORY ${DEP_SOURCE_DIR}
+                        RESULT_VARIABLE _errored
+                        OUTPUT_QUIET
+                        ERROR_QUIET)
+                if (NOT _errored)
+                    message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
+                    set(_skip_fetch TRUE)
+                endif()
+            endif()
+        endif()
+        if (NOT _skip_fetch)
+            file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
+        endif()
+        file(REMOVE_RECURSE ${DEP_BINARY_DIR})
 
         # check for local existence
         if (EXISTS ${URL})
@@ -635,25 +663,26 @@ function(auib_import AUI_MODULE_NAME URL)
                 else()
                     set(_import_type GIT_REPOSITORY)
                 endif()
+                if (NOT _skip_fetch)
+                    FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                            PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                            ${_import_type} "${URL}"
+                            GIT_TAG ${AUIB_IMPORT_VERSION}
+                            GIT_PROGRESS TRUE # show progress of download
+                            USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                            USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                            ${SOURCE_BINARY_DIRS_ARG}
+                            )
 
-                FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                        PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                        ${_import_type} "${URL}"
-                        GIT_TAG ${AUIB_IMPORT_VERSION}
-                        GIT_PROGRESS TRUE # show progress of download
-                        USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                        USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                        ${SOURCE_BINARY_DIRS_ARG}
-                        )
-
-                FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+                    FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
 
-                FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                        BINARY_DIR DEP_BINARY_DIR
-                        SOURCE_DIR DEP_SOURCE_DIR
-                        )
-                message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                    FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                            BINARY_DIR DEP_BINARY_DIR
+                            SOURCE_DIR DEP_SOURCE_DIR
+                            )
+                    message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                endif()
             endif()
         endif()
 
@@ -914,6 +943,7 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (NOT DEP_ADD_SUBDIRECTORY)
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+        set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_DIR=${${AUI_MODULE_NAME}_DIR}")
     endif()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
