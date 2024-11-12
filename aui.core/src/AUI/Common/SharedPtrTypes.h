@@ -116,9 +116,13 @@ namespace aui {
          * @brief Creates unique_ptr from raw pointer and a deleter.
          * @details
          * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
+         * By using this function, lifetime of the pointer is delegated to std::unique_ptr. The wrapped pointer will
+         * be freed by specified Deleter. Default deleter is std::default_delete. You may want to specialize
+         * `std::default_delete<T>` struct in order to specify default deleter for T, in this case you can omit deleter
+         * argument of this function.
          */
         template<typename T, typename Deleter = std::default_delete<T>>
-        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter) {
+        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter = Deleter{}) {
             return { ptr, std::move(deleter) };
         }
 

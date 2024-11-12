@@ -193,4 +193,4 @@ AUI_ENUM_VALUES(ass::Sizing,
                 ass::Sizing::CONTAIN,
                 ass::Sizing::SPLIT_2X2,
                 ass::Sizing::CROPPED
-            )
+)

@@ -74,8 +74,11 @@ inline std::ostream& operator<<(std::ostream& o, EnumWithoutEnumValue t) {
 
 
 AUI_ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
+
 AUI_ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
-AUI_ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
+
+AUI_ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2,
+                namespaceeee::ATest2::TEST2_3)
 
 
 TEST(Reflect, NameClass) {
@@ -93,16 +96,6 @@ TEST(Reflect, NameEnum) {
     ASSERT_EQ((AClass<ATest>::name()), "ATest");
 }
 
-TEST(Reflect, EnumerateNames) {
-    AMap<AString, ATest> ref = {
-        {"VALUE1", VALUE1},
-        {"VALUE2", VALUE2},
-        {"VALUE3", VALUE3},
-    };
-
-    ASSERT_TRUE((AEnumerate<ATest>::mapValueByName<VALUE1, VALUE2, VALUE3>() == ref));
-}
-
 TEST(Reflect, EnumerateAll) {
     AMap<AString, ATest> ref = {
             {"VALUE1", VALUE1},
@@ -111,7 +104,7 @@ TEST(Reflect, EnumerateAll) {
             {"VALUE4", VALUE4},
     };
 
-    auto test = AEnumerate<ATest>::all();
+    auto test = AEnumerate<ATest>::nameToValueMap();
     ASSERT_EQ(test, ref);
 }
 
@@ -121,7 +114,7 @@ TEST(Reflect, NamespaceEnumerateNames) {
             {"V2", namespaceeee::V2},
             {"V3", namespaceeee::V3},
     };
-    auto test = AEnumerate<namespaceeee::ATest>::all();
+    auto test = AEnumerate<namespaceeee::ATest>::nameToValueMap();
     ASSERT_EQ(test, ref);
 }
 
@@ -131,7 +124,7 @@ TEST(Reflect, NamespaceEnumerateEnumClassNames) {
             {"TEST2_2", namespaceeee::ATest2::TEST2_2},
             {"TEST2_3", namespaceeee::ATest2::TEST2_3},
     };
-    auto test = AEnumerate<namespaceeee::ATest2>::all();
+    auto test = AEnumerate<namespaceeee::ATest2>::nameToValueMap();
     ASSERT_TRUE((test == ref));
 }
 
