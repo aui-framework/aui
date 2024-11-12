@@ -564,10 +564,10 @@ function(auib_import AUI_MODULE_NAME URL)
         if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
-                file(LOCK "${AUI_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 1) # try lock without the message
+                file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 1) # try lock without the message
                 if (_error)
                     message(STATUS "Waiting for repository... (simultaneous configure processes may break something!)")
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+                    file(LOCK "${AUIB_CACHE_DIR}/repo.lock")
                 endif()
             endif()
         endif()
