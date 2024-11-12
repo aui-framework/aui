@@ -117,4 +117,4 @@ AUI_ENUM_VALUES(AWebsocket::Opcode,
                 AWebsocket::Opcode::CLOSE,
                 AWebsocket::Opcode::PING,
                 AWebsocket::Opcode::PONG
-                )
+)

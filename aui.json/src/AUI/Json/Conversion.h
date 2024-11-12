@@ -356,7 +356,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
 template<typename T>
 struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
     static AJson toJson(const T& v) {
-        return AEnumerate<T>::names()[v];
+        return AEnumerate<T>::valueToNameMap()[v];
     }
     static void fromJson(const AJson& json, T& dst) {
         dst = AEnumerate<T>::byName(json.asString());

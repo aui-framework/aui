@@ -118,7 +118,7 @@ namespace aui {
          * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
          */
         template<typename T, typename Deleter = std::default_delete<T>>
-        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter) {
+        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter = Deleter{}) {
             return { ptr, std::move(deleter) };
         }
 
