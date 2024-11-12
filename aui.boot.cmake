@@ -21,38 +21,6 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-function(_auib_fix_multiconfiguration)
-    get_property(_tmp GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
-    if (NOT _tmp)
-        return()
-    endif()
-    message(STATUS "\nMulti configuration generator detected (https://github.com/aui-framework/aui/issues/133)"
-    "\nPlease use ninja generator if possible")
-
-    if (CMAKE_BUILD_TYPE)
-        message(WARN "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
-        set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
-        return()
-    endif()
-    list(LENGTH CMAKE_CONFIGURATION_TYPES _tmp)
-    if (_tmp EQUAL 1)
-        # CMAKE_CONFIGURATION_TYPES is set to one configuration - it is perfect for us. Just initialize CMAKE_BUILD_TYPE
-        # for compatibility
-        set(CMAKE_BUILD_TYPE ${CMAKE_CONFIGURATION_TYPES} PARENT_SCOPE)
-        return()
-    endif()
-    if (CMAKE_DEFAULT_BUILD_TYPE)
-        message(WARNING "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_DEFAULT_BUILD_TYPE = ${CMAKE_DEFAULT_BUILD_TYPE}")
-        set(CMAKE_CONFIGURATION_TYPES ${CMAKE_BUILD_TYPE} PARENT_SCOPE)
-        set(CMAKE_BUILD_TYPE ${CMAKE_DEFAULT_BUILD_TYPE} PARENT_SCOPE)
-        return()
-    endif()
-    message(WARNING "CMAKE_CONFIGURATION_TYPES overridden to Debug")
-    set(CMAKE_CONFIGURATION_TYPES Debug PARENT_SCOPE)
-    set(CMAKE_BUILD_TYPE Debug PARENT_SCOPE)
-    return()
-endfunction()
-
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 
@@ -69,10 +37,6 @@ define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
-endif()
-
-if (NOT AUIB_DISABLE)
-    _auib_fix_multiconfiguration()
 endif()
 
 if (DEFINED BUILD_SHARED_LIBS)
@@ -152,40 +116,35 @@ else()
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
-# checking if custom cache dir is set for the system
-if(DEFINED ENV{AUIB_CACHE_DIR})
-    string(REPLACE "\\" "/" _tmp $ENV{AUIB_CACHE_DIR}) # little hack to handle Windows paths
-else()
-    set(_tmp ${HOME_DIR}/.aui)
-endif()
 
+set(_tmp ${HOME_DIR}/.aui)
 if(AUIB_LOCAL_CACHE)
     set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
 endif()
 
-set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
-message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
+set(AUI_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
+message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 
 
 
 set(AUI_BOOT_SOURCEDIR_COMPAT OFF)
 if(${CMAKE_VERSION} VERSION_LESS "3.21.0")
-    message(STATUS "Dependencies will be cloned to build directory, not to ${AUIB_CACHE_DIR} because you're using CMake older"
+    message(STATUS "Dependencies will be cloned to build directory, not to ${AUI_CACHE_DIR} because you're using CMake older"
             " than 3.21. See https://github.com/aui-framework/aui/issues/6 for details.")
     set(AUI_BOOT_SOURCEDIR_COMPAT ON)
 endif()
 
 
 # create all required dirs
-if (NOT EXISTS ${AUIB_CACHE_DIR})
-    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR})
+if (NOT EXISTS ${AUI_CACHE_DIR})
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR})
 endif()
-if (NOT EXISTS ${AUIB_CACHE_DIR}/prefix)
-    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR}/prefix)
+if (NOT EXISTS ${AUI_CACHE_DIR}/prefix)
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/prefix)
 endif()
-if (NOT EXISTS ${AUIB_CACHE_DIR}/repo)
-    file(MAKE_DIRECTORY ${AUIB_CACHE_DIR}/repo)
+if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/repo)
 endif()
 
 
@@ -359,6 +318,12 @@ function(_auib_dump_with_prefix PREFIX PATH)
     endforeach ()
 endfunction()
 
+function(_auib_find_git)
+    auib_use_system_libs_begin()
+    find_package(Git QUIET)
+    set(GIT_EXECUTABLE ${GIT_EXECUTABLE} PARENT_SCOPE)
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -505,7 +470,7 @@ function(auib_import AUI_MODULE_NAME URL)
     # append module name to build specifier in order to distinguish modules in prefix/ dir
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
 
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
+    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
     #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
@@ -518,11 +483,11 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
     else()
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
     endif()
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -558,14 +523,17 @@ function(auib_import AUI_MODULE_NAME URL)
         if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
-                message(STATUS "Waiting for repository...")
-                file(LOCK "${AUIB_CACHE_DIR}/repo.lock")
+                file(LOCK "${AUI_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 0) # try lock without the message
+                if (_error)
+                    message(STATUS "Waiting for repository... (simultaneous configure processes may break something!)")
+                    file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+                endif()
             endif()
         endif()
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                 BINARY_DIR ${DEP_BINARY_DIR})
     endif()
-    
+
     if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
         # validate the CMAKELISTS_CUSTOM param
         set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
@@ -613,7 +581,26 @@ function(auib_import AUI_MODULE_NAME URL)
 
         message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
-        file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
+        set(_skip_fetch FALSE)
+        if (EXISTS "${DEP_SOURCE_DIR}/.git")
+            # let's try to checkout a local repository
+            _auib_find_git()
+            if(GIT_EXECUTABLE)
+                execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
+                        WORKING_DIRECTORY ${DEP_SOURCE_DIR}
+                        RESULT_VARIABLE _errored
+                        OUTPUT_QUIET
+                        ERROR_QUIET)
+                if (NOT _errored)
+                    message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
+                    set(_skip_fetch TRUE)
+                endif()
+            endif()
+        endif()
+        if (NOT _skip_fetch)
+            file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
+        endif()
+        file(REMOVE_RECURSE ${DEP_BINARY_DIR})
 
         # check for local existence
         if (EXISTS ${URL})
@@ -636,24 +623,26 @@ function(auib_import AUI_MODULE_NAME URL)
                     set(_import_type GIT_REPOSITORY)
                 endif()
 
-                FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                        PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                        ${_import_type} "${URL}"
-                        GIT_TAG ${AUIB_IMPORT_VERSION}
-                        GIT_PROGRESS TRUE # show progress of download
-                        USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                        USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                        ${SOURCE_BINARY_DIRS_ARG}
-                        )
+                if (NOT _skip_fetch)
+                    FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                            PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                            ${_import_type} "${URL}"
+                            GIT_TAG ${AUIB_IMPORT_VERSION}
+                            GIT_PROGRESS TRUE # show progress of download
+                            USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                            USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                            ${SOURCE_BINARY_DIRS_ARG}
+                    )
 
-                FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+                    FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
 
-                FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                        BINARY_DIR DEP_BINARY_DIR
-                        SOURCE_DIR DEP_SOURCE_DIR
-                        )
-                message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                    FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                            BINARY_DIR DEP_BINARY_DIR
+                            SOURCE_DIR DEP_SOURCE_DIR
+                    )
+                    message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                endif()
             endif()
         endif()
 
@@ -700,7 +689,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             CMAKE_ANDROID_ARCH_ABI
                             ANDROID_NDK
                             CMAKE_ANDROID_NDK
-                            )
+                    )
                 endif()
 
                 get_cmake_property(CACHE_VARS CACHE_VARIABLES)
@@ -728,13 +717,12 @@ function(auib_import AUI_MODULE_NAME URL)
                         AUIB_NO_PRECOMPILED
                         AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
-                        AUIB_CACHE_DIR
+                        AUI_CACHE_DIR
                         CMAKE_C_FLAGS
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
                         CMAKE_VS_PLATFORM_NAME
                         CMAKE_BUILD_TYPE
-                        CMAKE_CONFIGURATION_TYPES
                         CMAKE_CROSSCOMPILING
                         CMAKE_MACOSX_RPATH
                         CMAKE_INSTALL_NAME_DIR
@@ -778,7 +766,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
-                        )
+                )
                 _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
@@ -789,7 +777,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                             RESULT_VARIABLE STATUS_CODE
                             OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
-                            )
+                    )
                     _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
@@ -811,7 +799,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
-                        )
+                )
                 _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
@@ -845,7 +833,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (_locked)
         set(_locked FALSE)
-        file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RELEASE)
+        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
@@ -914,6 +902,7 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (NOT DEP_ADD_SUBDIRECTORY)
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+        set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_DIR=${${AUI_MODULE_NAME}_DIR}")
     endif()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
