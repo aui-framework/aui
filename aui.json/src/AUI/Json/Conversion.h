@@ -360,6 +360,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
     }
     static void fromJson(const AJson& json, AVector<T>& dst) {
         auto& array = json.asArray();
+        dst.clear();
         dst.reserve(array.size());
         for (const auto& elem : array) {
             dst << aui::from_json<T>(elem);
