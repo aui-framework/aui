@@ -178,16 +178,18 @@ int AText::getContentMinimumWidth(ALayoutDirection layout) {
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (getAssNames().contains("DevtoolsTest")) {
+        printf("\n");
+    }
     if (!mPrerenderedString) {
         performLayout();
     }
-    auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
 
     if (auto engineHeight = mEngine.height()) {
-        height = std::max(height, *engineHeight - mPadding.vertical());
+        return *engineHeight;
     }
 
-    return height;
+    return 0;
 }
 
 void AText::render(ARenderContext context) {
