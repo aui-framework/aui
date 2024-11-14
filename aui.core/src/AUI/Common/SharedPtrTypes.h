@@ -309,6 +309,11 @@ public:
         return *this;
     }
 
+    template<typename... Arg>
+    auto operator()(Arg&&... value) const requires std::is_invocable_v<T, Arg...> {
+        return (*super::get())(std::forward<Arg>(value)...);
+    }
+
     template<typename Arg>
     const _<T>& operator+(Arg&& value) const {
         (*super::get()) + std::forward<Arg>(value);

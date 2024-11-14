@@ -33,7 +33,7 @@ namespace declarative {
 template<>
 struct ADataBindingDefault<ALabel, AString> {
    public:
-    static void setup(const _<AString>& view) {
+    static void setup(const _<ALabel>& view) {
     }
 
     static auto getSetter() { return &ALabel::setText; }
