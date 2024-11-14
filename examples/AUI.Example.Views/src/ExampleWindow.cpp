@@ -112,7 +112,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     addView(Horizontal {
             _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
-            AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
+            AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework"),
     });
 
     _<ATabView> tabView;

@@ -85,6 +85,7 @@ AStylesheet::AStylesheet() {
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
+            Expanding { 1, 0 },
         },
         // AAbstractLabel
         {
@@ -345,7 +346,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-                ATextAlign::LEFT,
+            ATextAlign::LEFT,
         },
 
         // AListView
