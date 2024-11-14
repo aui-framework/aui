@@ -96,6 +96,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatRight1) {
     });
     engine.performLayout({0, 0}, {100, 100});
 }
+
 TEST(WordWrappingEngine, SimpleLeftFloatRight2) {
     AWordWrappingEngine engine;
     engine.setEntries(AVector<_<AWordWrappingEngine::Entry>>{
@@ -107,6 +108,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatRight2) {
     });
     engine.performLayout({0, 0}, {100, 100});
 }
+
 TEST(WordWrappingEngine, SimpleLeftFloatBoth) {
     AWordWrappingEngine engine;
     engine.setEntries(AVector<_<AWordWrappingEngine::Entry>>{
@@ -135,6 +137,7 @@ TEST(WordWrappingEngine, SimpleRight) {
     engine.setTextAlign(ATextAlign::RIGHT);
     engine.performLayout({0, 0}, {100, 100});
 }
+
 TEST(WordWrappingEngine, SimpleCenter) {
     AWordWrappingEngine engine;
     engine.setEntries(AVector<_<AWordWrappingEngine::Entry>>{
@@ -146,6 +149,7 @@ TEST(WordWrappingEngine, SimpleCenter) {
     engine.setTextAlign(ATextAlign::CENTER);
     engine.performLayout({0, 0}, {100, 100});
 }
+
 TEST(WordWrappingEngine, SimpleJustify) {
     AWordWrappingEngine engine;
     engine.setEntries(AVector<_<AWordWrappingEngine::Entry>>{
@@ -153,6 +157,16 @@ TEST(WordWrappingEngine, SimpleJustify) {
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{40, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 15}),
+    });
+    engine.setTextAlign(ATextAlign::JUSTIFY);
+    engine.performLayout({0, 0}, {100, 100});
+}
+
+TEST(WordWrappingEngine, FloatingEntryConsumesHeight) {
+    AWordWrappingEngine engine;
+    engine.setEntries(AVector<_<AWordWrappingEngine::Entry>>{
+        _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 0}),
+        _new<FloatingEntry>(glm::ivec2{10, 100}, glm::ivec2{90, 0}, AFloat::RIGHT),
     });
     engine.setTextAlign(ATextAlign::JUSTIFY);
     engine.performLayout({0, 0}, {100, 100});

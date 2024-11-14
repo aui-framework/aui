@@ -187,10 +187,9 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
         }
         switch ((*currentItem)->getFloat()) {
             case AFloat::LEFT: {
-                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
                 int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
+                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
                 (*currentItem)->setPosition({position, currentY});
-                currentRowHeight = glm::max(currentRowHeight, currentItemSize.y);
                 break;
             }
 
@@ -198,7 +197,6 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
                 int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 (*currentItem)->setPosition({position, currentY});
-                currentRowHeight = glm::max(currentRowHeight, currentItemSize.y);
                 break;
             }
 
