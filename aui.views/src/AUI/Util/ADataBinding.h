@@ -12,6 +12,7 @@
 #pragma once
 
 #include "AUI/Traits/concepts.h"
+#include <functional>
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
