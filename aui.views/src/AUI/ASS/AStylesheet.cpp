@@ -93,6 +93,11 @@ AStylesheet::AStylesheet() {
             VerticalAlign::MIDDLE,
         },
         {
+            t<AText>() > t<AAbstractLabel>(),
+            Margin { 0 },
+            Padding { 0 },
+        },
+        {
             t<AAbstractLabel>::disabled(),
             TextColor { 0x444444_rgb },
         },
