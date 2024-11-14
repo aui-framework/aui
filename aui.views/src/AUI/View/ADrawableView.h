@@ -27,6 +27,7 @@ class API_AUI_VIEWS ADrawableView: public AView {
 public:
     explicit ADrawableView(const AUrl& url);
     explicit ADrawableView(const _<IDrawable>& drawable);
+    ADrawableView();
     void render(ARenderContext context) override;
 
     void setDrawable(const _<IDrawable>& drawable) {
@@ -43,6 +44,14 @@ private:
     _<IDrawable> mDrawable;
 };
 
+template<>
+struct ADataBindingDefault<ADrawableView, _<IDrawable>> {
+public:
+    static void setup(const _<ADrawableView>& view) {
+    }
+
+    static auto getSetter() { return &ADrawableView::setDrawable; }
+};
 
 namespace declarative {
     using Icon = aui::ui_building::view<ADrawableView>;

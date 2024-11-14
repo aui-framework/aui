@@ -246,6 +246,20 @@ public:
         return list;
     }
 
+    /**
+     * Create AListModel from initializer list. Applicable for initializing AListModel<AString> from
+     * const char* initializer list.
+     *
+     * @tparam V type that converts to T
+     * @return a new AListModel
+     */
+    template<typename V>
+    static _<AListModel<StoredType>> fromVector(std::vector<V> t) {
+        auto list = _new<AListModel<StoredType>>();
+        list->mVector = AVector<StoredType>(std::vector<StoredType>(std::move(t)));
+        return list;
+    }
+
     template<typename UnaryOperation>
     auto map(UnaryOperation&& transformer) {
         return mVector.map(std::forward<UnaryOperation>(transformer));
