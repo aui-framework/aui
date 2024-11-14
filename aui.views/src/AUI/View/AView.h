@@ -460,7 +460,7 @@ public:
     /**
      * @return pixel count which this AView acquired by width including content area, padding, border and margin.
      */
-    float getTotalOccupiedWidth() const
+    int getTotalOccupiedWidth() const
     {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
@@ -468,7 +468,7 @@ public:
     /**
      * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
-    float getTotalOccupiedHeight() const
+    int getTotalOccupiedHeight() const
     {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }

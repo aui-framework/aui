@@ -51,8 +51,6 @@ class API_AUI_VIEWS ANumberPicker : public AViewContainer {
     void setValue(int64_t v);
     int64_t getValue() const;
 
-    void setSuffix(const AString& suffix);
-
     [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
 
     void increase();

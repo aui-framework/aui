@@ -25,20 +25,15 @@ ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable)
 
 void ADrawableView::render(ARenderContext context) {
     AView::render(context);
-    if (!mDrawable) {
-        return;
-    }
     context.render.setColor(getAssHelper()->state.backgroundUrl.overlayColor.orDefault(0xffffff_rgb));
-    IDrawable::Params p;
-    p.size = getSize();
-    mDrawable->draw(context.render, p);
+    if (mDrawable) {
+        IDrawable::Params p;
+        p.size = getSize();
+        mDrawable->draw(context.render, p);
+    }
 }
 
 ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
-
-}
-
-ADrawableView::ADrawableView() {
 
 }
 

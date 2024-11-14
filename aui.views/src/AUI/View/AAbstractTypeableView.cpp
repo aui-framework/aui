@@ -129,23 +129,12 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
                 invalidateFont();
                 mCursorSelection = -1;
                 mCursorIndex = sel.begin;
-            } else {
-                if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
-                    auto index = typeableFind(' ', mCursorIndex);
-                    if (index == AString::NPOS) {
-                        index = length();
-                    } else {
-                        index = index + 1;
-                    }
-
-                    typeableErase(mCursorIndex, index);
+            } else
+            {
+                if (mCursorIndex < length())
+                {
+                    typeableErase(mCursorIndex, mCursorIndex + 1);
                     invalidateFont();
-                } else {
-                    if (mCursorIndex < length())
-                    {
-                        typeableErase(mCursorIndex, mCursorIndex + 1);
-                        invalidateFont();
-                    }
                 }
             }
             break;
@@ -153,7 +142,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
         case AInput::LEFT:
             fastenSelection();
             if (mCursorIndex) {
-                if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     if (mCursorIndex <= 1) {
                         mCursorIndex = 0;
                     } else {
@@ -168,7 +157,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
         case AInput::RIGHT:
             fastenSelection();
             if (mCursorIndex < length()) {
-                if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     auto index = typeableFind(' ', mCursorIndex);
                     if (index == AString::NPOS) {
                         mCursorIndex = length();

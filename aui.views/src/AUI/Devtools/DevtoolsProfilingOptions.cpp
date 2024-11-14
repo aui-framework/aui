@@ -34,6 +34,8 @@ namespace {
             APlatform::openUrl(destination);
         });
         l->setCustomStyle({
+            Margin { 0 },
+            Padding { 1_dp },
             ACursor::POINTER,
             BorderBottom{1_px, AColor::BLACK}
         });

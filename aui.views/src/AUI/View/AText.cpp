@@ -161,35 +161,23 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
-    if (mExpanding.x != 0 || mFixedSize.x != 0) {
-        // there's no need to calculate min size because width is defined.
-        return 0;
-    }
-
-    int accumulator = 0;
-    for (const auto& e : mEngine.entries()) {
-        if (accumulator + e->getSize().x > mMaxSize.x) {
-            // there's no need to calculate min size further.
-            return accumulator;
-        }
-        accumulator += e->getSize().x;
-    }
-    return accumulator;
-}
-
-int AText::getContentMinimumHeight(ALayoutDirection layout) {
-    if (getAssNames().contains("DevtoolsTest")) {
-        printf("\n");
-    }
     if (!mPrerenderedString) {
         performLayout();
     }
+    return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
+}
+
+int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        performLayout();
+    }
+    auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
 
     if (auto engineHeight = mEngine.height()) {
-        return *engineHeight;
+        height = std::max(height, *engineHeight);
     }
 
-    return 0;
+    return height;
 }
 
 void AText::render(ARenderContext context) {
@@ -230,11 +218,12 @@ void AText::prerenderString(ARenderContext ctx) {
 void AText::performLayout() {
     mEngine.setTextAlign(getFontStyle().align);
     mEngine.setLineHeight(getFontStyle().lineSpacing);
-    mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
+    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
 }
 
 void AText::setSize(glm::ivec2 size) {
     bool widthDiffers = size.x != getWidth();
+    int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
     AViewContainer::setSize(size);
     if (widthDiffers) {
         mPrerenderedString = nullptr;

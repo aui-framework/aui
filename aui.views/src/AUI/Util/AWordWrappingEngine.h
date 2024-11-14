@@ -61,11 +61,6 @@ public:
     }
 
     [[nodiscard]]
-    const AVector<_<Entry>>& entries() const {
-        return mEntries;
-    }
-
-    [[nodiscard]]
     AOptional<int> height() const {
         return mHeight;
     }

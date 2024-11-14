@@ -217,5 +217,5 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
         flushRow(true);
     }
 
-    mHeight = currentY + int(float(currentRowHeight) * mLineHeight) - offset.y;
+    mHeight = currentY + int(float(currentRowHeight) * mLineHeight) + offset.y;
 }

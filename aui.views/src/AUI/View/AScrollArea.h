@@ -17,7 +17,6 @@
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
@@ -29,7 +28,7 @@ class AScrollAreaContainer;
  * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
  * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
  * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events. This behaviour is similar to Text.
+ * involving displaying scroll bars and handling scroll events.
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
@@ -87,8 +86,7 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
-        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
+    void setScrollbarAppearance(ass::ScrollbarAppearance scrollbarAppearance) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }

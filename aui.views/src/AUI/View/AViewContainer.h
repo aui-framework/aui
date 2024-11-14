@@ -125,8 +125,6 @@ public:
 
     void setEnabled(bool enabled = true) override;
 
-    void adjustContentSize();
-
     void adjustHorizontalSizeToContent();
 
     void adjustVerticalSizeToContent();
@@ -321,11 +319,6 @@ public:
 
     bool capturesFocus() override;
 
-    virtual void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
-        mScrollbarAppearance = scrollbarAppearance;
-        emit scrollbarAppearanceSet(scrollbarAppearance);
-    }
-
     /**
      * @see mPointerEventsMapping
      */
@@ -340,7 +333,6 @@ public:
 
 protected:
     AVector<_<AView>> mViews;
-    ScrollbarAppearance mScrollbarAppearance;
     bool mWantsLayoutUpdate = true;
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
@@ -380,7 +372,6 @@ protected:
     virtual void applyGeometryToChildren();
 
 signals:
-    emits<ScrollbarAppearance> scrollbarAppearanceSet;
     /**
      * @brief Emitted when addView(s)/removeView/setLayout was called.
      */

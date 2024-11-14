@@ -120,12 +120,6 @@ int64_t ANumberPicker::getValue() const
 	return mTextField->text().toInt().valueOr(0);
 }
 
-void ANumberPicker::setSuffix(const AString& suffix)
-{
-	mTextField->setSuffix(suffix);
-	redraw();
-}
-
 void ANumberPicker::setMin(int64_t min)
 {
 	mMin = min;

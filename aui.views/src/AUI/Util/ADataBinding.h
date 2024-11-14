@@ -338,7 +338,6 @@ template<typename View, typename Model, typename Data>
 _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>& linker) {
     ADataBindingDefault<View, Data>::setup(object);
 
-    using getter = ASignal<Data>(View::*);
     using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
 
     using setter_ret = typename setter::return_t;
@@ -348,14 +347,8 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
 
     using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
 
-    getter g = nullptr;
-    // getter is optional.
-    if constexpr (requires {  ADataBindingDefault<View, Data>::getGetter(); }) {
-        g = (getter) (ADataBindingDefault<View, Data>::getGetter());
-    }
-
     object && (*linker.getBinder())(linker.getField(),
-                                    g,
+                                    (ASignal<Data>(View::*))(ADataBindingDefault<View, Data>::getGetter()),
                                     static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
     return object;
 }
