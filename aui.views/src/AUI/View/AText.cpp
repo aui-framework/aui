@@ -169,6 +169,9 @@ int AText::getContentMinimumWidth(ALayoutDirection layout) {
     int accumulator = 0;
     for (const auto& e : mEngine.entries()) {
         if (accumulator + e->getSize().x > mMaxSize.x) {
+            if (accumulator == 0) {
+                return mMaxSize.x;
+            }
             // there's no need to calculate min size further.
             return accumulator;
         }
@@ -250,8 +253,8 @@ void AText::WordEntry::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
 
-Float AText::WordEntry::getFloat() const {
-    return Float::NONE;
+AFloat AText::WordEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 glm::ivec2 AText::WhitespaceEntry::getSize() {
@@ -262,8 +265,8 @@ void AText::WhitespaceEntry::setPosition(const glm::ivec2& position) {
 
 }
 
-Float AText::WhitespaceEntry::getFloat() const {
-    return Float::NONE;
+AFloat AText::WhitespaceEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 bool AText::WhitespaceEntry::escapesEdges() {
@@ -279,8 +282,8 @@ void AText::CharEntry::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
 
-Float AText::CharEntry::getFloat() const {
-    return Float::NONE;
+AFloat AText::CharEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 void AText::clearContent() {

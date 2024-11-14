@@ -29,8 +29,8 @@ void AViewEntry::setPosition(const glm::ivec2& position) {
 
 }
 
-Float AViewEntry::getFloat() const {
-    return Float::NONE;
+AFloat AViewEntry::getFloat() const {
+    return mView->getFloating();
 }
 
 AViewEntry::~AViewEntry() {

@@ -96,7 +96,7 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         const glm::ivec2& getPosition() const {
             return mPosition;
@@ -120,7 +120,7 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         const glm::ivec2& getPosition() const {
             return mPosition;
@@ -141,7 +141,7 @@ private:
 
         glm::ivec2 getSize() override;
         void setPosition(const glm::ivec2& position) override;
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         bool escapesEdges() override;
 

@@ -23,8 +23,8 @@ void AMultilineTextRender::TextEntry::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
 
-Float AMultilineTextRender::TextEntry::getFloat() const {
-    return Float::NONE;
+AFloat AMultilineTextRender::TextEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 

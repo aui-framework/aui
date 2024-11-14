@@ -45,6 +45,7 @@
 #include <AUI/Event/APointerMoveEvent.h>
 #include <AUI/Render/ITexture.h>
 #include <AUI/Render/IRenderViewToTexture.h>
+#include <AUI/Enum/AFloat.h>
 
 
 class AWindow;
@@ -1010,6 +1011,23 @@ public:
         mSkipUntilLayoutUpdate = skipUntilLayoutUpdate;
     }
 
+    /**
+     * @brief Set floating value for AText.
+     */
+    void setFloating(AFloat f) noexcept
+    {
+        mFloating = f;
+    }
+
+    /**
+     * @brief Floating value for AText.
+     */
+    [[nodiscard]]
+    AFloat getFloating() const noexcept
+    {
+        return mFloating;
+    }
+
 signals:
     /**
      * @see onViewGraphSubtreeChanged()
@@ -1100,6 +1118,11 @@ private:
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
+
+    /**
+     * @brief Floating value for AText.
+     */
+    AFloat mFloating = AFloat::NONE;
 
     struct RenderToTexture {
         _unique<IRenderViewToTexture> rendererInterface;

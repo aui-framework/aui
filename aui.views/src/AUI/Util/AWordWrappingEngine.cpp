@@ -13,6 +13,7 @@
 // Created by Alex2772 on 11/16/2021.
 //
 
+#include <range/v3/numeric/accumulate.hpp>
 #include <AUI/Traits/iterators.h>
 #include "AWordWrappingEngine.h"
 #include <algorithm>
@@ -185,27 +186,23 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
             firstItem = false;
         }
         switch ((*currentItem)->getFloat()) {
-            case Float::LEFT: {
+            case AFloat::LEFT: {
                 leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
-                int position = 0;
-                for (auto it = leftFloat.begin(); it != leftFloat.end() - 1; ++it) {
-                    position += it->occupiedHorizontalSpace;
-                }
+                int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 (*currentItem)->setPosition({position, currentY});
+                currentRowHeight = glm::max(currentRowHeight, currentItemSize.y);
                 break;
             }
 
-            case Float::RIGHT: {
+            case AFloat::RIGHT: {
                 rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
-                int position = size.x;
-                for (auto it = rightFloat.begin(); it != rightFloat.end(); ++it) {
-                    position -= it->occupiedHorizontalSpace;
-                }
+                int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 (*currentItem)->setPosition({position, currentY});
+                currentRowHeight = glm::max(currentRowHeight, currentItemSize.y);
                 break;
             }
 
-            case Float::NONE:
+            case AFloat::NONE:
                 currentRow->push_back({*currentItem, currentItemSize.x});
                 currentRowHeight = glm::max(currentRowHeight, currentItemSize.y);
                 break;
