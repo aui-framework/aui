@@ -445,7 +445,6 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
 void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
-    adjustContentSize();
     applyGeometryToChildrenIfNecessary();
 }
 
@@ -572,14 +571,6 @@ void AViewContainer::onKeyUp(AInput::Key key) {
 void AViewContainer::onCharEntered(char16_t c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
-}
-
-void AViewContainer::adjustContentSize() {
-    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustVerticalSizeToContent();
-
-    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustHorizontalSizeToContent();
 }
 
 void AViewContainer::adjustHorizontalSizeToContent() {

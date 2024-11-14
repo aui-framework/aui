@@ -31,7 +31,7 @@ public:
             }
         );
         *this << ".container";
-        setCustomStyle({ ass::BackgroundSolid{ 0xff0000_rgb, } });
+        setCustomStyle({ ass::BackgroundSolid{ AColor::BLUE } });
     
         EXPECT_CALL(*this, setSize(testing::_)).Times(testing::AtLeast(1));
     }
@@ -77,10 +77,8 @@ protected:
 };
 
 TEST_F(UIScrollTest, ContainedViewExpanded) {
-    // scroll a little to see whether container view expanded properly
-    mTestWindow->applyGeometryToChildrenIfNecessary();
     By::type<AScrollArea>().perform(scroll({0, 500}));
-    By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+    (By::name(".container") | By::type<AScrollArea>()).check(areBottomAligned());
 }
 
 TEST_F(UIScrollTest, ScrollTo1) {

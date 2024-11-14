@@ -17,7 +17,6 @@
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
@@ -33,7 +32,7 @@ class AScrollAreaContainer;
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
- * @note Behaviour of vertical and horizontal axes are independent from each other.
+ * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
@@ -87,8 +86,7 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
-        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
+    void setScrollbarAppearance(ass::ScrollbarAppearance scrollbarAppearance) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }

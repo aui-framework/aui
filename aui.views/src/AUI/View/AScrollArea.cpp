@@ -93,8 +93,6 @@ void AScrollArea::setSize(glm::ivec2 size) {
                 mInner->getWidth(),
                 contents()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
-
-    AViewContainer::adjustContentSize();
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {

@@ -110,7 +110,7 @@ public:
         }
     }
 
-    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+    void setAppearance(ass::ScrollbarAppearance::AxisValue appearance) {
         mAppearance = appearance;
     }
 
@@ -178,7 +178,7 @@ private:
      * @see AScrollbar::setStickToEnd()
      */
     AOptional<StickToEnd> mStickToEnd;
-    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
+    ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
 };
 
 

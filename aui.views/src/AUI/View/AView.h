@@ -164,11 +164,6 @@ protected:
     AViewContainer* mParent = nullptr;
 
     /**
-     * @brief Determines how to display text that go out of the bounds.
-     */
-    ATextOverflow mTextOverflow = ATextOverflow::NONE;
-
-    /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
     std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
@@ -421,10 +416,6 @@ public:
         mOverflow = overflow;
     }
 
-    void setTextOverflow(ATextOverflow textOverflow) {
-        mTextOverflow = textOverflow;
-    }
-
     /**
      * @brief Controls how does the overflow (stencil) mask is produced.
      */
@@ -460,7 +451,7 @@ public:
     /**
      * @return pixel count which this AView acquired by width including content area, padding, border and margin.
      */
-    float getTotalOccupiedWidth() const
+    int getTotalOccupiedWidth() const
     {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
@@ -468,7 +459,7 @@ public:
     /**
      * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
-    float getTotalOccupiedHeight() const
+    int getTotalOccupiedHeight() const
     {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }

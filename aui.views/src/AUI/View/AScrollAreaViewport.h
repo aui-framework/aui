@@ -16,7 +16,6 @@
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief Inner component of AScrollArea that manages rendering and event handling with custom offset (scroll).
