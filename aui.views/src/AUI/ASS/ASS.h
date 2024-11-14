@@ -84,7 +84,7 @@
  * AStylesheet::global().addRules({
  *   {
  *     t<ALabel>(),
- *     BackgroundSolid { 0xff0000_rgb },
+ *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
  *   {
@@ -102,7 +102,7 @@
  * container->setExtraStylesheet({
  *   {
  *     t<ALabel>(),
- *     BackgroundSolid { 0xff0000_rgb },
+ *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
  *   {
@@ -121,7 +121,7 @@
  * using namespace ass;
  * setContents(Centered{
  *   Label { "Hello" } with_style {
- *     BackgroundSolid { 0xff0000_rgb },
+ *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
  *   Label { "World" } with_style {
@@ -138,13 +138,178 @@
  *
  * auto l = _new<ALabel>("Hello world");
  * l->setCustomStyle({
- *   BackgroundSolid { 0xff0000_rgb },
+ *   BackgroundSolid { AColor::RED },
  *   TextAlign::CENTER,
  * }),
  * setContents(Centered{ l });
  * @endcode
  *
- * See below for BackgroundSolid and other declarations.
+ * # Selectors
+ * As said earlier, first statement in a rule is selector. Here's some examples.
+ *
+ * ### Select all ALabel's
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>(),
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * @endcode
+ *
+ * ### Select all ASS name
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     c(".highlight"),
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * // ...
+ * auto v = _new<AView>();
+ * v->addAssName(".highlight");
+ * setContents(Centered { v });
+ * // or
+ * setContents(Centered {
+ *     _new<AView>() << ".highlight",
+ * });
+ * @endcode
+ *
+ * ### Select all ALabel's or AButton's
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     {t<ALabel>(), t<AButton>()},
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * @endcode
+ *
+ * ### Select all labels with ASS name
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>() && c(".highlight"),
+ *     BackgroundSolid { AColor::RED },
+ *   },
+ * });
+ * // ...
+ * setContents(Centered {
+ *     Label { "Highlighted" } << ".highlight",
+ *     Label { "Not highlighted" },
+ *     Button { "Not highlighted either" },
+ * });
+ * @endcode
+ *
+ * ### Select indirect child
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     c(".highlight_container") >> t<ALabel>(),
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * // ...
+ * setContents(Centered {
+ *     Vertical {
+ *         Label { "Highlighted" },
+ *         Centered { Label { "Highlighted" } },
+ *     } << ".highlight_container",
+ *     Vertical {
+ *         Label { "Not highlighted" },
+ *     },
+ * });
+ * @endcode
+ *
+ * ### Select direct child
+ * Works faster than selecting indirect child
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     c(".highlight_container") > t<ALabel>(),
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * // ...
+ * setContents(Centered {
+ *     Vertical {
+ *         Label { "Highlighted" },
+ *         Centered { Label { "Not highlighted" } },
+ *     } << ".highlight_container",
+ *     Vertical {
+ *         Label { "Not highlighted" },
+ *     },
+ * } << ".highlight_container");
+ * @endcode
+ *
+ * ## Sub selectors
+ * Sub selector is kind of a selector that depends on view's state (i.e, pressed or focused). Sub selectors, as well as
+ * other selectors don't replace previous rules entirely. Instead, they extend existing rules. However, same properties
+ * are replaced.
+ *
+ * ### Hover sub selector
+ * Hovered view is a view below mouse cursor.
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>::hover(),
+ *     BackgroundSolid { AColor::RED },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * @endcode
+ *
+ * ### Active sub selector
+ * Active view is a pressed view.
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>::hover(),
+ *     BackgroundSolid { AColor::RED },
+ *   },
+ * });
+ * @endcode
+ *
+ * ### Focus sub selector
+ * Focused view is a view that was clicked and currently receiving keyboard input.
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>::focus(),
+ *     Border { 1_px, AColor::RED },
+ *     TextColor { AColor::RED },
+ *   },
+ * });
+ * @endcode
+ *
+ * ### Disabled sub selector
+ * Disabled view is a view with AView::setEnabled(false) thus not able to change it's state.
+ * @code{cpp}
+ * using namespace ass;
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>::disabled(),
+ *     Border { 1_px, AColor::RED },
+ *     TextColor { AColor::RED },
+ *   },
+ * });
+ * @endcode
+ *
+ * See below for declarations and selectors.
  *
  */
 
@@ -155,8 +320,10 @@
 #include "Property/BackgroundEffect.h"
 #include "Property/Border.h"
 #include "Property/BorderBottom.h"
-#include "Property/BorderRadius.h"
 #include "Property/BorderLeft.h"
+#include "Property/BorderRadius.h"
+#include "Property/BorderRight.h"
+#include "Property/BorderTop.h"
 #include "Property/BoxShadow.h"
 #include "Property/BoxShadowInner.h"
 #include "Property/Cursor.h"
@@ -194,6 +361,7 @@
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
+#include "Selector/AndSelector.h"
 #include "Selector/type_of.h"
 #include "Selector/activated.h"
 #include "Selector/disabled.h"

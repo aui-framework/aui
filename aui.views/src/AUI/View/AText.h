@@ -27,6 +27,12 @@
  * Used to display rich text or large texts.
  *
  * Unlike ALabel, AText is optimized to store, render, word break large texts.
+ *
+ * AText always prefers expanding in horizontal over vertical.
+ *
+ * To perform word breaking, AText requires it's width to be fully defined (either by FixedSize, Expanding or MaxSize),
+ * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
+ * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
 class API_AUI_VIEWS AText: public AViewContainer, public IFontView {
 public:
@@ -57,7 +63,10 @@ public:
     void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
     void clearContent();
     void setHtml(const AString& html, const Flags& flags = {});
-    void setString(const AString& string, const Flags& flags = {});
+    void setString(const AString& string, const Flags& flags);
+    void setString(const AString& string) {
+        setString(string, {});
+    }
 
     void render(ARenderContext context) override;
     void setSize(glm::ivec2 size) override;

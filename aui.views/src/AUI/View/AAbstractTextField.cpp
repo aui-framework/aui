@@ -116,6 +116,12 @@ void AAbstractTextField::setText(const AString& t)
 	emit textChanged(t);
 }
 
+void AAbstractTextField::setSuffix(const AString& s)
+{
+    mSuffix = s;
+    invalidateFont();
+}
+
 bool AAbstractTextField::wantsTouchscreenKeyboard() {
     return true;
 }
@@ -200,7 +206,7 @@ void AAbstractTextField::onCharEntered(char16_t c) {
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getContentsPasswordWrap();
+        auto text = getContentsPasswordWrap() + mSuffix;
         updateTextAlignOffset();
         if (!text.empty()) {
             auto canvas = render.newMultiStringCanvas(getFontStyle());

@@ -32,6 +32,7 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void setText(const AString& t) override;
+    void setSuffix(const AString& s);
 
     void render(ARenderContext ctx) override;
 
@@ -91,6 +92,7 @@ signals:
 protected:
     _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
+    AString mSuffix;
     virtual bool isValidText(const AString& text);
 
     void prerenderStringIfNeeded(IRenderer& render);
