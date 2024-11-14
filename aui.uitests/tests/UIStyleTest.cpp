@@ -21,6 +21,8 @@ namespace {
     class View : public AView {
     };
 
+    using namespace declarative;
+
     class UIStyleTest : public testing::UITest {
     public:
     protected:
@@ -28,25 +30,30 @@ namespace {
             UITest::SetUp();
 
             mWindow = _new<AWindow>();
-            using namespace declarative;
             ALayoutInflater::inflate(mWindow,
                                      Vertical{
-                                             mView = _new<View>() with_style {
-                                                     MinSize { 10_dp },
-                                                     BackgroundSolid{AColor::BLACK},
-
-                                                     on_state::Hovered {
-                                                         BackgroundSolid{AColor::RED},
-                                                     },
-
-                                                     on_state::Activated {
-                                                         BackgroundSolid{AColor::GREEN},
-                                                     },
-                                             },
-                                             Label{"Some bullshit to complicate layout"},
+                                         mView = _new<View>() with_style {
+                                             MinSize { 10_dp }
+                                         },
+                                         Label{"Some bullshit to complicate layout"},
                                      }
             );
             mWindow->show();
+        }
+
+        void setupStateStyles() {
+            mView with_style {
+                    MinSize { 10_dp },
+                    BackgroundSolid{AColor::BLACK},
+
+                    on_state::Hovered {
+                            BackgroundSolid{AColor::RED},
+                    },
+
+                    on_state::Activated {
+                            BackgroundSolid{AColor::GREEN},
+                    },
+            };
         }
 
         void TearDown() override {
@@ -64,6 +71,7 @@ namespace {
  * Checks mouse move events.
  */
 TEST_F(UIStyleTest, MouseMoveNoClick) {
+    setupStateStyles();
     testing::InSequence s;
 
     By::type<View>().check(averageColor(AColor::BLACK));
@@ -80,6 +88,7 @@ TEST_F(UIStyleTest, MouseMoveNoClick) {
  * Checks click with release outside the view.
  */
 TEST_F(UIStyleTest, MouseMoveWithClick) {
+    setupStateStyles();
     testing::InSequence s;
 
     By::type<View>().check(averageColor(AColor::BLACK));
@@ -101,6 +110,7 @@ TEST_F(UIStyleTest, MouseMoveWithClick) {
  * Checks click with release outside the view.
  */
 TEST_F(UIStyleTest, Opacity) {
+    setupStateStyles();
     testing::InSequence s;
     using namespace ass;
 
@@ -116,4 +126,22 @@ TEST_F(UIStyleTest, Opacity) {
         Opacity(1),
     };
     By::type<View>().check(averageColor(AColor::RED), "view should appear");
+}
+
+TEST_F(UIStyleTest, AndSelector) {
+    testing::InSequence s;
+    using namespace ass;
+
+    mWindow->setExtraStylesheet(AStylesheet{
+        {
+            ass::c(".one") && ass::c(".two"),
+            BackgroundSolid { AColor::RED },
+        }
+    });
+
+    mView->addAssName(".one");
+    By::type<View>().check(averageColor(AColor::WHITE), "view should be uncolored");
+
+    mView->addAssName(".two");
+    By::type<View>().check(averageColor(AColor::RED), "view should be colored");
 }
