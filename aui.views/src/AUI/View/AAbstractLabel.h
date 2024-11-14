@@ -76,6 +76,14 @@ public:
         invalidateFont();
     }
 
+    void setTextOverflow(ATextOverflow textOverflow) {
+        if (mTextOverflow == textOverflow) {
+            return;
+        }
+        mTextOverflow = textOverflow;
+        markMinContentSizeInvalid();
+    }
+
     void setTextTransform(TextTransform textTransform) {
         if (mTextTransform == textTransform) {
             return;
@@ -111,6 +119,11 @@ private:
     AColor mIconColor = {1, 1, 1, 1};
 
     glm::ivec2 getIconSize() const;
+
+    /**
+     * @brief Determines how to display text that go out of the bounds.
+     */
+    ATextOverflow mTextOverflow = ATextOverflow::NONE;
 
     AString getTransformedText();
 

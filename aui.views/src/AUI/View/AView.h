@@ -164,11 +164,6 @@ protected:
     AViewContainer* mParent = nullptr;
 
     /**
-     * @brief Determines how to display text that go out of the bounds.
-     */
-    ATextOverflow mTextOverflow = ATextOverflow::NONE;
-
-    /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
     std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
@@ -419,10 +414,6 @@ public:
     void setOverflow(AOverflow overflow)
     {
         mOverflow = overflow;
-    }
-
-    void setTextOverflow(ATextOverflow textOverflow) {
-        mTextOverflow = textOverflow;
     }
 
     /**
