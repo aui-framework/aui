@@ -13,7 +13,7 @@
 // Created by Alex2772 on 11/16/2021.
 //
 
-#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/all.hpp>
 #include <AUI/Traits/iterators.h>
 #include "AWordWrappingEngine.h"
 #include <algorithm>
@@ -33,6 +33,11 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
         _<Entry> entry;
         int occupiedHorizontalSpace;
         int remainingHeight;
+        glm::ivec2 position;
+
+        void setPosition(glm::ivec2 p) {
+            entry->setPosition(position = p);
+        }
     };
 
 
@@ -189,14 +194,14 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
             case AFloat::LEFT: {
                 int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
-                (*currentItem)->setPosition({position, currentY});
+                leftFloat.last().setPosition({position, currentY});
                 break;
             }
 
             case AFloat::RIGHT: {
                 rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
                 int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
-                (*currentItem)->setPosition({position, currentY});
+                rightFloat.last().setPosition({position, currentY});
                 break;
             }
 
@@ -212,5 +217,13 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
         flushRow(true);
     }
 
-    mHeight = currentY + int(float(currentRowHeight) * mLineHeight) - offset.y;
+    auto floatingMax = [&] {
+        auto r = ranges::view::concat(leftFloat, rightFloat);
+        if (r.empty()) {
+            return 0;
+        }
+        return ranges::max(r | ranges::view::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
+    }();
+
+    mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
 }

@@ -168,6 +168,6 @@ TEST(WordWrappingEngine, FloatingEntryConsumesHeight) {
         _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 0}),
         _new<FloatingEntry>(glm::ivec2{10, 100}, glm::ivec2{90, 0}, AFloat::RIGHT),
     });
-    engine.setTextAlign(ATextAlign::JUSTIFY);
     engine.performLayout({0, 0}, {100, 100});
+    EXPECT_EQ(*engine.height(), 100);
 }
