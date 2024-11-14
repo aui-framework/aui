@@ -85,12 +85,18 @@ AStylesheet::AStylesheet() {
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
+            Expanding { 1, 0 },
         },
         // AAbstractLabel
         {
             t<AAbstractLabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
+        },
+        {
+            t<AText>() > t<AAbstractLabel>(),
+            Margin { 0 },
+            Padding { 0 },
         },
         {
             t<AAbstractLabel>::disabled(),
@@ -110,8 +116,8 @@ AStylesheet::AStylesheet() {
             MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
-                ATextAlign::CENTER,
-                VerticalAlign::MIDDLE,
+            ATextAlign::CENTER,
+            VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -340,7 +346,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-                ATextAlign::LEFT,
+            ATextAlign::LEFT,
         },
 
         // AListView

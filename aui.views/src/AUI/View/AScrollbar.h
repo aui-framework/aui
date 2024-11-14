@@ -68,6 +68,7 @@ public:
  * @brief A single scrollbar
  * @ingroup useful_views
  * @see AScrollArea
+ * @see ASlider
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;

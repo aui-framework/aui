@@ -29,7 +29,7 @@ class AScrollAreaContainer;
  * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
  * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
  * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events.
+ * involving displaying scroll bars and handling scroll events. This behaviour is similar to Text.
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
