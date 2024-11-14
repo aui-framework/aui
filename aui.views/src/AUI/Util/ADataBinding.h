@@ -38,25 +38,25 @@ public:
 template <typename Model>
 class ADataBinding;
 
-template<typename Model, typename Klass, typename ModelField, typename Getter, typename Setter>
+template<typename Model, typename View, typename ModelField, typename Getter, aui::invocable<View*, const ModelField&> Setter>
 class ADataBindingLinker {
 private:
     ADataBinding<Model>* mBinder;
-    void(Klass::*mSetterFunc)(Setter);
+    Setter setter;
     std::decay_t<ModelField>(Model::*mField);
-    ASignal<std::decay_t<Getter>>(Klass::*mGetter);
+    ASignal<std::decay_t<Getter>>(View::*mGetter);
 
 public:
-    ADataBindingLinker(ADataBinding<Model>* binder, ASignal<std::decay_t<Getter>>(Klass::*getter), void (Klass::*setterFunc)(Setter),
+    ADataBindingLinker(ADataBinding<Model>* binder, ASignal<std::decay_t<Getter>>(View::*getter), Setter setter,
                        std::decay_t<ModelField>(Model::*field)):
-            mBinder(binder), mGetter(getter), mSetterFunc(setterFunc), mField(field) {}
+            mBinder(binder), mGetter(getter), setter(std::move(setter)), mField(field) {}
 
     ADataBinding<Model>* getBinder() const {
         return mBinder;
     }
 
     auto getSetterFunc() const {
-        return mSetterFunc;
+        return setter;
     }
 
     auto getField() const {
@@ -67,14 +67,15 @@ public:
         return mGetter;
     }
 };
-template<typename Model, typename Data>
+template<typename Model, typename Data, typename Projection>
 class ADataBindingLinker2 {
 private:
     ADataBinding<Model>* mBinder;
     Data(Model::*mField);
+    Projection mProjection;
 
 public:
-    ADataBindingLinker2(ADataBinding<Model>* binder, Data(Model::*field)) : mBinder(binder), mField(field) {}
+    ADataBindingLinker2(ADataBinding<Model>* binder, Data(Model::*field), Projection projection = nullptr) : mBinder(binder), mField(field), mProjection(std::move(projection)) {}
 
     ADataBinding<Model>* getBinder() const {
         return mBinder;
@@ -82,6 +83,10 @@ public:
 
     auto getField() const {
         return mField;
+    }
+
+    Projection getProjection() const {
+        return mProjection;
     }
 };
 
@@ -175,24 +180,77 @@ public:
             delete mModel;
         }
     }
+
+    /**
+     * @brief Create a connection to setter only.
+     * @param field pointer-to-member-field of model.
+     * @param setterFunc pointer-to-member-function setter.
+     */
     template<typename View, typename ModelField, typename SetterArg>
-    ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg> operator()(ModelField(Model::*field), void(View::*setterFunc)(SetterArg)) {
+    auto operator()(ModelField(Model::*field), void(View::*setterFunc)(SetterArg)) {
         AUI_ASSERT(setterFunc != nullptr);
-        return ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg>(this, nullptr, setterFunc, field);
-    }
-    template<typename View, typename ModelField, typename GetterRV, typename SetterArg>
-    ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg> operator()(ModelField(Model::*field),
-                                                                                              ASignal<GetterRV>(View::*getter),
-                                                                                              void(View::*setterFunc)(SetterArg) = nullptr) {
-        AUI_ASSERT((getter != nullptr || setterFunc != nullptr) &&
-               "implement ADataBindingDefault for your view in order to use default binding");
-
-        return ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg>(this, getter, setterFunc, field);
+        return operator()<View, ModelField>(field, (ASignal<ModelField>(View::*))nullptr, setterFunc);
     }
 
+    /**
+     * @brief Create a connection to specified lambda setter only.
+     * @param field pointer-to-member-field of model.
+     * @param setterLambda lambda which accepts reference to your view type and const reference to data (see examples).
+     * @details
+     * View type is deduces from the first argument of your lambda.
+     * @code{cpp}
+     * struct Model {
+     *   AString text;
+     * };
+     * auto model = _new<ADataBinding<Model>>(Model{});
+     * _new<ALabel>() && model(&Model::text, [](ALabel& view, const AString& data) {
+     *    view.setText(data);
+     * });
+     * @endcode
+     */
+    template<typename ModelField, typename SetterLambda>
+    auto operator()(ModelField(Model::*field), SetterLambda setterLambda) {
+        using lambda_args = aui::lambda_info<SetterLambda>::args;
+        return aui::tuple_visitor<lambda_args>::for_each_all([&]<typename ViewReference, typename DataArgument>() {
+            static_assert(std::is_reference_v<ViewReference>, "View is expected to be a reference");
+            static_assert(aui::convertible_to<ModelField, DataArgument>, "lambda's argument is expected to be constructible from ModelField");
+            using View = std::decay_t<ViewReference>;
+            return operator()<View, ModelField>(field, (ASignal<ModelField>(View::*))nullptr, [setterLambda = std::move(setterLambda)](View* view, DataArgument dataArgument) {
+                std::invoke(setterLambda, *view, std::forward<DataArgument>(dataArgument));
+            });
+        });
+    }
+
+    /**
+     * @brief Create a connection to specified pointer-to-member-field signal and pointer-to-member-function setter.
+     * @param field pointer-to-member-field of model.
+     */
+    template<typename View, typename ModelField, typename GetterRV, aui::invocable<View*, const ModelField&> Setter>
+    auto operator()(ModelField(Model::*field),
+                    ASignal<GetterRV>(View::*getter),
+                    Setter setter = (void(View::*)(const ModelField&))nullptr) {
+        return ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, Setter>(this, getter, std::move(setter), field);
+    }
+
+    /**
+     * @brief Create a connection via ADataBindingDefault.
+     * @param field pointer-to-member-field of model.
+     * @details
+     * ADataBindingDefault must be defined for model type and your view.
+     */
     template<typename Data>
-    ADataBindingLinker2<Model, Data> operator()(Data(Model::*field)) {
-        return ADataBindingLinker2<Model, Data>(this, field);
+    auto operator()(Data(Model::*field)) {
+        return ADataBindingLinker2<Model, Data, std::nullptr_t>(this, field, nullptr);
+    }
+
+    /**
+     * @brief Create a connection via ADataBindingDefault and projection (setter only).
+     * @details
+     * ADataBindingDefault must be defined for model type and your view.
+     */
+    template<typename Data, aui::invocable<Data> Projection>
+    ADataBindingLinker2<Model, Data, Projection> operator()(Data(Model::*field), Projection projection) {
+        return ADataBindingLinker2<Model, Data, Projection>(this, field, std::move(projection));
     }
     const Model& getModel() const noexcept {
         return *mModel;
@@ -290,37 +348,40 @@ signals:
     emits<> modelChanged;
 };
 
-template<typename Klass1, typename Klass2, typename Model, typename ModelField, typename GetterRV, typename SetterArg>
-_<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Klass2, ModelField, GetterRV, SetterArg>& linker) {
+template<typename Klass1, typename View, typename Model, typename ModelField, typename GetterRV, typename SetterArg>
+_<Klass1> operator&&(const _<Klass1>& modelBinding, const ADataBindingLinker<Model, View, ModelField, GetterRV, SetterArg>& linker) {
     union converter {
         unsigned i;
         decltype(linker.getField()) p;
     };
     if (linker.getGetter()) {
-        AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const GetterRV& data) {
+        AObject::connect(modelBinding.get()->*(linker.getGetter()), linker.getBinder(), [modelBinding, linker](const GetterRV& data) {
             AUI_ASSERTX(&linker.getBinder()->getEditableModel(), "please setModel for ADataBinding");
-            object->setSignalsEnabled(false);
+            modelBinding->setSignalsEnabled(false);
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;
             c.p = linker.getField();
-            linker.getBinder()->notifyUpdate(object.get(), c.i);
-            object->setSignalsEnabled(true);
+            linker.getBinder()->notifyUpdate(modelBinding.get(), c.i);
+            modelBinding->setSignalsEnabled(true);
         });
     }
 
-    if (linker.getSetterFunc()) {
-        linker.getBinder()->addObserver([object, linker](const Model& model, unsigned field) {
-            converter c;
-            c.p = linker.getField();
-            if (c.i == field || field == -1) {
-                if (object.get() != linker.getBinder()->getExclusion()) {
-                    (object.get()->*(linker.getSetterFunc()))(model.*(linker.getField()));
-                }
+    if constexpr (aui::convertible_to<decltype(linker.getSetterFunc()), bool>) {
+        if (!bool(linker.getSetterFunc())) {
+            return modelBinding;
+        }
+    }
+    linker.getBinder()->addObserver([modelBinding, linker](const Model& model, unsigned field) {
+        converter c;
+        c.p = linker.getField();
+        if (c.i == field || field == -1) {
+            if (modelBinding.get() != linker.getBinder()->getExclusion()) {
+                std::invoke(linker.getSetterFunc(), modelBinding.get(), model.*(linker.getField()));
             }
-        });
-    }
+        }
+    });
 
-    return object;
+    return modelBinding;
 }
 
 
@@ -334,28 +395,41 @@ namespace aui::detail {
     };
 }
 
-template<typename View, typename Model, typename Data>
-_<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>& linker) {
+template<typename View, typename Model, typename Data, typename Projection>
+_<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data, Projection>& linker) {
     ADataBindingDefault<View, Data>::setup(object);
 
+    constexpr bool is_default_projection = std::is_same_v<Projection, std::nullptr_t>;
+    using projection_deduced = std::conditional_t<is_default_projection, std::identity, Projection>;
+    static_assert(std::is_invocable_v<projection_deduced, Data>, "projection is expected to accept Data value from model");
+    using data_deduced = std::decay_t<std::invoke_result_t<projection_deduced, Data>>;
+
     using getter = ASignal<Data>(View::*);
-    using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
+    using setter = aui::member<decltype(ADataBindingDefault<View, data_deduced>::getSetter())>;
 
     using setter_ret = typename setter::return_t;
     using setter_args = typename setter::args;
 
     using my_pointer_to_member = typename aui::detail::pointer_to_member<View, setter_ret>;
 
-    using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
+    using pointer_to_setter = decltype(my_pointer_to_member::with_args(std::declval<setter_args>()));
 
-    getter g = nullptr;
-    // getter is optional.
-    if constexpr (requires {  ADataBindingDefault<View, Data>::getGetter(); }) {
-        g = (getter) (ADataBindingDefault<View, Data>::getGetter());
+    if constexpr (is_default_projection) {
+        getter g = nullptr;
+        // getter is optional.
+        if constexpr (requires { ADataBindingDefault<View, Data>::getGetter(); }) {
+            g = (getter) (ADataBindingDefault<View, Data>::getGetter());
+        }
+        auto s = static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter());
+
+        AUI_ASSERTX(g != nullptr || s != nullptr, "ADataBindingDefault is not defined for View, Data");
+
+        object && (*linker.getBinder())(linker.getField(), g, s);
+    } else {
+        object && (*linker.getBinder())(linker.getField(), [projection = linker.getProjection()](View& v, const Data& d) {
+            auto s = static_cast<pointer_to_setter>(ADataBindingDefault<View, data_deduced>::getSetter());
+            std::invoke(s, &v, projection(d));
+        });
     }
-
-    object && (*linker.getBinder())(linker.getField(),
-                                    g,
-                                    static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
     return object;
 }
