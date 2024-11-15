@@ -76,19 +76,20 @@ public:
     }
 
 
-    void push_back(const StoredType& data) noexcept {
-        mVector.push_back(data);
-        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
-                                            AListModelIndex(mVector.size()    )));
+    void push_back(const StoredType& data) {
+        insert(end(), std::move(data));
     }
 
-
-    void push_back(StoredType&& data) noexcept {
-        mVector.push_back(std::forward<StoredType>(data));
-        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
-                                            AListModelIndex(mVector.size()    )));
+    void push_back(StoredType&& data) {
+        insert(end(), std::forward<StoredType>(data));
     }
 
+    const_iterator insert(const_iterator at, StoredType data) {
+        at = mVector.insert(at, std::move(data));
+        emit this->dataInserted(this->range(AListModelIndex(at - begin()),
+                                            AListModelIndex(at - begin() + 1)));
+        return at;
+    }
 
     void pop_back() noexcept {
         mVector.pop_back();
@@ -96,11 +97,11 @@ public:
                                            AListModelIndex(mVector.size() + 1)));
     }
 
-    AListModel& operator<<(const StoredType& data) noexcept {
+    AListModel& operator<<(const StoredType& data) {
         push_back(data);
         return *this;
     }
-    AListModel& operator<<(StoredType&& data) noexcept {
+    AListModel& operator<<(StoredType&& data) {
         push_back(std::forward<StoredType>(data));
         return *this;
     }
