@@ -329,6 +329,7 @@
 #include "Property/Cursor.h"
 #include "Property/Expanding.h"
 #include "Property/FixedSize.h"
+#include "Property/Float.h"
 #include "Property/Font.h"
 #include "Property/FontFamily.h"
 #include "Property/FontRendering.h"

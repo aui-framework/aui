@@ -41,7 +41,7 @@ friend class TextEntry;
         }
         glm::ivec2 getSize() override;
         void setPosition(const glm::ivec2& position) override;
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         ~TextEntry() override = default;
 

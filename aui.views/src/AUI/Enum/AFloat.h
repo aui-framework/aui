@@ -12,7 +12,7 @@
 #pragma once
 
 
-enum class Float {
+enum class AFloat {
     /**
      * Entry's default position behaviour.
      */
