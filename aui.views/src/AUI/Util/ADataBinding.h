@@ -211,7 +211,7 @@ public:
      */
     template<typename ModelField, typename SetterLambda>
     auto operator()(ModelField(Model::*field), SetterLambda setterLambda) {
-        using lambda_args = aui::lambda_info<SetterLambda>::args;
+        using lambda_args = typename aui::lambda_info<SetterLambda>::args;
         return aui::tuple_visitor<lambda_args>::for_each_all([&]<typename ViewReference, typename DataArgument>() {
             static_assert(std::is_reference_v<ViewReference>, "View is expected to be a reference");
             static_assert(aui::convertible_to<ModelField, DataArgument>, "lambda's argument is expected to be constructible from ModelField");
@@ -401,7 +401,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data,
     ADataBindingDefault<View, Data>::setup(object);
 
     constexpr bool is_default_projection = std::is_same_v<Projection, std::nullptr_t>;
-    using projection_deduced = std::conditional_t<is_default_projection, std::identity, Projection>;
+    using projection_deduced = std::conditional_t<is_default_projection, aui::identity, Projection>;
     static_assert(std::is_invocable_v<projection_deduced, Data>, "projection is expected to accept Data value from model");
     using data_deduced = std::decay_t<std::invoke_result_t<projection_deduced, Data>>;
 
