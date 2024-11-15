@@ -325,8 +325,8 @@ public:
     }
 
     template<typename ModelField, typename FieldObserver>
-    void addObserver(ModelField(Model::*field), FieldObserver&& observer) {
-        mLinkObservers << [observer = std::forward<FieldObserver>(observer), field] (const Model& model, unsigned index) {
+    void addObserverNoInitialCall(ModelField(Model::*field), FieldObserver&& observer) {
+        mLinkObservers << [observer = std::forward<FieldObserver>(observer), field](const Model& model, unsigned index) {
             union converter {
                 unsigned i;
                 decltype(field) p;
@@ -336,6 +336,10 @@ public:
                 observer(model.*field);
             }
         };
+    }
+    template<typename ModelField, typename FieldObserver>
+    void addObserver(ModelField(Model::*field), FieldObserver&& observer) {
+        addObserverNoInitialCall(field, std::forward<FieldObserver>(observer));
         if (mModel) {
             mLinkObservers.last()(*mModel, -1);
         }
