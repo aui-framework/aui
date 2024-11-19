@@ -277,6 +277,9 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         });
     }
 
+    res = curl_easy_setopt(mCURL, CURLOPT_ACCEPT_ENCODING, "");
+    AUI_ASSERT(res == CURLE_OK);
+
     return *this;
 }
 
