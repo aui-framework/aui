@@ -15,18 +15,22 @@
 
 
 #include "TransformScale.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-void ass::prop::Property<ass::TransformScale>::renderFor(AView* view) {
+void ass::prop::Property<ass::TransformScale>::renderFor(AView* view, const ARenderContext& ctx) {
     auto pivot = view->getSize() / 2;
     glm::mat4 m(1.f);
     m = glm::translate(m, glm::vec3(pivot, 0.f));
     m = glm::scale(m, glm::vec3(mInfo.scale, 1.0f));
     m = glm::translate(m, glm::vec3(-pivot, 0.f));
-    ARender::setTransform(m);
+    ctx.render.setTransform(m);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformScale>::getPropertySlot() const {
     return ass::prop::PropertySlot::TRANSFORM_SCALE;
+}
+
+void ass::prop::Property<ass::TransformScale>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    invalidRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * mInfo.scale);
 }

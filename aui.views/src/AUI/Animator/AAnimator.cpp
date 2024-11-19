@@ -16,7 +16,7 @@
 #include <AUI/Platform/AWindow.h>
 #include "AAnimator.h"
 
-void AAnimator::animate(AView* view) {
+void AAnimator::animate(AView* view, IRenderer& render) {
     if (mIsPlaying) {
         AWindow::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -36,11 +36,11 @@ void AAnimator::animate(AView* view) {
 
         mLastFrameTime = now;
     }
-    doAnimation(view, mCurve(mCurrentTheta));
+    doAnimation(view, mCurve(mCurrentTheta), render);
 }
 
-void AAnimator::postRender(AView* view) {
-    doPostRender(view, mCurrentTheta);
+void AAnimator::postRender(AView* view, IRenderer& render) {
+    doPostRender(view, mCurrentTheta, render);
 }
 
 void AAnimator::pause() {
@@ -48,23 +48,23 @@ void AAnimator::pause() {
     mIsPlaying = false;
 }
 
-void AAnimator::translateToCenter() {
-    translateToCenter(mView);
+void AAnimator::translateToCenter(IRenderer& render) {
+    translateToCenter(mView, render);
 }
 
-void AAnimator::translateToCorner() {
-    translateToCorner(mView);
+void AAnimator::translateToCorner(IRenderer& render) {
+    translateToCorner(mView, render);
 }
 
-void AAnimator::translateToCenter(AView* view) {
-    ARender::setTransform(
+void AAnimator::translateToCenter(AView* view, IRenderer& render) {
+    render.setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(glm::vec2(view->getSize().x,
                                                view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
 }
 
-void AAnimator::translateToCorner(AView* view) {
-    ARender::setTransform(
+void AAnimator::translateToCorner(AView* view, IRenderer& render) {
+    render.setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(-glm::vec2(view->getSize().x,
                                                 view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
@@ -79,15 +79,15 @@ _<AAnimator> AAnimator::combine(const AVector<_<AAnimator>>& animators) {
         ACombiningAnimator(const AVector<_<AAnimator>>& animator) : mAnimator(animator) {}
 
     protected:
-        void doAnimation(AView* view, float theta) override {
+        void doAnimation(AView* view, float theta, IRenderer& render) override {
             for (auto& animator : mAnimator) {
-                animator->animate(view);
+                animator->animate(view, render);
             }
         }
 
-        void doPostRender(AView* view, float theta) override {
+        void doPostRender(AView* view, float theta, IRenderer& render) override {
             for (auto& animator : mAnimator) {
-                animator->doPostRender(view, theta);
+                animator->doPostRender(view, theta, render);
             }
         }
     };

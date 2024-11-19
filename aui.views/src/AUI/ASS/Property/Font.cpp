@@ -14,11 +14,11 @@
 //
 
 #include "Font.h"
+#include "AUI/Font/IFontView.h"
 #include <AUI/Platform/AFontManager.h>
 
 void ass::prop::Property<ass::Font>::applyFor(AView* view) {
     auto font = AFontManager::inst().getFont(mInfo.url);
     if (!font) font = AFontManager::inst().getDefaultFont();
-    view->getFontStyle().font = std::move(font);
-    view->invalidateFont();
+    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().font = std::move(font);
 }

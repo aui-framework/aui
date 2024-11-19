@@ -14,7 +14,7 @@
 //
 
 #include "FractalView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 static gl::Shader::Uniform UNIFORM_TR("tr");
@@ -75,12 +75,12 @@ FractalView::FractalView():
     mTexture->tex2D(*AImage::fromUrl(":img/color_scheme_wikipedia.png"));
 }
 
-void FractalView::render(ClipOptimizationContext context) {
+void FractalView::render(ARenderContext context) {
     AView::render(context);
 
     mShader.use();
     mTexture->bind();
-    ARender::rect(ACustomShaderBrush{}, {0, 0}, getSize());
+    ctx.render.rect(ACustomShaderBrush{}, {0, 0}, getSize());
 }
 
 void FractalView::setSize(glm::ivec2 size) {

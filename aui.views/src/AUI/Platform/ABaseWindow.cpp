@@ -27,6 +27,7 @@
 #include "APlatform.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/View/AViewContainer.h"
+#include "AUI/Util/Breakpoint.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -54,11 +55,11 @@ void ABaseWindow::updateDpi() {
     mDpiRatio = [&]() -> float {
         float systemDpi = fetchDpiFromSystem();
         float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
-        if (!mScalingParams.maximalWindowSizeDp) {
+        if (!mScalingParams.minimalWindowSizeDp) {
             return ratio;
         }
 
-        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.maximalWindowSizeDp);
+        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
         float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
         maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
         return glm::min(ratio, maxDpiRatio);
@@ -208,6 +209,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 }
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -280,6 +282,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 }
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -337,6 +340,7 @@ void ABaseWindow::onScroll(const AScrollEvent& event) {
 }
 
 void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -397,20 +401,21 @@ void ABaseWindow::flagRedraw() {
 
 }
 
-void ABaseWindow::flagUpdateLayout() {
-
-}
-
-void ABaseWindow::updateLayout() {
+void ABaseWindow::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
-    AViewContainer::updateLayout();
+    AViewContainer::applyGeometryToChildren();
 }
 
-void ABaseWindow::render(ClipOptimizationContext context) {
+void ABaseWindow::render(ARenderContext context) {
     APerformanceSection root("render");
+    currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
+    {
+        APerformanceSection root("before frame");
+        std::exchange(mBeforeFrameQueue, {}).processMessages(context.render);
+    }
     processTouchscreenKeyboardRequest();
 
     mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
@@ -437,8 +442,8 @@ void ABaseWindow::render(ClipOptimizationContext context) {
 
     AViewContainer::render(context);
 
-    if (auto v = mProfiledView.lock()) {
-        AViewProfiler::displayBoundsOn(*v);
+    if (auto v = profiling().highlightView.lock()) {
+        AViewProfiler::displayBoundsOn(*v, context);
     }
 
 #if AUI_SHOW_TOUCHES
@@ -451,15 +456,15 @@ void ABaseWindow::render(ClipOptimizationContext context) {
             if (data.release) {
                 lines << *data.release;
             }
-            ARender::lines(ASolidBrush{AColor::BLUE}, lines);
+            ctx.render.lines(ASolidBrush{AColor::BLUE}, lines);
         }
-        ARender::points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
+        ctx.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
         glm::vec2 p[1] = { data.press };
-        ARender::points(ASolidBrush{AColor::GREEN}, p, 6_dp);
+        ctx.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
 
         if (data.release) {
             glm::vec2 p[1] = { *data.release };
-            ARender::points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
+            ctx.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
         }
     }
 #endif
@@ -577,4 +582,18 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
     }
 
     mKeyboardRequestedState = KeyboardRequest::NO_OP;
+}
+
+
+void ABaseWindow::markMinContentSizeInvalid() {
+    if (profiling().breakpointOnMarkMinContentSizeInvalid) {
+        profiling().breakpointOnMarkMinContentSizeInvalid = false;
+        AUI_BREAKPOINT();
+    }
+    AViewContainer::markMinContentSizeInvalid();
+    flagRedraw();
+}
+
+void ABaseWindow::markPixelDataInvalid(ARect<int> invalidArea) {
+    flagRedraw();
 }

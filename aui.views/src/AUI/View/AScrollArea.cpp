@@ -16,7 +16,7 @@
 #include "AScrollArea.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #include "AUI/View/AView.h"
 #include "AUI/View/AViewContainer.h"
 #include "glm/fwd.hpp"
@@ -29,12 +29,14 @@
 AScrollArea::AScrollArea():
     AScrollArea(Builder{})
 {
+    addAssName("AScrollArea");
 }
 
 AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
-    setLayout(_new<AAdvancedGridLayout>(2, 2));
+    addAssName("AScrollArea");
+    setLayout(std::make_unique<AAdvancedGridLayout>(2, 2));
 
-    addView(mInner = _new<AScrollAreaInner>());
+    addView(mInner = _new<AScrollAreaViewport>());
     if (!builder.mExternalVerticalScrollbar) {
         addView(mVerticalScrollbar = _new<AScrollbar>(ALayoutDirection::VERTICAL));
     } else {
@@ -55,10 +57,6 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
     connect(mVerticalScrollbar->scrolled, me::setScrollY);
     connect(mHorizontalScrollbar->scrolled, me::setScrollX);
-}
-void AScrollArea::updateLayout() {
-    AViewContainer::updateLayout();
-    mInner->updateLayout();
 }
 
 int AScrollArea::getContentMinimumWidth(ALayoutDirection layout) {
@@ -85,7 +83,7 @@ int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
 }
 void AScrollArea::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
-    mInner->updateLayout();
+    mInner->applyGeometryToChildrenIfNecessary();
     if (contents()) {
         mVerticalScrollbar->setScrollDimensions(
                 mInner->getHeight(),
@@ -95,8 +93,6 @@ void AScrollArea::setSize(glm::ivec2 size) {
                 mInner->getWidth(),
                 contents()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
-
-    AViewContainer::adjustContentSize();
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {

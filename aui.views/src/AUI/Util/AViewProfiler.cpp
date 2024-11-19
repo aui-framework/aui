@@ -20,10 +20,10 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <AUI/Util/AMetric.h>
 
-void AViewProfiler::displayBoundsOn(const AView& v) {
+void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
 
-    RenderHints::PushMatrix m;
-    ARender::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
+    RenderHints::PushMatrix m(ctx.render);
+    ctx.render.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0xff);
     glStencilOp(GL_INCR, GL_INCR, GL_INCR);
@@ -31,23 +31,23 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
 
     // content
     {
-        ARender::rect(ASolidBrush{0x7cb6c180u},
-                      {v.getPadding().left, v.getPadding().top},
-                      {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
+        ctx.render.rectangle(ASolidBrush{0x7cb6c180u},
+                             {v.getPadding().left, v.getPadding().top},
+                             {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
     }
 
     // padding
     {
-        ARender::rect(ASolidBrush{0xbccf9180u},
-                      {0, 0},
-                      v.getSize());
+        ctx.render.rectangle(ASolidBrush{0xbccf9180u},
+                             {0, 0},
+                             v.getSize());
     }
 
     // margin
     {
-        ARender::rect(ASolidBrush{0xffcca4a0u},
-                      {-v.getMargin().left, -v.getMargin().top},
-                      {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
+        ctx.render.rectangle(ASolidBrush{0xffcca4a0u},
+                             {-v.getMargin().left, -v.getMargin().top},
+                             {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
     }
 
     glDisable(GL_STENCIL_TEST);
@@ -56,20 +56,20 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
         int x = -v.getMargin().left;
         int y = v.getHeight() + v.getMargin().bottom + 2_dp;
 
-        AFontStyle fs;
-        fs.color = 0xffffffffu;
-        fs.fontRendering = FontRendering::ANTIALIASING;
-        fs.size = 9_pt;
+        AFontStyle fs {
+            .size = static_cast<unsigned int>(9_pt),
+            .fontRendering = FontRendering::ANTIALIASING,
+        };
 
-        auto s = ARender::prerenderString({x + 2_dp, y + 1_dp },
+        auto s = ctx.render.prerenderString({x + 2_dp, y + 1_dp },
                                          v.getAssNames().empty()
                                          ? typeid(v).name()
                                          : *v.getAssNames().begin() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
 
         {
-            ARender::rect(ASolidBrush{0x00000070u},
-                          {x, y},
-                          {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
+            ctx.render.rectangle(ASolidBrush{0x00000070u},
+                                 {x, y},
+                                 {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
         }
         s->draw();
     }

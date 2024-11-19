@@ -48,18 +48,18 @@ int AAbstractTextField::getContentMinimumHeight(ALayoutDirection layout)
 }
 
 
-void AAbstractTextField::render(ClipOptimizationContext context)
+void AAbstractTextField::render(ARenderContext ctx)
 {
-	AView::render(context);
+	AView::render(ctx);
 
-    prerenderStringIfNeeded();
+    prerenderStringIfNeeded(ctx.render);
 	if (hasFocus()) {
-	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre(ctx.render);
 
 	    // text
-        doDrawString();
+        doDrawString(ctx.render);
 
-        ACursorSelectable::drawSelectionPost();
+        ACursorSelectable::drawSelectionPost(ctx.render);
 
         // cursor
         if (hasFocus() && isCursorBlinkVisible()) {
@@ -72,14 +72,14 @@ void AAbstractTextField::render(ClipOptimizationContext context)
             }
 
             auto p = getMouseSelectionPadding();
-            ARender::rect(ASolidBrush{},
-                          {p.x + absoluteCursorPos, p.y - 1},
-                          {1, getMouseSelectionFont().size + 2});
+            ctx.render.rectangle(ASolidBrush{},
+                                 {p.x + absoluteCursorPos, p.y - 1},
+                                 {1, getMouseSelectionFont().size + 2});
         }
 
-        ARender::setBlending(Blending::NORMAL);
+        ctx.render.setBlending(Blending::NORMAL);
     } else {
-        doDrawString();
+        doDrawString(ctx.render);
 	}
 
 }
@@ -90,10 +90,14 @@ glm::ivec2 AAbstractTextField::getMouseSelectionPadding() {
     return p;
 }
 
-void AAbstractTextField::doDrawString() {
-    RenderHints::PushMatrix m;
-    ARender::translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
-    if (mPrerenderedString) mPrerenderedString->draw();
+void AAbstractTextField::doDrawString(IRenderer& render) {
+    if (!mPrerenderedString) {
+        return;
+    }
+    RenderHints::PushState m(render);
+    render.translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
+    render.setColor(getTextColor());
+    mPrerenderedString->draw();
 }
 
 
@@ -108,8 +112,14 @@ void AAbstractTextField::setText(const AString& t)
     mCursorIndex = t.size();
 	updateCursorBlinking();
 
-    invalidatePrerenderedString();
+    invalidateFont();
 	emit textChanged(t);
+}
+
+void AAbstractTextField::setSuffix(const AString& s)
+{
+    mSuffix = s;
+    invalidateFont();
 }
 
 bool AAbstractTextField::wantsTouchscreenKeyboard() {
@@ -172,10 +182,6 @@ size_t AAbstractTextField::length() const {
     return mContents.length();
 }
 
-void AAbstractTextField::invalidatePrerenderedString() {
-    mPrerenderedString = nullptr;
-}
-
 void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
@@ -198,12 +204,12 @@ void AAbstractTextField::onCharEntered(char16_t c) {
     emit textChanging(mContents);
 }
 
-void AAbstractTextField::prerenderStringIfNeeded() {
+void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getContentsPasswordWrap();
+        auto text = getContentsPasswordWrap() + mSuffix;
         updateTextAlignOffset();
         if (!text.empty()) {
-            auto canvas = ARender::newMultiStringCanvas(getFontStyle());
+            auto canvas = render.newMultiStringCanvas(getFontStyle());
             canvas->enableCachingForTextLayoutHelper();
             switch (getFontStyle().align) {
                 case ATextAlign::LEFT:

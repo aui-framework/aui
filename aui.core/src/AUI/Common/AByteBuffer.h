@@ -98,7 +98,7 @@ public:
      * @brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
      *        enough to store <code>size</code> bytes.
      */
-    void ensureReserved(size_t size) {
+    void grow(size_t size) {
         auto availableToWrite = getAvailableToWrite();
         if (availableToWrite < size) {
             increaseInternalBuffer((glm::max)(getReserved() * 2, size_t(size - availableToWrite)));
@@ -247,6 +247,7 @@ public:
             return *this;
         }
 
+        delete[] mBuffer;
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;
@@ -262,8 +263,10 @@ public:
             return *this;
         }
 
-        mBuffer = other.mBuffer;
-        mCapacity = other.mCapacity;
+        if (mCapacity < other.size()) {
+            reallocate(other.size());
+        }
+        std::memcpy(mBuffer, other.data(), other.size());
         mSize = other.mSize;
 
         return *this;

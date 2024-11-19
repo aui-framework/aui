@@ -143,11 +143,36 @@ Check the `examples/` folder.
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
-# Contributing
-You are always free to contribute to this project and add yourself to the authors list :)
-## Workflow
-`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
-all tests on all supported platforms.
-Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
-`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
-and tests.
+# Licensing
+
+Please refer to [LICENSE](https://github.com/aui-framework/aui/blob/master/LICENSE).
+
+Our project is published under Mozilla Public License Version 2.0 (the License). In short, you can use AUI for free in
+your private (i.e, that does not go outside your company) projects.
+
+If you would like to publish your project (including, but not limited to: sell, sign, release in software stores like
+Google Play or App Store), does not matter open source, closed source or proprietary, the License obligates you to:
+ - Mention your project uses "AUI Framework" in your legal notice.
+ - Release your changes to AUI (if any) under the same terms (the License).
+
+As for the latter, you are welcome to upstream your changes (i.e., propose your changes to
+[this repository](https://github.com/aui-framework/aui)). If you decided to not do so, please keep in mind that the
+License allows us to take your changes and upstream them.
+
+You are not obligated to disclose your own sources nor release your own project under the same terms (License).
+
+# Maintaining
+
+The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)
+with contributions from many other people.
+
+Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
+
+## Contributing
+
+You are welcome to open issues and pull requests on our GitHub repository. This project is maintained by a team of
+volunteers on a reasonable-effort basis. As such, we can accept your issue, but we can't guarantee resolution. It's all
+depends on severity and our own needs. In fact, we'd be happy if you submit a pull request. In this case we'll do our
+best to help you merge your changes to upstream.
+
+Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/master/CONTRIBUTING.md)

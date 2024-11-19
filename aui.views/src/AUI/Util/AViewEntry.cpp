@@ -16,6 +16,9 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
+    if (!(mView->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return {0, 0};
+    }
     return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
             ALayoutDirection::NONE) + mView->getMargin().vertical() };
 }
@@ -26,8 +29,8 @@ void AViewEntry::setPosition(const glm::ivec2& position) {
 
 }
 
-Float AViewEntry::getFloat() const {
-    return Float::NONE;
+AFloat AViewEntry::getFloat() const {
+    return mView->getFloating();
 }
 
 AViewEntry::~AViewEntry() {

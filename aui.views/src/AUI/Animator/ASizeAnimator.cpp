@@ -21,7 +21,7 @@ ASizeAnimator::ASizeAnimator(const glm::ivec2& beginSize, const glm::ivec2& endS
 
 }
 
-void ASizeAnimator::doAnimation(AView* view, float theta) {
+void ASizeAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
     if (mEndSize.x == 0 && mEndSize.y == 0) {
         mEndSize = view->getSize();
     }

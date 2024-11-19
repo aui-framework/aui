@@ -37,10 +37,10 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -59,15 +59,17 @@ namespace {
         static constexpr auto DEFAULT_SIZE = 256;
         GraphView(): mImage({DEFAULT_SIZE, DEFAULT_SIZE}) {
             setExpanding();
-            mTexture = ARender::getNewTexture();
             mImage.fill({0, 0, 0, 0});
             mFrames.resize(DEFAULT_SIZE);
         }
 
-        void render(ClipOptimizationContext c) override {
-            AView::render(c);
+        void render(ARenderContext ctx) override {
+            AView::render(ctx);
+            if (mTexture == nullptr) {
+                mTexture = ctx.render.getNewTexture();
+            }
 
-            ARender::rect(ATexturedBrush {
+            ctx.render.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -77,11 +79,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 
@@ -144,7 +146,8 @@ namespace {
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(16'600us) - 1}, AFormattedColorConverter(AColor::RED)); // 60 fps
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
 
-            mTexture->setImage(mImage);
+            // nullsafe lol?
+            AUI_NULLSAFE(mTexture)->setImage(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
             redraw();
@@ -235,7 +238,7 @@ namespace {
 
     class PerformanceSectionsTreeView: public AViewContainer {
     public:
-        static constexpr auto MAX_DEPTH = 7;
+        static constexpr auto MAX_DEPTH = 20;
         PerformanceSectionsTreeView() {
         }
 

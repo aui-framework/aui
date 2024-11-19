@@ -14,7 +14,7 @@
 //
 
 #include "EffectShimmer.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 void EffectShimmer::draw(AView* view) {
     using namespace std::chrono;
@@ -24,7 +24,7 @@ void EffectShimmer::draw(AView* view) {
     const auto transparent = AColor(glm::vec4(glm::vec3(mColor), 0.f));
 
     /*
-    ARender::rect(ALinearGradientBrush {
+    ctx.render.rect(ALinearGradientBrush {
         transparent,
         mColor,
         transparent,
@@ -32,7 +32,7 @@ void EffectShimmer::draw(AView* view) {
     }, {(t * 4 - 2) * view->getSize().x, 0}, view->getSize());
 
 
-    ARender::rect(ALinearGradientBrush {
+    ctx.render.rect(ALinearGradientBrush {
         mColor,
         transparent,
         mColor,

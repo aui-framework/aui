@@ -41,7 +41,7 @@ namespace ass {
 
         public:
             Property(const TransformScale& info) : mInfo(info) {}
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             PropertySlot getPropertySlot() const override;
 
@@ -49,6 +49,8 @@ namespace ass {
             const auto& value() const noexcept {
                 return mInfo;
             }
+
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
         };
     }
 }

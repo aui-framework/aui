@@ -12,7 +12,7 @@
 #include "AViewContainer.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
@@ -25,41 +25,89 @@
 
 static constexpr auto LOG_TAG = "AViewContainer";
 
-void AViewContainer::drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer) {
-    if (view->getVisibility() == Visibility::INVISIBLE || view->getVisibility() == Visibility::GONE) {
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view) {
+        if (!(view.getVisibility() & Visibility::FLAG_RENDER_NEEDED)) [[unlikely]] {
+            return true;
+        }
+
+        // consider anything below this value as effectively "zero" or negligible in terms of opacity.
+        view.ensureAssUpdated();
+        if (view.getOpacity() < 0.0001f) [[unlikely]] {
+            return true;
+        }
+
+        return false;
+    }
+}
+
+void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+    if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
+        return;
+    }
+
+    if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
         return;
     }
 
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    if (glm::any(glm::lessThan(view->getSize(), contextOfTheView.position))) {
+    ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
+    if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
+        return rectOfTheView.isIntersects(r);
+    })) {
         return;
     }
 
-    auto contextOfTheViewEnd = contextOfTheView.position + contextOfTheView.size;
-    if (glm::any(glm::lessThan(contextOfTheViewEnd, glm::ivec2(0)))) {
-        return;
-    }
+    const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
 
-    const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
+    const bool showRedraw = [&] {
+        if (view->mRedrawRequested) [[unlikely]] {
+            if (auto w = AWindow::current()) [[unlikely]] {
+                if (w->profiling().highlightRedrawRequests) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }();
+    AUI_DEFER {
+        if (showRedraw) [[unlikely]] {
+            auto c = contextOfTheView.render.getColor();
+            AUI_DEFER { contextOfTheView.render.setColorForced(c); };
+            contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+        }
+    };
 
-    RenderHints::PushState s;
+    RenderHints::PushState s(contextOfTheView.render);
     glm::mat4 t(1.f);
     view->getTransform(t);
-    ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
-    ARender::setTransform(t);
-
+    contextOfTheView.render.setTransform(t);
+    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
+        view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
+        // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture
+        // optimizations.
+        // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
+        // and contains uncommited data.
+        if (view->mRenderToTexture->drawFromTexture) {
+            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+            return;
+        }
+    }
     try {
         view->render(contextOfTheView);
-        view->postRender();
+        view->postRender(contextOfTheView);
     }
     catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        ARender::getRenderer()->setStencilDepth(prevStencilLevel);
+        contextOfTheView.render.setStencilDepth(prevStencilLevel);
         return;
     }
 
-    auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
-    AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    {
+        auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
+        AUI_ASSERT(currentStencilLevel == prevStencilLevel);
+    }
 }
 
 
@@ -78,6 +126,7 @@ AViewContainer::~AViewContainer() {
 void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
         view->onViewGraphSubtreeChanged();
     }
@@ -93,6 +142,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 
 void AViewContainer::addView(const _<AView>& view) {
     AUI_NULLSAFE(view->mParent)->removeView(view);
+    view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
@@ -105,6 +155,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
+    view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
@@ -112,6 +163,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
+    view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view, index);
@@ -120,7 +172,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::setLayout(_<ALayout> layout) {
+void AViewContainer::setLayout(_unique<ALayout> layout) {
     for (const auto& v : mViews) {
         v->mParent = nullptr;
     }
@@ -173,7 +225,7 @@ void AViewContainer::removeView(size_t index) {
     emit childrenChanged;
 }
 
-void AViewContainer::render(ClipOptimizationContext context) {
+void AViewContainer::render(ARenderContext context) {
     AView::render(context);
     renderChildren(context);
 }
@@ -338,10 +390,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-_<ALayout> AViewContainer::getLayout() const {
-    return mLayout;
-}
-
 
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
@@ -367,7 +415,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
         }
 
         if (hitTest) {
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
@@ -397,27 +445,45 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
 void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
-    adjustContentSize();
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
 }
 
 void AViewContainer::invalidateAllStyles() {
     AView::invalidateAllStyles();
     if (mSizeSet)
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::updateLayout() {
-    /*
-    if (getContentMinimumWidth() > getContentWidth() ||
-        getContentMinimumHeight() > getContentHeight()) {
-        //AWindow::current()->flagUpdateLayout();
-    } else {
-    }*/
-    if (mLayout)
-        mLayout->onResize(mPadding.left, mPadding.top,
-                          getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-    invalidateCaches();
+void AViewContainer::applyGeometryToChildren() {
+    if (!mLayout) {
+        // no layout = no update.
+        return;
+    }
+    mLayout->onResize(mPadding.left, mPadding.top,
+                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+}
+
+void AViewContainer::applyGeometryToChildrenIfNecessary() {
+    if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
+        if (mLastLayoutUpdateSize == getSize()) {
+            // no need to go deeper.
+            return;
+        }
+    }
+    mWantsLayoutUpdate = false;
+    mLastLayoutUpdateSize = getSize();
+    AUI_ASSERT(!mRepaintTrap.hasValue());
+    mRepaintTrap.emplace();
+    AUI_DEFER {
+        mRepaintTrap.reset();
+    };
+    applyGeometryToChildren();
+    if (mRepaintTrap->triggered) {
+        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
+        // we would like to repaint whole container
+        redraw();
+    }
+    mConsumesClickCache.reset();
 }
 
 void AViewContainer::removeAllViews() {
@@ -430,15 +496,6 @@ void AViewContainer::removeAllViews() {
     }
     mViews.clear();
     invalidateCaches();
-}
-
-void AViewContainer::updateParentsLayoutIfNecessary() {
-    if (mPreviousSize != mSize) {
-        mPreviousSize = mSize;
-        if (mParent) {
-            mParent->updateLayout();
-        }
-    }
 }
 
 void AViewContainer::onDpiChanged() {
@@ -459,9 +516,13 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     mCustomStyleRule = std::move(container->mCustomStyleRule);
     mAssNames.insertAll(container->mAssNames);
     mAssHelper = nullptr;
+    invalidateCaches();
 }
 
 void AViewContainer::setEnabled(bool enabled) {
+    if (isEnabled() == enabled) [[unlikely]] {
+        return;
+    }
     AView::setEnabled(enabled);
     notifyParentEnabledStateChanged(enabled);
 }
@@ -512,14 +573,6 @@ void AViewContainer::onCharEntered(char16_t c) {
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
 }
 
-void AViewContainer::adjustContentSize() {
-    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustVerticalSizeToContent();
-
-    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustHorizontalSizeToContent();
-}
-
 void AViewContainer::adjustHorizontalSizeToContent() {
     setFixedSize(glm::ivec2(0, getFixedSize().y));
 }
@@ -540,6 +593,8 @@ void AViewContainer::onClickPrevented() {
 
 void AViewContainer::invalidateCaches() {
     mConsumesClickCache.reset();
+    markMinContentSizeInvalid();
+    redraw();
 }
 
 void AViewContainer::onViewGraphSubtreeChanged() {
@@ -565,7 +620,30 @@ void AViewContainer::setViews(AVector<_<AView>> views) {
 
     for (const auto& view : mViews) {
         view->mParent = this;
+        view->mSkipUntilLayoutUpdate = true;
         if (mLayout)
             mLayout->addView(view);
     }
+}
+
+void AViewContainer::markMinContentSizeInvalid() {
+    AView::markMinContentSizeInvalid();
+    mWantsLayoutUpdate = true;
+}
+
+void AViewContainer::forceUpdateLayoutRecursively() {
+    AView::forceUpdateLayoutRecursively();
+    mWantsLayoutUpdate = true;
+    for (const auto& view: mViews) {
+        view->forceUpdateLayoutRecursively();
+    }
+    applyGeometryToChildrenIfNecessary();
+}
+
+void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mRepaintTrap) {
+        mRepaintTrap->triggered = true;
+        return;
+    }
+    AView::markPixelDataInvalid(invalidArea);
 }

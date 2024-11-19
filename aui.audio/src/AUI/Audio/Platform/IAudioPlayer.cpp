@@ -68,11 +68,11 @@ void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
 }
 
 void IAudioPlayer::onFinished() {
-    if (!loop()) {
-        mPlaybackStatus = PlaybackStatus::STOPPED;
-        release();
-    }
-    emit finished;
+    release();
+    mPlaybackStatus = PlaybackStatus::STOPPED;
+    getThread()->enqueue([this, self = _cast<IAudioPlayer>(sharedPtr())]() {
+        emit finished;
+    });
 }
 
 void IAudioPlayer::rewind() {

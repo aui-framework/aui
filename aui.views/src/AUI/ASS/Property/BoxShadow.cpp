@@ -14,11 +14,11 @@
 //
 
 #include "BoxShadow.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 
-void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view) {
-    ARender::boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
+void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderContext& ctx) {
+    ctx.render.boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
                        mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
                       glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
                        mInfo.blurRadius,
@@ -31,4 +31,11 @@ ass::prop::PropertySlot ass::prop::Property<ass::BoxShadow>::getPropertySlot() c
 
 bool ass::prop::Property<ass::BoxShadow>::isNone() {
     return mInfo.color.isFullyTransparent();
+}
+
+void ass::prop::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    auto shadowRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * float(mInfo.spreadRadius));
+    shadowRect.translate({mInfo.offsetX, mInfo.offsetY});
+    invalidRect.p1 = glm::min(invalidRect.p1, shadowRect.p1);
+    invalidRect.p2 = glm::max(invalidRect.p2, shadowRect.p2);
 }

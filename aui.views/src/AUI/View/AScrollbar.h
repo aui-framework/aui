@@ -68,6 +68,7 @@ public:
  * @brief A single scrollbar
  * @ingroup useful_views
  * @see AScrollArea
+ * @see ASlider
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;
@@ -109,7 +110,7 @@ public:
         }
     }
 
-    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+    void setAppearance(ass::ScrollbarAppearance::AxisValue appearance) {
         mAppearance = appearance;
     }
 
@@ -177,7 +178,7 @@ private:
      * @see AScrollbar::setStickToEnd()
      */
     AOptional<StickToEnd> mStickToEnd;
-    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
+    ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
 };
 
 

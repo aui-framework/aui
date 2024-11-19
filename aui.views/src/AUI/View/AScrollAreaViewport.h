@@ -16,7 +16,6 @@
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief Inner component of AScrollArea that manages rendering and event handling with custom offset (scroll).
@@ -26,9 +25,10 @@ class AScrollAreaContainer;
  *
  * This view does not handle scroll events and tocuh events related to scroll. Use AScrollArea for such case.
  */
-class API_AUI_VIEWS AScrollAreaInner: public AViewContainer {
+class API_AUI_VIEWS AScrollAreaViewport: public AViewContainer {
 public:
-    AScrollAreaInner() = default;
+    AScrollAreaViewport();
+    ~AScrollAreaViewport() override;
 
     void setContents(_<AView> content);
 
@@ -37,19 +37,28 @@ public:
         return mContents;
     }
 
-    void updateLayout() override;
+    void applyGeometryToChildren() override;
   
     void setScroll(glm::uvec2 scroll) {
+        if (mScroll == scroll) [[unlikely]] {
+            return;
+        }
         mScroll = scroll;
         updateContentsScroll();
     }
 
     void setScrollX(unsigned scroll) {
+        if (mScroll.x == scroll) [[unlikely]] {
+            return;
+        }
         mScroll.x = scroll;
         updateContentsScroll();
     }
 
     void setScrollY(unsigned scroll) {
+        if (mScroll.y == scroll) [[unlikely]] {
+            return;
+        }
         mScroll.y = scroll;
         updateContentsScroll();
     }
@@ -60,7 +69,10 @@ public:
     }
 
 private:
+    class Inner;
+    _<Inner> mInner;
     _<AView> mContents;
+
     glm::uvec2 mScroll = {0, 0};
 
     void updateContentsScroll();

@@ -44,7 +44,7 @@ namespace ass {
 
             }
 
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             bool isNone() override;
 

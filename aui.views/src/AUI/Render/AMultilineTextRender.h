@@ -12,7 +12,7 @@
 #pragma once
 
 
-#include "ARender.h"
+#include "IRenderer.h"
 #include <AUI/Util/AWordWrappingEngine.h>
 #include "AUI/Font/AFontStyle.h"
 
@@ -41,7 +41,7 @@ friend class TextEntry;
         }
         glm::ivec2 getSize() override;
         void setPosition(const glm::ivec2& position) override;
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         ~TextEntry() override = default;
 
@@ -52,7 +52,7 @@ friend class TextEntry;
 
 
 public:
-    ARender::PrerenderedString updateText(const AString& text, const glm::ivec2& size);
+    _<IRenderer::IPrerenderedString> updateText(const AString& text, const glm::ivec2& size, IRenderer& render);
 
     void setFontStyle(const AFontStyle& fontStyle) {
         mFontStyle = fontStyle;

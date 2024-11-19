@@ -39,7 +39,7 @@ template<typename Layout, typename... Args>
 inline auto _container(AVector<_<AView>> views, Args&&... args)
 {
     auto c = _new<AViewContainer>();
-    c->setLayout(_new<Layout>(std::forward<Args>(args)...));
+    c->setLayout(std::make_unique<Layout>(std::forward<Args>(args)...));
 
     c->setViews(std::move(views));
 
@@ -49,7 +49,7 @@ inline auto _container(AVector<_<AView>> views, Args&&... args)
 inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views)
 {
 	auto c = _new<AViewContainer>();
-	c->setLayout(_new<AAdvancedGridLayout>(2, views.size()));
+	c->setLayout(std::make_unique<AAdvancedGridLayout>(2, views.size()));
 	c->setExpanding({2, 0});
 	for (const auto& v : views) {
 		try {
@@ -104,6 +104,17 @@ using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayou
  * </p>
  */
 using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
+
+/**
+ * Places views according to specified xy coordinates.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AAbsoluteLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Absolute = aui::ui_building::layouted_container_factory<AAbsoluteLayout>;
 
 /**
  * Does not actually set the layout. The views' geometry is determined manually.

@@ -139,7 +139,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
-        mTargetWindow->setProfiledView(nullptr);
+        mTargetWindow->profiling().highlightView.reset();
         mTargetWindow->redraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {
@@ -162,5 +162,5 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
 }
 
 void DevtoolsLayoutTab::forceLayoutUpdate() {
-    mTargetWindow->updateLayout();
+    mTargetWindow->forceUpdateLayoutRecursively();
 }

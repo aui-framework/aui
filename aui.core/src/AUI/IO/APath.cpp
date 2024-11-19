@@ -207,6 +207,7 @@ APath APath::absolute() const {
         aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
     buf.resizeToNullTerminator();
+    buf.removeBackSlashes();
     return buf;
 #else
     auto rawPath = aui::ptr::make_unique_with_deleter(realpath(toStdString().c_str(), nullptr), free);
@@ -318,7 +319,7 @@ APath APath::workingDir() {
     APath p;
     p.resize(0x800);
     p.resize(GetCurrentDirectory(p.length(), aui::win32::toWchar(p)));
-    p.replaceAll('\\', '/');
+    p.removeBackSlashes();
     return p;
 }
 

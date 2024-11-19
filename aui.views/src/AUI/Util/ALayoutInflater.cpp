@@ -18,10 +18,10 @@
 #include <AUI/Platform/ABaseWindow.h>
 
 void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView>& view) {
-    root->setLayout(_new<AStackedLayout>());
+    root->setLayout(std::make_unique<AStackedLayout>());
     if (view) {
         view->setExpanding();
         root->addView(view);
     }
-    AUI_NULLSAFE(root->getWindow())->flagUpdateLayout();
+    root->markMinContentSizeInvalid();
 }

@@ -44,7 +44,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     if (!targetView) {
         return;
     }
-    AUI_NULLSAFE(targetView->getWindow())->setProfiledView(targetView);
+    AUI_NULLSAFE(targetView->getWindow())->profiling().highlightView = targetView;
     AUI_NULLSAFE(targetView->getWindow())->redraw();
 
     mTargetView = targetView;
@@ -64,7 +64,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             },
             Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(ALayoutDirection::NONE), targetView->getMinimumHeight(ALayoutDirection::NONE)) },
             CheckBoxWrapper {
-                Label { "Enabled "},
+                Label { "Enabled"},
             } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
@@ -73,6 +73,15 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                 });
             },
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+            Horizontal{
+                Button{"Add \"DevtoolsTest\" stylesheet name"} let {
+                    it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
+                    connect(it->clicked, [=] {
+                        targetView->addAssName("DevtoolsTest");
+                        setTargetView(targetView);
+                    });
+                },
+            },
             CheckBoxWrapper {
                 Label {"Expanding"},
             } let {
@@ -111,7 +120,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     dst->addView( _new<ALabel>("}") << ".declaration_br");
     AScrollArea::setContents(dst);
 
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
     redraw();
 }
 
@@ -132,7 +141,7 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
 void ViewPropertiesView::requestTargetUpdate() {
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
-            targetWindow->updateLayout();
+            targetWindow->applyGeometryToChildrenIfNecessary();
             targetWindow->redraw();
         }
     }

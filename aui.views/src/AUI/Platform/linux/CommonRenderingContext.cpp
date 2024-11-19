@@ -128,8 +128,6 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
     XSetICFocus((XIC)window.mIC);
 
 
-    XMapWindow(ourDisplay, window.mHandle);
-
     auto title = init.name.toStdString();
     XStoreName(ourDisplay, window.mHandle, title.c_str());
     XChangeProperty(ourDisplay, window.mHandle, XInternAtom(ourDisplay, "_NET_WM_NAME", false),

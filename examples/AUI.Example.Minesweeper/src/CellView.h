@@ -25,6 +25,6 @@ public:
 
 
 	int getContentMinimumWidth(ALayoutDirection layout) override;
-	void render(ClipOptimizationContext context) override;
+	void render(ARenderContext context) override;
 	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
 };

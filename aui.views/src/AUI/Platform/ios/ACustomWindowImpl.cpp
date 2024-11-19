@@ -17,7 +17,7 @@
 #if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Platform/AFontManager.h"
 

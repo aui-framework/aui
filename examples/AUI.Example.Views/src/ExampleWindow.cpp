@@ -80,7 +80,7 @@ struct MyModel {
 
 void fillWindow(_<AViewContainer> t)
 {
-    t->setLayout(_new<AStackedLayout>());
+    t->setLayout(std::make_unique<AStackedLayout>());
     t->addView(_new<ALabel>("Window contents"));
 }
 
@@ -102,7 +102,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
     allowDragNDrop();
 
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
     AStylesheet::global().addRules({
                                            {
                                                    c(".all_views_wrap") > t<AViewContainer>(),
@@ -112,7 +112,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     addView(Horizontal {
             _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
-            AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
+            AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework"),
     });
 
     _<ATabView> tabView;
@@ -190,7 +190,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         GroupBox {
                                 Label { "Window factory" },
                                 Vertical {
-                                        CheckBoxWrapper { Label { "Resizeable" } },
+                                        // CheckBoxWrapper { Label { "Resizeable" } }, TODO
                                         _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
                                             auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                                             fillWindow(w);
@@ -346,7 +346,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, [](int64_t x) {
                                     AWindow::current()->setScalingParams({
                                         .scalingFactor = x * 0.25f,
-                                        .maximalWindowSizeDp = std::nullopt
+                                        .minimalWindowSizeDp = std::nullopt
                                     });
                                 }) let {
                                     it->setMin(1);

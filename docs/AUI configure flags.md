@@ -33,8 +33,10 @@ Whether build examples or not.
 ## AUI_BUILD_FOR
 Specifies target platform for cross-compilation (see [cross-compiling](@ref md_docs_Crosscompiling)).
 
-## AUI_CACHE_DIR
-Changes aui.boot's cache dir (which is `~/.aui` by default)
+## AUIB_CACHE_DIR
+Changes aui.boot's cache dir (which is `~/.aui` by default).
+
+Can be defined as environment variable.
 
 ## AUI_INSTALL_RUNTIME_DEPENDENCIES
 When `true`, all AUI's dependencies will be installed along with it. **WARNING** on Linux doing `make install` with `AUI_INSTALL_RUNTIME_DEPENDENCIES=TRUE` is dangerous and may cause system instability. It will replace some system libraries with AUI's ones (i.e. `libssl`, `libcrypto`, `GLEW`, etc...) which may produce the following messages:

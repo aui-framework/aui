@@ -20,7 +20,7 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "AUI/Platform/ErrorToException.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -263,9 +263,8 @@ void AWindow::show() {
     }
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
         AThread::current() << [&]() {
-            redraw();
+            XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
         };
-        XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
     emit shown();
@@ -409,8 +408,12 @@ void AWindowManager::loop() {
             }
         }
 
-        if (poll(ps, std::size(ps), -1) < 0) {
+        // [1000 ms timeout] sometimes, leaving an always rerendering window (game) work a long time deadlocks the loop
+        // in infinite poll.
+        if (int p = poll(ps, std::size(ps), 1000); p < 0) {
             aui::impl::unix_based::lastErrorToException("eventloop poll failed");
+        } else if (p == 0) {
+            continue;
         }
         mFastPathNotify = false;
         if (ps[1].revents & POLLIN) {
@@ -508,8 +511,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         if (auto w = _cast<ACustomWindow>(window)) {
                             w->handleXConfigureNotify();
                         }
-                        window->mRedrawFlag = false;
-                        window->redraw();
+                        window->mRedrawFlag = true;
 
                         XSyncValue syncValue;
                         XSyncIntsToValue(&syncValue,

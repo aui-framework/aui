@@ -19,9 +19,9 @@
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"
 #include "AUI/Common/AVector.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/RenderHints.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "glm/fwd.hpp"
 
 
@@ -89,9 +89,9 @@ public:
     void removeView(size_t index);
     void removeAllViews();
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
-    void renderChildren(ClipOptimizationContext contextPassedToContainer) {
+    void renderChildren(ARenderContext contextPassedToContainer) {
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
@@ -125,8 +125,6 @@ public:
 
     void setEnabled(bool enabled = true) override;
 
-    void adjustContentSize();
-
     void adjustHorizontalSizeToContent();
 
     void adjustVerticalSizeToContent();
@@ -142,9 +140,12 @@ public:
     /**
      * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
      */
-    void setLayout(_<ALayout> layout);
+    void setLayout(_unique<ALayout> layout);
 
-    _<ALayout> getLayout() const;
+    [[nodiscard]]
+    const _unique<ALayout>& getLayout() const noexcept {
+        return mLayout;
+    }
 
     /**
      * @brief Finds first direct child view under position.
@@ -195,17 +196,12 @@ public:
             if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x || targetPos.y >= view->getSize().y) {
                 continue;
             }
-            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY)) {
-                if (view->getVisibility() == Visibility::GONE ||
-                    view->getVisibility() == Visibility::UNREACHABLE) {
-                    continue;
-                }
+            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY) && !(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
+                continue;
             }
 
             if (view->consumesClick(targetPos)) {
-                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
-                                                                        view->getVisibility() !=
-                                                                        Visibility::UNREACHABLE)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                     if (process(view)) {
                         return true;
                     }
@@ -237,7 +233,7 @@ public:
     bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainer>(view)) {
@@ -297,12 +293,20 @@ public:
     }
 
 
-    virtual void updateLayout();
+    void applyGeometryToChildrenIfNecessary();
 
     const AVector<_<AView>>& getViews() const {
         return mViews;
     }
 
+
+    /**
+     * @brief Adds view to container without exposing it to the layout manager.
+     * @details
+     * User is obligated to manage view's layout by themselves. Implement applyGeometryToChildren() to do so.
+     *
+     * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
+     */
     void addViewCustomLayout(const _<AView>& view);
 
     void onKeyDown(AInput::Key key) override;
@@ -315,11 +319,6 @@ public:
 
     bool capturesFocus() override;
 
-    virtual void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
-        mScrollbarAppearance = scrollbarAppearance;
-        emit scrollbarAppearanceSet(scrollbarAppearance);
-    }
-    
     /**
      * @see mPointerEventsMapping
      */
@@ -327,19 +326,28 @@ public:
         return mPointerEventsMapping;
     }
 
+    void forceUpdateLayoutRecursively() override;
+
+    void markMinContentSizeInvalid() override;
+    void markPixelDataInvalid(ARect<int> invalidArea) override;
+
 protected:
     AVector<_<AView>> mViews;
-    ScrollbarAppearance mScrollbarAppearance;
+    bool mWantsLayoutUpdate = true;
+    glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
-    void drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer);
+    void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 
     template<typename Iterator>
-    void drawViews(Iterator begin, Iterator end, ClipOptimizationContext contextPassedToContainer) {
+    void drawViews(Iterator begin, Iterator end, ARenderContext contextPassedToContainer) {
         switch (mOverflow) {
             case AOverflow::VISIBLE: break;
             case AOverflow::HIDDEN:
             case AOverflow::HIDDEN_FROM_THIS:
-                contextPassedToContainer = { .position = glm::ivec2(0), .size = getSize() };
+                contextPassedToContainer.clip(ARect<int>{
+                    .p1 = {0, 0},
+                    .p2 = getSize(),
+                });
         }
         
         for (auto i = begin; i != end; ++i) {
@@ -354,11 +362,6 @@ protected:
     void invalidateAssHelper() override;
 
     /**
-     * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
-     */
-    virtual void updateParentsLayoutIfNecessary();
-
-    /**
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
      * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
      * @note If access to this function is restricted or you want to pass an object derived from AViewContainer, you
@@ -366,17 +369,23 @@ protected:
      */
     void setContents(const _<AViewContainer>& container);
 
+    virtual void applyGeometryToChildren();
+
 signals:
-    emits<ScrollbarAppearance> scrollbarAppearanceSet;
     /**
      * @brief Emitted when addView(s)/removeView/setLayout was called.
      */
     emits<> childrenChanged;
 
 private:
-    _<ALayout> mLayout;
+    _unique<ALayout> mLayout;
     bool mSizeSet = false;
-    glm::ivec2 mPreviousSize = mSize;
+
+
+    struct RepaintTrap {
+        bool triggered = false;
+    };
+    AOptional<RepaintTrap> mRepaintTrap;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

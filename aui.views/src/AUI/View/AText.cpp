@@ -161,45 +161,56 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
-    if (!mPrerenderedString) {
-        prerenderString();
+    if (mExpanding.x != 0 || mFixedSize.x != 0) {
+        // there's no need to calculate min size because width is defined.
+        return 0;
     }
 
-    return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
+    int accumulator = 0;
+    for (const auto& e : mEngine.entries()) {
+        if (accumulator + e->getSize().x > mMaxSize.x) {
+            if (accumulator == 0) {
+                return mMaxSize.x;
+            }
+            // there's no need to calculate min size further.
+            return accumulator;
+        }
+        accumulator += e->getSize().x;
+    }
+    return accumulator;
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (getAssNames().contains("DevtoolsTest")) {
+        printf("\n");
+    }
     if (!mPrerenderedString) {
-        prerenderString();
+        performLayout();
     }
 
-    auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
-    auto engineHeight = mEngine.getHeight();
-    if (engineHeight.has_value()) {
-        height = std::max(height, *engineHeight);
+    if (auto engineHeight = mEngine.height()) {
+        return *engineHeight;
     }
 
-    return height;
+    return 0;
 }
 
-void AText::render(ClipOptimizationContext context) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
+void AText::render(ARenderContext context) {
     AViewContainer::render(context);
 
+    if (!mPrerenderedString) {
+        prerenderString(context);
+    }
     if (mPrerenderedString) {
+        context.render.setColor(getTextColor());
         mPrerenderedString->draw();
     }
 }
 
-void AText::prerenderString() {
-    mEngine.setTextAlign(getFontStyle().align);
-    mEngine.setLineHeight(getFontStyle().lineSpacing);
-    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
+void AText::prerenderString(ARenderContext ctx) {
+    performLayout();
     {
-        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
+        auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
 
         if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
             for (auto& wordEntry: mWordEntries) {
@@ -219,13 +230,18 @@ void AText::prerenderString() {
     }
 }
 
+void AText::performLayout() {
+    mEngine.setTextAlign(getFontStyle().align);
+    mEngine.setLineHeight(getFontStyle().lineSpacing);
+    mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
+}
+
 void AText::setSize(glm::ivec2 size) {
     bool widthDiffers = size.x != getWidth();
-    int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
     AViewContainer::setSize(size);
     if (widthDiffers) {
-        prerenderString();
-        AWindow::current()->flagUpdateLayout();
+        mPrerenderedString = nullptr;
+        markMinContentSizeInvalid();
     }
 }
 
@@ -237,8 +253,8 @@ void AText::WordEntry::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
 
-Float AText::WordEntry::getFloat() const {
-    return Float::NONE;
+AFloat AText::WordEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 glm::ivec2 AText::WhitespaceEntry::getSize() {
@@ -249,8 +265,8 @@ void AText::WhitespaceEntry::setPosition(const glm::ivec2& position) {
 
 }
 
-Float AText::WhitespaceEntry::getFloat() const {
-    return Float::NONE;
+AFloat AText::WhitespaceEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 bool AText::WhitespaceEntry::escapesEdges() {
@@ -266,12 +282,8 @@ void AText::CharEntry::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
 
-Float AText::CharEntry::getFloat() const {
-    return Float::NONE;
-}
-
-void AText::invalidateFont() {
-    mPrerenderedString.reset();
+AFloat AText::CharEntry::getFloat() const {
+    return AFloat::NONE;
 }
 
 void AText::clearContent() {
@@ -279,4 +291,19 @@ void AText::clearContent() {
     mCharEntries.clear();
     removeAllViews();
     mPrerenderedString = nullptr;
+}
+
+void AText::invalidateAllStyles() {
+    invalidateAllStylesFont();
+    AViewContainer::invalidateAllStyles();
+}
+
+void AText::commitStyle() {
+    AView::commitStyle();
+    commitStyleFont();
+}
+
+void AText::invalidateFont() {
+    mPrerenderedString.reset();
+    markMinContentSizeInvalid();
 }

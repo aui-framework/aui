@@ -18,21 +18,21 @@
 #include "IProperty.h"
 
 
-void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view) {
+void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARenderContext& ctx) {
     ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
-        ARender::roundedRect(brush,
+        ctx.render.roundedRectangle(brush,
                              {0, 0},
                              view->getSize(),
                              view->getBorderRadius());
     } else  {
-        ARender::rect(brush,
-                      {0, 0},
-                      view->getSize());
+        ctx.render.rectangle(brush,
+                             {0, 0},
+                             view->getSize());
 
     }
 
-    IPropertyBase::renderFor(view);
+    IPropertyBase::renderFor(view, ctx);
 }
 
 bool ass::prop::Property<ass::BackgroundSolid>::isNone() {

@@ -105,7 +105,7 @@ ACurl::Builder::~Builder() {
 	assert(mCURL == nullptr);
 }
 
-_<IInputStream> ACurl::Builder::toInputStream() {
+_unique<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
         _<ACurl> mCurl;
@@ -131,7 +131,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
         }
     };
 
-    return _new<CurlInputStream>(_new<ACurl>(*this));
+    return std::make_unique<CurlInputStream>(_new<ACurl>(*this));
 }
 
 
@@ -276,6 +276,9 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             success(*this);
         });
     }
+
+    res = curl_easy_setopt(mCURL, CURLOPT_ACCEPT_ENCODING, "");
+    AUI_ASSERT(res == CURLE_OK);
 
     return *this;
 }

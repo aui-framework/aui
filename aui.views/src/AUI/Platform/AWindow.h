@@ -47,7 +47,6 @@ class API_AUI_VIEWS AWindow: public ABaseWindow
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
-        ARender::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -215,7 +214,6 @@ public:
 
 signals:
     emits<> closed;
-    emits<> redrawn;
     emits<> shown;
 
     /**
@@ -243,7 +241,6 @@ signals:
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void flagUpdateLayout() override;
 protected:
 #if AUI_PLATFORM_WIN
     HICON mIcon = nullptr;
@@ -271,6 +268,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+
     float fetchDpiFromSystem() const override;
 
     /**
@@ -300,7 +298,6 @@ private:
 #else
     bool mRedrawFlag = true;
 #endif
-    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
 

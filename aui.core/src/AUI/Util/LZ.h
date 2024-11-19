@@ -13,24 +13,24 @@
 
 #include "AUI/Core.h"
 #include "AUI/Common/AException.h"
+#include "AUI/IO/IInputStream.h"
 
 class AByteBuffer;
+
 class AByteBufferView;
 
-class AZLibException: public AException
-{
+class AZLibException : public AException {
 public:
-	AZLibException()
-	{
-	}
+    AZLibException() {
+    }
 
-	AZLibException(const AString& message)
-		: AException(message)
-	{
-	}
+    AZLibException(const AString& message)
+            : AException(message) {
+    }
 };
 
-namespace LZ {
-	void API_AUI_CORE compress(AByteBufferView b, AByteBuffer& dst);
-	void API_AUI_CORE decompress(AByteBufferView b, AByteBuffer& dst);
+namespace aui::zlib {
+    void API_AUI_CORE compress(AByteBufferView b, AByteBuffer& dst);
+    void API_AUI_CORE decompress(AByteBufferView b, AByteBuffer& dst);
+    _unique<IInputStream> API_AUI_CORE decompressToStream(AByteBufferView b);
 }

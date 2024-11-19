@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cassert>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AStaticVector.h>
 
 /**
  * @deprecated Use std::span instead.
@@ -25,6 +26,11 @@ class AArrayView {
 public:
     AArrayView(const T* data, std::size_t count) noexcept : mData(data), mCount(count) {}
     AArrayView(const AVector<T>& vector) noexcept: mData(vector.data()), mCount(vector.size()) {
+
+    }
+
+    template<size_t Capacity>
+    AArrayView(const AStaticVector<T, Capacity>& vector) noexcept: mData(vector.data()), mCount(vector.size()) {
 
     }
 

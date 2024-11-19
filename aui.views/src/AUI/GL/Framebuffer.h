@@ -100,10 +100,12 @@ namespace gl {
             return *this;
         }
 
+        static gl::Framebuffer* current();
+
     private:
         uint32_t mHandle = 0;
         std::uint32_t mSupersamplingRatio = 1; 
-        glm::u32vec2 mSize;
+        glm::u32vec2 mSize{0, 0};
         AVector<_<IRenderTarget>> mAttachedTargets;
     };
 }

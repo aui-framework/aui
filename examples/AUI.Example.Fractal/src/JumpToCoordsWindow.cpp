@@ -24,7 +24,7 @@
 JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent):
     AWindow("Jump to coords", 854_dp, 500_dp, parent, WindowStyle::NO_RESIZE)
 {
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     auto re = _new<ATextField>();
     auto im = _new<ATextField>();

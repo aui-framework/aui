@@ -14,6 +14,7 @@
 
 #include <AUI/Util/AWordWrappingEngine.h>
 #include "AViewContainer.h"
+#include "AUI/Font/IFontView.h"
 #include <initializer_list>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
@@ -26,8 +27,14 @@
  * Used to display rich text or large texts.
  *
  * Unlike ALabel, AText is optimized to store, render, word break large texts.
+ *
+ * AText always prefers expanding in horizontal over vertical.
+ *
+ * To perform word breaking, AText requires it's width to be fully defined (either by FixedSize, Expanding or MaxSize),
+ * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
+ * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText: public AViewContainer {
+class API_AUI_VIEWS AText: public AViewContainer, public IFontView {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
@@ -56,16 +63,23 @@ public:
     void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
     void clearContent();
     void setHtml(const AString& html, const Flags& flags = {});
-    void setString(const AString& string, const Flags& flags = {});
+    void setString(const AString& string, const Flags& flags);
+    void setString(const AString& string) {
+        setString(string, {});
+    }
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
-    void prerenderString();
+    void prerenderString(ARenderContext ctx);
 
     void invalidateFont() override;
 
+protected:
+    void commitStyle() override;
+
+    void invalidateAllStyles() override;
 
 private:
     class CharEntry: public AWordWrappingEngine::Entry {
@@ -82,7 +96,7 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         const glm::ivec2& getPosition() const {
             return mPosition;
@@ -106,7 +120,7 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         const glm::ivec2& getPosition() const {
             return mPosition;
@@ -127,7 +141,7 @@ private:
 
         glm::ivec2 getSize() override;
         void setPosition(const glm::ivec2& position) override;
-        Float getFloat() const override;
+        AFloat getFloat() const override;
 
         bool escapesEdges() override;
 
@@ -138,7 +152,7 @@ private:
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;
 
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     ParsedFlags mParsedFlags;
 
 
@@ -147,6 +161,8 @@ private:
                   const ParsedFlags& flags);
 
     static ParsedFlags parseFlags(const Flags& flags);
+
+    void performLayout();
 };
 
 

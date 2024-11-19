@@ -42,7 +42,10 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
-    render({.position = glm::ivec2(0), .size = getSize()});
+    APerformanceSection s("AWindow::doDrawWindow");
+    auto& renderer = mRenderingContext->renderer();
+    renderer.setWindow(this);
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -78,6 +81,7 @@ void AWindow::redraw() {
     APerformanceFrame frame([&](APerformanceSection::Datas sections) {
         emit performanceFrameComplete(sections);
     });
+    APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
 #endif
 
     {
@@ -85,23 +89,26 @@ void AWindow::redraw() {
             return;
         }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        mRenderingContext->beginPaint(*this);
-        ARaiiHelper endPaintCaller = [&] {
+        {
+            APerformanceSection s("IRenderingContext::beginPaint");
+            mRenderingContext->beginPaint(*this);
+        }
+        AUI_DEFER {
+            APerformanceSection s("IRenderingContext::endPaint");
             mRenderingContext->endPaint(*this);
         };
 
-        if (mUpdateLayoutFlag) {
-            mUpdateLayoutFlag = false;
+        if (mMarkedMinContentSizeInvalid) {
             AUI_REPEAT(2) { // AText may trigger extra layout update
-                updateLayout();
+                applyGeometryToChildrenIfNecessary();
             }
+            mMarkedMinContentSizeInvalid = false;
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time
@@ -119,8 +126,10 @@ void AWindow::redraw() {
             }
         }
     }
-
-    emit redrawn();
+    {
+        APerformanceSection s2("emit redrawn");
+        emit redrawn();
+    }
 }
 
 _<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
@@ -170,12 +179,6 @@ void AWindow::onKeyRepeat(AInput::Key key) {
 ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
-
-void AWindow::flagUpdateLayout() {
-    flagRedraw();
-    mUpdateLayoutFlag = true;
-}
-
 
 void AWindow::onCloseButtonClicked() {
     close();

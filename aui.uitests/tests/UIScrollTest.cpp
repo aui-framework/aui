@@ -31,7 +31,7 @@ public:
             }
         );
         *this << ".container";
-        setCustomStyle({ ass::BackgroundSolid{ 0xff0000_rgb, } });
+        setCustomStyle({ ass::BackgroundSolid{ AColor::BLUE } });
     
         EXPECT_CALL(*this, setSize(testing::_)).Times(testing::AtLeast(1));
     }
@@ -77,21 +77,19 @@ protected:
 };
 
 TEST_F(UIScrollTest, ContainedViewExpanded) {
-    // scroll a little to see whether container view expanded properly
-    mTestWindow->updateLayout();
     By::type<AScrollArea>().perform(scroll({0, 500}));
-    By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+    (By::name(".container") | By::type<AScrollArea>()).check(areBottomAligned());
 }
 
 TEST_F(UIScrollTest, ScrollTo1) {
-    mTestWindow->updateLayout();
+    mTestWindow->applyGeometryToChildrenIfNecessary();
     By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
     By::text("Bottom").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
 }
 
 TEST_F(UIScrollTest, ScrollTo2) {
-    mTestWindow->updateLayout();
+    mTestWindow->applyGeometryToChildrenIfNecessary();
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
     By::text("Content").check(isTopAboveTopOf(By::type<AScrollArea>()), "first check");
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBigContent);

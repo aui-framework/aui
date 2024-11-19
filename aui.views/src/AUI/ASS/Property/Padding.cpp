@@ -18,10 +18,10 @@
 void ass::prop::Property<ass::Padding>::applyFor(AView* view) {
     auto padding = view->getPadding();
 
-    mInfo.left.bind_to(padding.left);
-    mInfo.top.bind_to(padding.top);
-    mInfo.right.bind_to(padding.right);
-    mInfo.bottom.bind_to(padding.bottom);
+    mInfo.left.bindTo(padding.left);
+    mInfo.top.bindTo(padding.top);
+    mInfo.right.bindTo(padding.right);
+    mInfo.bottom.bindTo(padding.bottom);
 
     view->setPadding(padding);
 }

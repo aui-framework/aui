@@ -87,6 +87,7 @@ void gl::Texture<TEXTURE_TARGET>::setupClampToEdge() {
 
 template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
+    AUI_ASSERTX(getHandle() != 0, "gl::Texture::bind: mTexture == 0");
     gl::State::activeTexture(index);
     gl::State::bindTexture(TEXTURE_TARGET, mTexture);
 }

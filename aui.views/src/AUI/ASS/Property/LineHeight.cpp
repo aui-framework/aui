@@ -14,7 +14,8 @@
 //
 
 #include "LineHeight.h"
+#include "AUI/Font/IFontView.h"
 
 void ass::prop::Property<ass::LineHeight>::applyFor(AView* view) {
-    view->getFontStyle().lineSpacing = mInfo.spacing;
+    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().lineSpacing = mInfo.spacing;
 }

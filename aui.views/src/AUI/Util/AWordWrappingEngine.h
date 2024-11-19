@@ -16,7 +16,7 @@
 #include <AUI/Common/AVector.h>
 #include <glm/glm.hpp>
 #include <AUI/Enum/ATextAlign.h>
-#include <AUI/Enum/Float.h>
+#include <AUI/Enum/AFloat.h>
 
 class API_AUI_VIEWS AWordWrappingEngine {
 public:
@@ -28,11 +28,11 @@ public:
         virtual void setPosition(const glm::ivec2& position) = 0;
 
         [[nodiscard]]
-        virtual Float getFloat() const = 0;
+        virtual AFloat getFloat() const = 0;
 
         [[nodiscard]]
         bool isFloating() const {
-            return getFloat() != Float::NONE;
+            return getFloat() != AFloat::NONE;
         }
 
         [[nodiscard]]
@@ -45,7 +45,7 @@ private:
     AVector<_<Entry>> mEntries;
     float mLineHeight = 1.f;
     ATextAlign mTextAlign = ATextAlign::LEFT;
-    std::optional<int> mHeight;
+    AOptional<int> mHeight;
 
 public:
     void setLineHeight(float lineHeight) {
@@ -60,7 +60,13 @@ public:
         mEntries = std::move(entries);
     }
 
-    std::optional<int> getHeight() {
+    [[nodiscard]]
+    const AVector<_<Entry>>& entries() const {
+        return mEntries;
+    }
+
+    [[nodiscard]]
+    AOptional<int> height() const {
         return mHeight;
     }
 

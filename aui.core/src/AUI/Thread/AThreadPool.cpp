@@ -81,7 +81,9 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
 }
 
 AThreadPool::Worker::~Worker() {
-	join();
+    try {
+        join();
+    } catch (...) {}
 }
 
 void AThreadPool::Worker::aboutToDelete() {

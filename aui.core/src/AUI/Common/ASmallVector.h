@@ -146,7 +146,7 @@ public:
 
     constexpr void clear() noexcept {
         deallocate();
-        new (inplace()) StaticVector();
+        new (&mBase.inplace) StaticVector();
     }
 
     /**

@@ -16,12 +16,12 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderBottom.h"
 
-void ass::prop::Property<ass::BorderBottom>::renderFor(AView* view) {
-    RenderHints::PushColor x;
+void ass::prop::Property<ass::BorderBottom>::renderFor(AView* view, const ARenderContext& ctx) {
+    RenderHints::PushColor x(ctx.render);
     int w = mInfo.width;
-    ARender::rect(ASolidBrush{mInfo.color},
-                  {0, view->getHeight() - w},
-                  {view->getWidth(), w});
+    ctx.render.rectangle(ASolidBrush{mInfo.color},
+                         {0, view->getHeight() - w},
+                         {view->getWidth(), w});
 }
 
 bool ass::prop::Property<ass::BorderBottom>::isNone() {

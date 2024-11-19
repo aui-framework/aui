@@ -20,7 +20,7 @@
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
-    caption->setLayout(_new<AHorizontalLayout>());
+    caption->setLayout(std::make_unique<AHorizontalLayout>());
     caption->addAssName(".window-title");
     caption->setExpanding({1, 0});
 
@@ -28,7 +28,7 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     caption->addView(titleLabel);
 
     mCaptionContainer = _new<AViewContainer>();
-    mCaptionContainer->setLayout(_new<AHorizontalLayout>());
+    mCaptionContainer->setLayout(std::make_unique<AHorizontalLayout>());
     mCaptionContainer->setExpanding({1, 0 });
     mCaptionContainer->addAssName(".window-title-content");
     caption->addView(mCaptionContainer);
@@ -50,14 +50,14 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     caption->addView(mCloseButton);
 
     if (stacked) {
-        to->setLayout(_new<AStackedLayout>());
+        to->setLayout(std::make_unique<AStackedLayout>());
         to->addView(mContentContainer = _new<AViewContainer>());
         to->addView(_container<AVerticalLayout>({
                                                     caption,
                                                     _new<ASpacerExpanding>(),
                                             }) let { it->setExpanding({1, 1}); });
     } else {
-        to->setLayout(_new<AVerticalLayout>());
+        to->setLayout(std::make_unique<AVerticalLayout>());
         to->addView(caption);
         to->addView(mContentContainer = _new<AViewContainer>());
     }

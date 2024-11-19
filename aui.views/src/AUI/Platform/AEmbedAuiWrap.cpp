@@ -80,7 +80,7 @@ public:
         removeView(surface);
     }
 
-    void flagUpdateLayout() override {
+    void markMinContentSizeInvalid() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
@@ -117,14 +117,15 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    ARender::setWindow(mContainer.get());
+    auto& render = mContainer->getRenderingContext()->renderer();
+    render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
-        mContainer->updateLayout();
+        mContainer->applyGeometryToChildrenIfNecessary();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
@@ -133,7 +134,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
     mContainer->makeCurrent();
-    mContainer->flagUpdateLayout();
+    mContainer->markMinContentSizeInvalid();
     mContainer->flagRedraw();
 }
 

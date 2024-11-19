@@ -298,7 +298,7 @@ macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
         auib_import(benchmark https://github.com/google/benchmark
                     VERSION v1.8.3
-                    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on
+                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                     LINK STATIC)
         set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
@@ -387,6 +387,8 @@ function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
+
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
@@ -709,7 +711,7 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
@@ -738,7 +740,7 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
-            VERSION 03bfb4f86094784124728ba803007b22de3aaf29)
+            VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -750,7 +752,7 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUI_CACHE_DIR}/crosscompile-host
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
@@ -1261,7 +1263,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
         set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
         set(MACOSX_BUNDLE_ICON_FILE "app.icns")
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})

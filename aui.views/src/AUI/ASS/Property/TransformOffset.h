@@ -41,9 +41,11 @@ namespace ass {
 
         public:
             Property(const TransformOffset& info) : mInfo(info) {}
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             PropertySlot getPropertySlot() const override;
+
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
 
             [[nodiscard]]
             const auto& value() const noexcept {

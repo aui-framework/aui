@@ -34,7 +34,7 @@ public:
 
     size_t textLength() const override;
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext ctx) override;
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
@@ -53,7 +53,6 @@ public:
 protected:
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
-    AFontStyle getMouseSelectionFont() override;
     AString getDisplayText() override;
     void doRedraw() override;
 

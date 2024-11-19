@@ -6,14 +6,14 @@ _<AStrongByteBufferInputStream> AStrongByteBufferInputStream::fromUrl(const AUrl
 }
 
 bool AStrongByteBufferInputStream::isEof() {
-    return mReadPos == mRef.size();
+    return mReadPos == buffer().size();
 }
 
 void AStrongByteBufferInputStream::seek(std::streamoff offset, std::ios::seekdir seekDir) {
     switch (seekDir) {
         case std::ios::beg: mReadPos = offset; break;
         case std::ios::cur: mReadPos += offset; break;
-        case std::ios::end: mReadPos = mRef.size() + offset; break;
+        case std::ios::end: mReadPos = buffer().size() + offset; break;
     }
 }
 
@@ -22,8 +22,8 @@ size_t AStrongByteBufferInputStream::tell() {
 }
 
 size_t AStrongByteBufferInputStream::read(char* dst, size_t size) {
-    size_t toRead = glm::min(mReadPos + size, mRef.size()) - mReadPos;
-    std::memcpy(dst, mRef.data() + mReadPos, toRead);
+    size_t toRead = glm::min(mReadPos + size, buffer().size()) - mReadPos;
+    std::memcpy(dst, buffer().data() + mReadPos, toRead);
     mReadPos += toRead;
     return toRead;
 }

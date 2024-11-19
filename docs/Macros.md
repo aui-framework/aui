@@ -248,3 +248,9 @@ one of the supported platforms (see the table above).
      </td>
    </tr>
 </table>
+
+# Other
+
+## AUI_MODULE_NAME
+
+Target name exposed by [aui_module](@ref md_docs_aui_module) and [aui_executable](@ref md_docs_aui_executable).

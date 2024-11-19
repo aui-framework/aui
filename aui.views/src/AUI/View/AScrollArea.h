@@ -13,11 +13,10 @@
 
 
 #include "AViewContainer.h"
-#include "AScrollAreaInner.h"
+#include "AScrollAreaViewport.h"
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
@@ -29,11 +28,11 @@ class AScrollAreaContainer;
  * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
  * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
  * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events.
+ * involving displaying scroll bars and handling scroll events. This behaviour is similar to Text.
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
- * @note Behaviour of vertical and horizontal axes are independent from each other.
+ * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
@@ -49,8 +48,6 @@ public:
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
-
-    void updateLayout() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -89,8 +86,7 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
-        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
+    void setScrollbarAppearance(ass::ScrollbarAppearance scrollbarAppearance) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }
@@ -177,7 +173,7 @@ protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
-    _<AScrollAreaInner> mInner;
+    _<AScrollAreaViewport> mInner;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
 

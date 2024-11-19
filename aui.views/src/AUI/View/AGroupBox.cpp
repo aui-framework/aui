@@ -27,14 +27,16 @@ namespace {
             setContents(contents);
         }
 
-        void drawStencilMask() override {
-            AView::drawStencilMask();
+        void drawStencilMask(ARenderContext ctx) override {
+            AView::drawStencilMask(ctx);
 
-            RenderHints::PushMatrix transform;
+            RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            ARender::rect(ASolidBrush{},
-                          d,
-                          mTitle->getSize());
+            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
+                ctx.render.rectangle(ASolidBrush{},
+                                     d,
+                                     mTitle->getSize());
+            }
         }
 
     private:
@@ -47,7 +49,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     mContent(std::move(contentView)) {
 
 
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     using namespace declarative;
     setContents(Vertical {
@@ -77,14 +79,9 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     }
 }
 
-void AGroupBox::updateLayout() {
-    AViewContainer::updateLayout();
-
+void AGroupBox::applyGeometryToChildren() {
+    AViewContainer::applyGeometryToChildren();
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
-}
-
-int AGroupBox::getContentMinimumHeight(ALayoutDirection layout) {
-    return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE) + mFrame->getPosition().y - getFrameForcedPosition();
 }
 
 int AGroupBox::getFrameForcedPosition() const noexcept {

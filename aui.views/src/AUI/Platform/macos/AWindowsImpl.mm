@@ -10,11 +10,11 @@
  */
 
 #include "AUI/GL/gl.h"
+#include "AUI/Platform/AWindow.h"
 #import <Cocoa/Cocoa.h>
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -45,11 +45,16 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+    if (!mHandle) {
+        return;
+    }
+    getWindowManager().mWindows.removeFirst(mSelfHolder);
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
     });
+    [static_cast<NSWindow*>(mHandle) close];
+    mHandle = nullptr;
     if (getWindowManager().mWindows.empty()) {
         MacosApp::inst().quit();
     }
@@ -76,6 +81,13 @@ void AWindow::show() {
 }
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
+    if (!mHandle) return;
+    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
+        auto s = static_cast<NSWindow*>(mHandle);
+        [s setStyleMask:NSWindowStyleMaskBorderless];
+        [s setTitlebarAppearsTransparent:YES];
+        [s setTitleVisibility:NSWindowTitleHidden];
+    }
 }
 
 float AWindow::fetchDpiFromSystem() const {

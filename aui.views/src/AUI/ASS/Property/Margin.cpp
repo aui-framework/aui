@@ -18,10 +18,17 @@
 void ass::prop::Property<ass::Margin>::applyFor(AView* view) {
     auto margin = view->getMargin();
 
-    mInfo.left.bind_to(margin.left);
-    mInfo.top.bind_to(margin.top);
-    mInfo.right.bind_to(margin.right);
-    mInfo.bottom.bind_to(margin.bottom);
+    mInfo.left.bindTo(margin.left);
+    mInfo.top.bindTo(margin.top);
+    mInfo.right.bindTo(margin.right);
+    mInfo.bottom.bindTo(margin.bottom);
 
     view->setMargin(margin);
+}
+
+void ass::prop::Property<ass::Margin>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+    invalidRect.p1.x -= mInfo.left.orDefault(0).getValuePx();
+    invalidRect.p1.y -= mInfo.top.orDefault(0).getValuePx();
+    invalidRect.p2.x -= mInfo.right.orDefault(0).getValuePx();
+    invalidRect.p2.y -= mInfo.bottom.orDefault(0).getValuePx();
 }

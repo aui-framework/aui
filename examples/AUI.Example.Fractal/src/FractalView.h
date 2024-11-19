@@ -28,7 +28,7 @@ private:
 
 public:
     FractalView();
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
     void reset();
 

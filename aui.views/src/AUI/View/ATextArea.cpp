@@ -27,7 +27,7 @@ private:
     ATextArea& mTextArea;
     struct Line {
         AString text;
-        ARender::PrerenderedString prerendered;
+        _<IRenderer::IPrerenderedString> prerendered;
     };
 
     AVector<Line> mLines;
@@ -48,8 +48,8 @@ private:
         mTextArea.mScrollbar->setScrollDimensions(getContentHeight(),
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
-    void pushScrollMatrix() {
-        ARender::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+    void pushScrollMatrix(IRenderer& render) {
+        render.setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -105,7 +105,7 @@ public:
         return length;
     }
 
-    void render(ClipOptimizationContext context) override {
+    void render(ARenderContext ctx) override {
         if (mLines.empty() && !mFullText->empty()) {
             size_t wordWrappingPos = 0;
             while (wordWrappingPos < mFullText->length()) {
@@ -118,7 +118,7 @@ public:
             }
             updateScrollDimensions();
         }
-        AView::render(context);
+        AView::render(ctx);
 
         auto drawText = [&] {
             size_t lineHeight = getFontStyle().getLineHeight();
@@ -133,10 +133,10 @@ public:
                 }
 
                 if (!mLines[i].prerendered) {
-                    mLines[i].prerendered = ARender::prerenderString({0, 0}, mLines[i].text, getFontStyle());
+                    mLines[i].prerendered = ctx.render.prerenderString({0, 0}, mLines[i].text, getFontStyle());
                 }
-                RenderHints::PushMatrix m;
-                ARender::translate({mPadding.left - mHorizontalScroll,
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({mPadding.left - mHorizontalScroll,
                                     mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
                 mLines[i].prerendered->draw();
             }
@@ -145,16 +145,16 @@ public:
         if (hasFocus() && mTextArea.mEditable) {
             int absoluteCursorPos;
             {
-                RenderHints::PushMatrix m;
-                pushScrollMatrix();
-                absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+                RenderHints::PushMatrix m(ctx.render);
+                pushScrollMatrix(ctx.render);
+                absoluteCursorPos = ACursorSelectable::drawSelectionPre(ctx.render);
             }
 
             drawText();
 
             {
-                RenderHints::PushMatrix m;
-                ACursorSelectable::drawSelectionPost();
+                RenderHints::PushMatrix m(ctx.render);
+                ACursorSelectable::drawSelectionPost(ctx.render);
             }
 
             // cursor
@@ -167,9 +167,9 @@ public:
                     redraw();
                 }
 
-                ARender::rect(ASolidBrush{},
-                              {mPadding.left + absoluteCursorPos, mPadding.top},
-                              {glm::ceil(1_dp), getFontStyle().size + 3});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mPadding.left + absoluteCursorPos, mPadding.top},
+                                     {glm::ceil(1_dp), getFontStyle().size + 3});
             }
             // TODO STUB
             // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -186,7 +186,7 @@ public:
     }
 
 protected:
-    void invalidatePrerenderedString() override {
+    void invalidateFont() override {
         for (auto& l : mLines) {
             l.prerendered = nullptr;
         }
@@ -352,7 +352,7 @@ protected:
 
 ATextArea::ATextArea() {
     addAssName(".input-field");
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
     mScrollbar = _new<AScrollbar>();
     addView(mTextField = _new<TextAreaField>(*this) let {
         it->setExpanding();

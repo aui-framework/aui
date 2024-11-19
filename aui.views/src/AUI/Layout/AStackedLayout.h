@@ -10,6 +10,7 @@
  */
 
 #pragma once
+
 #include "ALinearLayout.h"
 
 
@@ -27,15 +28,16 @@
  *
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  */
-class API_AUI_VIEWS AStackedLayout: public ALinearLayout<>
-{
+class API_AUI_VIEWS AStackedLayout : public ALinearLayout<> {
 public:
-	AStackedLayout()
-	{
-	}
-	virtual ~AStackedLayout() = default;
+    AStackedLayout() {
+    }
 
-	void onResize(int x, int y, int width, int height) override;
-	int getMinimumWidth() override;
-	int getMinimumHeight() override;
+    virtual ~AStackedLayout() = default;
+
+    void onResize(int x, int y, int width, int height) override;
+
+    int getMinimumWidth() override;
+
+    int getMinimumHeight() override;
 };

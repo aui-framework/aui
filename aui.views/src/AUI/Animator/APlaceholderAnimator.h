@@ -31,7 +31,7 @@ public:
     };
 
 protected:
-    void doPostRender(AView* view, float theta) override;
+    void doPostRender(AView* view, float theta, IRenderer& render) override;
 };
 
 

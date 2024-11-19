@@ -18,7 +18,7 @@
 
 void ass::prop::Property<ass::Expanding>::applyFor(AView* view) {
     view->setExpanding({
-                               mInfo.expandingX.or_default(view->getExpandingHorizontal()),
-                               mInfo.expandingY.or_default(view->getExpandingVertical()),
+                               mInfo.expandingX.orDefault(view->getExpandingHorizontal()),
+                               mInfo.expandingY.orDefault(view->getExpandingVertical()),
     });
 }

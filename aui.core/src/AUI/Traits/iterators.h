@@ -15,6 +15,7 @@
 #include <variant>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include "parameter_pack.h"
 #include "macros.h"
 
@@ -89,12 +90,12 @@ namespace aui {
         }
 
         [[nodiscard]]
-        constexpr Iterator& begin() const noexcept {
+        constexpr Iterator begin() const noexcept {
             return mBegin;
         }
 
         [[nodiscard]]
-        constexpr Iterator& end() const noexcept {
+        constexpr Iterator end() const noexcept {
             return mEnd;
         }
 
@@ -106,6 +107,14 @@ namespace aui {
         [[nodiscard]]
         constexpr const auto& last() const {
             return *std::prev(mEnd);
+        }
+
+        [[nodiscard]]
+        constexpr bool operator==(const range& rhs) const noexcept;
+
+        [[nodiscard]]
+        constexpr bool operator!=(const range& rhs) const noexcept {
+            return !(*this == rhs);
         }
     };
 
@@ -224,4 +233,32 @@ namespace aui {
 
         return std::make_reverse_iterator(iterator + 1);
     }
+}
+
+template<typename Iterator>
+inline constexpr bool aui::range<Iterator>::operator==(const range& rhs) const noexcept {
+    if (size() != rhs.size()) {
+        return false;
+    }
+    for (const auto&[l, r] : aui::zip(*this, rhs)) {
+        if (l != r) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& os, aui::range<T> range) {
+    os << "[ ";
+    bool isFirst = true;
+    for (const auto& v : range) {
+        if (isFirst) {
+            isFirst = false;
+        } else {
+            os << ", ";
+        }
+        os << v;
+    }
+    return os << " ]";
 }

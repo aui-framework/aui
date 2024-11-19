@@ -74,6 +74,8 @@ namespace ass {
 
             }
 
+            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
+
             void applyFor(AView* view) override;
 
             [[nodiscard]]

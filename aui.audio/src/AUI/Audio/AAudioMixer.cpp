@@ -38,13 +38,13 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                 return false;
             }
             catch (const AException& e) {
-                ALogger::err("audio") << "An error occured during audio playback: " << e;
+                ALogger::err("audio") << "An error occurred during audio playback: " << e;
             }
             catch (const std::exception& e) {
-                ALogger::err("audio") << "An error occured during audio playback: " << e.what();
+                ALogger::err("audio") << "An error occurred during audio playback: " << e.what();
             }
             catch (...) {
-                ALogger::err("audio") << "An error occured during audio playback";
+                ALogger::err("audio") << "An error occurred during audio playback";
             }
 
             //if an error occured during playback, remove player from player list
@@ -52,9 +52,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
         }), mPlayers.end());
     }
     for (auto& player: itemsToRemove) {
-        player->getThread()->enqueue([player = std::move(player)]() {
-            player->onFinished();
-        });
+        player->onFinished();
     }
 
     return result;

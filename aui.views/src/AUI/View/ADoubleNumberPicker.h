@@ -50,6 +50,8 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainer {
 
     void setValue(double v);
 
+    void setSuffix(const AString& suffix);
+
     [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
 
     [[nodiscard]] double getValue() const { return mTextField->text().toDouble().valueOr(0.0); }

@@ -56,6 +56,12 @@ public:
         return std::nullopt;
     }
 
+    IRenderer& renderer() override {
+        return *mRenderer;
+    }
+
+    static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
+
 private:
     ARenderingContextOptions::OpenGL mConfig;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
@@ -82,7 +88,7 @@ private:
 #elif AUI_PLATFORM_LINUX
     static GLXContext ourContext;
 #elif AUI_PLATFORM_MACOS
-    void* mContext;
+    static void* ourContext;
 #endif
 
 };

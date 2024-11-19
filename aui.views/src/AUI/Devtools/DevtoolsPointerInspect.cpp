@@ -43,11 +43,11 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/ABrush.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ALayoutInflater.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -67,15 +67,15 @@ public:
 
     }
 
-    void render(ClipOptimizationContext context) override {
-        AViewContainer::render(context);
+    void render(ARenderContext ctx) override {
+        AViewContainer::render(ctx);
         auto view = mView.lock();
         if (!view) {
-            ARender::string({0, 0}, "Expired");
+            ctx.render.string({0, 0}, "Expired");
             return;
         }
 
-        drawView(view, context);
+        drawView(view, ctx);
     }
 
 
@@ -100,7 +100,7 @@ public:
 
     void setView(_weak<AView> view) {
         mView = std::move(view);
-        AWindow::current()->flagUpdateLayout();
+        markMinContentSizeInvalid();
     }
 
 private:
@@ -114,7 +114,7 @@ public:
         connect(mButton->clicked, me::reinflateToParent);
     }
 
-    void render(ClipOptimizationContext context) override {
+    void render(ARenderContext context) override {
         AViewContainer::render(context);
         
         auto v = mFake->view();
@@ -178,7 +178,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(ABaseWindow* targetWindow) : mTar
 
 void DevtoolsPointerInspect::inspect(AView* ptr) {
     ALogger::info(LOG_TAG) << "Inspecting: " << ptr;
-    mResultView->setLayout(_new<AVerticalLayout>());
+    mResultView->setLayout(std::make_unique<AVerticalLayout>());
     mResultView->addView(Horizontal { Label { "AReflect::name = " }, Label { AReflect::name(ptr) } });
     mResultView->addView(Horizontal { Label { "Ass names = " }, Label { AStringVector(ptr->getAssNames()).join(", ") } });
     auto fake = _new<FakeContainer>(ptr->sharedPtr());
@@ -189,5 +189,5 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     });
     mResultView->addView(parentHelper);
     mResultView->addView(std::move(fake));
-    AWindow::current()->flagUpdateLayout();
+    markMinContentSizeInvalid();
 }
