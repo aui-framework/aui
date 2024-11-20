@@ -71,8 +71,6 @@ public:
 
     const AString& text() const override;
 
-    size_t textLength() const override;
-
     void onCharEntered(char16_t c) override;
 
     void onFocusLost() override;

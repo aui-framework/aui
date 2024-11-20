@@ -32,7 +32,7 @@ public:
         return ALabel::text();
     }
 
-    size_t textLength() const override;
+    size_t length() const override;
 
     void render(ARenderContext ctx) override;
 

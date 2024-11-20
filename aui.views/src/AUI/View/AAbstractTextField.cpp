@@ -269,10 +269,6 @@ bool AAbstractTextField::isValidText(const AString& text) {
     return true;
 }
 
-size_t AAbstractTextField::textLength() const {
-    return mContents.length();
-}
-
 AString AAbstractTextField::toString() const {
     return mContents;
 }

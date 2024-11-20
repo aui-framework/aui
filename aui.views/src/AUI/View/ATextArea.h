@@ -22,25 +22,39 @@
 #include "AScrollbar.h"
 
 /**
- * @brief Multiline text field.
+ * @brief Multiline text input area.
  * @ingroup useful_views
  * @details
  * Word breaking text area.
+ *
+ * In contrast to ATextField, ATextArea is not scrollable. It is often preferable to use a dedicated scroll area to make
+ * the entire application pages scrollable with other content rather than using nested scrolls just for text area.
+ *
+ * If you want to make AScrollArea scrollable, it can be places inside a AScrollArea:
+ * @code{cpp}
+ * AScrollArea::Builder().withContents(_new<AScrollArea>())
+ * @endcode
  */
-class API_AUI_VIEWS ATextArea: public AViewContainer {
-private:
-    class TextAreaField;
-    _<TextAreaField> mTextField;
-    _<AScrollbar> mScrollbar;
-    bool mEditable = false; // TODO editable
-
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView, public IStringable {
 public:
     ATextArea();
     explicit ATextArea(const AString& text);
+    ~ATextArea() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    AString toString() const override;
+    void invalidateFont() override;
+    const AString& text() const override;
 
-    void onScroll(const AScrollEvent& event) override;
+protected:
+    void typeableErase(size_t begin, size_t end) override;
+    bool typeableInsert(size_t at, const AString& toInsert) override;
+    bool typeableInsert(size_t at, char16_t toInsert) override;
+    size_t typeableFind(char16_t c, size_t startPos) override;
+    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+    size_t length() const override;
+
+private:
+    AOptional<AString> mText;
 };
 
 

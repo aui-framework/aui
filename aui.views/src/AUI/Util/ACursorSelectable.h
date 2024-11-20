@@ -38,6 +38,11 @@ public:
         bool operator!=(const Selection& rhs) const noexcept {
             return !(rhs == *this);
         }
+
+        [[nodiscard]]
+        bool empty() const noexcept {
+            return begin == end;
+        }
     };
 
     /**
@@ -53,7 +58,7 @@ public:
     /**
      * @return Text field text length.
      */
-    [[nodiscard]] virtual size_t textLength() const = 0;
+    [[nodiscard]] virtual size_t length() const = 0;
     [[nodiscard]] AString selectedText() const
     {
         if (!hasSelection())
@@ -91,7 +96,7 @@ public:
 
     void setSelection(int cursorIndex) {
         mCursorIndex = cursorIndex;
-        mCursorSelection = -1;
+        mCursorSelection.reset();
         onSelectionChanged();
     }
 
@@ -103,7 +108,7 @@ public:
 
 protected:
     unsigned mCursorIndex = 0;
-    unsigned mCursorSelection = -1;
+    AOptional<unsigned> mCursorSelection;
 
     virtual glm::ivec2 getMouseSelectionPadding() = 0;
     virtual glm::ivec2 getMouseSelectionScroll() = 0;
@@ -138,4 +143,12 @@ private:
     ATextLayoutHelper mTextLayoutHelper;
 };
 
-
+inline std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e) noexcept{
+    o << "Selection";
+    if (e.empty()) {
+        o << "{" << e.begin << "}";
+    } else {
+        o << "(" << e.begin << ";" << e.end << "]";
+    }
+    return o;
+}

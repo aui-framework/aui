@@ -12,6 +12,7 @@
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATextField.h>
+#include "AUI/View/ATextArea.h"
 
 using namespace ass;
 using std::operator""sv;
@@ -35,9 +36,9 @@ namespace {
     using selectionMatches = SelectionMatchesAssert;
 }
 
-class UITextField: public testing::UITest {
+class UITextArea: public testing::UITest {
 public:
-    ~UITextField() override = default;
+    ~UITextArea() override = default;
 
 protected:
     void SetUp() override {
@@ -47,7 +48,7 @@ protected:
         public:
             TestWindow() {
                 setContents(Centered {
-                        _new<ATextField>() with_style { FixedSize { 300_dp, {} } } let {
+                        _new<ATextArea>() with_style { FixedSize { 300_dp, {} } } let {
                             it->setText("hello world!");
                         }
                 });
@@ -67,7 +68,7 @@ protected:
 /**
  * Checks that then clicking at the left border of the text field, cursor jumps to the first symbol.
  */
-TEST_F(UITextField, CursorAppearsAtTheStart) {
+TEST_F(UITextArea, CursorAppearsAtTheStart) {
     By::type<ATextField>().perform(click({0_dp, 0_dp})) // click at the left border
                           .check(selectionMatches(0));
 }
@@ -75,7 +76,7 @@ TEST_F(UITextField, CursorAppearsAtTheStart) {
 /**
  * Checks that then clicking at the right border of the text field, cursor jumps to the last symbol.
  */
-TEST_F(UITextField, CursorAppearsAtTheEnd) {
+TEST_F(UITextArea, CursorAppearsAtTheEnd) {
     By::type<ATextField>().perform(click({299_dp, 0_dp})) // click at the right border
                           .check(selectionMatches(12));
 }
@@ -83,7 +84,7 @@ TEST_F(UITextField, CursorAppearsAtTheEnd) {
 /**
  * Checks that when doubleclicking a whole word is selected
  */
-TEST_F(UITextField, DoubleClickWordSelection1) {
+TEST_F(UITextArea, DoubleClickWordSelection1) {
     By::type<ATextField>().perform(doubleClick({20_dp, 0_dp})) // click at the first word
                           .check(selectionMatches(0, 5));
 }
@@ -91,7 +92,7 @@ TEST_F(UITextField, DoubleClickWordSelection1) {
 /**
  * Checks that when doubleclicking a whole word is selected
  */
-TEST_F(UITextField, DoubleClickWordSelection2) {
+TEST_F(UITextArea, DoubleClickWordSelection2) {
     By::type<ATextField>().perform(doubleClick({54_dp, 0_dp})) // click at the second word
                           .check(selectionMatches(6, 12));
 }
@@ -99,7 +100,7 @@ TEST_F(UITextField, DoubleClickWordSelection2) {
 /**
  * Checks cursor position when clicking between 'l' and 'o'.
  */
-TEST_F(UITextField, CursorClickPos1) {
+TEST_F(UITextArea, CursorClickPos1) {
     By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
@@ -107,12 +108,12 @@ TEST_F(UITextField, CursorClickPos1) {
 /**
  * Checks cursor position when clicking between 'o' and 'r'.
  */
-TEST_F(UITextField, CursorClickPos2) {
+TEST_F(UITextArea, CursorClickPos2) {
     By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(8));
 }
 
-TEST_F(UITextField, LeftRight) {
+TEST_F(UITextArea, LeftRight) {
     By::type<ATextField>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
@@ -123,7 +124,7 @@ TEST_F(UITextField, LeftRight) {
             ;
 }
 
-TEST_F(UITextField, HomeEnd) {
+TEST_F(UITextArea, HomeEnd) {
     By::type<ATextField>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
@@ -134,14 +135,14 @@ TEST_F(UITextField, HomeEnd) {
             ;
 }
 
-TEST_F(UITextField, CtrlA) {
+TEST_F(UITextArea, CtrlA) {
     By::type<ATextField>()
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
             .perform(type("replace"))
             .check(text("replace"));
 }
 
-TEST_F(UITextField, CtrlLeftRight) {
+TEST_F(UITextArea, CtrlLeftRight) {
     By::type<ATextField>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
@@ -152,7 +153,7 @@ TEST_F(UITextField, CtrlLeftRight) {
             ;
 }
 
-TEST_F(UITextField, CtrlShiftLeftRight) {
+TEST_F(UITextArea, CtrlShiftLeftRight) {
     By::type<ATextField>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))

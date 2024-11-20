@@ -19,11 +19,11 @@
 #include "ACursorSelectable.h"
 
 ACursorSelectable::Selection ACursorSelectable::selection() const {
-    return { glm::min(mCursorIndex, unsigned(mCursorSelection)), glm::max(mCursorIndex, unsigned(mCursorSelection)) };
+    return { glm::min(mCursorIndex, mCursorSelection.valueOr(mCursorIndex)), glm::max(mCursorIndex, mCursorSelection.valueOr(mCursorIndex)) };
 }
 
 bool ACursorSelectable::hasSelection() const {
-    return mCursorIndex != mCursorSelection && mCursorSelection != -1;
+    return mCursorIndex != mCursorSelection && mCursorSelection.hasValue();
 }
 
 unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
@@ -51,7 +51,7 @@ void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) 
         mIgnoreSelection = false;
         if (mCursorSelection == mCursorIndex)
         {
-            mCursorSelection = -1;
+            mCursorSelection.reset();
         }
         onSelectionChanged();
     }
@@ -63,10 +63,10 @@ int ACursorSelectable::drawSelectionPre(IRenderer& render) {
     // selection
     if (hasSelection())
     {
-        auto absoluteSelectionPos = getPosByIndex(mCursorSelection);
+        auto absoluteSelectionPos = getPosByIndex(*mCursorSelection);
 
-        mAbsoluteBegin = mCursorIndex < mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
-        mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
+        mAbsoluteBegin = mCursorIndex < *mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
+        mAbsoluteEnd = mCursorIndex < *mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
         RenderHints::PushColor c(render);
         render.setColor(AColor(1.f) - AColor(0x0078d700u));
@@ -90,16 +90,16 @@ void ACursorSelectable::drawSelectionPost(IRenderer& render) {
 }
 
 void ACursorSelectable::selectAll() {
-    size_t length = textLength();
-    if (length > 0) {
+    size_t l = length();
+    if (l > 0) {
         mCursorSelection = 0;
-        mCursorIndex = length;
+        mCursorIndex = l;
         onSelectionChanged();
     }
 }
 
 void ACursorSelectable::clearSelection() {
-    mCursorSelection = -1;
+    mCursorSelection.reset();
 }
 
 

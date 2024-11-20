@@ -14,18 +14,25 @@
 #include <AUI/Platform/AWindow.h>
 
 struct ViewActionKeyDownAndUp: ViewActionClick<> {
-    AInput::Key key;
+    AShortcut key;
 
-    explicit ViewActionKeyDownAndUp(AInput::Key key) : key(key) {}
+    explicit ViewActionKeyDownAndUp(AShortcut key) : key(std::move(key)) {}
 
     void operator()(const _<AView>& view) {
         // click on it to acquire focus
-        ViewActionClick::operator()(view);
+        view->focus();
 
         auto window = view->getWindow();
 
-        window->onKeyDown(key);
-        window->onKeyUp(key);
+        uitest::frame();
+        for (const auto& k : key.getKeys()) {
+            AInput::overrideStateForTesting(k, true);
+            window->onKeyDown(k);
+        }
+        for (const auto& k : key.getKeys()) {
+            AInput::overrideStateForTesting(k, false);
+            window->onKeyUp(k);
+        }
     }
 };
 

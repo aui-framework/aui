@@ -112,8 +112,8 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 
     auto fastenSelection = [&]() {
         if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
-            mCursorSelection = -1;
-        } else if (mCursorSelection == -1)
+            mCursorSelection.reset();
+        } else if (!mCursorSelection)
         {
             mCursorSelection = mCursorIndex;
         }
@@ -127,7 +127,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
                 auto sel = selection();
                 typeableErase(sel.begin, sel.end);
                 invalidateFont();
-                mCursorSelection = -1;
+                mCursorSelection.reset();
                 mCursorIndex = sel.begin;
             } else {
                 if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
@@ -230,7 +230,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
-    if (mCursorSelection != -1) {
+    if (mCursorSelection) {
         prevContents = text();
         auto sel = selection();
         pastePos = sel.begin;
@@ -244,7 +244,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
     }
     if (typeableInsert(pastePos, toPaste)) {
         mCursorIndex = pastePos + toPaste.length();
-        mCursorSelection = -1;
+        mCursorSelection.reset();
 
         invalidateFont();
         updateCursorPos();
@@ -262,7 +262,7 @@ void AAbstractTypeableView::cutToClipboard() {
     AClipboard::copyToClipboard(selectedText());
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
-    mCursorSelection = -1;
+    mCursorSelection.reset();
     invalidateFont();
 }
 
@@ -305,7 +305,7 @@ void AAbstractTypeableView::enterChar(char16_t c)
                     mCursorIndex = sel.begin;
                 }
         }
-        mCursorSelection = -1;
+        mCursorSelection.reset();
     } else {
         switch (c)
         {
@@ -331,7 +331,7 @@ void AAbstractTypeableView::enterChar(char16_t c)
 
     if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT))
     {
-        mCursorSelection = -1;
+        mCursorSelection.reset();
     }
 
     redraw();

@@ -22,356 +22,52 @@
 #include <glm/ext/matrix_transform.hpp>
 
 
-class ATextArea::TextAreaField: public AAbstractTypeableView {
-private:
-    ATextArea& mTextArea;
-    struct Line {
-        AString text;
-        _<IRenderer::IPrerenderedString> prerendered;
-    };
-
-    AVector<Line> mLines;
-
-    /**
-     * Full text. Must be set to null if mLines changed.
-     */
-    mutable AOptional<AString> mFullText;
-
-    int mScroll = 0;
-
-    void updateWordWrap(const AString& text) {
-        mLines.clear();
-        mFullText = text;
-    }
-
-    void updateScrollDimensions() {
-        mTextArea.mScrollbar->setScrollDimensions(getContentHeight(),
-                                                  mLines.size() * getFontStyle().getLineHeight());
-    }
-    void pushScrollMatrix(IRenderer& render) {
-        render.setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
-    }
-
-public:
-    TextAreaField(ATextArea& textArea) : mTextArea(textArea) {
-
-        connect(mTextArea.mScrollbar->scrolled, [&](int scroll) {
-            mScroll = scroll;
-            redraw();
-        });
-        addAssName(".text-area-field");
-    }
-
-    void setSize(glm::ivec2 size) override {
-        bool widthChanged = getWidth() != size.x;
-        bool heightChanged = getHeight() != size.y;
-        AView::setSize(size);
-
-        if (widthChanged) {
-            mLines.clear();
-        } else if (heightChanged) {
-            updateScrollDimensions();
-        }
-    }
-
-    void setText(const AString& t) override {
-        mLines.clear();
-        AAbstractTypeableView::setText(t);
-        updateWordWrap(t);
-    }
-
-    /**
-     * @note This function is expensive!
-     * @return containing text
-     */
-    const AString& text() const override {
-        if (!mFullText) {
-            AString s;
-            s.reserve(length());
-
-            for (auto& l: mLines) {
-                s += l.text;
-            }
-            mFullText = std::move(s);
-        }
-        return *mFullText;
-    }
-
-    size_t textLength() const override {
-        size_t length = 0;
-        for (auto& l : mLines) {
-            length += l.text.length();
-        }
-        return length;
-    }
-
-    void render(ARenderContext ctx) override {
-        if (mLines.empty() && !mFullText->empty()) {
-            size_t wordWrappingPos = 0;
-            while (wordWrappingPos < mFullText->length()) {
-                AString line = getFontStyle().font->trimStringToWidth(getFontStyle(),
-                                                                      mFullText->begin() + wordWrappingPos,
-                                                                      mFullText->end(),
-                                                                      getContentWidth());
-                wordWrappingPos += glm::max(line.length(), size_t(1));
-                mLines.push_back(Line{ std::move(line), {} });
-            }
-            updateScrollDimensions();
-        }
-        AView::render(ctx);
-
-        auto drawText = [&] {
-            size_t lineHeight = getFontStyle().getLineHeight();
-            size_t viewHeight = getContentHeight();
-            for (size_t i = mScroll / getFontStyle().getLineHeight(); i < mLines.size(); ++i) {
-                if (i * lineHeight > viewHeight + mScroll) {
-                    return;
-                }
-
-                if (mLines[i].text.empty()) {
-                    continue;
-                }
-
-                if (!mLines[i].prerendered) {
-                    mLines[i].prerendered = ctx.render.prerenderString({0, 0}, mLines[i].text, getFontStyle());
-                }
-                RenderHints::PushMatrix m(ctx.render);
-                ctx.render.translate({mPadding.left - mHorizontalScroll,
-                                    mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
-                mLines[i].prerendered->draw();
-            }
-        };
-
-        if (hasFocus() && mTextArea.mEditable) {
-            int absoluteCursorPos;
-            {
-                RenderHints::PushMatrix m(ctx.render);
-                pushScrollMatrix(ctx.render);
-                absoluteCursorPos = ACursorSelectable::drawSelectionPre(ctx.render);
-            }
-
-            drawText();
-
-            {
-                RenderHints::PushMatrix m(ctx.render);
-                ACursorSelectable::drawSelectionPost(ctx.render);
-            }
-
-            // cursor
-            if (mTextArea.mEditable && hasFocus() && isCursorBlinkVisible()) {
-                if (absoluteCursorPos < 0) {
-                    mHorizontalScroll += absoluteCursorPos;
-                    redraw();
-                } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
-                    mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
-                    redraw();
-                }
-
-                ctx.render.rectangle(ASolidBrush{},
-                                     {mPadding.left + absoluteCursorPos, mPadding.top},
-                                     {glm::ceil(1_dp), getFontStyle().size + 3});
-            }
-            // TODO STUB
-            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        } else {
-            drawText();
-        }
-    }
-
-    void onCharEntered(char16_t c) override {
-        AView::onCharEntered(c);
-        if (mTextArea.mEditable) {
-            enterChar(c);
-        }
-    }
-
-protected:
-    void invalidateFont() override {
-        for (auto& l : mLines) {
-            l.prerendered = nullptr;
-        }
-    }
-
-    void typeableErase(size_t begin, size_t end) override {
-        if (!mTextArea.mEditable) {
-            return;
-        }
-        // find line number and offset
-        size_t lineNumber = 0;
-        size_t offset = 0;
-        for (size_t currentLineLength; ; offset -= currentLineLength, ++lineNumber) {
-            if (lineNumber >= mLines.size()) {
-                // error: out of bounds
-                return;
-            }
-            currentLineLength = mLines[lineNumber].text.length();
-            if (begin - offset < currentLineLength) {
-                // found
-                break;
-            }
-        }
-
-        // do erase
-        auto& firstLine = mLines[lineNumber];
-        auto& firstText = firstLine.text;
-        if (end == -1) {
-            // _________
-            // _____####
-            // #########
-            // #########
-
-            // erase string till end
-            firstText.erase(firstText.begin() + (begin - offset), firstText.end());
-
-            // erase lines till end
-            mLines.erase(mLines.begin() + lineNumber + 1, mLines.end());
-            return;
-        } else {
-            // check if erase ends before the end of the line
-            if ((begin - offset) < firstText.length()) {
-                // _________
-                // __###____
-                // _________
-                firstText.erase(firstText.begin() + begin - offset, firstText.begin() + end - offset);
-            } else {
-                if (begin == offset) {
-                    // _________
-                    // #########
-                    // #########
-                    // ######___
-
-                    // we can delete whole lines
-                    // this breaks firstLine and firstText
-                    do {
-                        offset += mLines[lineNumber].text.length();
-                        mLines.erase(mLines.begin() + lineNumber);
-                    } while ((end - offset) > mLines[lineNumber].text.length());
-
-                    // the last line left
-                    if (end > offset) {
-                        // ######___
-                        auto& t = mLines[lineNumber].text;
-                        t.erase(t.begin(), t.begin() + (end - offset));
-                    }
-                } else {
-                    // _________
-                    // ___#######
-                    // #########
-                    // ######___
-                    AUI_ASSERT(0);
-                }
-            }
-            firstText.erase(firstText.begin() + (begin - offset), firstText.begin() + (end - offset));
-            firstLine.prerendered = nullptr;
-        }
-    }
-
-    bool typeableInsert(size_t at, const AString& toInsert) override {
-        if (!mTextArea.mEditable) {
-            return false;
-        }
-        AUI_ASSERT(0);
-        return true;
-    }
-
-    bool typeableInsert(size_t at, char16_t toInsert) override {
-        if (!mTextArea.mEditable) {
-            return false;
-        }
-        for (size_t i = 0; i < mLines.size(); ++i) {
-            auto& text = mLines[i].text;
-            size_t length = text.length();
-            if (at <= length) {
-                // found target line
-                // at is now offset relative to begin of current line text
-
-                // insert single symbol
-                text.insert(at++, toInsert);
-                if (toInsert == '\n') {
-                    if (text.length() == at) {
-                        // just create a new blank line
-                        mLines.insert(mLines.begin() + at, {});
-                    } else {
-                        // split line
-                        auto secondPart = text.substr(at);
-                        text.resize(at);
-                        mLines.insert(mLines.begin() + at, {secondPart, {}});
-                        mLines[i].prerendered = nullptr;
-                    }
-                } else {
-                    mLines[i].prerendered = nullptr;
-                }
-                return true;
-            } else {
-                // not found, continue searching
-                at -= length;
-            }
-        }
-
-        // no lines, create a new one
-        mLines.push_back({AString(toInsert), {}});
-        return false;
-    }
-
-    size_t typeableFind(char16_t c, size_t startPos) override {
-        size_t s = 0;
-        for (auto& l : mLines) {
-            size_t absoluteEnd = s + l.text.length();
-            size_t r;
-            if (startPos <= s) {
-                // ignore startPos
-                r = l.text.find(c);
-            } else if (absoluteEnd < startPos) {
-                r = l.text.find(c, startPos - s);
-            } else {
-                s = absoluteEnd;
-                continue;
-            }
-            if (r != AString::NPOS) {
-                return r + s;
-            }
-            s = absoluteEnd;
-        }
-        return AString::NPOS;
-    }
-
-    size_t typeableReverseFind(char16_t c, size_t startPos) override {
-        return AString::NPOS;
-    }
-
-    size_t length() const override {
-        size_t accumulator = 0;
-
-        for (auto& l : mLines) {
-            accumulator += l.text.length();
-        }
-
-        return accumulator;
-    }
-};
-
 ATextArea::ATextArea() {
     addAssName(".input-field");
-    setLayout(std::make_unique<AHorizontalLayout>());
-    mScrollbar = _new<AScrollbar>();
-    addView(mTextField = _new<TextAreaField>(*this) let {
-        it->setExpanding();
-    });
-    addView(mScrollbar);
 }
 
 ATextArea::ATextArea(const AString& text):
     ATextArea()
 {
-    mTextField->setText(text);
+    setText(text);
 }
 
-int ATextArea::getContentMinimumHeight(ALayoutDirection layout) {
-    return 80_dp;
+ATextArea::~ATextArea() {
+
 }
 
-void ATextArea::onScroll(const AScrollEvent& event) {
-    //AViewContainer::onScroll(pos, delta);
-    mScrollbar->onScroll(event);
+AString ATextArea::toString() const {
+    return AString();
 }
 
+void ATextArea::invalidateFont() {
+
+}
+
+const AString& ATextArea::text() const {
+    return *mText;
+}
+
+void ATextArea::typeableErase(size_t begin, size_t end) {
+
+}
+
+bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
+    return false;
+}
+
+bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
+    return false;
+}
+
+size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
+    return 0;
+}
+
+size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
+    return 0;
+}
+
+size_t ATextArea::length() const {
+    return 0;
+}

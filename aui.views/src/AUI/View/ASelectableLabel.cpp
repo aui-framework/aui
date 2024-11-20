@@ -136,6 +136,6 @@ void ASelectableLabel::onPointerDoubleClicked(const APointerPressedEvent& event)
     ACursorSelectable::handleMouseDoubleClicked(event);
 }
 
-size_t ASelectableLabel::textLength() const {
+size_t ASelectableLabel::length() const {
     return ALabel::text().length();
 }
