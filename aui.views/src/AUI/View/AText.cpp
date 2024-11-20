@@ -181,9 +181,6 @@ int AText::getContentMinimumWidth(ALayoutDirection layout) {
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
-    if (getAssNames().contains("DevtoolsTest")) {
-        printf("\n");
-    }
     if (!mPrerenderedString) {
         performLayout();
     }
