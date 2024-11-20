@@ -35,7 +35,7 @@
  * AScrollArea::Builder().withContents(_new<AScrollArea>())
  * @endcode
  */
-class API_AUI_VIEWS ATextArea: public AAbstractTypeableView, public IStringable {
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<AView>, public IStringable {
 public:
     ATextArea();
     explicit ATextArea(const AString& text);

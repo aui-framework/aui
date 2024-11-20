@@ -37,7 +37,7 @@ AString ASelectableLabel::getDisplayText() {
     //return getTransformedText();
 }
 
-void ASelectableLabel::doRedraw() {
+void ASelectableLabel::cursorSelectableRedraw() {
     redraw();
 }
 

@@ -37,7 +37,7 @@ ATextArea::~ATextArea() {
 }
 
 AString ATextArea::toString() const {
-    return AString();
+    return text();
 }
 
 void ATextArea::invalidateFont() {

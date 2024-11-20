@@ -15,7 +15,7 @@
 
 
 #include <AUI/Platform/AClipboard.h>
-#include "AAbstractTypeableView.h"
+#include "AAbstractTypeable.h"
 
 
 #include "AUI/Platform/APlatform.h"
@@ -27,7 +27,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 
-_<ATimer> AAbstractTypeableView::blinkTimer()
+_<ATimer> AAbstractTypeable::blinkTimer()
 {
     using namespace std::chrono_literals;
     static _weak<ATimer> t;
@@ -40,75 +40,27 @@ _<ATimer> AAbstractTypeableView::blinkTimer()
     return timer;
 }
 
-void AAbstractTypeableView::updateCursorBlinking()
+void AAbstractTypeable::updateCursorBlinking()
 {
     mBlinkTimer->restart();
     mCursorBlinkVisible = true;
     mCursorBlinkCount = 0;
-    redraw();
+    cursorSelectableRedraw();
 }
 
-void AAbstractTypeableView::updateCursorPos()
+AAbstractTypeable::AAbstractTypeable()
 {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
-
-    const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
-
-    if (absoluteCursorPos < 0)
-    {
-        mHorizontalScroll += absoluteCursorPos - SCROLL_ADVANCEMENT;
-    }
-    else if (absoluteCursorPos >= getContentWidth())
-    {
-        mHorizontalScroll += absoluteCursorPos - getContentWidth() + SCROLL_ADVANCEMENT;
-    }
-    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getDisplayText())) - getContentWidth() + 1, 0));
-}
-
-
-
-AAbstractTypeableView::AAbstractTypeableView()
-{
-    connect(mBlinkTimer->fired, this, [&]()
-    {
-        if (hasFocus() && mCursorBlinkCount < 60) {
-            mCursorBlinkVisible = !mCursorBlinkVisible;
-            mCursorBlinkCount += 1;
-            redraw();
-        }
-    });
 
 }
 
-void AAbstractTypeableView::onFocusAcquired() {
-    AView::onFocusAcquired();
-    updateCursorBlinking();
-}
-
-AAbstractTypeableView::~AAbstractTypeableView()
+AAbstractTypeable::~AAbstractTypeable()
 {
 }
 
-bool AAbstractTypeableView::handlesNonMouseNavigation() {
-    return true;
-}
-
-int AAbstractTypeableView::getContentMinimumHeight(ALayoutDirection layout)
-{
-    return getFontStyle().size;
-}
-
-void AAbstractTypeableView::onKeyDown(AInput::Key key)
-{
-    AView::onKeyDown(key);
-    onKeyRepeat(key);
-}
-
-void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
+void AAbstractTypeable::handleKey(AInput::Key key)
 {
     if (AInput::isKeyDown(AInput::LBUTTON))
         return;
-
 
     auto fastenSelection = [&]() {
         if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
@@ -218,16 +170,16 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     }
 
     if (textChanging) {
-        emit textChanging(text());
+        emitTextChanging(text());
     }
 
     updateCursorPos();
     updateCursorBlinking();
 
-    redraw();
+    cursorSelectableRedraw();
 }
 
-void AAbstractTypeableView::pasteFromClipboard() {
+void AAbstractTypeable::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
     if (mCursorSelection) {
@@ -248,13 +200,12 @@ void AAbstractTypeableView::pasteFromClipboard() {
 
         invalidateFont();
         updateCursorPos();
-        emit textChanged;
     } else if (prevContents) {
         setText(*prevContents);
     }
 }
 
-void AAbstractTypeableView::cutToClipboard() {
+void AAbstractTypeable::cutToClipboard() {
     if (!mIsCopyable)
         return;
 
@@ -266,16 +217,14 @@ void AAbstractTypeableView::cutToClipboard() {
     invalidateFont();
 }
 
-void AAbstractTypeableView::copyToClipboard() const {
+void AAbstractTypeable::copyToClipboard() const {
     if (!mIsCopyable)
         return;
 
     AClipboard::copyToClipboard(selectedText());
 }
 
-void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
-
-void AAbstractTypeableView::enterChar(char16_t c)
+void AAbstractTypeable::enterChar(char16_t c)
 {
     if (AInput::isKeyDown(AInput::LBUTTON) ||
         AInput::isKeyDown(AInput::LCONTROL) ||
@@ -334,50 +283,10 @@ void AAbstractTypeableView::enterChar(char16_t c)
         mCursorSelection.reset();
     }
 
-    redraw();
+    cursorSelectableRedraw();
 }
 
-void AAbstractTypeableView::onFocusLost()
-{
-    AView::onFocusLost();
-    if (mTextChangedFlag)
-    {
-        mTextChangedFlag = false;
-        if (textChanged) {
-            emit textChanged(text());
-        }
-    }
-
-}
-
-void AAbstractTypeableView::onPointerPressed(const APointerPressedEvent& event)
-{
-    AView::onPointerPressed(event);
-    ACursorSelectable::handleMousePressed(event);
-    updateCursorBlinking();
-}
-
-void AAbstractTypeableView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
-{
-    AView::onPointerMove(pos, event);
-    ACursorSelectable::handleMouseMove(pos);
-}
-
-bool AAbstractTypeableView::isLButtonPressed() {
-    return isPressed();
-}
-
-void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
-{
-    AView::onPointerReleased(event);
-    if (!event.triggerClick) return;
-
-    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
-        ACursorSelectable::handleMouseReleased(event);
-    }
-}
-
-AMenuModel AAbstractTypeableView::composeContextMenu() {
+AMenuModel AAbstractTypeable::composeContextMenuImpl() {
     return { { .name = "aui.cut"_i18n, .shortcut = AInput::LCONTROL + AInput::X, .onAction = [&]{cutToClipboard();}, .enabled = hasSelection(), },
              { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
              { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
@@ -385,58 +294,29 @@ AMenuModel AAbstractTypeableView::composeContextMenu() {
              { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !text().empty() } };
 }
 
-void AAbstractTypeableView::setText(const AString& t)
+void AAbstractTypeable::setText(const AString& t)
 {
     mHorizontalScroll = 0;
     updateSelectionOnTextSet(t);
     updateCursorBlinking();
 
     invalidateFont();
-    emit textChanged(t);
+    emitTextChanged(t);
 }
 
-void AAbstractTypeableView::updateSelectionOnTextSet(const AString& t) {
+void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorIndex = t.length();
     mCursorSelection = 0;
 }
 
-void AAbstractTypeableView::onPointerDoubleClicked(const APointerPressedEvent& event) {
-    AView::onPointerDoubleClicked(event);
-    ACursorSelectable::handleMouseDoubleClicked(event);
-    updateCursorBlinking();
-}
-
-glm::ivec2 AAbstractTypeableView::getMouseSelectionPadding() {
-    return {mPadding.left, mPadding.top + getVerticalAlignmentOffset() };
-}
-
-glm::ivec2 AAbstractTypeableView::getMouseSelectionScroll() {
+glm::ivec2 AAbstractTypeable::getMouseSelectionScroll() {
     return {mHorizontalScroll, 0};
 }
 
-AFontStyle AAbstractTypeableView::getMouseSelectionFont() {
+AFontStyle AAbstractTypeable::getMouseSelectionFont() {
     return getFontStyle();
 }
 
-AString AAbstractTypeableView::getDisplayText() {
+AString AAbstractTypeable::getDisplayText() {
     return text();
-}
-
-
-void AAbstractTypeableView::doRedraw() {
-    redraw();
-}
-
-void AAbstractTypeableView::onSelectionChanged() {
-    if (selectionChanged) emit selectionChanged(selection());
-}
-
-void AAbstractTypeableView::invalidateAllStyles() {
-    invalidateAllStylesFont();
-    AView::invalidateAllStyles();
-}
-
-void AAbstractTypeableView::commitStyle() {
-    AView::commitStyle();
-    commitStyleFont();
 }

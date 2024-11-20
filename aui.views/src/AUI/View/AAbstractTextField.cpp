@@ -24,15 +24,6 @@
 AAbstractTextField::AAbstractTextField() {
 }
 
-void AAbstractTextField::onFocusAcquired() {
-    AView::onFocusAcquired();
-    updateCursorBlinking();
-}
-
-void AAbstractTextField::onFocusLost() {
-    AAbstractTypeableView::onFocusLost();
-}
-
 AAbstractTextField::~AAbstractTextField()
 {
 }
@@ -137,7 +128,7 @@ AString AAbstractTextField::getDisplayText() {
     return getContentsPasswordWrap();
 }
 
-void AAbstractTextField::doRedraw() {
+void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 

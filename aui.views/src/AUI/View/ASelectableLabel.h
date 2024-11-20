@@ -54,6 +54,6 @@ protected:
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
     AString getDisplayText() override;
-    void doRedraw() override;
+    void cursorSelectableRedraw() override;
 
 };

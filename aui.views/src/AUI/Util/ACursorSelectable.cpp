@@ -41,7 +41,7 @@ void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
     if (!mIgnoreSelection && isLButtonPressed()) {
         mCursorIndex = cursorIndexByPos(pos);
         onSelectionChanged();
-        doRedraw();
+        cursorSelectableRedraw();
     }
 }
 

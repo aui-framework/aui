@@ -115,7 +115,7 @@ protected:
     virtual AFontStyle getMouseSelectionFont() = 0;
     virtual bool isLButtonPressed() = 0;
     virtual AString getDisplayText() = 0;
-    virtual void doRedraw() = 0;
+    virtual void cursorSelectableRedraw() = 0;
     virtual void onSelectionChanged() = 0;
 
 

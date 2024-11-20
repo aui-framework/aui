@@ -24,11 +24,11 @@
  * @details ATextField is separated into the different class in order to simplify styling.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
+class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView<AView>, public IStringable
 {
 public:
     AAbstractTextField();
-    virtual ~AAbstractTextField();
+    ~AAbstractTextField() override;
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void setText(const AString& t) override;
@@ -67,13 +67,10 @@ public:
     }
 
     bool handlesNonMouseNavigation() override;
-    void onFocusAcquired() override;
 
     const AString& text() const override;
 
     void onCharEntered(char16_t c) override;
-
-    void onFocusLost() override;
 
     bool wantsTouchscreenKeyboard() override;
 
@@ -105,7 +102,7 @@ protected:
 
     AString getDisplayText() override;
 
-    void doRedraw() override;
+    void cursorSelectableRedraw() override;
 
 
     void doDrawString(IRenderer& render);

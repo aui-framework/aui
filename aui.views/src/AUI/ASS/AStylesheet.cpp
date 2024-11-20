@@ -182,7 +182,7 @@ AStylesheet::AStylesheet() {
 
         // Text fields
         {
-            t<AAbstractTypeableView>(),
+            t<AAbstractTypeable>(),
             Padding { 3_dp, 6_dp },
             ACursor::TEXT,
         },
