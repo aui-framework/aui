@@ -26,7 +26,7 @@ public:
 
         virtual glm::ivec2 getSize() = 0;
         virtual size_t getCharacterCount();
-        virtual void setPosition(const glm::ivec2& position);
+        virtual void setPosition(glm::ivec2 position);
 
         [[nodiscard]]
         virtual AFloat getFloat() const;
@@ -43,6 +43,14 @@ public:
         virtual bool escapesEdges() {
             return false;
         }
+
+        [[nodiscard]]
+        glm::ivec2 getPosition() const {
+            return mPosition;
+        }
+
+    private:
+        glm::ivec2 mPosition{0, 0};
     };
 
 private:
@@ -66,6 +74,11 @@ public:
 
     [[nodiscard]]
     const AVector<_<Entry>>& entries() const {
+        return mEntries;
+    }
+
+    [[nodiscard]]
+    AVector<_<Entry>>& entries() {
         return mEntries;
     }
 

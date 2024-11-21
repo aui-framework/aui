@@ -246,13 +246,13 @@ unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
                                                        getFontStyle());
 }
 
-glm::ivec2 AAbstractTextField::getPosByIndex(int i) {
+glm::ivec2 AAbstractTextField::getPosByIndex(size_t index) {
     int x = [&] {
-        if (auto r = mTextLayoutHelper.indexToPos(0, i)) [[unlikely]] {
+        if (auto r = mTextLayoutHelper.indexToPos(0, index)) [[unlikely]] {
             return r->x;
         }
         // fallback as a slower implementation.
-        return int(getFontStyle().getWidth(getDisplayText().substr(0, i)));
+        return int(getFontStyle().getWidth(getDisplayText().substr(0, index)));
     }();
     return { -mHorizontalScroll + x, 0 };
 }

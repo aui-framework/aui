@@ -23,7 +23,8 @@ glm::ivec2 AViewEntry::getSize() {
             ALayoutDirection::NONE) + mView->getMargin().vertical() };
 }
 
-void AViewEntry::setPosition(const glm::ivec2& position) {
+void AViewEntry::setPosition(glm::ivec2 position) {
+    Entry::setPosition(position);
     mView->setGeometry(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
                        mView->getMinimumSize());
 

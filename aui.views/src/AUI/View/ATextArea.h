@@ -47,7 +47,7 @@ public:
     AString toString() const override;
     const AString& text() const override;
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
-    glm::ivec2 getPosByIndex(int i) override;
+    glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;
 
     void render(ARenderContext context) override;
@@ -68,6 +68,8 @@ protected:
 private:
     AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
+
+    AVector<_<AWordWrappingEngine::Entry>>::iterator getLeftEntity(size_t& index);
 };
 
 

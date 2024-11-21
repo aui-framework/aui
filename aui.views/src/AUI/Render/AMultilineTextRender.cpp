@@ -19,7 +19,7 @@ glm::ivec2 AMultilineTextRender::TextEntry::getSize() {
     return {mTextRender.mFontStyle.getWidth(getText()), mTextRender.mFontStyle.size };
 }
 
-void AMultilineTextRender::TextEntry::setPosition(const glm::ivec2& position) {
+void AMultilineTextRender::TextEntry::setPosition(glm::ivec2 position) {
     mPosition = position;
 }
 

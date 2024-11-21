@@ -229,8 +229,8 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
 }
 
-void AWordWrappingEngine::Entry::setPosition(const glm::ivec2& position) {
-
+void AWordWrappingEngine::Entry::setPosition(glm::ivec2 position) {
+    mPosition = position;
 }
 
 AFloat AWordWrappingEngine::Entry::getFloat() const {

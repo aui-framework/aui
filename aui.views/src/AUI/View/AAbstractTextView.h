@@ -65,7 +65,7 @@ protected:
 
         glm::ivec2 getSize() override;
 
-        void setPosition(const glm::ivec2& position) override;
+        void setPosition(glm::ivec2 position) override;
 
         const glm::ivec2& getPosition() const {
             return mPosition;
@@ -79,7 +79,6 @@ protected:
     private:
         AAbstractTextView* mText;
         AString mWord;
-        glm::ivec2 mPosition;
 
     public:
         WordEntry(AAbstractTextView* text, AString word)
@@ -87,13 +86,11 @@ protected:
 
         glm::ivec2 getSize() override;
 
-        void setPosition(const glm::ivec2& position) override;
-
-        const glm::ivec2& getPosition() const {
-            return mPosition;
+        const AString& getWord() const {
+            return mWord;
         }
 
-        const AString& getWord() const {
+        AString& getWord() {
             return mWord;
         }
 
@@ -142,6 +139,10 @@ protected:
     static ParsedFlags parseFlags(const Flags& flags);
 
     void performLayout();
+
+    void
+    processString(const AString& string, const ParsedFlags& parsedFlags,
+                  AVector<_<AWordWrappingEngine::Entry>>& entries);
 };
 
 

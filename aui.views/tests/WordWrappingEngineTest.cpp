@@ -30,7 +30,7 @@ public:
         return mSize;
     }
 
-    void setPosition(const glm::ivec2& position) override {
+    void setPosition(glm::ivec2 position) override {
         EXPECT_NEAR(float(mExpectedPosition.x), float(position.x), 2.f);
         EXPECT_NEAR(float(mExpectedPosition.y), float(position.y), 2.f);
     }

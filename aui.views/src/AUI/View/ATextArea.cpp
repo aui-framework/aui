@@ -13,9 +13,10 @@
 // Created by alex2 on 5/22/2021.
 //
 
-
+#include <range/v3/numeric.hpp>
 #include "ATextArea.h"
 #include "AUI/Traits/algorithms.h"
+#include "AButton.h"
 
 
 ATextArea::ATextArea() {
@@ -29,7 +30,8 @@ ATextArea::ATextArea(const AString& text):
 }
 
 void ATextArea::setText(const AString& t) {
-    AAbstractTextView::setString(t);
+    AAbstractTextView::setItems({t, _new<AButton>("ololo"), "kek"});
+//    AAbstractTextView::setString(t);
     AAbstractTypeable::setText(t);
     mCompiledText = t;
 }
@@ -57,7 +59,38 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
     return false;
 }
 
+AVector<_<AWordWrappingEngine::Entry>>::iterator ATextArea::getLeftEntity(size_t& index) {
+    for (auto it = mEngine.entries().begin(); it != mEngine.entries().end(); ++it) {
+        auto characterCount = (*it)->getCharacterCount();
+        if (index > characterCount) {
+            index -= characterCount;
+            continue;
+        }
+        return it;
+    }
+    if (!mEngine.entries().empty()) {
+        return std::prev(mEngine.entries().end());
+    }
+    return mEngine.entries().end();
+}
 bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
+    auto target = getLeftEntity(at);
+    if (target == mEngine.entries().end()) {
+        // empty ATextArea; this one going to be the first word
+        pushWord(mEngine.entries(), AString(1, toInsert), mParsedFlags);
+        return true;
+    }
+
+    if (auto word = _cast<WordEntry>(*target)) {
+        if (toInsert == ' ') {
+            return false;
+        }
+        if (toInsert == '\n') {
+            return false;
+        }
+        word->getWord().insert(at, toInsert);
+        return true;
+    }
     return false;
 }
 
@@ -76,15 +109,35 @@ size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
 }
 
 size_t ATextArea::length() const {
-    return 0;
+    if (mCompiledText) {
+        return mCompiledText->length();
+    }
+    return ranges::accumulate(mEngine.entries(), size_t(0), std::plus<>{}, [](const _<AWordWrappingEngine::Entry>& e) {
+        return e->getCharacterCount();
+    });
 }
 
 unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
     return 0;
 }
 
-glm::ivec2 ATextArea::getPosByIndex(int i) {
-    return glm::ivec2();
+glm::ivec2 ATextArea::getPosByIndex(size_t index) {
+    auto target = getLeftEntity(index);
+    if (target == mEngine.entries().end()) {
+        return {0, 0};
+    }
+    if (index <= (*target)->getCharacterCount()) {
+        auto base = (*target)->getPosition();
+        if (auto word = _cast<WordEntry>(*target)) {
+            return base + glm::ivec2{getFontStyle().getWidth(word->getWord().begin(), word->getWord().begin() + index), 0} - mPadding.leftTop();
+        }
+        return base + (*target)->getSize() - mPadding.leftTop();
+    }
+    auto next = std::next(target);
+    if (next != mEngine.entries().end()) {
+        return (*next)->getPosition() - mPadding.leftTop();
+    }
+    return (*target)->getPosition() + (*target)->getSize() - mPadding.leftTop();
 }
 
 void ATextArea::onCursorIndexChanged() {
@@ -99,3 +152,4 @@ void ATextArea::render(ARenderContext context) {
 bool ATextArea::capturesFocus() {
     return true;
 }
+

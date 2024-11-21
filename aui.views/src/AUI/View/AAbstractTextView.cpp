@@ -63,6 +63,13 @@ void AAbstractTextView::setString(const AString& string, const Flags& flags) {
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     entries.reserve(string.length());
+    processString(string, parsedFlags, entries);
+
+    mEngine.setEntries(std::move(entries));
+}
+
+void AAbstractTextView::processString(const AString& string, const AAbstractTextView::ParsedFlags& parsedFlags,
+                                      AVector<_<AWordWrappingEngine::Entry>>& entries) {
     AString currentWord;
     auto commitWord = [&] {
         if (!currentWord.empty()) {
@@ -87,8 +94,6 @@ void AAbstractTextView::setString(const AString& string, const Flags& flags) {
         }
     }
     commitWord();
-
-    mEngine.setEntries(std::move(entries));
 }
 
 
@@ -101,9 +106,7 @@ void AAbstractTextView::setItems(const AVector<std::variant<AString, _<AView>>>&
     for (auto& item : init) {
         std::visit(aui::lambda_overloaded {
             [&](const AString& string) {
-                for (auto& w : string.split(' ')) {
-                    pushWord(entries, w, parsedFlags);
-                }
+                processString(string, parsedFlags, entries);
             },
             [&](const _<AView>& view) {
                 addView(view);
@@ -298,10 +301,6 @@ size_t AAbstractTextView::WordEntry::getCharacterCount() {
     return mWord.length();
 }
 
-void AAbstractTextView::WordEntry::setPosition(const glm::ivec2& position) {
-    mPosition = position;
-}
-
 glm::ivec2 AAbstractTextView::WhitespaceEntry::getSize() {
     return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
 }
@@ -314,6 +313,6 @@ glm::ivec2 AAbstractTextView::CharEntry::getSize() {
     return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
 }
 
-void AAbstractTextView::CharEntry::setPosition(const glm::ivec2& position) {
+void AAbstractTextView::CharEntry::setPosition(glm::ivec2 position) {
     mPosition = position;
 }

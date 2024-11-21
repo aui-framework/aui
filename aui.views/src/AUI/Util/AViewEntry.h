@@ -23,7 +23,7 @@ public:
     AViewEntry() = default;
 
     glm::ivec2 getSize() override;
-    void setPosition(const glm::ivec2& position) override;
+    void setPosition(glm::ivec2 position) override;
     AFloat getFloat() const override;
 
     ~AViewEntry() override;

@@ -110,7 +110,7 @@ protected:
     void cursorSelectableRedraw() override;
 
     unsigned cursorIndexByPos(glm::ivec2 pos) override;
-    glm::ivec2 getPosByIndex(int i) override;
+    glm::ivec2 getPosByIndex(size_t index) override;
 
     void doDrawString(IRenderer& render);
 
