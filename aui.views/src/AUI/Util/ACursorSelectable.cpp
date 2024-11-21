@@ -30,6 +30,7 @@ bool ACursorSelectable::hasSelection() const {
 void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
     if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
         mCursorSelection = mCursorIndex = cursorIndexByPos(event.position);
+        onSelectionChanged();
     }
 }
 

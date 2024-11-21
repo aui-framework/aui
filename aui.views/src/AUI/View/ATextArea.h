@@ -51,7 +51,7 @@ public:
     glm::ivec2 getPosByIndex(int i) override;
 
 private:
-    void updateCursorPos() override;
+    void onCursorIndexChanged() override;
 
 protected:
     void typeableErase(size_t begin, size_t end) override;

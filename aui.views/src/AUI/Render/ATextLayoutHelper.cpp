@@ -21,7 +21,9 @@ size_t ATextLayoutHelper::xToIndex(const AVector<Boundary>& line, int pos) {
     pos += 2; // magic offset
     if (line.empty()) return 0;
     if (pos < 0) return 0;
-    if (pos > line.last().position.x + 3) return line.size(); // hardcoded char width
+    if (pos > line.last().position.x + 3) { // hardcoded char width
+        return line.size() - 1; // last symbol boundary is the right border of the last character; hence -1
+    }
     // perform binary search in order to find index
     auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Boundary>::const_iterator& it) {
         int posCurrent = it->position.x;
@@ -41,7 +43,8 @@ size_t ATextLayoutHelper::xToIndex(const AVector<Boundary>& line, int pos) {
         return aui::BinarySearchResult::MATCH;
     });
     if (it != line.end()) {
-        return it - line.begin();
+        const auto MAX = line.size() - 1; // last symbol boundary is the right border of the last character; hence -1
+        return glm::min(size_t(it - line.begin()), MAX);
     }
     return 0;
 }

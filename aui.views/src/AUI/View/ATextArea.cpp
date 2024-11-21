@@ -78,6 +78,6 @@ glm::ivec2 ATextArea::getPosByIndex(int i) {
     return glm::ivec2();
 }
 
-void ATextArea::updateCursorPos() {
+void ATextArea::onCursorIndexChanged() {
 
 }

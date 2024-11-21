@@ -116,7 +116,7 @@ protected:
 
     void doDrawString(IRenderer& render);
 
-    void updateCursorPos() override;
+    void onCursorIndexChanged() override;
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;

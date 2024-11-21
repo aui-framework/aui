@@ -137,6 +137,7 @@ protected:
     }
 
     void onSelectionChanged() override {
+        onCursorIndexChanged();
         if (selectionChanged) emit selectionChanged(selection());
     }
 };

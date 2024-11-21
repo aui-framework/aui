@@ -100,6 +100,8 @@ protected:
     virtual size_t typeableReverseFind(char16_t c, size_t startPos = -1) = 0;
     virtual void updateSelectionOnTextSet(const AString& t);
 
+    virtual void onCursorIndexChanged() = 0;
+
 
     /**
      * Char enter implementation. Should be called in onCharEntered.
@@ -127,7 +129,6 @@ private:
 
     virtual void emitTextChanged(const AString& text) = 0;
     virtual void emitTextChanging(const AString& text) = 0;
-    virtual void updateCursorPos() = 0;
     void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
 };
 

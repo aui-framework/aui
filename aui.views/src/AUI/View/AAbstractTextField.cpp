@@ -246,7 +246,7 @@ void AAbstractTextField::onKeyDown(AInput::Key key) {
 }
 
 unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos + glm::ivec2{ mPadding.left - mHorizontalScroll, mPadding.top + getVerticalAlignmentOffset() },
+    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - glm::ivec2{ mPadding.left - mHorizontalScroll, 0 },
                                                        getFontStyle());
 }
 
@@ -261,7 +261,7 @@ glm::ivec2 AAbstractTextField::getPosByIndex(int i) {
     return { -mHorizontalScroll + x, 0 };
 }
 
-void AAbstractTextField::updateCursorPos() {
+void AAbstractTextField::onCursorIndexChanged() {
     auto absoluteCursorPos = getPosByIndex(mCursorIndex).x;
 
     if (absoluteCursorPos < 0)

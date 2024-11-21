@@ -173,7 +173,7 @@ void AAbstractTypeable::handleKey(AInput::Key key)
         emitTextChanging(text());
     }
 
-    updateCursorPos();
+    onCursorIndexChanged();
     updateCursorBlinking();
 
     cursorSelectableRedraw();
@@ -199,7 +199,7 @@ void AAbstractTypeable::pasteFromClipboard() {
         mCursorSelection.reset();
 
         invalidateFont();
-        updateCursorPos();
+        onCursorIndexChanged();
     } else if (prevContents) {
         setText(*prevContents);
     }
@@ -215,7 +215,7 @@ void AAbstractTypeable::cutToClipboard() {
     mCursorIndex = sel.begin;
     mCursorSelection.reset();
     invalidateFont();
-    updateCursorPos();
+    onCursorIndexChanged();
 }
 
 void AAbstractTypeable::copyToClipboard() const {
@@ -277,7 +277,7 @@ void AAbstractTypeable::enterChar(char16_t c)
     }
     invalidateFont();
     updateCursorBlinking();
-    updateCursorPos();
+    onCursorIndexChanged();
 
     if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT))
     {
