@@ -250,27 +250,30 @@ void AAbstractTextField::onKeyDown(AInput::Key key) {
 }
 
 unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos + glm::ivec2{ mPadding.left - int(mHorizontalScroll), mPadding.top + getVerticalAlignmentOffset() },
+    return mTextLayoutHelper.posToIndexFixedLineHeight(pos + glm::ivec2{ mPadding.left - mHorizontalScroll, mPadding.top + getVerticalAlignmentOffset() },
                                                        getFontStyle());
 }
 
 glm::ivec2 AAbstractTextField::getPosByIndex(int end, int begin) {
-    return { -int(mHorizontalScroll) + int(getFontStyle().getWidth(getDisplayText().substr(begin, end - begin))), 0 };
+    return { -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(begin, end - begin))), 0 };
 }
 
 void AAbstractTextField::updateCursorPos() {
-    auto absoluteCursorPos = -int(mHorizontalScroll) + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
-
-    const int SCROLL_ADVANCEMENT = this->getContentWidth() * 4 / 10;
+    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
 
     if (absoluteCursorPos < 0)
     {
-        mHorizontalScroll += absoluteCursorPos - SCROLL_ADVANCEMENT;
+        mHorizontalScroll += absoluteCursorPos;
+        absoluteCursorPos = 0;
     }
     else if (absoluteCursorPos >= this->getContentWidth())
     {
-        mHorizontalScroll += absoluteCursorPos - this->getContentWidth() + SCROLL_ADVANCEMENT;
+        mHorizontalScroll += absoluteCursorPos - this->getContentWidth();
+        absoluteCursorPos = this->getContentWidth() - 1 /* -1 for cursor width */;
+    } else if (hasSelection() && selection().end == mCursorIndex) {
+        // apply -1 offset to cursor if cursor stays at the end of selection so it covers selection.
+        absoluteCursorPos -= 1;
     }
     mAbsoluteCursorPos = absoluteCursorPos;
-    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0u, glm::max(unsigned(getFontStyle().getWidth(getDisplayText()) - this->getContentWidth() + 1), 0u));
+    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getDisplayText()) - this->getContentWidth()), 0));
 }

@@ -122,7 +122,7 @@ private:
     ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
-    unsigned mHorizontalScroll = 0;
+    int mHorizontalScroll = 0; // positive only
     unsigned mAbsoluteCursorPos = 0;
     ATextLayoutHelper mTextLayoutHelper;
 

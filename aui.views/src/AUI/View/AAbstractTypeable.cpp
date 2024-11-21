@@ -317,5 +317,5 @@ void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position,
         return;
     }
     renderer.setBlending(Blending::INVERSE_DST);
-    renderer.rectangle(ASolidBrush{}, position, {1_dp, lineHeight});
+    renderer.rectangle(ASolidBrush{}, position, {1, lineHeight});
 }
