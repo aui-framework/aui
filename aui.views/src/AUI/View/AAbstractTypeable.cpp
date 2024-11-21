@@ -215,6 +215,7 @@ void AAbstractTypeable::cutToClipboard() {
     mCursorIndex = sel.begin;
     mCursorSelection.reset();
     invalidateFont();
+    updateCursorPos();
 }
 
 void AAbstractTypeable::copyToClipboard() const {
@@ -317,5 +318,6 @@ void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position,
         return;
     }
     renderer.setBlending(Blending::INVERSE_DST);
+    AUI_DEFER { renderer.setBlending(Blending::NORMAL); };
     renderer.rectangle(ASolidBrush{}, position, {1, lineHeight});
 }

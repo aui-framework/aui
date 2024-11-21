@@ -12,13 +12,7 @@
 #pragma once
 
 
-#include <AUI/Util/AWordWrappingEngine.h>
-#include "AViewContainer.h"
-#include "AUI/Font/IFontView.h"
-#include <initializer_list>
-#include <variant>
-#include <AUI/Enum/WordBreak.h>
-
+#include "AAbstractTextView.h"
 
 /**
  * @brief HTML-capable text container.
@@ -34,7 +28,7 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText: public AViewContainer, public IFontView {
+class API_AUI_VIEWS AText: public AAbstractTextView {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
@@ -42,7 +36,24 @@ public:
     };
 
 public:
-    AText() {}
+    AText();
+    ~AText() override;
+
+    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {}) {
+        AAbstractTextView::setItems(init, flags);
+    }
+    void clearContent() {
+        AAbstractTextView::clearContent();
+    }
+    void setHtml(const AString& html, const Flags& flags = {}) {
+        AAbstractTextView::setHtml(html, flags);
+    }
+    void setString(const AString& string, const Flags& flags) {
+        AAbstractTextView::setString(string, flags);
+    }
+    void setString(const AString& string) {
+        setString(string, {});
+    }
 
     static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {}) {
         auto v = aui::ptr::manage(new AText());
@@ -60,109 +71,6 @@ public:
         return v;
     }
 
-    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
-    void clearContent();
-    void setHtml(const AString& html, const Flags& flags = {});
-    void setString(const AString& string, const Flags& flags);
-    void setString(const AString& string) {
-        setString(string, {});
-    }
-
-    void render(ARenderContext context) override;
-    void setSize(glm::ivec2 size) override;
-    int getContentMinimumWidth(ALayoutDirection layout) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
-    void prerenderString(ARenderContext ctx);
-
-    void invalidateFont() override;
-
-protected:
-    void commitStyle() override;
-
-    void invalidateAllStyles() override;
-
-private:
-    class CharEntry: public AWordWrappingEngine::Entry {
-    private:
-        AText* mText;
-        char32_t mChar;
-        glm::ivec2 mPosition;
-
-    public:
-        CharEntry(AText* text, char32_t ch)
-                : mText(text), mChar(ch) {}
-
-        glm::ivec2 getSize() override;
-
-        void setPosition(const glm::ivec2& position) override;
-
-        AFloat getFloat() const override;
-
-        const glm::ivec2& getPosition() const {
-            return mPosition;
-        }
-
-        char32_t getChar() const {
-            return mChar;
-        }
-    };
-    class WordEntry: public AWordWrappingEngine::Entry {
-    private:
-        AText* mText;
-        AString mWord;
-        glm::ivec2 mPosition;
-
-    public:
-        WordEntry(AText* text, AString word)
-                : mText(text), mWord(std::move(word)){}
-
-        glm::ivec2 getSize() override;
-
-        void setPosition(const glm::ivec2& position) override;
-
-        AFloat getFloat() const override;
-
-        const glm::ivec2& getPosition() const {
-            return mPosition;
-        }
-
-
-        const AString& getWord() const {
-            return mWord;
-        }
-    };
-
-    class WhitespaceEntry: public AWordWrappingEngine::Entry {
-    private:
-        AText* mText;
-
-    public:
-        WhitespaceEntry(AText* text) : mText(text) {}
-
-        glm::ivec2 getSize() override;
-        void setPosition(const glm::ivec2& position) override;
-        AFloat getFloat() const override;
-
-        bool escapesEdges() override;
-
-        ~WhitespaceEntry() override = default;
-    } mWhitespaceEntry = this;
-
-    AWordWrappingEngine mEngine;
-    ADeque<WordEntry> mWordEntries;
-    ADeque<CharEntry> mCharEntries;
-
-    _<IRenderer::IPrerenderedString> mPrerenderedString;
-    ParsedFlags mParsedFlags;
-
-
-    void pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
-                  const AString& word,
-                  const ParsedFlags& flags);
-
-    static ParsedFlags parseFlags(const Flags& flags);
-
-    void performLayout();
 };
 
 
