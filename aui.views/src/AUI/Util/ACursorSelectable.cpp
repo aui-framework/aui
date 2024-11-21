@@ -26,10 +26,6 @@ bool ACursorSelectable::hasSelection() const {
     return mCursorIndex != mCursorSelection && mCursorSelection.hasValue();
 }
 
-unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - getMouseSelectionPadding() + getMouseSelectionScroll(),
-                                                       getMouseSelectionFont());
-}
 
 void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
     if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
@@ -57,38 +53,6 @@ void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) 
     }
 }
 
-int ACursorSelectable::drawSelectionPre(IRenderer& render) {
-    auto absoluteCursorPos = getPosByIndex(mCursorIndex);
-    
-    // selection
-    if (hasSelection())
-    {
-        auto absoluteSelectionPos = getPosByIndex(*mCursorSelection);
-
-        mAbsoluteBegin = mCursorIndex < *mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
-        mAbsoluteEnd = mCursorIndex < *mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
-
-        RenderHints::PushColor c(render);
-        render.setColor(AColor(1.f) - AColor(0x0078d700u));
-        
-        auto padding = getMouseSelectionPadding();
-        drawSelectionRects(render);
-    }
-    return absoluteCursorPos;
-}
-
-int ACursorSelectable::getPosByIndex(int end, int begin) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().substr(begin, end - begin)));
-}
-
-void ACursorSelectable::drawSelectionPost(IRenderer& render) {
-    render.setBlending(Blending::INVERSE_DST);
-    if (hasSelection())
-    {
-        drawSelectionRects(render);
-    }
-}
-
 void ACursorSelectable::selectAll() {
     size_t l = length();
     if (l > 0) {
@@ -102,43 +66,6 @@ void ACursorSelectable::clearSelection() {
     mCursorSelection.reset();
 }
 
-
-void ACursorSelectable::drawSelectionRects(IRenderer& render) {
-    auto p = getMouseSelectionPadding();
-
-    int absoluteBeginPos = mAbsoluteBegin;
-    int absoluteEndPos = mAbsoluteEnd;
-
-    int row = 0;
-
-    auto draw = [&]() {
-        auto fs = getMouseSelectionFont();
-        render.rectangle(ASolidBrush{},
-                             {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
-                             {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
-    };
-
-    auto t = getDisplayText();
-    auto sel = selection();
-    size_t lineBeginIndex = 0;
-    for (size_t i = 0; i != sel.begin; ++i) {
-        if (t[i] == '\n') {
-            ++row;
-        }
-    }
-    for (size_t i = sel.begin; i != sel.end; ++i) {
-        if (t[i] == '\n') {
-            absoluteEndPos = getPosByIndex(i, lineBeginIndex);
-            draw();
-            absoluteBeginPos = -getMouseSelectionScroll().x;
-            lineBeginIndex = i;
-            ++row;
-        }
-    }
-
-    absoluteEndPos = getPosByIndex(sel.end, lineBeginIndex);
-    draw();
-}
 
 void ACursorSelectable::handleMouseDoubleClicked(const APointerPressedEvent& event) {
     mIgnoreSelection = true;

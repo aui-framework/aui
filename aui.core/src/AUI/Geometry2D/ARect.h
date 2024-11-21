@@ -32,7 +32,28 @@ struct ARect {
         return { .p1 = position - size / static_cast<T>(2), .p2 = position + size / static_cast<T>(2) };
     }
 
+    [[nodiscard]]
     bool operator==(const ARect&) const noexcept = default;
+
+    [[nodiscard]]
+    APoint2D<T> leftTop() const noexcept {
+        return min();
+    }
+
+    [[nodiscard]]
+    APoint2D<T> rightBottom() const noexcept {
+        return max();
+    }
+
+    [[nodiscard]]
+    APoint2D<T> rightTop() const noexcept {
+        return { glm::max(p1.x, p2.x), glm::min(p1.y, p2.y) };
+    }
+
+    [[nodiscard]]
+    APoint2D<T> leftBottom() const noexcept {
+        return { glm::min(p1.x, p2.x), glm::max(p1.y, p2.y) };
+    }
 
     [[nodiscard]]
     bool isInside(APoint2D<T> other) const noexcept {

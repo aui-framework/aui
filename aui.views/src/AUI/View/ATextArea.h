@@ -38,12 +38,19 @@
 class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<AView>, public IStringable {
 public:
     ATextArea();
-    explicit ATextArea(const AString& text);
+    ATextArea(const AString& text);
     ~ATextArea() override;
 
     AString toString() const override;
     void invalidateFont() override;
     const AString& text() const override;
+
+    unsigned int cursorIndexByPos(glm::ivec2 pos) override;
+
+    glm::ivec2 getPosByIndex(int end, int begin) override;
+
+private:
+    void updateCursorPos() override;
 
 protected:
     void typeableErase(size_t begin, size_t end) override;

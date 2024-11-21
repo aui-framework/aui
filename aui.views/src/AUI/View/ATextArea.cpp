@@ -71,3 +71,15 @@ size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
 size_t ATextArea::length() const {
     return 0;
 }
+
+unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
+    return 0;
+}
+
+glm::ivec2 ATextArea::getPosByIndex(int end, int begin) {
+    return glm::ivec2();
+}
+
+void ATextArea::updateCursorPos() {
+
+}

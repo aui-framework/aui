@@ -103,6 +103,13 @@ public:
         return this->isPressed();
     }
 
+    void drawCursor(IRenderer& renderer, glm::ivec2 position) {
+        if (!this->hasFocus()) {
+            return;
+        }
+        drawCursorImpl(renderer, position, getFontStyle().size);
+    }
+
 protected:
     AMenuModel composeContextMenu() override {
         return composeContextMenuImpl();
@@ -131,25 +138,5 @@ protected:
 
     void onSelectionChanged() override {
         if (selectionChanged) emit selectionChanged(selection());
-    }
-
-    glm::ivec2 getMouseSelectionPadding() override {
-        return {this->getPadding().left, this->getPadding().top + getVerticalAlignmentOffset() };
-    }
-
-    void updateCursorPos() override {
-        auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
-
-        const int SCROLL_ADVANCEMENT = this->getContentWidth() * 4 / 10;
-
-        if (absoluteCursorPos < 0)
-        {
-            mHorizontalScroll += absoluteCursorPos - SCROLL_ADVANCEMENT;
-        }
-        else if (absoluteCursorPos >= this->getContentWidth())
-        {
-            mHorizontalScroll += absoluteCursorPos - this->getContentWidth() + SCROLL_ADVANCEMENT;
-        }
-        mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getDisplayText())) - this->getContentWidth() + 1, 0));
     }
 };

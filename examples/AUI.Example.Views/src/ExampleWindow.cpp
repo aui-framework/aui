@@ -52,7 +52,6 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
-#include <AUI/View/ASelectableLabel.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextArea.h>
 #include <AUI/View/ARulerView.h>

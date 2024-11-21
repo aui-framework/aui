@@ -24,14 +24,16 @@
  * @details ATextField is separated into the different class in order to simplify styling.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView<AView>, public IStringable
-{
+class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView<AView>, public IStringable {
 public:
     AAbstractTextField();
+
     ~AAbstractTextField() override;
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
+
     void setText(const AString& t) override;
+
     void setSuffix(const AString& s);
 
     void render(ARenderContext ctx) override;
@@ -63,7 +65,7 @@ public:
     }
 
     bool isPasswordMode() const {
-            return mIsPasswordTextField;
+        return mIsPasswordTextField;
     }
 
     bool handlesNonMouseNavigation() override;
@@ -88,14 +90,19 @@ protected:
     _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
     AString mSuffix;
+
     virtual bool isValidText(const AString& text);
 
     void prerenderStringIfNeeded(IRenderer& render);
 
     void typeableErase(size_t begin, size_t end) override;
+
     bool typeableInsert(size_t at, const AString& toInsert) override;
+
     size_t typeableFind(char16_t c, size_t startPos) override;
+
     size_t typeableReverseFind(char16_t c, size_t startPos) override;
+
     size_t length() const override;
 
     bool typeableInsert(size_t at, char16_t toInsert) override;
@@ -104,18 +111,23 @@ protected:
 
     void cursorSelectableRedraw() override;
 
+    unsigned cursorIndexByPos(glm::ivec2 pos) override;
+    glm::ivec2 getPosByIndex(int end, int begin) override;
 
     void doDrawString(IRenderer& render);
 
-    glm::ivec2 getMouseSelectionPadding() override;
-
+    void updateCursorPos() override;
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
+    unsigned mHorizontalScroll = 0;
+    unsigned mAbsoluteCursorPos = 0;
+    ATextLayoutHelper mTextLayoutHelper;
 
     void invalidateFont() override;
+
     AString getContentsPasswordWrap();
 
     void updateTextAlignOffset();

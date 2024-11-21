@@ -67,7 +67,6 @@ signals:
     emits<Selection> selectionChanged;
 
 protected:
-    int mHorizontalScroll = 0;
     size_t mMaxTextLength = 0x200;
 
     bool isCursorBlinkVisible() const {
@@ -108,8 +107,6 @@ protected:
      */
     void enterChar(char16_t c);
 
-    glm::ivec2 getMouseSelectionScroll() override;
-    AFontStyle getMouseSelectionFont() override;
     AString getDisplayText() override;
     AMenuModel composeContextMenuImpl();
     void handleKey(AInput::Key key);
@@ -131,6 +128,7 @@ private:
     virtual void emitTextChanged(const AString& text) = 0;
     virtual void emitTextChanging(const AString& text) = 0;
     virtual void updateCursorPos() = 0;
+    void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
 };
 
 

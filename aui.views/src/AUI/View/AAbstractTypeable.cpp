@@ -296,7 +296,6 @@ AMenuModel AAbstractTypeable::composeContextMenuImpl() {
 
 void AAbstractTypeable::setText(const AString& t)
 {
-    mHorizontalScroll = 0;
     updateSelectionOnTextSet(t);
     updateCursorBlinking();
 
@@ -309,14 +308,14 @@ void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-glm::ivec2 AAbstractTypeable::getMouseSelectionScroll() {
-    return {mHorizontalScroll, 0};
-}
-
-AFontStyle AAbstractTypeable::getMouseSelectionFont() {
-    return getFontStyle();
-}
-
 AString AAbstractTypeable::getDisplayText() {
     return text();
+}
+
+void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {
+    if (!isCursorBlinkVisible()) {
+        return;
+    }
+    renderer.setBlending(Blending::INVERSE_DST);
+    renderer.rectangle(ASolidBrush{}, position, {1_dp, lineHeight});
 }
