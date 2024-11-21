@@ -17,18 +17,13 @@
 #include "ATextLayoutHelper.h"
 #include <limits>
 
-size_t ATextLayoutHelper::xToIndex(int x) const {
-    if (mSymbols.empty()) return -1;
-    return xToIndex(mSymbols.first(), x);
-}
-
-size_t ATextLayoutHelper::xToIndex(const AVector<Symbol>& line, int pos) {
+size_t ATextLayoutHelper::xToIndex(const AVector<Boundary>& line, int pos) {
     pos += 2; // magic offset
     if (line.empty()) return 0;
     if (pos < 0) return 0;
     if (pos > line.last().position.x + 3) return line.size(); // hardcoded char width
     // perform binary search in order to find index
-    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Symbol>::const_iterator& it) {
+    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Boundary>::const_iterator& it) {
         int posCurrent = it->position.x;
 
         int leftBound = it == line.begin()
@@ -60,4 +55,15 @@ size_t ATextLayoutHelper::posToIndexFixedLineHeight(const glm::ivec2& position, 
         return lastLine.size();
     }
     return xToIndex(mSymbols[lineIndex], position.x);
+}
+
+AOptional<glm::ivec2> ATextLayoutHelper::indexToPos(size_t line, size_t column) {
+    if (mSymbols.size() <= line) {
+        return std::nullopt;
+    }
+    const auto& l = mSymbols[line];
+    if (l.size() <= column) {
+        return std::nullopt;
+    }
+    return l[column].position;
 }

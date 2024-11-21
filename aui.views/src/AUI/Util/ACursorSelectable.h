@@ -80,11 +80,7 @@ public:
      * @return Character index by pixel position.
      */
     [[nodiscard]] virtual unsigned cursorIndexByPos(glm::ivec2 pos) = 0;
-    [[nodiscard]] virtual glm::ivec2 getPosByIndex(int end, int begin) = 0;
-    [[nodiscard]] glm::ivec2 getPosByIndex(int end) {
-        return getPosByIndex(end, 0);
-    }
-
+    [[nodiscard]] virtual glm::ivec2 getPosByIndex(int i) = 0;
 
     /**
      * @brief Select whole text in the text field.

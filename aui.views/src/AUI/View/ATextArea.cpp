@@ -14,12 +14,7 @@
 //
 
 
-#include <AUI/Layout/AHorizontalLayout.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Util/AMetric.h>
 #include "ATextArea.h"
-#include <optional>
-#include <glm/ext/matrix_transform.hpp>
 
 
 ATextArea::ATextArea() {
@@ -45,7 +40,10 @@ void ATextArea::invalidateFont() {
 }
 
 const AString& ATextArea::text() const {
-    return *mText;
+    if (!mCompiledText) {
+
+    }
+    return *mCompiledText;
 }
 
 void ATextArea::typeableErase(size_t begin, size_t end) {
@@ -76,7 +74,7 @@ unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
     return 0;
 }
 
-glm::ivec2 ATextArea::getPosByIndex(int end, int begin) {
+glm::ivec2 ATextArea::getPosByIndex(int i) {
     return glm::ivec2();
 }
 

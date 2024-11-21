@@ -20,6 +20,7 @@
 #include "AViewContainer.h"
 #include "AAbstractTextField.h"
 #include "AScrollbar.h"
+#include "AAbstractTextView.h"
 
 /**
  * @brief Multiline text input area.
@@ -47,7 +48,7 @@ public:
 
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
 
-    glm::ivec2 getPosByIndex(int end, int begin) override;
+    glm::ivec2 getPosByIndex(int i) override;
 
 private:
     void updateCursorPos() override;
@@ -61,7 +62,7 @@ protected:
     size_t length() const override;
 
 private:
-    AOptional<AString> mText;
+    AOptional<AString> mCompiledText;
 };
 
 

@@ -675,6 +675,7 @@ public:
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
+                notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advanceX = (glm::max)(advanceX, advance);
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
@@ -732,6 +733,8 @@ public:
                 advance = glm::floor(advance);
             }
         }
+
+        notifySymbolAdded({glm::ivec2{advance, advanceY}});
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();

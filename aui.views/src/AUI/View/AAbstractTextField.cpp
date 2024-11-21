@@ -45,8 +45,8 @@ void AAbstractTextField::render(ARenderContext ctx) {
     AStaticVector<ARect<int>, 1> selectionRects;
     if (hasSelection()) {
         auto s = selection();
-        auto beginPos = getPosByIndex(s.begin, 0).x;
-        auto endPos = getPosByIndex(s.end, 0).x;
+        auto beginPos = getPosByIndex(s.begin).x;
+        auto endPos = getPosByIndex(s.end).x;
         selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, mPadding.top + getVerticalAlignmentOffset()},
                                                                         {endPos - beginPos, getFontStyle().size}));
     }
@@ -91,15 +91,11 @@ bool AAbstractTextField::wantsTouchscreenKeyboard() {
     return true;
 }
 
-AString AAbstractTextField::getContentsPasswordWrap() {
+AString AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
         return AString(mContents.length(), L'•');
     }
     return mContents;
-}
-
-AString AAbstractTextField::getDisplayText() {
-    return getContentsPasswordWrap();
 }
 
 void AAbstractTextField::cursorSelectableRedraw() {
@@ -170,7 +166,7 @@ void AAbstractTextField::onCharEntered(char16_t c) {
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getContentsPasswordWrap() + mSuffix;
+        auto text = getDisplayText() + mSuffix;
         updateTextAlignOffset();
         if (!text.empty()) {
             auto canvas = render.newMultiStringCanvas(getFontStyle());
@@ -209,7 +205,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getFontStyle().getWidth(getContentsPasswordWrap());
+    auto w = getPosByIndex(text().length()).x;
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -254,12 +250,19 @@ unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
                                                        getFontStyle());
 }
 
-glm::ivec2 AAbstractTextField::getPosByIndex(int end, int begin) {
-    return { -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(begin, end - begin))), 0 };
+glm::ivec2 AAbstractTextField::getPosByIndex(int i) {
+    int x = [&] {
+        if (auto r = mTextLayoutHelper.indexToPos(0, i)) [[unlikely]] {
+            return r->x;
+        }
+        // fallback as a slower implementation.
+        return int(getFontStyle().getWidth(getDisplayText().substr(0, i)));
+    }();
+    return { -mHorizontalScroll + x, 0 };
 }
 
 void AAbstractTextField::updateCursorPos() {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
+    auto absoluteCursorPos = getPosByIndex(mCursorIndex).x;
 
     if (absoluteCursorPos < 0)
     {
@@ -275,5 +278,5 @@ void AAbstractTextField::updateCursorPos() {
         absoluteCursorPos -= 1;
     }
     mAbsoluteCursorPos = absoluteCursorPos;
-    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getDisplayText()) - this->getContentWidth()), 0));
+    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
 }

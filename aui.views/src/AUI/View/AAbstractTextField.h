@@ -112,7 +112,7 @@ protected:
     void cursorSelectableRedraw() override;
 
     unsigned cursorIndexByPos(glm::ivec2 pos) override;
-    glm::ivec2 getPosByIndex(int end, int begin) override;
+    glm::ivec2 getPosByIndex(int i) override;
 
     void doDrawString(IRenderer& render);
 
@@ -127,8 +127,6 @@ private:
     ATextLayoutHelper mTextLayoutHelper;
 
     void invalidateFont() override;
-
-    AString getContentsPasswordWrap();
 
     void updateTextAlignOffset();
 
