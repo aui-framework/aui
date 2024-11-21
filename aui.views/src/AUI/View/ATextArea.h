@@ -36,19 +36,23 @@
  * AScrollArea::Builder().withContents(_new<AScrollArea>())
  * @endcode
  */
-class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<AView>, public IStringable {
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<AAbstractTextView>, public IStringable {
 public:
     ATextArea();
     ATextArea(const AString& text);
     ~ATextArea() override;
 
+    bool capturesFocus() override;
+
     AString toString() const override;
-    void invalidateFont() override;
     const AString& text() const override;
-
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
-
     glm::ivec2 getPosByIndex(int i) override;
+    void setText(const AString& t) override;
+
+    void render(ARenderContext context) override;
+
+    void onCharEntered(char16_t c) override;
 
 private:
     void onCursorIndexChanged() override;
@@ -63,6 +67,7 @@ protected:
 
 private:
     AOptional<AString> mCompiledText;
+    glm::ivec2 mCursorPosition{0, 0};
 };
 
 

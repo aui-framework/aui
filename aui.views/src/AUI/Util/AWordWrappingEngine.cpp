@@ -156,11 +156,12 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
     for (auto currentItem = mEntries.begin(); currentItem != mEntries.end(); ++currentItem) {
         auto currentItemSize = (*currentItem)->getSize();
+        bool forcesNextLine = (*currentItem)->forcesNextLine();
 
         // check if entry fits into the row
-        if (currentRowWidth + currentItemSize.x  > size.x) {
-            // if current row is empty, we must place this element in any case
-            if (!currentRow->empty()) {
+        if (forcesNextLine || currentRowWidth + currentItemSize.x > size.x) {
+            // if current row is empty, we must place this element (unless forcesNextLine)
+            if (!currentRow->empty() || forcesNextLine) {
                 // jump to the next row
 
                 auto removeRedundantItems = [&currentRowHeight](AVector<FloatingEntry>& fl) {
@@ -226,4 +227,20 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     }();
 
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
+}
+
+void AWordWrappingEngine::Entry::setPosition(const glm::ivec2& position) {
+
+}
+
+AFloat AWordWrappingEngine::Entry::getFloat() const {
+    return AFloat::NONE;
+}
+
+bool AWordWrappingEngine::Entry::forcesNextLine() const {
+    return false;
+}
+
+size_t AWordWrappingEngine::Entry::getCharacterCount() {
+    return 1;
 }

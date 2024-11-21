@@ -26,6 +26,7 @@
 
 class API_AUI_VIEWS ACursorSelectable {
 public:
+    virtual ~ACursorSelectable();
 
     struct Selection
     {

@@ -34,13 +34,10 @@ struct State {
 
 
 void AAbstractTextView::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
-                     const AString& word,
+                     AString word,
                      const ParsedFlags& flags) {
-    if (!entries.empty()) {
-        entries << aui::ptr::fake(&mWhitespaceEntry);
-    }
     if (flags.wordBreak == WordBreak::NORMAL) {
-        mWordEntries.emplace_back(this, word);
+        mWordEntries.emplace_back(this, std::move(word));
         entries << aui::ptr::fake(&mWordEntries.last());
     } else {
         for (const auto& c : word) {
@@ -65,11 +62,31 @@ void AAbstractTextView::setString(const AString& string, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
-    auto splt = string.split(' ');
-    entries.reserve(splt.size());
-    for (auto& w : splt) {
-        pushWord(entries, w, parsedFlags);
+    entries.reserve(string.length());
+    AString currentWord;
+    auto commitWord = [&] {
+        if (!currentWord.empty()) {
+            pushWord(entries, std::move(currentWord), parsedFlags);
+        }
+    };
+    for (auto c : string) {
+        switch (c) {
+            case '\r': break;
+            case ' ':
+                commitWord();
+                entries << aui::ptr::fake(&mWhitespaceEntry);
+                break;
+            case '\n':
+                commitWord();
+                entries << aui::ptr::fake(&mNextLineEntry);
+                break;
+
+            default:
+                currentWord += c;
+                continue;
+        }
     }
+    commitWord();
 
     mEngine.setEntries(std::move(entries));
 }
@@ -139,9 +156,6 @@ void AAbstractTextView::setHtml(const AString& html, const Flags& flags) {
                 }
 
                 ~ViewEntityVisitor() override {
-                    auto view = _new<AButton>("hello {}"_format(name));
-                    parent.text.addView(view);
-                    parent.entries << _new<AViewEntry>(view);
                 }
             };
 
@@ -202,6 +216,7 @@ void AAbstractTextView::render(ARenderContext context) {
         prerenderString(context);
     }
     if (mPrerenderedString) {
+        RenderHints::PushColor c(context.render);
         context.render.setColor(getTextColor());
         mPrerenderedString->draw();
     }
@@ -245,47 +260,6 @@ void AAbstractTextView::setSize(glm::ivec2 size) {
     }
 }
 
-glm::ivec2 AAbstractTextView::WordEntry::getSize() {
-    return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
-}
-
-void AAbstractTextView::WordEntry::setPosition(const glm::ivec2& position) {
-    mPosition = position;
-}
-
-AFloat AAbstractTextView::WordEntry::getFloat() const {
-    return AFloat::NONE;
-}
-
-glm::ivec2 AAbstractTextView::WhitespaceEntry::getSize() {
-    return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
-}
-
-void AAbstractTextView::WhitespaceEntry::setPosition(const glm::ivec2& position) {
-
-}
-
-AFloat AAbstractTextView::WhitespaceEntry::getFloat() const {
-    return AFloat::NONE;
-}
-
-bool AAbstractTextView::WhitespaceEntry::escapesEdges() {
-    return true;
-}
-
-
-glm::ivec2 AAbstractTextView::CharEntry::getSize() {
-    return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
-}
-
-void AAbstractTextView::CharEntry::setPosition(const glm::ivec2& position) {
-    mPosition = position;
-}
-
-AFloat AAbstractTextView::CharEntry::getFloat() const {
-    return AFloat::NONE;
-}
-
 void AAbstractTextView::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
@@ -306,4 +280,40 @@ void AAbstractTextView::commitStyle() {
 void AAbstractTextView::invalidateFont() {
     mPrerenderedString.reset();
     markMinContentSizeInvalid();
+}
+
+glm::ivec2 AAbstractTextView::NextLineEntry::getSize() {
+    return {0, mText->getFontStyle().size};
+}
+
+bool AAbstractTextView::NextLineEntry::forcesNextLine() const {
+    return true;
+}
+
+glm::ivec2 AAbstractTextView::WordEntry::getSize() {
+    return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
+}
+
+size_t AAbstractTextView::WordEntry::getCharacterCount() {
+    return mWord.length();
+}
+
+void AAbstractTextView::WordEntry::setPosition(const glm::ivec2& position) {
+    mPosition = position;
+}
+
+glm::ivec2 AAbstractTextView::WhitespaceEntry::getSize() {
+    return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
+}
+
+bool AAbstractTextView::WhitespaceEntry::escapesEdges() {
+    return true;
+}
+
+glm::ivec2 AAbstractTextView::CharEntry::getSize() {
+    return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
+}
+
+void AAbstractTextView::CharEntry::setPosition(const glm::ivec2& position) {
+    mPosition = position;
 }

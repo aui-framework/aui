@@ -15,6 +15,7 @@
 
 
 #include "ATextArea.h"
+#include "AUI/Traits/algorithms.h"
 
 
 ATextArea::ATextArea() {
@@ -27,16 +28,18 @@ ATextArea::ATextArea(const AString& text):
     setText(text);
 }
 
+void ATextArea::setText(const AString& t) {
+    AAbstractTextView::setString(t);
+    AAbstractTypeable::setText(t);
+    mCompiledText = t;
+}
+
 ATextArea::~ATextArea() {
 
 }
 
 AString ATextArea::toString() const {
     return text();
-}
-
-void ATextArea::invalidateFont() {
-
 }
 
 const AString& ATextArea::text() const {
@@ -62,6 +65,12 @@ size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
     return 0;
 }
 
+void ATextArea::onCharEntered(char16_t c) {
+    AAbstractTypeableView<AAbstractTextView>::onCharEntered(c);
+    enterChar(c);
+    if (textChanging) emit textChanging(text());
+}
+
 size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
     return 0;
 }
@@ -79,5 +88,14 @@ glm::ivec2 ATextArea::getPosByIndex(int i) {
 }
 
 void ATextArea::onCursorIndexChanged() {
+    mCursorPosition = getPosByIndex(mCursorIndex);
+}
 
+void ATextArea::render(ARenderContext context) {
+    AAbstractTextView::render(context);
+    drawCursor(context.render, mCursorPosition + mPadding.leftTop());
+}
+
+bool ATextArea::capturesFocus() {
+    return true;
 }

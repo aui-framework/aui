@@ -23,11 +23,15 @@
  * @details Used as base in ATextArea and ATextField, both of them using own way of text handling and rendering.
  */
 template<aui::derived_from<AView> Super>
-class AAbstractTypeableView: public Super, public AAbstractTypeable {
+class AAbstractTypeableView
+        : public Super,
+          public AAbstractTypeable,
+          public std::conditional_t<aui::derived_from<Super, IFontView>, std::monostate, IFontView> /* implement
+                                                                                                       IFontView if
+                                                                                                       Super doesn't */{
 public:
     AAbstractTypeableView() {
-        AObject::connect(mBlinkTimer->fired, this, [&]()
-        {
+        AObject::connect(mBlinkTimer->fired, this, [&]() {
             if (this->hasFocus() && mCursorBlinkCount < 60) {
                 mCursorBlinkVisible = !mCursorBlinkVisible;
                 mCursorBlinkCount += 1;
@@ -35,6 +39,7 @@ public:
             }
         });
     }
+
     ~AAbstractTypeableView() override = default;
 
     void onKeyDown(AInput::Key key) override {
@@ -49,8 +54,7 @@ public:
 
     void onFocusLost() override {
         Super::onFocusLost();
-        if (mTextChangedFlag)
-        {
+        if (mTextChangedFlag) {
             mTextChangedFlag = false;
             if (textChanged) {
                 emit textChanged(text());
@@ -84,6 +88,10 @@ public:
         }
     }
 
+    bool wantsTouchscreenKeyboard() override {
+        return true;
+    }
+
     bool handlesNonMouseNavigation() override {
         return true;
     }
@@ -95,7 +103,7 @@ public:
 
     void invalidateAllStyles() override {
         // order is intentional
-        invalidateAllStylesFont();
+        this->invalidateAllStylesFont();
         Super::invalidateAllStyles();
     }
 
@@ -107,7 +115,7 @@ public:
         if (!this->hasFocus()) {
             return;
         }
-        drawCursorImpl(renderer, position, getFontStyle().size);
+        drawCursorImpl(renderer, position, this->getFontStyle().size);
     }
 
 protected:
@@ -117,17 +125,23 @@ protected:
 
     void commitStyle() override {
         Super::commitStyle();
-        commitStyleFont();
+        this->commitStyleFont();
     }
 
     int getVerticalAlignmentOffset() noexcept {
-        return (glm::max)(0, int(glm::ceil((Super::getContentHeight() - getFontStyle().size) / 2.0)));
+        return (glm::max)(0, int(glm::ceil((Super::getContentHeight() - this->getFontStyle().size) / 2.0)));
     }
 
     void cursorSelectableRedraw() override {
         this->redraw();
     }
 
+    void onSelectionChanged() override {
+        onCursorIndexChanged();
+        if (selectionChanged) emit selectionChanged(selection());
+    }
+
+private:
     void emitTextChanged(const AString& text) override {
         emit textChanged(text);
     }
@@ -136,8 +150,7 @@ protected:
         emit textChanging(text);
     }
 
-    void onSelectionChanged() override {
-        onCursorIndexChanged();
-        if (selectionChanged) emit selectionChanged(selection());
+    void typeableInvalidateFont() override {
+        this->invalidateFont();
     }
 };

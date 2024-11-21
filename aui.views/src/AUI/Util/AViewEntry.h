@@ -14,12 +14,12 @@
 #include <AUI/View/AView.h>
 #include "AWordWrappingEngine.h"
 
-class API_AUI_VIEWS AViewEntry: public AWordWrappingEngine::Entry {
+class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngine::Entry {
 private:
     _<AView> mView;
 
 public:
-    explicit AViewEntry(const _<AView>& view) : mView(view) {}
+    explicit AViewEntry(_<AView> view) : mView(std::move(view)) {}
     AViewEntry() = default;
 
     glm::ivec2 getSize() override;

@@ -78,7 +78,7 @@ void AAbstractTypeable::handleKey(AInput::Key key)
             if (hasSelection()) {
                 auto sel = selection();
                 typeableErase(sel.begin, sel.end);
-                invalidateFont();
+                typeableInvalidateFont();
                 mCursorSelection.reset();
                 mCursorIndex = sel.begin;
             } else {
@@ -91,12 +91,12 @@ void AAbstractTypeable::handleKey(AInput::Key key)
                     }
 
                     typeableErase(mCursorIndex, index);
-                    invalidateFont();
+                    typeableInvalidateFont();
                 } else {
                     if (mCursorIndex < length())
                     {
                         typeableErase(mCursorIndex, mCursorIndex + 1);
-                        invalidateFont();
+                        typeableInvalidateFont();
                     }
                 }
             }
@@ -198,7 +198,7 @@ void AAbstractTypeable::pasteFromClipboard() {
         mCursorIndex = pastePos + toPaste.length();
         mCursorSelection.reset();
 
-        invalidateFont();
+        typeableInvalidateFont();
         onCursorIndexChanged();
     } else if (prevContents) {
         setText(*prevContents);
@@ -214,7 +214,7 @@ void AAbstractTypeable::cutToClipboard() {
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection.reset();
-    invalidateFont();
+    typeableInvalidateFont();
     onCursorIndexChanged();
 }
 
@@ -275,7 +275,7 @@ void AAbstractTypeable::enterChar(char16_t c)
 
         }
     }
-    invalidateFont();
+    typeableInvalidateFont();
     updateCursorBlinking();
     onCursorIndexChanged();
 
@@ -300,7 +300,7 @@ void AAbstractTypeable::setText(const AString& t)
     updateSelectionOnTextSet(t);
     updateCursorBlinking();
 
-    invalidateFont();
+    typeableInvalidateFont();
     emitTextChanged(t);
 }
 

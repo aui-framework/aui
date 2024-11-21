@@ -18,6 +18,8 @@
 #include <AUI/Render/RenderHints.h>
 #include "ACursorSelectable.h"
 
+ACursorSelectable::~ACursorSelectable() = default;
+
 ACursorSelectable::Selection ACursorSelectable::selection() const {
     return { glm::min(mCursorIndex, mCursorSelection.valueOr(mCursorIndex)), glm::max(mCursorIndex, mCursorSelection.valueOr(mCursorIndex)) };
 }

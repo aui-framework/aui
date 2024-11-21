@@ -81,7 +81,7 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            t<AText>(),
+            t<AAbstractTextView>(),
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,

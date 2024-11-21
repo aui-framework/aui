@@ -52,8 +52,8 @@ protected:
     void setString(const AString& string, const Flags& flags = {});
 
 
-private:
-    class CharEntry: public AWordWrappingEngine::Entry {
+protected:
+    class CharEntry final: public AWordWrappingEngine::Entry {
     private:
         AAbstractTextView* mText;
         char32_t mChar;
@@ -67,8 +67,6 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        AFloat getFloat() const override;
-
         const glm::ivec2& getPosition() const {
             return mPosition;
         }
@@ -77,7 +75,7 @@ private:
             return mChar;
         }
     };
-    class WordEntry: public AWordWrappingEngine::Entry {
+    class WordEntry final: public AWordWrappingEngine::Entry {
     private:
         AAbstractTextView* mText;
         AString mWord;
@@ -91,19 +89,18 @@ private:
 
         void setPosition(const glm::ivec2& position) override;
 
-        AFloat getFloat() const override;
-
         const glm::ivec2& getPosition() const {
             return mPosition;
         }
 
-
         const AString& getWord() const {
             return mWord;
         }
+
+        size_t getCharacterCount() override;
     };
 
-    class WhitespaceEntry: public AWordWrappingEngine::Entry {
+    class WhitespaceEntry final: public AWordWrappingEngine::Entry {
     private:
         AAbstractTextView* mText;
 
@@ -111,13 +108,24 @@ private:
         WhitespaceEntry(AAbstractTextView* text) : mText(text) {}
 
         glm::ivec2 getSize() override;
-        void setPosition(const glm::ivec2& position) override;
-        AFloat getFloat() const override;
 
         bool escapesEdges() override;
 
         ~WhitespaceEntry() override = default;
     } mWhitespaceEntry = this;
+
+    class NextLineEntry final: public AWordWrappingEngine::Entry {
+    private:
+        AAbstractTextView* mText;
+
+    public:
+        NextLineEntry(AAbstractTextView* text) : mText(text) {}
+
+        bool forcesNextLine() const override;
+
+        glm::ivec2 getSize() override;
+        ~NextLineEntry() override = default;
+    } mNextLineEntry = this;
 
     AWordWrappingEngine mEngine;
     ADeque<WordEntry> mWordEntries;
@@ -128,7 +136,7 @@ private:
 
 
     void pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
-                  const AString& word,
+                  AString word,
                   const ParsedFlags& flags);
 
     static ParsedFlags parseFlags(const Flags& flags);

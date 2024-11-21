@@ -74,8 +74,6 @@ public:
 
     void onCharEntered(char16_t c) override;
 
-    bool wantsTouchscreenKeyboard() override;
-
     void setSize(glm::ivec2 size) override;
 
     void onKeyDown(AInput::Key key) override;

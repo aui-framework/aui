@@ -25,10 +25,14 @@ public:
         virtual ~Entry() = default;
 
         virtual glm::ivec2 getSize() = 0;
-        virtual void setPosition(const glm::ivec2& position) = 0;
+        virtual size_t getCharacterCount();
+        virtual void setPosition(const glm::ivec2& position);
 
         [[nodiscard]]
-        virtual AFloat getFloat() const = 0;
+        virtual AFloat getFloat() const;
+
+        [[nodiscard]]
+        virtual bool forcesNextLine() const;
 
         [[nodiscard]]
         bool isFloating() const {

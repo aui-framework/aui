@@ -20,7 +20,7 @@
 /**
  * @brief Base class for AAbstractTypeableView which is template class.
  */
-class AAbstractTypeable: public ACursorSelectable, public IFontView {
+class AAbstractTypeable: public ACursorSelectable {
 public:
     AAbstractTypeable();
     ~AAbstractTypeable() override;
@@ -129,6 +129,7 @@ private:
 
     virtual void emitTextChanged(const AString& text) = 0;
     virtual void emitTextChanging(const AString& text) = 0;
+    virtual void typeableInvalidateFont() = 0;
     void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
 };
 

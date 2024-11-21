@@ -87,10 +87,6 @@ void AAbstractTextField::setSuffix(const AString& s) {
     invalidateFont();
 }
 
-bool AAbstractTextField::wantsTouchscreenKeyboard() {
-    return true;
-}
-
 AString AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
         return AString(mContents.length(), L'•');
