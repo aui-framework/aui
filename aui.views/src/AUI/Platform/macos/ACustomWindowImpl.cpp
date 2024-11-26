@@ -191,7 +191,7 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 }
 
 void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    ABaseWindow::onPointerPressed(event);
+    AWindowBase::onPointerPressed(event);
 }
 
 void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {

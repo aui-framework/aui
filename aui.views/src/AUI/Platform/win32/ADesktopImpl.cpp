@@ -35,7 +35,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 }
 
 
-AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
@@ -106,7 +106,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
     };
 }
 
-AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;

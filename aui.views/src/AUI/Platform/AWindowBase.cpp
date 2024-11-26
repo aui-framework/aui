@@ -19,7 +19,7 @@
 #include "AUI/Render/ABrush.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Platform/AWindow.h"
-#include "ABaseWindow.h"
+#include "AWindowBase.h"
 #include <AUI/Action/AMenu.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
@@ -34,23 +34,23 @@
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/UITestState.h>
 
-static constexpr auto LOG_TAG = "ABaseWindow";
+static constexpr auto LOG_TAG = "AWindowBase";
 
-ABaseWindow::ABaseWindow() {
+AWindowBase::AWindowBase() {
     mDpiRatio = APlatform::getDpiRatio();
 }
 
-ABaseWindow::~ABaseWindow() {
+AWindowBase::~AWindowBase() {
     if (currentWindowStorage() == this) {
         currentWindowStorage() = nullptr;
     }
 }
 
-float ABaseWindow::fetchDpiFromSystem() const {
+float AWindowBase::fetchDpiFromSystem() const {
     return APlatform::getDpiRatio();
 }
 
-void ABaseWindow::updateDpi() {
+void AWindowBase::updateDpi() {
     emit dpiChanged;
     mDpiRatio = [&]() -> float {
         float systemDpi = fetchDpiFromSystem();
@@ -67,17 +67,17 @@ void ABaseWindow::updateDpi() {
     onDpiChanged();
 }
 
-void ABaseWindow::setScalingParams(ScalingParams params) {
+void AWindowBase::setScalingParams(ScalingParams params) {
     mScalingParams = std::move(params);
     updateDpi();
 }
 
-_unique<AWindowManager>& ABaseWindow::getWindowManagerImpl() {
+_unique<AWindowManager>& AWindowBase::getWindowManagerImpl() {
     thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
     return ourWindowManager;
 }
 
-void ABaseWindow::setFocusedView(const _<AView>& view) {
+void AWindowBase::setFocusedView(const _<AView>& view) {
     if (mFocusedView.lock() == view) {
         return;
     }
@@ -105,7 +105,7 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     }
 }
 
-void ABaseWindow::updateFocusChain() {
+void AWindowBase::updateFocusChain() {
     if (auto focusedView = mFocusedView.lock()) {
         _weak<AView> focusChainTarget = mFocusedView;
         if (auto container = _cast<AViewContainer>(focusedView)) {
@@ -119,7 +119,7 @@ void ABaseWindow::updateFocusChain() {
     }
 }
 
-void ABaseWindow::focusNextView() {
+void AWindowBase::focusNextView() {
     AView* beginPoint = getFocusedView().get();
 
     bool triedToSearchFromBeginning = false;
@@ -194,7 +194,7 @@ void ABaseWindow::focusNextView() {
     }
 }
 
-void ABaseWindow::closeOverlappingSurfacesOnClick() {
+void AWindowBase::closeOverlappingSurfacesOnClick() {
     // creating copy because of comodification
     AVector<AOverlappingSurface*> surfacesToClose;
     surfacesToClose.reserve(mOverlappingSurfaces.size());
@@ -208,7 +208,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
     }
 }
 
-void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
+void AWindowBase::onPointerPressed(const APointerPressedEvent& event) {
     currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
@@ -281,7 +281,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 #endif
 }
 
-void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+void AWindowBase::onPointerReleased(const APointerReleasedEvent& event) {
     currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
@@ -311,7 +311,7 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
             }); it != mScrolls.end()) {
             it->scroller.handlePointerReleased(event);
         } else {
-            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerReleased is unable to find finger " << event.pointerIndex;
+            ALogger::warn(LOG_TAG) << "AWindowBase::onPointerReleased is unable to find finger " << event.pointerIndex;
         }
     }
 
@@ -330,16 +330,16 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 #endif
 }
 
-void ABaseWindow::forceUpdateCursor() {
+void AWindowBase::forceUpdateCursor() {
     AViewContainer::onPointerMove(mMousePos, {});
 }
 
-void ABaseWindow::onScroll(const AScrollEvent& event) {
+void AWindowBase::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
     AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
-void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+void AWindowBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
@@ -368,7 +368,7 @@ void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
                 });
             }
         } else {
-            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerMove is unable to find finger " << event.pointerIndex;
+            ALogger::warn(LOG_TAG) << "AWindowBase::onPointerMove is unable to find finger " << event.pointerIndex;
         }
     }
 
@@ -380,7 +380,7 @@ void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 #endif
 }
 
-void ABaseWindow::onKeyDown(AInput::Key key) {
+void AWindowBase::onKeyDown(AInput::Key key) {
     AViewContainer::onKeyDown(key);
     emit keyDown(key);
 
@@ -391,22 +391,22 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
 #endif
 }
 
-void ABaseWindow::createDevtoolsWindow() {
+void AWindowBase::createDevtoolsWindow() {
     auto surface = createOverlappingSurface({0, 0}, { 500_dp, 400_dp });
     surface->setCloseOnClick(false);
     ALayoutInflater::inflate(surface, _new<DevtoolsPanel>(this));
 }
 
-void ABaseWindow::flagRedraw() {
+void AWindowBase::flagRedraw() {
 
 }
 
-void ABaseWindow::applyGeometryToChildren() {
+void AWindowBase::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
     AViewContainer::applyGeometryToChildren();
 }
 
-void ABaseWindow::render(ARenderContext context) {
+void AWindowBase::render(ARenderContext context) {
     APerformanceSection root("render");
     currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
@@ -484,46 +484,46 @@ void ABaseWindow::render(ARenderContext context) {
 #endif
 }
 
-ABaseWindow*& ABaseWindow::currentWindowStorage() {
-    thread_local ABaseWindow* threadLocal = nullptr;
-    static ABaseWindow* global = nullptr;
+AWindowBase*& AWindowBase::currentWindowStorage() {
+    thread_local AWindowBase* threadLocal = nullptr;
+    static AWindowBase* global = nullptr;
     if (threadLocal)
         return threadLocal;
     return global;
 }
 
 
-void ABaseWindow::onFocusLost() {
+void AWindowBase::onFocusLost() {
     AView::onFocusLost();
     closeOverlappingSurfacesOnClick();
 }
 
-void ABaseWindow::blockUserInput(bool blockUserInput) {
+void AWindowBase::blockUserInput(bool blockUserInput) {
 
 }
 
-bool ABaseWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {
+bool AWindowBase::onDragEnter(const ADragNDrop::EnterEvent& event) {
     return false;
 }
 
-void ABaseWindow::onDragLeave() {
+void AWindowBase::onDragLeave() {
 
 }
 
-void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
+void AWindowBase::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 }
 
 
-void ABaseWindow::requestShowTouchscreenKeyboard() {
+void AWindowBase::requestShowTouchscreenKeyboard() {
     mKeyboardRequestedState = KeyboardRequest::SHOW;
 }
 
-void ABaseWindow::requestHideTouchscreenKeyboard() {
+void AWindowBase::requestHideTouchscreenKeyboard() {
     mKeyboardRequestedState = KeyboardRequest::HIDE;
 }
 
-bool ABaseWindow::shouldDisplayHoverAnimations() const {
+bool AWindowBase::shouldDisplayHoverAnimations() const {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
     return false;
 #else
@@ -535,15 +535,15 @@ bool ABaseWindow::shouldDisplayHoverAnimations() const {
 }
 
 
-void ABaseWindow::showTouchscreenKeyboardImpl() {
+void AWindowBase::showTouchscreenKeyboardImpl() {
     // stub
 }
 
-void ABaseWindow::hideTouchscreenKeyboardImpl() {
+void AWindowBase::hideTouchscreenKeyboardImpl() {
     // stub
 }
 
-void ABaseWindow::preventClickOnPointerRelease() {
+void AWindowBase::preventClickOnPointerRelease() {
     if (!mPreventClickOnPointerRelease) {
         return;
     }
@@ -554,7 +554,7 @@ void ABaseWindow::preventClickOnPointerRelease() {
     mPreventClickOnPointerRelease = true;
 }
 
-bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+bool AWindowBase::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
     bool v = AViewContainer::onGesture(origin, event);
     if (v) {
         preventClickOnPointerRelease();
@@ -562,7 +562,7 @@ bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event
     return v;
 }
 
-void ABaseWindow::processTouchscreenKeyboardRequest() {
+void AWindowBase::processTouchscreenKeyboardRequest() {
     switch (mKeyboardRequestedState) {
         case KeyboardRequest::SHOW:
             showTouchscreenKeyboardImpl();
@@ -585,7 +585,7 @@ void ABaseWindow::processTouchscreenKeyboardRequest() {
 }
 
 
-void ABaseWindow::markMinContentSizeInvalid() {
+void AWindowBase::markMinContentSizeInvalid() {
     if (profiling().breakpointOnMarkMinContentSizeInvalid) {
         profiling().breakpointOnMarkMinContentSizeInvalid = false;
         AUI_BREAKPOINT();
@@ -594,6 +594,6 @@ void ABaseWindow::markMinContentSizeInvalid() {
     flagRedraw();
 }
 
-void ABaseWindow::markPixelDataInvalid(ARect<int> invalidArea) {
+void AWindowBase::markPixelDataInvalid(ARect<int> invalidArea) {
     flagRedraw();
 }

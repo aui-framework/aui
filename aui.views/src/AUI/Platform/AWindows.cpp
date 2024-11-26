@@ -153,19 +153,19 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    ABaseWindow::onPointerMove(pos, event);
+    AWindowBase::onPointerMove(pos, event);
 }
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
-    ABaseWindow::onFocusLost();
+    AWindowBase::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
     }
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
-    ABaseWindow::onKeyDown(key);
+    AWindowBase::onKeyDown(key);
     if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
         focusNextView();
     }
@@ -176,7 +176,7 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-ABaseWindow* AWindow::current() {
+AWindowBase* AWindow::current() {
     return currentWindowStorage();
 }
 
@@ -282,7 +282,7 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
 }
 
 void AWindow::forceUpdateCursor() {
-    ABaseWindow::forceUpdateCursor();
+    AWindowBase::forceUpdateCursor();
     AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 

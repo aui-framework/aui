@@ -20,20 +20,20 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow &window) {
+void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
     CommonRenderingContext::beginPaint(window);
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
-void SoftwareRenderingContext::endPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::endPaint(AWindowBase &window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
+void SoftwareRenderingContext::beginResize(AWindowBase &window) {
 
 }
 
@@ -41,7 +41,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
 }
 
-void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+void SoftwareRenderingContext::endResize(AWindowBase &window) {
     mBitmapSize = window.getSize();
 }
 
@@ -49,7 +49,7 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     return {};
 }
 
-void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
+void SoftwareRenderingContext::reallocateImageBuffers(const AWindowBase& window) {
     mBitmapSize = window.getSize();
 }
 

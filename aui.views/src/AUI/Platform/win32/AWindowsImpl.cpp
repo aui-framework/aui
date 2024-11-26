@@ -28,7 +28,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 #include <AUI/Platform/ACustomWindow.h>
 
 #include <chrono>
@@ -492,7 +492,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
     class DropTarget: public AComBase<DropTarget, IDropTarget> {
     public:
-        DropTarget(ABaseWindow* window) : mWindow(window) {}
+        DropTarget(AWindowBase* window) : mWindow(window) {}
 
         HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             auto effect = DROPEFFECT_NONE;
@@ -527,7 +527,7 @@ void AWindow::allowDragNDrop() {
 
     private:
         AMimedData mMimed;
-        ABaseWindow* mWindow;
+        AWindowBase* mWindow;
         DWORD mOleEffect;
     };
     Ole::inst();
@@ -537,11 +537,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    ABaseWindow::showTouchscreenKeyboardImpl();
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {

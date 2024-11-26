@@ -111,7 +111,7 @@ public:
     }
 };
 
-DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
+DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow):
         mTargetWindow(targetWindow) {
     using namespace declarative;
 

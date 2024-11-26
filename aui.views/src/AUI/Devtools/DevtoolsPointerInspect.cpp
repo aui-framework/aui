@@ -38,7 +38,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/AWindow.h"
@@ -145,7 +145,7 @@ private:
 
 using namespace declarative;
 
-DevtoolsPointerInspect::DevtoolsPointerInspect(ABaseWindow* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
 
 
     setContents(Vertical {

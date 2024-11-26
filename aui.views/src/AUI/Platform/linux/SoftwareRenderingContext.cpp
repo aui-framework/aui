@@ -26,16 +26,16 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     if (mBitmapBlob && !mXImage) free(mBitmapBlob);
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow &window) {
+void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
     CommonRenderingContext::beginPaint(window);
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
-void SoftwareRenderingContext::endPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::endPaint(AWindowBase &window) {
     CommonRenderingContext::endPaint(window);
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         XPutImage(ourDisplay,
@@ -49,7 +49,7 @@ void SoftwareRenderingContext::endPaint(ABaseWindow &window) {
     }
 }
 
-void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
+void SoftwareRenderingContext::beginResize(AWindowBase &window) {
 
 }
 
@@ -95,11 +95,11 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     SoftwareRenderingContext::endResize(init.window);
 }
 
-void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+void SoftwareRenderingContext::endResize(AWindowBase &window) {
     reallocateImageBuffers(window);
 }
 
-void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
+void SoftwareRenderingContext::reallocateImageBuffers(const AWindowBase& window) {
     mBitmapSize = window.getSize();
     reallocate();
 }

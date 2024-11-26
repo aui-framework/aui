@@ -24,11 +24,11 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    ABaseWindow::onPointerPressed(event);
+    AWindowBase::onPointerPressed(event);
 }
 
 void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    ABaseWindow::onPointerReleased(event);
+    AWindowBase::onPointerReleased(event);
 }
 
 

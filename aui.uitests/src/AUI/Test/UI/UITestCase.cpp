@@ -104,7 +104,7 @@ void testing::UITest::SetUp() {
     UITestState::beginUITest();
     Test::SetUp();
     AWindow::setWindowManager<AStubWindowManager>();
-    ABaseWindow::currentWindowStorage() = nullptr;
+    AWindowBase::currentWindowStorage() = nullptr;
 }
 
 void testing::UITest::TearDown() {

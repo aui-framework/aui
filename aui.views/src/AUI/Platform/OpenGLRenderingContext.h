@@ -29,11 +29,11 @@ public:
 
     AImage makeScreenshot() override;
 
-    void destroyNativeWindow(ABaseWindow& window) override;
-    void beginPaint(ABaseWindow& window) override;
-    void endPaint(ABaseWindow& window) override;
-    void beginResize(ABaseWindow& window) override;
-    void endResize(ABaseWindow& window) override;
+    void destroyNativeWindow(AWindowBase& window) override;
+    void beginPaint(AWindowBase& window) override;
+    void endPaint(AWindowBase& window) override;
+    void beginResize(AWindowBase& window) override;
+    void endResize(AWindowBase& window) override;
 
     [[nodiscard]]
     uint32_t getDefaultFb() const noexcept;
