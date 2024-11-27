@@ -21,7 +21,7 @@
 ASet<_<AView>> UIMatcher::toSet() const {
     ASet<_<AView>> result;
 
-    for (auto& window : ABaseWindow::getWindowManager().getWindows()) {
+    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
         processContainer(result, window);
     }
     return result;

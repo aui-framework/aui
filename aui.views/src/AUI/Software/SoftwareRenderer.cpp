@@ -539,7 +539,7 @@ _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AF
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
-void SoftwareRenderer::setWindow(ABaseWindow* window) {
+void SoftwareRenderer::setWindow(AWindowBase* window) {
     IRenderer::setWindow(window);
     if (auto context = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
         mContext = context;

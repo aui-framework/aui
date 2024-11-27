@@ -19,10 +19,10 @@ public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
 
-    void destroyNativeWindow(ABaseWindow& window) override;
-    void beginPaint(ABaseWindow& window) override;
-    void endPaint(ABaseWindow& window) override;
-    void beginResize(ABaseWindow& window) override;
+    void destroyNativeWindow(AWindowBase& window) override;
+    void beginPaint(AWindowBase& window) override;
+    void endPaint(AWindowBase& window) override;
+    void beginResize(AWindowBase& window) override;
     void init(const Init& init) override;
 
     IRenderer& renderer() override;
@@ -83,13 +83,13 @@ public:
     }
 #endif
 
-    void endResize(ABaseWindow& window) override;
+    void endResize(AWindowBase& window) override;
 
 protected:
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
 
-    void reallocateImageBuffers(const ABaseWindow& window);
+    void reallocateImageBuffers(const AWindowBase& window);
 
 private:
 #if AUI_PLATFORM_WIN

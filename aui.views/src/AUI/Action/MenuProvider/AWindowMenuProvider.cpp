@@ -35,7 +35,7 @@ class AMenuContainer : public AViewContainer {
         auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
-        ABaseWindow* window = nullptr;
+        AWindowBase* window = nullptr;
         if (auto s = mSurface.lock())
             window = s->getParentWindow();
         else

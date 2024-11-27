@@ -15,7 +15,7 @@
 
 #include <AUI/Layout/AStackedLayout.h>
 #include "ALayoutInflater.h"
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 
 void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView>& view) {
     root->setLayout(std::make_unique<AStackedLayout>());

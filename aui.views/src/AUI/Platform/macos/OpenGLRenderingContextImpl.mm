@@ -89,11 +89,11 @@ void OpenGLRenderingContext::init(const Init& init) {
     ALogger::info("OpenGL context is ready");
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
@@ -104,7 +104,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     [static_cast<NSOpenGLContext*>(ourContext) update];
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
@@ -115,12 +115,12 @@ void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
     [static_cast<NSOpenGLContext*>(ourContext) setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
     [static_cast<NSOpenGLContext*>(ourContext) update];
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     endFramebuffer();
     mRenderer->endPaint();
     [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];

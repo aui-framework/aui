@@ -16,6 +16,6 @@
 #include <AUI/Platform/ADragNDrop.h>
 
 
-void ADragNDrop::perform(ABaseWindow* sourceWindow) {
+void ADragNDrop::perform(AWindowBase* sourceWindow) {
 
 }

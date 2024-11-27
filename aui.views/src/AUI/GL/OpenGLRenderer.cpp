@@ -38,7 +38,7 @@
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
 #include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
