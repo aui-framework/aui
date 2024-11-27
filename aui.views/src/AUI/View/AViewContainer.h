@@ -24,14 +24,20 @@
  *
  * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
  * possible complex UI by nested AViewContainers with different layout managers.
+ *
+ * @note
+ * Consider using AViewContainerBase as a base class when possible. Use AViewContainer if you want to expose view
+ * modifying methods such as addView, removeView, setContents, setLayout, etc. Use AViewContainerBase if these methods
+ * might cause unwanted interference with implementation details of your view.
  */
-class API_AUI_VIEWS AViewContainer final: public AViewContainerBase {
+class API_AUI_VIEWS AViewContainer: public AViewContainerBase {
 public:
     AViewContainer();
     ~AViewContainer() override;
 
     using AViewContainerBase::addView;
     using AViewContainerBase::addViews;
+    using AViewContainerBase::addViewCustomLayout;
     using AViewContainerBase::removeView;
     using AViewContainerBase::removeAllViews;
     using AViewContainerBase::setViews;

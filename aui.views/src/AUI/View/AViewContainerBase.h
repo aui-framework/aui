@@ -62,11 +62,13 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
  * Since AViewContainerBase is an instance of AView, AViewContainerBase can handle AViewContainerBases recursively, thus, making
  * possible complex UI by nested AViewContainerBases with different layout managers.
  *
- * This class is abstract. The methods for accessing it's views are protected. You can use AViewContainer which exposes
+ * This class is abstract. The methods for modifying it's views are protected. You can use AViewContainer which exposes
  * these methods to public or extend AViewContainerBase to make your own container-like view.
  */
 class API_AUI_VIEWS AViewContainerBase : public AView {
 public:
+    friend class AView;
+
     struct PointerEventsMapping {
         APointerIndex pointerIndex;
         _weak<AView> targetView;
@@ -277,15 +279,6 @@ public:
 
     void applyGeometryToChildrenIfNecessary();
 
-    /**
-     * @brief Adds view to container without exposing it to the layout manager.
-     * @details
-     * User is obligated to manage view's layout by themselves. Implement applyGeometryToChildren() to do so.
-     *
-     * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
-     */
-    void addViewCustomLayout(const _<AView>& view);
-
     void onKeyDown(AInput::Key key) override;
 
     void onKeyRepeat(AInput::Key key) override;
@@ -340,6 +333,15 @@ protected:
      * @brief Replace views.
      */
     void setViews(AVector<_<AView>> views);
+
+    /**
+     * @brief Adds view to container without exposing it to the layout manager.
+     * @details
+     * User is obligated to manage view's layout by themselves. Implement applyGeometryToChildren() to do so.
+     *
+     * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
+     */
+    void addViewCustomLayout(const _<AView>& view);
 
     /**
      * @brief Add all views from vector.

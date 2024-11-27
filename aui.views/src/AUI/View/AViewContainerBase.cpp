@@ -573,14 +573,6 @@ void AViewContainerBase::onCharEntered(char16_t c) {
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
 }
 
-void AViewContainerBase::adjustHorizontalSizeToContent() {
-    setFixedSize(glm::ivec2(0, getFixedSize().y));
-}
-
-void AViewContainerBase::adjustVerticalSizeToContent() {
-    setFixedSize(glm::ivec2(getFixedSize().x, 0));
-}
-
 void AViewContainerBase::onClickPrevented() {
     AView::onClickPrevented();
     auto pointerEvents = std::move(mPointerEventsMapping);

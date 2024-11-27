@@ -20,7 +20,7 @@
 using namespace declarative;
 
 namespace {
-    class Inner: public AViewContainer {
+    class Inner: public AViewContainerBase {
     friend class AGroupBox;
     public:
         Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
@@ -80,7 +80,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
 }
 
 void AGroupBox::applyGeometryToChildren() {
-    AViewContainer::applyGeometryToChildren();
+    AViewContainerBase::applyGeometryToChildren();
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
 }
 

@@ -76,6 +76,7 @@ class AStylesheet;
 class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainerBase;
+    friend class AViewContainer;
     friend class IRenderViewToTexture;
 private:
     /**
@@ -551,7 +552,7 @@ public:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* getParent() const
+    AViewContainerBase* getParent() const
     {
         return mParent;
     }

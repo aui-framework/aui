@@ -19,7 +19,7 @@
  * @brief Slider control.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS ASlider: public AViewContainer {
+class API_AUI_VIEWS ASlider: public AViewContainerBase {
 public:
     class Handle: public AView {}; // embed class for styling
 

@@ -236,7 +236,7 @@ namespace {
 
     };
 
-    class PerformanceSectionsTreeView: public AViewContainer {
+    class PerformanceSectionsTreeView: public AViewContainerBase {
     public:
         static constexpr auto MAX_DEPTH = 20;
         PerformanceSectionsTreeView() {

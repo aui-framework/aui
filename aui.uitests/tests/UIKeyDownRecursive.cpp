@@ -17,7 +17,7 @@
 
 
 namespace {
-    class InnerDialogBox : public AViewContainer {
+    class InnerDialogBox : public AViewContainerBase {
     public:
         InnerDialogBox(const _<AViewContainer>& contents) {
             setContents(contents);

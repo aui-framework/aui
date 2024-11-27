@@ -14,7 +14,7 @@
 
 #include "AViewContainer.h"
 
-class API_AUI_VIEWS ADragNDropView: public AViewContainer {
+class API_AUI_VIEWS ADragNDropView: public AViewContainerBase {
 public:
     ADragNDropView();
 

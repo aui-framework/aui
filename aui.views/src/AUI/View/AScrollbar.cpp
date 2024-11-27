@@ -217,7 +217,7 @@ void AScrollbar::scrollBackward() {
 }
 
 void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
 }
 
 void AScrollbar::handleScrollbar(int s) {
@@ -286,7 +286,7 @@ void AScrollbarHandle::setSize(glm::ivec2 size) {
 }
 
 void AScrollbar::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     updateScrollHandleSize();
 }
 
@@ -296,5 +296,5 @@ void AScrollbar::scrollToEnd() {
 }
 
 void AScrollbar::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+    AViewContainerBase::onScroll(event);
 }

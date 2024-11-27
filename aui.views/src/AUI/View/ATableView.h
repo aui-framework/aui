@@ -14,7 +14,7 @@
 #include "AViewContainer.h"
 #include "AUI/Model/ITableModel.h"
 
-class API_AUI_VIEWS ATableView: public AViewContainer
+class API_AUI_VIEWS ATableView: public AViewContainerBase
 {
 private:
 	_<ITableModel> mModel;

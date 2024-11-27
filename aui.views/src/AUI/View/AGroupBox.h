@@ -23,7 +23,7 @@
  *
  * If the title is a checkbox then it's checked state used to enable/disable the elements of this group box.
  *
- * Frame of the groupbox cam be customized by `".agroupbox-inner"` class as like the title is customized by
+ * Frame of the groupbox can be customized by `".agroupbox-inner"` class as like the title is customized by
  * `".agroupbox-title"` class.
  *
  * Frame of the groupbox is not drawn under the title; this behaviour can be overridden by the Overflow::VISIBLE style
@@ -31,7 +31,7 @@
  *
  * Title is done by hacking the vertical layout and forcing the frame top side to the center of the title view.
  */
-class API_AUI_VIEWS AGroupBox: public AViewContainer {
+class API_AUI_VIEWS AGroupBox: public AViewContainerBase {
 public:
     AGroupBox(_<AView> titleView, _<AView> contentView);
 

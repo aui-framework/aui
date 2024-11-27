@@ -145,7 +145,7 @@ public:
         operator _<AView>() {
             return build();
         }
-        operator _<AViewContainer>() {
+        operator _<AViewContainerBase>() {
             return build();
         }
     };

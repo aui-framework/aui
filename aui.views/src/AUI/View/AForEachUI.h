@@ -20,7 +20,7 @@
 #include <AUI/Platform/AWindow.h>
 
 template<typename T, typename Layout>
-class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
+class AForEachUI: public AViewContainerBase, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
     using Factory = std::function<_<AView>(const T& value, size_t index)>;

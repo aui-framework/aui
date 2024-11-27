@@ -24,7 +24,7 @@
 
 using namespace std::chrono_literals;
 
-class AMenuContainer : public AViewContainer {
+class AMenuContainer : public AViewContainerBase {
    private:
     _<AMenuContainer> mSubWindow;
     _weak<AOverlappingSurface> mSurface;

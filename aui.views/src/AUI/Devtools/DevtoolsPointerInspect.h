@@ -19,7 +19,7 @@
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsPointerInspect: public AViewContainer {
+class DevtoolsPointerInspect: public AViewContainerBase {
 public:
     DevtoolsPointerInspect(AWindowBase* targetWindow);
 

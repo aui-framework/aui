@@ -70,7 +70,7 @@ public:
  * @see AScrollArea
  * @see ASlider
  */
-class API_AUI_VIEWS AScrollbar: public AViewContainer {
+class API_AUI_VIEWS AScrollbar: public AViewContainerBase {
     friend class AScrollbarHandle;
 public:
 

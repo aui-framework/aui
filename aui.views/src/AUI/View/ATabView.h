@@ -35,7 +35,7 @@ public:
     void setCurrent(bool current);
 };
 
-class API_AUI_VIEWS ATabButtonRow: public AViewContainer {
+class API_AUI_VIEWS ATabButtonRow: public AViewContainerBase {
 private:
     _<AViewContainer> mContents;
 
@@ -57,7 +57,7 @@ public:
  *
  * Unlike APageView, has a row with buttons to switch tabs (pages).
  */
-class API_AUI_VIEWS ATabView: public AViewContainer {
+class API_AUI_VIEWS ATabView: public AViewContainerBase {
 private:
     _<APageView> mPageView;
     _<ATabButtonRow> mRow;
