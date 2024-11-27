@@ -21,7 +21,7 @@
  * @brief A text field for numbers with increase/decrease buttons.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainer {
+class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
    private:
     class ADoubleNumberPickerField : public AAbstractTextField {
        private:
@@ -45,8 +45,6 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainer {
 
    public:
     ADoubleNumberPicker();
-
-    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void setValue(double v);
 

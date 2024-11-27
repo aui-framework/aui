@@ -27,7 +27,7 @@
  * @details
  * Word breaking text area.
  */
-class API_AUI_VIEWS ATextArea: public AViewContainer {
+class API_AUI_VIEWS ATextArea: public AViewContainerBase {
 private:
     class TextAreaField;
     _<TextAreaField> mTextField;

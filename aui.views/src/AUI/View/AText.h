@@ -34,7 +34,7 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText: public AViewContainer, public IFontView {
+class API_AUI_VIEWS AText: public AViewContainerBase, public IFontView {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {

@@ -15,7 +15,7 @@
 #include "AUI/Platform/AWindowBase.h"
 #include "ViewPropertiesView.h"
 
-class DevtoolsLayoutTab: public AViewContainer {
+class DevtoolsLayoutTab: public AViewContainerBase {
 public:
     DevtoolsLayoutTab(AWindowBase* targetWindow);
 

@@ -23,7 +23,7 @@
  *
  * Unlike AProgressBar, this one is circle shaped; thus occupies less space.
  */
-class API_AUI_VIEWS ACircleProgressBar: public AViewContainer {
+class API_AUI_VIEWS ACircleProgressBar: public AViewContainerBase {
 public:
     class Inner: public AView {
     public:

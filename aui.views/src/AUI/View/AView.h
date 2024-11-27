@@ -50,7 +50,7 @@
 
 class AWindow;
 class AWindowBase;
-class AViewContainer;
+class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
@@ -75,6 +75,7 @@ class AStylesheet;
  */
 class API_AUI_VIEWS AView: public AObject
 {
+    friend class AViewContainerBase;
     friend class AViewContainer;
     friend class IRenderViewToTexture;
 private:
@@ -162,7 +163,7 @@ protected:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* mParent = nullptr;
+    AViewContainerBase* mParent = nullptr;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -551,7 +552,7 @@ public:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* getParent() const
+    AViewContainerBase* getParent() const
     {
         return mParent;
     }

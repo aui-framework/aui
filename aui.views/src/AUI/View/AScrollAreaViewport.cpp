@@ -42,7 +42,7 @@ void AScrollAreaViewport::setContents(_<AView> content) {
 }
 
 void AScrollAreaViewport::applyGeometryToChildren() {
-    AViewContainer::applyGeometryToChildren();
+    AViewContainerBase::applyGeometryToChildren();
     mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
     if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
         if (!IRenderViewToTexture::isEnabledForView(*mInner)) {

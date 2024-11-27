@@ -193,7 +193,7 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
 }
 
 void AText::render(ARenderContext context) {
-    AViewContainer::render(context);
+    AViewContainerBase::render(context);
 
     if (!mPrerenderedString) {
         prerenderString(context);
@@ -235,7 +235,7 @@ void AText::performLayout() {
 
 void AText::setSize(glm::ivec2 size) {
     bool widthDiffers = size.x != getWidth();
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     if (widthDiffers) {
         mPrerenderedString = nullptr;
         markMinContentSizeInvalid();
@@ -292,7 +292,7 @@ void AText::clearContent() {
 
 void AText::invalidateAllStyles() {
     invalidateAllStylesFont();
-    AViewContainer::invalidateAllStyles();
+    AViewContainerBase::invalidateAllStyles();
 }
 
 void AText::commitStyle() {

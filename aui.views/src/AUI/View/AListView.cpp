@@ -38,7 +38,7 @@ class AListViewContainer : public AViewContainer {
             case 0:
                 return nullptr;
             case 1: {
-                auto v = AViewContainer::getViewAt(pos, flags);
+                auto v = AViewContainerBase::getViewAt(pos, flags);
                 mIndex = v ? 0 : -1;
                 return v;
             }
@@ -184,10 +184,6 @@ void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) 
     }
 
     emit selectionChanged(getSelectionModel());
-}
-
-bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
-    return AViewContainer::onGesture(origin, event);
 }
 
 void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {

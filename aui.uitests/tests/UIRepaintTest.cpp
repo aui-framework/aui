@@ -234,7 +234,7 @@ TEST_F(UIRepaintTest, SurroundingRepaint2) {
         testing::InSequence s;
         EXPECT_CALL(*labelRight, renderMock).Times(testing::AtLeast(1));
         // arbitrary addView case
-        labelRight->getParent()->addView(0, _new<ALabel>("olol"));
+        dynamic_cast<AViewContainer*>(labelRight->getParent())->addView(0, _new<ALabel>("olol"));
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }

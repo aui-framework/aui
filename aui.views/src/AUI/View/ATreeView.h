@@ -28,7 +28,7 @@
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */
-class API_AUI_VIEWS ATreeView: public AViewContainer {
+class API_AUI_VIEWS ATreeView: public AViewContainerBase {
 private:
     class ContainerView;
     class ItemView;

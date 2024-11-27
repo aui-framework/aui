@@ -19,7 +19,7 @@
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsProfilingOptions: public AViewContainer {
+class DevtoolsProfilingOptions: public AViewContainerBase {
 public:
     DevtoolsProfilingOptions(AWindowBase* targetWindow);
 

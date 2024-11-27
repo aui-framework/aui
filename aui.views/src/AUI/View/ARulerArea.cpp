@@ -22,7 +22,7 @@
 
 using namespace ass;
 
-class WrapperContainer: public AViewContainer {
+class WrapperContainer: public AViewContainerBase {
 private:
     _<AView> mWrappedView;
 
@@ -61,7 +61,7 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
 }
 
 void ARulerArea::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     mWrappedView->setSize({mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
             ALayoutDirection::NONE)});
     updatePosition();
@@ -74,7 +74,7 @@ void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
 }
 
 void ARulerArea::render(ARenderContext ctx) {
-    AViewContainer::render(ctx);
+    AViewContainerBase::render(ctx);
 
 
     glDisable(GL_STENCIL_TEST);
@@ -118,7 +118,7 @@ void ARulerArea::render(ARenderContext ctx) {
 }
 
 void ARulerArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainer::onPointerMove(pos, event);
+    AViewContainerBase::onPointerMove(pos, event);
     mMousePos = pos;
     redraw();
 }

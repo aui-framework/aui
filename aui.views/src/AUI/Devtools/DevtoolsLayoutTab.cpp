@@ -24,15 +24,15 @@
 
 class ViewHierarchyTreeModel: public ITreeModel<AString> {
 private:
-    _<AViewContainer> mRoot;
+    _<AViewContainerBase> mRoot;
 
 public:
-    ViewHierarchyTreeModel(_<AViewContainer> root) : mRoot(std::move(root)) {
+    ViewHierarchyTreeModel(_<AViewContainerBase> root) : mRoot(std::move(root)) {
         // scan(mRoot); // crashes
     }
 
     void scan(aui::no_escape<AView> view) {
-        auto asContainer = dynamic_cast<AViewContainer*>(view.ptr());
+        auto asContainer = dynamic_cast<AViewContainerBase*>(view.ptr());
         if (!asContainer) {
             return;
         }
@@ -43,7 +43,7 @@ public:
         }
     }
 
-    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainer> container) {
+    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainerBase> container) {
         if (container->childrenChanged.hasConnectionsWith(this)) {
             return;
         }
@@ -79,7 +79,7 @@ public:
     }
 
     size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
         if (c) {
             return c->getViews().size();
         }
@@ -91,7 +91,7 @@ public:
     }
 
     ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
         if (!c) {
             throw AException("invalid index");
         }

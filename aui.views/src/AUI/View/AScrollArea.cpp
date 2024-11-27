@@ -82,7 +82,7 @@ int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
     return result;
 }
 void AScrollArea::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     mInner->applyGeometryToChildrenIfNecessary();
     if (contents()) {
         mVerticalScrollbar->setScrollDimensions(
@@ -96,7 +96,7 @@ void AScrollArea::setSize(glm::ivec2 size) {
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+    AViewContainerBase::onScroll(event);
     if (!mIsWheelScrollable) {
         return;
     }
@@ -118,15 +118,15 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
 }
 
 bool AScrollArea::onGesture(const glm::ivec2 &origin, const AGestureEvent &event) {
-    return AViewContainer::onGesture(origin, event);
+    return AViewContainerBase::onGesture(origin, event);
 }
 
 void AScrollArea::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
 }
 
 void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    AViewContainerBase::onPointerReleased(event);
 }
 
 void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {

@@ -94,11 +94,6 @@ ADoubleNumberPicker::ADoubleNumberPicker()
     addView(c);
 }
 
-int ADoubleNumberPicker::getContentMinimumHeight(ALayoutDirection layout)
-{
-    return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE);
-}
-
 void ADoubleNumberPicker::setValue(double v)
 {
     mTextField->setText(AString::number(v));

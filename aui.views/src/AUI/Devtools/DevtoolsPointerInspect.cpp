@@ -61,14 +61,14 @@ using namespace ass;
 static constexpr auto LOG_TAG = "DevtoolsPointerInspect";
 
 namespace {
-class FakeContainer: public AViewContainer {
+class FakeContainer: public AViewContainerBase {
 public:
     FakeContainer(_weak<AView> view): mView(std::move(view)) {
 
     }
 
     void render(ARenderContext ctx) override {
-        AViewContainer::render(ctx);
+        AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
             ctx.render.string({0, 0}, "Expired");
@@ -83,14 +83,14 @@ public:
         if (auto view = mView.lock()) {
             return view->getContentMinimumWidth(layout);
         }
-        return AViewContainer::getContentMinimumWidth(layout);
+        return AViewContainerBase::getContentMinimumWidth(layout);
     }
 
     int getContentMinimumHeight(ALayoutDirection layout) override {
         if (auto view = mView.lock()) {
             return view->getContentMinimumHeight(layout);
         }
-        return AViewContainer::getContentMinimumHeight(layout);
+        return AViewContainerBase::getContentMinimumHeight(layout);
     }
 
     [[nodiscard]]
@@ -107,7 +107,7 @@ private:
     _weak<AView> mView;
 };
 
-class ParentHelper: public AViewContainer {
+class ParentHelper: public AViewContainerBase {
 public:
     ParentHelper(_<FakeContainer> fake): mFake(std::move(fake)) {
         setContents(Centered { mButton = _new<AButton>("Reinflate to parent") });
@@ -115,7 +115,7 @@ public:
     }
 
     void render(ARenderContext context) override {
-        AViewContainer::render(context);
+        AViewContainerBase::render(context);
         
         auto v = mFake->view();
         mButton->setEnabled(!(v == nullptr || v->getParent() == nullptr));

@@ -21,11 +21,8 @@
 #include <AUI/View/ASpacerExpanding.h>
 
 /**
- * @brief A spinner view to display some long operation.
+ * @brief A resizeable horizontal or vertical layout
  * @ingroup useful_views
- * @details
- * A progress bar is used to express a long operation (i.e. file copy) with unknown progress and reassure the user that
- * application is still running.
  */
 class API_AUI_VIEWS ASplitter: public AViewContainer
 {

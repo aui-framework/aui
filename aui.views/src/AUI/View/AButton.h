@@ -10,6 +10,7 @@
  */
 
 #pragma once
+
 #include "AView.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Render/IRenderer.h"
@@ -23,51 +24,56 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AButton: public AAbstractLabel
-{	
+class API_AUI_VIEWS AButton : public AAbstractLabel {
 public:
-	AButton();
-	explicit AButton(AString text) noexcept: AAbstractLabel(std::move(text)) {}
-	virtual ~AButton() = default;
+    AButton();
+
+    explicit AButton(AString text) noexcept: AAbstractLabel(std::move(text)) {}
+
+    virtual ~AButton() = default;
 
     [[nodiscard]]
     bool isDefault() const noexcept {
         return mDefault;
     }
 
-	void setDefault(bool isDefault = true);
+    void setDefault(bool isDefault = true);
 
     bool consumesClick(const glm::ivec2& pos) override;
 
 signals:
-	emits<bool> defaultState;
-	emits<> becameDefault;
-	emits<> noLongerDefault;
+    emits<bool> defaultState;
+    emits<> becameDefault;
+    emits<> noLongerDefault;
 
 private:
-	AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
+    AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
 /**
  * @brief Unlike AButton, AButtonEx is a container which looks like a button.
  */
-class AButtonEx: public AViewContainer {
+class AButtonEx : public AViewContainer {
 public:
     AButtonEx() {
         addAssName(".btn");
     }
+
+    ~AButtonEx() override = default;
 };
 
 namespace declarative {
-    struct Button: aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx> {
+    struct Button : aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx> {
         using aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>::layouted_container_factory;
-        Button(AString text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
-        Button(const char* text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { text }}) {}
+
+        Button(AString text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({Label{std::move(text)}}) {}
+
+        Button(const char* text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({Label{text}}) {}
     };
 }
 
 namespace ass::button {
-    struct Default: IAssSubSelector {
+    struct Default : IAssSubSelector {
     private:
         _unique<IAssSubSelector> mWrapped;
 

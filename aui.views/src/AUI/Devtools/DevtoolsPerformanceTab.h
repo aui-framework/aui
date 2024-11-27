@@ -17,7 +17,7 @@
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsPerformanceTab: public AViewContainer {
+class DevtoolsPerformanceTab: public AViewContainerBase {
 public:
     DevtoolsPerformanceTab(AWindowBase* targetWindow);
 

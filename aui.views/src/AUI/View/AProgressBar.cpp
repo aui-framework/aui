@@ -29,7 +29,7 @@ AProgressBar::~AProgressBar() {
 }
 
 void AProgressBar::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     updateInnerWidth();
 }
 
@@ -41,6 +41,6 @@ void AProgressBar::updateInnerWidth() {
 }
 
 void AProgressBar::render(ARenderContext context) {
-    AViewContainer::render(context);
+    AViewContainerBase::render(context);
 }
 

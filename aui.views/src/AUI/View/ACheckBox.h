@@ -71,7 +71,7 @@ signals:
  * @brief View container with a checkbox.
  * @ingroup userful_views
  */
-class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainer {
+class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
