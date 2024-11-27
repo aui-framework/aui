@@ -20,7 +20,7 @@
 #include "AViewContainer.h"
 #include "AAbstractTextField.h"
 #include "AScrollbar.h"
-#include "AAbstractTextView.h"
+#include "ATextBase.h"
 
 /**
  * @brief Multiline text input area.
@@ -36,7 +36,7 @@
  * AScrollArea::Builder().withContents(_new<AScrollArea>())
  * @endcode
  */
-class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<AAbstractTextView>, public IStringable {
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase>, public IStringable {
 public:
     ATextArea();
     ATextArea(const AString& text);

@@ -30,8 +30,8 @@ ATextArea::ATextArea(const AString& text):
 }
 
 void ATextArea::setText(const AString& t) {
-    AAbstractTextView::setItems({t, _new<AButton>("ololo"), "kek"});
-//    AAbstractTextView::setString(t);
+    ATextBase::setItems({t, _new<AButton>("ololo"), "kek"});
+//    ATextBase::setString(t);
     AAbstractTypeable::setText(t);
     mCompiledText = t;
 }
@@ -95,17 +95,37 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
 }
 
 size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
+    size_t posRelativeToEntity = startPos;
+
+    for (auto it = getLeftEntity(posRelativeToEntity); it != mEngine.entries().end(); startPos += (*it)->getCharacterCount(), ++it) {
+        if (c == ' ') {
+            if (_cast<WhitespaceEntry>(*it)) {
+                return startPos;
+            }
+        }
+        if (c == '\n') {
+            if (_cast<NextLineEntry>(*it)) {
+                return startPos;
+            }
+        }
+        if (auto w = _cast<WordEntry>(*it)) {
+            if (auto index = w->getWord().find(c, posRelativeToEntity); index != AString::NPOS) {
+                return startPos + index;
+            }
+        }
+    }
+    return AString::NPOS;
+}
+
+size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
+    auto it = getLeftEntity(startPos);
     return 0;
 }
 
 void ATextArea::onCharEntered(char16_t c) {
-    AAbstractTypeableView<AAbstractTextView>::onCharEntered(c);
+    AAbstractTypeableView<ATextBase>::onCharEntered(c);
     enterChar(c);
     if (textChanging) emit textChanging(text());
-}
-
-size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
-    return 0;
 }
 
 size_t ATextArea::length() const {
@@ -145,7 +165,7 @@ void ATextArea::onCursorIndexChanged() {
 }
 
 void ATextArea::render(ARenderContext context) {
-    AAbstractTextView::render(context);
+    ATextBase::render(context);
     drawCursor(context.render, mCursorPosition + mPadding.leftTop());
 }
 

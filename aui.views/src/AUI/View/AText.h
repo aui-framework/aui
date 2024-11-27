@@ -12,7 +12,7 @@
 #pragma once
 
 
-#include "AAbstractTextView.h"
+#include "ATextBase.h"
 
 /**
  * @brief HTML-capable text container.
@@ -28,7 +28,7 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText: public AAbstractTextView {
+class API_AUI_VIEWS AText: public ATextBase {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
@@ -39,18 +39,11 @@ public:
     AText();
     ~AText() override;
 
-    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {}) {
-        AAbstractTextView::setItems(init, flags);
-    }
-    void clearContent() {
-        AAbstractTextView::clearContent();
-    }
-    void setHtml(const AString& html, const Flags& flags = {}) {
-        AAbstractTextView::setHtml(html, flags);
-    }
-    void setString(const AString& string, const Flags& flags) {
-        AAbstractTextView::setString(string, flags);
-    }
+    using ATextBase::setItems;
+    using ATextBase::setHtml;
+    using ATextBase::setString;
+    using ATextBase::clearContent;
+
     void setString(const AString& string) {
         setString(string, {});
     }
@@ -70,7 +63,4 @@ public:
         v->setString(string, flags);
         return v;
     }
-
 };
-
-

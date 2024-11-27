@@ -16,7 +16,7 @@
 #include <AUI/Traits/callables.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Xml/AXml.h>
-#include "AAbstractTextView.h"
+#include "ATextBase.h"
 #include "AButton.h"
 #include <stack>
 #include <AUI/Util/kAUI.h>
@@ -33,7 +33,11 @@ struct State {
 };
 
 
-void AAbstractTextView::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
+ATextBase::ATextBase() = default;
+ATextBase::~ATextBase() = default;
+
+
+void ATextBase::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
                      AString word,
                      const ParsedFlags& flags) {
     if (flags.wordBreak == WordBreak::NORMAL) {
@@ -47,7 +51,7 @@ void AAbstractTextView::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries
     }
 }
 
-AAbstractTextView::ParsedFlags AAbstractTextView::parseFlags(const AAbstractTextView::Flags& flags) {
+ATextBase::ParsedFlags ATextBase::parseFlags(const ATextBase::Flags& flags) {
     ParsedFlags pf;
     for (auto& flag : flags) {
         std::visit(aui::lambda_overloaded {
@@ -57,7 +61,7 @@ AAbstractTextView::ParsedFlags AAbstractTextView::parseFlags(const AAbstractText
     return pf;
 }
 
-void AAbstractTextView::setString(const AString& string, const Flags& flags) {
+void ATextBase::setString(const AString& string, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
@@ -68,7 +72,7 @@ void AAbstractTextView::setString(const AString& string, const Flags& flags) {
     mEngine.setEntries(std::move(entries));
 }
 
-void AAbstractTextView::processString(const AString& string, const AAbstractTextView::ParsedFlags& parsedFlags,
+void ATextBase::processString(const AString& string, const ATextBase::ParsedFlags& parsedFlags,
                                       AVector<_<AWordWrappingEngine::Entry>>& entries) {
     AString currentWord;
     auto commitWord = [&] {
@@ -97,7 +101,7 @@ void AAbstractTextView::processString(const AString& string, const AAbstractText
 }
 
 
-void AAbstractTextView::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
+void ATextBase::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
@@ -118,12 +122,12 @@ void AAbstractTextView::setItems(const AVector<std::variant<AString, _<AView>>>&
     mEngine.setEntries(std::move(entries));
 }
 
-void AAbstractTextView::setHtml(const AString& html, const Flags& flags) {
+void ATextBase::setHtml(const AString& html, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
-        AAbstractTextView& text;
+        ATextBase& text;
         AVector<_<AWordWrappingEngine::Entry>> entries;
         ParsedFlags& parsedFlags;
 
@@ -134,7 +138,7 @@ void AAbstractTextView::setHtml(const AString& html, const Flags& flags) {
         } currentState;
         std::stack<State> stateStack;
 
-        CommonEntityVisitor(AAbstractTextView& text, ParsedFlags& parsedFlags) : text(text), parsedFlags(parsedFlags) {}
+        CommonEntityVisitor(ATextBase& text, ParsedFlags& parsedFlags) : text(text), parsedFlags(parsedFlags) {}
 
         void visitAttribute(const AString& name, AString value) override {};
         _<IXmlEntityVisitor> visitEntity(AString entityName) override {
@@ -177,7 +181,7 @@ void AAbstractTextView::setHtml(const AString& html, const Flags& flags) {
     mEngine.setEntries(std::move(entityVisitor.entries));
 }
 
-int AAbstractTextView::getContentMinimumWidth(ALayoutDirection layout) {
+int ATextBase::getContentMinimumWidth(ALayoutDirection layout) {
     if (mExpanding.x != 0 || mFixedSize.x != 0) {
         // there's no need to calculate min size because width is defined.
         return 0;
@@ -197,7 +201,7 @@ int AAbstractTextView::getContentMinimumWidth(ALayoutDirection layout) {
     return accumulator;
 }
 
-int AAbstractTextView::getContentMinimumHeight(ALayoutDirection layout) {
+int ATextBase::getContentMinimumHeight(ALayoutDirection layout) {
     if (getAssNames().contains("DevtoolsTest")) {
         printf("\n");
     }
@@ -212,8 +216,8 @@ int AAbstractTextView::getContentMinimumHeight(ALayoutDirection layout) {
     return 0;
 }
 
-void AAbstractTextView::render(ARenderContext context) {
-    AViewContainer::render(context);
+void ATextBase::render(ARenderContext context) {
+    AViewContainerBase::render(context);
 
     if (!mPrerenderedString) {
         prerenderString(context);
@@ -225,7 +229,7 @@ void AAbstractTextView::render(ARenderContext context) {
     }
 }
 
-void AAbstractTextView::prerenderString(ARenderContext ctx) {
+void ATextBase::prerenderString(ARenderContext ctx) {
     performLayout();
     {
         auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
@@ -248,71 +252,71 @@ void AAbstractTextView::prerenderString(ARenderContext ctx) {
     }
 }
 
-void AAbstractTextView::performLayout() {
+void ATextBase::performLayout() {
     mEngine.setTextAlign(getFontStyle().align);
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
 }
 
-void AAbstractTextView::setSize(glm::ivec2 size) {
+void ATextBase::setSize(glm::ivec2 size) {
     bool widthDiffers = size.x != getWidth();
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     if (widthDiffers) {
         mPrerenderedString = nullptr;
         markMinContentSizeInvalid();
     }
 }
 
-void AAbstractTextView::clearContent() {
+void ATextBase::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
     removeAllViews();
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextView::invalidateAllStyles() {
+void ATextBase::invalidateAllStyles() {
     invalidateAllStylesFont();
-    AViewContainer::invalidateAllStyles();
+    AViewContainerBase::invalidateAllStyles();
 }
 
-void AAbstractTextView::commitStyle() {
+void ATextBase::commitStyle() {
     AView::commitStyle();
     commitStyleFont();
 }
 
-void AAbstractTextView::invalidateFont() {
+void ATextBase::invalidateFont() {
     mPrerenderedString.reset();
     markMinContentSizeInvalid();
 }
 
-glm::ivec2 AAbstractTextView::NextLineEntry::getSize() {
+glm::ivec2 ATextBase::NextLineEntry::getSize() {
     return {0, mText->getFontStyle().size};
 }
 
-bool AAbstractTextView::NextLineEntry::forcesNextLine() const {
+bool ATextBase::NextLineEntry::forcesNextLine() const {
     return true;
 }
 
-glm::ivec2 AAbstractTextView::WordEntry::getSize() {
+glm::ivec2 ATextBase::WordEntry::getSize() {
     return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
 }
 
-size_t AAbstractTextView::WordEntry::getCharacterCount() {
+size_t ATextBase::WordEntry::getCharacterCount() {
     return mWord.length();
 }
 
-glm::ivec2 AAbstractTextView::WhitespaceEntry::getSize() {
+glm::ivec2 ATextBase::WhitespaceEntry::getSize() {
     return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
 }
 
-bool AAbstractTextView::WhitespaceEntry::escapesEdges() {
+bool ATextBase::WhitespaceEntry::escapesEdges() {
     return true;
 }
 
-glm::ivec2 AAbstractTextView::CharEntry::getSize() {
+glm::ivec2 ATextBase::CharEntry::getSize() {
     return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
 }
 
-void AAbstractTextView::CharEntry::setPosition(glm::ivec2 position) {
+void ATextBase::CharEntry::setPosition(glm::ivec2 position) {
     mPosition = position;
 }

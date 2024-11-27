@@ -23,7 +23,7 @@
 /**
  * @brief Base class for AText without public APIs.
  */
-class API_AUI_VIEWS AAbstractTextView: public AViewContainer, public IFontView {
+class API_AUI_VIEWS ATextBase: public AViewContainerBase, public IFontView {
 public:
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
@@ -31,7 +31,8 @@ public:
     };
 
 public:
-    AAbstractTextView() {}
+    ATextBase();
+    ~ATextBase() override = 0;
     void render(ARenderContext context) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumWidth(ALayoutDirection layout) override;
@@ -55,12 +56,12 @@ protected:
 protected:
     class CharEntry final: public AWordWrappingEngine::Entry {
     private:
-        AAbstractTextView* mText;
+        ATextBase* mText;
         char32_t mChar;
         glm::ivec2 mPosition;
 
     public:
-        CharEntry(AAbstractTextView* text, char32_t ch)
+        CharEntry(ATextBase* text, char32_t ch)
                 : mText(text), mChar(ch) {}
 
         glm::ivec2 getSize() override;
@@ -77,11 +78,11 @@ protected:
     };
     class WordEntry final: public AWordWrappingEngine::Entry {
     private:
-        AAbstractTextView* mText;
+        ATextBase* mText;
         AString mWord;
 
     public:
-        WordEntry(AAbstractTextView* text, AString word)
+        WordEntry(ATextBase* text, AString word)
                 : mText(text), mWord(std::move(word)){}
 
         glm::ivec2 getSize() override;
@@ -99,10 +100,10 @@ protected:
 
     class WhitespaceEntry final: public AWordWrappingEngine::Entry {
     private:
-        AAbstractTextView* mText;
+        ATextBase* mText;
 
     public:
-        WhitespaceEntry(AAbstractTextView* text) : mText(text) {}
+        WhitespaceEntry(ATextBase* text) : mText(text) {}
 
         glm::ivec2 getSize() override;
 
@@ -113,10 +114,10 @@ protected:
 
     class NextLineEntry final: public AWordWrappingEngine::Entry {
     private:
-        AAbstractTextView* mText;
+        ATextBase* mText;
 
     public:
-        NextLineEntry(AAbstractTextView* text) : mText(text) {}
+        NextLineEntry(ATextBase* text) : mText(text) {}
 
         bool forcesNextLine() const override;
 
