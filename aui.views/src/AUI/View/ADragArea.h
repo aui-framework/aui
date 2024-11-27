@@ -25,24 +25,24 @@
  */
 class API_AUI_VIEWS ADragArea: public AViewContainer {
 private:
-    _weak<AViewContainer> mDraggedContainer;
+    _weak<AViewContainerBase> mDraggedContainer;
     glm::ivec2 mInitialMousePos;
 
 
     void setValidPositionFor(const _<AView>& targetView, const glm::ivec2& newPosition);
 public:
     ADragArea();
-    void startDragging(AViewContainer* container);
+    void startDragging(AViewContainerBase* container);
     void handleMouseMove();
 
     void endDragging();
 
     void applyGeometryToChildren() override;
 
-    class API_AUI_VIEWS ADraggableHandle: public AViewContainer {
+    class API_AUI_VIEWS ADraggableHandle: public AViewContainerBase {
         friend class ADragArea;
     private:
-        std::tuple<ADragArea*, AViewContainer*> getDragAreaAndDraggingView();
+        std::tuple<ADragArea*, AViewContainerBase*> getDragAreaAndDraggingView();
         bool mDragging = false;
         bool mCheckForClickConsumption = true;
 
@@ -56,8 +56,8 @@ public:
         emits<glm::ivec2> mouseMove;
     };
 
-    static _<AView>          convertToDraggable(const _<AView>& view, bool checkForClickConsumption = true);
-    static _<AViewContainer> convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption = true);
+    static _<AView>            convertToDraggable(const _<AView>& view, bool checkForClickConsumption = true);
+    static _<ADraggableHandle> convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption = true);
 };
 
 

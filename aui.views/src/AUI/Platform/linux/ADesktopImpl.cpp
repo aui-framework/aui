@@ -44,7 +44,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos)
 }
 
 
-AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     parent->blockUserInput();
     auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>("org.freedesktop.portal.Desktop",     // bus
                                                                "/org/freedesktop/portal/desktop",    // object
@@ -78,7 +78,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
     return f;
 }
 
-AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
     parent->blockUserInput();
     return async {
         /*

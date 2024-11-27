@@ -26,7 +26,7 @@
 #include "IRenderViewToTexture.h"
 
 class AColor;
-class ABaseWindow;
+class AWindowBase;
 
 
 
@@ -510,7 +510,7 @@ public:
      * @brief Sets the window to render on.
      * @param window target window
      */
-    virtual void setWindow(ABaseWindow* window)
+    virtual void setWindow(AWindowBase* window)
     {
         mWindow = window;
         setColorForced(1.f);
@@ -519,7 +519,7 @@ public:
     }
 
     [[nodiscard]]
-    ABaseWindow* getWindow() const noexcept {
+    AWindowBase* getWindow() const noexcept {
         return mWindow;
     }
 
@@ -577,7 +577,7 @@ public:
 protected:
     AColor mColor;
     glm::mat4 mTransform;
-    ABaseWindow* mWindow = nullptr;
+    AWindowBase* mWindow = nullptr;
     APool<ITexture> mTexturePool;
     uint8_t mStencilDepth = 0;
 

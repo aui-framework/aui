@@ -170,12 +170,12 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    ABaseWindow::showTouchscreenKeyboardImpl();
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {

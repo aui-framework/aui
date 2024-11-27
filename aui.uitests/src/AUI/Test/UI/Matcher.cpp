@@ -21,7 +21,7 @@
 ASet<_<AView>> UIMatcher::toSet() const {
     ASet<_<AView>> result;
 
-    for (auto& window : ABaseWindow::getWindowManager().getWindows()) {
+    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
         processContainer(result, window);
     }
     return result;
@@ -32,13 +32,13 @@ UIMatcher*& UIMatcher::currentImpl() {
     return matcher;
 }
 
-void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
+void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainerBase>& container) const {
     for (auto& view : container) {
         if (mIncludeInvisibleViews || (view->getVisibility() == Visibility::VISIBLE)) {
             if (mMatcher->matches(view)) {
                 destination << view;
             }
-            if (auto currentContainer = _cast<AViewContainer>(view)) {
+            if (auto currentContainer = _cast<AViewContainerBase>(view)) {
                 processContainer(destination, currentContainer);
             }
         }

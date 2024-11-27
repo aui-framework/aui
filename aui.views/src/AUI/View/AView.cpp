@@ -44,7 +44,7 @@
 #undef min
 
 
-ABaseWindow* AView::getWindow() const
+AWindowBase* AView::getWindow() const
 {
 
     AView* parent = nullptr;
@@ -53,7 +53,7 @@ ABaseWindow* AView::getWindow() const
         parent = target;
     }
 
-    return dynamic_cast<ABaseWindow*>(parent);
+    return dynamic_cast<AWindowBase*>(parent);
 }
 
 AView::AView()
@@ -684,7 +684,7 @@ void AView::onClickPrevented() {
 
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
-    if (mParent) { // ABaseWindow does not have parent
+    if (mParent) { // AWindowBase does not have parent
         AWindow::current()->forceUpdateCursor();
     }
 }

@@ -33,7 +33,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
@@ -236,7 +236,7 @@ namespace {
 
     };
 
-    class PerformanceSectionsTreeView: public AViewContainer {
+    class PerformanceSectionsTreeView: public AViewContainerBase {
     public:
         static constexpr auto MAX_DEPTH = 20;
         PerformanceSectionsTreeView() {
@@ -298,7 +298,7 @@ namespace {
 }
 
 
-DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
 #if AUI_PROFILING

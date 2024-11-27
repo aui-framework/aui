@@ -53,7 +53,7 @@ public:
     }
 };
 
-class ATreeView::ItemView: public AViewContainer, public ass::ISelectable
+class ATreeView::ItemView: public AViewContainerBase, public ass::ISelectable
 {
 public:
     ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeModelIndex& index)
@@ -149,19 +149,19 @@ public:
     }
 
     void onPointerPressed(const APointerPressedEvent& event) override {
-        AViewContainer::onPointerPressed(event);
+        AViewContainerBase::onPointerPressed(event);
 
         mTreeView->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
-        AViewContainer::onPointerDoubleClicked(event);
+        AViewContainerBase::onPointerDoubleClicked(event);
 
         mTreeView->handleMouseDoubleClicked(this);
     }
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override {
-        AViewContainer::onPointerMove(pos, event);
+        AViewContainerBase::onPointerMove(pos, event);
         mTreeView->handleMouseMove(this);
     }
 
@@ -314,7 +314,7 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
 
 
 void ATreeView::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
 
     updateScrollbarDimensions();
 }
@@ -400,7 +400,7 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
 }
 
 _<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
-    auto currentTarget = _cast<AViewContainer>(mContent);
+    auto currentTarget = _cast<AViewContainerBase>(mContent);
     _<ATreeView::ItemView> itemView;
     traverseFromRootToTarget([&](std::size_t row) {
         if (!currentTarget) {

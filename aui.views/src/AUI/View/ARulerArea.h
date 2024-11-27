@@ -20,7 +20,7 @@
  * @details
  * Consists of vertical and horizontal @ref ARulerView "rulers".
  */
-class API_AUI_VIEWS ARulerArea: public AViewContainer, public IFontView {
+class API_AUI_VIEWS ARulerArea: public AViewContainerBase, public IFontView {
 private:
     _<AView> mWrappedView;
     _<ARulerView> mHorizontalRuler;

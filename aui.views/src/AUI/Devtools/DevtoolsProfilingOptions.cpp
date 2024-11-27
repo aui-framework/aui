@@ -41,24 +41,24 @@ namespace {
     }
 }
 
-DevtoolsProfilingOptions::DevtoolsProfilingOptions(ABaseWindow* targetWindow): mModel(&targetWindow->profiling()) {
+DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow): mModel(&targetWindow->profiling()) {
 
     setContents(Centered {
         Vertical::Expanding {
             AText::fromItems({"These settings are applicable for render-to-texture optimizations.",
                               makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html")}),
-            CheckBoxWrapper { Label { "Highlight redraw requests" } } && mModel(&ABaseWindow::Profiling::highlightRedrawRequests),
+            CheckBoxWrapper { Label { "Highlight redraw requests" } } && mModel(&AWindowBase::Profiling::highlightRedrawRequests),
             AText::fromItems({"Draws purple rect ", coloredRect(0xff00ff_rgb), " over view that requested redraw "
                               "(AView::redraw). This can help to find views that causes window to repaint which "
                               "affects application performance and device's battery life."}),
-            CheckBoxWrapper { Label { "Render to texture decay" } } && mModel(&ABaseWindow::Profiling::renderToTextureDecay),
+            CheckBoxWrapper { Label { "Render to texture decay" } } && mModel(&AWindowBase::Profiling::renderToTextureDecay),
             AText::fromItems({"Visually displays render to texture optimization by gradually transforming old pixel ",
                               "data to gray ", coloredRect(AColor::GRAY), " color. When a view is redrawn it pixel "
                               "data would be represented as unaffected to gray color and seem bright and saturated "
                               "color. From perspective of performance it's good that whole screen transformed to gray "
                               "color and thus no redraw is performed."
                                 }),
-            CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } && mModel(&ABaseWindow::Profiling::breakpointOnMarkMinContentSizeInvalid),
+            CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } && mModel(&AWindowBase::Profiling::breakpointOnMarkMinContentSizeInvalid),
             AText::fromItems({"Stops the attached debugger at the point when window's update layout flag is set. This "
                               "can be used to walk through stacktrace and find which view and why triggered layout "
                               "update. When breakpoint is triggered, checkbox is unset. Note: when debugger is not attached, behaviour is undefined."}),

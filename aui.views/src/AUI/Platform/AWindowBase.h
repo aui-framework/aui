@@ -30,7 +30,7 @@ namespace testing {
     class UITest;
 }
 
-class API_AUI_VIEWS ABaseWindow: public AViewContainer {
+class API_AUI_VIEWS AWindowBase: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
@@ -38,7 +38,7 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 public:
     using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
-    ABaseWindow();
+    AWindowBase();
 
     /**
      * @brief Profiling (debugging) settings for this window.
@@ -86,7 +86,7 @@ public:
      */
     virtual void blockUserInput(bool blockUserInput = true);
 
-    virtual ~ABaseWindow();
+    virtual ~AWindowBase();
 
 
     /**
@@ -101,7 +101,7 @@ public:
     void preventClickOnPointerRelease();
 
     /**
-     * @see ABaseWindow::preventClickOnPointerRelease
+     * @see AWindowBase::preventClickOnPointerRelease
      */
     [[nodiscard]]
     bool isPreventingClickOnPointerRelease() const noexcept {
@@ -393,7 +393,7 @@ protected:
     bool mIsFocused = true;
 
     /**
-     * @see ABaseWindow::preventClickOnPointerRelease
+     * @see AWindowBase::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
 
@@ -405,10 +405,10 @@ protected:
 
     _unique<IRenderingContext> mRenderingContext;
 
-    static ABaseWindow*& currentWindowStorage();
+    static AWindowBase*& currentWindowStorage();
 
     /**
-     * @see ABaseWindow::createOverlappingSurface
+     * @see AWindowBase::createOverlappingSurface
      */
     virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
     virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;

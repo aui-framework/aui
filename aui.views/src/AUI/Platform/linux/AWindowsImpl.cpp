@@ -727,7 +727,7 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
-    ABaseWindow::blockUserInput(blockUserInput);
+    AWindowBase::blockUserInput(blockUserInput);
     // TODO linux impl
 }
 
@@ -736,11 +736,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    ABaseWindow::showTouchscreenKeyboardImpl();
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {

@@ -49,8 +49,8 @@
 
 
 class AWindow;
-class ABaseWindow;
-class AViewContainer;
+class AWindowBase;
+class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
@@ -75,6 +75,7 @@ class AStylesheet;
  */
 class API_AUI_VIEWS AView: public AObject
 {
+    friend class AViewContainerBase;
     friend class AViewContainer;
     friend class IRenderViewToTexture;
 private:
@@ -162,7 +163,7 @@ protected:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* mParent = nullptr;
+    AViewContainerBase* mParent = nullptr;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -312,7 +313,7 @@ public:
      * @brief Determines window which this AView belongs to.
      * @return window which this AView belongs to. Could be nullptr
      */
-    ABaseWindow* getWindow() const;
+    AWindowBase* getWindow() const;
 
     virtual void drawStencilMask(ARenderContext ctx);
 
@@ -551,7 +552,7 @@ public:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* getParent() const
+    AViewContainerBase* getParent() const
     {
         return mParent;
     }
@@ -956,7 +957,7 @@ public:
     }
 
     /**
-     * @brief Called on ABaseWindow::preventClickOnPointerRelease.
+     * @brief Called on AWindowBase::preventClickOnPointerRelease.
      */
     virtual void onClickPrevented();
 

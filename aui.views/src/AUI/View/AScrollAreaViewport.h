@@ -25,7 +25,7 @@
  *
  * This view does not handle scroll events and tocuh events related to scroll. Use AScrollArea for such case.
  */
-class API_AUI_VIEWS AScrollAreaViewport: public AViewContainer {
+class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:
     AScrollAreaViewport();
     ~AScrollAreaViewport() override;

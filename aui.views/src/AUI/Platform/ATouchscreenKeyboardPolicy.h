@@ -23,7 +23,7 @@ enum class ATouchscreenKeyboardPolicy {
     SHOWN_IF_NEEDED,
     /**
      * @brief If set, AUI will not send any show/hide touchscreen keyboard requests, user need to send these requests manually
-     * @see ABaseWindow::requestShowTouchscreenKeyboard(), ABaseWindow::requestHideTouchscreenKeyboard()
+     * @see AWindowBase::requestShowTouchscreenKeyboard(), AWindowBase::requestHideTouchscreenKeyboard()
      */
     MANUAL
 };

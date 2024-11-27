@@ -37,7 +37,7 @@ struct A2DTransform {
  * move, rotate). A2FingerTransformArea is a container, so the transformed view should be somewhere inside.
  * A2FingerTransformArea does not apply any transformation though, so you can control transformation behaviour.
  *
- * The transformation data is emitted on delta basis via `transform` signal. This allows to easily incomporate
+ * The transformation data is emitted on delta basis via `transform` signal. This allows to easily incorporate
  * A2FingerTransformArea to transforming routines, including limit handling.
  *
  * Consider the following example, where the transformation is applied through ASS styles:

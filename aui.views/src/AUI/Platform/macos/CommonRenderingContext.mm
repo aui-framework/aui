@@ -74,7 +74,7 @@ void CommonRenderingContext::init(const Init& init) {
 
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     AUI_ASSERT(mDisplayLink != nullptr);
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
@@ -82,8 +82,8 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     [static_cast<NSWindow*>(mWindow->nativeHandle()) close];
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
 }

@@ -38,6 +38,6 @@ void ACircleProgressBar::render(ARenderContext context) {
         context.render.squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));
 
     });
-    AViewContainer::renderChildren(context);
+    AViewContainerBase::renderChildren(context);
 }
 

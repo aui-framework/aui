@@ -22,7 +22,7 @@
  * @brief Like ATabView but without tabs line.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS APageView: public AViewContainer {
+class API_AUI_VIEWS APageView: public AViewContainerBase {
 private:
     unsigned mPageId = 0;
 

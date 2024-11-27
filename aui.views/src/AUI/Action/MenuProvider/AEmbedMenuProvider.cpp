@@ -21,11 +21,12 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AEmbedMenuProvider.h"
 
-class AEmbedMenuProvider::MenuContainer: public AViewContainer {
+class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
+    AWindowBase* mWindow;
     _<MenuContainer> mSubWindow;
 public:
-    MenuContainer(const AVector<AMenuItem>& vector)
+    MenuContainer(AWindowBase* window, const AVector<AMenuItem>& vector): mWindow(window)
     {
         addAssName(".menu");
         addAssName(".menu-background");
@@ -75,11 +76,11 @@ public:
                                 mSubWindow->close();
                             }
 
-                            mSubWindow = _new<MenuContainer>(items);
+                            mSubWindow = _new<MenuContainer>(mWindow, items);
                             auto pos = (view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
                             mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(),
                                                     mSubWindow->getMinimumHeight());
-                            getParent()->addViewCustomLayout(mSubWindow);
+                            mWindow->addViewCustomLayout(mSubWindow);
                         });
                     } else {
                         view->disable();
@@ -97,21 +98,21 @@ public:
 
 
     void close() {
-        getParent()->removeView(this);
+        mWindow->removeView(this);
         if (mSubWindow) {
             mSubWindow->close();
         }
     }
+
 };
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
-    mWindow = _new<MenuContainer>(vector);
+    mWindow = _new<MenuContainer>(AWindow::current(), vector);
     auto mousePos = AWindow::current()->getMousePos();
     mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(),
                          mWindow->getMinimumHeight(
                                  ALayoutDirection::NONE));
-    AWindow::current()->addViewCustomLayout(mWindow);
 }
 
 void AEmbedMenuProvider::closeMenu() {

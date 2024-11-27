@@ -14,15 +14,15 @@
 #include "AUI/Util/ADataBinding.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ATreeView.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/View/AViewContainer.h"
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsProfilingOptions: public AViewContainer {
+class DevtoolsProfilingOptions: public AViewContainerBase {
 public:
-    DevtoolsProfilingOptions(ABaseWindow* targetWindow);
+    DevtoolsProfilingOptions(AWindowBase* targetWindow);
 
 private:
-    ADataBinding<ABaseWindow::Profiling> mModel;
+    ADataBinding<AWindowBase::Profiling> mModel;
 };

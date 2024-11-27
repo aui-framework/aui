@@ -57,13 +57,13 @@ public:
 
     void init(const Init& init) override;
 
-    void beginPaint(ABaseWindow& window) override;
+    void beginPaint(AWindowBase& window) override;
 
-    void endPaint(ABaseWindow& window) override;
+    void endPaint(AWindowBase& window) override;
 
     ~CommonRenderingContext() override = default;
 
-    void destroyNativeWindow(ABaseWindow& window) override;
+    void destroyNativeWindow(AWindowBase& window) override;
 
 protected:
 #if AUI_PLATFORM_WIN

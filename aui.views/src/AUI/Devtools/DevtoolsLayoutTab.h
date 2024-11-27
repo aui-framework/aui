@@ -12,15 +12,15 @@
 #pragma once
 
 #include "AUI/View/ATreeView.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "ViewPropertiesView.h"
 
-class DevtoolsLayoutTab: public AViewContainer {
+class DevtoolsLayoutTab: public AViewContainerBase {
 public:
-    DevtoolsLayoutTab(ABaseWindow* targetWindow);
+    DevtoolsLayoutTab(AWindowBase* targetWindow);
 
 private:
-    ABaseWindow* mTargetWindow;
+    AWindowBase* mTargetWindow;
 
     _<ATreeView> mViewHierarchyTree;
     _<ViewPropertiesView> mViewPropertiesView;

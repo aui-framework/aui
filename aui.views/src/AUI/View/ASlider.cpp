@@ -41,14 +41,14 @@ void ASlider::onPointerPressed(const APointerPressedEvent& event) {
 }
 
 void ASlider::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainer::onPointerMove(pos, event);
+    AViewContainerBase::onPointerMove(pos, event);
     if (isDragging()) {
         updateSliderWithPosition(pos);
     }
 }
 
 void ASlider::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    AViewContainerBase::onPointerReleased(event);
     updateSliderWithPosition(event.position);
 
     emit valueChanged(value());
@@ -59,7 +59,7 @@ void ASlider::updateSliderWithPosition(glm::ivec2 pointerPosition) {
 }
 
 void ASlider::applyGeometryToChildren() {
-    AViewContainer::applyGeometryToChildren();
+    AViewContainerBase::applyGeometryToChildren();
     updateHandlePosition();
 }
 

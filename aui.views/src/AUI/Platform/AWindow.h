@@ -17,7 +17,7 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 #include "AWindowNativePtr.h"
@@ -37,7 +37,7 @@
 class ARender;
 class AWindowManager;
 
-class API_AUI_VIEWS AWindow: public ABaseWindow
+class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
@@ -164,7 +164,7 @@ public:
     /**
      * @return Current window for current thread.
      */
-    static ABaseWindow* current();
+    static AWindowBase* current();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
