@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AViewContainer.h"
+#include "AViewContainerBase.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
@@ -23,7 +23,7 @@
 #include <AUI/Traits/iterators.h>
 
 
-static constexpr auto LOG_TAG = "AViewContainer";
+static constexpr auto LOG_TAG = "AViewContainerBase";
 
 namespace aui::view::impl {
     bool isDefinitelyInvisible(AView& view) {
@@ -41,7 +41,7 @@ namespace aui::view::impl {
     }
 }
 
-void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
@@ -111,11 +111,11 @@ void AViewContainer::drawView(const _<AView>& view, ARenderContext contextOfTheC
 }
 
 
-AViewContainer::AViewContainer() {
+AViewContainerBase::AViewContainerBase() {
 
 }
 
-AViewContainer::~AViewContainer() {
+AViewContainerBase::~AViewContainerBase() {
     mLayout = nullptr;
     for (auto& view: mViews) {
         view->mParent = nullptr;
@@ -123,7 +123,7 @@ AViewContainer::~AViewContainer() {
     //Stylesheet::inst().invalidateCache();
 }
 
-void AViewContainer::addViews(AVector<_<AView>> views) {
+void AViewContainerBase::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
         view->mSkipUntilLayoutUpdate = true;
@@ -140,7 +140,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     emit childrenChanged;
 }
 
-void AViewContainer::addView(const _<AView>& view) {
+void AViewContainerBase::addView(const _<AView>& view) {
     AUI_NULLSAFE(view->mParent)->removeView(view);
     view->mSkipUntilLayoutUpdate = true;
     mViews << view;
@@ -151,7 +151,7 @@ void AViewContainer::addView(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::addViewCustomLayout(const _<AView>& view) {
+void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
@@ -162,7 +162,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::addView(size_t index, const _<AView>& view) {
+void AViewContainerBase::addView(size_t index, const _<AView>& view) {
     view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
@@ -172,7 +172,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::setLayout(_unique<ALayout> layout) {
+void AViewContainerBase::setLayout(_unique<ALayout> layout) {
     for (const auto& v : mViews) {
         v->mParent = nullptr;
     }
@@ -189,7 +189,7 @@ void AViewContainer::setLayout(_unique<ALayout> layout) {
     emit childrenChanged;
 }
 
-void AViewContainer::removeView(const _<AView>& view) {
+void AViewContainerBase::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
     if (!index) return;
     view->mParent = nullptr;
@@ -198,7 +198,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainer::removeView(AView* view) {
+void AViewContainerBase::removeView(AView* view) {
     auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
     if (it != mViews.end()) {
         if (mLayout) {
@@ -215,7 +215,7 @@ void AViewContainer::removeView(AView* view) {
     emit childrenChanged;
 }
 
-void AViewContainer::removeView(size_t index) {
+void AViewContainerBase::removeView(size_t index) {
     auto view = std::move(mViews[index]);
     mViews.removeAt(index);
     if (mLayout)
@@ -225,16 +225,16 @@ void AViewContainer::removeView(size_t index) {
     emit childrenChanged;
 }
 
-void AViewContainer::render(ARenderContext context) {
+void AViewContainerBase::render(ARenderContext context) {
     AView::render(context);
     renderChildren(context);
 }
 
-void AViewContainer::onMouseEnter() {
+void AViewContainerBase::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+void AViewContainerBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AView::onPointerMove(pos, event);
 
     auto viewUnderPointer = getViewAt(pos);
@@ -256,7 +256,7 @@ void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event
     }
 }
 
-void AViewContainer::onMouseLeave() {
+void AViewContainerBase::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
         if (view->isMouseEntered()) {
@@ -265,7 +265,7 @@ void AViewContainer::onMouseLeave() {
     }
 }
 
-int AViewContainer::getContentMinimumWidth(ALayoutDirection layout) {
+int AViewContainerBase::getContentMinimumWidth(ALayoutDirection layout) {
     if (mLayout) {
         return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth(ALayoutDirection::NONE));
     }
@@ -273,14 +273,14 @@ int AViewContainer::getContentMinimumWidth(ALayoutDirection layout) {
 }
 
 
-int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
+int AViewContainerBase::getContentMinimumHeight(ALayoutDirection layout) {
     if (mLayout) {
         return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight(ALayoutDirection::NONE));
     }
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
+void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event);
 
     //discard focus chain target for proper updating of focus chain targets when moving from child to parent
@@ -320,7 +320,7 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
     }
 }
 
-void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
+void AViewContainerBase::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
 
     auto viewUnderPointer = getViewAt(event.position);
@@ -341,7 +341,7 @@ void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     }), mPointerEventsMapping.end());
 }
 
-void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
+void AViewContainerBase::onPointerDoubleClicked(const APointerPressedEvent& event) {
     AView::onPointerDoubleClicked(event);
 
     auto p = getViewAt(event.position);
@@ -352,7 +352,7 @@ void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
     }
 }
 
-void AViewContainer::onScroll(const AScrollEvent& event) {
+void AViewContainerBase::onScroll(const AScrollEvent& event) {
     AView::onScroll(event);
     auto p = getViewAt(event.origin);
     if (p && p->isEnabled()) {
@@ -362,7 +362,7 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
     }
 }
 
-bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
     if (mConsumesClickCache) {
         if (mConsumesClickCache->position == pos) {
             return mConsumesClickCache->value;
@@ -391,7 +391,7 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
 }
 
 
-_<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+_<AView> AViewContainerBase::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
 
     for (auto view: aui::reverse_iterator_wrap(mViews)) {
@@ -428,12 +428,12 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
     return possibleOutput;
 }
 
-_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+_<AView> AViewContainerBase::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
     int depth = 0;
-    while (auto asContainer = _cast<AViewContainer>(target)) {
+    while (auto asContainer = _cast<AViewContainerBase>(target)) {
         pos -= asContainer->getPosition();
         target = asContainer->getViewAt(pos, flags);
         if (!target)
@@ -442,19 +442,19 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLooku
     return target;
 }
 
-void AViewContainer::setSize(glm::ivec2 size) {
+void AViewContainerBase::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
     applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::invalidateAllStyles() {
+void AViewContainerBase::invalidateAllStyles() {
     AView::invalidateAllStyles();
     if (mSizeSet)
         applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::applyGeometryToChildren() {
+void AViewContainerBase::applyGeometryToChildren() {
     if (!mLayout) {
         // no layout = no update.
         return;
@@ -463,7 +463,7 @@ void AViewContainer::applyGeometryToChildren() {
                       getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
 }
 
-void AViewContainer::applyGeometryToChildrenIfNecessary() {
+void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
     if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
         if (mLastLayoutUpdateSize == getSize()) {
             // no need to go deeper.
@@ -486,7 +486,7 @@ void AViewContainer::applyGeometryToChildrenIfNecessary() {
     mConsumesClickCache.reset();
 }
 
-void AViewContainer::removeAllViews() {
+void AViewContainerBase::removeAllViews() {
     if (mLayout) {
         // using reverse iterator wrap here as vector is not efficient in removing first elements
         std::size_t i = getViews().size();
@@ -498,16 +498,16 @@ void AViewContainer::removeAllViews() {
     invalidateCaches();
 }
 
-void AViewContainer::onDpiChanged() {
+void AViewContainerBase::onDpiChanged() {
     AView::onDpiChanged();
     for (auto& v: mViews) {
         v->onDpiChanged();
     }
 }
 
-void AViewContainer::setContents(const _<AViewContainer>& container) {
-    AUI_ASSERT(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" &&
-            typeid(*container.get()) == typeid(AViewContainer)));
+void AViewContainerBase::setContents(const _<AViewContainer>& container) {
+    AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
+        "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v: mViews) {
@@ -519,7 +519,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     invalidateCaches();
 }
 
-void AViewContainer::setEnabled(bool enabled) {
+void AViewContainerBase::setEnabled(bool enabled) {
     if (isEnabled() == enabled) [[unlikely]] {
         return;
     }
@@ -527,7 +527,7 @@ void AViewContainer::setEnabled(bool enabled) {
     notifyParentEnabledStateChanged(enabled);
 }
 
-void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
+void AViewContainerBase::notifyParentEnabledStateChanged(bool enabled) {
     enabled &= mDirectlyEnabled;
     AView::notifyParentEnabledStateChanged(enabled);
     for (auto& v: mViews) {
@@ -535,53 +535,53 @@ void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
     }
 }
 
-bool AViewContainer::capturesFocus() {
+bool AViewContainerBase::capturesFocus() {
     return false; // we don't want every single container to catch focus.
 }
 
-bool AViewContainer::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
     auto p = getViewAt(origin);
     if (p && p->isEnabled())
         return p->onGesture(origin - p->getPosition(), event);
     return false;
 }
 
-void AViewContainer::invalidateAssHelper() {
+void AViewContainerBase::invalidateAssHelper() {
     AView::invalidateAssHelper();
     for (const auto& v: mViews) {
         v->invalidateAssHelper();
     }
 }
 
-void AViewContainer::onKeyDown(AInput::Key key) {
+void AViewContainerBase::onKeyDown(AInput::Key key) {
     AView::onKeyDown(key);
     AUI_NULLSAFE(focusChainTarget())->onKeyDown(key);
 }
 
-void AViewContainer::onKeyRepeat(AInput::Key key) {
+void AViewContainerBase::onKeyRepeat(AInput::Key key) {
     AView::onKeyRepeat(key);
     AUI_NULLSAFE(focusChainTarget())->onKeyRepeat(key);
 }
 
-void AViewContainer::onKeyUp(AInput::Key key) {
+void AViewContainerBase::onKeyUp(AInput::Key key) {
     AView::onKeyUp(key);
     AUI_NULLSAFE(focusChainTarget())->onKeyUp(key);
 }
 
-void AViewContainer::onCharEntered(char16_t c) {
+void AViewContainerBase::onCharEntered(char16_t c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
 }
 
-void AViewContainer::adjustHorizontalSizeToContent() {
+void AViewContainerBase::adjustHorizontalSizeToContent() {
     setFixedSize(glm::ivec2(0, getFixedSize().y));
 }
 
-void AViewContainer::adjustVerticalSizeToContent() {
+void AViewContainerBase::adjustVerticalSizeToContent() {
     setFixedSize(glm::ivec2(getFixedSize().x, 0));
 }
 
-void AViewContainer::onClickPrevented() {
+void AViewContainerBase::onClickPrevented() {
     AView::onClickPrevented();
     auto pointerEvents = std::move(mPointerEventsMapping);
     for (const auto& e : pointerEvents) {
@@ -591,20 +591,20 @@ void AViewContainer::onClickPrevented() {
     }
 }
 
-void AViewContainer::invalidateCaches() {
+void AViewContainerBase::invalidateCaches() {
     mConsumesClickCache.reset();
     markMinContentSizeInvalid();
     redraw();
 }
 
-void AViewContainer::onViewGraphSubtreeChanged() {
+void AViewContainerBase::onViewGraphSubtreeChanged() {
     AView::onViewGraphSubtreeChanged();
     for (const auto& v : mViews) {
         v->onViewGraphSubtreeChanged();
     }
 }
 
-_<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
+_<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
     auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
         return v.pointerIndex == index;
     });
@@ -614,7 +614,7 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
     return it->targetView.lock();
 }
 
-void AViewContainer::setViews(AVector<_<AView>> views) {
+void AViewContainerBase::setViews(AVector<_<AView>> views) {
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
     mViews = std::move(views);
 
@@ -626,12 +626,12 @@ void AViewContainer::setViews(AVector<_<AView>> views) {
     }
 }
 
-void AViewContainer::markMinContentSizeInvalid() {
+void AViewContainerBase::markMinContentSizeInvalid() {
     AView::markMinContentSizeInvalid();
     mWantsLayoutUpdate = true;
 }
 
-void AViewContainer::forceUpdateLayoutRecursively() {
+void AViewContainerBase::forceUpdateLayoutRecursively() {
     AView::forceUpdateLayoutRecursively();
     mWantsLayoutUpdate = true;
     for (const auto& view: mViews) {
@@ -640,7 +640,7 @@ void AViewContainer::forceUpdateLayoutRecursively() {
     applyGeometryToChildrenIfNecessary();
 }
 
-void AViewContainer::markPixelDataInvalid(ARect<int> invalidArea) {
+void AViewContainerBase::markPixelDataInvalid(ARect<int> invalidArea) {
     if (mRepaintTrap) {
         mRepaintTrap->triggered = true;
         return;

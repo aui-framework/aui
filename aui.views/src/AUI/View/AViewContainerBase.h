@@ -29,12 +29,12 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
     NONE = 0,
 
     /**
-     * @brief On AViewContainer::getViewAt*, ignores visibility flags.
+     * @brief On AViewContainerBase::getViewAt*, ignores visibility flags.
      */
     IGNORE_VISIBILITY = 0b1,
 
     /**
-     * @brief On AViewContainer::getViewAt* with callbacks, only the first view in the container is passed to callback.
+     * @brief On AViewContainerBase::getViewAt* with callbacks, only the first view in the container is passed to callback.
      * @details
      * Basically this flag allows to replicate mouse click handling behaviour, which is useful in creating custom events
      * (i.e. drag&drop).
@@ -54,15 +54,18 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
  * @brief A view that represents a set of views.
  * @ingroup useful_views
  * @details
- * AViewContainer can store, render, resize, provide events to and handle the child views.
+ * AViewContainerBase can store, render, resize, provide events to and handle the child views.
  *
- * AViewContainer does not control the position and size of the child views by itself; instead, it delegates that
+ * AViewContainerBase does not control the position and size of the child views by itself; instead, it delegates that
  * responsibility to it's @ref layout_managers "layout manager".
  *
- * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
- * possible complex UI by nested AViewContainers with different layout managers.
+ * Since AViewContainerBase is an instance of AView, AViewContainerBase can handle AViewContainerBases recursively, thus, making
+ * possible complex UI by nested AViewContainerBases with different layout managers.
+ *
+ * This class is abstract. The methods for accessing it's views are protected. You can use AViewContainer which exposes
+ * these methods to public or extend AViewContainerBase to make your own container-like view.
  */
-class API_AUI_VIEWS AViewContainer : public AView {
+class API_AUI_VIEWS AViewContainerBase : public AView {
 public:
     struct PointerEventsMapping {
         APointerIndex pointerIndex;
@@ -74,26 +77,13 @@ public:
         bool isBlockClicksWhenPressed = true;
     };
 
-    AViewContainer();
+    AViewContainerBase();
+    ~AViewContainerBase() override = 0; // this class is intended to be derived; use AViewContainer for trivial
+                                        // container
 
-    virtual ~AViewContainer();
 
-    void setViews(AVector<_<AView>> views);
-
-    void addViews(AVector<_<AView>> views);
-    void addView(const _<AView>& view);
-    void addView(size_t index, const _<AView>& view);
-
-    void removeView(const _<AView>& view);
-    void removeView(AView* view);
-    void removeView(size_t index);
-    void removeAllViews();
 
     void render(ARenderContext context) override;
-
-    void renderChildren(ARenderContext contextPassedToContainer) {
-        drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
-    }
 
     void onMouseEnter() override;
 
@@ -125,10 +115,6 @@ public:
 
     void setEnabled(bool enabled = true) override;
 
-    void adjustHorizontalSizeToContent();
-
-    void adjustVerticalSizeToContent();
-
     auto begin() const {
         return mViews.cbegin();
     }
@@ -138,13 +124,10 @@ public:
     }
 
     /**
-     * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
+     * @brief Get all views of the container.
      */
-    void setLayout(_unique<ALayout> layout);
-
-    [[nodiscard]]
-    const _unique<ALayout>& getLayout() const noexcept {
-        return mLayout;
+    const AVector<_<AView>>& getViews() const {
+        return mViews;
     }
 
     /**
@@ -159,7 +142,7 @@ public:
     virtual _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
-     * @brief Acts as AViewContainer::getViewAt but recursively (may include non-direct child).
+     * @brief Acts as AViewContainerBase::getViewAt but recursively (may include non-direct child).
      * @param pos position relative to this container
      * @param flags see AViewLookupFlags
      * @return found view or nullptr
@@ -168,7 +151,7 @@ public:
     _<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
-     * @brief Acts as AViewContainer::getViewAtRecursive but calls a callback instead of returning value.
+     * @brief Acts as AViewContainerBase::getViewAtRecursive but calls a callback instead of returning value.
      * @param pos position relative to this container
      * @param flags see AViewLookupFlags
      * @return true if callback returned true; false otherwise
@@ -182,7 +165,7 @@ public:
         auto process = [&](const _<AView>& view) {
             if (callback(view))
                 return true;
-            if (auto container = _cast<AViewContainer>(view)) {
+            if (auto container = _cast<AViewContainerBase>(view)) {
                 if (container->getViewAtRecursive(pos - view->getPosition(), callback, flags)) {
                     return true;
                 }
@@ -236,7 +219,7 @@ public:
             if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (callback(view))
                     return true;
-                if (auto container = _cast<AViewContainer>(view)) {
+                if (auto container = _cast<AViewContainerBase>(view)) {
                     if (container->visitsViewRecursive(callback, flags)) {
                         return true;
                     }
@@ -251,7 +234,7 @@ public:
 
 
     /**
-     * @brief Acts as AViewContainer::getViewAtRecursive but finds a view castable to specified template type.
+     * @brief Acts as AViewContainerBase::getViewAtRecursive but finds a view castable to specified template type.
      * @param pos position relative to this container
      * @param flags see AViewLookupFlags
      * @return found view or nullptr
@@ -262,7 +245,6 @@ public:
         getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
         return result;
     }
-
 
     /**
      * @brief Set focus chain target.
@@ -294,11 +276,6 @@ public:
 
 
     void applyGeometryToChildrenIfNecessary();
-
-    const AVector<_<AView>>& getViews() const {
-        return mViews;
-    }
-
 
     /**
      * @brief Adds view to container without exposing it to the layout manager.
@@ -356,18 +333,68 @@ protected:
     }
 
     void invalidateAllStyles() override;
-
     void onViewGraphSubtreeChanged() override;
-
     void invalidateAssHelper() override;
+
+    /**
+     * @brief Replace views.
+     */
+    void setViews(AVector<_<AView>> views);
+
+    /**
+     * @brief Add all views from vector.
+     */
+    void addViews(AVector<_<AView>> views);
+
+    /**
+     * @brief Add view to the container.
+     */
+    void addView(const _<AView>& view);
+
+    /**
+     * @brief Add view at specific index to the container.
+     */
+    void addView(size_t index, const _<AView>& view);
+
+    /**
+     * @brief Remove view from the container.
+     */
+    void removeView(const _<AView>& view);
+
+    /**
+     * @brief Remove view from the container.
+     */
+    void removeView(AView* view);
+
+    /**
+     * @brief Remove view from the container at specified index.
+     */
+    void removeView(size_t index);
+
+    /**
+     * @brief Remove all views from container.
+     */
+    void removeAllViews();
 
     /**
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
      * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
-     * @note If access to this function is restricted or you want to pass an object derived from AViewContainer, you
-     * should use ALayoutInflater::inflate instead.
      */
     void setContents(const _<AViewContainer>& container);
+
+    /**
+     * @brief Set new layout manager for this AViewContainerBase. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
+     */
+    void setLayout(_unique<ALayout> layout);
+
+    [[nodiscard]]
+    const _unique<ALayout>& getLayout() const noexcept {
+        return mLayout;
+    }
+
+    void renderChildren(ARenderContext contextPassedToContainer) {
+        drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
+    }
 
     virtual void applyGeometryToChildren();
 
@@ -396,7 +423,7 @@ private:
      * @brief Temporary cache for consumesClick().
      * @details
      * AUI does several view graph visits for a single event in order to call virtual methods properly.
-     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     * AViewContainerBase::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
      */
     AOptional<ConsumesClickCache> mConsumesClickCache;
 

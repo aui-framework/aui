@@ -34,7 +34,7 @@
  *
  * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
-class API_AUI_VIEWS AScrollArea: public AViewContainer {
+class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
     class Builder;
 
