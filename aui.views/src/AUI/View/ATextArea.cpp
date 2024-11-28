@@ -13,10 +13,11 @@
 // Created by alex2 on 5/22/2021.
 //
 
-#include <range/v3/numeric.hpp>
+#include <range/v3/all.hpp>
 #include "ATextArea.h"
 #include "AUI/Traits/algorithms.h"
 #include "AButton.h"
+#include <AUI/Util/AWordWrappingEngineImpl.h>
 
 
 ATextArea::ATextArea() {
@@ -30,8 +31,33 @@ ATextArea::ATextArea(const AString& text):
 }
 
 void ATextArea::setText(const AString& t) {
-    ATextBase::setItems({t, _new<AButton>("ololo"), "kek"});
-//    ATextBase::setString(t);
+    auto entries = t
+            | ranges::view::filter([](auto c) { return c != '\r'; })
+            | ranges::view::chunk_by([](char16_t prev, char16_t next) {
+                if (prev == '\n' || next == '\n') {
+                    return false;
+                }
+                if (next == ' ' && prev != ' ') {
+                    return false;
+                }
+                if (next != ' ' && prev == ' ') {
+                    return false;
+                }
+                return true;
+            })
+            | ranges::view::transform([&](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
+                AUI_ASSERT(!chars.empty());
+                if (chars.front() == ' ') {
+                    return std::make_unique<WhitespaceEntry>(this, std::distance(chars.begin(), chars.end()));
+                }
+                if (chars.front() == '\n') {
+                    return std::make_unique<NextLineEntry>(this);
+                }
+                return std::make_unique<WordEntry>(this, AString(chars.begin(), chars.end()));
+            })
+            | ranges::to<Entries>();
+    mEngine.setEntries(std::move(entries));
+
     AAbstractTypeable::setText(t);
     mCompiledText = t;
 }
@@ -59,7 +85,7 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
     return false;
 }
 
-AVector<_<AWordWrappingEngine::Entry>>::iterator ATextArea::getLeftEntity(size_t& index) {
+ATextArea::Iterator ATextArea::getLeftEntity(size_t& index) {
     for (auto it = mEngine.entries().begin(); it != mEngine.entries().end(); ++it) {
         auto characterCount = (*it)->getCharacterCount();
         if (index > characterCount) {
@@ -77,7 +103,7 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     auto target = getLeftEntity(at);
     if (target == mEngine.entries().end()) {
         // empty ATextArea; this one going to be the first word
-        pushWord(mEngine.entries(), AString(1, toInsert), mParsedFlags);
+        pushWord(mEngine.entries(), AString(1, toInsert));
         return true;
     }
 
@@ -132,7 +158,7 @@ size_t ATextArea::length() const {
     if (mCompiledText) {
         return mCompiledText->length();
     }
-    return ranges::accumulate(mEngine.entries(), size_t(0), std::plus<>{}, [](const _<AWordWrappingEngine::Entry>& e) {
+    return ranges::accumulate(mEngine.entries(), size_t(0), std::plus<>{}, [](const _unique<aui::detail::TextBaseEntry>& e) {
         return e->getCharacterCount();
     });
 }
@@ -147,17 +173,18 @@ glm::ivec2 ATextArea::getPosByIndex(size_t index) {
         return {0, 0};
     }
     if (index <= (*target)->getCharacterCount()) {
-        auto base = (*target)->getPosition();
         if (auto word = _cast<WordEntry>(*target)) {
+            auto base = word->getPosition();
             return base + glm::ivec2{getFontStyle().getWidth(word->getWord().begin(), word->getWord().begin() + index), 0} - mPadding.leftTop();
         }
-        return base + (*target)->getSize() - mPadding.leftTop();
+//        return base + (*target)->getSize() - mPadding.leftTop();
     }
     auto next = std::next(target);
     if (next != mEngine.entries().end()) {
-        return (*next)->getPosition() - mPadding.leftTop();
+//        return (*next)->getPosition() - mPadding.leftTop();
     }
-    return (*target)->getPosition() + (*target)->getSize() - mPadding.leftTop();
+//    return (*target)->getPosition() + (*target)->getSize() - mPadding.leftTop();
+    return {};
 }
 
 void ATextArea::onCursorIndexChanged() {
@@ -171,5 +198,22 @@ void ATextArea::render(ARenderContext context) {
 
 bool ATextArea::capturesFocus() {
     return true;
+}
+
+void ATextArea::pushWord(Entries& entries, AString word) {
+
+}
+
+auto ATextArea::wordEntries() const {
+    return mEngine.entries()
+        | ranges::view::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
+            return _cast<aui::detail::WordEntry>(e);
+        })
+        | ranges::view::filter([](auto ptr) { return ptr != nullptr; })
+        | ranges::view::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
+}
+
+auto ATextArea::charEntries() const {
+    return std::initializer_list<aui::detail::CharEntry>{};
 }
 

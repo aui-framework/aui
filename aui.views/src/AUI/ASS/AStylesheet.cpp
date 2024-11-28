@@ -43,6 +43,7 @@
 #include "AUI/View/ASpinner.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
+#include "AUI/View/ATextArea.h"
 
 
 AStylesheet::AStylesheet() {
@@ -81,7 +82,7 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            t<ATextBase>(),
+            { t<AText>(), t<ATextArea>() },
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,

@@ -14,7 +14,7 @@
 #include <AUI/View/AView.h>
 #include "AWordWrappingEngine.h"
 
-class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngine::Entry {
+class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngineBase::Entry {
 private:
     _<AView> mView;
 

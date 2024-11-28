@@ -28,21 +28,27 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText: public ATextBase {
+class API_AUI_VIEWS AText : public ATextBase<AText, AWordWrappingEngine<>> {
 public:
+    friend class ATextBase<AText, AWordWrappingEngine<>>;
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
         WordBreak wordBreak = WordBreak::NORMAL;
     };
 
+
 public:
     AText();
+
     ~AText() override;
 
-    using ATextBase::setItems;
-    using ATextBase::setHtml;
-    using ATextBase::setString;
-    using ATextBase::clearContent;
+    void clearContent() override;
+
+    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
+
+    void setHtml(const AString& html, const Flags& flags = {});
+
+    void setString(const AString& string, const Flags& flags = {});
 
     void setString(const AString& string) {
         setString(string, {});
@@ -53,14 +59,51 @@ public:
         v->setItems(init, flags);
         return v;
     }
+
     static _<AText> fromHtml(const AString& html, const Flags& flags = {}) {
         auto v = aui::ptr::manage(new AText());
         v->setHtml(html, flags);
         return v;
     }
+
     static _<AText> fromString(const AString& string, const Flags& flags = {}) {
         auto v = aui::ptr::manage(new AText());
         v->setString(string, flags);
         return v;
     }
+
+protected:
+    const auto& wordEntries() const {
+        return mWordEntries;
+    }
+
+    const auto& charEntries() const {
+        return mCharEntries;
+    }
+
+private:
+    class WordEntry final : public aui::detail::WordEntry {
+    public:
+        using aui::detail::WordEntry::WordEntry;
+    };
+
+    class CharEntry final : public aui::detail::CharEntry {
+    public:
+        using aui::detail::CharEntry::CharEntry;
+    };
+
+    ADeque<WordEntry> mWordEntries;
+    ADeque<CharEntry> mCharEntries;
+    ParsedFlags mParsedFlags;
+    aui::detail::WhitespaceEntry mWhitespaceEntry = this;
+    aui::detail::NextLineEntry mNextLineEntry = this;
+
+    void pushWord(Entries& entries,
+                  AString word,
+                  const ParsedFlags& flags);
+
+    static ParsedFlags parseFlags(const Flags& flags);
+
+    void processString(const AString& string, const ParsedFlags& parsedFlags,
+                       Entries& entries);
 };
