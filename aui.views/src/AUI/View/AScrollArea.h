@@ -53,15 +53,18 @@ public:
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void setScroll(glm::uvec2 scroll) {
-        mInner->setScroll(scroll); 
+        setScrollX(scroll.x);
+        setScrollY(scroll.y);
     }
 
     void setScrollX(unsigned scroll) {
-        mInner->setScrollX(scroll); 
+        AUI_NULLSAFE(mHorizontalScrollbar)->setScroll(int(scroll));
+        else mInner->setScrollX(scroll);
     }
 
     void setScrollY(unsigned scroll) {
-        mInner->setScrollY(scroll); 
+        AUI_NULLSAFE(mVerticalScrollbar)->setScroll(int(scroll));
+        else mInner->setScrollY(scroll);
     }
 
     /**
@@ -79,7 +82,9 @@ public:
 
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
+        else mInner->setScrollX(mInner->scroll().x + deltaByX);
         AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
+        else mInner->setScrollY(mInner->scroll().y + deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
