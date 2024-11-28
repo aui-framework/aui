@@ -23,6 +23,8 @@ namespace aui::detail {
     class TextBaseEntry: public AWordWrappingEngineBase::Entry {
     public:
         virtual size_t getCharacterCount() = 0;
+        virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
+        virtual void appendTo(AString& dst) = 0;
     };
 
     class CharEntry: public TextBaseEntry {
@@ -53,6 +55,14 @@ namespace aui::detail {
 
         size_t getCharacterCount() override {
             return 1;
+        }
+
+        glm::ivec2 getPosByIndex(size_t characterIndex) override {
+            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).advanceX, 0};
+        }
+
+        void appendTo(AString& dst) override {
+            dst += mChar;
         }
     };
     class WordEntry: public TextBaseEntry {
@@ -90,6 +100,14 @@ namespace aui::detail {
         size_t getCharacterCount() override {
             return mWord.size();
         }
+
+        glm::ivec2 getPosByIndex(size_t characterIndex) override {
+            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + long(characterIndex)), 0};
+        }
+
+        void appendTo(AString& dst) override {
+            dst += mWord;
+        }
     };
 
     class WhitespaceEntry: public TextBaseEntry {
@@ -112,6 +130,14 @@ namespace aui::detail {
         size_t getCharacterCount() override {
             return 1;
         }
+
+        glm::ivec2 getPosByIndex(size_t characterIndex) override {
+            throw AException("unimplemented");
+        }
+
+        void appendTo(AString& dst) override {
+            dst += ' ';
+        }
     };
 
     class NextLineEntry: public TextBaseEntry {
@@ -133,6 +159,14 @@ namespace aui::detail {
 
         size_t getCharacterCount() override {
             return 1;
+        }
+
+        glm::ivec2 getPosByIndex(size_t characterIndex) override {
+            throw AException("unimplemented");
+        }
+
+        void appendTo(AString& dst) override {
+            dst += '\n';
         }
     };
 }

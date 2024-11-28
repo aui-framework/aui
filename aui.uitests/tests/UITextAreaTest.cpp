@@ -11,7 +11,7 @@
 
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/View/ATextField.h>
+#include <AUI/View/ATextArea.h>
 #include "AUI/View/ATextArea.h"
 
 using namespace ass;
@@ -44,24 +44,27 @@ protected:
     void SetUp() override {
         UITest::SetUp();
 
-        class TestWindow: public AWindow {
-        public:
-            TestWindow() {
-                setContents(Centered {
-                        _new<ATextArea>() with_style { FixedSize { 300_dp, {} } } let {
-                            it->setText("hello world!");
-                        }
-                });
-                pack();
-            }
-        };
 
-        _new<TestWindow>()->show();
+        auto window = _new<AWindow>();
+        window->setContents(Centered {
+            mTextArea
+        });
+        window->pack();
+        window->show();
         uitest::frame();
     }
 
+    _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} } } let {
+        it->setText("hello world!");
+    };
+
     void TearDown() override {
         UITest::TearDown();
+    }
+
+
+    auto& entries() {
+        return mTextArea->mEngine.entries();
     }
 };
 
@@ -69,7 +72,7 @@ protected:
  * Checks that then clicking at the left border of the text field, cursor jumps to the first symbol.
  */
 TEST_F(UITextArea, CursorAppearsAtTheStart) {
-    By::type<ATextField>().perform(click({0_dp, 0_dp})) // click at the left border
+    By::type<ATextArea>().perform(click({0_dp, 0_dp})) // click at the left border
                           .check(selectionMatches(0));
 }
 
@@ -77,7 +80,7 @@ TEST_F(UITextArea, CursorAppearsAtTheStart) {
  * Checks that then clicking at the right border of the text field, cursor jumps to the last symbol.
  */
 TEST_F(UITextArea, CursorAppearsAtTheEnd) {
-    By::type<ATextField>().perform(click({299_dp, 0_dp})) // click at the right border
+    By::type<ATextArea>().perform(click({299_dp, 0_dp})) // click at the right border
                           .check(selectionMatches(12));
 }
 
@@ -85,7 +88,7 @@ TEST_F(UITextArea, CursorAppearsAtTheEnd) {
  * Checks that when doubleclicking a whole word is selected
  */
 TEST_F(UITextArea, DoubleClickWordSelection1) {
-    By::type<ATextField>().perform(doubleClick({20_dp, 0_dp})) // click at the first word
+    By::type<ATextArea>().perform(doubleClick({20_dp, 0_dp})) // click at the first word
                           .check(selectionMatches(0, 5));
 }
 
@@ -93,7 +96,7 @@ TEST_F(UITextArea, DoubleClickWordSelection1) {
  * Checks that when doubleclicking a whole word is selected
  */
 TEST_F(UITextArea, DoubleClickWordSelection2) {
-    By::type<ATextField>().perform(doubleClick({54_dp, 0_dp})) // click at the second word
+    By::type<ATextArea>().perform(doubleClick({54_dp, 0_dp})) // click at the second word
                           .check(selectionMatches(6, 12));
 }
 
@@ -101,7 +104,7 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextArea, CursorClickPos1) {
-    By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
 
@@ -109,12 +112,12 @@ TEST_F(UITextArea, CursorClickPos1) {
  * Checks cursor position when clicking between 'o' and 'r'.
  */
 TEST_F(UITextArea, CursorClickPos2) {
-    By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(8));
 }
 
 TEST_F(UITextArea, LeftRight) {
-    By::type<ATextField>()
+    By::type<ATextArea>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
             .perform(keyDownAndUp(AInput::RIGHT))
@@ -125,7 +128,7 @@ TEST_F(UITextArea, LeftRight) {
 }
 
 TEST_F(UITextArea, HomeEnd) {
-    By::type<ATextField>()
+    By::type<ATextArea>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
             .perform(keyDownAndUp(AInput::END))
@@ -136,14 +139,14 @@ TEST_F(UITextArea, HomeEnd) {
 }
 
 TEST_F(UITextArea, CtrlA) {
-    By::type<ATextField>()
+    By::type<ATextArea>()
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
             .perform(type("replace"))
             .check(text("replace"));
 }
 
 TEST_F(UITextArea, CtrlLeftRight) {
-    By::type<ATextField>()
+    By::type<ATextArea>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::RIGHT))
@@ -154,7 +157,7 @@ TEST_F(UITextArea, CtrlLeftRight) {
 }
 
 TEST_F(UITextArea, CtrlShiftLeftRight) {
-    By::type<ATextField>()
+    By::type<ATextArea>()
             .perform(click({0, 0}))
             .check(selectionMatches(0))
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::LSHIFT + AInput::RIGHT))
@@ -162,4 +165,93 @@ TEST_F(UITextArea, CtrlShiftLeftRight) {
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::LSHIFT + AInput::LEFT))
             .check(selectionMatches(0))
             ;
+}
+
+TEST_F(UITextArea, Type1) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+        .perform(type("aui"))
+        .check(selectionMatches(3))
+        ;
+    EXPECT_EQ(mTextArea->text(), "aui");
+    EXPECT_EQ(entries().size(), 1);
+}
+
+TEST_F(UITextArea, Type2a) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+            .perform(type("aui "))
+            .check(selectionMatches(4))
+            ;
+    EXPECT_EQ(mTextArea->text(), "aui ");
+    EXPECT_EQ(entries().size(), 2);
+}
+
+TEST_F(UITextArea, Type2b) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+            .perform(type(" aui"))
+            .check(selectionMatches(4))
+            ;
+    EXPECT_EQ(mTextArea->text(), " aui");
+    EXPECT_EQ(entries().size(), 2);
+}
+
+TEST_F(UITextArea, Type2c) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>().perform(type("aui"));
+    EXPECT_EQ(mTextArea->text(), "aui");
+    mTextArea->setSelection(0);
+    By::type<ATextArea>().perform(type(" "));
+    EXPECT_EQ(mTextArea->text(), " aui");
+    EXPECT_EQ(entries().size(), 2);
+}
+
+TEST_F(UITextArea, Type2d) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>().perform(type("aui"));
+    EXPECT_EQ(mTextArea->text(), "aui");
+    mTextArea->setSelection(1);
+    By::type<ATextArea>().perform(type(" "));
+    EXPECT_EQ(mTextArea->text(), "a ui");
+    EXPECT_EQ(entries().size(), 3);
+}
+
+TEST_F(UITextArea, Type3) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+            .perform(type("aui framework"))
+            .check(selectionMatches(13))
+            ;
+    EXPECT_EQ(mTextArea->text(), "aui framework");
+    EXPECT_EQ(entries().size(), 3);
+}
+
+TEST_F(UITextArea, Type4) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+            .perform(type("aui  framework"))
+            .check(selectionMatches(14))
+            ;
+    EXPECT_EQ(mTextArea->text(), "aui  framework");
+    EXPECT_EQ(entries().size(), 3);
+}
+
+TEST_F(UITextArea, Type5) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>().perform(type("   "));
+    EXPECT_EQ(mTextArea->text(), "   ");
+    EXPECT_EQ(entries().size(), 1);
+    mTextArea->setSelection(1);
+    By::type<ATextArea>().perform(type("aui"));
+    EXPECT_EQ(mTextArea->text(), " aui  ");
+    EXPECT_EQ(entries().size(), 3);
 }

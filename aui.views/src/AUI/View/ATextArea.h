@@ -39,6 +39,7 @@
 class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
 public:
     friend class ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>;
+    friend class UITextArea; // for testing
 
     using Iterator = Entries::iterator;
 
@@ -73,51 +74,16 @@ protected:
     auto charEntries() const;
 
 private:
-    AOptional<AString> mCompiledText;
+    mutable AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
 
-    class WhitespaceEntry final: public aui::detail::TextBaseEntry {
-    private:
-        friend class ATextArea;
-        IFontView* mText;
-        size_t mCount;
 
-    public:
-        WhitespaceEntry(IFontView* text, size_t count) : mText(text), mCount(count) {
-            AUI_ASSERT(mCount > 0);
-        }
-
-        glm::ivec2 getSize() override {
-            AUI_ASSERT(mCount > 0);
-            return { mText->getFontStyle().getSpaceWidth() * mCount, mText->getFontStyle().size };
-        }
-
-        bool escapesEdges() override {
-            return true;
-        }
-
-        ~WhitespaceEntry() override = default;
-
-        size_t getCharacterCount() override {
-            AUI_ASSERT(mCount > 0);
-            return mCount;
-        }
+    struct EntityQueryResult {
+        Iterator iterator;
+        size_t relativeIndex;
     };
 
-    class NextLineEntry final: public aui::detail::NextLineEntry {
-    public:
-        using aui::detail::NextLineEntry::NextLineEntry;
-    };
-
-    class WordEntry final: public aui::detail::WordEntry {
-    public:
-        using aui::detail::WordEntry::WordEntry;
-    };
-
-
-    static void pushWord(Entries& entries, AString word);
-
-    Iterator getLeftEntity(size_t& index);
+    EntityQueryResult getLeftEntity(size_t index);
 };
 
 
