@@ -134,7 +134,7 @@ const AString& ATextArea::text() const {
     if (!mCompiledText) {
         AString compiledText;
         compiledText.reserve(length());
-        for (const auto& e : mEngine.entries()) {
+        for (const auto& e : entities()) {
             e->appendTo(compiledText);
         }
         mCompiledText.emplace(std::move(compiledText));
@@ -151,7 +151,7 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
 }
 
 ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
-    for (auto it = mEngine.entries().begin(); it != mEngine.entries().end(); ++it) {
+    for (auto it = entities().begin(); it != entities().end(); ++it) {
         auto characterCount = (*it)->getCharacterCount();
         if (index > characterCount) {
             index -= characterCount;
@@ -159,18 +159,18 @@ ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
         }
         return { it, index };
     }
-    if (!mEngine.entries().empty()) {
-        return { std::prev(mEngine.entries().end()), index };
+    if (!entities().empty()) {
+        return { std::prev(entities().end()), index };
     }
-    return { mEngine.entries().end(), 0 };
+    return { entities().end(), 0 };
 }
 bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     mCompiledText.reset();
     auto[target, relativeIndex] = getLeftEntity(at);
     if (toInsert == ' ') {
         tryAgainSpace:
-        if (target == mEngine.entries().end()) {
-            mEngine.entries().insert(target, std::make_unique<WhitespaceEntry>(this, 1));
+        if (target == entities().end()) {
+            entities().insert(target, std::make_unique<WhitespaceEntry>(this, 1));
             return true;
         }
         if (auto word = _cast<WhitespaceEntry>(*target)) {
@@ -187,9 +187,9 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
             if (relativeIndex > 0) {
                 auto rightString = std::make_unique<WordEntry>(this, leftWord->getWord().substr(relativeIndex));
                 leftWord->getWord().resize(relativeIndex);
-                target = mEngine.entries().insert(std::next(target), std::move(rightString));
+                target = entities().insert(std::next(target), std::move(rightString));
             }
-            mEngine.entries().insert(target, std::make_unique<WhitespaceEntry>(this, 1));
+            entities().insert(target, std::make_unique<WhitespaceEntry>(this, 1));
             return true;
         }
         return false;
@@ -199,8 +199,8 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     }
 
     tryAgainWord:
-    if (target == mEngine.entries().end()) {
-        mEngine.entries().insert(target, std::make_unique<WordEntry>(this, AString(1, toInsert)));
+    if (target == entities().end()) {
+        entities().insert(target, std::make_unique<WordEntry>(this, AString(1, toInsert)));
         return true;
     }
 
@@ -219,9 +219,9 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
         if (relativeIndex > 0) {
             auto rightString = std::make_unique<WhitespaceEntry>(this, leftWord->mCount - relativeIndex);
             leftWord->mCount = relativeIndex;
-            target = mEngine.entries().insert(std::next(target), std::move(rightString));
+            target = entities().insert(std::next(target), std::move(rightString));
         }
-        mEngine.entries().insert(target, std::make_unique<WordEntry>(this, AString(1, toInsert)));
+        entities().insert(target, std::make_unique<WordEntry>(this, AString(1, toInsert)));
         return true;
     }
 
@@ -229,7 +229,7 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
 }
 
 size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
-    for (auto[it, relativeIndex] = getLeftEntity(startPos); it != mEngine.entries().end(); startPos += (*it)->getCharacterCount(), ++it, relativeIndex = 0) {
+    for (auto[it, relativeIndex] = getLeftEntity(startPos); it != entities().end(); startPos += (*it)->getCharacterCount(), ++it, relativeIndex = 0) {
         if (c == ' ') {
             if (_cast<WhitespaceEntry>(*it)) {
                 return startPos;
@@ -264,7 +264,7 @@ size_t ATextArea::length() const {
     if (mCompiledText) {
         return mCompiledText->length();
     }
-    return ranges::accumulate(mEngine.entries(), size_t(0), std::plus<>{}, [](const _unique<aui::detail::TextBaseEntry>& e) {
+    return ranges::accumulate(entities(), size_t(0), std::plus<>{}, [](const _unique<aui::detail::TextBaseEntry>& e) {
         return e->getCharacterCount();
     });
 }
@@ -275,7 +275,7 @@ unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
 
 glm::ivec2 ATextArea::getPosByIndex(size_t index) {
     auto[it, relativeIndex] = getLeftEntity(index);
-    if (it == mEngine.entries().end()) {
+    if (it == entities().end()) {
         return {0, 0};
     }
     return (*it)->getPosByIndex(glm::min(relativeIndex, (*it)->getCharacterCount())) - mPadding.leftTop();
@@ -295,7 +295,7 @@ bool ATextArea::capturesFocus() {
 }
 
 auto ATextArea::wordEntries() const {
-    return mEngine.entries()
+    returnentities()
         | ranges::view::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
             return _cast<aui::detail::WordEntry>(e);
         })

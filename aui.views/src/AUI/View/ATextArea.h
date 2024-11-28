@@ -77,6 +77,13 @@ private:
     mutable AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
 
+    auto& entities() {
+        return mEngine.entries();
+    }
+
+    auto& entities() const {
+        return mEngine.entries();
+    }
 
     struct EntityQueryResult {
         Iterator iterator;
