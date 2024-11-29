@@ -90,6 +90,7 @@ private:
         size_t relativeIndex;
     };
 
+    EntityQueryResult getLeftEntity(size_t indexRelativeToFrom, EntityQueryResult from);
     EntityQueryResult getLeftEntity(size_t index);
 };
 

@@ -64,6 +64,12 @@ namespace {
                 dst += ' ';
             }
         }
+
+        void erase(size_t begin, AOptional<size_t> end) override {
+            auto eraseCount = end.valueOr(mCount) - begin;
+            AUI_ASSERT(mCount > eraseCount);
+            mCount -= eraseCount;
+        }
     };
 
     class NextLineEntry final : public aui::detail::NextLineEntry {
@@ -144,32 +150,51 @@ const AString& ATextArea::text() const {
 }
 
 void ATextArea::typeableErase(size_t begin, size_t end) {
+    auto resolvedBegin = getLeftEntity(begin);
+    if (resolvedBegin.iterator == entities().end()) {
+        return;
+    }
+    mCompiledText.reset();
+    auto resolvedEnd = getLeftEntity(end - begin, resolvedBegin);
+    if (resolvedBegin.iterator == resolvedEnd.iterator) [[likely]] {
+        if (resolvedBegin.relativeIndex == 0 && resolvedEnd.relativeIndex == (*resolvedEnd.iterator)->getCharacterCount()) [[unlikely]] {
+            entities().erase(resolvedBegin.iterator);
+            return;
+        }
+        (*resolvedBegin.iterator)->erase(resolvedBegin.relativeIndex, resolvedEnd.relativeIndex);
+        return;
+    }
 
+    if (resolvedBegin.relativeIndex != 0) [[likely]] {
+        (*resolvedBegin.iterator)->erase(resolvedBegin.relativeIndex, std::nullopt);
+        resolvedBegin = { .iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0 };
+    } else {
+        if (resolvedBegin.relativeIndex == (*resolvedBegin.iterator)->getCharacterCount()) {
+            resolvedBegin = { .iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0 };
+        }
+    }
+
+    if (resolvedEnd.iterator != entities().end()) {
+        if (resolvedEnd.relativeIndex != (*resolvedEnd.iterator)->getCharacterCount()) {
+            (*resolvedEnd.iterator)->erase(0, resolvedEnd.relativeIndex);
+            resolvedEnd = { .iterator = resolvedEnd.iterator, .relativeIndex = 0 };
+        } else {
+            resolvedEnd = {.iterator = std::next(resolvedEnd.iterator), .relativeIndex = 0};
+        }
+    }
+
+
+    entities().erase(resolvedBegin.iterator, resolvedEnd.iterator);
 }
 
 bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
     return false;
 }
 
-ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
-    for (auto it = entities().begin(); it != entities().end(); ++it) {
-        auto characterCount = (*it)->getCharacterCount();
-        if (index > characterCount) {
-            index -= characterCount;
-            continue;
-        }
-        return {it, index};
-    }
-    if (!entities().empty()) {
-        return {std::prev(entities().end()), index};
-    }
-    return {entities().end(), 0};
-}
-
-
 
 bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     mCompiledText.reset();
+    AUI_DEFER { performLayout(); };
     auto [target, relativeIndex] = getLeftEntity(at);
 
     auto insertImpl = [&]<aui::factory<_unique<aui::detail::TextBaseEntry>> NewEntity, typename Append>(NewEntity&& newEntity, Append&& append) {
@@ -214,21 +239,23 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     }
 
     insertImpl([&] { return std::make_unique<WordEntry>(this, AString(1, toInsert)); },
-               [&](WordEntry& e) { e.getWord() += toInsert; });
+               [&](WordEntry& e) { e.getWord().insert(relativeIndex, toInsert); });
     return true;
 }
 
 size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
     for (auto [it, relativeIndex] = getLeftEntity(startPos);
-         it != entities().end(); startPos += (*it)->getCharacterCount(), ++it, relativeIndex = 0) {
-        if (c == ' ') {
-            if (_cast<WhitespaceEntry>(*it)) {
-                return startPos;
+         it != entities().end(); startPos += (*it)->getCharacterCount() - relativeIndex, ++it, relativeIndex = 0) {
+        if (relativeIndex == 0) {
+            if (c == ' ') {
+                if (_cast<WhitespaceEntry>(*it)) {
+                    return startPos;
+                }
             }
-        }
-        if (c == '\n') {
-            if (_cast<NextLineEntry>(*it)) {
-                return startPos;
+            if (c == '\n') {
+                if (_cast<NextLineEntry>(*it)) {
+                    return startPos;
+                }
             }
         }
         if (auto w = _cast<WordEntry>(*it)) {
@@ -241,8 +268,30 @@ size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
 }
 
 size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
-    auto it = getLeftEntity(startPos);
-    return 0;
+    for (auto [it, relativeIndex] = getLeftEntity(startPos);
+         it != entities().end(); startPos -= relativeIndex, --it, relativeIndex = (*it)->getCharacterCount()) {
+        if (relativeIndex == 0) {
+            if (c == ' ') {
+                if (_cast<WhitespaceEntry>(*it)) {
+                    return startPos;
+                }
+            }
+            if (c == '\n') {
+                if (_cast<NextLineEntry>(*it)) {
+                    return startPos;
+                }
+            }
+        }
+        if (auto w = _cast<WordEntry>(*it)) {
+            if (auto index = w->getWord().rfind(c, relativeIndex); index != AString::NPOS) {
+                return startPos - index;
+            }
+        }
+        if (it == entities().begin()) {
+            break;
+        }
+    }
+    return AString::NPOS;
 }
 
 void ATextArea::onCharEntered(char16_t c) {
@@ -267,7 +316,10 @@ unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
 glm::ivec2 ATextArea::getPosByIndex(size_t index) {
     auto [it, relativeIndex] = getLeftEntity(index);
     if (it == entities().end()) {
-        return {0, 0};
+        if (it == entities().begin()) {
+            return {0, 0};
+        }
+        it = std::prev(it);
     }
     return (*it)->getPosByIndex(glm::min(relativeIndex, (*it)->getCharacterCount())) - mPadding.leftTop();
 }
@@ -298,4 +350,23 @@ auto ATextArea::charEntries() const {
     return std::initializer_list<aui::detail::CharEntry>{};
 }
 
+ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
+    return getLeftEntity(index, { .iterator = entities().begin(), .relativeIndex = 0 });
+}
+
+ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index, EntityQueryResult from) {
+    index += from.relativeIndex;
+    for (auto it = from.iterator; it != entities().end(); ++it) {
+        auto characterCount = (*it)->getCharacterCount();
+        if (index > characterCount) {
+            index -= characterCount;
+            continue;
+        }
+        return {it, index};
+    }
+    if (!entities().empty()) {
+        return {std::prev(entities().end()), index};
+    }
+    return {entities().end(), 0};
+}
 

@@ -25,6 +25,9 @@ namespace aui::detail {
         virtual size_t getCharacterCount() = 0;
         virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
         virtual void appendTo(AString& dst) = 0;
+        virtual void erase(size_t begin, AOptional<size_t> end) {
+            throw AException("unimplemented");
+        }
     };
 
     class CharEntry: public TextBaseEntry {
@@ -107,6 +110,10 @@ namespace aui::detail {
 
         void appendTo(AString& dst) override {
             dst += mWord;
+        }
+
+        void erase(size_t begin, AOptional<size_t> end) override {
+            mWord.erase(mWord.begin() + long(begin), mWord.begin() + long(end.valueOr(mWord.length())));
         }
     };
 

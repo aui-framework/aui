@@ -155,7 +155,7 @@ inline std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Select
     if (e.empty()) {
         o << "{" << e.begin << "}";
     } else {
-        o << "(" << e.begin << ";" << e.end << "]";
+        o << "[" << e.begin << ";" << e.end << ")";
     }
     return o;
 }

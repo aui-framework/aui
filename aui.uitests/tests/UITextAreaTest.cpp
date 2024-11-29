@@ -255,3 +255,66 @@ TEST_F(UITextArea, Type5) {
     EXPECT_EQ(mTextArea->text(), " aui  ");
     EXPECT_EQ(entries().size(), 3);
 }
+
+TEST_F(UITextArea, TypeAtTheMiddleOfWord) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+            .perform(type("aui"))
+            .check(selectionMatches(3))
+            ;
+    EXPECT_EQ(mTextArea->text(), "aui");
+    mTextArea->setSelection(1); // between a and u
+    By::type<ATextArea>()
+            .perform(type("1"))
+            .check(selectionMatches(2))
+            ;
+    EXPECT_EQ(entries().size(), 1);
+    EXPECT_EQ(mTextArea->text(), "a1ui");
+}
+
+TEST_F(UITextArea, Backspace) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>().perform(type("aui"));
+    EXPECT_EQ(mTextArea->text(), "aui");
+    By::type<ATextArea>().perform(type("\b"));
+    EXPECT_EQ(mTextArea->text(), "au");
+    EXPECT_EQ(entries().size(), 1);
+}
+
+TEST_F(UITextArea, BackspaceFuzzy) {
+    const std::string_view SAMPLE = " aui  framework   ";
+    for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
+        AString expected = SAMPLE;
+        mTextArea->setText(expected);
+        if (i > 0) {
+            // at beginning backspace does not take effect.
+            expected.erase(i - 1, 1);
+        }
+        mTextArea->setSelection({i});
+        By::type<ATextArea>().perform(type("\b"));
+        ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << i << ")";
+    }
+}
+
+TEST_F(UITextArea, EraseFuzzy) {
+    const std::string_view SAMPLE = " aui  framework   ";
+    for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
+        for (unsigned j = i; j <= SAMPLE.length(); ++j) {
+            AString expected = SAMPLE;
+            mTextArea->setText(expected);
+            if (i == j) { // non selection mode; just cursor hit backspace
+                if (i > 0) { // at beginning backspace does not take effect.
+                    expected.erase(i - 1, 1);
+                }
+            } else {
+                expected.erase(i, j - i);
+            }
+            mTextArea->setSelection({i, j});
+            auto selection = mTextArea->selection();
+            By::type<ATextArea>().perform(type("\b"));
+            ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << selection << ")";
+        }
+    }
+}

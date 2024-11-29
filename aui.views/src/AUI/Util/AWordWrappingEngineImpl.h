@@ -185,7 +185,7 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
             }
         }
         if (firstItem) {
-            if ((*currentItem)->escapesEdges()) {
+            if (mTextAlign == ATextAlign::JUSTIFY && (*currentItem)->escapesEdges()) {
                 currentItemSize.x = 0;
             }
             firstItem = false;
