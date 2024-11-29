@@ -28,6 +28,12 @@ namespace aui::detail {
         virtual void erase(size_t begin, AOptional<size_t> end) {
             throw AException("unimplemented");
         }
+
+        struct StopLineScanningHint{};
+        using HitTestResult = std::variant<std::nullopt_t, size_t, StopLineScanningHint>;
+        virtual HitTestResult hitTest(glm::ivec2 position) {
+            return std::nullopt;
+        }
     };
 
     class CharEntry: public TextBaseEntry {
@@ -69,7 +75,7 @@ namespace aui::detail {
         }
     };
     class WordEntry: public TextBaseEntry {
-    private:
+    protected:
         IFontView* mText;
         AString mWord;
         glm::ivec2 mPosition{};

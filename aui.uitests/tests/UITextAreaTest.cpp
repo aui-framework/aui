@@ -55,7 +55,7 @@ protected:
     }
 
     _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} } } let {
-        it->setText("hello world!");
+        it->setText("hello world!\nsecond line");
     };
 
     void TearDown() override {
@@ -104,7 +104,7 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextArea, CursorClickPos1) {
-    By::type<ATextArea>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({25_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
 
@@ -114,6 +114,14 @@ TEST_F(UITextArea, CursorClickPos1) {
 TEST_F(UITextArea, CursorClickPos2) {
     By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(8));
+}
+
+/**
+ * Checks cursor position when clicking between 's' and 'e
+ */
+TEST_F(UITextArea, CursorClickPos3) {
+    By::type<ATextArea>().perform(click({17_dp, 12_pt})) // hardcoded mouse position
+            .check(selectionMatches(15));
 }
 
 TEST_F(UITextArea, LeftRight) {

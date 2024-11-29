@@ -70,6 +70,16 @@ namespace {
             AUI_ASSERT(mCount > eraseCount);
             mCount -= eraseCount;
         }
+
+        HitTestResult hitTest(glm::ivec2 position) override {
+            position -= mPosition;
+            auto size = getSize();
+            if (glm::all(glm::greaterThanEqual(position, glm::ivec2(0))) && glm::all(glm::lessThanEqual(position, size))) {
+                // click at the left or right corner
+                return size_t((mCount * position.x * 2 + mText->getFontStyle().getSpaceWidth()) / size.x / 2);
+            }
+            return std::nullopt;
+        }
     };
 
     class NextLineEntry final : public aui::detail::NextLineEntry {
@@ -77,6 +87,10 @@ namespace {
         friend class ATextArea;
 
         using aui::detail::NextLineEntry::NextLineEntry;
+
+        glm::ivec2 getPosByIndex(size_t characterIndex) override {
+            return {};
+        }
     };
 
     class WordEntry final : public aui::detail::WordEntry {
@@ -84,6 +98,26 @@ namespace {
         friend class ATextArea;
 
         using aui::detail::WordEntry::WordEntry;
+
+        HitTestResult hitTest(glm::ivec2 position) override {
+            position -= mPosition;
+            auto lineHeight = int(mText->getFontStyle().getLineHeight()) / 2;
+            if (position.y < -lineHeight) {
+                return StopLineScanningHint{};
+            }
+            if (position.y > lineHeight) {
+                return std::nullopt;
+            }
+            for (auto it = mWord.begin(); it != mWord.end(); ++it) {
+                const auto characterWidth = mText->getFontStyle().getWidth(it, std::next(it));
+                if (position.x <= int(characterWidth)) {
+                    bool rightHalf = position.x > characterWidth / 2;
+                    return size_t(std::distance(mWord.begin(), it + (rightHalf ? 1 : 0)));
+                }
+                position.x -= characterWidth;
+            }
+            return std::nullopt;
+        }
     };
 }
 
@@ -310,7 +344,19 @@ size_t ATextArea::length() const {
 }
 
 unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
-    return 0;
+    unsigned accumulator = 0;
+    for (const auto& e : mEngine.entries()) {
+        auto result = e->hitTest(pos);
+        if (std::holds_alternative<aui::detail::TextBaseEntry::StopLineScanningHint>(result)) {
+            // we came way below this line.
+            return accumulator;
+        }
+        if (auto offset = std::get_if<size_t>(&result)) {
+            return accumulator + *offset;
+        }
+        accumulator += e->getCharacterCount();
+    }
+    return accumulator;
 }
 
 glm::ivec2 ATextArea::getPosByIndex(size_t index) {
