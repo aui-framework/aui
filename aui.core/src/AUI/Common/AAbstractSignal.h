@@ -55,21 +55,7 @@ class AObject;
  *
  * They can specify arguments:
  * @code{cpp}
- * class Counter: public AObject {
- * public:
- *   Counter() = default;
- *
- *   void setValue(int value) {
- *     mValue = value;
- *     emit valueChanged(value);
- *   }
- *
- * signals:
- *   emits<int> valueChanged;
- *
- * private:
- *   int mValue = 0;
- * };
+ * emits<int> valueChanged;
  * @endcode
  *
  * Any member function of a class can be used as a slot.
@@ -108,6 +94,76 @@ class AObject;
  * callbacks is well-justified for most applications, given its minimal performance cost that users won't perceive.
  *
  * # Basic example
+ * Let's use \c Counter from our previous example:
+ * @code{cpp}
+ * class Counter: public AObject {
+ * public:
+ *   Counter() = default;
+ *
+ *   void setValue(int value) {
+ *     mValue = value;
+ *     emit valueChanged(value);
+ *   }
+ *
+ * signals:
+ *   emits<int> valueChanged;
+ *
+ * private:
+ *   int mValue = 0;
+ * };
+ *
+ * class MyApp: public AObject {
+ * public:
+ *   MyApp() {}
+ *
+ *   void run() {
+ *     connect(mCounter->valueChanged, this, &MyApp::printCounter);
+ *     mCounter->setValue(123); // prints "New value: 123"
+ *   }
+ *
+ * private:
+ *   _<Counter> mCounter = _new<Counter>();
+ *
+ *   void printCounter(int value) {
+ *     ALogger::info("MyApp") << value;
+ *   }
+ * };
+ *
+ * AUI_ENTRY {
+ *   auto app = _new<MyApp>();
+ *   app->run();
+ *   return 0;
+ * }
+ * @endcode
+ *
+ * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
+ * @ref slot "slot" macro:
+ * @code{cpp}
+ * connect(mCounter->valueChanged, slot(this)::printCounter);
+ * @endcode
+ *
+ * Furthermore, when connecting to `this`, slot(this) can be replaced with @ref me "me":
+ * @code{cpp}
+ * connect(mCounter->valueChanged, me::printCounter);
+ * @endcode
+ *
+ * Lambda can be used as a slot either:
+ * @code{cpp}
+ * connect(mCounter->valueChanged, this, [](int value) {
+ *   ALogger::info("MyApp") << value;
+ * });
+ * @endcode
+ *
+ * As with methods, `this` can be omitted:
+ * @code{cpp}
+ * connect(mCounter->valueChanged, [](int value) {
+ *   ALogger::info("MyApp") << value;
+ * });
+ * @endcode
+ *
+ *
+ * # UI example
+ * Knowing basics of signal slots, you can know utilize UI signals:
  * @code{cpp}
  * mOkButton = _new<AButton>("OK");
  * ...
@@ -125,6 +181,81 @@ class AObject;
  *     view->setText("clicked");
  * });
  * @endcode
+ *
+ * ## Going further
+ * Let's take our previous example with `Counter` and make an UI app. Signal slot reveal it's power when your objects
+ * have small handy functions, so lets add `increase` method to our counter:
+ *
+ * @code{cpp}
+ * class Counter: public AObject {
+ * public:
+ *   Counter() = default;
+ *
+ *   void setValue(int value) {
+ *     mValue = value;
+ *     emit valueChanged(value);
+ *   }
+ *
+ *   void increase() {
+ *     setValue(mCounter + 1);
+ *   }
+ *
+ * signals:
+ *   emits<int> valueChanged;
+ *
+ * private:
+ *   int mValue = 0;
+ * };
+ *
+ * class MyApp: public AWindow {
+ * public:
+ *   MyApp() {
+ *     auto label = _new<ALabel>("-");
+ *     auto button = _new<AButton>("Increase");
+ *
+ *     using namespace declarative;
+ *     setContents(Vertical {
+ *       label,
+ *       button,
+ *     });
+ *
+ *     connect(button->clicked, slot(mCounter)::increase); // beauty, huh?
+ *     connect(mCounter->valueChanged, label, [label = label.get()](int value) {
+ *       label->setText("{}"_format(value));
+ *     });
+ *   }
+ *
+ * private:
+ *   _<Counter> mCounter = _new<Counter>();
+ * };
+ *
+ * AUI_ENTRY {
+ *   auto app = _new<MyApp>();
+ *   app->show();
+ *   return 0;
+ * }
+ * @endcode
+ *
+ * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
+ *
+ * Let's make things more declarative and use @ref let "let" syntax to set up connections:
+ * @code{cpp}
+ * MyApp() {
+ *   using namespace declarative;
+ *   setContents(Vertical {
+ *     _new<ALabel>("-") let {
+ *       connect(counter->valueChanged, label, [label = it.get()](int value) {
+ *         label->setText("{}"_format(value));
+ *       });
+ *     },
+ *     _new<AButton>("Increase") let {
+ *       connect(it->clicked, slot(mCounter)::increase);
+ *     },
+ *   });
+ * }
+ * @endcode
+ *
+ * See also ADataBinding for making reactive UI's on trivial data.
  *
  * # Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:
