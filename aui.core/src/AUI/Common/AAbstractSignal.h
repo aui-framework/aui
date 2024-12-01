@@ -23,8 +23,8 @@ class AObject;
  * @defgroup signal_slot Signal-slot
  * @ingroup core
  * @brief Signal-slots is an object messaging mechanism that creates seamless relations between objects.
- * @details Signal-slots originally implemented in Qt and it has proven itself as an object messaging mechanism making
- * it easy to implement the observer pattern without boilerplate code.
+ * @details Signal-slots were originally implemented in Qt and it has proven themselves as an object messaging mechanism
+ * making it easy to implement the observer pattern without boilerplate code.
  * Signal-slot tracks object existence on the both ends so destruction of either sender or receiver object breaks the
  * link between them. When the sender or receiver object is destroyed slot execution is never possible even in a
  * multithreaded environment. Almost any signal can be connected to almost any slot (even lambda) by any code.
@@ -56,6 +56,8 @@ class AObject;
  * They can specify arguments:
  * @code{cpp}
  * emits<int> valueChanged;
+ * ...
+ * emit valueChanged(mValue);
  * @endcode
  *
  * Any member function of a class can be used as a slot.
@@ -163,7 +165,7 @@ class AObject;
  *
  *
  * # UI example
- * Knowing basics of signal slots, you can know utilize UI signals:
+ * Knowing basics of signal slots, you can now utilize UI signals:
  * @code{cpp}
  * mOkButton = _new<AButton>("OK");
  * ...
@@ -173,17 +175,26 @@ class AObject;
  * @endcode
  *
  * @note
- * In lambda, do not capture signal emitter or receiver object by value. This would cause memory leak. Do this way:
+ * In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
+ * a memory leak:
  * @code
  * mOkButton = _new<AButton>("OK");
  * ...
- * connect(mOkButton->clicked, [view = mOkButton.get()] {
+ * connect(mOkButton->clicked, [view] { // WRONG!!!
+ *     view->setText("clicked");
+ * });
+ * @endcode
+ * Do this way:
+ * @code
+ * mOkButton = _new<AButton>("OK");
+ * ...
+ * connect(mOkButton->clicked, [view = view.get()] { // ok
  *     view->setText("clicked");
  * });
  * @endcode
  *
  * ## Going further
- * Let's take our previous example with `Counter` and make an UI app. Signal slot reveal it's power when your objects
+ * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects
  * have small handy functions, so lets add `increase` method to our counter:
  *
  * @code{cpp}
