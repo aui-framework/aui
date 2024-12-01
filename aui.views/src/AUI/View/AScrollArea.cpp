@@ -55,8 +55,8 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
     setExpanding();
 
-    connect(mVerticalScrollbar->scrolled, me::setScrollY);
-    connect(mHorizontalScrollbar->scrolled, me::setScrollX);
+    connect(mVerticalScrollbar->scrolled, slot(mInner)::setScrollY);
+    connect(mHorizontalScrollbar->scrolled, slot(mInner)::setScrollX);
 }
 
 int AScrollArea::getContentMinimumWidth(ALayoutDirection layout) {
