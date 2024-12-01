@@ -29,16 +29,124 @@ class AObject;
  * link between them. When the sender or receiver object is destroyed slot execution is never possible even in a
  * multithreaded environment. Almost any signal can be connected to almost any slot (even lambda) by any code.
  *
- * <h1>Basic example</h1>
+ * All classes that inherit from AObject or one of its subclasses (e.g., AView) can contain signals and slots. Signals
+ * are emitted by objects when they change their state in a way that may be interesting to other objects. This is all
+ * the object does to communicate. It does not know or care whether anything is receiving the signals it emits. This is
+ * true information encapsulation, and ensures that the object can be used as a software component.
+ *
+ * @ref emits "Signal declarations" are special public fields of any class that inherit from AObject.
+ * @code{cpp}
+ * class Counter: public AObject {
+ * public:
+ *   Counter() = default;
+ *
+ *   void setValue(int value) {
+ *     mValue = value;
+ *     emit valueChanged;
+ *   }
+ *
+ * signals:
+ *   emits<> valueChanged;
+ *
+ * private:
+ *   int mValue = 0;
+ * };
+ * @endcode
+ *
+ * They can specify arguments:
+ * @code{cpp}
+ * class Counter: public AObject {
+ * public:
+ *   Counter() = default;
+ *
+ *   void setValue(int value) {
+ *     mValue = value;
+ *     emit valueChanged(value);
+ *   }
+ *
+ * signals:
+ *   emits<int> valueChanged;
+ *
+ * private:
+ *   int mValue = 0;
+ * };
+ * @endcode
+ *
+ * Any member function of a class can be used as a slot.
+ *
+ * You can connect as many signals as you want to a single slot, and a signal can be connected to as many slots as you
+ * need.
+ *
+ * ## Signals
+ * Signals are publicly accessible fields that notify an object's client when its internal state has changed in some way
+ * that might be interesting or significant. These signals can be emitted from various locations, but it is generally
+ * recommended to only emit them from within the class that defines the signal and its subclasses.
+ *
+ * The slots connected to a signal are generaly executed immediately when the signal is emitted like a regular function
+ * call. \c emit returns control after all slots are called. If receiver has AObject::setSlotsCallsOnlyOnMyThread set to
+ * true and \c emit was called on a different thread, \c emit queues slot execution to the AEventLoop associated with
+ * receiver's thread. All AView have this behaviour enabled by default.
+ *
+ * # Slots
+ * A slot is triggered by the emission of a related signal. Slot is no more than a regular class method with a signal
+ * connected to it.
+ *
+ * When called directly, slots follow standard C++ rules and syntax. However, through a signal-slot connection, any
+ * component can invoke a slot regardless of its accessibility level. Visibility scope matters only when creating
+ * connection (AObject::connect). This means a signal from one class can call a private slot in another unrelated class
+ * if connection is created within class itself (with access to its private/protected methods).
+ *
+ * Furthermore, slots can be defined as virtual functions, which have been found to be beneficial in practical
+ * application development.
+ *
+ * Compared to callbacks, the signals and slots system has some performance overhead due to its increased flexibility.
+ * The difference is typically insignificant for real-world applications. In general, emitting a signal connected to
+ * various slots can result in an execution time roughly ten times slower than direct function calls. This delay comes
+ * from locating the connection object and safely iterating over connections.
+ *
+ * The trade-off between the signals and slots mechanism's simplicity and flexibility compared to pure function calls or
+ * callbacks is well-justified for most applications, given its minimal performance cost that users won't perceive.
+ *
+ * # Basic example
  * @code{cpp}
  * mOkButton = _new<AButton>("OK");
  * ...
  * connect(mOkButton->clicked, [] { // the signal is connected to "this" object
- *     ALogger::info("The button was clicked");
+ *     ALogger::info("Example") << "The button was clicked";
  * });
  * @endcode
  *
- * <h1>Differences between Qt and AUI implementation</h1>
+ * @note
+ * In lambda, do not capture signal emitter or receiver object by value. This would cause memory leak. Do this way:
+ * @code
+ * mOkButton = _new<AButton>("OK");
+ * ...
+ * connect(mOkButton->clicked, [view = mOkButton.get()] {
+ *     view->setText("clicked");
+ * });
+ * @endcode
+ *
+ * # Arguments
+ * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:
+ * @code{cpp}
+ * view = _new<ATextField>();
+ * ...
+ * connect(view->keyPressed, [](AInput::Key k) { // the signal is connected to "this" object
+ *     ALogger::info("Example") << "Key was pressed: " << k;
+ * });
+ * @endcode
+ *
+ * The signals and slots mechanism is type safe: The signature of a signal must match the signature of the receiving
+ * slot. Also, a slot may have a shorter signature than the signal it receives because it can ignore extra arguments:
+ * @code{cpp}
+ * view = _new<ATextField>();
+ * ...
+ * connect(view->keyPressed, [] { // the signal is connected to "this" object
+ *     ALogger::info("Example") << "Key was pressed";
+ * });
+ * @endcode
+ *
+ * # Differences between Qt and AUI implementation
  * Suppose we want to emit <code>statusChanged</code> signal with a string argument and connect it with
  * <code>showMessage</code> slot:
  * <table>
