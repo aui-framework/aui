@@ -79,20 +79,12 @@ void ACursorSelectable::handleMouseDoubleClicked(const APointerPressedEvent& eve
 
 
     // determine the begin and end indices of the word
-    auto end = text.find(' ', clickIndex);
-    auto begin = text.rfind(' ', clickIndex);
+    auto predicate = [](auto c) { return c == ' ' || c == '\n'; };
+    auto end = std::find_if(text.begin() + clickIndex, text.end(), predicate);
+    auto begin = std::find_if(std::make_reverse_iterator(text.begin() + clickIndex), text.rend(), predicate).base();
 
-    if (end == AString::NPOS) {
-        end = text.length();
-    }
-    if (begin == AString::NPOS) {
-        begin = 0;
-    } else {
-        begin += 1;
-    }
-
-    mCursorSelection = begin;
-    mCursorIndex = end;
+    mCursorSelection = std::distance(text.begin(), begin);
+    mCursorIndex = std::distance(text.begin(), end);
     onSelectionChanged();
 }
 

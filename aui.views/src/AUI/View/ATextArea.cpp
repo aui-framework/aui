@@ -109,7 +109,7 @@ namespace {
                 return std::nullopt;
             }
             for (auto it = mWord.begin(); it != mWord.end(); ++it) {
-                const auto characterWidth = mText->getFontStyle().getWidth(it, std::next(it));
+                const int characterWidth = mText->getFontStyle().getWidth(it, std::next(it));
                 if (position.x <= int(characterWidth)) {
                     bool rightHalf = position.x > characterWidth / 2;
                     return size_t(std::distance(mWord.begin(), it + (rightHalf ? 1 : 0)));
@@ -304,15 +304,15 @@ size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
 size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
     for (auto [it, relativeIndex] = getLeftEntity(startPos);
          it != entities().end(); startPos -= relativeIndex, --it, relativeIndex = (*it)->getCharacterCount()) {
-        if (relativeIndex == 0) {
+        if (relativeIndex == 1) {
             if (c == ' ') {
                 if (_cast<WhitespaceEntry>(*it)) {
-                    return startPos;
+                    return startPos - relativeIndex;
                 }
             }
             if (c == '\n') {
                 if (_cast<NextLineEntry>(*it)) {
-                    return startPos;
+                    return startPos - relativeIndex;
                 }
             }
         }
@@ -347,8 +347,10 @@ unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
     unsigned accumulator = 0;
     for (const auto& e : mEngine.entries()) {
         auto result = e->hitTest(pos);
-        if (std::holds_alternative<aui::detail::TextBaseEntry::StopLineScanningHint>(result)) {
-            // we came way below this line.
+        if (std::holds_alternative<aui::detail::TextBaseEntry::StopLineScanningHint>(result)) { // we came way below this line.
+            if (accumulator > 0) {
+                return accumulator - 1;
+            }
             return accumulator;
         }
         if (auto offset = std::get_if<size_t>(&result)) {

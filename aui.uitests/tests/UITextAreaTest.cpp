@@ -140,7 +140,7 @@ TEST_F(UITextArea, HomeEnd) {
             .perform(click({0, 0}))
             .check(selectionMatches(0))
             .perform(keyDownAndUp(AInput::END))
-            .check(selectionMatches("hello world!"sv.length()))
+            .check(selectionMatches(24))
             .perform(keyDownAndUp(AInput::HOME))
             .check(selectionMatches(0))
             ;
