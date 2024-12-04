@@ -749,7 +749,7 @@ inline AString operator+(char lhs, const AString& cs) noexcept
     return s;
 }
 
-inline AString operator"" _as(const char* str, size_t len)
+inline AString operator""_as(const char* str, size_t len)
 {
     return {str};
 }

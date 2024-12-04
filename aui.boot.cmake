@@ -721,7 +721,6 @@ function(auib_import AUI_MODULE_NAME URL)
                 get_property(_forwardable_vars GLOBAL PROPERTY AUIB_FORWARDABLE_VARS)
                 if(ANDROID)
                     list(APPEND _forwardable_vars
-                            CMAKE_SYSTEM_NAME
                             CMAKE_EXPORT_COMPILE_COMMANDS
                             CMAKE_SYSTEM_VERSION
                             ANDROID_PLATFORM
@@ -765,7 +764,9 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_BUILD_TYPE
                         CMAKE_CONFIGURATION_TYPES
                         CMAKE_CROSSCOMPILING
+                        CMAKE_CROSSCOMPILING_EMULATOR
                         CMAKE_MACOSX_RPATH
+                        CMAKE_SYSTEM_NAME
                         CMAKE_INSTALL_NAME_DIR
                         CMAKE_INSTALL_RPATH
                         CMAKE_MAKE_PROGRAM

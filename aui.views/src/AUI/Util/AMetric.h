@@ -229,15 +229,15 @@ public:
 };
 
 
-constexpr inline AMetric operator"" _px(unsigned long long v)
+constexpr inline AMetric operator""_px(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PX);
 }
-constexpr inline AMetric operator"" _dp(unsigned long long v)
+constexpr inline AMetric operator""_dp(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_DP);
 }
-constexpr inline AMetric operator"" _pt(unsigned long long v)
+constexpr inline AMetric operator""_pt(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
 }

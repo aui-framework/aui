@@ -212,7 +212,7 @@ public:
     ALogger(AString filename) {
         setLogFileImpl(std::move(filename));
     }
-
+    ALogger();
     ~ALogger();
 
     static ALogger& global();
@@ -312,7 +312,6 @@ public:
 
 
 private:
-	ALogger();
 
     AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;

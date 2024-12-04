@@ -10,30 +10,25 @@
  */
 
 //
-// Created by Alex2772 on 12/7/2021.
+// Created by alex2 on 26.11.2020.
 //
 
-#pragma once
+#include "AUI/Platform/AClipboard.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/AWindowManager.h"
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
-using AWindowNativePtr = HWND;
 
-#elif AUI_PLATFORM_LINUX
+void AClipboard::copyToClipboard(const AString &text) {
+    // stub
+}
 
-using AWindowNativePtr = unsigned long;
+bool AClipboard::isEmpty() {
+    // stub
+    return false;
+}
 
-#elif AUI_PLATFORM_APPLE
+AString AClipboard::pasteFromClipboard() {
+    // stub
+    return AString();
+}
 
-using AWindowNativePtr = void*;
-
-#elif AUI_PLATFORM_ANDROID
-
-#include <jni.h>
-using AWindowNativePtr = jobject;
-
-#else
-
-using AWindowNativePtr = void*;
-
-#endif

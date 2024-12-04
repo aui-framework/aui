@@ -941,7 +941,7 @@ void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, A
     uploadToShaderCommon();
 
 
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
     // TODO slow, use instancing instead
     for (auto point : points) {
         drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
@@ -1027,6 +1027,7 @@ void OpenGLRenderer::bindTemporaryVao() const noexcept {
 }
 
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept {
+#if !AUI_PLATFORM_EMSCRIPTEN
     AUI_ASSERT(allowRenderToTexture());
     if (!glBlendFuncSeparate) {
         return nullptr;
@@ -1219,6 +1220,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
         return std::make_unique<OpenGLRenderViewToTexture>(*this);
     } catch (const AException& e) {
         ALogger::warn(LOG_TAG) << "Failed to initialize newRenderViewToTexture: " << e;
-        return nullptr;
     }
+#endif
+    return nullptr;
 }
