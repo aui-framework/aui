@@ -722,7 +722,6 @@ function(auib_import AUI_MODULE_NAME URL)
                 if(ANDROID)
                     list(APPEND _forwardable_vars
                             CMAKE_EXPORT_COMPILE_COMMANDS
-                            CMAKE_SYSTEM_VERSION
                             ANDROID_PLATFORM
                             ANDROID_ABI
                             CMAKE_ANDROID_ARCH_ABI
@@ -767,6 +766,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_CROSSCOMPILING_EMULATOR
                         CMAKE_MACOSX_RPATH
                         CMAKE_SYSTEM_NAME
+                        CMAKE_SYSTEM_VERSION
+                        CMAKE_SYSTEM_PROCESSOR
                         CMAKE_INSTALL_NAME_DIR
                         CMAKE_INSTALL_RPATH
                         CMAKE_MAKE_PROGRAM
