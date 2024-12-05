@@ -10,30 +10,27 @@
  */
 
 //
-// Created by Alex2772 on 12/7/2021.
+// Created by alex2772 on 12/4/24.
 //
 
-#pragma once
+#include "StubAudioPlayer.h"
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
-using AWindowNativePtr = HWND;
+void StubAudioPlayer::playImpl() {
 
-#elif AUI_PLATFORM_LINUX
+}
 
-using AWindowNativePtr = unsigned long;
+void StubAudioPlayer::pauseImpl() {
 
-#elif AUI_PLATFORM_APPLE
+}
 
-using AWindowNativePtr = void*;
+void StubAudioPlayer::stopImpl() {
 
-#elif AUI_PLATFORM_ANDROID
+}
 
-#include <jni.h>
-using AWindowNativePtr = jobject;
+void StubAudioPlayer::onLoopSet() {
 
-#else
+}
 
-using AWindowNativePtr = void*;
+void StubAudioPlayer::onVolumeSet() {
 
-#endif
+}

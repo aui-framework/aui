@@ -5,6 +5,11 @@ if (NOT TARGET aui::views)
   return()
 endif()
 aui_module(aui.uitests EXPORT aui)
-aui_link(aui.uitests PRIVATE aui::core aui::views GTest::gmock)
+
+aui_link(aui.uitests PRIVATE aui::core aui::views)
+
+if (TARGET GTest::gmock)
+  aui_link(aui.uitests PRIVATE GTest::gmock)
+endif()
 
 aui_enable_tests(aui.uitests)

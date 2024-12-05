@@ -46,7 +46,7 @@ public:
 };
 
 
-inline AString operator"" _i18n(const char* input, size_t s)
+inline AString operator""_i18n(const char* input, size_t s)
 {
     auto i = AI18n::inst().getLangData().find(AString(input));
     if (i == AI18n::inst().getLangData().end())

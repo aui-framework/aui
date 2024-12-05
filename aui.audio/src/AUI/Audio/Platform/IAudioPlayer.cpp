@@ -1,5 +1,6 @@
 #include "AUI/Audio/IAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Audio/StubAudioPlayer.h"
 #include "AUI/Url/AUrl.h"
 
 #if AUI_PLATFORM_WIN
@@ -14,6 +15,8 @@ using DefaultSystemPlayer = OboeAudioPlayer;
 #elif AUI_PLATFORM_APPLE
 #include "apple/CoreAudioPlayer.h"
 using DefaultSystemPlayer = CoreAudioPlayer;
+#else
+using DefaultSystemPlayer = StubAudioPlayer;
 #endif
 
 _<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {

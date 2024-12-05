@@ -95,15 +95,15 @@ private:
 };
 
 
-constexpr inline AAngleRadians operator"" _rad(long double v)
+constexpr inline AAngleRadians operator""_rad(long double v)
 {
     return AAngleRadians(v);
 }
-constexpr inline AAngleRadians operator"" _deg(long double v)
+constexpr inline AAngleRadians operator""_deg(long double v)
 {
     return AAngleRadians(glm::radians(v));
 }
-constexpr inline AAngleRadians operator"" _deg(unsigned long long v)
+constexpr inline AAngleRadians operator""_deg(unsigned long long v)
 {
     return AAngleRadians(glm::radians(float(v)));
 }

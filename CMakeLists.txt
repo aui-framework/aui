@@ -57,7 +57,7 @@ auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 # define all components
 define_aui_component(core)
-if (NOT ANDROID AND NOT IOS)
+if (NOT CMAKE_CROSSCOMPILING)
     define_aui_component(toolbox)
     # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)

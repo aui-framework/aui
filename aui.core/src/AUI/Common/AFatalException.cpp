@@ -45,7 +45,7 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 #include <sys/syscall.h>
-#if !AUI_PLATFORM_ANDROID
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_EMSCRIPTEN
 #include <execinfo.h>
 #endif
 #include <dlfcn.h>

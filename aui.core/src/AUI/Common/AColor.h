@@ -170,7 +170,7 @@ inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
  * @param color integer representing color in 0xAARRGGBB
  * \example AColor(0xff0000ff) will represent opaque bright blue
  */
-inline constexpr AColor operator"" _argb(unsigned long long v)
+inline constexpr AColor operator""_argb(unsigned long long v)
 {
     return AColor::fromAARRGGBB(unsigned(v));
 }
@@ -181,7 +181,7 @@ inline constexpr AColor operator"" _argb(unsigned long long v)
  * @param color integer representing color in 0xRRGGBB
  * \example AColor(0x00ff00) will represent opaque bright green
  */
-inline constexpr AColor operator"" _rgb(unsigned long long v)
+inline constexpr AColor operator""_rgb(unsigned long long v)
 {
 	assert(("_rgb literal should be in 0xrrggbb format, not 0xaarrggbb" && !(v & 0xff000000u)));
     return AColor::fromRRGGBB(unsigned(v));

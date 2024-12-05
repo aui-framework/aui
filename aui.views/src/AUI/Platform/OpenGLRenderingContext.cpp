@@ -58,6 +58,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderingContext::endFramebuffer() {
+#if !AUI_PLATFORM_EMSCRIPTEN
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         fb->bindForRead();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
@@ -69,6 +70,7 @@ void OpenGLRenderingContext::endFramebuffer() {
                           GL_LINEAR);                // filter
         gl::Framebuffer::unbind();
     }
+#endif
 }
 
 void OpenGLRenderingContext::bindViewport() {
