@@ -26,6 +26,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
         mPlayers.erase(std::remove_if(mPlayers.begin(), mPlayers.end(), [&](_<IAudioPlayer>& player) {
             try {
                 size_t r = player->resampledStream()->read(destination);
+                AUI_EMIT_FOREIGN(player, read);
                 if (r == 0) {
                     if (player->loop()) {
                         player->rewind();

@@ -42,7 +42,7 @@ private:
      */
     size_t mCurrentFrame = -1;
     size_t mFrameCount;
-    AVector<int> mDurations;
+    AVector<std::chrono::milliseconds> mDurations;
     size_t mLoopsPassed = 0;
     size_t mLoopCount;
     bool mAnimationFinished = false;
