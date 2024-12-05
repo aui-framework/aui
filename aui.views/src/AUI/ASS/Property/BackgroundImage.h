@@ -179,6 +179,9 @@ namespace ass {
 
             AString toString() const override;
 
+
+            static void draw(const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info);
+
         };
 
     }

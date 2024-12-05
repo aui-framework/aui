@@ -19,19 +19,18 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
 
-ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
+ADrawableView::ADrawableView(_<IDrawable> drawable) : mDrawable(std::move(drawable)) {
 
 }
 
 void ADrawableView::render(ARenderContext context) {
     AView::render(context);
+    AUI_ASSERTX(!getAssHelper()->state.backgroundUrl.url, "BackgroundImage url of ADrawableView should be empty");
     if (!mDrawable) {
         return;
     }
-    context.render.setColor(getAssHelper()->state.backgroundUrl.overlayColor.orDefault(0xffffff_rgb));
-    IDrawable::Params p;
-    p.size = getSize();
-    mDrawable->draw(context.render, p);
+
+    ass::prop::Property<ass::BackgroundImage>::draw(context, this, mDrawable, getAssHelper()->state.backgroundUrl);
 }
 
 ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
