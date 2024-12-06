@@ -300,7 +300,7 @@ TEST_F(UITextArea, BackspaceFuzzy) {
             // at beginning backspace does not take effect.
             expected.erase(i - 1, 1);
         }
-        mTextArea->setSelection({i});
+        mTextArea->setSelection(static_cast<int>(i));
         By::type<ATextArea>().perform(type("\b"));
         ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << i << ")";
     }

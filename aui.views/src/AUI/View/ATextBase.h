@@ -188,7 +188,7 @@ namespace aui::detail {
 template<typename Impl, typename WordWrappingEngine = AWordWrappingEngine<>>
 class API_AUI_VIEWS ATextBase: public AViewContainerBase, public IFontView {
 public:
-    using Entries = WordWrappingEngine::Entries;
+    using Entries = typename WordWrappingEngine::Entries;
 
     ATextBase() = default;
     ~ATextBase() override = 0;

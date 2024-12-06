@@ -130,8 +130,8 @@ namespace {
 
 
     constexpr auto stringToEntriesView(ATextArea* thiz) {
-        return ranges::view::filter([](auto c) { return c != '\r'; })
-               | ranges::view::chunk_by([](char16_t prev, char16_t next) {
+        return ranges::views::filter([](auto c) { return c != '\r'; })
+               | ranges::views::chunk_by([](char16_t prev, char16_t next) {
                     if (prev == '\n' || next == '\n') {
                         return false;
                     }
@@ -143,7 +143,7 @@ namespace {
                     }
                     return true;
                  })
-               | ranges::view::transform([thiz](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
+               | ranges::views::transform([thiz](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
                    AUI_ASSERT(!chars.empty());
                    if (chars.front() == ' ') {
                        return std::make_unique<WhitespaceEntry>(thiz, std::distance(chars.begin(), chars.end()));
@@ -271,29 +271,29 @@ ATextArea::Iterator ATextArea::splitIfNecessary(EntityQueryResult at) {
 bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     mCompiledText.reset();
     AUI_DEFER { performLayout(); };
-    auto [target, relativeIndex] = getLeftEntity(at);
+    auto entity = getLeftEntity(at);
 
     auto insertImpl = [&]<aui::factory<_unique<aui::detail::TextBaseEntry>> NewEntity, typename Append>(NewEntity&& newEntity, Append&& append) {
         tryAgain:
-        if (target == entities().end()) {
-            entities().insert(target, newEntity());
+        if (entity.iterator == entities().end()) {
+            entities().insert(entity.iterator, newEntity());
             return;
         }
         using T = std::decay_t<decltype(*newEntity())>;
         if constexpr (!std::is_null_pointer_v<Append>) {
-            if (auto c = _cast<T>(*target)) {
+            if (auto c = _cast<T>(*entity.iterator)) {
                 append(*c);
                 return;
             }
         }
-        if ((*target)->getCharacterCount() == relativeIndex) {
-            target++;
-            relativeIndex = 0;
+        if ((*entity.iterator)->getCharacterCount() == entity.relativeIndex) {
+            entity.iterator++;
+            entity.relativeIndex = 0;
             goto tryAgain;
         }
 
-        target = splitIfNecessary({target, relativeIndex});
-        entities().insert(target, newEntity());
+        entity.iterator = splitIfNecessary(entity);
+        entities().insert(entity.iterator, newEntity());
     };
 
     if (toInsert == ' ') {
@@ -308,7 +308,7 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     }
 
     insertImpl([&] { return std::make_unique<WordEntry>(this, AString(1, toInsert)); },
-               [&](WordEntry& e) { e.getWord().insert(relativeIndex, toInsert); });
+               [&](WordEntry& e) { e.getWord().insert(entity.relativeIndex, toInsert); });
     return true;
 }
 
@@ -455,15 +455,16 @@ void ATextArea::render(ARenderContext context) {
                 // ################# // first rect
                 // ###########...... // third rect
                 // .................
-                selectionRects.push_back(ARect<int>{ .p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT}, .p2 = { RIGHT_POS, endPos.y - LINE_HEIGHT } });
+                selectionRects.push_back(ARect<int>{ .p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT},
+                                                     .p2 = { RIGHT_POS, endPos.y - LINE_HEIGHT } });
                 [[fallthrough]];
             case 2:
                 // .................
                 // .....############ // first rect
                 // ###########...... // second rect
                 // .................
-                selectionRects.push_back(ARect{ .p1 = beginPos, .p2 = { RIGHT_POS, beginPos.y + LINE_HEIGHT } });
-                selectionRects.push_back(ARect{ .p1 = { LEFT_POS, endPos.y - LINE_HEIGHT }, .p2 = endPos });
+                selectionRects.push_back(ARect<int>{ .p1 = beginPos, .p2 = { RIGHT_POS, beginPos.y + LINE_HEIGHT } });
+                selectionRects.push_back(ARect<int>{ .p1 = { LEFT_POS, endPos.y - LINE_HEIGHT }, .p2 = endPos });
                 break;
             case 1:
                 // .................
@@ -487,11 +488,11 @@ bool ATextArea::capturesFocus() {
 
 auto ATextArea::wordEntries() const {
     return entities()
-           | ranges::view::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
+           | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
         return _cast<aui::detail::WordEntry>(e);
     })
-           | ranges::view::filter([](auto ptr) { return ptr != nullptr; })
-           | ranges::view::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
+           | ranges::views::filter([](auto ptr) { return ptr != nullptr; })
+           | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
 }
 
 auto ATextArea::charEntries() const {

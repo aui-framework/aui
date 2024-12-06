@@ -1109,11 +1109,11 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     static constexpr auto MAX_RECTANGLE_COUNT = std::decay_t<decltype(*rectangles)>::capacity();
                     using Vertices = AStaticVector<glm::vec2, MAX_RECTANGLE_COUNT * 4>;
                     using Indices = AStaticVector<GLuint, MAX_RECTANGLE_COUNT * 6>;
-                    auto vertices =  ranges::view::transform(*rectangles, [&](const ARect<int>& r) {
+                    auto vertices =  ranges::views::transform(*rectangles, [&](const ARect<int>& r) {
                         return getVerticesForRect(r.p1, r.size());
-                    }) | ranges::view::join | ranges::to<Vertices>();
+                    }) | ranges::views::join | ranges::to<Vertices>();
                     mRenderer.mRectangleVao.insert(0, AArrayView(vertices), "render-to-texture invalid areas");
-                    auto indices = ranges::view::generate([i = 0]() mutable {
+                    auto indices = ranges::views::generate([i = 0]() mutable {
                         int offset = 4 * i++;
                         return std::array<GLuint, 6>{GLuint(offset + 0),
                                                      GLuint(offset + 1),
@@ -1121,8 +1121,8 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                                                      GLuint(offset + 2),
                                                      GLuint(offset + 1),
                                                      GLuint(offset + 3)};
-                    }) | ranges::view::take_exactly(rectangles->size())
-                       | ranges::view::join
+                    }) | ranges::views::take_exactly(rectangles->size())
+                       | ranges::views::join
                        | ranges::to<Indices>()
                                ;
                     static constexpr auto DEFAULT_INDICES_SIZE = 6;

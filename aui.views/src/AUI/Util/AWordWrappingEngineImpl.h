@@ -218,11 +218,11 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     }
 
     auto floatingMax = [&] {
-        auto r = ranges::view::concat(leftFloat, rightFloat);
+        auto r = ranges::views::concat(leftFloat, rightFloat);
         if (r.empty()) {
             return 0;
         }
-        return ranges::max(r | ranges::view::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
+        return ranges::max(r | ranges::views::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
     }();
 
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
