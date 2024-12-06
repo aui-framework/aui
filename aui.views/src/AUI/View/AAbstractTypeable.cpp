@@ -62,15 +62,6 @@ void AAbstractTypeable::handleKey(AInput::Key key)
     if (AInput::isKeyDown(AInput::LBUTTON))
         return;
 
-    auto fastenSelection = [&]() {
-        if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
-            mCursorSelection.reset();
-        } else if (!mCursorSelection)
-        {
-            mCursorSelection = mCursorIndex;
-        }
-    };
-
     mTextChangedFlag = true;
     switch (key)
     {
@@ -103,35 +94,12 @@ void AAbstractTypeable::handleKey(AInput::Key key)
             break;
 
         case AInput::LEFT:
-            fastenSelection();
-            if (mCursorIndex) {
-                if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
-                    if (mCursorIndex <= 1) {
-                        mCursorIndex = 0;
-                    } else {
-                        mCursorIndex = typeableReverseFind(' ', mCursorIndex - 2) + 1;
-                    }
-                } else {
-                    mCursorIndex -= 1;
-                }
-            }
-            break;
+            moveCursorLeft();
+            return;
 
         case AInput::RIGHT:
-            fastenSelection();
-            if (mCursorIndex < length()) {
-                if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
-                    auto index = typeableFind(' ', mCursorIndex);
-                    if (index == AString::NPOS) {
-                        mCursorIndex = length();
-                    } else {
-                        mCursorIndex = index + 1;
-                    }
-                } else {
-                    mCursorIndex += 1;
-                }
-            }
-            break;
+            moveCursorRight();
+            return;
 
         case AInput::HOME:
             fastenSelection();
@@ -179,7 +147,16 @@ void AAbstractTypeable::handleKey(AInput::Key key)
     cursorSelectableRedraw();
 }
 
-void AAbstractTypeable::pasteFromClipboard() {
+void AAbstractTypeable::fastenSelection() {
+    if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
+        mCursorSelection.reset();
+    } else if (!mCursorSelection)
+    {
+        mCursorSelection = mCursorIndex;
+    }
+}
+
+void AAbstractTypeable::paste(AString content) {
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
     if (mCursorSelection) {
@@ -188,14 +165,14 @@ void AAbstractTypeable::pasteFromClipboard() {
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
     }
-    auto toPaste = AClipboard::pasteFromClipboard();
     if (mMaxTextLength <= length())
         return;
+
     if (!mIsMultiline) {
-        toPaste = toPaste.replacedAll("\n", "");
+        content = content.replacedAll("\n", "");
     }
-    if (typeableInsert(pastePos, toPaste)) {
-        mCursorIndex = pastePos + toPaste.length();
+    if (typeableInsert(pastePos, content)) {
+        mCursorIndex = pastePos + content.length();
         mCursorSelection.reset();
 
         typeableInvalidateFont();
@@ -203,6 +180,10 @@ void AAbstractTypeable::pasteFromClipboard() {
     } else if (prevContents) {
         setText(*prevContents);
     }
+}
+
+void AAbstractTypeable::pasteFromClipboard() {
+    paste(AClipboard::pasteFromClipboard());
 }
 
 void AAbstractTypeable::cutToClipboard() {
@@ -320,4 +301,41 @@ void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position,
     renderer.setBlending(Blending::INVERSE_DST);
     AUI_DEFER { renderer.setBlending(Blending::NORMAL); };
     renderer.rectangle(ASolidBrush{}, position, {1, lineHeight});
+}
+
+void AAbstractTypeable::moveCursorLeft() {
+    fastenSelection();
+    if (mCursorIndex) {
+        if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
+            if (mCursorIndex <= 1) {
+                mCursorIndex = 0;
+            } else {
+                mCursorIndex = typeableReverseFind(' ', mCursorIndex - 2) + 1;
+            }
+        } else {
+            mCursorIndex -= 1;
+        }
+    }
+    onCursorIndexChanged();
+    updateCursorBlinking();
+    cursorSelectableRedraw();
+}
+
+void AAbstractTypeable::moveCursorRight() {
+    fastenSelection();
+    if (mCursorIndex < length()) {
+        if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
+            auto index = typeableFind(' ', mCursorIndex);
+            if (index == AString::NPOS) {
+                mCursorIndex = length();
+            } else {
+                mCursorIndex = index + 1;
+            }
+        } else {
+            mCursorIndex += 1;
+        }
+    }
+    onCursorIndexChanged();
+    updateCursorBlinking();
+    cursorSelectableRedraw();
 }

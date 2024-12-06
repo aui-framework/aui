@@ -88,6 +88,11 @@ AStylesheet::AStylesheet() {
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
         },
+
+        {
+            t<ATextArea>(),
+            Expanding { 1 },
+        },
         // AAbstractLabel
         {
             t<AAbstractLabel>(),

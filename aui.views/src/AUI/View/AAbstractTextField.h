@@ -78,6 +78,8 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
+    glm::ivec2 getCursorPosition() override;
+
 signals:
     /**
      * @brief On action button of touchscreen keyboard pressed

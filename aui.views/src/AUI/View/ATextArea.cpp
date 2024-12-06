@@ -89,8 +89,15 @@ namespace {
         using aui::detail::NextLineEntry::NextLineEntry;
 
         glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return {};
+            return mPosition;
         }
+
+        void setPosition(glm::ivec2 position) override {
+            Entry::setPosition(position);
+            mPosition = position;
+        }
+    private:
+        glm::ivec2 mPosition;
     };
 
     class WordEntry final : public aui::detail::WordEntry {
@@ -119,11 +126,38 @@ namespace {
             return std::nullopt;
         }
     };
+
+
+    constexpr auto stringToEntriesView(ATextArea* thiz) {
+        return ranges::view::filter([](auto c) { return c != '\r'; })
+               | ranges::view::chunk_by([](char16_t prev, char16_t next) {
+                    if (prev == '\n' || next == '\n') {
+                        return false;
+                    }
+                    if (next == ' ' && prev != ' ') {
+                        return false;
+                    }
+                    if (next != ' ' && prev == ' ') {
+                        return false;
+                    }
+                    return true;
+                 })
+               | ranges::view::transform([thiz](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
+                   AUI_ASSERT(!chars.empty());
+                   if (chars.front() == ' ') {
+                       return std::make_unique<WhitespaceEntry>(thiz, std::distance(chars.begin(), chars.end()));
+                   }
+                   if (chars.front() == '\n') {
+                       return std::make_unique<NextLineEntry>(thiz);
+                   }
+                   return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
+                 });
+    }
 }
 
 
 ATextArea::ATextArea() {
-    addAssName(".input-field");
+    mIsMultiline = true;
 }
 
 ATextArea::ATextArea(const AString& text) :
@@ -133,33 +167,12 @@ ATextArea::ATextArea(const AString& text) :
 
 void ATextArea::setText(const AString& t) {
     auto entries = t
-                   | ranges::view::filter([](auto c) { return c != '\r'; })
-                   | ranges::view::chunk_by([](char16_t prev, char16_t next) {
-        if (prev == '\n' || next == '\n') {
-            return false;
-        }
-        if (next == ' ' && prev != ' ') {
-            return false;
-        }
-        if (next != ' ' && prev == ' ') {
-            return false;
-        }
-        return true;
-    })
-                   | ranges::view::transform([&](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
-        AUI_ASSERT(!chars.empty());
-        if (chars.front() == ' ') {
-            return std::make_unique<WhitespaceEntry>(this, std::distance(chars.begin(), chars.end()));
-        }
-        if (chars.front() == '\n') {
-            return std::make_unique<NextLineEntry>(this);
-        }
-        return std::make_unique<WordEntry>(this, AString(chars.begin(), chars.end()));
-    })
+                   | stringToEntriesView(this)
                    | ranges::to<Entries>();
     mEngine.setEntries(std::move(entries));
 
     AAbstractTypeable::setText(t);
+    performLayout();
     mCompiledText = t;
 }
 
@@ -189,6 +202,7 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
         return;
     }
     mCompiledText.reset();
+    AUI_DEFER { performLayout(); };
     auto resolvedEnd = getLeftEntity(end - begin, resolvedBegin);
     if (resolvedBegin.iterator == resolvedEnd.iterator) [[likely]] {
         if (resolvedBegin.relativeIndex == 0 && resolvedEnd.relativeIndex == (*resolvedEnd.iterator)->getCharacterCount()) [[unlikely]] {
@@ -222,9 +236,36 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
 }
 
 bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
-    return false;
+    mCompiledText.reset();
+    auto [target, relativeIndex] = getLeftEntity(at);
+    if ((*target)->getCharacterCount() == relativeIndex) {
+        target++;
+        relativeIndex = 0;
+    }
+    target = splitIfNecessary({target, relativeIndex});
+    for (auto i : toInsert | stringToEntriesView(this)) {
+        target = std::next(mEngine.entries().insert(target, std::move(i)));
+    }
+
+    return true;
 }
 
+ATextArea::Iterator ATextArea::splitIfNecessary(EntityQueryResult at) {
+    auto& [target, relativeIndex] = at;
+    if (relativeIndex > 0) {
+        if (auto leftWord = _cast<WordEntry>(*target)) {
+            auto rightString = std::make_unique<WordEntry>(this, leftWord->getWord().substr(relativeIndex));
+            leftWord->getWord().resize(relativeIndex);
+            target = entities().insert(std::next(target), std::move(rightString));
+        }
+        if (auto leftWord = _cast<WhitespaceEntry>(*target)) {
+            auto rightString = std::make_unique<WhitespaceEntry>(this, leftWord->mCount - relativeIndex);
+            leftWord->mCount = relativeIndex;
+            target = entities().insert(std::next(target), std::move(rightString));
+        }
+    }
+    return target;
+}
 
 bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     mCompiledText.reset();
@@ -238,9 +279,11 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
             return;
         }
         using T = std::decay_t<decltype(*newEntity())>;
-        if (auto c = _cast<T>(*target)) {
-            append(*c);
-            return;
+        if constexpr (!std::is_null_pointer_v<Append>) {
+            if (auto c = _cast<T>(*target)) {
+                append(*c);
+                return;
+            }
         }
         if ((*target)->getCharacterCount() == relativeIndex) {
             target++;
@@ -248,18 +291,7 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
             goto tryAgain;
         }
 
-        if (relativeIndex > 0) {
-            if (auto leftWord = _cast<WordEntry>(*target)) {
-                auto rightString = std::make_unique<WordEntry>(this, leftWord->getWord().substr(relativeIndex));
-                leftWord->getWord().resize(relativeIndex);
-                target = entities().insert(std::next(target), std::move(rightString));
-            }
-            if (auto leftWord = _cast<WhitespaceEntry>(*target)) {
-                auto rightString = std::make_unique<WhitespaceEntry>(this, leftWord->mCount - relativeIndex);
-                leftWord->mCount = relativeIndex;
-                target = entities().insert(std::next(target), std::move(rightString));
-            }
-        }
+        target = splitIfNecessary({target, relativeIndex});
         entities().insert(target, newEntity());
     };
 
@@ -269,7 +301,9 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
         return true;
     }
     if (toInsert == '\n') {
-        return false;
+        insertImpl([&] { return std::make_unique<NextLineEntry>(this); },
+                   nullptr);
+        return true;
     }
 
     insertImpl([&] { return std::make_unique<WordEntry>(this, AString(1, toInsert)); },
@@ -372,12 +406,60 @@ glm::ivec2 ATextArea::getPosByIndex(size_t index) {
     return (*it)->getPosByIndex(glm::min(relativeIndex, (*it)->getCharacterCount())) - mPadding.leftTop();
 }
 
+glm::ivec2 ATextArea::getCursorPosition() {
+    return mCursorPosition;
+}
+
 void ATextArea::onCursorIndexChanged() {
     mCursorPosition = getPosByIndex(mCursorIndex);
 }
 
 void ATextArea::render(ARenderContext context) {
-    ATextBase::render(context);
+    AViewContainerBase::render(context);
+    AStaticVector<ARect<int>, 3> selectionRects;
+    if (hasSelection() && hasFocus()) {
+        auto s = selection();
+        auto beginPos = getPosByIndex(s.begin);
+        auto endPos = getPosByIndex(s.end);
+        const auto LINE_HEIGHT = int(getFontStyle().size);
+        endPos.y += LINE_HEIGHT;
+        for (auto i : { &beginPos, &endPos }) *i += glm::ivec2{mPadding.left, mPadding.top};
+        const auto LINES_OF_SELECTION = (endPos.y - beginPos.y) / LINE_HEIGHT;
+        const auto LEFT_POS = mPadding.left;
+        const auto RIGHT_POS = getWidth() - mPadding.right;
+        switch (LINES_OF_SELECTION) {
+            default:
+                // .................
+                // .....############ // second rect
+                // ################# // first rect
+                // ################# // first rect
+                // ################# // first rect
+                // ################# // first rect
+                // ###########...... // third rect
+                // .................
+                selectionRects.push_back(ARect<int>{ .p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT}, .p2 = { RIGHT_POS, endPos.y - LINE_HEIGHT } });
+                [[fallthrough]];
+            case 2:
+                // .................
+                // .....############ // first rect
+                // ###########...... // second rect
+                // .................
+                selectionRects.push_back(ARect{ .p1 = beginPos, .p2 = { RIGHT_POS, beginPos.y + LINE_HEIGHT } });
+                selectionRects.push_back(ARect{ .p1 = { LEFT_POS, endPos.y - LINE_HEIGHT }, .p2 = endPos });
+                break;
+            case 1:
+                // .................
+                // ....##########... // first rect
+                // .................
+                selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize(beginPos,
+                                                                                endPos - beginPos));
+                break;
+        }
+    }
+    drawSelectionBeforeAndAfter(context.render, selectionRects, [&] {
+        doDrawString(context);
+    });
+
     drawCursor(context.render, mCursorPosition + mPadding.leftTop());
 }
 

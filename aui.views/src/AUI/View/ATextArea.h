@@ -28,13 +28,18 @@
  * @details
  * Word breaking text area.
  *
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20241206_060324.png">
+ *
  * In contrast to ATextField, ATextArea is not scrollable. It is often preferable to use a dedicated scroll area to make
  * the entire application pages scrollable with other content rather than using nested scrolls just for text area.
  *
- * If you want to make AScrollArea scrollable, it can be places inside a AScrollArea:
+ * If you want to make AScrollArea scrollable, it can be placed inside a AScrollArea:
  * @code{cpp}
  * AScrollArea::Builder().withContents(_new<AScrollArea>())
  * @endcode
+ *
+ * This is why it does not offer default styling - you would probably want to style AScrollArea as if it were text
+ * input.
  */
 class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
 public:
@@ -58,6 +63,8 @@ public:
     void render(ARenderContext context) override;
 
     void onCharEntered(char16_t c) override;
+
+    glm::ivec2 getCursorPosition() override;
 
 private:
     void onCursorIndexChanged() override;
@@ -92,6 +99,7 @@ private:
 
     EntityQueryResult getLeftEntity(size_t indexRelativeToFrom, EntityQueryResult from);
     EntityQueryResult getLeftEntity(size_t index);
+    Iterator splitIfNecessary(EntityQueryResult at);
 };
 
 

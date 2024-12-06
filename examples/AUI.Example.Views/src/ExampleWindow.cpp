@@ -364,14 +364,15 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                         _new<ANumberPicker>(),
                                         _new<ADoubleNumberPicker>(),
                                         Label { "Text area" },
-                                        _new<ATextArea>("AUI Framework - Declarative UI toolkit for modern C++20\n"
-                                                        "Copyright (C) 2020-2024 Alex2772 and Contributors\n"
-                                                        "\n"
-                                                        "SPDX-License-Identifier: MPL-2.0\n"
-                                                        "\n"
-                                                        "This Source Code Form is subject to the terms of the Mozilla "
-                                                        "Public License, v. 2.0. If a copy of the MPL was not distributed with this "
-                                                        "file, You can obtain one at http://mozilla.org/MPL/2.0/.") let { it->setExpanding(); },
+                                        AScrollArea::Builder().withContents(_new<ATextArea>(
+                                                "AUI Framework - Declarative UI toolkit for modern C++20\n"
+                                                "Copyright (C) 2020-2024 Alex2772 and Contributors\n"
+                                                "\n"
+                                                "SPDX-License-Identifier: MPL-2.0\n"
+                                                "\n"
+                                                "This Source Code Form is subject to the terms of the Mozilla "
+                                                "Public License, v. 2.0. If a copy of the MPL was not distributed with this "
+                                                "file, You can obtain one at http://mozilla.org/MPL/2.0/.")).build() << ".input-field" let { it->setExpanding(); },
                                 }
                         } with_style { Expanding{} }
                 }

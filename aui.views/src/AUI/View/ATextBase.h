@@ -25,9 +25,7 @@ namespace aui::detail {
         virtual size_t getCharacterCount() = 0;
         virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
         virtual void appendTo(AString& dst) = 0;
-        virtual void erase(size_t begin, AOptional<size_t> end) {
-            throw AException("unimplemented");
-        }
+        virtual void erase(size_t begin, AOptional<size_t> end) {}
 
         struct StopLineScanningHint{};
         using HitTestResult = std::variant<std::nullopt_t, size_t, StopLineScanningHint>;
@@ -197,6 +195,10 @@ public:
     void render(ARenderContext context) override {
         AViewContainerBase::render(context);
 
+        doDrawString(context);
+    }
+
+    void doDrawString(ARenderContext& context) {
         if (!mPrerenderedString) {
             prerenderString(context);
         }
@@ -295,6 +297,7 @@ protected:
 
 
     void performLayout() {
+        APerformanceSection s("ATextBase::performLayout");
         mEngine.setTextAlign(getFontStyle().align);
         mEngine.setLineHeight(getFontStyle().lineSpacing);
         mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});

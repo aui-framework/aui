@@ -81,7 +81,17 @@ public:
      * @return Character index by pixel position.
      */
     [[nodiscard]] virtual unsigned cursorIndexByPos(glm::ivec2 pos) = 0;
+
     [[nodiscard]] virtual glm::ivec2 getPosByIndex(size_t index) = 0;
+
+    /**
+     * @return Cursor position relative to this view.
+     * @details
+     * Returns position relative to top left corner of the view. That is, if implementation supports scrolling (i.e.,
+     * ATextField) the returned position does not include overflowed contents.
+     */
+    [[nodiscard]] virtual glm::ivec2 getCursorPosition() = 0;
+
 
     /**
      * @brief Select whole text in the text field.

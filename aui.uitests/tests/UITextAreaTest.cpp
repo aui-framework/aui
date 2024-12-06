@@ -326,3 +326,38 @@ TEST_F(UITextArea, EraseFuzzy) {
         }
     }
 }
+
+TEST_F(UITextArea, CursorPosDel) {
+    const std::string_view SAMPLE = " aui  framework   ";
+    mTextArea->setText(SAMPLE);
+    for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
+        uitest::frame();
+        EXPECT_EQ(mTextArea->getCursorPosition(), glm::ivec2{0}) << "(del count: " << i << ")";
+        By::type<ATextArea>().perform(keyDownAndUp(AInput::DEL));
+    }
+}
+
+TEST_F(UITextArea, Insert) {
+    const std::string_view SAMPLE = " aui  framework   ";
+    const std::string_view SAMPLE_PASTE = "foo bar";
+    for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
+        mTextArea->setText(SAMPLE);
+        mTextArea->setSelection(i);
+        mTextArea->paste(SAMPLE_PASTE);
+        AString expectedString = SAMPLE;
+        expectedString.insert(i, SAMPLE_PASTE);
+
+        EXPECT_EQ(expectedString, mTextArea->text()) << "(insert at " << i << ")";
+    }
+}
+
+TEST_F(UITextArea, NextLineCursorPos) {
+    mTextArea->setText("hello");
+    mTextArea->setSelection(5);
+    EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
+    By::type<ATextArea>().perform(type("\n"));
+    EXPECT_EQ(mTextArea->text(), "hello\n");
+    EXPECT_GE(mTextArea->getCursorPosition().y, 0);
+    mTextArea->moveCursorLeft();
+    EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
+}

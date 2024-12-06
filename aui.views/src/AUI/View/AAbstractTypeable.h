@@ -42,9 +42,46 @@ public:
 
     virtual void setText(const AString& t);
 
+    /**
+     * @brief Performs copy operation (CTRL+C) to system clipboard.
+     */
     void copyToClipboard() const;
+
+    /**
+     * @brief Performs cut operation (CTRL+X) to system clipboard.
+     */
     void cutToClipboard();
+
+    /**
+     * @brief Performs paste operation (CTRL+V) from system clipboard.
+     * @details
+     * Effectively:
+     * @code{cpp}
+     * paste(AClipboard::pasteFromClipboard());
+     * @endcode
+     */
     void pasteFromClipboard();
+
+    /**
+     * @brief Performs paste operation (CTRL+V).
+     * @param content string to insert
+     * @details
+     * Performs paste operation at cursor's position. If the view has selection, the selected contents are removed
+     * before insertion.
+     *
+     * After operation, selection is reset and cursor is set to the end of inserted contents.
+     */
+    void paste(AString content);
+
+    /**
+     * @brief Performs move left operation (like AInput::LEFT)
+     */
+    void moveCursorLeft();
+
+    /**
+     * @brief Performs move right operation (like AInput::RIGHT)
+     */
+    void moveCursorRight();
 
 signals:
     /**
@@ -64,16 +101,22 @@ signals:
      */
     emits<AString> textChanging;
 
+    /**
+     * <dl>
+     *   <dt><b>Emits</b></dt>
+     *   <dd>When selection is changed due to user operation or code operation.</dd>
+     * </dl>
+     */
     emits<Selection> selectionChanged;
 
 protected:
     size_t mMaxTextLength = 0x200;
+    bool mIsMultiline = false;
 
+protected:
     bool isCursorBlinkVisible() const {
         return mCursorBlinkVisible;
     }
-
-protected:
 
     void updateCursorBlinking();
 
@@ -114,15 +157,15 @@ protected:
     void handleKey(AInput::Key key);
 
 private:
-    static _<ATimer> blinkTimer();
-
     _<ATimer> mBlinkTimer = blinkTimer();
 
     unsigned mCursorBlinkCount = 0;
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
-    bool mIsMultiline = false;
     bool mIsCopyable = true;
+
+private:
+    static _<ATimer> blinkTimer();
 
     template<aui::derived_from<AView> Super>
     friend class AAbstractTypeableView;
@@ -131,6 +174,8 @@ private:
     virtual void emitTextChanging(const AString& text) = 0;
     virtual void typeableInvalidateFont() = 0;
     void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
+
+    void fastenSelection();
 };
 
 

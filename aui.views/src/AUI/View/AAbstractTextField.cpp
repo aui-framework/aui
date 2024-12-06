@@ -276,3 +276,7 @@ void AAbstractTextField::onCursorIndexChanged() {
     mAbsoluteCursorPos = absoluteCursorPos;
     mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
 }
+
+glm::ivec2 AAbstractTextField::getCursorPosition() {
+    return {mAbsoluteCursorPos, 0};
+}
