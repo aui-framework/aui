@@ -18,7 +18,7 @@
 #include <AUI/Enum/ATextAlign.h>
 #include <AUI/Enum/AFloat.h>
 
-class API_AUI_VIEWS AWordWrappingEngineBase {
+class AWordWrappingEngineBase {
 public:
     class Entry {
     public:
@@ -28,10 +28,14 @@ public:
         virtual void setPosition(glm::ivec2 position) {}
 
         [[nodiscard]]
-        virtual AFloat getFloat() const;
+        virtual AFloat getFloat() const {
+            return AFloat::NONE;
+        }
 
         [[nodiscard]]
-        virtual bool forcesNextLine() const;
+        virtual bool forcesNextLine() const {
+            return false;
+        }
 
         [[nodiscard]]
         bool isFloating() const {

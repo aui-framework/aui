@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 #include <AUI/Util/AWordWrappingEngine.h>
+#include <AUI/Util/AWordWrappingEngineImpl.h>
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& o, const glm::tvec2<T>& v) {

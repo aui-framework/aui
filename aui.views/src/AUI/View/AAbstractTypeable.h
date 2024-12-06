@@ -20,7 +20,7 @@
 /**
  * @brief Base class for AAbstractTypeableView which is template class.
  */
-class AAbstractTypeable: public ACursorSelectable {
+class API_AUI_VIEWS AAbstractTypeable: public ACursorSelectable {
 public:
     AAbstractTypeable();
     ~AAbstractTypeable() override;
