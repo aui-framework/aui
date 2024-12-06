@@ -528,12 +528,12 @@ public:
     }
 
     [[nodiscard]]
-    explicit operator std::span<StoredType>() {
+    operator std::span<StoredType>() {
         return std::span(data(), size());
     }
 
     [[nodiscard]]
-    explicit operator std::span<const StoredType>() const {
+    operator std::span<const StoredType>() const {
         return std::span(data(), size());
     }
 
