@@ -76,6 +76,10 @@ _<AThread>& ATimer::timerThread() {
 }
 
 AScheduler& ATimer::scheduler() {
+#if AUI_PLATFORM_EMSCRIPTEN
+    static AScheduler scheduler;
+    return scheduler;
+#else
     static struct GlobalScheduler {
         AScheduler scheduler;
 
@@ -93,4 +97,5 @@ AScheduler& ATimer::scheduler() {
         }
     } global;
     return global.scheduler;
+#endif
 }

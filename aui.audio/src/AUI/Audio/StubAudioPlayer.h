@@ -9,31 +9,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 12/7/2021.
-//
-
 #pragma once
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
-using AWindowNativePtr = HWND;
+#include "AUI/Audio/IAudioPlayer.h"
 
-#elif AUI_PLATFORM_LINUX
+class StubAudioPlayer : public IAudioPlayer {
+public:
+    using IAudioPlayer::IAudioPlayer;
+private:
+    void playImpl() override;
+    void pauseImpl() override;
+    void stopImpl() override;
 
-using AWindowNativePtr = unsigned long;
-
-#elif AUI_PLATFORM_APPLE
-
-using AWindowNativePtr = void*;
-
-#elif AUI_PLATFORM_ANDROID
-
-#include <jni.h>
-using AWindowNativePtr = jobject;
-
-#else
-
-using AWindowNativePtr = void*;
-
-#endif
+    void onLoopSet() override;
+    void onVolumeSet() override;
+};

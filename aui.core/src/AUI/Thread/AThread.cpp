@@ -61,7 +61,7 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 }
 #else
 #include <signal.h>
-#if !AUI_PLATFORM_ANDROID
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_EMSCRIPTEN
 #include <execinfo.h>
 #endif
 #include <pthread.h>
@@ -311,7 +311,7 @@ void AAbstractThread::updateThreadName() noexcept {
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
-#else
+#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());

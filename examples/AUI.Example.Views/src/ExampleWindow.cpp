@@ -377,6 +377,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
         }), "Common");
 
+#if !AUI_PLATFORM_EMSCRIPTEN
         mWavAudio = IAudioPlayer::fromUrl(":sound/sound1.wav");
         mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
 
@@ -411,6 +412,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
             }
         }), "Sounds");
+#endif
 
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {

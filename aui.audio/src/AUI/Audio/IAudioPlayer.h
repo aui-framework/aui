@@ -102,6 +102,11 @@ signals:
      */
     emits<> finished;
 
+    /**
+     * @brief On sound stream read.
+     */
+    emits<> read;
+
 protected:
     bool isInitialized() const noexcept {
         return mResampledStream != nullptr;

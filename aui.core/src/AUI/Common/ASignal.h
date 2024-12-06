@@ -19,13 +19,6 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 
-
-/**
- * @brief Represents a signal.
- * @tparam Args signal arguments
- * @ingroup core
- * @ingroup signal_slot
- */
 template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
@@ -310,6 +303,13 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     AAbstractSignal::isDisconnected() = false;
 }
 
+/**
+ * @brief A signal declaration.
+ * @tparam Args signal arguments
+ * @ingroup core
+ * @ingroup signal_slot
+ * See @ref signal_slot "signal-slot system" for more info.
+ */
 template<typename... Args>
 using emits = ASignal<Args...>;
 

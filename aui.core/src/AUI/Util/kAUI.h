@@ -20,6 +20,7 @@
  * @brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
  *        connect function:
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * <table>
  *   <tr>
@@ -62,6 +63,7 @@ namespace aui::impl::slot {
  * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function (see examples).
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * Quick example:
  * <table>

@@ -14,6 +14,9 @@
 #include <webp/decode.h>
 #include <webp/demux.h>
 
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
 WebpImageFactory::WebpImageFactory(AByteBufferView buffer) {
     //save webp file data
     auto buf = reinterpret_cast<uint8_t*>(WebPMalloc(buffer.size()));
@@ -50,9 +53,14 @@ WebpImageFactory::~WebpImageFactory() {
 }
 
 AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
-    if (isNewImageAvailable()) {
-        mLastTimeFrameStarted = std::chrono::system_clock::now();
+    if (mLastTimeFrameStarted.time_since_epoch().count() == 0) {
         loadNextFrame();
+        mLastTimeFrameStarted = system_clock::now();
+    } else {
+        if (isNewImageAvailable()) {
+            loadNextFrame();
+            mLastTimeFrameStarted += mDurations[mCurrentFrame];
+        }
     }
 
     return {AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
@@ -69,8 +77,8 @@ bool WebpImageFactory::isNewImageAvailable() {
         return false;
     }
 
-    auto delta = std::chrono::system_clock::now() - mLastTimeFrameStarted;
-    return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() >= mDurations[mCurrentFrame];
+    auto delta = system_clock::now() - mLastTimeFrameStarted;
+    return delta + 1ms >= mDurations[mCurrentFrame];
 }
 
 glm::ivec2 WebpImageFactory::getSizeHint() {
@@ -90,7 +98,7 @@ void WebpImageFactory::loadNextFrame() {
     int prevFrameTimestamp = mDecodedFrameTimestamp;
     WebPAnimDecoderGetNext(mDecoder, &mDecodedFrameBuffer, &mDecodedFrameTimestamp);
     if (mDurations.size() < mFrameCount) {
-        mDurations.push_back(mDecodedFrameTimestamp - prevFrameTimestamp);
+        mDurations.push_back(milliseconds(mDecodedFrameTimestamp - prevFrameTimestamp));
     }
 }
 
