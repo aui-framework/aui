@@ -87,11 +87,11 @@ void AScrollArea::setSize(glm::ivec2 size) {
     if (contents()) {
         mVerticalScrollbar->setScrollDimensions(
                 mInner->getHeight(),
-                contents()->getContentMinimumHeight(ALayoutDirection::NONE));
+                contents()->getMinimumSizePlusMargin().y);
 
         mHorizontalScrollbar->setScrollDimensions(
                 mInner->getWidth(),
-                contents()->getContentMinimumWidth(ALayoutDirection::NONE));
+                contents()->getMinimumSizePlusMargin().y);
     }
 }
 

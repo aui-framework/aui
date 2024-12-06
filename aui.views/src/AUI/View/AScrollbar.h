@@ -130,6 +130,21 @@ public:
 
     static const _<ATimer>& buttonTimer();
 
+
+    /**
+     * @return max scroll of this scrollbar.
+     * @details
+     * If viewport size is larger than content size (in the case when contents are smaller than AScrollArea), 0 is
+     * returned.
+     */
+    std::size_t getMaxScroll() const noexcept {
+        if (mFullSize <= mViewportSize) {
+            return 0;
+        }
+
+        return mFullSize - mViewportSize;
+    }
+
 signals:
 
     emits<int> scrolled;
@@ -155,13 +170,6 @@ protected:
 
     void handleScrollbar(int s);
 
-    std::size_t getMaxScroll() const noexcept {
-        if (mFullSize <= mViewportSize) {
-            return 0;
-        }
-
-        return mFullSize - mViewportSize;
-    }
 
 private:
     struct StickToEnd {

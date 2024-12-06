@@ -466,9 +466,15 @@ public:
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }
 
+    /**
+     * @return minimum content size plus margin.
+     * @details
+     * This value is bare minimum space required for this view. It includes minimal content size + padding + margin which
+     * is exact space the view requires.
+     */
     [[nodiscard]]
-    glm::ivec2 getMinimumSizePlusField() {
-        return getMinimumSize() + getTotalFieldSize();
+    glm::ivec2 getMinimumSizePlusMargin() {
+        return getMinimumSize() + mMargin.occupiedSize();
     }
 
     /**
@@ -990,7 +996,7 @@ public:
      * </ul>
      */
     void invalidateStateStyles() {
-        invalidateStateStylesImpl(getMinimumSizePlusField());
+        invalidateStateStylesImpl(getMinimumSizePlusMargin());
     }
 
 
