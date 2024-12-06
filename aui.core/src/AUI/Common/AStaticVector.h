@@ -14,6 +14,7 @@
 #include "AVector.h"
 #include "AException.h"
 #include <utility>
+#include <span>
 
 
 #define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
@@ -526,6 +527,15 @@ public:
         return result;
     }
 
+    [[nodiscard]]
+    explicit operator std::span<StoredType>() {
+        return std::span(data(), size());
+    }
+
+    [[nodiscard]]
+    explicit operator std::span<const StoredType>() const {
+        return std::span(data(), size());
+    }
 
 private:
     iterator mBegin;
