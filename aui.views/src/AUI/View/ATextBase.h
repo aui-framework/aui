@@ -191,7 +191,7 @@ public:
     using Entries = typename WordWrappingEngine::Entries;
 
     ATextBase() = default;
-    ~ATextBase() override = 0;
+    ~ATextBase() override = default;
     void render(ARenderContext context) override {
         AViewContainerBase::render(context);
 
@@ -297,6 +297,3 @@ protected:
         mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
     }
 };
-
-template<typename WordWrappingEngine>
-ATextBase<WordWrappingEngine>::~ATextBase() = default;
