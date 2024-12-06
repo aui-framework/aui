@@ -380,5 +380,5 @@ lol
 kek)"));
     By::type<ATextArea>().check(isBottomAboveBottomOf(By::type<AScrollArea>()));
     mTextArea->setSelection(0); // move to the beginning
-    (By::type<ATextArea>() | By::type<AScrollArea>()).check(areTopAligned());
+    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
 }
