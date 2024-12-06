@@ -172,3 +172,17 @@ void AText::setHtml(const AString& html, const Flags& flags) {
     mParsedFlags = parsedFlags;
     mEngine.setEntries(std::move(entityVisitor.entries));
 }
+
+void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+    for (auto& wordEntry: mWordEntries) {
+        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+    }
+    AString str(1, ' ');
+    for (auto& charEntry: mCharEntries) {
+        auto c = charEntry.getChar();
+        if (c != ' ') {
+            str.first() = c;
+            canvas->addString(charEntry.getPosition(), str);
+        }
+    }
+}

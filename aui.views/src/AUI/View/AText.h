@@ -28,9 +28,8 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  */
-class API_AUI_VIEWS AText : public ATextBase<AText, AWordWrappingEngine<>> {
+class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
 public:
-    friend class ATextBase<AText, AWordWrappingEngine<>>;
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
         WordBreak wordBreak = WordBreak::NORMAL;
@@ -73,13 +72,7 @@ public:
     }
 
 protected:
-    const auto& wordEntries() const {
-        return mWordEntries;
-    }
-
-    const auto& charEntries() const {
-        return mCharEntries;
-    }
+    void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {

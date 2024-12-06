@@ -45,9 +45,8 @@ class API_AUI_VIEWS AScrollArea;
  *
  * ATextArea offers integrations and optimizations for AScrollArea specifically.
  */
-class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
 public:
-    friend class ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>;
     friend class UITextArea; // for testing
 
     using Iterator = Entries::iterator;
@@ -79,9 +78,7 @@ protected:
     size_t typeableFind(char16_t c, size_t startPos) override;
     size_t typeableReverseFind(char16_t c, size_t startPos) override;
     size_t length() const override;
-
-    auto wordEntries() const;
-    auto charEntries() const;
+    void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
 
 private:
     mutable AOptional<AString> mCompiledText;

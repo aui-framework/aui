@@ -185,7 +185,7 @@ namespace aui::detail {
 /**
  * @brief Base class for AText without public APIs.
  */
-template<typename Impl, typename WordWrappingEngine = AWordWrappingEngine<>>
+template<typename WordWrappingEngine = AWordWrappingEngine<>>
 class API_AUI_VIEWS ATextBase: public AViewContainerBase, public IFontView {
 public:
     using Entries = typename WordWrappingEngine::Entries;
@@ -265,21 +265,15 @@ protected:
         AViewContainerBase::invalidateAllStyles();
     }
 
+    virtual void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) = 0;
+
     void prerenderString(ARenderContext ctx) {
         performLayout();
         {
             auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
-            for (auto& wordEntry: static_cast<Impl*>(this)->wordEntries()) {
-                multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
-            }
-            AString str(1, ' ');
-            for (auto& charEntry: static_cast<Impl*>(this)->charEntries()) {
-                auto c = charEntry.getChar();
-                if (c != ' ') {
-                    str.first() = c;
-                    multiStringCanvas->addString(charEntry.getPosition(), str);
-                }
-            }
+            fillStringCanvas(multiStringCanvas);
+            /*
+            */
             mPrerenderedString = multiStringCanvas->finalize();
         }
     }
@@ -304,5 +298,5 @@ protected:
     }
 };
 
-template<typename Impl, typename WordWrappingEngine>
-ATextBase<Impl, WordWrappingEngine>::~ATextBase() = default;
+template<typename WordWrappingEngine>
+ATextBase<WordWrappingEngine>::~ATextBase() = default;

@@ -486,19 +486,6 @@ bool ATextArea::capturesFocus() {
     return true;
 }
 
-auto ATextArea::wordEntries() const {
-    return entities()
-           | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
-        return _cast<aui::detail::WordEntry>(e);
-    })
-           | ranges::views::filter([](auto ptr) { return ptr != nullptr; })
-           | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
-}
-
-auto ATextArea::charEntries() const {
-    return std::initializer_list<aui::detail::CharEntry>{};
-}
-
 ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
     return getLeftEntity(index, { .iterator = entities().begin(), .relativeIndex = 0 });
 }
@@ -526,5 +513,18 @@ AScrollArea* ATextArea::findScrollArea() {
         }
     }
     return nullptr;
+}
+
+void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+    auto wordEntries = entities()
+        | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
+            return _cast<aui::detail::WordEntry>(e);
+          })
+        | ranges::views::filter([](auto ptr) { return ptr != nullptr; })
+        | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
+
+    for (auto& wordEntry: wordEntries) {
+        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+    }
 }
 
