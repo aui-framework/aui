@@ -80,12 +80,22 @@ void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
+    bool isOverflowing = mViewportSize < mFullSize;
+    if (isOverflowing) {
+        enable();
+    }
+
     updateScrollHandleSize();
+    setScroll(mCurrentScroll); // validates mCurrentScroll since mViewportSize and mFullSize are updated
 
     if (mStickToEnd && mStickToEnd->locked) {
         scrollToEnd();
     }
     emit updatedMaxScroll(getMaxScroll());
+
+    if (!isOverflowing) {
+        disable();
+    }
 }
 
 void AScrollbar::updateScrollHandleSize() {
@@ -97,7 +107,6 @@ void AScrollbar::updateScrollHandleSize() {
     }
 
     if (mViewportSize >= mFullSize) {
-        setDisabled();
         switch (mAppearance) {
             case ScrollbarAppearance::ALWAYS:
                 setVisibility(Visibility::VISIBLE);
@@ -132,7 +141,6 @@ void AScrollbar::updateScrollHandleSize() {
 }
 
 void AScrollbar::setScroll(int scroll) {
-    updateScrollHandleSize();
     int max = getMaxScroll();
     auto newScroll = glm::clamp(scroll, 0, max);
     if (mCurrentScroll != newScroll) {

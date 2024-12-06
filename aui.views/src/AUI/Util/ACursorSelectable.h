@@ -20,23 +20,28 @@
 #include <glm/glm.hpp>
 #include <AUI/Font/AFontStyle.h>
 #include <AUI/Render/ATextLayoutHelper.h>
+#include <AUI/Render/RenderHints.h>
 #include <AUI/Platform/AInput.h>
 #include <AUI/View/AView.h>
 
 class API_AUI_VIEWS ACursorSelectable {
 public:
+    virtual ~ACursorSelectable();
 
     struct Selection
     {
         unsigned begin;
         unsigned end;
 
-        bool operator==(const Selection& rhs) const noexcept {
-            return std::tie(begin, end) == std::tie(rhs.begin, rhs.end);
-        }
+        [[nodiscard]]
+        bool operator==(const Selection& rhs) const noexcept = default;
 
-        bool operator!=(const Selection& rhs) const noexcept {
-            return !(rhs == *this);
+        [[nodiscard]]
+        bool operator!=(const Selection& rhs) const noexcept = default;
+
+        [[nodiscard]]
+        bool empty() const noexcept {
+            return begin == end;
         }
     };
 
@@ -53,7 +58,7 @@ public:
     /**
      * @return Text field text length.
      */
-    [[nodiscard]] virtual size_t textLength() const = 0;
+    [[nodiscard]] virtual size_t length() const = 0;
     [[nodiscard]] AString selectedText() const
     {
         if (!hasSelection())
@@ -75,8 +80,17 @@ public:
     /**
      * @return Character index by pixel position.
      */
-    [[nodiscard]] unsigned cursorIndexByPos(glm::ivec2 pos);
-    [[nodiscard]] int getPosByIndex(int end, int begin = 0);
+    [[nodiscard]] virtual unsigned cursorIndexByPos(glm::ivec2 pos) = 0;
+
+    [[nodiscard]] virtual glm::ivec2 getPosByIndex(size_t index) = 0;
+
+    /**
+     * @return Cursor position relative to this view.
+     * @details
+     * Returns position relative to top left corner of the view. That is, if implementation supports scrolling (i.e.,
+     * ATextField) the returned position does not include overflowed contents.
+     */
+    [[nodiscard]] virtual glm::ivec2 getCursorPosition() = 0;
 
 
     /**
@@ -91,7 +105,7 @@ public:
 
     void setSelection(int cursorIndex) {
         mCursorIndex = cursorIndex;
-        mCursorSelection = -1;
+        mCursorSelection.reset();
         onSelectionChanged();
     }
 
@@ -103,14 +117,11 @@ public:
 
 protected:
     unsigned mCursorIndex = 0;
-    unsigned mCursorSelection = -1;
+    AOptional<unsigned> mCursorSelection;
 
-    virtual glm::ivec2 getMouseSelectionPadding() = 0;
-    virtual glm::ivec2 getMouseSelectionScroll() = 0;
-    virtual AFontStyle getMouseSelectionFont() = 0;
     virtual bool isLButtonPressed() = 0;
     virtual AString getDisplayText() = 0;
-    virtual void doRedraw() = 0;
+    virtual void cursorSelectableRedraw() = 0;
     virtual void onSelectionChanged() = 0;
 
 
@@ -119,23 +130,42 @@ protected:
     void handleMouseReleased(const APointerReleasedEvent& event);
     void handleMouseMove(const glm::ivec2& pos);
 
-    /**
-     * @return absoluteCursorPos
-     */
-    int drawSelectionPre(IRenderer& render);
+    template<aui::invocable Callback>
+    void drawSelectionBeforeAndAfter(IRenderer& render, std::span<ARect<int>> rects, Callback&& drawText) {
+        if (rects.empty()) {
+            drawText();
+            return;
+        }
 
-    void drawSelectionPost(IRenderer& render);
+        auto drawRects = [&] {
+            for (auto r : rects) {
+                render.rectangle(ASolidBrush{}, r.p1, r.size());
+            }
+        };
+        {
+            RenderHints::PushColor c(render);
+            render.setColor(AColor(1.f) - AColor(0x0078d700u));
+            drawRects();
+        }
 
-    void drawSelectionRects(IRenderer& render);
+        drawText();
 
-    void setTextLayoutHelper(ATextLayoutHelper textLayoutHelper) {
-        mTextLayoutHelper = std::move(textLayoutHelper);
+        render.setBlending(Blending::INVERSE_DST);
+        AUI_DEFER { render.setBlending(Blending::NORMAL); };
+        drawRects();
     }
 
 private:
-    int mAbsoluteBegin, mAbsoluteEnd;
     bool mIgnoreSelection = false;
-    ATextLayoutHelper mTextLayoutHelper;
+
 };
 
-
+inline std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e) noexcept{
+    o << "Selection";
+    if (e.empty()) {
+        o << "{" << e.begin << "}";
+    } else {
+        o << "[" << e.begin << ";" << e.end << ")";
+    }
+    return o;
+}

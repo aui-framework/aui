@@ -387,13 +387,37 @@ namespace aui {
     }
 }
 
-
+template<typename TO, typename FROM>
+inline TO* _cast(const _unique<FROM>& object)
+{
+    return dynamic_cast<TO*>(object.get());
+}
 
 template<typename TO, typename FROM>
-inline _<TO> _cast(_<FROM> object)
+inline _<TO> _cast(const _<FROM>& object)
 {
     return std::dynamic_pointer_cast<TO, FROM>(object);
 }
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(_<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(const std::shared_ptr<FROM>& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(object);
+}
+
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(std::shared_ptr<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
 
 
 /**

@@ -20,27 +20,92 @@
 #include "AViewContainer.h"
 #include "AAbstractTextField.h"
 #include "AScrollbar.h"
+#include "ATextBase.h"
+
+class API_AUI_VIEWS AScrollArea;
 
 /**
- * @brief Multiline text field.
+ * @brief Multiline text input area.
  * @ingroup useful_views
  * @details
  * Word breaking text area.
+ *
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20241206_060324.png">
+ *
+ * In contrast to ATextField, ATextArea is not scrollable. It is often preferable to use a dedicated scroll area to make
+ * the entire application pages scrollable with other content rather than using nested scrolls just for text area.
+ *
+ * If you want to make AScrollArea scrollable, it can be placed inside a AScrollArea:
+ * @code{cpp}
+ * AScrollArea::Builder().withContents(_new<AScrollArea>())
+ * @endcode
+ *
+ * This is why it does not offer default styling - you would probably want to style AScrollArea as if it were text
+ * input.
+ *
+ * ATextArea offers integrations and optimizations for AScrollArea specifically.
  */
-class API_AUI_VIEWS ATextArea: public AViewContainerBase {
-private:
-    class TextAreaField;
-    _<TextAreaField> mTextField;
-    _<AScrollbar> mScrollbar;
-    bool mEditable = false; // TODO editable
-
+class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
 public:
+    friend class UITextArea; // for testing
+
+    using Iterator = Entries::iterator;
+
     ATextArea();
-    explicit ATextArea(const AString& text);
+    ATextArea(const AString& text);
+    ~ATextArea() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    bool capturesFocus() override;
 
-    void onScroll(const AScrollEvent& event) override;
+    AString toString() const override;
+    const AString& text() const override;
+    unsigned int cursorIndexByPos(glm::ivec2 pos) override;
+    glm::ivec2 getPosByIndex(size_t index) override;
+    void setText(const AString& t) override;
+
+    void render(ARenderContext context) override;
+
+    void onCharEntered(char16_t c) override;
+
+    glm::ivec2 getCursorPosition() override;
+
+    void setSize(glm::ivec2 size) override;
+
+protected:
+    void typeableErase(size_t begin, size_t end) override;
+    bool typeableInsert(size_t at, const AString& toInsert) override;
+    bool typeableInsert(size_t at, char16_t toInsert) override;
+    size_t typeableFind(char16_t c, size_t startPos) override;
+    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+    size_t length() const override;
+    void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
+
+private:
+    mutable AOptional<AString> mCompiledText;
+    glm::ivec2 mCursorPosition{0, 0};
+
+    struct EntityQueryResult {
+        Iterator iterator;
+        size_t relativeIndex;
+    };
+
+private:
+
+    auto& entities() {
+        return mEngine.entries();
+    }
+
+    auto& entities() const {
+        return mEngine.entries();
+    }
+
+    void onCursorIndexChanged() override;
+
+    EntityQueryResult getLeftEntity(size_t indexRelativeToFrom, EntityQueryResult from);
+    EntityQueryResult getLeftEntity(size_t index);
+    Iterator splitIfNecessary(EntityQueryResult at);
+
+    AScrollArea* findScrollArea();
 };
 
 

@@ -164,9 +164,10 @@ public:
          * @brief Notifies IMultiStringCanvas than a symbol was added used to construct a ATextLayoutHelper.
          * @details
          * @note should be called by the implementation of IMultiStringCanvas.
-         * @param symbol symbol to add
+         * @param symbol symbol data to add
+         * @note at the end of line, implementation must add extra symbol to mark last position.
          */
-        void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) noexcept {
+        void notifySymbolAdded(const ATextLayoutHelper::Boundary& symbol) noexcept {
             if (mSymbols) mSymbols->last().push_back(symbol);
         }
 

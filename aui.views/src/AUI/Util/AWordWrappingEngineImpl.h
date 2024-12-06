@@ -9,28 +9,27 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 11/16/2021.
-//
+#pragma once
 
-#include <range/v3/all.hpp>
-#include <AUI/Traits/iterators.h>
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/algorithm/max.hpp>
+#include <range/v3/view/concat.hpp>
+#include <range/v3/view/transform.hpp>
 #include "AWordWrappingEngine.h"
-#include <algorithm>
-#include <numeric>
-#include <AUI/Util/AFraction.h>
+#include "AUI/Util/AFraction.h"
 
-void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
+template<typename Container>
+void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
     if (mEntries.empty()) return;
 
 
     struct StandardEntry {
-        _<Entry> entry;
+        aui::no_escape<Entry> entry;
         int occupiedHorizontalSpace;
     };
 
     struct FloatingEntry {
-        _<Entry> entry;
+        aui::no_escape<Entry> entry;
         int occupiedHorizontalSpace;
         int remainingHeight;
         glm::ivec2 position;
@@ -42,7 +41,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
 
     AVector<AVector<StandardEntry>> inflatedEntriesByRows;
-    decltype(inflatedEntriesByRows)::iterator currentRow;
+    typename decltype(inflatedEntriesByRows)::iterator currentRow;
     size_t currentRowWidth = 0;
     int currentRowHeight = 0;
     int currentY = offset.y;
@@ -156,11 +155,12 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
     for (auto currentItem = mEntries.begin(); currentItem != mEntries.end(); ++currentItem) {
         auto currentItemSize = (*currentItem)->getSize();
+        bool forcesNextLine = (*currentItem)->forcesNextLine();
 
         // check if entry fits into the row
-        if (currentRowWidth + currentItemSize.x  > size.x) {
-            // if current row is empty, we must place this element in any case
-            if (!currentRow->empty()) {
+        if (forcesNextLine || currentRowWidth + currentItemSize.x > size.x) {
+            // if current row is empty, we must place this element (unless forcesNextLine)
+            if (!currentRow->empty() || forcesNextLine) {
                 // jump to the next row
 
                 auto removeRedundantItems = [&currentRowHeight](AVector<FloatingEntry>& fl) {
@@ -185,7 +185,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
             }
         }
         if (firstItem) {
-            if ((*currentItem)->escapesEdges()) {
+            if (mTextAlign == ATextAlign::JUSTIFY && (*currentItem)->escapesEdges()) {
                 currentItemSize.x = 0;
             }
             firstItem = false;
@@ -218,11 +218,11 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     }
 
     auto floatingMax = [&] {
-        auto r = ranges::view::concat(leftFloat, rightFloat);
+        auto r = ranges::views::concat(leftFloat, rightFloat);
         if (r.empty()) {
             return 0;
         }
-        return ranges::max(r | ranges::view::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
+        return ranges::max(r | ranges::views::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
     }();
 
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;

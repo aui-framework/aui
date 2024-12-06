@@ -11,39 +11,35 @@
 
 #include "ASide.h"
 
-glm::vec2 ASides::getNormalVector(ASide s)
-{
-	switch (s)
-	{
-	case ASide::TOP:
-		return { 0, -1 };
-	case ASide::BOTTOM:
-		return { 0, 1 };
-	case ASide::LEFT:
-		return { -1, 0 };
-	case ASide::RIGHT:
-		return { 1, 0 };
-	case ASide::NONE:
-		return {};
-	}
-	glm::ivec2 result;
+glm::vec2 ASides::getNormalVector(ASide s) {
+    switch (s) {
+        case ASide::TOP:
+            return {0, -1};
+        case ASide::BOTTOM:
+            return {0, 1};
+        case ASide::LEFT:
+            return {-1, 0};
+        case ASide::RIGHT:
+            return {1, 0};
+        case ASide::NONE:
+            return {};
+        default:
+            break;
+    }
+    glm::ivec2 result{0};
 
-	if (!!(s & ASide::LEFT))
-	{
-		result += glm::vec2(-1, 0);
-	}
-	if (!!(s & ASide::RIGHT))
-	{
-		result += glm::vec2(1, 0);
-	}
-	if (!!(s & ASide::TOP))
-	{
-		result += glm::vec2(0, -1);
-	}
-	if (!!(s & ASide::BOTTOM))
-	{
-		result += glm::vec2(0, 1);
-	}
-	
-	return result;
+    if (!!(s & ASide::LEFT)) {
+        result += glm::vec2(-1, 0);
+    }
+    if (!!(s & ASide::RIGHT)) {
+        result += glm::vec2(1, 0);
+    }
+    if (!!(s & ASide::TOP)) {
+        result += glm::vec2(0, -1);
+    }
+    if (!!(s & ASide::BOTTOM)) {
+        result += glm::vec2(0, 1);
+    }
+
+    return result;
 }

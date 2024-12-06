@@ -43,6 +43,7 @@
 #include "AUI/View/ASpinner.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
+#include "AUI/View/ATextArea.h"
 
 
 AStylesheet::AStylesheet() {
@@ -81,11 +82,16 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            t<AText>(),
+            { t<AText>(), t<ATextArea>() },
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
+        },
+
+        {
+            t<ATextArea>(),
+            Expanding { 1 },
         },
         // AAbstractLabel
         {
@@ -182,7 +188,7 @@ AStylesheet::AStylesheet() {
 
         // Text fields
         {
-            t<AAbstractTypeableView>(),
+            t<AAbstractTypeable>(),
             Padding { 3_dp, 6_dp },
             ACursor::TEXT,
         },

@@ -179,7 +179,7 @@ void AView::render(ARenderContext ctx)
 void AView::invalidateAllStyles()
 {
     static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusField() : glm::ivec2(DEFINITELY_INVALID_SIZE);
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
@@ -238,7 +238,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     applyAssRule(mCustomStyleRule);
     commitStyle();
 
-    if (prevMinimumSizePlusField != getMinimumSizePlusField()) {
+    if (prevMinimumSizePlusField != getMinimumSizePlusMargin()) {
         mMarkedMinContentSizeInvalid = true;
         AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
     }
