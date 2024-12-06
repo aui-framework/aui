@@ -475,7 +475,7 @@ void ATextArea::render(ARenderContext context) {
                 break;
         }
     }
-    drawSelectionBeforeAndAfter(context.render, selectionRects, [&] {
+    drawSelectionBeforeAndAfter(context.render, std::span(selectionRects), [&] {
         doDrawString(context);
     });
 

@@ -50,7 +50,7 @@ void AAbstractTextField::render(ARenderContext ctx) {
         selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, mPadding.top + getVerticalAlignmentOffset()},
                                                                         {endPos - beginPos, getFontStyle().size}));
     }
-    drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
+    drawSelectionBeforeAndAfter(ctx.render, std::span(selectionRects), [&] {
         doDrawString(ctx.render);
     });
     drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, mPadding.top + getVerticalAlignmentOffset()});

@@ -5,12 +5,7 @@ WarningsAsErrors: 'clang-analyzer-*,
 
   # rvalue references should be handled properly
   cppcoreguidelines-rvalue-reference-*'
-HeaderFileExtensions:
-  - 'h'
-  - 'hh'
-  - 'hpp'
-  - 'hxx'
-  - 'inl'
+
 HeaderFilterRegex: '^.*/src/AUI/.*$'
 AnalyzeTemporaryDtors: false
 FormatStyle:     google
