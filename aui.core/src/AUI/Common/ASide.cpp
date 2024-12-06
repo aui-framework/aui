@@ -24,8 +24,9 @@ glm::vec2 ASides::getNormalVector(ASide s) {
         case ASide::NONE:
             return {};
         default:
+            break;
     }
-    glm::ivec2 result{};
+    glm::ivec2 result{0};
 
     if (!!(s & ASide::LEFT)) {
         result += glm::vec2(-1, 0);
