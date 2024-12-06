@@ -15,6 +15,7 @@
 
 #include <range/v3/all.hpp>
 #include "ATextArea.h"
+#include "AScrollArea.h"
 #include "AUI/Traits/algorithms.h"
 #include "AButton.h"
 #include <AUI/Util/AWordWrappingEngineImpl.h>
@@ -412,6 +413,23 @@ glm::ivec2 ATextArea::getCursorPosition() {
 
 void ATextArea::onCursorIndexChanged() {
     mCursorPosition = getPosByIndex(mCursorIndex);
+    AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));
+}
+
+void ATextArea::setSize(glm::ivec2 size) {
+    ATextBase::setSize(size);
+    if (auto scrollArea = findScrollArea()) {
+        for (const auto& scrollbar : { scrollArea->horizontalScrollbar(), scrollArea->verticalScrollbar() }) {
+            if (!scrollbar) {
+                continue;
+            }
+
+            connect(scrollbar->updatedMaxScroll, this, [this] {
+                AObject::disconnect();
+                AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));
+            });
+        }
+    }
 }
 
 void ATextArea::render(ARenderContext context) {
@@ -498,5 +516,14 @@ ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index, EntityQueryR
         return {std::prev(entities().end()), index};
     }
     return {entities().end(), 0};
+}
+
+AScrollArea* ATextArea::findScrollArea() {
+    for (auto parent = getParent(); parent != nullptr; parent = parent->getParent()) {
+        if (auto scrollArea = dynamic_cast<AScrollArea*>(parent)) {
+            return scrollArea;
+        }
+    }
+    return nullptr;
 }
 

@@ -12,7 +12,7 @@
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATextArea.h>
-#include "AUI/View/ATextArea.h"
+#include <AUI/View/AScrollArea.h>
 
 using namespace ass;
 using std::operator""sv;
@@ -360,4 +360,25 @@ TEST_F(UITextArea, NextLineCursorPos) {
     EXPECT_GE(mTextArea->getCursorPosition().y, 0);
     mTextArea->moveCursorLeft();
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
+}
+
+TEST_F(UITextArea, ScrollAreaFollowsCursor) {
+    AWindow::current()->setContents(Centered {
+        AScrollArea::Builder().withContents(mTextArea).build() with_style { FixedSize(200_dp, 100_dp) },
+    });
+    mTextArea->setText("");
+    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
+    By::type<ATextArea>().perform(type(R"(Text
+with
+very
+large
+height
+blah
+bruh
+ololo
+lol
+kek)"));
+    By::type<ATextArea>().check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+    mTextArea->setSelection(0); // move to the beginning
+    (By::type<ATextArea>() | By::type<AScrollArea>()).check(areTopAligned());
 }

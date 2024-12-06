@@ -91,7 +91,7 @@ void AScrollArea::setSize(glm::ivec2 size) {
 
         mHorizontalScrollbar->setScrollDimensions(
                 mInner->getWidth(),
-                contents()->getMinimumSizePlusMargin().y);
+                contents()->getMinimumSizePlusMargin().x);
     }
 }
 
@@ -129,12 +129,9 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainerBase::onPointerReleased(event);
 }
 
-void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
-    if (!target) {
-        // nullptr target???
-        return;
-    }
-    const auto targetBegin = target->getPositionInWindow();
+void AScrollArea::scrollTo(ARect<int> target, bool nearestBorder) {
+    const auto targetBegin = target.leftTop();
+    const auto targetSize = target.size();
     const auto myBegin = getPositionInWindow();
 
     const auto toBeginPoint = targetBegin - myBegin;
@@ -143,12 +140,12 @@ void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
         return;
     }
 
-    const auto targetEnd = targetBegin + target->getSize() * 2;
+    const auto targetEnd = targetBegin + targetSize * 2;
     const auto myEnd = myBegin + getSize();
 
     const auto toEndPoint = targetEnd - myEnd;
 
-    auto delta = (targetBegin + target->getSize() / 2) - (myBegin + getSize() / 2);
+    auto delta = (targetBegin + targetSize / 2) - (myBegin + getSize() / 2);
     auto direction = glm::greaterThan(delta, glm::ivec2(0));
     const auto toBeginPointConditional = toBeginPoint * glm::ivec2(glm::greaterThan(myBegin, targetBegin));
     const auto toEndPointConditional = toEndPoint * glm::ivec2(glm::greaterThan(targetEnd, myEnd));

@@ -22,6 +22,8 @@
 #include "AScrollbar.h"
 #include "ATextBase.h"
 
+class API_AUI_VIEWS AScrollArea;
+
 /**
  * @brief Multiline text input area.
  * @ingroup useful_views
@@ -40,6 +42,8 @@
  *
  * This is why it does not offer default styling - you would probably want to style AScrollArea as if it were text
  * input.
+ *
+ * ATextArea offers integrations and optimizations for AScrollArea specifically.
  */
 class API_AUI_VIEWS ATextArea: public AAbstractTypeableView<ATextBase<ATextArea, AWordWrappingEngine<std::list<_unique<aui::detail::TextBaseEntry>>>>>, public IStringable {
 public:
@@ -66,8 +70,7 @@ public:
 
     glm::ivec2 getCursorPosition() override;
 
-private:
-    void onCursorIndexChanged() override;
+    void setSize(glm::ivec2 size) override;
 
 protected:
     void typeableErase(size_t begin, size_t end) override;
@@ -84,6 +87,13 @@ private:
     mutable AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
 
+    struct EntityQueryResult {
+        Iterator iterator;
+        size_t relativeIndex;
+    };
+
+private:
+
     auto& entities() {
         return mEngine.entries();
     }
@@ -92,14 +102,13 @@ private:
         return mEngine.entries();
     }
 
-    struct EntityQueryResult {
-        Iterator iterator;
-        size_t relativeIndex;
-    };
+    void onCursorIndexChanged() override;
 
     EntityQueryResult getLeftEntity(size_t indexRelativeToFrom, EntityQueryResult from);
     EntityQueryResult getLeftEntity(size_t index);
     Iterator splitIfNecessary(EntityQueryResult at);
+
+    AScrollArea* findScrollArea();
 };
 
 
