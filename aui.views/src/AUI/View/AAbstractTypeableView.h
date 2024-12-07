@@ -45,6 +45,9 @@ public:
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
         AAbstractTypeable::handleKey(key);
+        if (key == AInput::Key::RETURN) {
+            emit this->actionButtonPressed;
+        }
     }
 
     void onKeyRepeat(AInput::Key key) override {
@@ -148,6 +151,10 @@ private:
 
     void emitTextChanging(const AString& text) override {
         emit textChanging(text);
+    }
+
+    void emitActionButtonPressed() override {
+        emit actionButtonPressed;
     }
 
     void typeableInvalidateFont() override {

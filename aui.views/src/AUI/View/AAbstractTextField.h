@@ -12,7 +12,6 @@
 #pragma once
 
 #include <AUI/View/AAbstractTypeableView.h>
-#include "AUI/Enum/ATextInputAction.h"
 #include "AUI/Enum/ATextInputType.h"
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
@@ -45,26 +44,17 @@ public:
     }
 
     [[nodiscard]]
-    ATextInputType textInputType() const noexcept {
+    ATextInputType textInputType() const noexcept override {
         return mTextInputType;
     }
 
-    void setTextInputAction(ATextInputAction textInputAction) noexcept {
-        mTextInputAction = textInputAction;
+    void setPasswordMode(bool isPasswordField) {
+        mIsPasswordTextField = isPasswordField;
+        setCopyable(!isPasswordField);
     }
 
     [[nodiscard]]
-    ATextInputAction textInputAction() const noexcept {
-        return mTextInputAction;
-    }
-
-
-    void setPasswordMode(bool isPasswordMode) {
-        mIsPasswordTextField = isPasswordMode;
-        setCopyable(!isPasswordMode);
-    }
-
-    bool isPasswordMode() const {
+    bool isPasswordField() const noexcept override {
         return mIsPasswordTextField;
     }
 
@@ -76,15 +66,7 @@ public:
 
     void setSize(glm::ivec2 size) override;
 
-    void onKeyDown(AInput::Key key) override;
-
     glm::ivec2 getCursorPosition() override;
-
-signals:
-    /**
-     * @brief On action button of touchscreen keyboard pressed
-     */
-    emits<> actionButtonPressed;
 
 protected:
     _<IRenderer::IPrerenderedString> mPrerenderedString;
@@ -119,7 +101,6 @@ protected:
     void onCursorIndexChanged() override;
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
-    ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
     int mHorizontalScroll = 0; // positive only

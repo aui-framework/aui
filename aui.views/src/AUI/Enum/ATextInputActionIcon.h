@@ -14,7 +14,7 @@
 #include <AUI/Reflect/AEnumerate.h>
 
 /**
- * @brief Controls IME text input action the user is requested to perform.
+ * @brief Controls icons representing IME text input action the user is requested to perform.
  * @ingroup views
  * @details
  * Each action configures soft keyboard to display the certain kind of operation. The visual appearance of the action
@@ -23,7 +23,7 @@
  *
  * It's up to developer to handle the action accordingly.
  */
-enum class ATextInputAction {
+enum class ATextInputActionIcon {
     /**
      * @brief There's no concrete input action. Let the OS decide which action is the most appropriate.
      * @details
@@ -110,11 +110,11 @@ enum class ATextInputAction {
     NEXT,
 };
 
-AUI_ENUM_VALUES(ATextInputAction,
-                ATextInputAction::DEFAULT,
-                ATextInputAction::DONE,
-                ATextInputAction::GO,
-                ATextInputAction::SEND,
-                ATextInputAction::SEARCH,
-                ATextInputAction::NEXT)
+AUI_ENUM_VALUES(ATextInputActionIcon,
+                ATextInputActionIcon::DEFAULT,
+                ATextInputActionIcon::DONE,
+                ATextInputActionIcon::GO,
+                ATextInputActionIcon::SEND,
+                ATextInputActionIcon::SEARCH,
+                ATextInputActionIcon::NEXT)
 
