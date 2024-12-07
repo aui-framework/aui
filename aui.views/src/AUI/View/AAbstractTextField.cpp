@@ -234,13 +234,6 @@ void AAbstractTextField::setSize(glm::ivec2 size) {
     updateTextAlignOffset();
 }
 
-void AAbstractTextField::onKeyDown(AInput::Key key) {
-    AAbstractTypeableView::onKeyDown(key);
-    if (key == AInput::Key::RETURN) {
-        emit actionButtonPressed;
-    }
-}
-
 unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
     return mTextLayoutHelper.posToIndexFixedLineHeight(pos - glm::ivec2{ mPadding.left - mHorizontalScroll, 0 },
                                                        getFontStyle());

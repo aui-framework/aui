@@ -13,6 +13,8 @@
 
 
 #include <AUI/Util/ACursorSelectable.h>
+#include <AUI/Enum/ATextInputActionIcon.h>
+#include <AUI/Enum/ATextInputType.h>
 #include "AUI/Common/ATimer.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Font/IFontView.h"
@@ -41,6 +43,35 @@ public:
     }
 
     virtual void setText(const AString& t);
+
+    /**
+     * @return true if this typeable should be treated as password.
+     */
+    [[nodiscard]]
+    virtual bool isPasswordField() const noexcept = 0;
+
+    /**
+     * @return text input type of this typeable.
+     * @see ATextInputType
+     */
+    [[nodiscard]]
+    virtual ATextInputType textInputType() const noexcept = 0;
+
+    /**
+     * @see ATextInputActionIcon
+     */
+    void setTextInputActionIcon(ATextInputActionIcon textInputActionIcon) noexcept {
+        mTextInputActionIcon = textInputActionIcon;
+    }
+
+    /**
+     * @return text input type of this typeable.
+     * @see ATextInputActionIcon
+     */
+    [[nodiscard]]
+    ATextInputActionIcon textInputActionIcon() const noexcept {
+        return mTextInputActionIcon;
+    }
 
     /**
      * @brief Performs copy operation (CTRL+C) to system clipboard.
@@ -83,6 +114,10 @@ public:
      */
     void moveCursorRight();
 
+    virtual void emitTextChanged(const AString& text) = 0;
+    virtual void emitTextChanging(const AString& text) = 0;
+    virtual void emitActionButtonPressed() = 0;
+
 signals:
     /**
      * <dl>
@@ -108,6 +143,14 @@ signals:
      * </dl>
      */
     emits<Selection> selectionChanged;
+
+    /**
+     * <dl>
+     *   <dt><b>Emits</b></dt>
+     *   <dd>When action button of touchscreen keyboard or AInput::RETURN is pressed.</dd>
+     * </dl>
+     */
+    emits<> actionButtonPressed;
 
 protected:
     size_t mMaxTextLength = 0x200;
@@ -159,6 +202,10 @@ protected:
 private:
     _<ATimer> mBlinkTimer = blinkTimer();
 
+    /**
+     * @see ATextInputActionIcon
+     */
+    ATextInputActionIcon mTextInputActionIcon = ATextInputActionIcon::DEFAULT;
     unsigned mCursorBlinkCount = 0;
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
@@ -170,8 +217,6 @@ private:
     template<aui::derived_from<AView> Super>
     friend class AAbstractTypeableView;
 
-    virtual void emitTextChanged(const AString& text) = 0;
-    virtual void emitTextChanging(const AString& text) = 0;
     virtual void typeableInvalidateFont() = 0;
     void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
 

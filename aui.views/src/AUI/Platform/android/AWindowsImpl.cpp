@@ -150,12 +150,12 @@ void AWindow::allowDragNDrop() {
 void AWindow::showTouchscreenKeyboardImpl() {
     ui_thread {
         ATextInputType type = ATextInputType::DEFAULT;
-        ATextInputAction action = ATextInputAction::DEFAULT;
+        ATextInputActionIcon action = ATextInputActionIcon::DEFAULT;
         bool isPassword = false;
-        if (auto textField = _cast<AAbstractTextField>(AWindow::getFocusedView())) {
+        if (auto textField = _cast<AAbstractTypeable>(AWindow::getFocusedView())) {
             type = textField->textInputType();
-            action = textField->textInputAction();
-            isPassword = textField->isPasswordMode();
+            action = textField->textInputActionIcon();
+            isPassword = textField->isPasswordField();
         }
         com::github::aui::android::Platform::showKeyboard(static_cast<int>(type),
                                                         static_cast<int>(action), isPassword);

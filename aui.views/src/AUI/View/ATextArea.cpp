@@ -528,3 +528,11 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
     }
 }
 
+bool ATextArea::isPasswordField() const noexcept {
+    return false;
+}
+
+ATextInputType ATextArea::textInputType() const noexcept {
+    return ATextInputType::MULTILINE;
+}
+

@@ -62,14 +62,14 @@ public:
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;
-
     void render(ARenderContext context) override;
-
     void onCharEntered(char16_t c) override;
-
     glm::ivec2 getCursorPosition() override;
-
     void setSize(glm::ivec2 size) override;
+
+    bool isPasswordField() const noexcept override;
+
+    ATextInputType textInputType() const noexcept override;
 
 protected:
     void typeableErase(size_t begin, size_t end) override;
