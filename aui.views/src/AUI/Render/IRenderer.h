@@ -320,16 +320,11 @@ public:
      * @param position string's top left point
      * @param string string to render
      * @param fs font style (optional)
-     * @details
-     * <dl>
-     *     <dt><b>Warning!</b></dt>
-     *     <dd>
-     *         This function is dramatically inefficient since it does symbol lookup for every character is the
-     *         <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
-     *         times (frames), consider using the IRenderer::prerenderString function or high level views (such as
-     *         ALabel) instead.
-     *     </dd>
-     * </dl>
+     * @note
+     * This function is dramatically inefficient since it does symbol lookup for every character is the
+     * <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
+     * times (frames), consider using the IRenderer::prerenderString function or high level views (such as
+     * ALabel) instead.
      */
     virtual void string(glm::vec2 position,
                         const AString& string,

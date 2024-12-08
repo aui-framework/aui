@@ -87,6 +87,7 @@ AStylesheet::AStylesheet() {
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
+            LineHeight::NORMAL,
         },
 
         {

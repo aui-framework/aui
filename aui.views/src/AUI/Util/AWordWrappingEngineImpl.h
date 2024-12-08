@@ -11,10 +11,7 @@
 
 #pragma once
 
-#include <range/v3/numeric/accumulate.hpp>
-#include <range/v3/algorithm/max.hpp>
-#include <range/v3/view/concat.hpp>
-#include <range/v3/view/transform.hpp>
+#include <range/v3/all.hpp>
 #include "AWordWrappingEngine.h"
 #include "AUI/Util/AFraction.h"
 
@@ -28,6 +25,7 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         int occupiedHorizontalSpace;
     };
 
+    static constexpr auto UNDEFINED_POSITION_MARKER = std::numeric_limits<int>::min();
     struct FloatingEntry {
         aui::no_escape<Entry> entry;
         int occupiedHorizontalSpace;
@@ -35,9 +33,12 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         glm::ivec2 position;
 
         void setPosition(glm::ivec2 p) {
-            entry->setPosition(position = p);
+            position = p;
+            if (p.x != UNDEFINED_POSITION_MARKER && p.y != UNDEFINED_POSITION_MARKER);
+            entry->setPosition(p);
         }
     };
+
 
 
     AVector<AVector<StandardEntry>> inflatedEntriesByRows;
@@ -65,7 +66,18 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     };
 
     auto flushRow = [&](bool last) {
-        int currentPos = 0;
+        const int currentYWithLineHeightApplied = currentY + (mLineHeight - 1.f) / 2.f * currentRowHeight;
+        for (AVector<FloatingEntry>* floating : {&leftFloat, &rightFloat}) {
+            for (FloatingEntry& i: *floating | ranges::views::reverse) {
+                if (i.position.y != UNDEFINED_POSITION_MARKER) {
+                    break;
+                }
+                i.position.y = currentYWithLineHeightApplied;
+                i.setPosition(i.position);
+            }
+        }
+
+        int currentX = 0;
         switch (mTextAlign) {
             case ATextAlign::JUSTIFY: {
                 if (!last) {
@@ -90,11 +102,11 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
 
                     AFraction spacing(freeSpace - actualRowWidth, (glm::max)(int(currentRow->size()) - 1, 1));
 
-                    currentPos = offset.x + leftPadding;
+                    currentX = offset.x + leftPadding;
                     int index = 0;
                     for (auto& i: *currentRow) {
-                        i.entry->setPosition({currentPos + (spacing * index).toInt(), currentY});
-                        currentPos += i.occupiedHorizontalSpace;
+                        i.entry->setPosition({currentX + (spacing * index).toInt(), currentYWithLineHeightApplied});
+                        currentX += i.occupiedHorizontalSpace;
                         ++index;
                     }
                     break;
@@ -103,11 +115,11 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
             }
             case ATextAlign::LEFT:
                 for (auto& i: leftFloat) {
-                    currentPos += i.occupiedHorizontalSpace;
+                    currentX += i.occupiedHorizontalSpace;
                 }
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentPos + offset.x, currentY});
-                    currentPos += i.occupiedHorizontalSpace;
+                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    currentX += i.occupiedHorizontalSpace;
                 }
                 break;
 
@@ -128,10 +140,10 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                     }
                 }
 
-                currentPos = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
+                currentX = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentPos + offset.x, currentY});
-                    currentPos += i.occupiedHorizontalSpace;
+                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    currentX += i.occupiedHorizontalSpace;
                 }
                 break;
             }
@@ -141,10 +153,10 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                 int actualRowWidth = 0;
                 for (auto& i : *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
                 for (auto& i : rightFloat) actualRowWidth += i.occupiedHorizontalSpace;
-                currentPos = size.x - actualRowWidth;
+                currentX = size.x - actualRowWidth;
                 for (auto& i : *currentRow) {
-                    i.entry->setPosition({currentPos + offset.x, currentY});
-                    currentPos += i.occupiedHorizontalSpace;
+                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    currentX += i.occupiedHorizontalSpace;
                 }
                 break;
         }
@@ -156,9 +168,10 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     for (auto currentItem = mEntries.begin(); currentItem != mEntries.end(); ++currentItem) {
         auto currentItemSize = (*currentItem)->getSize();
         bool forcesNextLine = (*currentItem)->forcesNextLine();
+        bool escapesEdges = (*currentItem)->escapesEdges();
 
         // check if entry fits into the row
-        if (forcesNextLine || currentRowWidth + currentItemSize.x > size.x) {
+        if (forcesNextLine || (currentRowWidth + currentItemSize.x > size.x && !escapesEdges)) {
             // if current row is empty, we must place this element (unless forcesNextLine)
             if (!currentRow->empty() || forcesNextLine) {
                 // jump to the next row
@@ -194,14 +207,14 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
             case AFloat::LEFT: {
                 int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
-                leftFloat.last().setPosition({position, currentY});
+                leftFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;
             }
 
             case AFloat::RIGHT: {
                 rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
                 int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
-                rightFloat.last().setPosition({position, currentY});
+                rightFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;
             }
 
@@ -213,9 +226,7 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
 
         currentRowWidth += currentItemSize.x;
     }
-    if (!currentRow->empty()) {
-        flushRow(true);
-    }
+    flushRow(true);
 
     auto floatingMax = [&] {
         auto r = ranges::views::concat(leftFloat, rightFloat);

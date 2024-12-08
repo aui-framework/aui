@@ -22,9 +22,16 @@ namespace ass {
     /**
      * @brief Controls line height multiplier of the font of the AView.
      * @ingroup ass
+     * @details
+     * Matches CSS property line-height.
      */
     struct LineHeight {
         float spacing;
+
+        /**
+         * @brief LineHeight matching 'line-height: normal' on common browsers (= 1.2). Used by default.
+         */
+        static LineHeight NORMAL;
     };
 
     namespace prop {
@@ -47,3 +54,5 @@ namespace ass {
         };
     }
 }
+
+inline ass::LineHeight ass::LineHeight::NORMAL = { 1.2f };

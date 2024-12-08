@@ -224,18 +224,28 @@ public:
             return 0;
         }
 
+        // if width is not defined, when we try to occupy as much space as possible, only restricted by max size.
+        // basically, it is drastically simplified version of perform layout.
+        int max = 0;
         int accumulator = 0;
+        const auto paddedMaxSize = mMaxSize.x - mPadding.horizontal();
         for (const auto& e : mEngine.entries()) {
-            if (accumulator + e->getSize().x > mMaxSize.x) {
+            if (e->forcesNextLine()) {
+                max = glm::max(max, accumulator);
+                accumulator = 0;
+                continue;
+            }
+            if (accumulator + e->getSize().x > paddedMaxSize) {
                 if (accumulator == 0) {
                     return mMaxSize.x;
                 }
                 // there's no need to calculate min size further.
-                return accumulator;
+                goto ret;
             }
             accumulator += e->getSize().x;
         }
-        return accumulator;
+        ret:
+        return glm::max(max, accumulator);
     }
     int getContentMinimumHeight(ALayoutDirection layout) override {
         if (!mPrerenderedString) {
