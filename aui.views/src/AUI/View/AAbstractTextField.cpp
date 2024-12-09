@@ -32,7 +32,7 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 }
 
 
-int AAbstractTextField::getContentMinimumHeight(ALayoutDirection layout) {
+int AAbstractTextField::getContentMinimumHeight() {
     return getFontStyle().size;
 }
 

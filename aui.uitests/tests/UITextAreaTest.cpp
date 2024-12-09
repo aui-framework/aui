@@ -54,7 +54,7 @@ protected:
         uitest::frame();
     }
 
-    _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} } } let {
+    _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} }, LineHeight { 1.f } } let {
         it->setText("hello world!\nsecond line");
     };
 

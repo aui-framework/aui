@@ -97,9 +97,9 @@ public:
 
     void onClickPrevented() override;
 
-    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumWidth() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    int getContentMinimumHeight() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
@@ -130,6 +130,15 @@ public:
      */
     const AVector<_<AView>>& getViews() const {
         return mViews;
+    }
+
+
+    /**
+     * @brief Get layout manager of the container.
+     */
+    [[nodiscard]]
+    const _unique<ALayout>& getLayout() const noexcept {
+        return mLayout;
     }
 
     /**
@@ -388,11 +397,6 @@ protected:
      * @brief Set new layout manager for this AViewContainerBase. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
      */
     void setLayout(_unique<ALayout> layout);
-
-    [[nodiscard]]
-    const _unique<ALayout>& getLayout() const noexcept {
-        return mLayout;
-    }
 
     void renderChildren(ARenderContext contextPassedToContainer) {
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);

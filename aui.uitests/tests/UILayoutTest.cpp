@@ -137,11 +137,11 @@ namespace {
 class LabelMock: public ALabel {
 public:
     LabelMock(AString text): ALabel(std::move(text)) {
-        ON_CALL(*this, getContentMinimumWidth).WillByDefault([this](const auto& a) {
-            return ALabel::getContentMinimumWidth(a);
+        ON_CALL(*this, getContentMinimumWidth).WillByDefault([this]() {
+            return ALabel::getContentMinimumWidth();
         });
     }
-    MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override));
+    MOCK_METHOD(int, getContentMinimumWidth, (), (override));
 };
 }
 
@@ -151,7 +151,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, getContentMinimumWidth(testing::_)).Times(1);
+    EXPECT_CALL(*l, getContentMinimumWidth()).Times(1);
     inflate(Centered { Horizontal {
         l,
     }});
@@ -168,7 +168,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     testing::InSequence s;
     auto l1 = _new<LabelMock>("test");
     auto l2 = _new<ALabel>("test");
-    EXPECT_CALL(*l1, getContentMinimumWidth(testing::_)).Times(2);
+    EXPECT_CALL(*l1, getContentMinimumWidth()).Times(2);
     inflate(Centered { Horizontal {
         l1,
         l2,

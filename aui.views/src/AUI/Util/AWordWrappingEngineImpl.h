@@ -34,7 +34,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
 
         void setPosition(glm::ivec2 p) {
             position = p;
-            if (p.x != UNDEFINED_POSITION_MARKER && p.y != UNDEFINED_POSITION_MARKER);
+            if (p.x == UNDEFINED_POSITION_MARKER || p.y == UNDEFINED_POSITION_MARKER) {
+                return;
+            }
             entry->setPosition(p);
         }
     };

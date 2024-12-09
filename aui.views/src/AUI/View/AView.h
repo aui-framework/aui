@@ -576,14 +576,14 @@ public:
      * @return minimal content-area width.
      */
     [[nodiscard]]
-    virtual int getContentMinimumWidth(ALayoutDirection layout);
+    virtual int getContentMinimumWidth();
 
 
     /**
      * @return minimal content-area height.
      */
     [[nodiscard]]
-    virtual int getContentMinimumHeight(ALayoutDirection layout);
+    virtual int getContentMinimumHeight();
 
     /**
      * @return minimal content-area size.
@@ -591,7 +591,7 @@ public:
     [[nodiscard]]
     glm::ivec2 getContentMinimumSize(ALayoutDirection layout) noexcept {
         if (!mCachedMinContentSize) {
-            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(layout), getContentMinimumHeight(layout));
+            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(), getContentMinimumHeight());
             mCachedMinContentSize = minContentSize;
             return minContentSize;
         }

@@ -265,19 +265,18 @@ void AViewContainerBase::onMouseLeave() {
     }
 }
 
-int AViewContainerBase::getContentMinimumWidth(ALayoutDirection layout) {
+int AViewContainerBase::getContentMinimumWidth() {
     if (mLayout) {
-        return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth(ALayoutDirection::NONE));
+        return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
     }
-    return AView::getContentMinimumWidth(ALayoutDirection::NONE);
+    return AView::getContentMinimumWidth();
 }
 
-
-int AViewContainerBase::getContentMinimumHeight(ALayoutDirection layout) {
+int AViewContainerBase::getContentMinimumHeight() {
     if (mLayout) {
-        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight(ALayoutDirection::NONE));
+        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
     }
-    return AView::getContentMinimumHeight(ALayoutDirection::NONE);
+    return AView::getContentMinimumHeight();
 }
 
 void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {

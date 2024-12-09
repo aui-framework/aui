@@ -54,7 +54,7 @@ public:
         return mSelectionId;
     }
     void setSelectionId(int id);
-    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumWidth() override;
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
