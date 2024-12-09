@@ -17,6 +17,7 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
+#include <AUI/View/AView.h>
 
 
 template<typename View, typename FieldType>
@@ -438,3 +439,17 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data,
     }
     return object;
 }
+
+template<typename View>
+struct ADataBindingDefault<View, Visibility> {
+public:
+    /**
+     * Called then view linked with field.
+     * @param view
+     */
+    static void setup(const _<View>& view) {}
+
+    static auto getSetter() {
+        return &AView::setVisibility;
+    }
+};
