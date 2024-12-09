@@ -45,7 +45,7 @@ public:
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
         AAbstractTypeable::handleKey(key);
-        if (key == AInput::Key::RETURN) {
+        if (key == AInput::Key::RETURN && !AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
             emit this->actionButtonPressed;
         }
     }
