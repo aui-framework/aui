@@ -75,7 +75,8 @@ namespace {
         HitTestResult hitTest(glm::ivec2 position) override {
             position -= mPosition;
             auto size = getSize();
-            if (glm::all(glm::greaterThanEqual(position, glm::ivec2(0))) && glm::all(glm::lessThanEqual(position, size))) {
+            if (glm::all(glm::greaterThanEqual(position, glm::ivec2(0))) &&
+                glm::all(glm::lessThanEqual(position, size))) {
                 // click at the left or right corner
                 return size_t((mCount * position.x * 2 + mText->getFontStyle().getSpaceWidth()) / size.x / 2);
             }
@@ -97,6 +98,7 @@ namespace {
             Entry::setPosition(position);
             mPosition = position;
         }
+
     private:
         glm::ivec2 mPosition;
     };
@@ -132,27 +134,27 @@ namespace {
     constexpr auto stringToEntriesView(ATextArea* thiz) {
         return ranges::views::filter([](auto c) { return c != '\r'; })
                | ranges::views::chunk_by([](char16_t prev, char16_t next) {
-                    if (prev == '\n' || next == '\n') {
-                        return false;
-                    }
-                    if (next == ' ' && prev != ' ') {
-                        return false;
-                    }
-                    if (next != ' ' && prev == ' ') {
-                        return false;
-                    }
-                    return true;
-                 })
+            if (prev == '\n' || next == '\n') {
+                return false;
+            }
+            if (next == ' ' && prev != ' ') {
+                return false;
+            }
+            if (next != ' ' && prev == ' ') {
+                return false;
+            }
+            return true;
+        })
                | ranges::views::transform([thiz](ranges::range auto chars) -> _unique<aui::detail::TextBaseEntry> {
-                   AUI_ASSERT(!chars.empty());
-                   if (chars.front() == ' ') {
-                       return std::make_unique<WhitespaceEntry>(thiz, std::distance(chars.begin(), chars.end()));
-                   }
-                   if (chars.front() == '\n') {
-                       return std::make_unique<NextLineEntry>(thiz);
-                   }
-                   return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
-                 });
+            AUI_ASSERT(!chars.empty());
+            if (chars.front() == ' ') {
+                return std::make_unique<WhitespaceEntry>(thiz, std::distance(chars.begin(), chars.end()));
+            }
+            if (chars.front() == '\n') {
+                return std::make_unique<NextLineEntry>(thiz);
+            }
+            return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
+        });
     }
 }
 
@@ -206,7 +208,8 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
     AUI_DEFER { performLayout(); };
     auto resolvedEnd = getLeftEntity(end - begin, resolvedBegin);
     if (resolvedBegin.iterator == resolvedEnd.iterator) [[likely]] {
-        if (resolvedBegin.relativeIndex == 0 && resolvedEnd.relativeIndex == (*resolvedEnd.iterator)->getCharacterCount()) [[unlikely]] {
+        if (resolvedBegin.relativeIndex == 0 &&
+            resolvedEnd.relativeIndex == (*resolvedEnd.iterator)->getCharacterCount()) [[unlikely]] {
             entities().erase(resolvedBegin.iterator);
             return;
         }
@@ -216,17 +219,17 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
 
     if (resolvedBegin.relativeIndex != 0) [[likely]] {
         (*resolvedBegin.iterator)->erase(resolvedBegin.relativeIndex, std::nullopt);
-        resolvedBegin = { .iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0 };
+        resolvedBegin = {.iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0};
     } else {
         if (resolvedBegin.relativeIndex == (*resolvedBegin.iterator)->getCharacterCount()) {
-            resolvedBegin = { .iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0 };
+            resolvedBegin = {.iterator = std::next(resolvedBegin.iterator), .relativeIndex = 0};
         }
     }
 
     if (resolvedEnd.iterator != entities().end()) {
         if (resolvedEnd.relativeIndex != (*resolvedEnd.iterator)->getCharacterCount()) {
             (*resolvedEnd.iterator)->erase(0, resolvedEnd.relativeIndex);
-            resolvedEnd = { .iterator = resolvedEnd.iterator, .relativeIndex = 0 };
+            resolvedEnd = {.iterator = resolvedEnd.iterator, .relativeIndex = 0};
         } else {
             resolvedEnd = {.iterator = std::next(resolvedEnd.iterator), .relativeIndex = 0};
         }
@@ -244,7 +247,7 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
         relativeIndex = 0;
     }
     target = splitIfNecessary({target, relativeIndex});
-    for (auto i : toInsert | stringToEntriesView(this)) {
+    for (auto i: toInsert | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
     }
 
@@ -273,7 +276,8 @@ bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
     AUI_DEFER { performLayout(); };
     auto entity = getLeftEntity(at);
 
-    auto insertImpl = [&]<aui::factory<_unique<aui::detail::TextBaseEntry>> NewEntity, typename Append>(NewEntity&& newEntity, Append&& append) {
+    auto insertImpl = [&]<aui::factory<_unique<aui::detail::TextBaseEntry>> NewEntity, typename Append>(
+            NewEntity&& newEntity, Append&& append) {
         tryAgain:
         if (entity.iterator == entities().end()) {
             entities().insert(entity.iterator, newEntity());
@@ -380,9 +384,10 @@ size_t ATextArea::length() const {
 
 unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
     unsigned accumulator = 0;
-    for (const auto& e : mEngine.entries()) {
+    for (const auto& e: mEngine.entries()) {
         auto result = e->hitTest(pos);
-        if (std::holds_alternative<aui::detail::TextBaseEntry::StopLineScanningHint>(result)) { // we came way below this line.
+        if (std::holds_alternative<aui::detail::TextBaseEntry::StopLineScanningHint>(
+                result)) { // we came way below this line.
             if (accumulator > 0) {
                 return accumulator - 1;
             }
@@ -413,20 +418,23 @@ glm::ivec2 ATextArea::getCursorPosition() {
 
 void ATextArea::onCursorIndexChanged() {
     mCursorPosition = getPosByIndex(mCursorIndex);
-    AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));
+    AUI_NULLSAFE(findScrollArea())->scrollTo(
+                ARect<int>::fromTopLeftPositionAndSize(getPositionInWindow() + mCursorPosition - mPadding.leftTop(),
+                                                       {1, getFontStyle().size}));
 }
 
 void ATextArea::setSize(glm::ivec2 size) {
     ATextBase::setSize(size);
     if (auto scrollArea = findScrollArea()) {
-        for (const auto& scrollbar : { scrollArea->horizontalScrollbar(), scrollArea->verticalScrollbar() }) {
+        for (const auto& scrollbar: {scrollArea->horizontalScrollbar(), scrollArea->verticalScrollbar()}) {
             if (!scrollbar) {
                 continue;
             }
 
             connect(scrollbar->updatedMaxScroll, this, [this] {
                 AObject::disconnect();
-                AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));
+                AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(
+                            getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));
             });
         }
     }
@@ -441,7 +449,7 @@ void ATextArea::render(ARenderContext context) {
         auto endPos = getPosByIndex(s.end);
         const auto LINE_HEIGHT = int(getFontStyle().size);
         endPos.y += LINE_HEIGHT;
-        for (auto i : { &beginPos, &endPos }) *i += glm::ivec2{mPadding.left, mPadding.top};
+        for (auto i: {&beginPos, &endPos}) *i += glm::ivec2{mPadding.left, mPadding.top};
         const auto LINES_OF_SELECTION = (endPos.y - beginPos.y) / LINE_HEIGHT;
         const auto LEFT_POS = mPadding.left;
         const auto RIGHT_POS = getWidth() - mPadding.right;
@@ -455,16 +463,16 @@ void ATextArea::render(ARenderContext context) {
                 // ################# // first rect
                 // ###########...... // third rect
                 // .................
-                selectionRects.push_back(ARect<int>{ .p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT},
-                                                     .p2 = { RIGHT_POS, endPos.y - LINE_HEIGHT } });
+                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT},
+                        .p2 = {RIGHT_POS, endPos.y - LINE_HEIGHT}});
                 [[fallthrough]];
             case 2:
                 // .................
                 // .....############ // first rect
                 // ###########...... // second rect
                 // .................
-                selectionRects.push_back(ARect<int>{ .p1 = beginPos, .p2 = { RIGHT_POS, beginPos.y + LINE_HEIGHT } });
-                selectionRects.push_back(ARect<int>{ .p1 = { LEFT_POS, endPos.y - LINE_HEIGHT }, .p2 = endPos });
+                selectionRects.push_back(ARect<int>{.p1 = beginPos, .p2 = {RIGHT_POS, beginPos.y + LINE_HEIGHT}});
+                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, endPos.y - LINE_HEIGHT}, .p2 = endPos});
                 break;
             case 1:
                 // .................
@@ -487,7 +495,7 @@ bool ATextArea::capturesFocus() {
 }
 
 ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index) {
-    return getLeftEntity(index, { .iterator = entities().begin(), .relativeIndex = 0 });
+    return getLeftEntity(index, {.iterator = entities().begin(), .relativeIndex = 0});
 }
 
 ATextArea::EntityQueryResult ATextArea::getLeftEntity(size_t index, EntityQueryResult from) {
@@ -517,11 +525,11 @@ AScrollArea* ATextArea::findScrollArea() {
 
 void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
     auto wordEntries = entities()
-        | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
-            return _cast<aui::detail::WordEntry>(e);
-          })
-        | ranges::views::filter([](auto ptr) { return ptr != nullptr; })
-        | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
+                       | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
+        return _cast<aui::detail::WordEntry>(e);
+    })
+                       | ranges::views::filter([](auto ptr) { return ptr != nullptr; })
+                       | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
 
     for (auto& wordEntry: wordEntries) {
         canvas->addString(wordEntry.getPosition(), wordEntry.getWord());

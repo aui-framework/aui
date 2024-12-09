@@ -19,3 +19,10 @@ work happen. When we consider `develop` branch stable enough, we merge `develop`
 
 We have `.clang-format` in root directory which describes our code style. Also, this document is used in code style
 check pipeline.
+
+Visual Studio Code with clang plugin should pickup this file by itself.
+
+In CLion, click "4 spaces" button in bottom right corner (near `UTF-8`) and select "Enable ClangFormat" ([source](https://www.jetbrains.com/help/clion/clangformat-as-alternative-formatter.html#clion-support)).
+
+We recommend to use this `.clang-format` in your projects as well, so you wont struggle with indentation while building
+UIs.
