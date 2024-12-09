@@ -35,8 +35,8 @@ public:
 
     void render(ARenderContext context) override;
     void doRenderText(IRenderer& render);
-    int getContentMinimumWidth(ALayoutDirection layout) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    int getContentMinimumWidth() override;
+    int getContentMinimumHeight() override;
 
     const _<IDrawable>& getIcon() const {
         return mIcon;

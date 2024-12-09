@@ -59,13 +59,13 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     connect(mHorizontalScrollbar->scrolled, slot(mInner)::setScrollX);
 }
 
-int AScrollArea::getContentMinimumWidth(ALayoutDirection layout) {
+int AScrollArea::getContentMinimumWidth() {
     if (getExpandingHorizontal() != 0) return 0;
-    return AViewContainerBase::getContentMinimumWidth(layout) + contents()->getMinimumSizePlusMargin().x;
+    return AViewContainerBase::getContentMinimumWidth() + contents()->getMinimumSizePlusMargin().x;
 }
-int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
+int AScrollArea::getContentMinimumHeight() {
     if (getExpandingVertical() != 0) return 0;
-    return AViewContainerBase::getContentMinimumHeight(layout) + contents()->getMinimumSizePlusMargin().y;
+    return AViewContainerBase::getContentMinimumHeight() + contents()->getMinimumSizePlusMargin().y;
 }
 void AScrollArea::setSize(glm::ivec2 size) {
     AViewContainerBase::setSize(size);

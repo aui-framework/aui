@@ -138,10 +138,10 @@ class LabelMock: public ALabel {
 public:
     LabelMock(AString text): ALabel(std::move(text)) {
         ON_CALL(*this, getContentMinimumWidth).WillByDefault([this](const auto& a) {
-            return ALabel::getContentMinimumWidth(a);
+            return ALabel::getContentMinimumWidth();
         });
     }
-    MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override));
+    MOCK_METHOD(int, getContentMinimumWidth, (ALayoutDirection layout), (override)) intgetContentMinimumWidth();
 };
 }
 

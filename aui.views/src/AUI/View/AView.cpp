@@ -245,14 +245,11 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     redraw();
 }
 
-
-int AView::getContentMinimumWidth(ALayoutDirection layout)
-{
+int AView::getContentMinimumWidth() {
     return 0;
 }
 
-int AView::getContentMinimumHeight(ALayoutDirection layout)
-{
+int AView::getContentMinimumHeight() {
     return 0;
 }
 

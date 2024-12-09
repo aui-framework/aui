@@ -78,19 +78,18 @@ public:
         drawView(view, ctx);
     }
 
-
-    int getContentMinimumWidth(ALayoutDirection layout) override {
+    int getContentMinimumWidth() override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumWidth(layout);
+            return view->getContentMinimumWidth();
         }
-        return AViewContainerBase::getContentMinimumWidth(layout);
+        return AViewContainerBase::getContentMinimumWidth();
     }
 
-    int getContentMinimumHeight(ALayoutDirection layout) override {
+    int getContentMinimumHeight() override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumHeight(layout);
+            return view->getContentMinimumHeight();
         }
-        return AViewContainerBase::getContentMinimumHeight(layout);
+        return AViewContainerBase::getContentMinimumHeight();
     }
 
     [[nodiscard]]

@@ -31,8 +31,7 @@ void AAbstractLabel::render(ARenderContext context) {
     doRenderText(context.render);
 }
 
-
-int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout) {
+int AAbstractLabel::getContentMinimumWidth() {
     if (mTextOverflow != ATextOverflow::NONE)
         return 0;
 
@@ -43,7 +42,7 @@ int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout) {
     return acc;
 }
 
-int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout) {
+int AAbstractLabel::getContentMinimumHeight() {
     if (mText.empty())
         return 0;
 

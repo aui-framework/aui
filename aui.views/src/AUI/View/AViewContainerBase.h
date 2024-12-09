@@ -97,9 +97,9 @@ public:
 
     void onClickPrevented() override;
 
-    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumWidth() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    int getContentMinimumHeight() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 

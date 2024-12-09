@@ -29,7 +29,7 @@ public:
 
     ~AAbstractTextField() override;
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    int getContentMinimumHeight() override;
 
     void setText(const AString& t) override;
 

@@ -218,7 +218,7 @@ public:
         }
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override {
+    int getContentMinimumWidth() override {
         if (mExpanding.x != 0 || mFixedSize.x != 0) {
             // there's no need to calculate min size because width is defined.
             return 0;
@@ -247,7 +247,7 @@ public:
         ret:
         return glm::max(max, accumulator);
     }
-    int getContentMinimumHeight(ALayoutDirection layout) override {
+    int getContentMinimumHeight() override {
         if (!mPrerenderedString) {
             performLayout();
         }

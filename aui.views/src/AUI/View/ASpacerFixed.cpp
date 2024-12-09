@@ -11,7 +11,7 @@
 
 #include "ASpacerFixed.h"
 
-int ASpacerFixed::getContentMinimumWidth(ALayoutDirection layout) {
+int ASpacerFixed::getContentMinimumWidth() {
     if (auto parent = getParent()) {
         if (const auto& layout = parent->getLayout()) {
             if (layout->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
@@ -22,7 +22,7 @@ int ASpacerFixed::getContentMinimumWidth(ALayoutDirection layout) {
     return 0;
 }
 
-int ASpacerFixed::getContentMinimumHeight(ALayoutDirection layout) {
+int ASpacerFixed::getContentMinimumHeight() {
     if (auto parent = getParent()) {
         if (const auto& layout = parent->getLayout()) {
             if (layout->getLayoutDirection() == ALayoutDirection::VERTICAL) {

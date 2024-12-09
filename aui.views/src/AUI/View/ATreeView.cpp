@@ -44,11 +44,11 @@ public:
         return mIndex;
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override {
+    int getContentMinimumWidth() override {
         return 40;
     }
 
-    int getContentMinimumHeight(ALayoutDirection layout) override {
+    int getContentMinimumHeight() override {
         return 40;
     }
 };
@@ -321,8 +321,7 @@ void ATreeView::setSize(glm::ivec2 size) {
 
 void ATreeView::updateScrollbarDimensions() {
     if (mContent) {
-        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight(
-                ALayoutDirection::NONE));
+        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
     }
 }
 
@@ -355,7 +354,7 @@ void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATr
 
 }
 
-int ATreeView::getContentMinimumHeight(ALayoutDirection layout) {
+int ATreeView::getContentMinimumHeight() {
     return 40;
 }
 

@@ -73,8 +73,8 @@ void ADropdownList::render(ARenderContext context) {
     }
 }
 
-int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
-    return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
+int ADropdownList::getContentMinimumWidth() {
+    return AAbstractLabel::getContentMinimumWidth() + 20;
 }
 
 void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
