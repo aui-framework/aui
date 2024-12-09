@@ -132,6 +132,15 @@ public:
         return mViews;
     }
 
+
+    /**
+     * @brief Get layout manager of the container.
+     */
+    [[nodiscard]]
+    const _unique<ALayout>& getLayout() const noexcept {
+        return mLayout;
+    }
+
     /**
      * @brief Finds first direct child view under position.
      * @param pos position relative to this container
@@ -388,11 +397,6 @@ protected:
      * @brief Set new layout manager for this AViewContainerBase. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
      */
     void setLayout(_unique<ALayout> layout);
-
-    [[nodiscard]]
-    const _unique<ALayout>& getLayout() const noexcept {
-        return mLayout;
-    }
 
     void renderChildren(ARenderContext contextPassedToContainer) {
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
