@@ -27,6 +27,12 @@ using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
  * platform dependent. The goal is to implement a customizable caption bar yet preserve native system caption bar look
  * and feel.
  *
+ * Use getCaptionContainer to fill up window caption.
+ *
+ * Use getContentContainer to fill up the window contents.
+ * @note
+ * Do not use setContents/setLayout.
+ *
  * Depending on the platform, AUI provides following ASS classes to customize:
  * - ".window-title" for whole window caption container. It has BackgroundSolid by default.
  * - ".title" for window title label
@@ -68,6 +74,7 @@ public:
 protected:
     bool isCustomCaptionMaximized() override;
 
+private:
     // these functions are hidden; use ACustomCaptionWindow::getContentContainer() instead
     using ACustomWindow::setLayout;
     using ACustomWindow::setViews;
