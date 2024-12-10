@@ -73,3 +73,4 @@ bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
     }
     return false;
 }
+void ACustomWindow::setSize(glm::ivec2 size) { AWindow::setSize(size); }

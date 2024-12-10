@@ -14,7 +14,6 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
-#if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "AUI/Render/IRenderer.h"
@@ -59,7 +58,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     case WM_MOVING:
         if (!mDragging) {
             mDragging = true;
-            emit dragBegin();
+            auto info = reinterpret_cast<RECT*>(lParam);
+            emit dragBegin({info->left, info->top });
         }
         break;
     case WM_EXITSIZEMOVE:
@@ -164,14 +164,6 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindo
     windowNativePreInit(name, width, height, nullptr, WindowStyle::DEFAULT);
 }
 
-ACustomWindow::ACustomWindow(): ACustomWindow("My custom window", 854, 500)
-{
-}
-
-ACustomWindow::~ACustomWindow()
-{
-}
-
 void ACustomWindow::setSize(glm::ivec2 size)
 {
     AViewContainer::setSize(size);
@@ -179,112 +171,6 @@ void ACustomWindow::setSize(glm::ivec2 size)
 
     MoveWindow(mHandle, pos.x, pos.y, size.x, size.y, false);
 }
-
-#elif AUI_PLATFORM_ANDROID
-
-void ACustomWindow::handleXConfigureNotify() {
-
-}
-
-ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
-
-}
-
-void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    AWindowBase::onPointerPressed(event);
-}
-
-void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
-}
-
-#elif AUI_PLATFORM_APPLE
-
-ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
-        AWindow(name, width, height) {
-
-
-    setWindowStyle(WindowStyle::NO_DECORATORS);
-}
-void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < mTitleHeight && button == AInput::LBUTTON) {
-        if (isCaptionAt(pos)) {
-            // TODO apple
-
-            mDragging = true;
-            mDragPos = pos;
-            emit dragBegin(pos);
-        }
-    }
-    AViewContainer::onPointerPressed(event);
-}
-
-
-void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
-}
-void ACustomWindow::handleXConfigureNotify() {
-    emit dragEnd();
-
-    // x11 does not send release button event
-    AViewContainer::onPointerReleased(mDragPos, AInput::LBUTTON);
-}
-
-
-#else
-
-extern Display* gDisplay;
-
-ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
-        AWindow(name, width, height) {
-
-
-    setWindowStyle(WindowStyle::NO_DECORATORS);
-}
-
-void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < mTitleHeight && button == AInput::LBUTTON) {
-        if (isCaptionAt(pos)) {
-            XClientMessageEvent xclient;
-            memset(&xclient, 0, sizeof(XClientMessageEvent));
-            XUngrabPointer(gDisplay, 0);
-            XFlush(gDisplay);
-            xclient.type = ClientMessage;
-            xclient.window = mHandle;
-            xclient.message_type = XInternAtom(gDisplay, "_NET_WM_MOVERESIZE", False);
-            xclient.format = 32;
-            auto newPos = ADesktop::getMousePosition();
-            xclient.data.l[0] = newPos.x;
-            xclient.data.l[1] = newPos.y;
-            xclient.data.l[2] = 8;
-            xclient.data.l[3] = 0;
-            xclient.data.l[4] = 0;
-            XSendEvent(gDisplay, XRootWindow(gDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
-                       (XEvent*) &xclient);
-
-            mDragging = true;
-            mDragPos = pos;
-            emit dragBegin(pos);
-        }
-    }
-    AViewContainer::onPointerPressed(event);
-}
-
-
-void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
-}
-void ACustomWindow::handleXConfigureNotify() {
-    emit dragEnd();
-
-    // x11 does not send release button event
-    AViewContainer::onPointerReleased(mDragPos, AInput::LBUTTON);
-}
-
-
-
-#endif
-
 
 bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
     if (pos.y <= mTitleHeight) {
@@ -296,4 +182,12 @@ bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
         }
     }
     return false;
+}
+
+void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    AWindow::onPointerPressed(event);
+}
+
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AWindow::onPointerReleased(event);
 }

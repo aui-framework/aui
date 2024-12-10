@@ -37,6 +37,10 @@
 class ARender;
 class AWindowManager;
 
+/**
+ * @brief Represents a window in the underlying windowing system.
+ * @ingroup views
+ */
 class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
