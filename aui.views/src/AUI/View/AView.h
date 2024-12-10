@@ -589,7 +589,7 @@ public:
      * @return minimal content-area size.
      */
     [[nodiscard]]
-    glm::ivec2 getContentMinimumSize(ALayoutDirection layout) noexcept {
+    glm::ivec2 getContentMinimumSize() noexcept {
         if (!mCachedMinContentSize) {
             glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(), getContentMinimumHeight());
             mCachedMinContentSize = minContentSize;
@@ -608,11 +608,11 @@ public:
     bool hasFocus() const;
 
 
-    virtual int getMinimumWidth(ALayoutDirection layout = ALayoutDirection::NONE);
-    virtual int getMinimumHeight(ALayoutDirection layout = ALayoutDirection::NONE);
+    virtual int getMinimumWidth();
+    virtual int getMinimumHeight();
 
     glm::ivec2 getMinimumSize() {
-        return {getMinimumWidth(), getMinimumHeight()};
+        return { getMinimumWidth(), getMinimumHeight() };
     }
 
     void setMaxSize(const glm::ivec2& maxSize) {

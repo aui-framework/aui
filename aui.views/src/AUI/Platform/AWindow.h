@@ -146,6 +146,9 @@ public:
     void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
+#if AUI_PLATFORM_LINUX
+    void applyGeometryToChildren() override;
+#endif
 
     void onFocusAcquired() override;
     void onFocusLost() override;

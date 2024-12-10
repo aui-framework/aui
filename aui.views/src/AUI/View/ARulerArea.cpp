@@ -56,14 +56,12 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
     setExpanding({10, 10});
 
 
-    mWrappedView->setSize({mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
-            ALayoutDirection::NONE)});
+    mWrappedView->setSize({ mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight() });
 }
 
 void ARulerArea::setSize(glm::ivec2 size) {
     AViewContainerBase::setSize(size);
-    mWrappedView->setSize({mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
-            ALayoutDirection::NONE)});
+    mWrappedView->setSize({ mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight() });
     updatePosition();
 }
 
