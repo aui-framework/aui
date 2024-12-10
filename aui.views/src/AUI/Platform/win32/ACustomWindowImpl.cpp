@@ -58,7 +58,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     case WM_MOVING:
         if (!mDragging) {
             mDragging = true;
-            emit dragBegin();
+            auto info = reinterpret_cast<RECT*>(lParam);
+            emit dragBegin({info->left, info->top });
         }
         break;
     case WM_EXITSIZEMOVE:
@@ -163,14 +164,6 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindo
     windowNativePreInit(name, width, height, nullptr, WindowStyle::DEFAULT);
 }
 
-ACustomWindow::ACustomWindow(): ACustomWindow("My custom window", 854, 500)
-{
-}
-
-ACustomWindow::~ACustomWindow()
-{
-}
-
 void ACustomWindow::setSize(glm::ivec2 size)
 {
     AViewContainer::setSize(size);
@@ -189,4 +182,12 @@ bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
         }
     }
     return false;
+}
+
+void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    AWindow::onPointerPressed(event);
+}
+
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AWindow::onPointerReleased(event);
 }
