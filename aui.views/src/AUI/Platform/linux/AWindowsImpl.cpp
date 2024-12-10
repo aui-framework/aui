@@ -753,6 +753,9 @@ void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 }
 void AWindow::applyGeometryToChildren() {
     AWindowBase::applyGeometryToChildren();
+    if (CommonRenderingContext::ourDisplay == nullptr) {
+        return;
+    }
     auto sizeHints = aui::ptr::make_unique_with_deleter(XAllocSizeHints(), XFree);
     sizeHints->flags = PMinSize | PMaxSize;
     sizeHints->min_width = getMinimumWidth();
