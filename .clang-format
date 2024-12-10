@@ -17,6 +17,8 @@ UseCRLF: false
 NamespaceIndentation: None
 BreakConstructorInitializers: BeforeComma
 
+SortIncludes: Never
+
 
 ################################################# UI BUILDING ##########################################################
 

@@ -19,8 +19,9 @@ glm::ivec2 AViewEntry::getSize() {
     if (!(mView->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return {0, 0};
     }
-    return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
-            ALayoutDirection::NONE) + mView->getMargin().vertical() };
+    return {
+        mView->getMinimumWidth() + mView->getMargin().horizontal(),
+        mView->getMinimumHeight() + mView->getMargin().vertical() };
 }
 
 void AViewEntry::setPosition(glm::ivec2 position) {
