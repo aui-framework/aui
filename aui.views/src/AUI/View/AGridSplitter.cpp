@@ -26,21 +26,19 @@ AGridSplitter::AGridSplitter():
 
 }
 
-void AGridSplitter::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
-    auto mousePos = event.position;
+glm::bvec2 AGridSplitter::isDraggingArea(glm::ivec2 position) {
     bool doVerticalDrag = true;
     for (auto& r : mItems) {
         auto& v = r.first();
         auto viewPos = v->getPosition().y + CLICK_BIAS.getValuePx();
         auto viewSize = v->getSize().y - CLICK_BIAS.getValuePx() * 2.f;
 
-        if (mousePos.y > viewPos && mousePos.y < viewPos + viewSize) {
+        if (position.y > viewPos && position.y < viewPos + viewSize) {
             doVerticalDrag = false;
             break;
         }
 
-        if (mousePos.y <= viewPos) {
+        if (position.y <= viewPos) {
             break;
         }
     }
@@ -49,20 +47,29 @@ void AGridSplitter::onPointerPressed(const APointerPressedEvent& event) {
         auto viewPos = v->getPosition().x + CLICK_BIAS.getValuePx();
         auto viewSize = v->getSize().x - CLICK_BIAS.getValuePx() * 2.f;
 
-        if (mousePos.x > viewPos && mousePos.x < viewPos + viewSize) {
+        if (position.x > viewPos && position.x < viewPos + viewSize) {
             doHorizontalDrag = false;
             break;
         }
 
-        if (mousePos.x <= viewPos) {
+        if (position.x <= viewPos) {
             break;
         }
     }
-    if (doVerticalDrag) {
-        mVerticalHelper.beginDrag(mousePos);
+
+    return { doHorizontalDrag, doVerticalDrag };
+}
+
+void AGridSplitter::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
+
+    auto isDrag = isDraggingArea(event.position);
+
+    if (isDrag.y) {
+        mVerticalHelper.beginDrag(event.position);
     }
-    if (doHorizontalDrag) {
-        mHorizontalHelper.beginDrag(mousePos);
+    if (isDrag.x) {
+        mHorizontalHelper.beginDrag(event.position);
     }
 }
 
@@ -74,7 +81,22 @@ void AGridSplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
     if (mVerticalHelper.isDragging() || mHorizontalHelper.isDragging()) {
         applyGeometryToChildrenIfNecessary();
         redraw();
+        return;
     }
+    auto area = isDraggingArea(pos);
+    if (area.x && area.y) {
+        setCursor(ACursor::MOVE);
+        return;
+    }
+    if (area.x) {
+        setCursor(ACursor::EW_RESIZE);
+        return;
+    }
+    if (area.y) {
+        setCursor(ACursor::NS_RESIZE);
+        return;
+    }
+    setCursor({});
 }
 
 void AGridSplitter::onPointerReleased(const APointerReleasedEvent& event) {

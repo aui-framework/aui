@@ -16,7 +16,7 @@ ASplitter::ASplitter() {
 }
 
 void ASplitter::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
     if (getViewAt(event.position) == nullptr) {
         mHelper.beginDrag(event.position);
     }
@@ -24,11 +24,11 @@ void ASplitter::onPointerPressed(const APointerPressedEvent& event) {
 
 
 void ASplitter::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
 }
 
 void ASplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainer::onPointerMove(pos, event);
+    AViewContainerBase::onPointerMove(pos, event);
     if (mHelper.mouseDrag(pos)) {
         applyGeometryToChildrenIfNecessary();
         redraw();
@@ -36,11 +36,11 @@ void ASplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 }
 
 void ASplitter::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    AViewContainerBase::onPointerReleased(event);
     mHelper.endDrag();
 }
 
 void ASplitter::onClickPrevented() {
-    AViewContainer::onClickPrevented();
+    AViewContainerBase::onClickPrevented();
     mHelper.endDrag();
 }

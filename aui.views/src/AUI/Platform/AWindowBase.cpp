@@ -331,6 +331,9 @@ void AWindowBase::onPointerReleased(const APointerReleasedEvent& event) {
 }
 
 void AWindowBase::forceUpdateCursor() {
+    if (mForceUpdateCursorGuard) {
+        return;
+    }
     AViewContainer::onPointerMove(mMousePos, {});
 }
 
@@ -372,7 +375,11 @@ void AWindowBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
         }
     }
 
-    AViewContainer::onPointerMove(pos, event);
+    {
+        mForceUpdateCursorGuard = true;
+        AUI_DEFER { mForceUpdateCursorGuard = false; };
+        AViewContainer::onPointerMove(pos, event);
+    }
 
     emit mouseMove(pos);
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID

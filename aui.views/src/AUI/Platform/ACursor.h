@@ -31,19 +31,46 @@ private:
 public:
     enum System {
         /**
-         * Default arrow
+         * @brief Default arrow.
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_default.png">
          */
         DEFAULT,
 
         /**
-         * Pointing finger
+         * @brief Pointing finger.
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_pointer.png">
          */
         POINTER,
 
         /**
-         * 'I' beam
+         * @brief 'I' beam.
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_text.png">
          */
         TEXT,
+
+        /**
+         * @brief Something to be moved. Crosshair-like cursor.
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_move.png">
+         */
+        MOVE,
+
+        /**
+         * @brief Bidirectional resize cursor east-west. <->
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_ew_resize.png">
+         */
+        EW_RESIZE,
+
+        /**
+         * @brief Bidirectional resize cursor north-south.
+         * @details
+         * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_ns_resize.png">
+         */
+        NS_RESIZE,
     };
 
     ACursor(System systemCursor): mValue(systemCursor) {}

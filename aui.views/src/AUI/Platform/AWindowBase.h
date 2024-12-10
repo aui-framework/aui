@@ -427,6 +427,10 @@ protected:
 private:
     void processTouchscreenKeyboardRequest();
 
+    /**
+     * @brief If try, AWindowBase::forceUpdateCursor takes no action.
+     */
+    bool mForceUpdateCursorGuard = false;
     _weak<AView> mFocusedView;
     Profiling mProfiling{};
     float mDpiRatio = 1.f;

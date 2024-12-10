@@ -21,63 +21,16 @@
 #include <AUI/View/ASpacerExpanding.h>
 
 /**
- * @brief A resizeable horizontal or vertical layout
+ * @brief A resizeable horizontal or vertical layout.
  * @ingroup useful_views
+ * @details
+ * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views
+ * may be controlled by a single splitter.
+ *
+ * ASplitter is constructed by builder. Use `ASplitter::Horizontal()` and `ASplitter::Vertical()`.
  */
-class API_AUI_VIEWS ASplitter: public AViewContainer
+class API_AUI_VIEWS ASplitter: public AViewContainerBase
 {
-private:
-    template<typename Layout>
-    friend class Builder;
-
-    ASplitterHelper mHelper;
-
-    ASplitter();
-
-    template<typename Layout>
-    class Builder {
-    friend class ASplitter;
-    private:
-        AVector<_<AView>> mItems;
-
-    public:
-       Builder& withItems(const AVector<_<AView>>& items) {
-           mItems = items;
-           return *this;
-       }
-
-       _<AView> build() {
-           auto splitter = aui::ptr::manage(new ASplitter);
-           splitter->mHelper.setDirection(Layout::DIRECTION);
-
-
-           if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
-               splitter->setLayout(std::make_unique<AVerticalLayout>());
-           } else {
-               splitter->setLayout(std::make_unique<AHorizontalLayout>());
-           }
-
-           bool atLeastOneItemHasExpanding = false;
-           for (auto& item : mItems) {
-               splitter->addView(item);
-               atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
-           }
-           if (!atLeastOneItemHasExpanding) {
-               auto spacer = _new<ASpacerExpanding>();
-               splitter->addView(spacer);
-               mItems << spacer;
-           }
-
-           splitter->mHelper.mItems = std::move(mItems);
-
-           return splitter;
-       }
-
-       operator _<AView>() {
-           return build();
-       }
-    };
-
 public:
     virtual ~ASplitter() = default;
 
@@ -91,7 +44,60 @@ public:
 
     void onClickPrevented() override;
 
+    template<typename Layout>
+    class Builder;
     using Vertical = Builder<AVerticalLayout>;
     using Horizontal = Builder<AHorizontalLayout>;
 
+private:
+    template<typename Layout>
+    friend class Builder;
+
+    ASplitterHelper mHelper;
+
+    ASplitter();
+
+};
+
+template<typename Layout>
+class ASplitter::Builder {
+    friend class ASplitter;
+private:
+    AVector<_<AView>> mItems;
+
+public:
+    Builder& withItems(AVector<_<AView>> items) {
+        mItems = std::move(items);
+        return *this;
+    }
+
+    _<AView> build() {
+        auto splitter = aui::ptr::manage(new ASplitter);
+        splitter->mHelper.setDirection(Layout::DIRECTION);
+
+        if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
+            splitter->setLayout(std::make_unique<Layout>());
+        } else {
+            splitter->setLayout(std::make_unique<Layout>());
+        }
+
+        bool atLeastOneItemHasExpanding = false;
+        for (auto& item : mItems) {
+            splitter->addView(item);
+            atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
+        }
+        if (!atLeastOneItemHasExpanding) {
+            auto spacer = _new<ASpacerExpanding>();
+            splitter->addView(spacer);
+            mItems << spacer;
+        }
+
+        splitter->mHelper.mItems = std::move(mItems);
+
+        return splitter;
+    }
+
+    operator _<AView>() {
+        return build();
+    }
 };

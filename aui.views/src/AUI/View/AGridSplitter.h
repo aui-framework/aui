@@ -69,6 +69,8 @@ private:
 
     AGridSplitter();
 
+    glm::bvec2 isDraggingArea(glm::ivec2 position);
+
 public:
     void updateSplitterItems();
 
