@@ -334,6 +334,8 @@ void AWindowBase::forceUpdateCursor() {
     if (mForceUpdateCursorGuard) {
         return;
     }
+    mForceUpdateCursorGuard = true;
+    AUI_DEFER { mForceUpdateCursorGuard = true; };
     AViewContainer::onPointerMove(mMousePos, {});
 }
 

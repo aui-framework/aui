@@ -83,7 +83,7 @@ void fillWindow(_<AViewContainer> t) {
 }
 
 class AllViewsWindow : public AWindow {
-   public:
+public:
     AllViewsWindow() : AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::MODAL) {
         setContents(Centered {
           AScrollArea::Builder()
@@ -211,11 +211,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show window custom caption")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                   auto w = _new<ACustomCaptionWindow>("Custom window custom caption", 400_dp, 300_dp);
-                                   fillWindow(w->getContentContainer());
-                                   w->show();
-                                   w->setWindowStyle(WindowStyle::MODAL);
-                                   mWindows << w;
+                                     auto w =
+                                         _new<ACustomCaptionWindow>("Custom window custom caption", 400_dp, 300_dp);
+                                     fillWindow(w->getContentContainer());
+                                     w->show();
+                                     w->setWindowStyle(WindowStyle::MODAL);
+                                     mWindows << w;
                                  }),
                     _new<AButton>("Close all windows")
                         .connect(&AButton::clicked, this,
@@ -469,13 +470,16 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                    _new<AButton>("Four"), _new<AButton>("Five") })
                       .build() let { it->setExpanding(); },
               _new<ALabel>("Grid splitter"),
-              AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(
-                  5,
-                  [](size_t y) {
-                      return AVector<_<AView>>::generate(5, [&](size_t x) {
-                          return _new<AButton>("{}x{}"_format(x, y));
-                      });
-                  })) } let { it->setExpanding(); },
+              AGridSplitter::Builder()
+                      .withItems(AVector<AVector<_<AView>>>::generate(
+                          5,
+                          [](size_t y) {
+                              return AVector<_<AView>>::generate(5, [&](size_t x) {
+                                  return _new<AButton>("{}x{}"_format(x, y));
+                              });
+                          }))
+                      .build() let { it->setExpanding(); },
+            },
             "Splitters");
 
         it->addTab(

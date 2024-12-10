@@ -64,6 +64,7 @@ class ASplitter::Builder {
     friend class ASplitter;
 private:
     AVector<_<AView>> mItems;
+    glm::ivec2 mExpanding{};
 
 public:
     Builder& withItems(AVector<_<AView>> items) {
@@ -71,8 +72,14 @@ public:
         return *this;
     }
 
+    Builder& withExpanding(glm::ivec2 expanding = { 2, 2 }) {
+        mExpanding = expanding;
+        return *this;
+    }
+
     _<AView> build() {
         auto splitter = aui::ptr::manage(new ASplitter);
+        splitter->setExpanding(mExpanding);
         splitter->mHelper.setDirection(Layout::DIRECTION);
 
         if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
@@ -92,7 +99,7 @@ public:
             mItems << spacer;
         }
 
-        splitter->mHelper.mItems = std::move(mItems);
+        splitter->mHelper.setItems(std::move(mItems));
 
         return splitter;
     }

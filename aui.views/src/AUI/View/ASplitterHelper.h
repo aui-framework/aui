@@ -46,7 +46,6 @@ private:
         }
     }
 
-
 public:
     ASplitterHelper() = default;
     ASplitterHelper(ALayoutDirection direction) : mDirection(direction) {}
@@ -61,8 +60,8 @@ public:
         mDraggingDividerIndex = -1;
     }
 
-    void setItems(AVector<_<AView>>&& items) {
-        mItems = items;
+    void setItems(AVector<_<AView>> items) {
+        mItems = std::move(items);
     }
 
     [[nodiscard]]
@@ -71,7 +70,6 @@ public:
     }
 
     bool isDraggingArea(glm::ivec2 position);
-
 };
 
 
