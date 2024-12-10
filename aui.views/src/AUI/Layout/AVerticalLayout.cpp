@@ -31,7 +31,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height) {
         view->ensureAssUpdated();
         if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         int expanding = view->getExpandingVertical();
-        int minSpace = view->getMinimumHeight(ALayoutDirection::VERTICAL);
+        int minSpace = view->getMinimumHeight();
         sum += expanding;
         if (expanding == 0 || view->getFixedSize().y != 0)
             availableSpace -= minSpace + view->getMargin().vertical() + mSpacing;
@@ -61,7 +61,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height) {
                               viewHeight);
         } else {
             int expanding = view->getExpandingVertical();
-            int minSpace = view->getMinimumHeight(ALayoutDirection::VERTICAL);
+            int minSpace = view->getMinimumHeight();
             int viewHeight = glm::clamp(availableSpace * expanding / sum, minSpace, maxSize.y);
 
             view->setGeometry(x + margins.left,
@@ -82,7 +82,7 @@ int AVerticalLayout::getMinimumWidth() {
     for (auto& v: mViews) {
         if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
         minWidth = glm::max(minWidth,
-                            int(v->getMinimumWidth(ALayoutDirection::VERTICAL) + v->getMargin().horizontal()));
+                            int(v->getMinimumWidth() + v->getMargin().horizontal()));
     }
     return minWidth;
 }
@@ -92,7 +92,7 @@ int AVerticalLayout::getMinimumHeight() {
 
     for (auto& v: mViews) {
         if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-        minHeight += v->getMinimumHeight(ALayoutDirection::VERTICAL) + mSpacing + v->getMargin().vertical();
+        minHeight += v->getMinimumHeight() + mSpacing + v->getMargin().vertical();
     }
 
     return glm::max(minHeight, 0);

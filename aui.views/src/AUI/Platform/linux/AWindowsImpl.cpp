@@ -751,3 +751,13 @@ void AWindow::moveToCenter() {
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
 }
+void AWindow::applyGeometryToChildren() {
+    AWindowBase::applyGeometryToChildren();
+    auto sizeHints = aui::ptr::make_unique_with_deleter(XAllocSizeHints(), XFree);
+    sizeHints->flags = PMinSize | PMaxSize;
+    sizeHints->min_width = getMinimumWidth();
+    sizeHints->min_height = getMinimumHeight();
+    sizeHints->max_width = getMaxSize().x;
+    sizeHints->max_height = getMaxSize().y;
+    XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizeHints.get());
+}

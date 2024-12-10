@@ -55,11 +55,11 @@ public:
 
     }
 
-    int getMinimumWidth(ALayoutDirection) override {
+    int getMinimumWidth() override {
         return 0;
     }
 
-    int getMinimumHeight(ALayoutDirection) override {
+    int getMinimumHeight() override {
         return 0;
     }
 };

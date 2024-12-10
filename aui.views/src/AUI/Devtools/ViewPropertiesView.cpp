@@ -62,7 +62,8 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     AClipboard::copyToClipboard(addressStr);
                 }),
             },
-            Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(ALayoutDirection::NONE), targetView->getMinimumHeight(ALayoutDirection::NONE)) },
+            Label { "Min size = {}, {}"_format(
+            targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
             CheckBoxWrapper {
                 Label { "Enabled"},
             } let {
