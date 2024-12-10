@@ -27,6 +27,23 @@
  * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views
  * may be controlled by a single splitter.
  *
+ * Generally, ASplitter mimics behaviour of linear layouts (i.e., `Vertical` and `Horizontal`):
+ * 1. if there's no expanding view, both linear layouts and ASplitter leave blank space at the end
+ * 2. expanding views to use all available space.
+ *
+ * ASplitter is applying geometry via AView::setFixedSize. ASplitter never applies fixed size to expanding views. As
+ * such, there's should be at least 1 view without expanding. If there's no such view, ASplitter throws an exception on
+ * construction.
+ *
+ * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there's should be at
+ * least 1 view with expanding. If there's no such view, ASplitter adds ASpacerFixed to the end.
+ *
+ * These limitations are required in order to prioritize views when reclaiming space.
+ *
+ * @note
+ * Valid expandings should be applied before constructing ASplitter. ASplitter does not support changing expanding on
+ * the fly.
+ *
  * ASplitter is constructed by builder. Use `ASplitter::Horizontal()` and `ASplitter::Vertical()`.
  */
 class API_AUI_VIEWS ASplitter: public AViewContainerBase
@@ -88,10 +105,16 @@ public:
             splitter->setLayout(std::make_unique<Layout>());
         }
 
+        bool atLeastOneItemHasntExpanding = false;
         bool atLeastOneItemHasExpanding = false;
         for (auto& item : mItems) {
             splitter->addView(item);
+            item->ensureAssUpdated();
+            atLeastOneItemHasntExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) == 0;
             atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
+        }
+        if (!atLeastOneItemHasntExpanding) {
+            throw AException("please add at least one view without expanding");
         }
         if (!atLeastOneItemHasExpanding) {
             auto spacer = _new<ASpacerExpanding>();

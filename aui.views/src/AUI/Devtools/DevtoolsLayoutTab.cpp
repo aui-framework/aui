@@ -122,8 +122,8 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
       },
       ASplitter::Horizontal()
           .withItems({
-            mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize { 300_dp }, ass::Expanding {} },
-            mViewPropertiesView = _new<ViewPropertiesView>(nullptr),
+            mViewHierarchyTree = _new<ATreeView>() with_style { MinSize { 300_dp }, Expanding {} },
+            Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
           })
           .withExpanding(),
     });

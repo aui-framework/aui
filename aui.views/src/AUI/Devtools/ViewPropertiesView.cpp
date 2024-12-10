@@ -40,8 +40,8 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
       },
       Padding { 1_px },
       Margin { 4_dp },
-      MinSize { 100_dp },
-      ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::NEVER),
+      MinSize { 200_dp },
+      ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::ON_DEMAND),
       Expanding(),
     });
     setTargetView(targetView);

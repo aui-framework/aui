@@ -461,9 +461,21 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         it->addTab(
             Vertical {
               _new<ALabel>("Horizontal splitter"),
-              ASplitter::Horizontal().withItems(
-                  { _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"), _new<AButton>("Four"),
-                    _new<AButton>("Five") }),
+              ASplitter::Horizontal().withItems({
+                _new<AButton>("One"),
+                _new<AButton>("Two"),
+                _new<AButton>("Three"),
+                _new<AButton>("Four"),
+                _new<AButton>("Five"),
+              }),
+              ASplitter::Horizontal().withItems({
+                _new<AButton>("One"),
+                _new<AButton>("Two"),
+                _new<AButton>("Three"),
+                SpacerExpanding(),
+                _new<AButton>("Four"),
+                _new<AButton>("Five"),
+              }),
               _new<ALabel>("Vertical splitter"),
               ASplitter::Vertical()
                       .withItems({ _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"),
@@ -486,7 +498,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             AScrollArea::Builder().withContents(
                 Vertical {
                   ASplitter::Horizontal().withItems({
-                    Vertical::Expanding {
+                    Vertical {
                       _new<ALabel>("Default"),
                       AText::fromString(
                           "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
@@ -496,7 +508,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style {
                         ATextAlign::JUSTIFY },
-                    },
+                    } with_style { MinSize { 100_dp } },
                     Vertical::Expanding {
                       _new<ALabel>("Word breaking"),
                       AText::fromString(
