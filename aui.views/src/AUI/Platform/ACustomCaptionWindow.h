@@ -24,7 +24,16 @@ using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
  * @ingroup views
  * @details
  * ACustomCaptionWindow implements a fully custom window with customizable caption (title) bar. The way it's done is
- * platform dependent.
+ * platform dependent. The goal is to implement a customizable caption bar yet preserve native system caption bar look
+ * and feel.
+ *
+ * Depending on the platform, AUI provides following ASS classes to customize:
+ * - ".window-title" for whole window caption container. It has BackgroundSolid by default.
+ * - ".title" for window title label
+ * - ".window-title-content" for your contents
+ * - ".minimize" for minimize button
+ * - ".close" for close button
+ * - ".middle" for maximize button
  *
  * # Windows
  * Since Windows does not provide APIs to the customize caption, AUI implements and renders caption by itself, including
