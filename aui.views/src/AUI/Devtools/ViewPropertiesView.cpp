@@ -13,8 +13,9 @@
 // Created by Alex2772 on 11/11/2021.
 //
 
-#include "ViewPropertiesView.h"
+#include <range/v3/range.hpp>
 
+#include "ViewPropertiesView.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Common/IStringable.h>
 #include <AUI/Platform/AClipboard.h>
@@ -25,8 +26,6 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ALabel.h>
-
-#include <range/v3/range.hpp>
 
 #include "AUI/View/AText.h"
 #include "Devtools.h"
