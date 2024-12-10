@@ -23,7 +23,7 @@
  * AGridSplitter represents a grid layout which can be resized by user. Unlike ASplitter, works in both directions.
  * AGridSplitter can be constructed with AGridSplitter::Builder.
  */
-class API_AUI_VIEWS AGridSplitter: public AViewContainer {
+class API_AUI_VIEWS AGridSplitter: public AViewContainerBase {
 public:
     class Builder {
         friend class ASplitter;

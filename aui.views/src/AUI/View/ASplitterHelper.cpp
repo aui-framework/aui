@@ -15,6 +15,8 @@
 
 #include "ASplitterHelper.h"
 
+static const auto CLICK_BIAS = 4_dp;
+
 void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
     int cursor = getAxisValue(mousePos);
     size_t dividerIndex = 0;
@@ -121,3 +123,30 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
     return false;
 }
 
+bool ASplitterHelper::isDraggingArea(glm::ivec2 position) {
+    if (mItems.empty()) {
+        return false;
+    }
+    if (getAxisValue(position) <= getAxisValue(mItems.first()->getPosition()) + CLICK_BIAS.getValuePx()) {
+        // position is before first view.
+        return false;
+    }
+    if (getAxisValue(position) >= getAxisValue(mItems.last()->getPosition() + mItems.last()->getSize()) - CLICK_BIAS.getValuePx() * 2) {
+        // position is after last view.
+        return false;
+    }
+
+    for (auto& v : mItems) {
+        auto viewPos = getAxisValue(v->getPosition()) + CLICK_BIAS.getValuePx();
+        auto viewSize = getAxisValue(v->getSize()) - CLICK_BIAS.getValuePx() * 2.f;
+
+        if (getAxisValue(position) > viewPos && getAxisValue(position) < viewPos + viewSize) {
+            return false;
+        }
+
+        if (getAxisValue(position) <= viewPos) {
+            break;
+        }
+    }
+    return true;
+}

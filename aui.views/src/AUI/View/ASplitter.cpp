@@ -16,10 +16,12 @@ ASplitter::ASplitter() {
 }
 
 void ASplitter::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainerBase::onPointerPressed(event);
-    if (getViewAt(event.position) == nullptr) {
+    if (mHelper.isDraggingArea(event.position)) {
+        AView::onPointerPressed(event); // NOLINT(*-parent-virtual-call)
         mHelper.beginDrag(event.position);
+        return;
     }
+    AViewContainerBase::onPointerPressed(event);
 }
 
 
@@ -28,16 +30,26 @@ void ASplitter::setSize(glm::ivec2 size) {
 }
 
 void ASplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainerBase::onPointerMove(pos, event);
-    if (mHelper.mouseDrag(pos)) {
-        applyGeometryToChildrenIfNecessary();
-        redraw();
+    if (mHelper.isDragging() || (mHelper.isDraggingArea(pos) && !isPressed())) {
+        setCursor(mHelper.mDirection == ALayoutDirection::HORIZONTAL ? ACursor::EW_RESIZE : ACursor::NS_RESIZE);
+        AView::onPointerMove(pos, event); // NOLINT(*-parent-virtual-call)
+        if (mHelper.mouseDrag(pos)) {
+            applyGeometryToChildrenIfNecessary();
+            redraw();
+        }
+        return;
     }
+    setCursor({});
+    AViewContainerBase::onPointerMove(pos, event);
 }
 
 void ASplitter::onPointerReleased(const APointerReleasedEvent& event) {
+    if (mHelper.isDragging()) {
+        AView::onPointerReleased(event); // NOLINT(*-parent-virtual-call)
+        mHelper.endDrag();
+        return;
+    }
     AViewContainerBase::onPointerReleased(event);
-    mHelper.endDrag();
 }
 
 void ASplitter::onClickPrevented() {

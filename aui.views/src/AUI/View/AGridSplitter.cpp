@@ -17,92 +17,69 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include "AGridSplitter.h"
 
-static const auto CLICK_BIAS = 8_dp;
-
-AGridSplitter::AGridSplitter():
-    mHorizontalHelper(ALayoutDirection::HORIZONTAL),
-    mVerticalHelper(ALayoutDirection::VERTICAL)
-{
-
-}
+AGridSplitter::AGridSplitter()
+  : mHorizontalHelper(ALayoutDirection::HORIZONTAL), mVerticalHelper(ALayoutDirection::VERTICAL) {}
 
 glm::bvec2 AGridSplitter::isDraggingArea(glm::ivec2 position) {
-    bool doVerticalDrag = true;
-    for (auto& r : mItems) {
-        auto& v = r.first();
-        auto viewPos = v->getPosition().y + CLICK_BIAS.getValuePx();
-        auto viewSize = v->getSize().y - CLICK_BIAS.getValuePx() * 2.f;
-
-        if (position.y > viewPos && position.y < viewPos + viewSize) {
-            doVerticalDrag = false;
-            break;
-        }
-
-        if (position.y <= viewPos) {
-            break;
-        }
-    }
-    bool doHorizontalDrag = true;
-    for (auto& v : mItems.first()) {
-        auto viewPos = v->getPosition().x + CLICK_BIAS.getValuePx();
-        auto viewSize = v->getSize().x - CLICK_BIAS.getValuePx() * 2.f;
-
-        if (position.x > viewPos && position.x < viewPos + viewSize) {
-            doHorizontalDrag = false;
-            break;
-        }
-
-        if (position.x <= viewPos) {
-            break;
-        }
-    }
-
-    return { doHorizontalDrag, doVerticalDrag };
+    return { mHorizontalHelper.isDraggingArea(position), mVerticalHelper.isDraggingArea(position) };
 }
 
 void AGridSplitter::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
-
     auto isDrag = isDraggingArea(event.position);
-
     if (isDrag.y) {
         mVerticalHelper.beginDrag(event.position);
     }
     if (isDrag.x) {
         mHorizontalHelper.beginDrag(event.position);
     }
+    if (glm::any(isDrag)) {
+        AView::onPointerPressed(event); // NOLINT(*-parent-virtual-call)
+        return;
+    }
+    AViewContainerBase::onPointerPressed(event);
 }
 
 void AGridSplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainer::onPointerMove(pos, {});
     mVerticalHelper.mouseDrag(pos);
     mHorizontalHelper.mouseDrag(pos);
 
     if (mVerticalHelper.isDragging() || mHorizontalHelper.isDragging()) {
         applyGeometryToChildrenIfNecessary();
         redraw();
+        AView::onPointerMove(pos, event); // NOLINT(*-parent-virtual-call)
         return;
     }
-    auto area = isDraggingArea(pos);
-    if (area.x && area.y) {
-        setCursor(ACursor::MOVE);
-        return;
-    }
-    if (area.x) {
-        setCursor(ACursor::EW_RESIZE);
-        return;
-    }
-    if (area.y) {
-        setCursor(ACursor::NS_RESIZE);
-        return;
+    if (!isPressed()) {
+        auto area = isDraggingArea(pos);
+        if (area.x && area.y) {
+            setCursor(ACursor::MOVE);
+            AView::onPointerMove(pos, event);   // NOLINT(*-parent-virtual-call)
+            return;
+        }
+        if (area.x) {
+            setCursor(ACursor::EW_RESIZE);
+            AView::onPointerMove(pos, event);   // NOLINT(*-parent-virtual-call)
+            return;
+        }
+        if (area.y) {
+            setCursor(ACursor::NS_RESIZE);
+            AView::onPointerMove(pos, event);   // NOLINT(*-parent-virtual-call)
+            return;
+        }
     }
     setCursor({});
+    AViewContainerBase::onPointerMove(pos, {});
 }
 
 void AGridSplitter::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
-    mVerticalHelper.endDrag();
-    mHorizontalHelper.endDrag();
+    if (mVerticalHelper.isDragging() || mHorizontalHelper.isDragging()) {
+        mVerticalHelper.endDrag();
+        mHorizontalHelper.endDrag();
+        AView::onPointerReleased(event); // NOLINT(*-parent-virtual-call)
+        return;
+    }
+
+    AViewContainerBase::onPointerReleased(event);
 }
 
 void AGridSplitter::updateSplitterItems() {
@@ -124,6 +101,4 @@ void AGridSplitter::updateSplitterItems() {
     mHorizontalHelper.setItems(std::move(horizontal));
 }
 
-bool AGridSplitter::consumesClick(const glm::ivec2& pos) {
-    return true;
-}
+bool AGridSplitter::consumesClick(const glm::ivec2& pos) { return true; }

@@ -70,6 +70,8 @@ public:
         return mDraggingDividerIndex != -1;
     }
 
+    bool isDraggingArea(glm::ivec2 position);
+
 };
 
 
