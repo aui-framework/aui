@@ -54,6 +54,29 @@ public:
 
     bool isDraggingArea(glm::ivec2 position);
 
+    /**
+     * @brief Reclaims space via specified divider index.
+     * @param space space to reclaim in px. Cannot be zero.
+     * @param dividerIndex divider index.
+     * @return space argument but reduced (abs) by amount of space successfully reclaimed.
+     * @details
+     * Negative space reclaims space from the left direction of dividerIndex, positive space reclaims space from the
+     * right direction of dividerIndex.
+     */
+    int reclaimSpace(int space, size_t dividerIndex);
+
+    /**
+     * @brief Reclaims space via the last divider.
+     * @param space space to reclaim in px. Cannot be zero.
+     * @return space argument but reduced (abs) by amount of space successfully reclaimed.
+     * @details
+     * Negative space reclaims space from the left direction of dividerIndex, positive space reclaims space from the
+     * right direction of dividerIndex.
+     */
+    int reclaimSpace(int space) {
+        return reclaimSpace(space, mItems.size() - 1);
+    }
+
 private:
     ALayoutDirection mDirection; // will be initialized in the Builder
     size_t mDraggingDividerIndex = -1;

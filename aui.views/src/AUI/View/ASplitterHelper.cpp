@@ -47,41 +47,8 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
 
         // our first task is shrink items to get free space.
         // we should take space from the first item after divider, then from the second item after divider, etc...
-
-        // we'll use this value in for loops for adding it to index
+        auto amountToShrink = reclaimSpace(delta, mDraggingDividerIndex);
         int direction = glm::sign(delta);
-
-        int amountToShrink = glm::abs(delta);
-        for (int i = int(mDraggingDividerIndex) + glm::clamp(direction, 0, 1); // first index to shrink
-             i < mItems.size() && i >= 0; // dual check for both forward and backward iteration
-             i += direction) {
-            auto& currentItem = mItems[i];
-
-            int currentSize = getAxisValue(currentItem.view->getSize());
-            const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
-
-            if (isNonExpandingView) {
-                currentItem.overridedSize = 0;
-            }
-            // check if current view can handle us all free space
-            int minSize = getAxisValue(currentItem.view->getMinimumSize());
-            int currentDelta = currentSize - minSize;
-            if (currentDelta >= amountToShrink) {
-                // best case. current view handled all free space
-                if (isNonExpandingView) {
-                    currentItem.overridedSize = currentSize - amountToShrink;
-                }
-                amountToShrink = 0;
-                break;
-            } else if (currentDelta != 0) {
-                // worse case. current view partially handled free space, so we have to spread it to the next elements
-                if (isNonExpandingView) {
-                    currentItem.overridedSize = currentSize - currentDelta;
-                }
-                amountToShrink -= currentDelta;
-            }
-        }
-
         int amountToEnlarge = (glm::abs(delta) - amountToShrink);
         int amountToEnlargeCopy = amountToEnlarge;
         if (amountToEnlarge != 0) {
@@ -93,9 +60,6 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
 
               const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
               int currentSize = getAxisValue(currentItem.view->getSize());
-              if (isNonExpandingView) {
-                  currentItem.overridedSize = 0;
-              }
 
               // check if current view can handle us all free space
               int maxSize = getAxisValue(currentItem.view->getMaxSize());
@@ -105,12 +69,14 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
                   // best case. current view handled all free space
                   if (isNonExpandingView) {
                       currentItem.overridedSize = currentSize + amountToEnlarge;
+                      currentItem.view->markMinContentSizeInvalid();
                   }
                   amountToEnlarge = 0;
               } else if (currentDelta != 0) {
                   // worse case. current view partially handled free space, so we have to spread it to the next elements
                   if (isNonExpandingView) {
                       currentItem.overridedSize = currentSize + currentDelta;
+                      currentItem.view->markMinContentSizeInvalid();
                   }
                   amountToEnlarge -= currentDelta;
               }
@@ -170,4 +136,42 @@ bool ASplitterHelper::isDraggingArea(glm::ivec2 position) {
         }
     }
     return true;
+}
+int ASplitterHelper::reclaimSpace(int space, size_t dividerIndex) {
+    AUI_ASSERT(space != 0);
+
+    // we'll use this value in for loops for adding it to index
+    int direction = glm::sign(space);
+
+    int amountToShrink = glm::abs(space);
+    for (int i = int(dividerIndex) + glm::clamp(direction, 0, 1); // first index to shrink
+         i < mItems.size() && i >= 0; // dual check for both forward and backward iteration
+         i += direction) {
+        auto& currentItem = mItems[i];
+
+        int currentSize = getAxisValue(currentItem.view->getSize());
+        const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
+
+        // check if current view can handle us all free space
+        int minSize = getAxisValue(currentItem.view->getMinimumSize());
+        int currentDelta = currentSize - minSize;
+        if (currentDelta >= amountToShrink) {
+            // best case. current view handled all free space
+            if (isNonExpandingView) {
+                currentItem.overridedSize = currentSize - amountToShrink;
+                currentItem.view->markMinContentSizeInvalid();
+            }
+            amountToShrink = 0;
+            break;
+        } else if (currentDelta != 0) {
+            // worse case. current view partially handled free space, so we have to spread it to the next elements
+            if (isNonExpandingView) {
+                currentItem.overridedSize = currentSize - currentDelta;
+                currentItem.view->markMinContentSizeInvalid();
+            }
+            amountToShrink -= currentDelta;
+        }
+    }
+
+    return amountToShrink;
 }

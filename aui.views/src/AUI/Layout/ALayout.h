@@ -158,13 +158,9 @@ class AViewContainer;
  * @ingroup layout_managers
  */
 class API_AUI_VIEWS ALayout : public AObject {
-protected:
-    ADeque<_<AView>> mViews;
-
 public:
     ALayout() = default;
     virtual ~ALayout() = default;
-    const ADeque<_<AView>>& getViews();
     virtual void onResize(int x, int y, int width, int height) = 0;
 
     /**

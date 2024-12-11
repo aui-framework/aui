@@ -158,3 +158,8 @@ if (NOT MSVC AND AUI_CATCH_UNHANDLED)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
     endif()
 endif()
+
+if (AUI_COMPILER_GCC AND AUI_DEBUG)
+    # this helps with ranges-v3
+    target_compile_options(aui.core PUBLIC -fdiagnostics-all-candidates -fconcepts-diagnostics-depth=3)
+endif()

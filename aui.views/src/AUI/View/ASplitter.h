@@ -94,38 +94,7 @@ public:
         return *this;
     }
 
-    _<AView> build() {
-        auto splitter = aui::ptr::manage(new ASplitter);
-        splitter->setExpanding(mExpanding);
-        splitter->mHelper.setDirection(Layout::DIRECTION);
-
-        if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
-            splitter->setLayout(std::make_unique<Layout>());
-        } else {
-            splitter->setLayout(std::make_unique<Layout>());
-        }
-
-        bool atLeastOneItemHasntExpanding = false;
-        bool atLeastOneItemHasExpanding = false;
-        for (auto& item : mItems) {
-            splitter->addView(item);
-            item->ensureAssUpdated();
-            atLeastOneItemHasntExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) == 0;
-            atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
-        }
-        if (!atLeastOneItemHasntExpanding) {
-            throw AException("please add at least one view without expanding");
-        }
-        if (!atLeastOneItemHasExpanding) {
-            auto spacer = _new<ASpacerExpanding>();
-            splitter->addView(spacer);
-            mItems << spacer;
-        }
-
-        splitter->mHelper.setItems(std::move(mItems));
-
-        return splitter;
-    }
+    _<AView> build();
 
     operator _<AView>() {
         return build();

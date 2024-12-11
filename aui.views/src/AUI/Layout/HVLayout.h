@@ -17,6 +17,11 @@ namespace aui {
 
 /**
  * @brief Shared implementation of AVerticalLayout and AHorizontalLayout.
+ * @details
+ * HVLayout does not strictly requires to layout AView. The only requirement is to pass range of items that implement
+ * methods required by HVLayout (as AView does). This make compile time polymorphism possible.
+ *
+ * ASplitter is an example of object that requires AHorizontalLayout/AVerticalLayout-like behaviour with some changes.
  */
 template<ALayoutDirection direction>
 struct HVLayout {
@@ -62,7 +67,7 @@ struct HVLayout {
         int sum = 0;
         int availableSpace = getAxisValue(paddedSize) + spacing;
 
-        for (auto& view: views) {
+        for (const auto& view: views) {
             view->ensureAssUpdated();
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             int expanding = getAxisValue(view->getExpanding());
@@ -79,8 +84,8 @@ struct HVLayout {
         sum = glm::max(sum, 1);
 
         int posOurAxis = getAxisValue(paddedPosition);
-        auto& last = views.back();
-        for (auto& view: views) {
+        const auto& last = views.back();
+        for (const auto& view: views) {
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             auto margins = view->getMargin();
             auto maxSize = view->getMaxSize();
@@ -136,7 +141,7 @@ private:
     static int getMinimumSizeOurAxis(ranges::range auto&& views, int spacing) {
         int minSize = -spacing;
 
-        for (auto& v: views) {
+        for (const auto& v: views) {
             if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             minSize += getAxisValue(v->getMinimumSize() + v->getMargin().occupiedSize()) + spacing;
         }
@@ -146,7 +151,7 @@ private:
 
     static int getMinimumSizePerpAxis(ranges::range auto&& views, int spacing) {
         int minSize = 0;
-        for (auto& v: views) {
+        for (const auto& v: views) {
             if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             auto h = getPerpAxisValue(v->getMinimumSize() + + v->getMargin().occupiedSize());
             minSize = glm::max(minSize, int(h));

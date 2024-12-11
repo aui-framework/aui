@@ -14,5 +14,3 @@
 void ALayout::setSpacing(int spacing) {}
 
 ALayoutDirection ALayout::getLayoutDirection() { return ALayoutDirection::NONE; }
-
-const ADeque<_<AView>>& ALayout::getViews() { return mViews; }
