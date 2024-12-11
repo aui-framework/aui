@@ -109,6 +109,9 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
                     "-framework CoreData"
                     "-framework Foundation"
                     "-framework QuartzCore")
+            if(CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL "20.0")
+                target_link_libraries(aui.views PUBLIC "-framework UniformTypeIdentifiers")
+            endif()
         endif ()
     endif ()
 else ()
