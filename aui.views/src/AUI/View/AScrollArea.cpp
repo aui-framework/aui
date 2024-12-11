@@ -87,14 +87,18 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         return;
     }
 
-    {
+    // Checking visibility here for both scrollbars:
+    // The logic behind this check is user would not probably intend scroll a scroll area without visible scrollbars.
+    // Scroll bar visibility is determined primarily by ass::ScrollbarAppearance.
+
+    if (bool(mVerticalScrollbar->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
         auto prevScroll = mVerticalScrollbar->getCurrentScroll();
         mVerticalScrollbar->onScroll(event.delta.y);
         if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
             AWindow::current()->preventClickOnPointerRelease();
         }
     }
-    {
+    if (bool(mHorizontalScrollbar->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
         auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
         mHorizontalScrollbar->onScroll(event.delta.x);
         if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
