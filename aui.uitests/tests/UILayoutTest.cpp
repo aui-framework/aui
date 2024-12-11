@@ -133,6 +133,26 @@ TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
 }
 
+TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
+    inflate(Horizontal::Expanding {
+        _new<AView>() with_style { Expanding {}, MaxSize { 100_dp, {} } } << ".expanding_maxsize",
+        _new<AView>() with_style { Expanding {} } << ".expanding",
+    } with_style { FixedSize(300_dp, {}) });
+
+    By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
+    By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
+}
+
+TEST_F(UILayoutTest, ExpandingWithMaxSize2) {
+    inflate(Horizontal::Expanding {
+        _new<AView>() with_style { Expanding {} } << ".expanding",
+        _new<AView>() with_style { Expanding {}, MaxSize { 100_dp, {} } } << ".expanding_maxsize",
+    } with_style { FixedSize(300_dp, {}) });
+
+    By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
+    By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
+}
+
 namespace {
 class LabelMock : public ALabel {
 public:
