@@ -157,16 +157,15 @@ class AViewContainer;
  * @brief Base class for all layout managers.
  * @ingroup layout_managers
  */
-class API_AUI_VIEWS ALayout: public AObject
-{
+class API_AUI_VIEWS ALayout : public AObject {
 protected:
-	ADeque<_<AView>> mViews;
-	
+    ADeque<_<AView>> mViews;
+
 public:
-	ALayout() = default;
-	virtual ~ALayout() = default;
+    ALayout() = default;
+    virtual ~ALayout() = default;
     const ADeque<_<AView>>& getViews();
-	virtual void onResize(int x, int y, int width, int height) = 0;
+    virtual void onResize(int x, int y, int width, int height) = 0;
 
     /**
      * @brief Attaches view to the layout.
@@ -175,7 +174,7 @@ public:
      * @details
      * See ABasicLayout for basic implementation of this method.
      */
-	virtual void addView(const _<AView>& view, AOptional<size_t> index = std::nullopt) = 0;
+    virtual void addView(const _<AView>& view, AOptional<size_t> index = std::nullopt) = 0;
 
     /**
      * @brief Detaches view from the layout.
@@ -186,10 +185,10 @@ public:
      * @details
      * See ABasicLayout for basic implementation of this method.
      */
-	virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
+    virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-	virtual int getMinimumWidth() = 0;
-	virtual int getMinimumHeight() = 0;
+    virtual int getMinimumWidth() = 0;
+    virtual int getMinimumHeight() = 0;
 
     /**
      * @brief Visits all views in the layout.
@@ -202,5 +201,5 @@ public:
      * @brief Layout spacing.
      * @param spacing spacing in px.
      */
-	virtual void setSpacing(int spacing);
+    virtual void setSpacing(int spacing);
 };

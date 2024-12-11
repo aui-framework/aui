@@ -17,36 +17,12 @@
 
 class ASplitterHelper {
     friend class ASplitter;
-private:
-    ALayoutDirection mDirection; // will be initialized in the Builder
-    size_t mDraggingDividerIndex = -1;
-    int mDragOffset; // may be uninitialized
-    AVector<_<AView>> mItems;
-
-    float getTotalOccupiedSizeOf(const _<AView>& view) {
-        return mDirection == ALayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
-    }
-
-    template<typename T>
-    [[nodiscard]]
-    T& getAxisValue(glm::tvec2<T>& v) {
-        switch (mDirection) {
-            case ALayoutDirection::VERTICAL  : return v.y;
-            case ALayoutDirection::HORIZONTAL: return v.x;
-            default: throw AException("invalid direction");
-        }
-    }
-    template<typename T>
-    [[nodiscard]]
-    T getAxisValue(const glm::tvec2<T>& v) {
-        switch (mDirection) {
-            case ALayoutDirection::VERTICAL  : return v.y;
-            case ALayoutDirection::HORIZONTAL: return v.x;
-            default: throw AException("invalid direction");
-        }
-    }
-
 public:
+    struct Item {
+        _<AView> view;
+        AOptional<int> overridedSize;
+    };
+
     ASplitterHelper() = default;
     ASplitterHelper(ALayoutDirection direction) : mDirection(direction) {}
 
@@ -60,8 +36,15 @@ public:
         mDraggingDividerIndex = -1;
     }
 
-    void setItems(AVector<_<AView>> items) {
+    [[nodiscard]]
+    const AVector<Item>& items() const { return mItems; }
+
+    void setItems(AVector<Item> items) {
         mItems = std::move(items);
+    }
+
+    void setItems(const AVector<_<AView>>& items) {
+        mItems = items.map([](const _<AView>& view) { return Item { .view = view }; });
     }
 
     [[nodiscard]]
@@ -70,6 +53,29 @@ public:
     }
 
     bool isDraggingArea(glm::ivec2 position);
+
+private:
+    ALayoutDirection mDirection; // will be initialized in the Builder
+    size_t mDraggingDividerIndex = -1;
+    int mDragOffset; // may be uninitialized
+    AVector<Item> mItems;
+
+    float getTotalOccupiedSizeOf(const _<AView>& view) {
+        return mDirection == ALayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
+    }
+
+    template<typename T>
+    [[nodiscard]]
+    T& getAxisValue(glm::tvec2<T>& v) {
+        return aui::layout_direction::getAxisValue(mDirection, v);
+    }
+
+    template<typename T>
+    [[nodiscard]]
+    T getAxisValue(const glm::tvec2<T>& v) {
+        return aui::layout_direction::getAxisValue(mDirection, v);
+    }
+
 };
 
 

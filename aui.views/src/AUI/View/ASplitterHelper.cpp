@@ -21,7 +21,7 @@ void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
     int cursor = getAxisValue(mousePos);
     size_t dividerIndex = 0;
     for (auto& v : mItems) {
-        if (getAxisValue(v->getPosition()) + getAxisValue(v->getSize()) / 2 > cursor) {
+        if (getAxisValue(v.view->getPosition()) + getAxisValue(v.view->getSize()) / 2 > cursor) {
             break;
         }
         dividerIndex += 1;
@@ -57,31 +57,26 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
              i += direction) {
             auto& currentItem = mItems[i];
 
-            const auto prevSize = currentItem->getFixedSize();
-            const bool isExpandingView = getAxisValue(currentItem->getExpanding()) == 0;
+            int currentSize = getAxisValue(currentItem.view->getSize());
+            const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
 
-            if (isExpandingView) {
-                currentItem->setFixedSize({0, 0});
+            if (isNonExpandingView) {
+                currentItem.overridedSize = 0;
             }
             // check if current view can handle us all free space
-            int minSize = getAxisValue(currentItem->getMinimumSize());
-            int currentSize = getAxisValue(currentItem->getSize());
+            int minSize = getAxisValue(currentItem.view->getMinimumSize());
             int currentDelta = currentSize - minSize;
             if (currentDelta >= amountToShrink) {
                 // best case. current view handled all free space
-                if (isExpandingView) {
-                    glm::ivec2 fixedSize = prevSize;
-                    getAxisValue(fixedSize) = currentSize - amountToShrink;
-                    currentItem->setFixedSize(fixedSize);
+                if (isNonExpandingView) {
+                    currentItem.overridedSize = currentSize - amountToShrink;
                 }
                 amountToShrink = 0;
                 break;
             } else if (currentDelta != 0) {
                 // worse case. current view partially handled free space, so we have to spread it to the next elements
-                if (isExpandingView) {
-                    glm::ivec2 fixedSize = prevSize;
-                    getAxisValue(fixedSize) = currentSize - currentDelta;
-                    currentItem->setFixedSize(fixedSize);
+                if (isNonExpandingView) {
+                    currentItem.overridedSize = currentSize - currentDelta;
                 }
                 amountToShrink -= currentDelta;
             }
@@ -93,32 +88,29 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
             // now we'll move backwards in order to increase the size of items.
             direction = -direction;
 
-            auto applyEnlargement = [&](const _<AView>& currentItem) {
+            auto applyEnlargement = [&](Item& currentItem) {
               // same stuff as above, but we'll check for maxSize
 
-              const bool isExpandingView = getAxisValue(currentItem->getExpanding()) == 0;
-              glm::ivec2 fixedSize = currentItem->getFixedSize();
-              if (isExpandingView) {
-                  currentItem->setFixedSize({0, 0});
+              const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
+              int currentSize = getAxisValue(currentItem.view->getSize());
+              if (isNonExpandingView) {
+                  currentItem.overridedSize = 0;
               }
 
               // check if current view can handle us all free space
-              int maxSize = getAxisValue(currentItem->getMaxSize());
-              int currentSize = getAxisValue(currentItem->getSize());
+              int maxSize = getAxisValue(currentItem.view->getMaxSize());
               int currentDelta = maxSize - currentSize;
 
               if (currentDelta >= amountToEnlarge) {
                   // best case. current view handled all free space
-                  if (isExpandingView) {
-                      getAxisValue(fixedSize) = currentSize + amountToEnlarge;
-                      currentItem->setFixedSize(fixedSize);
+                  if (isNonExpandingView) {
+                      currentItem.overridedSize = currentSize + amountToEnlarge;
                   }
                   amountToEnlarge = 0;
               } else if (currentDelta != 0) {
                   // worse case. current view partially handled free space, so we have to spread it to the next elements
-                  if (isExpandingView) {
-                      getAxisValue(fixedSize) = currentSize + currentDelta;
-                      currentItem->setFixedSize(fixedSize);
+                  if (isNonExpandingView) {
+                      currentItem.overridedSize = currentSize + currentDelta;
                   }
                   amountToEnlarge -= currentDelta;
               }
@@ -129,7 +121,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
                  i < mItems.size() && i >= 0 && amountToEnlarge != 0; // dual check for both forward and backward iteration
                  i += direction) {
                 auto& currentItem = mItems[i];
-                if (getAxisValue(currentItem->getExpanding()) == 0) {
+                if (getAxisValue(currentItem.view->getExpanding()) == 0) {
                     continue;
                 }
                 applyEnlargement(currentItem);
@@ -140,7 +132,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
                  i < mItems.size() && i >= 0 && amountToEnlarge != 0; // dual check for both forward and backward iteration
                  i += direction) {
                 auto& currentItem = mItems[i];
-                if (getAxisValue(currentItem->getExpanding()) != 0) {
+                if (getAxisValue(currentItem.view->getExpanding()) != 0) {
                     continue;
                 }
                 applyEnlargement(currentItem);
@@ -156,18 +148,18 @@ bool ASplitterHelper::isDraggingArea(glm::ivec2 position) {
     if (mItems.empty()) {
         return false;
     }
-    if (getAxisValue(position) <= getAxisValue(mItems.first()->getPosition()) + CLICK_BIAS.getValuePx()) {
+    if (getAxisValue(position) <= getAxisValue(mItems.first().view->getPosition()) + CLICK_BIAS.getValuePx()) {
         // position is before first view.
         return false;
     }
-    if (getAxisValue(position) >= getAxisValue(mItems.last()->getPosition() + mItems.last()->getSize()) - CLICK_BIAS.getValuePx() * 2) {
+    if (getAxisValue(position) >= getAxisValue(mItems.last().view->getPosition() + mItems.last().view->getSize()) - CLICK_BIAS.getValuePx() * 2) {
         // position is after last view.
         return false;
     }
 
     for (auto& v : mItems) {
-        auto viewPos = getAxisValue(v->getPosition()) + CLICK_BIAS.getValuePx();
-        auto viewSize = getAxisValue(v->getSize()) - CLICK_BIAS.getValuePx() * 2.f;
+        auto viewPos = getAxisValue(v.view->getPosition()) + CLICK_BIAS.getValuePx();
+        auto viewSize = getAxisValue(v.view->getSize()) - CLICK_BIAS.getValuePx() * 2.f;
 
         if (getAxisValue(position) > viewPos && getAxisValue(position) < viewPos + viewSize) {
             return false;
