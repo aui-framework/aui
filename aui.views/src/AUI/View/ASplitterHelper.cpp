@@ -58,7 +58,6 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
             auto applyEnlargement = [&](Item& currentItem) {
               // same stuff as above, but we'll check for maxSize
 
-              const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
               int currentSize = getAxisValue(currentItem.view->getSize());
 
               // check if current view can handle us all free space
@@ -67,17 +66,13 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
 
               if (currentDelta >= amountToEnlarge) {
                   // best case. current view handled all free space
-                  if (isNonExpandingView) {
-                      currentItem.overridedSize = currentSize + amountToEnlarge;
-                      currentItem.view->markMinContentSizeInvalid();
-                  }
+                  currentItem.overridedSize = currentSize + amountToEnlarge;
+                  currentItem.view->markMinContentSizeInvalid();
                   amountToEnlarge = 0;
               } else if (currentDelta != 0) {
                   // worse case. current view partially handled free space, so we have to spread it to the next elements
-                  if (isNonExpandingView) {
-                      currentItem.overridedSize = currentSize + currentDelta;
-                      currentItem.view->markMinContentSizeInvalid();
-                  }
+                  currentItem.overridedSize = currentSize + currentDelta;
+                  currentItem.view->markMinContentSizeInvalid();
                   amountToEnlarge -= currentDelta;
               }
             };
@@ -157,18 +152,14 @@ int ASplitterHelper::reclaimSpace(int space, size_t dividerIndex) {
         int currentDelta = currentSize - minSize;
         if (currentDelta >= amountToShrink) {
             // best case. current view handled all free space
-            if (isNonExpandingView) {
-                currentItem.overridedSize = currentSize - amountToShrink;
-                currentItem.view->markMinContentSizeInvalid();
-            }
+            currentItem.overridedSize = currentSize - amountToShrink;
+            currentItem.view->markMinContentSizeInvalid();
             amountToShrink = 0;
             break;
         } else if (currentDelta != 0) {
             // worse case. current view partially handled free space, so we have to spread it to the next elements
-            if (isNonExpandingView) {
-                currentItem.overridedSize = currentSize - currentDelta;
-                currentItem.view->markMinContentSizeInvalid();
-            }
+            currentItem.overridedSize = currentSize - currentDelta;
+            currentItem.view->markMinContentSizeInvalid();
             amountToShrink -= currentDelta;
         }
     }

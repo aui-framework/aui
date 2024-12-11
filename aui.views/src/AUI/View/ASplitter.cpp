@@ -63,7 +63,7 @@ public:
     /**
      * @brief AView-like object that forwards some methods from AView and injects overridedSize if set.
      */
-    struct FixedSizeInjector {
+    struct SizeInjector {
         const ASplitterHelper::Item& item;
         auto operator->() const { return this; }
 
@@ -78,6 +78,8 @@ public:
         ASPLITTER_IMPL_FORWARD_METHOD(getMargin)
         ASPLITTER_IMPL_FORWARD_METHOD(setGeometry)
         ASPLITTER_IMPL_FORWARD_METHOD(getSize)
+        ASPLITTER_IMPL_FORWARD_METHOD(getFixedSize)
+        ASPLITTER_IMPL_FORWARD_METHOD(getMaxSize)
 
         glm::ivec2 getMinimumSize() const {
             auto size = item.view->getMinimumSize();
@@ -87,28 +89,12 @@ public:
             return size;
         }
 
-        glm::ivec2 getFixedSize() const {
-            auto size = item.view->getFixedSize();
-            if (item.overridedSize) {
-                aui::layout_direction::getAxisValue(BaseLayout::DIRECTION, size) = *item.overridedSize;
-            }
-            return size;
-        }
-
-        glm::ivec2 getMaxSize() const {
-            auto size = item.view->getMaxSize();
-            if (item.overridedSize) {
-                aui::layout_direction::getAxisValue(BaseLayout::DIRECTION, size) = *item.overridedSize;
-            }
-            return size;
-        }
-
-        bool operator==(const FixedSizeInjector& rhs) const noexcept { return item.view == rhs.item.view; }
+        bool operator==(const SizeInjector& rhs) const noexcept { return item.view == rhs.item.view; }
     };
 
     ranges::range auto viewsWithFixedSizeInjected() {
         return mSplitterHelper.items() |
-               ranges::views::transform([](const ASplitterHelper::Item& item) { return FixedSizeInjector { item }; });
+               ranges::views::transform([](const ASplitterHelper::Item& item) { return SizeInjector { item }; });
     }
 
     ASplitterLayout(ASplitterHelper& splitterHelper) : mSplitterHelper(splitterHelper) {}
@@ -151,16 +137,11 @@ _<AView> ASplitter::Builder<Layout>::build() {
 
     splitter->setLayout(std::make_unique<ASplitterLayout<Layout>>(splitter->mHelper));
 
-    bool atLeastOneItemHasntExpanding = false;
     bool atLeastOneItemHasExpanding = false;
     for (auto& item : mItems) {
         splitter->addView(item);
         item->ensureAssUpdated();
-        atLeastOneItemHasntExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) == 0;
         atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
-    }
-    if (!atLeastOneItemHasntExpanding) {
-        throw AException("please add at least one view without expanding");
     }
     if (!atLeastOneItemHasExpanding) {
         auto spacer = _new<ASpacerExpanding>();

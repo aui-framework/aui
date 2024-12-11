@@ -65,7 +65,7 @@ struct HVLayout {
         if (views.empty()) return;
 
         int sum = 0;
-        int availableSpace = getAxisValue(paddedSize) + spacing;
+        int availableSpaceForExpandingViews = getAxisValue(paddedSize) + spacing;
 
         for (const auto& view: views) {
             view->ensureAssUpdated();
@@ -74,9 +74,9 @@ struct HVLayout {
             int minSpace = getAxisValue(view->getMinimumSize());
             sum += expanding;
             if (expanding == 0 || getAxisValue(view->getFixedSize()) != 0)
-                availableSpace -= minSpace + getAxisValue(view->getMargin().occupiedSize()) + spacing;
+                availableSpaceForExpandingViews -= minSpace + getAxisValue(view->getMargin().occupiedSize()) + spacing;
             else
-                availableSpace -= getAxisValue(view->getMargin().occupiedSize()) + spacing;
+                availableSpaceForExpandingViews -= getAxisValue(view->getMargin().occupiedSize()) + spacing;
         }
 
         bool containsExpandingItems = sum > 0;
@@ -105,7 +105,7 @@ struct HVLayout {
             } else {
                 int expanding = getAxisValue(view->getExpanding());
                 int viewMinSize = getAxisValue(view->getMinimumSize());
-                int viewSizeOurAxis = glm::clamp(availableSpace * expanding / sum, viewMinSize, getAxisValue(maxSize));
+                int viewSizeOurAxis = glm::clamp(availableSpaceForExpandingViews * expanding / sum, viewMinSize, getAxisValue(maxSize));
                 int viewSizePerpAxis = glm::min(getPerpAxisValue(paddedSize - margins.occupiedSize()), getPerpAxisValue(maxSize));
 
                 view->setGeometry(getAxisValue(glm::ivec2{viewPosOurAxis, viewPosPerpAxis}),
@@ -114,7 +114,7 @@ struct HVLayout {
                                   getAxisValue(glm::ivec2{viewSizePerpAxis, viewSizeOurAxis}));
 
                 posOurAxis += getAxisValue(view->getSize() + margins.occupiedSize()) + spacing;
-                availableSpace += viewSizeOurAxis - getAxisValue(view->getSize());
+                availableSpaceForExpandingViews += viewSizeOurAxis - getAxisValue(view->getSize());
             }
         }
     }
