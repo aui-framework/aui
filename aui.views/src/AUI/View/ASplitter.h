@@ -29,13 +29,13 @@
  *
  * Generally, ASplitter mimics behaviour of linear layouts (i.e., `Vertical` and `Horizontal`):
  * 1. if there's no expanding view, both linear layouts and ASplitter leave blank space at the end
- * 2. expanding views to use all available space.
+ * 2. expanding views use all available space.
  *
- * ASplitter is applying geometry via AView::setFixedSize. ASplitter never applies fixed size to expanding views. As
- * such, there's should be at least 1 view without expanding. If there's no such view, ASplitter throws an exception on
- * construction.
+ * ASplitter is applying geometry via fixed size-like logic by custom ALayout implementation. ASplitter never applies
+ * such fixed size to expanding views. Hence there's should be at least 1 view without expanding. If there's no such
+ * view, ASplitter throws an exception on construction. ASplitter is unable to control expanding views.
  *
- * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there's should be at
+ * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there should be at
  * least 1 view with expanding. If there's no such view, ASplitter adds ASpacerFixed to the end.
  *
  * These limitations are required in order to prioritize views when reclaiming space.
