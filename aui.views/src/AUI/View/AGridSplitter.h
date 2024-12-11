@@ -25,6 +25,7 @@
  */
 class API_AUI_VIEWS AGridSplitter: public AViewContainerBase {
 public:
+    friend class AGridSplitterLayout;
     class Builder {
         friend class ASplitter;
     private:

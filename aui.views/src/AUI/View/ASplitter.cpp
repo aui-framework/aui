@@ -13,6 +13,7 @@
 
 #include "ASplitter.h"
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/Util/SplitterSizeInjector.h>
 #include <AUI/Layout/HVLayout.h>
 
 ASplitter::ASplitter() {}
@@ -60,42 +61,9 @@ namespace {
 template <aui::derived_from<ALayout> BaseLayout>
 class ASplitterLayout final : public BaseLayout {
 public:
-    /**
-     * @brief AView-like object that forwards some methods from AView and injects overridedSize if set.
-     */
-    struct SizeInjector {
-        const ASplitterHelper::Item& item;
-        auto operator->() const { return this; }
-
-#define ASPLITTER_IMPL_FORWARD_METHOD(name)                  \
-    template <typename... Args>                              \
-    auto name(Args&&... args) const {                        \
-        return item.view->name(std::forward<Args>(args)...); \
-    }
-        ASPLITTER_IMPL_FORWARD_METHOD(ensureAssUpdated)
-        ASPLITTER_IMPL_FORWARD_METHOD(getExpanding)
-        ASPLITTER_IMPL_FORWARD_METHOD(getVisibility)
-        ASPLITTER_IMPL_FORWARD_METHOD(getMargin)
-        ASPLITTER_IMPL_FORWARD_METHOD(setGeometry)
-        ASPLITTER_IMPL_FORWARD_METHOD(getSize)
-        ASPLITTER_IMPL_FORWARD_METHOD(getFixedSize)
-        ASPLITTER_IMPL_FORWARD_METHOD(getMaxSize)
-
-        glm::ivec2 getMinimumSize() const {
-            auto size = item.view->getMinimumSize();
-            if (item.overridedSize) {
-                auto& value = aui::layout_direction::getAxisValue(BaseLayout::DIRECTION, size);
-                value = glm::max(*item.overridedSize, value);
-            }
-            return size;
-        }
-
-        bool operator==(const SizeInjector& rhs) const noexcept { return item.view == rhs.item.view; }
-    };
-
     ranges::range auto viewsWithFixedSizeInjected() {
         return mSplitterHelper.items() |
-               ranges::views::transform([](const ASplitterHelper::Item& item) { return SizeInjector { item }; });
+               ranges::views::transform([](const ASplitterHelper::Item& item) { return SizeInjector<BaseLayout::DIRECTION>{ item }; });
     }
 
     ASplitterLayout(ASplitterHelper& splitterHelper) : mSplitterHelper(splitterHelper) {}
@@ -108,15 +76,15 @@ public:
 
         // reclaim space if provided size is less than the current layout size.
         if constexpr (BaseLayout::DIRECTION == ALayoutDirection::HORIZONTAL) {
-            const auto fixedSizeMinWidth = HVLayout::getMinimumWidth(viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
-            if (width < fixedSizeMinWidth) {
-                mSplitterHelper.reclaimSpace(width - fixedSizeMinWidth);
+            const auto splitterWidth = HVLayout::getMinimumWidth(viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
+            if (width < splitterWidth) {
+                mSplitterHelper.reclaimSpace(width - splitterWidth);
             }
         }
         if constexpr (BaseLayout::DIRECTION == ALayoutDirection::VERTICAL) {
-            const auto fixedSizeMinHeight = HVLayout::getMinimumHeight(viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
-            if (height < fixedSizeMinHeight) {
-                mSplitterHelper.reclaimSpace(height - fixedSizeMinHeight);
+            const auto splitterHeight = HVLayout::getMinimumHeight(viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
+            if (height < splitterHeight) {
+                mSplitterHelper.reclaimSpace(height - splitterHeight);
             }
         }
 

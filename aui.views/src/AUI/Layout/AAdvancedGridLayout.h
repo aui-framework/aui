@@ -18,28 +18,6 @@
  * @ingroup layout_managers
  */
 class API_AUI_VIEWS AAdvancedGridLayout: public ALayout {
-private:
-    int mCurrentIndex = 0;
-    int cellsX, cellsY;
-    unsigned mSpacing = 0;
-
-    struct GridCell {
-        _<AView> view;
-        int x, y;
-
-        operator _<AView>() const {
-            return view;
-        }
-    };
-    AVector<GridCell> mCells;
-    AVector<int> mIndices;
-
-
-    int& indexAt(int x, int y);
-
-    AVector<_<AView>> getRow(int row);
-    AVector<_<AView>> getColumn(int column);
-
 public:
 
     AAdvancedGridLayout(int cellsX, int cellsY);
@@ -68,6 +46,39 @@ public:
     int indexOf(_<AView> view);
 
     AVector<_<AView>> getAllViews() override;
+
+protected:
+    struct CompositionCache {
+        unsigned expandingSum = 0;
+        int minSize = 0;
+
+        int finalPos = 0;
+        int finalSize = 0;
+    };
+
+    struct GridCell {
+        _<AView> view;
+        int x, y;
+
+        operator _<AView>() const {
+            return view;
+        }
+    };
+
+    int mCurrentIndex = 0;
+    int cellsX, cellsY;
+    unsigned mSpacing = 0;
+
+    AVector<GridCell> mCells;
+    AVector<int> mIndices;
+
+protected:
+    int& indexAt(int x, int y);
+
+    AVector<_<AView>> getRow(int row);
+    AVector<_<AView>> getColumn(int column);
+
+    virtual void prepareCache(AVector<CompositionCache>& columns, AVector<CompositionCache>& rows);
 
 };
 
