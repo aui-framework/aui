@@ -397,6 +397,11 @@ protected:
      */
     AOptional<bool> mPreventClickOnPointerRelease;
 
+    /**
+     * @brief If true, AWindowBase::forceUpdateCursor takes no action.
+     */
+    bool mForceUpdateCursorGuard = false;
+
     bool mPerformDoubleClickOnPointerRelease = false;
 
     std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();

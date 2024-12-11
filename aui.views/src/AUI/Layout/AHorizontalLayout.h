@@ -60,5 +60,8 @@ public:
 
     void setSpacing(int spacing) override;
 
+    [[nodiscard]]
+    int getSpacing() const { return mSpacing; }
+
     ALayoutDirection getLayoutDirection() override;
 };

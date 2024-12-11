@@ -154,6 +154,7 @@ void AWindow::onFocusAcquired() {
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AWindowBase::onPointerMove(pos, event);
+    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 
 void AWindow::onFocusLost() {
@@ -282,8 +283,14 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
 }
 
 void AWindow::forceUpdateCursor() {
+    if (mForceUpdateCursorGuard) {
+        return;
+    }
     AWindowBase::forceUpdateCursor();
-    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+    if (!mCursor) {
+        mCursor = ACursor::DEFAULT;
+    }
+    mCursor->applyNativeCursor(this);
 }
 
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {

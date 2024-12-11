@@ -61,11 +61,11 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
 int AScrollArea::getContentMinimumWidth() {
     if (getExpandingHorizontal() != 0) return 0;
-    return AViewContainerBase::getContentMinimumWidth() + contents()->getMinimumSizePlusMargin().x;
+    return AViewContainerBase::getContentMinimumWidth() + (contents() ? contents()->getMinimumSizePlusMargin().x : 0);
 }
 int AScrollArea::getContentMinimumHeight() {
     if (getExpandingVertical() != 0) return 0;
-    return AViewContainerBase::getContentMinimumHeight() + contents()->getMinimumSizePlusMargin().y;
+    return AViewContainerBase::getContentMinimumHeight() + (contents() ? contents()->getMinimumSizePlusMargin().y : 0);
 }
 void AScrollArea::setSize(glm::ivec2 size) {
     AViewContainerBase::setSize(size);

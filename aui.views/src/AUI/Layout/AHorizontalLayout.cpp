@@ -16,82 +16,20 @@
 #undef max
 #undef min
 
+#include "HVLayout.h"
+
+using HVLayout = aui::HVLayout<ALayoutDirection::HORIZONTAL>;
 
 void AHorizontalLayout::onResize(int x, int y, int width, int height) {
-    if (mViews.empty()) return;
-
-    int sum = 0;
-    int availableSpace = width + mSpacing;
-
-    for (auto& view: mViews) {
-        view->ensureAssUpdated();
-        if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-        int expanding = view->getExpandingHorizontal();
-        int minSpace = view->getMinimumWidth();
-        sum += expanding;
-        if (expanding == 0 || view->getFixedSize().x != 0)
-            availableSpace -= minSpace + view->getMargin().horizontal() + mSpacing;
-        else
-            availableSpace -= view->getMargin().horizontal() + mSpacing;
-    }
-
-    bool containsExpandingItems = sum > 0;
-
-    sum = glm::max(sum, 1);
-
-    unsigned index = 0;
-
-    int posX = x;
-    auto last = mViews.back();
-    for (auto& view: mViews) {
-        if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-        auto margins = view->getMargin();
-        auto maxSize = view->getMaxSize();
-
-        if (containsExpandingItems && view == last) {
-            // the last element should stick right to the border.
-            int viewPosX = posX + margins.left;
-            int viewWidth = width - viewPosX - margins.right + x;
-            view->setGeometry(viewPosX,
-                              y + margins.top,
-                              viewWidth,
-                              height - margins.vertical());
-        } else {
-            int expanding = view->getExpandingHorizontal();
-            int minSpace = view->getMinimumWidth();
-            int viewWidth = glm::clamp(availableSpace * expanding / sum, minSpace, maxSize.x);
-
-            view->setGeometry(posX + margins.left,
-                              y + margins.top,
-                              viewWidth,
-                              glm::min(height - margins.vertical(), maxSize.y));
-            posX += view->getSize().x + mSpacing + margins.horizontal();
-            availableSpace += viewWidth - view->getSize().x;
-        }
-    }
-    //assert(width == x);
+    HVLayout::onResize({ x, y }, { width, height }, mViews, mSpacing);
 }
 
-
 int AHorizontalLayout::getMinimumWidth() {
-    int minWidth = -mSpacing;
-
-    for (auto& v: mViews) {
-        if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-        minWidth += v->getMinimumWidth() + mSpacing + v->getMargin().horizontal();
-    }
-
-    return glm::max(minWidth, 0);
+    return HVLayout::getMinimumWidth(mViews, mSpacing);
 }
 
 int AHorizontalLayout::getMinimumHeight() {
-    int minHeight = 0;
-    for (auto& v: mViews) {
-        if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-        auto h = v->getMinimumHeight();
-        minHeight = glm::max(minHeight, int(h + v->getMargin().vertical()));
-    }
-    return minHeight;
+    return HVLayout::getMinimumHeight(mViews, mSpacing);
 }
 
 void AHorizontalLayout::setSpacing(int spacing) {
