@@ -508,7 +508,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style {
                         ATextAlign::JUSTIFY },
-                    },
+                    } with_style { MinSize { 200_dp } },
                     Vertical::Expanding {
                       _new<ALabel>("Word breaking"),
                       AText::fromString(
@@ -519,7 +519,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
                           { WordBreak::BREAK_ALL }),
-                    },
+                    } with_style { MinSize { 200_dp } },
                   }),
                   [] {
                       _<AViewContainer> v1 = Vertical {};

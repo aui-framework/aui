@@ -84,7 +84,8 @@ public:
         glm::ivec2 getMinimumSize() const {
             auto size = item.view->getMinimumSize();
             if (item.overridedSize) {
-                aui::layout_direction::getAxisValue(BaseLayout::DIRECTION, size) = *item.overridedSize;
+                auto& value = aui::layout_direction::getAxisValue(BaseLayout::DIRECTION, size);
+                value = glm::max(*item.overridedSize, value);
             }
             return size;
         }
