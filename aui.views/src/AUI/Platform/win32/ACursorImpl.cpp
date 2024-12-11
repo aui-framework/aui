@@ -69,6 +69,21 @@ void ACursor::applyNativeCursor(AWindow* pWindow) const {
                         SetCursor(cursor);
                         break;
                     }
+                    case ACursor::MOVE: {
+                        static auto cursor = LoadCursor(nullptr, IDC_SIZEALL);
+                        SetCursor(cursor);
+                        break;
+                    }
+                    case ACursor::NS_RESIZE: {
+                        static auto cursor = LoadCursor(nullptr, IDC_SIZENS);
+                        SetCursor(cursor);
+                        break;
+                    }
+                    case ACursor::EW_RESIZE: {
+                        static auto cursor = LoadCursor(nullptr, IDC_SIZEWE);
+                        SetCursor(cursor);
+                        break;
+                    }
                 }
             },
             [](const _<Custom>& custom) {
