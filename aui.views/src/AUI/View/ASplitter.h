@@ -90,7 +90,7 @@ public:
         return *this;
     }
 
-    _<AView> build();
+    API_AUI_VIEWS _<AView> build();
 
     operator _<AView>() {
         return build();
