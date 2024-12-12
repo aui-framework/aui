@@ -71,26 +71,21 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 - Internationalization (i18n)
 - DPI support
 - CMake deployment scripts
-- Model binding and ORM
+- Model binding
 - Encryption
 - IO streams
 - Networking, including http(s) requests
-- DBMS integration including SQL query builder
 - Both asynchronous and synchronous application architecture support
 
 ## Module list
 - `aui.core` - basic types (containers, strings, streams, etc...)
 - `aui.crypt` - wrapper around OpenSSL for encryption functionality
 - `aui.curl` - wrapper around libcurl for http/https requests
-- `aui.designer` - UI Designer (in dev)
-- `aui.data` - DBMS interface and ORM
 - `aui.image` - popular image format loader 
 - `aui.json` - JSON parser
-- `aui.mysql` - MySQL driver for `aui.data`
 - `aui.network` - networking
-- `aui.sqlite` - SQLite driver for `aui.data`
-- `aui.svg` - SVG image loader
 - `aui.toolbox` - resource compiler
+- `aui.uitests` - UI testing based on GTest
 - `aui.views` - UI toolkit
 - `aui.xml` - XML parser
 
@@ -100,33 +95,28 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
  - `+` equals almost completely supported
  - `#` equals fully supported
 
-| Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
-|-------------------|--------------------------|------------|-------|---------|-------|-----|
-| aui.core          |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.crypt         |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.curl          |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.data          |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
-| aui.image         |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.json          |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.network       |             #            |     #      |   #   |    #    |   +   |  +  |
-| aui.sqlite        |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.svg           |             #            |     #      |   #   |    #    |   #   |  #  |
-| aui.toolbox       |             #            |     #      |   #   |    -    |   #   |  -  |
-| aui.views         |             #            |     ?      |   +   |    +    |   +   |  +  |
-| aui.xml           |             #            |     #      |   #   |    #    |   #   |  #  |
-| Assets            |             #            |     #      |   #   |    #    |   +   |  +  |
-| Filesystem        |             #            |     #      |   #   |    #    |   +   |  +  |
-| Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |
+| Feature or module | Windows Vista+ | Windows XP | Linux | Android | MacOS | iOS |
+|-------------------|----------------|------------|-------|---------|-------|-----|
+| aui.core          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.crypt         | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.curl          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.image         | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.json          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.network       | #              |     #      |   #   |    #    |   +   |  +  |
+| aui.toolbox       | #              |     #      |   #   |    -    |   #   |  -  |
+| aui.views         | #              |     ?      |   +   |    +    |   +   |  +  |
+| aui.xml           | #              |     #      |   #   |    #    |   #   |  #  |
+| Assets            | #              |     #      |   #   |    #    |   +   |  +  |
+| Filesystem        | #              |     #      |   #   |    #    |   +   |  +  |
+| Process creation  | #              |     #      |   #   |    -    |   ?   |  -  |
 
-| Compiler                     | Support |
-|------------------------------|---------|
-| MSVC 19+ (Visual Studio 20+) | Full    |
-| gcc (8+)                     | Full    |
-| MinGW (8+)                   | Partial |
-| Cross-compile MinGW          | Partial |
-| clang                        | Full    |
+| Compiler                     | Support       |
+|------------------------------|---------------|
+| MSVC 19+ (Visual Studio 20+) | Full          |
+| gcc (8+)                     | Full          |
+| MinGW (8+)                   | Won't compile |
+| Cross-compile MinGW          | Won't compile |
+| clang                        | Full          |
 
 ## Used libraries
 - `libcurl` for http/https requests
