@@ -160,5 +160,14 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
 _<IDrawable> ADesktop::iconOfFile(const APath& file) { return nullptr; }
 
 void ADesktop::playSystemSound(ADesktop::SystemSound s) {
-    // unsupported
+    @autoreleasepool {
+        switch (s) {
+            case ADesktop::SystemSound::ASTERISK:
+                [[NSSound soundNamed:@"Basso"] play];
+                break;
+            case ADesktop::SystemSound::QUESTION:
+                [[NSSound soundNamed:@"Ping"] play];
+                break;
+        }
+    }
 }
