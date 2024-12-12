@@ -20,7 +20,7 @@
 #include <AUI/Platform/AWindow.h>
 
 template<typename T, typename Layout>
-class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
+class AForEachUI: public AViewContainerBase, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
     using Factory = std::function<_<AView>(const T& value, size_t index)>;
@@ -32,7 +32,7 @@ private:
 public:
     AForEachUI(const List& list):
         mObserver(_new<AListModelObserver<T>>(this)) {
-        setLayout(_new<Layout>());
+        setLayout(std::make_unique<Layout>());
         setModel(list);
     }
 
@@ -58,11 +58,11 @@ public:
     }
 
     void onDataCountChanged() override {
-        AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+        markMinContentSizeInvalid();
     }
 
     void onDataChanged() override {
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
     }
 
     void operator-(const Factory& f) {

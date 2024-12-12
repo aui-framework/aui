@@ -19,19 +19,25 @@
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(const IDrawable::Params &params) {
+void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+    APerformanceSection s("AAnimatedDrawable::draw");
     if (!mTexture)
-        mTexture = ARender::getNewTexture();
+        mTexture = render.getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
-        auto img = mFactory->provideImage(params.size);
+        auto img = [&] {
+            APerformanceSection s2("provideImage");
+            return mFactory->provideImage(params.size);
+        }();
         if (mFactory->hasAnimationFinished()) {
             emit animationFinished;
         }
+        APerformanceSection s2("upload");
         mTexture->setImage(img);
     }
 
-    ARender::rect(ATexturedBrush{
+    APerformanceSection s2("draw");
+    render.rectangle(ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

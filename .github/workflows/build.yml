@@ -37,6 +37,7 @@ jobs:
         run: tree -aI .
 
       - name: Deploy
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_dir: ./doxygen/out/html
@@ -245,6 +246,12 @@ jobs:
           - os: ubuntu-latest
             generator: "Ninja"
             additional_cmake_flags: ''
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
 
     steps:
       - name: Download artifact

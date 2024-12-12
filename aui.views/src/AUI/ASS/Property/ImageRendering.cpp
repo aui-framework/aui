@@ -20,7 +20,7 @@
 
 
 
-void ass::prop::Property<ImageRendering>::renderFor(AView* view) {
+void ass::prop::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
     view->getAssHelper()->state.imageRendering = mInfo;
 }
 

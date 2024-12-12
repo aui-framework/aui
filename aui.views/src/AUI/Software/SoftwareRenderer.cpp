@@ -179,9 +179,9 @@ glm::mat4 SoftwareRenderer::getProjectionMatrix() const {
     return glm::mat4(1.f);
 }
 
-void SoftwareRenderer::drawRect(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size) {
+void SoftwareRenderer::rectangle(const ABrush& brush,
+                                 glm::vec2 position,
+                                 glm::vec2 size) {
     auto transformedPosition = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     auto end = transformedPosition + glm::ivec2(size);
 
@@ -196,10 +196,10 @@ void SoftwareRenderer::drawRect(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
-                                       glm::vec2 position,
-                                       glm::vec2 size,
-                                       float radius) {
+void SoftwareRenderer::roundedRectangle(const ABrush& brush,
+                                        glm::vec2 position,
+                                        glm::vec2 size,
+                                        float radius) {
     RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
     auto end = r.transformedPosition + r.size;
 
@@ -220,21 +220,21 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      glm::vec2 position,
-                                      glm::vec2 size,
-                                      float lineWidth) {
-    drawRect(brush, position, {size.x, lineWidth});
-    drawRect(brush, position + glm::vec2{0, size.y - lineWidth}, { size.x, lineWidth });
-    drawRect(brush, position + glm::vec2{ 0, lineWidth }, { lineWidth, size.y - 2 * lineWidth });
-    drawRect(brush, position + glm::vec2{ size.x - lineWidth, lineWidth }, { lineWidth, size.y - 2 * lineWidth });
+void SoftwareRenderer::rectangleBorder(const ABrush& brush,
+                                       glm::vec2 position,
+                                       glm::vec2 size,
+                                       float lineWidth) {
+    rectangle(brush, position, {size.x, lineWidth});
+    rectangle(brush, position + glm::vec2{0, size.y - lineWidth}, {size.x, lineWidth});
+    rectangle(brush, position + glm::vec2{0, lineWidth}, {lineWidth, size.y - 2 * lineWidth});
+    rectangle(brush, position + glm::vec2{size.x - lineWidth, lineWidth}, {lineWidth, size.y - 2 * lineWidth});
 }
 
-void SoftwareRenderer::drawRoundedRectBorder(const ABrush& brush,
-                                             glm::vec2 position,
-                                             glm::vec2 size,
-                                             float radius,
-                                             int borderWidth) {
+void SoftwareRenderer::roundedRectangleBorder(const ABrush& brush,
+                                              glm::vec2 position,
+                                              glm::vec2 size,
+                                              float radius,
+                                              int borderWidth) {
     auto pos = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     RoundedRect outside(int(radius), glm::ivec2(size), pos);
     RoundedRect inside(int(radius) - borderWidth, glm::ivec2(size) - glm::ivec2(borderWidth * 2), pos + glm::ivec2(borderWidth));
@@ -267,10 +267,10 @@ void SoftwareRenderer::drawRoundedRectBorder(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
-                                     glm::vec2 size,
-                                     float blurRadius,
-                                     const AColor& color) {
+void SoftwareRenderer::boxShadow(glm::vec2 position,
+                                 glm::vec2 size,
+                                 float blurRadius,
+                                 const AColor& color) {
 
     auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
 
@@ -302,13 +302,13 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
         }
     }
 }
-void SoftwareRenderer::drawBoxShadowInner(glm::vec2 position,
-                                          glm::vec2 size,
-                                          float blurRadius,
-                                          float spreadRadius,
-                                          float borderRadius,
-                                          const AColor& color,
-                                          glm::vec2 offset) {
+void SoftwareRenderer::boxShadowInner(glm::vec2 position,
+                                      glm::vec2 size,
+                                      float blurRadius,
+                                      float spreadRadius,
+                                      float borderRadius,
+                                      const AColor& color,
+                                      glm::vec2 offset) {
 
     auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
 
@@ -375,7 +375,6 @@ class SoftwarePrerenderedString: public IRenderer::IPrerenderedString {
 private:
     SoftwareRenderer* mRenderer;
     AVector<CharEntry> mCharEntries;
-    AColor mColor;
     int mWidth = 0;
     int mHeight = 0;
     FontRendering mFontRendering;
@@ -383,17 +382,16 @@ private:
 public:
     SoftwarePrerenderedString(SoftwareRenderer* renderer,
                               AVector<CharEntry> charEntries,
-                              const AColor& color,
                               int width,
                               int height,
                               FontRendering fontRendering) : mRenderer(renderer),
                                                              mCharEntries(std::move(charEntries)),
-                                                             mColor(color), mWidth(width),
+                                                             mWidth(width),
                                                              mHeight(height),
                                                              mFontRendering(fontRendering) {}
 
     void draw() override {
-        auto finalColor = AColor(mRenderer->getColor() * mColor);
+        auto finalColor = AColor(mRenderer->getColor());
         if (finalColor.isFullyTransparent()) return;
         switch (mFontRendering) {
             case FontRendering::SUBPIXEL:
@@ -466,6 +464,7 @@ public:
                 advance += mFontStyle.getSpaceWidth();
             }
             else if (c == '\n') {
+                notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advanceX = (glm::max)(advanceX, advance);
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
@@ -500,6 +499,8 @@ public:
             }
         }
 
+        notifySymbolAdded({glm::ivec2{advance, advanceY}});
+
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
@@ -507,7 +508,6 @@ public:
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<SoftwarePrerenderedString>(mRenderer,
                                                std::move(mCharEntries),
-                                               mFontStyle.color,
                                                mAdvanceX,
                                                mAdvanceY,
                                                mFontStyle.fontRendering);
@@ -515,9 +515,9 @@ public:
 };
 
 
-void SoftwareRenderer::drawString(glm::vec2 position,
-                                  const AString& string,
-                                  const AFontStyle& fs) {
+void SoftwareRenderer::string(glm::vec2 position,
+                              const AString& string,
+                              const AFontStyle& fs) {
     SoftwareMultiStringCanvas c(this, fs);
     c.addString(position, string);
     c.finalize()->draw();
@@ -533,15 +533,16 @@ _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 pos
 
     return c.finalize();
 }
-ITexture* SoftwareRenderer::createNewTexture() {
-    return new SoftwareTexture;
+
+_unique<ITexture> SoftwareRenderer::createNewTexture() {
+    return std::make_unique<SoftwareTexture>();
 }
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
-void SoftwareRenderer::setWindow(ABaseWindow* window) {
+void SoftwareRenderer::setWindow(AWindowBase* window) {
     IRenderer::setWindow(window);
     if (auto context = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
         mContext = context;
@@ -554,12 +555,12 @@ void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2,
     // TODO
     if (p1.x == p2.x || p1.y == p2.y) {
         auto begin = glm::min(p1, p2);
-        drawRect(brush, begin, glm::max(p1, p2) - begin + glm::vec2(1));
+        rectangle(brush, begin, glm::max(p1, p2) - begin + glm::vec2(1));
         return;
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
+void SoftwareRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() == 0) {
         return;
     }
@@ -571,17 +572,21 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> poin
     }
 }
 
-void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) {
+void SoftwareRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) {
     for (auto[p1, p2] : points) {
         drawLine(brush, p1, p2, style, width);
     }
 }
 
-void SoftwareRenderer::drawPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
+void SoftwareRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
     if (points.size() == 0) {
         return;
     }
 }
 
-void SoftwareRenderer::drawSquareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size,
-                                        AAngleRadians begin, AAngleRadians end) {}
+void SoftwareRenderer::squareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size,
+                                    AAngleRadians begin, AAngleRadians end) {}
+
+_unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept {
+    return nullptr;
+}

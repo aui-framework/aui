@@ -15,7 +15,7 @@
 
 #pragma once
 
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
@@ -168,7 +168,7 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             PropertySlot getPropertySlot() const override;
 
@@ -178,6 +178,9 @@ namespace ass {
             }
 
             AString toString() const override;
+
+
+            static void draw(const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info);
 
         };
 
@@ -193,4 +196,4 @@ AUI_ENUM_VALUES(ass::Sizing,
                 ass::Sizing::CONTAIN,
                 ass::Sizing::SPLIT_2X2,
                 ass::Sizing::CROPPED
-            )
+)

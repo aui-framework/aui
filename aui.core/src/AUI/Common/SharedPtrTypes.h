@@ -116,9 +116,13 @@ namespace aui {
          * @brief Creates unique_ptr from raw pointer and a deleter.
          * @details
          * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
+         * By using this function, lifetime of the pointer is delegated to std::unique_ptr. The wrapped pointer will
+         * be freed by specified Deleter. Default deleter is std::default_delete. You may want to specialize
+         * `std::default_delete<T>` struct in order to specify default deleter for T, in this case you can omit deleter
+         * argument of this function.
          */
         template<typename T, typename Deleter = std::default_delete<T>>
-        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter) {
+        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter = Deleter{}) {
             return { ptr, std::move(deleter) };
         }
 
@@ -305,6 +309,11 @@ public:
         return *this;
     }
 
+    template<typename... Arg>
+    auto operator()(Arg&&... value) const requires std::is_invocable_v<T, Arg...> {
+        return (*super::get())(std::forward<Arg>(value)...);
+    }
+
     template<typename Arg>
     const _<T>& operator+(Arg&& value) const {
         (*super::get()) + std::forward<Arg>(value);
@@ -378,13 +387,37 @@ namespace aui {
     }
 }
 
-
+template<typename TO, typename FROM>
+inline TO* _cast(const _unique<FROM>& object)
+{
+    return dynamic_cast<TO*>(object.get());
+}
 
 template<typename TO, typename FROM>
-inline _<TO> _cast(_<FROM> object)
+inline _<TO> _cast(const _<FROM>& object)
 {
     return std::dynamic_pointer_cast<TO, FROM>(object);
 }
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(_<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(const std::shared_ptr<FROM>& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(object);
+}
+
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(std::shared_ptr<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
 
 
 /**

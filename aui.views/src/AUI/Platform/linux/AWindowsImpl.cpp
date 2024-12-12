@@ -20,7 +20,7 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "AUI/Platform/ErrorToException.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -263,9 +263,8 @@ void AWindow::show() {
     }
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
         AThread::current() << [&]() {
-            redraw();
+            XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
         };
-        XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
     emit shown();
@@ -411,7 +410,8 @@ void AWindowManager::loop() {
 
         // [1000 ms timeout] sometimes, leaving an always rerendering window (game) work a long time deadlocks the loop
         // in infinite poll.
-        if (int p = poll(ps, std::size(ps), 1000); p < 0) {
+        const auto timeout = mFastPathNotify || ranges::any_of(mWindows, [](const _<AWindow>& window) { return window->mRedrawFlag; }) ? 0 : 1000;
+        if (int p = poll(ps, std::size(ps), timeout); p < 0) {
             aui::impl::unix_based::lastErrorToException("eventloop poll failed");
         } else if (p == 0) {
             continue;
@@ -512,8 +512,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         if (auto w = _cast<ACustomWindow>(window)) {
                             w->handleXConfigureNotify();
                         }
-                        window->mRedrawFlag = false;
-                        window->redraw();
+                        window->mRedrawFlag = true;
 
                         XSyncValue syncValue;
                         XSyncIntsToValue(&syncValue,
@@ -729,7 +728,7 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
-    ABaseWindow::blockUserInput(blockUserInput);
+    AWindowBase::blockUserInput(blockUserInput);
     // TODO linux impl
 }
 
@@ -738,11 +737,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    ABaseWindow::showTouchscreenKeyboardImpl();
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {
@@ -751,4 +750,7 @@ void AWindow::moveToCenter() {
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
+}
+void AWindow::applyGeometryToChildren() {
+    AWindowBase::applyGeometryToChildren();
 }

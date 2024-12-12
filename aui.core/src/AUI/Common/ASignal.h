@@ -19,13 +19,6 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 
-
-/**
- * @brief Represents a signal.
- * @tparam Args signal arguments
- * @ingroup core
- * @ingroup signal_slot
- */
 template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
@@ -45,7 +38,6 @@ private:
         bool isDisconnected = false;
     };
 
-    ARecursiveMutex mSlotsLock;
     AVector<_<slot>> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
@@ -150,7 +142,6 @@ private:
     {
         static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
 
-        std::unique_lock lock(mSlotsLock);
         mSlots.push_back(_new<slot>(slot{ object, argument_ignore_helper<decltype(&Lambda::operator())>(lambda) }));
 
         linkSlot(object);
@@ -177,7 +168,6 @@ public:
 
     virtual ~ASignal() noexcept
     {
-        std::unique_lock lock(mSlotsLock);
         for (const _<slot>& slot : mSlots)
         {
             unlinkSlot(slot->object);
@@ -204,7 +194,6 @@ public:
 
     [[nodiscard]]
     bool hasConnectionsWith(aui::no_escape<AObject> object) noexcept {
-        std::unique_lock lock(mSlotsLock);
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
             return s->object == object.ptr();
         });
@@ -220,7 +209,6 @@ private:
          */
         AVector<func_t> slotsToRemove;
 
-        std::unique_lock lock(mSlotsLock);
         slotsToRemove.reserve(mSlots.size());
         mSlots.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<slot>& p) {
             if (predicate(p)) {
@@ -229,7 +217,6 @@ private:
             }
             return false;
         });
-        lock.unlock();
 
         slotsToRemove.clear();
     }
@@ -248,8 +235,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
         emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
     }
 
-    std::unique_lock lock(mSlotsLock);
-    auto slots = std::move(mSlots); // needed to safely unlock the mutex
+    auto slots = std::move(mSlots); // needed to safely iterate through the slots
     for (auto i = slots.begin(); i != slots.end();)
     {
         slot& slot = **i;
@@ -276,7 +262,6 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                         AAbstractSignal::isDisconnected() = false;
                         (std::apply)(slot->func, args);
                         if (AAbstractSignal::isDisconnected()) {
-                            std::unique_lock lock(mSlotsLock);
                             unlinkSlot(receiverPtr.get());
                             slot->isDisconnected = true;
                             mSlots.removeFirst(slot);
@@ -311,12 +296,20 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     if (mSlots.empty()) {
         mSlots = std::move(slots);
     } else {
+        // mSlots might be modified by a single threaded signal call. In this case merge two vectors
         mSlots.insert(mSlots.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
     }
 
     AAbstractSignal::isDisconnected() = false;
 }
 
+/**
+ * @brief A signal declaration.
+ * @tparam Args signal arguments
+ * @ingroup core
+ * @ingroup signal_slot
+ * See @ref signal_slot "signal-slot system" for more info.
+ */
 template<typename... Args>
 using emits = ASignal<Args...>;
 

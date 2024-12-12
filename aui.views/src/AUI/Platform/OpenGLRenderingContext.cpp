@@ -23,23 +23,22 @@ void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
     }
 #endif
     try {
-        gl::Framebuffer framebuffer;
-        framebuffer.setSupersamplingRatio(2);
-        framebuffer.resize(windowSize);
-        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-        framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        if constexpr (true) {
-            auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
-        } else {
-            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
-        }
-        mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
+        mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
         mFramebuffer = Failed{};
     }
+}
+
+gl::Framebuffer OpenGLRenderingContext::newOffscreenRenderingFramebuffer(glm::uvec2 initialSize) {
+    gl::Framebuffer framebuffer;
+    framebuffer.setSupersamplingRatio(2);
+    framebuffer.resize(initialSize);
+    auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
+    framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+    auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
+    framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
+    return framebuffer;
 }
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
@@ -59,6 +58,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderingContext::endFramebuffer() {
+#if !AUI_PLATFORM_EMSCRIPTEN
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         fb->bindForRead();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
@@ -70,6 +70,7 @@ void OpenGLRenderingContext::endFramebuffer() {
                           GL_LINEAR);                // filter
         gl::Framebuffer::unbind();
     }
+#endif
 }
 
 void OpenGLRenderingContext::bindViewport() {

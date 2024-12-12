@@ -128,8 +128,6 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
     XSetICFocus((XIC)window.mIC);
 
 
-    XMapWindow(ourDisplay, window.mHandle);
-
     auto title = init.name.toStdString();
     XStoreName(ourDisplay, window.mHandle, title.c_str());
     XChangeProperty(ourDisplay, window.mHandle, XInternAtom(ourDisplay, "_NET_WM_NAME", false),
@@ -146,14 +144,14 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(ourDisplay, w->mHandle);
     }
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
 }

@@ -17,7 +17,7 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 #include "AWindowNativePtr.h"
@@ -37,7 +37,11 @@
 class ARender;
 class AWindowManager;
 
-class API_AUI_VIEWS AWindow: public ABaseWindow
+/**
+ * @brief Represents a window in the underlying windowing system.
+ * @ingroup views
+ */
+class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
@@ -47,7 +51,6 @@ class API_AUI_VIEWS AWindow: public ABaseWindow
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
-        ARender::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -143,6 +146,9 @@ public:
     void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
+#if AUI_PLATFORM_LINUX
+    void applyGeometryToChildren() override;
+#endif
 
     void onFocusAcquired() override;
     void onFocusLost() override;
@@ -165,7 +171,7 @@ public:
     /**
      * @return Current window for current thread.
      */
-    static ABaseWindow* current();
+    static AWindowBase* current();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
@@ -215,7 +221,6 @@ public:
 
 signals:
     emits<> closed;
-    emits<> redrawn;
     emits<> shown;
 
     /**
@@ -243,7 +248,6 @@ signals:
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void flagUpdateLayout() override;
 protected:
 #if AUI_PLATFORM_WIN
     HICON mIcon = nullptr;
@@ -271,6 +275,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+
     float fetchDpiFromSystem() const override;
 
     /**
@@ -300,7 +305,6 @@ private:
 #else
     bool mRedrawFlag = true;
 #endif
-    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
 

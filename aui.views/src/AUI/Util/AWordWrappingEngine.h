@@ -16,23 +16,30 @@
 #include <AUI/Common/AVector.h>
 #include <glm/glm.hpp>
 #include <AUI/Enum/ATextAlign.h>
-#include <AUI/Enum/Float.h>
+#include <AUI/Enum/AFloat.h>
 
-class API_AUI_VIEWS AWordWrappingEngine {
+class AWordWrappingEngineBase {
 public:
     class Entry {
     public:
         virtual ~Entry() = default;
 
         virtual glm::ivec2 getSize() = 0;
-        virtual void setPosition(const glm::ivec2& position) = 0;
+        virtual void setPosition(glm::ivec2 position) {}
 
         [[nodiscard]]
-        virtual Float getFloat() const = 0;
+        virtual AFloat getFloat() const {
+            return AFloat::NONE;
+        }
+
+        [[nodiscard]]
+        virtual bool forcesNextLine() const {
+            return false;
+        }
 
         [[nodiscard]]
         bool isFloating() const {
-            return getFloat() != Float::NONE;
+            return getFloat() != AFloat::NONE;
         }
 
         [[nodiscard]]
@@ -41,11 +48,10 @@ public:
         }
     };
 
-private:
-    AVector<_<Entry>> mEntries;
+protected:
     float mLineHeight = 1.f;
     ATextAlign mTextAlign = ATextAlign::LEFT;
-    std::optional<int> mHeight;
+    AOptional<int> mHeight;
 
 public:
     void setLineHeight(float lineHeight) {
@@ -56,15 +62,38 @@ public:
         mTextAlign = textAlign;
     }
 
-    void setEntries(AVector<_<Entry>> entries) {
+
+    [[nodiscard]]
+    AOptional<int> height() const {
+        return mHeight;
+    }
+};
+
+template<typename Container = AVector<_<AWordWrappingEngineBase::Entry>>>
+class AWordWrappingEngine: public AWordWrappingEngineBase {
+public:
+    using Entries = Container;
+
+    // include AWordWrappingEngineImpl.h for implementation
+    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
+
+    void setEntries(Container entries) {
         mEntries = std::move(entries);
     }
 
-    std::optional<int> getHeight() {
-        return mHeight;
+    [[nodiscard]]
+    Container& entries() {
+        return mEntries;
     }
 
-    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
+
+    [[nodiscard]]
+    const Container& entries() const {
+        return mEntries;
+    }
+
+private:
+    Container mEntries;
 };
 
 

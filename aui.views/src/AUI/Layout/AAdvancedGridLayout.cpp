@@ -79,46 +79,14 @@ AAdvancedGridLayout::AAdvancedGridLayout(int cellsX, int cellsY): cellsX(cellsX)
 
 void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
 {
-    //float cellWidth = static_cast<float>(width) / cellsX;
-    //float cellHeight = static_cast<float>(height) / cellsY;
-
-    struct cache_t
-    {
-        unsigned expandingSum = 0;
-        int minSize = 0;
-
-        int finalPos = 0;
-        int finalSize = 0;
-    };
-
-    AVector<cache_t> columns;
-    AVector<cache_t> rows;
+    AVector<CompositionCache> columns;
+    AVector<CompositionCache> rows;
 
     columns.resize(cellsX);
     rows.resize(cellsY);
 
-
-
     // preparation
-    for (auto& v : mCells) {
-        v.view->ensureAssUpdated();
-        if (v.view->getVisibility() == Visibility::GONE) continue;
-
-        glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
-        auto fixed = v.view->getFixedSize();
-        if (fixed.x != 0) e.x = 0;
-        if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight(
-                ALayoutDirection::NONE)};
-        glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
-
-        columns[v.x].expandingSum += e.x;
-        rows[v.y].expandingSum    += e.y;
-
-        columns[v.x].minSize = glm::max(columns[v.x].minSize, minSpace.x);
-        rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
-
-    }
+    prepareCache(columns, rows);
     glm::ivec2 available { width, height };
 
     // evaluate expansion sum
@@ -182,6 +150,27 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     }
 }
 
+void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVector<CompositionCache>& rows) {
+    for (auto& v : mCells) {
+        v.view->ensureAssUpdated();
+        if (!(v.view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
+
+        glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
+        auto fixed = v.view->getFixedSize();
+        if (fixed.x != 0) e.x = 0;
+        if (fixed.y != 0) e.y = 0;
+        glm::ivec2 m = { v.view->getMinimumWidth(), v.view->getMinimumHeight() };
+        glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
+
+        columns[v.x].expandingSum += e.x;
+        rows[v.y].expandingSum    += e.y;
+
+        columns[v.x].minSize = glm::max(columns[v.x].minSize, minSpace.x);
+        rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
+
+    }
+}
+
 void AAdvancedGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
     if (mCurrentIndex < mIndices.size())
     {
@@ -222,7 +211,7 @@ int AAdvancedGridLayout::getMinimumWidth()
         int minForColumn = 0;
         for (auto& view : getColumn(x))
         {
-            if (view->getVisibility() == Visibility::GONE) continue;
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
         }
         min += minForColumn + mSpacing;
@@ -238,7 +227,7 @@ int AAdvancedGridLayout::getMinimumHeight()
         int minForRow = 0;
         for (auto& view : getRow(y))
         {
-            if (view->getVisibility() == Visibility::GONE) continue;
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
             minForRow = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForRow);
         }
         min += minForRow + mSpacing;

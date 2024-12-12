@@ -62,19 +62,19 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void ADropdownList::render(ClipOptimizationContext context) {
+void ADropdownList::render(ARenderContext context) {
     AAbstractLabel::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
         p.size = size;
         p.offset = { getWidth() - size.x - getPadding().right, (getHeight() - size.y) / 2 };
-        arrow->draw(p);
+        arrow->draw(context.render, p);
     }
 }
 
-int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
-    return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
+int ADropdownList::getContentMinimumWidth() {
+    return AAbstractLabel::getContentMinimumWidth() + 20;
 }
 
 void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
@@ -102,7 +102,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
                         (glm::max)(getWidth(), list->getMinimumWidth()),
                         listHeight
                 });
-        comboWindow->setLayout(_new<AVerticalLayout>());
+        comboWindow->setLayout(std::make_unique<AVerticalLayout>());
         comboWindow->addView(list);
         mComboWindow = comboWindow;
 

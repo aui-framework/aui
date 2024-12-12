@@ -89,7 +89,7 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         ReleaseDC(w->mHandle, mWindowDC);
 
@@ -98,7 +98,7 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     UnregisterClass(aui::win32::toWchar(mWindowClass), GetModuleHandle(nullptr));
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             AUI_ASSERT(mPainterDC == nullptr);
@@ -107,7 +107,7 @@ void CommonRenderingContext::beginPaint(ABaseWindow& window) {
     }
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             EndPaint(w->mHandle, &mPaintstruct);

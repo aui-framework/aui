@@ -14,29 +14,36 @@
 //
 
 #include <range/v3/range.hpp>
-#include <AUI/View/ALabel.h>
+
 #include "ViewPropertiesView.h"
-#include "Devtools.h"
-#include "AUI/View/AText.h"
 #include <AUI/ASS/ASS.h>
-#include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/Traits/iterators.h>
-#include <AUI/Reflect/AReflect.h>
-#include <AUI/View/AHDividerView.h>
 #include <AUI/Common/IStringable.h>
-#include <AUI/View/ACheckBox.h>
-#include <AUI/View/AButton.h>
 #include <AUI/Platform/AClipboard.h>
+#include <AUI/Reflect/AReflect.h>
+#include <AUI/Traits/iterators.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/AButton.h>
+#include <AUI/View/ACheckBox.h>
+#include <AUI/View/AHDividerView.h>
+#include <AUI/View/ALabel.h>
+
+#include "AUI/View/AText.h"
+#include "Devtools.h"
 
 using namespace ass;
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
-    setCustomStyle({ Border {
-                           1_px,
-                           0x505050_rgb,
-                   },
-                   Padding { 1_px },
-                   Margin { 4_dp } });
+    setCustomStyle({
+      Border {
+        1_px,
+        0x505050_rgb,
+      },
+      Padding { 1_px },
+      Margin { 4_dp },
+      MinSize { 200_dp },
+      ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::ON_DEMAND),
+      Expanding(),
+    });
     setTargetView(targetView);
 }
 
@@ -44,48 +51,59 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     if (!targetView) {
         return;
     }
-    AUI_NULLSAFE(targetView->getWindow())->setProfiledView(targetView);
+    AUI_NULLSAFE(targetView->getWindow())->profiling().highlightView = targetView;
     AUI_NULLSAFE(targetView->getWindow())->redraw();
 
     mTargetView = targetView;
-    if (!targetView) return;
+    if (!targetView)
+        return;
 
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
     using namespace declarative;
-    auto addressStr = "{}"_format((void*)targetView.get());
+    auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
-            _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
-            Horizontal {
-                Label { addressStr },
-                Button { "Copy" }.clicked(this, [addressStr] {
-                    AClipboard::copyToClipboard(addressStr);
-                }),
-            },
-            Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(ALayoutDirection::NONE), targetView->getMinimumHeight(ALayoutDirection::NONE)) },
-            CheckBoxWrapper {
-                Label { "Enabled "},
-            } let {
+        _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
+        Horizontal {
+          Label { addressStr },
+          Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
+        },
+
+        Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
+
+        CheckBoxWrapper {
+          Label { "Enabled" },
+        } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
-                    if (auto s = mTargetView.lock()) s->setEnabled(v);
+                    if (auto s = mTargetView.lock())
+                        s->setEnabled(v);
                     requestTargetUpdate();
                 });
             },
-            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
-            CheckBoxWrapper {
-                Label {"Expanding"},
-            } let {
+        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+        Horizontal {
+          Button { "Add \"DevtoolsTest\" stylesheet name" } let {
+                  it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
+                  connect(it->clicked, [=] {
+                      targetView->addAssName("DevtoolsTest");
+                      setTargetView(targetView);
+                  });
+              },
+        },
+        CheckBoxWrapper {
+          Label { "Expanding" },
+        } let {
                 it->setChecked(targetView->getExpanding() != glm::ivec2(0));
                 connect(it->checked, [this](bool v) {
-                    if (auto s = mTargetView.lock()) s->setExpanding(v);
+                    if (auto s = mTargetView.lock())
+                        s->setExpanding(v);
                     requestTargetUpdate();
                 });
             },
 
-            _new<ALabel>("view's custom style"),
-            _new<ALabel>("{") << ".declaration_br",
-
+        _new<ALabel>("view's custom style"),
+        _new<ALabel>("{") << ".declaration_br",
     };
 
     displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
@@ -108,31 +126,31 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             displayApplicableRule(dst, applicableDeclarations, &r);
         }
     }
-    dst->addView( _new<ALabel>("}") << ".declaration_br");
+    dst->addView(_new<ALabel>("}") << ".declaration_br");
     AScrollArea::setContents(dst);
 
-    updateLayout();
+    applyGeometryToChildrenIfNecessary();
     redraw();
 }
 
-void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
-                                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                                               const ass::PropertyList* rule) {
-
+void ViewPropertiesView::displayApplicableRule(
+    const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+    const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style{ Opacity {0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style { Opacity { 0.7f } });
     }
     dst->addView(Horizontal {
-            _new<ALabel>("},") << ".declaration_br",
+      _new<ALabel>("},") << ".declaration_br",
     });
-    dst->addView(_new<AHDividerView>() with_style{BackgroundSolid {0x505050_rgb }, Margin {5_dp, 0 }, MinSize {{}, 10_dp } });
+    dst->addView(_new<AHDividerView>() with_style {
+      BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
 }
 
 void ViewPropertiesView::requestTargetUpdate() {
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
-            targetWindow->updateLayout();
+            targetWindow->applyGeometryToChildrenIfNecessary();
             targetWindow->redraw();
         }
     }

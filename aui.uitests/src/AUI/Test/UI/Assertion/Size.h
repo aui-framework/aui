@@ -24,7 +24,9 @@ struct ViewAssertionSize {
     explicit ViewAssertionSize(const AMetric& value): value(value.getValuePx()) {}
 
     bool operator()(const _<AView>& v) {
-        return v->getSize()[I] == value;
+        auto viewSize = v->getSize()[I];
+        EXPECT_EQ(viewSize, value);
+        return viewSize == value;
     }
 };
 

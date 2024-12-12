@@ -49,7 +49,7 @@ set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries"
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix emscripten)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
@@ -63,7 +63,7 @@ if (WIN32)
 else()
     set(AUI_PLATFORM_WIN 0 CACHE INTERNAL "Platform")
 endif()
-if (UNIX AND NOT APPLE AND NOT ANDROID)
+if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(AUI_PLATFORM_LINUX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
@@ -98,7 +98,14 @@ else()
     set(AUI_PLATFORM_IOS 0 CACHE INTERNAL "Platform")
 endif()
 
-if (UNIX)
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    set(AUI_PLATFORM_EMSCRIPTEN 1 CACHE INTERNAL "Platform")
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS emscripten)
+else()
+    set(AUI_PLATFORM_EMSCRIPTEN 0 CACHE INTERNAL "Platform")
+endif()
+
+if (UNIX AND NOT AUI_PLATFORM_EMSCRIPTEN)
     set(AUI_PLATFORM_UNIX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
@@ -214,7 +221,7 @@ macro(_aui_import_gtest)
 endmacro()
 
 macro(aui_enable_tests AUI_MODULE_NAME)
-    if (NOT ANDROID AND NOT IOS)
+    if (NOT CMAKE_CROSSCOMPILING)
         _aui_import_gtest()
         if (NOT TARGET GTest::gtest)
             message(FATAL_ERROR "GTest::gtest not found!")
@@ -298,14 +305,14 @@ macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
         auib_import(benchmark https://github.com/google/benchmark
                     VERSION v1.8.3
-                    CMAKE_ARGS -DBENCHMARK_DOWNLOAD_DEPENDENCIES=on
+                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                     LINK STATIC)
         set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
 
 macro(aui_enable_benchmarks AUI_MODULE_NAME)
-    if (NOT ANDROID AND NOT IOS)
+    if (NOT CMAKE_CROSSCOMPILING)
         _aui_import_gtest()
         _aui_import_google_benchmark()
         if (NOT TARGET benchmark::benchmark)
@@ -387,6 +394,8 @@ function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
+
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
@@ -685,6 +694,8 @@ function(aui_executable AUI_MODULE_NAME)
 
         )
     endif()
+
+    configure_file(${AUI_BUILD_AUI_ROOT}/platform/emscripten/index.html.in ${CMAKE_BINARY_DIR}/bin/${AUI_MODULE_NAME}.html)
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
@@ -709,7 +720,7 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
@@ -738,7 +749,7 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
-            VERSION 03bfb4f86094784124728ba803007b22de3aaf29)
+            VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -750,7 +761,7 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUI_CACHE_DIR}/crosscompile-host
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}

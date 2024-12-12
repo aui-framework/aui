@@ -14,7 +14,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Platform/android/OSAndroid.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -150,12 +150,12 @@ void AWindow::allowDragNDrop() {
 void AWindow::showTouchscreenKeyboardImpl() {
     ui_thread {
         ATextInputType type = ATextInputType::DEFAULT;
-        ATextInputAction action = ATextInputAction::DEFAULT;
+        ATextInputActionIcon action = ATextInputActionIcon::DEFAULT;
         bool isPassword = false;
-        if (auto textField = _cast<AAbstractTextField>(AWindow::getFocusedView())) {
+        if (auto textField = _cast<AAbstractTypeable>(AWindow::getFocusedView())) {
             type = textField->textInputType();
-            action = textField->textInputAction();
-            isPassword = textField->isPasswordMode();
+            action = textField->textInputActionIcon();
+            isPassword = textField->isPasswordField();
         }
         com::github::aui::android::Platform::showKeyboard(static_cast<int>(type),
                                                         static_cast<int>(action), isPassword);

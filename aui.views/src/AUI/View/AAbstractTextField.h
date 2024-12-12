@@ -12,28 +12,30 @@
 #pragma once
 
 #include <AUI/View/AAbstractTypeableView.h>
-#include "AUI/Enum/ATextInputAction.h"
 #include "AUI/Enum/ATextInputType.h"
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 /**
  * @brief Text field implementation
  * @details ATextField is separated into the different class in order to simplify styling.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
-{
+class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView<AView>, public IStringable {
 public:
     AAbstractTextField();
-    virtual ~AAbstractTextField();
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    ~AAbstractTextField() override;
+
+    int getContentMinimumHeight() override;
+
     void setText(const AString& t) override;
 
-    void render(ClipOptimizationContext context) override;
+    void setSuffix(const AString& s);
+
+    void render(ARenderContext ctx) override;
 
     AString toString() const override;
 
@@ -42,85 +44,71 @@ public:
     }
 
     [[nodiscard]]
-    ATextInputType textInputType() const noexcept {
+    ATextInputType textInputType() const noexcept override {
         return mTextInputType;
     }
 
-    void setTextInputAction(ATextInputAction textInputAction) noexcept {
-        mTextInputAction = textInputAction;
+    void setPasswordMode(bool isPasswordField) {
+        mIsPasswordTextField = isPasswordField;
+        setCopyable(!isPasswordField);
     }
 
     [[nodiscard]]
-    ATextInputAction textInputAction() const noexcept {
-        return mTextInputAction;
-    }
-
-
-    void setPasswordMode(bool isPasswordMode) {
-        mIsPasswordTextField = isPasswordMode;
-        setCopyable(!isPasswordMode);
-    }
-
-    bool isPasswordMode() const {
-            return mIsPasswordTextField;
+    bool isPasswordField() const noexcept override {
+        return mIsPasswordTextField;
     }
 
     bool handlesNonMouseNavigation() override;
-    void onFocusAcquired() override;
 
     const AString& text() const override;
 
-    size_t textLength() const override;
-
     void onCharEntered(char16_t c) override;
-    void invalidateFont() override;
-
-    void onFocusLost() override;
-
-    bool wantsTouchscreenKeyboard() override;
 
     void setSize(glm::ivec2 size) override;
 
-    void onKeyDown(AInput::Key key) override;
-
-signals:
-    /**
-     * @brief On action button of touchscreen keyboard pressed
-     */
-    emits<> actionButtonPressed;
+    glm::ivec2 getCursorPosition() override;
 
 protected:
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
+    AString mSuffix;
+
     virtual bool isValidText(const AString& text);
 
-    void prerenderStringIfNeeded();
+    void prerenderStringIfNeeded(IRenderer& render);
 
     void typeableErase(size_t begin, size_t end) override;
+
     bool typeableInsert(size_t at, const AString& toInsert) override;
+
     size_t typeableFind(char16_t c, size_t startPos) override;
+
     size_t typeableReverseFind(char16_t c, size_t startPos) override;
+
     size_t length() const override;
 
     bool typeableInsert(size_t at, char16_t toInsert) override;
 
     AString getDisplayText() override;
 
-    void doRedraw() override;
+    void cursorSelectableRedraw() override;
 
+    unsigned cursorIndexByPos(glm::ivec2 pos) override;
+    glm::ivec2 getPosByIndex(size_t index) override;
 
-    void doDrawString();
+    void doDrawString(IRenderer& render);
 
-    glm::ivec2 getMouseSelectionPadding() override;
-
+    void onCursorIndexChanged() override;
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
-    ATextInputAction mTextInputAction = ATextInputAction::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
+    int mHorizontalScroll = 0; // positive only
+    unsigned mAbsoluteCursorPos = 0;
+    ATextLayoutHelper mTextLayoutHelper;
 
-    void invalidatePrerenderedString() override;
-    AString getContentsPasswordWrap();
+    void invalidateFont() override;
 
     void updateTextAlignOffset();
+
 };

@@ -14,17 +14,17 @@
 #include <AUI/View/AView.h>
 #include "AWordWrappingEngine.h"
 
-class API_AUI_VIEWS AViewEntry: public AWordWrappingEngine::Entry {
+class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngineBase::Entry {
 private:
     _<AView> mView;
 
 public:
-    explicit AViewEntry(const _<AView>& view) : mView(view) {}
+    explicit AViewEntry(_<AView> view) : mView(std::move(view)) {}
     AViewEntry() = default;
 
     glm::ivec2 getSize() override;
-    void setPosition(const glm::ivec2& position) override;
-    Float getFloat() const override;
+    void setPosition(glm::ivec2 position) override;
+    AFloat getFloat() const override;
 
     ~AViewEntry() override;
 };

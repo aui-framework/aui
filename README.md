@@ -162,6 +162,8 @@ As for the latter, you are welcome to upstream your changes (i.e., propose your 
 [this repository](https://github.com/aui-framework/aui)). If you decided to not do so, please keep in mind that the
 License allows us to take your changes and upstream them.
 
+You are not obligated to disclose your own sources nor release your own project under the same terms (License).
+
 # Maintaining
 
 The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)

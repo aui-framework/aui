@@ -93,11 +93,9 @@ class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AS
     void onDataCountChanged() override;
     void onDataChanged() override;
 
-   signals:
+signals:
     emits<AListModelSelection<AString>> selectionChanged;
     emits<unsigned> itemDoubleClicked;
 
     void clearSelection();
-
-    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 };

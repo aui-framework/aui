@@ -41,7 +41,7 @@ public:
  *
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
-class API_AUI_VIEWS ARadioButton : public AViewContainer, public ass::ISelectable {
+class API_AUI_VIEWS ARadioButton : public AViewContainerBase, public ass::ISelectable {
 private:
     _<ALabel> mText;
     bool mChecked = false;

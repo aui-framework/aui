@@ -76,22 +76,34 @@ bool AByteBuffer::operator!=(const AByteBuffer& r) const {
 AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is)
 {
     AByteBuffer buf;
-    char tmp[0x10000];
+    buf.reserve(0x1000);
 
-    for (size_t last; (last = is->read(tmp, sizeof(tmp))) > 0;)
+    for (size_t last; (last = is->read(buf.end(), buf.getAvailableToWrite())) > 0;)
     {
-        buf.write(tmp, last);
+        buf.mSize += last;
+
+        if (buf.getAvailableToWrite() < 0x100) {
+            buf.grow(buf.capacity());
+        }
     }
     return buf;
 }
 
 AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction) {
     AByteBuffer buf;
-    buf.reserve(sizeRestriction);
-    char tmp[4096];
-    for (size_t last; (last = is->read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
+    buf.reserve(0x1000);
+
+    for (size_t last; (last = is->read(buf.end(), buf.getAvailableToWrite())) > 0;)
     {
-        buf.write(tmp, last);
+        buf.mSize += last;
+
+        if (buf.getAvailableToWrite() < 0x100) {
+            auto newCapacity = glm::min(buf.capacity() * 2, sizeRestriction);
+            if (buf.capacity() == newCapacity && buf.getAvailableToWrite()) {
+                break;
+            }
+            buf.reserve(newCapacity);
+        }
     }
     return buf;
 }

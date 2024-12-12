@@ -19,7 +19,6 @@
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
-#include "AUI/Util/AMessageQueue.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
@@ -62,7 +61,7 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 }
 #else
 #include <signal.h>
-#if !AUI_PLATFORM_ANDROID
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_EMSCRIPTEN
 #include <execinfo.h>
 #endif
 #include <pthread.h>
@@ -260,7 +259,7 @@ void AThread::join()
 	mThread->join();
 }
 
-void AAbstractThread::enqueue(AMessageQueue::Message f)
+void AAbstractThread::enqueue(AMessageQueue<>::Message f)
 {
     mMessageQueue.enqueue(std::move(f));
     if (mCurrentEventLoop) {
@@ -312,7 +311,7 @@ void AAbstractThread::updateThreadName() noexcept {
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
-#else
+#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());

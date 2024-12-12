@@ -37,32 +37,33 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  */
-class API_AUI_VIEWS AVerticalLayout : public ALinearLayout<>
-{
+class API_AUI_VIEWS AVerticalLayout : public ALinearLayout<> {
 private:
-	int mSpacing = 0;
+    int mSpacing = 0;
 
 public:
     // for template<> logic
     static constexpr ALayoutDirection DIRECTION = ALayoutDirection::VERTICAL;
 
-	AVerticalLayout()
-	{
-	}
-	AVerticalLayout(int spacing) : mSpacing(spacing)
-	{
-	}
+    AVerticalLayout() {
+    }
 
-	void onResize(int x, int y, int width, int height) override;
+    AVerticalLayout(int spacing) : mSpacing(spacing) {
+    }
 
-	int getMinimumWidth() override;
-	int getMinimumHeight() override;
+    void onResize(int x, int y, int width, int height) override;
 
+    int getMinimumWidth() override;
+
+    int getMinimumHeight() override;
 
     /**
      * @see @ref ass::LayoutSpacing "LayoutSpacing"
      */
-	void setSpacing(int spacing) override;
+    void setSpacing(int spacing) override;
+
+    [[nodiscard]]
+    int getSpacing() const { return mSpacing; }
 
     ALayoutDirection getLayoutDirection() override;
 };

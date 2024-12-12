@@ -23,11 +23,13 @@
 class AShortcut {
 private:
     AVector<AInput::Key> mKeys;
+    friend inline AShortcut operator+(AShortcut k1, const AInput::Key& k2);
 
 public:
     AShortcut() = default;
     AShortcut(const AVector<AInput::Key>& keys) : mKeys(keys) {}
-    AShortcut(AVector<AInput::Key>&& keys) : mKeys(keys) {}
+    AShortcut(AInput::Key keys) : mKeys({keys}) {}
+    AShortcut(AVector<AInput::Key>&& keys) noexcept : mKeys(std::move(keys)) {}
 
     const AVector<AInput::Key>& getKeys() const {
         return mKeys;
@@ -52,9 +54,9 @@ inline AShortcut operator+(const AInput::Key& k1, const AInput::Key& k2) {
     return AShortcut({k1, k2});
 }
 
-inline AShortcut operator+(const AShortcut& k1, const AInput::Key& k2) {
-    auto k = k1.getKeys();
+inline AShortcut operator+(AShortcut k1, const AInput::Key& k2) {
+    auto k = std::move(k1.mKeys);
     k << k2;
-    return AShortcut(std::move(k));
+    return std::move(k);
 }
 

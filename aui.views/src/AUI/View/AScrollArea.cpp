@@ -16,7 +16,7 @@
 #include "AScrollArea.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #include "AUI/View/AView.h"
 #include "AUI/View/AViewContainer.h"
 #include "glm/fwd.hpp"
@@ -29,12 +29,14 @@
 AScrollArea::AScrollArea():
     AScrollArea(Builder{})
 {
+    addAssName("AScrollArea");
 }
 
 AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
-    setLayout(_new<AAdvancedGridLayout>(2, 2));
+    addAssName("AScrollArea");
+    setLayout(std::make_unique<AAdvancedGridLayout>(2, 2));
 
-    addView(mInner = _new<AScrollAreaInner>());
+    addView(mInner = _new<AScrollAreaViewport>());
     if (!builder.mExternalVerticalScrollbar) {
         addView(mVerticalScrollbar = _new<AScrollbar>(ALayoutDirection::VERTICAL));
     } else {
@@ -53,66 +55,50 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
     setExpanding();
 
-    connect(mVerticalScrollbar->scrolled, me::setScrollY);
-    connect(mHorizontalScrollbar->scrolled, me::setScrollX);
-}
-void AScrollArea::updateLayout() {
-    AViewContainer::updateLayout();
-    mInner->updateLayout();
+    connect(mVerticalScrollbar->scrolled, slot(mInner)::setScrollY);
+    connect(mHorizontalScrollbar->scrolled, slot(mInner)::setScrollX);
 }
 
-int AScrollArea::getContentMinimumWidth(ALayoutDirection layout) {
+int AScrollArea::getContentMinimumWidth() {
     if (getExpandingHorizontal() != 0) return 0;
-    int result = 0;
-    if (contents()) {
-        result += contents()->getMinimumWidth(layout);
-    }
-    if (mVerticalScrollbar) {
-        return result += mVerticalScrollbar->getTotalOccupiedWidth();
-    }
-    return result;
+    return AViewContainerBase::getContentMinimumWidth() + (contents() ? contents()->getMinimumSizePlusMargin().x : 0);
 }
-int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
+int AScrollArea::getContentMinimumHeight() {
     if (getExpandingVertical() != 0) return 0;
-    int result = 0;
-    if (contents()) {
-        result += contents()->getMinimumHeight(layout);
-    }
-    if (mHorizontalScrollbar) {
-        return result += mHorizontalScrollbar->getTotalOccupiedHeight();
-    }
-    return result;
+    return AViewContainerBase::getContentMinimumHeight() + (contents() ? contents()->getMinimumSizePlusMargin().y : 0);
 }
 void AScrollArea::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
-    mInner->updateLayout();
+    AViewContainerBase::setSize(size);
+    mInner->applyGeometryToChildrenIfNecessary();
     if (contents()) {
         mVerticalScrollbar->setScrollDimensions(
                 mInner->getHeight(),
-                contents()->getContentMinimumHeight(ALayoutDirection::NONE));
+                contents()->getMinimumSizePlusMargin().y);
 
         mHorizontalScrollbar->setScrollDimensions(
                 mInner->getWidth(),
-                contents()->getContentMinimumWidth(ALayoutDirection::NONE));
+                contents()->getMinimumSizePlusMargin().x);
     }
-
-    AViewContainer::adjustContentSize();
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+    AViewContainerBase::onScroll(event);
     if (!mIsWheelScrollable) {
         return;
     }
 
-    {
+    // Checking visibility here for both scrollbars:
+    // The logic behind this check is user would not probably intend scroll a scroll area without visible scrollbars.
+    // Scroll bar visibility is determined primarily by ass::ScrollbarAppearance.
+
+    if (bool(mVerticalScrollbar->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
         auto prevScroll = mVerticalScrollbar->getCurrentScroll();
         mVerticalScrollbar->onScroll(event.delta.y);
         if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
             AWindow::current()->preventClickOnPointerRelease();
         }
     }
-    {
+    if (bool(mHorizontalScrollbar->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
         auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
         mHorizontalScrollbar->onScroll(event.delta.x);
         if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
@@ -122,23 +108,20 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
 }
 
 bool AScrollArea::onGesture(const glm::ivec2 &origin, const AGestureEvent &event) {
-    return AViewContainer::onGesture(origin, event);
+    return AViewContainerBase::onGesture(origin, event);
 }
 
 void AScrollArea::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
 }
 
 void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    AViewContainerBase::onPointerReleased(event);
 }
 
-void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
-    if (!target) {
-        // nullptr target???
-        return;
-    }
-    const auto targetBegin = target->getPositionInWindow();
+void AScrollArea::scrollTo(ARect<int> target, bool nearestBorder) {
+    const auto targetBegin = target.leftTop();
+    const auto targetSize = target.size();
     const auto myBegin = getPositionInWindow();
 
     const auto toBeginPoint = targetBegin - myBegin;
@@ -147,12 +130,12 @@ void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
         return;
     }
 
-    const auto targetEnd = targetBegin + target->getSize() * 2;
+    const auto targetEnd = targetBegin + targetSize * 2;
     const auto myEnd = myBegin + getSize();
 
     const auto toEndPoint = targetEnd - myEnd;
 
-    auto delta = (targetBegin + target->getSize() / 2) - (myBegin + getSize() / 2);
+    auto delta = (targetBegin + targetSize / 2) - (myBegin + getSize() / 2);
     auto direction = glm::greaterThan(delta, glm::ivec2(0));
     const auto toBeginPointConditional = toBeginPoint * glm::ivec2(glm::greaterThan(myBegin, targetBegin));
     const auto toEndPointConditional = toEndPoint * glm::ivec2(glm::greaterThan(targetEnd, myEnd));

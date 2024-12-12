@@ -38,28 +38,30 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  */
-class API_AUI_VIEWS AHorizontalLayout: public ALinearLayout<>
-{
+class API_AUI_VIEWS AHorizontalLayout : public ALinearLayout<> {
 private:
-	int mSpacing = 0;
+    int mSpacing = 0;
 
 public:
     // for template<> logic
     static constexpr ALayoutDirection DIRECTION = ALayoutDirection::HORIZONTAL;
 
-	AHorizontalLayout()
-	{
-	}
-	AHorizontalLayout(int spacing): mSpacing(spacing)
-	{
-	}
+    AHorizontalLayout() {
+    }
 
-	void onResize(int x, int y, int width, int height) override;
+    AHorizontalLayout(int spacing) : mSpacing(spacing) {
+    }
 
-	int getMinimumWidth() override;
-	int getMinimumHeight() override;
+    void onResize(int x, int y, int width, int height) override;
 
-	void setSpacing(int spacing) override;
+    int getMinimumWidth() override;
+
+    int getMinimumHeight() override;
+
+    void setSpacing(int spacing) override;
+
+    [[nodiscard]]
+    int getSpacing() const { return mSpacing; }
 
     ALayoutDirection getLayoutDirection() override;
 };

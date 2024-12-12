@@ -23,7 +23,7 @@
 /**
  * @brief Helper UI to edit list models.
  */
-class ABasicListEditor: public AViewContainer {
+class ABasicListEditor: public AViewContainerBase {
 private:
 
 public:

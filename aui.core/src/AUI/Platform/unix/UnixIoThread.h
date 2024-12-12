@@ -69,7 +69,7 @@ private:
     AVector<pollfd> mPollFd;
     AVector<Callback> mCallbacks;
 #endif
-    AMessageQueue mMessageQueue;
+    AMessageQueue<> mMessageQueue;
 
     template<aui::invocable Callback>
     void executeOnIoThreadBlocking(Callback&& callback) {

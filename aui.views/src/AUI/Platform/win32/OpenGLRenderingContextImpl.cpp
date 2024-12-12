@@ -157,7 +157,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         AUI_ASSERT(k);
     }
 
-    ARender::setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
@@ -166,12 +166,12 @@ void OpenGLRenderingContext::init(const Init& init) {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     makeCurrent(nullptr);
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
@@ -179,15 +179,15 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     makeCurrent(mWindowDC);
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);

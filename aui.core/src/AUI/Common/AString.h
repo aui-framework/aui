@@ -749,7 +749,7 @@ inline AString operator+(char lhs, const AString& cs) noexcept
     return s;
 }
 
-inline AString operator"" _as(const char* str, size_t len)
+inline AString operator""_as(const char* str, size_t len)
 {
     return {str};
 }
@@ -759,17 +759,15 @@ inline std::ostream& operator<<(std::ostream& o, const AString& s)
     o << s.toStdString();
     return o;
 }
-namespace std
+
+template<>
+struct std::hash<AString>
 {
-    template<>
-    struct hash<AString>
+    size_t operator()(const AString& t) const
     {
-        size_t operator()(const AString& t) const
-        {
-            return hash<std::u16string>()(t);
-        }
-    };
-}
+        return std::hash<std::u16string>()(t);
+    }
+};
 
 #if AUI_PLATFORM_WIN
 namespace aui::win32 {

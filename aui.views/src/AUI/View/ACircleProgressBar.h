@@ -23,7 +23,7 @@
  *
  * Unlike AProgressBar, this one is circle shaped; thus occupies less space.
  */
-class API_AUI_VIEWS ACircleProgressBar: public AViewContainer {
+class API_AUI_VIEWS ACircleProgressBar: public AViewContainerBase {
 public:
     class Inner: public AView {
     public:
@@ -55,7 +55,7 @@ public:
 public:
     ACircleProgressBar();
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

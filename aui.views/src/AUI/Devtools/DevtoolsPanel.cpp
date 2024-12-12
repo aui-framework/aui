@@ -15,16 +15,18 @@
 #include "AUI/Devtools/DevtoolsLayoutTab.h"
 #include "AUI/Devtools/DevtoolsPerformanceTab.h"
 #include "AUI/Devtools/DevtoolsPointerInspect.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/ATabView.h"
+#include "DevtoolsProfilingOptions.h"
 
-DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow) {
+DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
     auto tabs = _new<ATabView>();
     tabs->setExpanding();
 
     tabs->addTab(_new<DevtoolsLayoutTab>(targetWindow), "Layout");
     tabs->addTab(_new<DevtoolsPerformanceTab>(targetWindow), "Performance");
+    tabs->addTab(_new<DevtoolsProfilingOptions>(targetWindow), "Profiling");
     tabs->addTab(_new<DevtoolsPointerInspect>(targetWindow), "Pointer inspect");
 
     setContents(Centered { tabs });

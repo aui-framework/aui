@@ -12,7 +12,7 @@
 #pragma once
 
 #include "AUI/Core.h"
-#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Common/AByteBufferView.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
@@ -20,18 +20,19 @@
 
 class AString;
 
-class API_AUI_CORE ABuiltinFiles
-{
+class API_AUI_CORE ABuiltinFiles {
 private:
-	AMap<AString, AByteBuffer> mBuffers;
+    AMap<std::string_view, AByteBufferView> mBuffers;
 
-	static ABuiltinFiles& inst();
-	ABuiltinFiles() = default;
+    static ABuiltinFiles& inst();
+
+    ABuiltinFiles() = default;
 
 public:
-	static void loadBuffer(AByteBuffer& data);
-	static void load(const unsigned char* data, size_t size);
-	static _<IInputStream> open(const AString& file);
-    static AOptional<AByteBufferView> getBuffer(const AString& file);
+    static void registerAsset(std::string_view path, const unsigned char* data, size_t size,
+                              std::string_view programModule = AUI_PP_STRINGIZE(AUI_MODULE_NAME));
+
+    static _unique<IInputStream> open(const AString& file);
+
     static bool contains(const AString& file);
 };

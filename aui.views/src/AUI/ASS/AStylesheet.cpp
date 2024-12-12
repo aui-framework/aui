@@ -14,7 +14,7 @@
 //
 
 #include "AUI/Enum/AOverflow.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
@@ -43,6 +43,7 @@
 #include "AUI/View/ASpinner.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
+#include "AUI/View/ATextArea.h"
 
 
 AStylesheet::AStylesheet() {
@@ -81,16 +82,28 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            t<AText>(),
+            { t<AText>(), t<ATextArea>() },
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
+            Expanding { 1, 0 },
+            LineHeight::NORMAL,
+        },
+
+        {
+            t<ATextArea>(),
+            Expanding { 1 },
         },
         // AAbstractLabel
         {
             t<AAbstractLabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
+        },
+        {
+            t<AText>() > t<AAbstractLabel>(),
+            Margin { 0 },
+            Padding { 0 },
         },
         {
             t<AAbstractLabel>::disabled(),
@@ -110,8 +123,8 @@ AStylesheet::AStylesheet() {
             MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
-                ATextAlign::CENTER,
-                VerticalAlign::MIDDLE,
+            ATextAlign::CENTER,
+            VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -133,7 +146,7 @@ AStylesheet::AStylesheet() {
             Padding { 0 },
         },
         {
-            { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
+            { button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
@@ -151,7 +164,6 @@ AStylesheet::AStylesheet() {
         },
         {
             { t<AButton>::active(), c::active(".btn")},
-            Padding { 4_dp, {}, 2_dp },
             BoxShadow { nullptr },
         },
         {
@@ -177,7 +189,7 @@ AStylesheet::AStylesheet() {
 
         // Text fields
         {
-            t<AAbstractTypeableView>(),
+            t<AAbstractTypeable>(),
             Padding { 3_dp, 6_dp },
             ACursor::TEXT,
         },
@@ -341,7 +353,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-                ATextAlign::LEFT,
+            ATextAlign::LEFT,
         },
 
         // AListView
@@ -475,7 +487,7 @@ AStylesheet::AStylesheet() {
         },
         // scrollbar
         {
-            t<AScrollAreaInner>(),
+            t<AScrollAreaViewport>(),
             AOverflow::HIDDEN,
             Expanding(),
         },

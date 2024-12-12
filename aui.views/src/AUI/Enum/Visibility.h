@@ -15,39 +15,49 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
+
 /**
  * @brief Controls the visibility of AView.
  * @ingroup ass
  * @ingroup views
- *
- * Enum         | Visibility | Consumes space | Consumes click
- * ---------------+------------+----------------+---------------
- * VISIBLE      | +          | +              | +
- * INVISIBLE    | -          | +              | +
- * UNREACHABLE  | +          | +              | -
- * GONE         | -          | -              | -
  */
-enum class Visibility {
+AUI_ENUM_FLAG(Visibility) {
+    /**
+     * @brief If set, content of view is shown
+     */
+    FLAG_RENDER_NEEDED = 1 << 0,
+    /**
+     * @brief If set, view interacts to the mouse
+     */
+    FLAG_CONSUME_CLICKS = 1 << 1,
+    /**
+     * @brief If set, view occupies space in layout
+     */
+    FLAG_CONSUME_SPACE = 1 << 2,
 
     /**
-     * AView is visible and active
+     * @brief AView is visible and active
      */
-    VISIBLE,
-
+    VISIBLE = FLAG_RENDER_NEEDED | FLAG_CONSUME_CLICKS | FLAG_CONSUME_SPACE,
     /**
-     * AView is invisible but still interacting to the mouse
+     * @brief AView is invisible but still interacting to the mouse
      */
-    INVISIBLE,
-
+    INVISIBLE = FLAG_CONSUME_CLICKS | FLAG_CONSUME_SPACE,
     /**
-     * AView is visible but not interacting to the mouse
+     * @brief AView is visible but not interacting to the mouse
      */
-    UNREACHABLE,
-
+    UNREACHABLE = FLAG_RENDER_NEEDED | FLAG_CONSUME_SPACE,
     /**
-     * AView is invisible and does not interact with the mouse
+     * @brief AView is invisible, do not interacts to the mouse, but occupy some space in layout
      */
-    GONE
+    CONSUME_SPACE_ONLY = FLAG_CONSUME_SPACE,
+    /**
+     * @brief AView is invisible and does not interact with the mouse
+     */
+    GONE = 0,
 };
 
-AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::UNREACHABLE, Visibility::GONE)
+AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, 
+                            Visibility::UNREACHABLE, Visibility::CONSUME_SPACE_ONLY, 
+                            Visibility::GONE)

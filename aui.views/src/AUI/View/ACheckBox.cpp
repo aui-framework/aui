@@ -29,7 +29,7 @@ bool ACheckBox::selectableIsSelectedImpl() {
 }
 
 ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
     addView(Centered { mCheckBox = _new<ACheckBox>() });
     addView(viewToWrap);
 

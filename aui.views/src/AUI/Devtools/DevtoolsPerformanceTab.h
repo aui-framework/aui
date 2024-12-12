@@ -13,13 +13,13 @@
 
 #include "AUI/Util/ADataBinding.h"
 #include "AUI/View/ATreeView.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsPerformanceTab: public AViewContainer {
+class DevtoolsPerformanceTab: public AViewContainerBase {
 public:
-    DevtoolsPerformanceTab(ABaseWindow* targetWindow);
+    DevtoolsPerformanceTab(AWindowBase* targetWindow);
 
 #if AUI_PROFILING
     struct Model {
@@ -43,7 +43,7 @@ public:
 
 
 private:
-    ABaseWindow* mTargetWindow;
+    AWindowBase* mTargetWindow;
 #if AUI_PROFILING
     emits<APerformanceSection::Datas> nextFrame;
 #endif

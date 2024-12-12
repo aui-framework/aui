@@ -28,7 +28,7 @@
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */
-class API_AUI_VIEWS ATreeView: public AViewContainer {
+class API_AUI_VIEWS ATreeView: public AViewContainerBase {
 private:
     class ContainerView;
     class ItemView;
@@ -39,7 +39,7 @@ public:
     void setModel(const _<ITreeModel<AString>>& model);
     void onScroll(const AScrollEvent& event) override;
     void setSize(glm::ivec2 size) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    int getContentMinimumHeight() override;
     void handleMouseMove(ItemView* pView);
 
     void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {

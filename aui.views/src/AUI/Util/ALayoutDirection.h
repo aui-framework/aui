@@ -11,8 +11,57 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
+
 enum class ALayoutDirection {
     NONE,
     HORIZONTAL,
     VERTICAL,
 };
+
+AUI_ENUM_VALUES(ALayoutDirection,
+                ALayoutDirection::NONE,
+                ALayoutDirection::HORIZONTAL,
+                ALayoutDirection::VERTICAL)
+
+namespace aui::layout_direction {
+template<typename T>
+[[nodiscard]]
+inline T& getAxisValue(ALayoutDirection direction, glm::tvec2<T>& v) {
+    switch (direction) {
+        case ALayoutDirection::VERTICAL  : return v.y;
+        case ALayoutDirection::HORIZONTAL: return v.x;
+        default: throw AException("invalid direction");
+    }
+}
+
+template<typename T>
+[[nodiscard]]
+inline T getAxisValue(ALayoutDirection direction, const glm::tvec2<T>& v) {
+    switch (direction) {
+        case ALayoutDirection::VERTICAL  : return v.y;
+        case ALayoutDirection::HORIZONTAL: return v.x;
+        default: throw AException("invalid direction");
+    }
+}
+
+template<typename T>
+[[nodiscard]]
+inline T& getPerpendicularAxisValue(ALayoutDirection direction, glm::tvec2<T>& v) {
+    switch (direction) {
+        case ALayoutDirection::VERTICAL  : return v.x;
+        case ALayoutDirection::HORIZONTAL: return v.y;
+        default: throw AException("invalid direction");
+    }
+}
+
+template<typename T>
+[[nodiscard]]
+inline T getPerpendicularAxisValue(ALayoutDirection direction, const glm::tvec2<T>& v) {
+    switch (direction) {
+        case ALayoutDirection::VERTICAL  : return v.x;
+        case ALayoutDirection::HORIZONTAL: return v.y;
+        default: throw AException("invalid direction");
+    }
+}
+}

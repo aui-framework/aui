@@ -16,13 +16,13 @@
 //  Created by Alexey Titov on 02.12.2021.
 //
 
+#include <AUI/Platform/AWindowManager.h>
+#include <AUI/Platform/AWindow.h>
 #import "AUIViewController.h"
 #import <CoreFoundation/CoreFoundation.h>
 #import "AUIView.h"
 
 #include <string>
-#include <AUI/Platform/AWindowManager.h>
-#include <AUI/Platform/AWindow.h>
 
 @interface AUIViewController()
 {

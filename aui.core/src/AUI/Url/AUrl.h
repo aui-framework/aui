@@ -10,6 +10,7 @@
  */
 
 #pragma once
+
 #include "AUI/Common/AString.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
@@ -27,56 +28,52 @@
  * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/AUI.Example.Views)
  * of asset usage.
  */
-class API_AUI_CORE AUrl
-{
+class API_AUI_CORE AUrl {
 public:
-	using Resolver = std::function<_<IInputStream>(const AUrl&)>;
+    using Resolver = std::function<_unique<IInputStream>(const AUrl&)>;
 
-	AUrl(AString full);
-	inline AUrl(const char* full): AUrl(AString(full)) {}
+    AUrl(AString full);
+
+    inline AUrl(const char* full) : AUrl(AString(full)) {}
 
     AUrl(AString schema, AString path) : mSchema(std::move(schema)), mPath(std::move(path)) {}
 
     static AUrl file(const AString& file) {
-        return { "file", file };
+        return {"file", file};
     }
 
     [[nodiscard]]
-	_<IInputStream> open() const;
+    _unique<IInputStream> open() const;
 
     [[nodiscard]]
-	const AString& path() const noexcept
-	{
-		return mPath;
-	}
+    const AString& path() const noexcept {
+        return mPath;
+    }
 
     [[nodiscard]]
-	const AString& schema() const noexcept
-	{
-		return mSchema;
-	}
+    const AString& schema() const noexcept {
+        return mSchema;
+    }
 
     [[nodiscard]]
-	AString full() const {
-	    return mSchema + "://" + mPath;
-	}
+    AString full() const {
+        return mSchema + "://" + mPath;
+    }
 
     bool operator<(const AUrl& u) const {
         return full() < u.full();
     }
 
-	static void registerResolver(const AString& protocol, Resolver resolver);
+    static void registerResolver(const AString& protocol, Resolver resolver);
 
 private:
-	AString mSchema;
-	AString mPath;
+    AString mSchema;
+    AString mPath;
 
-	static AMap<AString, AVector<AUrl::Resolver>>& resolvers();
+    static AMap<AString, AVector<AUrl::Resolver>>& resolvers();
 };
 
 
-
-inline AUrl operator"" _url(const char* input, size_t s)
-{
+inline AUrl operator""_url(const char* input, size_t s) {
     return AUrl(std::string{input, input + s});
 }

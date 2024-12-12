@@ -131,6 +131,18 @@ void ACursor::applyNativeCursor(AWindow* pWindow) const {
                         setFontCursor(pWindow, XC_xterm);
                         break;
                     }
+                    case ACursor::EW_RESIZE: {
+                        setFontCursor(pWindow, XC_sb_h_double_arrow);
+                        break;
+                    }
+                    case ACursor::NS_RESIZE: {
+                        setFontCursor(pWindow, XC_sb_v_double_arrow);
+                        break;
+                    }
+                    case ACursor::MOVE: {
+                        setFontCursor(pWindow, XC_fleur);
+                        break;
+                    }
                 }
             },
             [&](const _<Custom>& custom) {

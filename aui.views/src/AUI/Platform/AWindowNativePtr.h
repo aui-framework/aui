@@ -32,4 +32,8 @@ using AWindowNativePtr = void*;
 #include <jni.h>
 using AWindowNativePtr = jobject;
 
+#else
+
+using AWindowNativePtr = void*;
+
 #endif

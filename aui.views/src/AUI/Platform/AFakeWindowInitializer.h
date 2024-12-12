@@ -13,7 +13,7 @@
 
 
 #include "IRenderingContext.h"
-#include "ABaseWindow.h"
+#include "AWindowBase.h"
 
 /**
  * Fake window initializer which does not create any window. Applicable in UI tests
@@ -24,13 +24,13 @@ public:
 
     ~AFakeWindowInitializer() override = default;
 
-    void beginPaint(ABaseWindow& window) override;
+    void beginPaint(AWindowBase& window) override;
 
-    void endPaint(ABaseWindow& window) override;
+    void endPaint(AWindowBase& window) override;
 
-    void beginResize(ABaseWindow& window) override;
+    void beginResize(AWindowBase& window) override;
 
-    void destroyNativeWindow(ABaseWindow& window) override;
+    void destroyNativeWindow(AWindowBase& window) override;
 };
 
 

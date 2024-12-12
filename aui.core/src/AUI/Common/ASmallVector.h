@@ -146,7 +146,7 @@ public:
 
     constexpr void clear() noexcept {
         deallocate();
-        new (inplace()) StaticVector();
+        new (&mBase.inplace) StaticVector();
     }
 
     /**
@@ -567,7 +567,6 @@ public:
     template<aui::predicate<const StoredType&> Predicate>
     self filter(Predicate&& predicate) {
         self result;
-        result.reserve(super::size());
         for (const auto& element : *this) {
             if (predicate(element)) {
                 result.push_back(element);

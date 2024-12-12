@@ -118,6 +118,7 @@ foreach(_var AUI_PLATFORM_WIN
              AUI_PLATFORM_IOS
              AUI_PLATFORM_ANDROID
              AUI_PLATFORM_UNIX
+             AUI_PLATFORM_EMSCRIPTEN
 
              AUI_COMPILER_CLANG
              AUI_COMPILER_GCC

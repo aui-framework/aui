@@ -50,4 +50,16 @@ namespace aui {
 
     template<not_overloaded_lambda Lambda>
     using lambda_info = member<decltype(&Lambda::operator())>;
+
+    /**
+     * @brief Function object type whose `operator()` returns its argument unchanged.
+     * @details
+     * Implementation of std::identity.
+     */
+    struct identity
+    {
+        template<typename T>
+        [[nodiscard]]
+        constexpr T&& operator()(T&& t) const noexcept { return std::forward<T>(t); }
+    };
 }

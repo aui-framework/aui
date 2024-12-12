@@ -29,7 +29,7 @@ AProgressBar::~AProgressBar() {
 }
 
 void AProgressBar::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     updateInnerWidth();
 }
 
@@ -40,7 +40,7 @@ void AProgressBar::updateInnerWidth() {
                         getContentHeight() - mPadding.vertical());
 }
 
-void AProgressBar::render(ClipOptimizationContext context) {
-    AViewContainer::render(context);
+void AProgressBar::render(ARenderContext context) {
+    AViewContainerBase::render(context);
 }
 

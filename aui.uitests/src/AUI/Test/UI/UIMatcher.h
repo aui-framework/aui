@@ -24,7 +24,7 @@ private:
     bool mIncludeInvisibleViews = false;
 
 
-    void processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const;
+    void processContainer(ASet<_<AView>>& destination, const _<AViewContainerBase>& container) const;
 
     template<typename T, typename = int>
     struct ignores_visibility : std::false_type { };

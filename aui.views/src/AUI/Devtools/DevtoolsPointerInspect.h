@@ -14,17 +14,17 @@
 #include "AUI/Util/ADataBinding.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ATreeView.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/View/AViewContainer.h"
 #include "ViewPropertiesView.h"
 #include <variant>
 
-class DevtoolsPointerInspect: public AViewContainer {
+class DevtoolsPointerInspect: public AViewContainerBase {
 public:
-    DevtoolsPointerInspect(ABaseWindow* targetWindow);
+    DevtoolsPointerInspect(AWindowBase* targetWindow);
 
 private:
-    ABaseWindow* mTargetWindow;
+    AWindowBase* mTargetWindow;
     _<ATextField> mAddress = _new<ATextField>();
     _<AViewContainer> mResultView = _new<AViewContainer>();
 

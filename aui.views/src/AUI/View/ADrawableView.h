@@ -22,12 +22,38 @@
 /**
  * @brief Simple view to draw an IDrawable.
  * @ingroup useful_views
+ * @details
+ * ADrawableView brings you more control over the drawable. This is useful for drawables with extended interface
+ * (i.e., AAnimatedImage).
+ *
+ * The sizing and positioning acts like ass::BackgroundImage. Moreover, these rules are taken from ass::BackgroundImage
+ * applied to ADrawableView:
+ * @code{cpp}
+ * auto drawable = IDrawable::fromUrl(":animation.webp");
+ * _new<ADrawableView>(drawable) with_style {
+ *   BackgroundImage({}, {}, {}, Sizing::COVER), // <- drawable is sized and positioned as with COVER.
+ * };
+ * @endcode
+ *
+ * @note
+ * When applying ass::BackgroundImage, do not pass url to it, it's redundant for ADrawableView and would cause a debug
+ * error.
  */
 class API_AUI_VIEWS ADrawableView: public AView {
 public:
+    /**
+     * @brief Create an instance with the URL of a image resource.
+     * @param url URL to the image resource.
+     */
     explicit ADrawableView(const AUrl& url);
-    explicit ADrawableView(const _<IDrawable>& drawable);
-    void render(ClipOptimizationContext context) override;
+
+    /**
+     * @brief Create an instance from the given drawable.
+     * @param drawable The IDrawable to be rendered.
+     */
+    explicit ADrawableView(_<IDrawable> drawable);
+    ADrawableView();
+    void render(ARenderContext context) override;
 
     void setDrawable(const _<IDrawable>& drawable) {
         mDrawable = drawable;
@@ -43,6 +69,14 @@ private:
     _<IDrawable> mDrawable;
 };
 
+template<>
+struct ADataBindingDefault<ADrawableView, _<IDrawable>> {
+public:
+    static void setup(const _<ADrawableView>& view) {
+    }
+
+    static auto getSetter() { return &ADrawableView::setDrawable; }
+};
 
 namespace declarative {
     using Icon = aui::ui_building::view<ADrawableView>;

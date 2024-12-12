@@ -19,19 +19,27 @@
 #include <AUI/Font/AFontStyle.h>
 #include <glm/glm.hpp>
 
+/**
+ * @brief Helps mapping prerendered string with positions.
+ */
 class ATextLayoutHelper {
 public:
-    struct Symbol {
+    struct Boundary {
         glm::ivec2 position;
     };
 
-    using Line = AVector<Symbol>;
+    /**
+     * @brief Single line of symbols
+     * @details
+     * Actual size of line is +1 larger than symbol count; to expose last character's right bondary
+     */
+    using Line = AVector<Boundary>;
     using Symbols = AVector<Line>;
 
 private:
     Symbols mSymbols;
 
-    static size_t xToIndex(const AVector<Symbol>& line, int pos);
+    static size_t xToIndex(const AVector<Boundary>& line, int pos);
 
 public:
     ATextLayoutHelper() = default;
@@ -42,6 +50,8 @@ public:
     }
 
     [[nodiscard]]
-    size_t xToIndex(int x) const;
+    AOptional<glm::ivec2> indexToPos(size_t line, size_t column);
+
+    [[nodiscard]]
     size_t posToIndexFixedLineHeight(const glm::ivec2& position, const AFontStyle& font) const;
 };

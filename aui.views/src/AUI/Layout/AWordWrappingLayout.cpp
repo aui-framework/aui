@@ -13,6 +13,7 @@
 // Created by Alex2772 on 9/7/2021.
 //
 
+#include <AUI/Util/AWordWrappingEngineImpl.h>
 #include "AWordWrappingLayout.h"
 
 
@@ -50,7 +51,7 @@ int AWordWrappingLayout::getMinimumHeight() {
 }
 
 void AWordWrappingLayout::onResize(int x, int y, int width, int height) {
-    AVector<_<AWordWrappingEngine::Entry>> entries;
+    AVector<_<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
         entries << aui::ptr::fake(&v);
     }

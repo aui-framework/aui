@@ -1,5 +1,6 @@
 #include "AUI/Audio/IAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Audio/StubAudioPlayer.h"
 #include "AUI/Url/AUrl.h"
 
 #if AUI_PLATFORM_WIN
@@ -14,6 +15,8 @@ using DefaultSystemPlayer = OboeAudioPlayer;
 #elif AUI_PLATFORM_APPLE
 #include "apple/CoreAudioPlayer.h"
 using DefaultSystemPlayer = CoreAudioPlayer;
+#else
+using DefaultSystemPlayer = StubAudioPlayer;
 #endif
 
 _<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {
@@ -68,11 +71,11 @@ void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
 }
 
 void IAudioPlayer::onFinished() {
-    if (!loop()) {
-        mPlaybackStatus = PlaybackStatus::STOPPED;
-        release();
-    }
-    emit finished;
+    release();
+    mPlaybackStatus = PlaybackStatus::STOPPED;
+    getThread()->enqueue([this, self = _cast<IAudioPlayer>(sharedPtr())]() {
+        emit finished;
+    });
 }
 
 void IAudioPlayer::rewind() {

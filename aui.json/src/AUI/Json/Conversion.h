@@ -171,6 +171,13 @@ struct AJsonConvFieldDescriptor;
  *     (value1, "value1")
  *     (value2, "value2")
  * )
+ *
+ * // or
+ *
+ * AJSON_FIELDS(SomeModel,
+ *     AJSON_FIELDS_ENTRY(value1)
+ *     AJSON_FIELDS_ENTRY(value2)
+ * )
  * @endcode
  */
 #define AJSON_FIELDS(N, ...) \
@@ -182,6 +189,11 @@ template<> struct AJsonConvFieldDescriptor<N>: N { \
     } \
 };
 
+/**
+ * @brief Json entry of the same C++ and JSON field name.
+ * @see AJSON_FIELDS
+ */
+#define AJSON_FIELDS_ENTRY(name) (name, AUI_PP_STRINGIZE(name))
 
 /**
  * Simplified conversion for class fields.
@@ -261,6 +273,21 @@ struct AJsonConv<double> {
     }
 };
 
+template<aui::arithmetic UnderlyingType, auto min, auto max>
+    requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+struct AJsonConv<aui::ranged_number<UnderlyingType, min, max>> {
+    static AJson toJson(aui::ranged_number<UnderlyingType, min, max> v) {
+        return (UnderlyingType) v;
+    }
+    static void fromJson(const AJson& json, aui::ranged_number<UnderlyingType, min, max>& dst) {
+        if constexpr (aui::same_as<UnderlyingType, float> || aui::same_as<UnderlyingType, double>) {
+            dst = (UnderlyingType) json.asNumber();
+        } else {
+            dst = (UnderlyingType) json.asLongInt();
+        }
+    }
+};
+
 template<>
 struct AJsonConv<bool> {
     static AJson toJson(bool v) {
@@ -333,6 +360,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
     }
     static void fromJson(const AJson& json, AVector<T>& dst) {
         auto& array = json.asArray();
+        dst.clear();
         dst.reserve(array.size());
         for (const auto& elem : array) {
             dst << aui::from_json<T>(elem);
@@ -344,7 +372,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
 template<typename T>
 struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
     static AJson toJson(const T& v) {
-        return AEnumerate<T>::names()[v];
+        return AEnumerate<T>::valueToNameMap()[v];
     }
     static void fromJson(const AJson& json, T& dst) {
         dst = AEnumerate<T>::byName(json.asString());

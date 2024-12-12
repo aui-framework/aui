@@ -105,7 +105,7 @@ public:
     }
 
 
-    _<IInputStream> toStream() const;
+    _unique<IInputStream> toStream() const;
 };
 
 inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {

@@ -22,17 +22,17 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/AButton.h>
 
-class ViewHierarchyTreeModel: public ITreeModel<AString> {
+class ViewHierarchyTreeModel : public ITreeModel<AString> {
 private:
-    _<AViewContainer> mRoot;
+    _<AViewContainerBase> mRoot;
 
 public:
-    ViewHierarchyTreeModel(_<AViewContainer> root) : mRoot(std::move(root)) {
+    ViewHierarchyTreeModel(_<AViewContainerBase> root) : mRoot(std::move(root)) {
         // scan(mRoot); // crashes
     }
 
     void scan(aui::no_escape<AView> view) {
-        auto asContainer = dynamic_cast<AViewContainer*>(view.ptr());
+        auto asContainer = dynamic_cast<AViewContainerBase*>(view.ptr());
         if (!asContainer) {
             return;
         }
@@ -43,7 +43,7 @@ public:
         }
     }
 
-    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainer> container) {
+    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainerBase> container) {
         if (container->childrenChanged.hasConnectionsWith(this)) {
             return;
         }
@@ -51,20 +51,20 @@ public:
         struct ExtraData {
             AVector<_<AView>> children;
         };
-        
-        connect(container->childrenChanged, this, [this, container = container.ptr(), e = _new<ExtraData>(ExtraData{container->getViews()})]() {
-            auto containerIndex = makeIndex(container);
 
-            for (std::size_t i = 0; i < e->children.size(); ++i) {
-                emit dataRemoved(ATreeModelIndex(0, 0, e->children[i]));
-            }
-            e->children = container->getViews();
+        connect(
+            container->childrenChanged, this,
+            [this, container = container.ptr(), e = _new<ExtraData>(ExtraData { container->getViews() })]() {
+                auto containerIndex = makeIndex(container);
 
-            forEachDirectChildOf(containerIndex, [&](const ATreeModelIndex& i) {
-                emit dataInserted(i);
+                for (std::size_t i = 0; i < e->children.size(); ++i) {
+                    emit dataRemoved(ATreeModelIndex(0, 0, e->children[i]));
+                }
+                e->children = container->getViews();
+
+                forEachDirectChildOf(containerIndex, [&](const ATreeModelIndex& i) { emit dataInserted(i); });
+                scan(container);
             });
-            scan(container);
-        });
     }
 
     ATreeModelIndexOrRoot makeIndex(aui::no_escape<AView> view) {
@@ -79,7 +79,7 @@ public:
     }
 
     size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
         if (c) {
             return c->getViews().size();
         }
@@ -91,7 +91,7 @@ public:
     }
 
     ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainer>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
         if (!c) {
             throw AException("invalid index");
         }
@@ -111,24 +111,22 @@ public:
     }
 };
 
-DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
-        mTargetWindow(targetWindow) {
+DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
-    setContents(
-        Vertical {
-            Horizontal {
-                Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
-                SpacerExpanding{},
-                Label { "Use CTRL to hit test views" },
-            },
-            Horizontal::Expanding{
-                mViewHierarchyTree = _new<ATreeView>() with_style{ass::MinSize{300_dp}, ass::Expanding{}},
-                mViewPropertiesView = _new<ViewPropertiesView>(nullptr),
-            }, 
-        }
-    );
-
+    setContents(Vertical {
+      Horizontal {
+        Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+        SpacerExpanding {},
+        Label { "Use CTRL to hit test views" },
+      },
+      ASplitter::Horizontal()
+          .withItems({
+            mViewHierarchyTree = _new<ATreeView>() with_style { MinSize { 300_dp }, Expanding {} },
+            Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
+          })
+          .withExpanding(),
+    });
 
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
     mViewHierarchyTree->setModel(model);
@@ -136,10 +134,13 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeModelIndex& index) {
+        if (!AInput::isKeyDown(AInput::LCONTROL)) {
+            return;
+        }
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
-        mTargetWindow->setProfiledView(nullptr);
+        mTargetWindow->profiling().highlightView.reset();
         mTargetWindow->redraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {
@@ -161,6 +162,4 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ABaseWindow* targetWindow):
     });
 }
 
-void DevtoolsLayoutTab::forceLayoutUpdate() {
-    mTargetWindow->updateLayout();
-}
+void DevtoolsLayoutTab::forceLayoutUpdate() { mTargetWindow->forceUpdateLayoutRecursively(); }

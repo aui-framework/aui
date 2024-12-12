@@ -53,13 +53,13 @@ namespace {
 }
 
 ADragArea::ADragArea() {
-    setLayout(_new<DragAreaLayout>());
+    setLayout(std::make_unique<DragAreaLayout>());
     setExpanding({1, 1});
 }
 
-std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragAreaAndDraggingView() {
-    AViewContainer* potentionalDragArea = this;
-    AViewContainer* potentionalDraggingView = mParent;
+std::tuple<ADragArea*, AViewContainerBase*> ADragArea::ADraggableHandle::getDragAreaAndDraggingView() {
+    AViewContainerBase* potentionalDragArea = this;
+    AViewContainerBase* potentionalDraggingView = mParent;
 
     while (potentionalDragArea) {
         potentionalDraggingView = potentionalDragArea;
@@ -73,7 +73,7 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
 }
 
 void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
 
     if (mCheckForClickConsumption) {
         auto p = getViewAt(event.position);
@@ -103,7 +103,7 @@ void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& e
 }
 
 void ADragArea::ADraggableHandle::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    AViewContainerBase::onPointerReleased(event);
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();
@@ -113,10 +113,10 @@ void ADragArea::ADraggableHandle::onPointerReleased(const APointerReleasedEvent&
     }
 }
 
-void ADragArea::startDragging(AViewContainer* container) {
+void ADragArea::startDragging(AViewContainerBase* container) {
     for (auto& v : getViews()) {
         if (v.get() == container) {
-            mDraggedContainer = _cast<AViewContainer>(v);
+            mDraggedContainer = _cast<AViewContainerBase>(v);
             mInitialMousePos = ADesktop::getMousePosition() - container->getPosition();
             break;
         }
@@ -131,7 +131,7 @@ void ADragArea::handleMouseMove() {
     }
 }
 
-void ADragArea::updateLayout() {
+void ADragArea::applyGeometryToChildren() {
     const auto x = getPadding().left;
     const auto y = getPadding().top;
     const auto width = getWidth() - mPadding.horizontal();
@@ -157,7 +157,7 @@ void ADragArea::updateLayout() {
             setValidPositionFor(v, v->getPosition());
         }
     }
-    AViewContainer::updateLayout();
+    AViewContainerBase::applyGeometryToChildren();
 }
 
 void ADragArea::endDragging() {
@@ -172,16 +172,16 @@ void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2
 
 _<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
-    v->setLayout(_new<AStackedLayout>());
+    v->setLayout(std::make_unique<AStackedLayout>());
     v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
     v->addView(view);
     return v;
 }
 
-_<AViewContainer> ADragArea::convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption) {
+_<ADragArea::ADraggableHandle> ADragArea::convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setContents(view);
     v->setExpanding(view->getExpanding());
-    v->updateLayout();
+    v->applyGeometryToChildrenIfNecessary();
     return v;
 }

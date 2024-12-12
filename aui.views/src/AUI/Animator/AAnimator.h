@@ -19,6 +19,7 @@
 #include "Curves/viscous_fluid.h"
 
 class AView;
+class IRenderer;
 
 using AAnimationCurve = std::function<float(float)>;
 
@@ -41,15 +42,15 @@ protected:
      * @brief Does the animation (sets matrix, colors, etc...)
      * @param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation
      */
-    virtual void doAnimation(AView* view, float theta) {};
+    virtual void doAnimation(AView* view, float theta, IRenderer& render) {};
 
-    virtual void doPostRender(AView* view, float theta) {};
+    virtual void doPostRender(AView* view, float theta, IRenderer& render) {};
 
-    void translateToCenter();
-    void translateToCorner();
+    void translateToCenter(IRenderer& render);
+    void translateToCorner(IRenderer& render);
 
-    static void translateToCenter(AView* view);
-    static void translateToCorner(AView* view);
+    static void translateToCenter(AView* view, IRenderer& render);
+    static void translateToCorner(AView* view, IRenderer& render);
 
 public:
 
@@ -57,8 +58,8 @@ public:
         mCurve = curve;
     }
 
-    void animate(AView* view);
-    void postRender(AView* view);
+    void animate(AView* view, IRenderer& render);
+    void postRender(AView* view, IRenderer& render);
     void pause();
 
     void setDuration(float period) {

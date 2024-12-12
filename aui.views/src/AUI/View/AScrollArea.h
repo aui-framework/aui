@@ -13,11 +13,10 @@
 
 
 #include "AViewContainer.h"
-#include "AScrollAreaInner.h"
+#include "AScrollAreaViewport.h"
 #include "AScrollbar.h"
 #include "glm/fwd.hpp"
 
-class AScrollAreaContainer;
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
@@ -29,13 +28,13 @@ class AScrollAreaContainer;
  * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
  * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
  * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events.
+ * involving displaying scroll bars and handling scroll events. This behaviour is similar to Text.
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
- * @note Behaviour of vertical and horizontal axes are independent from each other.
+ * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
-class API_AUI_VIEWS AScrollArea: public AViewContainer {
+class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
     class Builder;
 
@@ -47,24 +46,25 @@ public:
         mInner->setContents(std::move(content));
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
-
-    void updateLayout() override;
+    int getContentMinimumWidth() override;
+    int getContentMinimumHeight() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void setScroll(glm::uvec2 scroll) {
-        mInner->setScroll(scroll); 
+        setScrollX(scroll.x);
+        setScrollY(scroll.y);
     }
 
     void setScrollX(unsigned scroll) {
-        mInner->setScrollX(scroll); 
+        AUI_NULLSAFE(mHorizontalScrollbar)->setScroll(int(scroll));
+        else mInner->setScrollX(scroll);
     }
 
     void setScrollY(unsigned scroll) {
-        mInner->setScrollY(scroll); 
+        AUI_NULLSAFE(mVerticalScrollbar)->setScroll(int(scroll));
+        else mInner->setScrollY(scroll);
     }
 
     /**
@@ -82,15 +82,16 @@ public:
 
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
+        else mInner->setScrollX(mInner->scroll().x + deltaByX);
         AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
+        else mInner->setScrollY(mInner->scroll().y + deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
     void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
-        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
+    void setScrollbarAppearance(ass::ScrollbarAppearance scrollbarAppearance) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }
@@ -100,9 +101,24 @@ public:
      * @param target target view to scroll to. Must be direct or indirect child.
      * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
      *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
-    *         top border of the target view.
+     *        top border of the target view.
      */
-    void scrollTo(const _<AView>& target, bool nearestBorder = true);
+    void scrollTo(const _<AView>& target, bool nearestBorder = true) {
+        if (!target) {
+            // nullptr target???
+            return;
+        }
+        scrollTo(ARect<int>::fromTopLeftPositionAndSize(target->getPositionInWindow(), target->getSize()), nearestBorder);
+    }
+
+    /**
+     * @brief Scrolls to the specified rectangle area.
+     * @param target target rectangle area in coordinate space of the window.
+     * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
+     *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
+     *        top border of the target view.
+     */
+    void scrollTo(ARect<int> target, bool nearestBorder = true);
 
     /**
      * @see mIsWheelScrollable
@@ -149,7 +165,7 @@ public:
         operator _<AView>() {
             return build();
         }
-        operator _<AViewContainer>() {
+        operator _<AViewContainerBase>() {
             return build();
         }
     };
@@ -177,7 +193,7 @@ protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
-    _<AScrollAreaInner> mInner;
+    _<AScrollAreaViewport> mInner;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
 

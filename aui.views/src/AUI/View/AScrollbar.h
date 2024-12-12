@@ -55,11 +55,11 @@ public:
 
     }
 
-    int getMinimumWidth(ALayoutDirection) override {
+    int getMinimumWidth() override {
         return 0;
     }
 
-    int getMinimumHeight(ALayoutDirection) override {
+    int getMinimumHeight() override {
         return 0;
     }
 };
@@ -68,8 +68,9 @@ public:
  * @brief A single scrollbar
  * @ingroup useful_views
  * @see AScrollArea
+ * @see ASlider
  */
-class API_AUI_VIEWS AScrollbar: public AViewContainer {
+class API_AUI_VIEWS AScrollbar: public AViewContainerBase {
     friend class AScrollbarHandle;
 public:
 
@@ -109,7 +110,7 @@ public:
         }
     }
 
-    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+    void setAppearance(ass::ScrollbarAppearance::AxisValue appearance) {
         mAppearance = appearance;
     }
 
@@ -128,6 +129,21 @@ public:
     void setSize(glm::ivec2 size) override;
 
     static const _<ATimer>& buttonTimer();
+
+
+    /**
+     * @return max scroll of this scrollbar.
+     * @details
+     * If viewport size is larger than content size (in the case when contents are smaller than AScrollArea), 0 is
+     * returned.
+     */
+    std::size_t getMaxScroll() const noexcept {
+        if (mFullSize <= mViewportSize) {
+            return 0;
+        }
+
+        return mFullSize - mViewportSize;
+    }
 
 signals:
 
@@ -154,13 +170,6 @@ protected:
 
     void handleScrollbar(int s);
 
-    std::size_t getMaxScroll() const noexcept {
-        if (mFullSize <= mViewportSize) {
-            return 0;
-        }
-
-        return mFullSize - mViewportSize;
-    }
 
 private:
     struct StickToEnd {
@@ -177,7 +186,7 @@ private:
      * @see AScrollbar::setStickToEnd()
      */
     AOptional<StickToEnd> mStickToEnd;
-    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
+    ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
 };
 
 

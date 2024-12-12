@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -19,6 +20,7 @@
  * @brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
  *        connect function:
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * <table>
  *   <tr>
@@ -61,6 +63,7 @@ namespace aui::impl::slot {
  * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function (see examples).
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * Quick example:
  * <table>
@@ -191,7 +194,7 @@ namespace aui::impl::slot {
  * @endcode
  * @sa ARaiiHelper
  */
-#define AUI_DEFER ARaiiHelper auiDeffer ## __LINE__ = [&]
+#define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_,  __LINE__) = [&]
 
 
 /**

@@ -16,21 +16,23 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
-    if (mView->getVisibility() == Visibility::GONE) {
+    if (!(mView->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return {0, 0};
     }
-    return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
-            ALayoutDirection::NONE) + mView->getMargin().vertical() };
+    return {
+        mView->getMinimumWidth() + mView->getMargin().horizontal(),
+        mView->getMinimumHeight() + mView->getMargin().vertical() };
 }
 
-void AViewEntry::setPosition(const glm::ivec2& position) {
+void AViewEntry::setPosition(glm::ivec2 position) {
+    Entry::setPosition(position);
     mView->setGeometry(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
                        mView->getMinimumSize());
 
 }
 
-Float AViewEntry::getFloat() const {
-    return Float::NONE;
+AFloat AViewEntry::getFloat() const {
+    return mView->getFloating();
 }
 
 AViewEntry::~AViewEntry() {

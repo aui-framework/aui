@@ -27,11 +27,10 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
-    void updateLayout() override {
+    void applyGeometryToChildren() override {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
@@ -39,7 +38,7 @@ class AListViewContainer : public AViewContainer {
             case 0:
                 return nullptr;
             case 1: {
-                auto v = AViewContainer::getViewAt(pos, flags);
+                auto v = AViewContainerBase::getViewAt(pos, flags);
                 mIndex = v ? 0 : -1;
                 return v;
             }
@@ -57,7 +56,7 @@ class AListViewContainer : public AViewContainer {
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
     }
 
     size_t getIndex() const { return mIndex; }
@@ -86,13 +85,13 @@ class AListItem : public ALabel, public ass::ISelectable {
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 
@@ -104,10 +103,10 @@ AListView::AListView(const _<IListModel<AString>>& model) {
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
-    horizontalScrollbar()->setAppearance(ScrollbarAppearance::GONE);
+    horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
     setContents(mContent = _new<AListViewContainer>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     mObserver->setModel(model);
@@ -151,7 +150,7 @@ void AListView::updateItem(size_t at, const AString& value) {
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() { AUI_NULLSAFE(AWindow::current())->flagUpdateLayout(); }
+void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
 
 void AListView::onDataChanged() { redraw(); }
 
@@ -185,10 +184,6 @@ void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) 
     }
 
     emit selectionChanged(getSelectionModel());
-}
-
-bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
-    return AViewContainer::onGesture(origin, event);
 }
 
 void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {

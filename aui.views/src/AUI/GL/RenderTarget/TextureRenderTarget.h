@@ -25,10 +25,13 @@ namespace gl {
             onFramebufferResize(to.size());
             glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, mTexture.getHandle(), 0);
             if (glGetError() != GL_NO_ERROR) {
-                throw std::runtime_error("unable to create texture target");
+                throw AException("unable to create texture target");
             }
-            to.attach(this);
-            Framebuffer::unbind();
+        }
+
+        [[nodiscard]]
+        Texture2D& texture() noexcept {
+            return mTexture;
         }
 
         void onFramebufferResize(glm::u32vec2 size) override {

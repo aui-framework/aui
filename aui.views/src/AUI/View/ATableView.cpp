@@ -24,7 +24,7 @@ void ATableView::setModel(_<ITableModel> model)
 {
 	mModel = model;
 
-	setLayout(_new<AGridLayout>(mModel->tableColumns(), mModel->tableRows()));
+	setLayout(std::make_unique<AGridLayout>(mModel->tableColumns(), mModel->tableRows()));
 
 	for (size_t row = 0; row < mModel->tableRows(); ++row)
 	{

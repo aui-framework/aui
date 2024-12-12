@@ -15,6 +15,7 @@
 
 #pragma once
 
+#include <AUI/Render/IRenderer.h>
 #include "AAnimator.h"
 
 class API_AUI_VIEWS ATranslationAnimator: public AAnimator {
@@ -25,6 +26,6 @@ private:
 public:
     ATranslationAnimator(const glm::vec2& from, const glm::vec2& to = {0.f, 0.f});
 
-    void doAnimation(AView* view, float theta) override;
+    void doAnimation(AView* view, float theta, IRenderer& render) override;
 };
 

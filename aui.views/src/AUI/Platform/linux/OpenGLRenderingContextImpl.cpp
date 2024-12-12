@@ -148,20 +148,20 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info("OpenGL context is ready");
     }
 
-    ARender::setRenderer(mRenderer = ourRenderer());
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
+    mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(ourDisplay, w->mHandle);
     }
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
 
     if (auto w = dynamic_cast<AWindow*>(&window)) {
@@ -171,7 +171,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     CommonRenderingContext::endPaint(window);
     endFramebuffer();
     mRenderer->endPaint();
@@ -180,13 +180,13 @@ void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     }
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(ourDisplay, w->mHandle, ourContext);
     }
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
 
 }
 

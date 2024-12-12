@@ -18,8 +18,9 @@
 #include <AUI/Enum/WindowStyle.h>
 #include <AUI/Image/AImage.h>
 
-class ABaseWindow;
+class AWindowBase;
 class AWindow;
+class IRenderer;
 
 /**
  * @brief Glue between AWindow and IRenderer.
@@ -46,12 +47,14 @@ public:
     };
     virtual void init(const Init& init);
     virtual ~IRenderingContext() = default;
-    virtual void destroyNativeWindow(ABaseWindow& window) = 0;
+    virtual void destroyNativeWindow(AWindowBase& window) = 0;
 
     virtual AImage makeScreenshot() = 0;
 
-    virtual void beginPaint(ABaseWindow& window) = 0;
-    virtual void endPaint(ABaseWindow& window) = 0;
-    virtual void beginResize(ABaseWindow& window) = 0;
-    virtual void endResize(ABaseWindow& window) = 0;
+    virtual void beginPaint(AWindowBase& window) = 0;
+    virtual void endPaint(AWindowBase& window) = 0;
+    virtual void beginResize(AWindowBase& window) = 0;
+    virtual void endResize(AWindowBase& window) = 0;
+
+    virtual IRenderer& renderer() = 0;
 };

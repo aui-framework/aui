@@ -74,7 +74,7 @@ struct AStringFormatHelper {
  * "test {:.2}"_format(1.2f)   // -> "test 1.2"
  * @endcode
  */
-inline AStringFormatHelper operator"" _format(const char* str, size_t len)
+inline AStringFormatHelper operator""_format(const char* str, size_t len)
 {
     return {std::string_view(str, len)};
 }

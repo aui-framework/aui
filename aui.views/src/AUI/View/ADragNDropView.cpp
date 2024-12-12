@@ -26,7 +26,7 @@ ADragNDropView::ADragNDropView() {
 }
 
 void ADragNDropView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainer::onPointerMove(pos, event);
+    AViewContainerBase::onPointerMove(pos, event);
 
     if (AInput::isKeyDown(AInput::LBUTTON)) {
         if (!mDnDInProgress) {

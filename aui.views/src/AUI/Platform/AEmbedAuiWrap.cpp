@@ -15,7 +15,7 @@
 
 
 #include "AEmbedAuiWrap.h"
-#include "ABaseWindow.h"
+#include "AWindowBase.h"
 #include "glm/fwd.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
@@ -23,7 +23,7 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
 
-class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
+class AEmbedAuiWrap::EmbedWindow: public AWindowBase {
     friend class AEmbedAuiWrap;
 private:
     AEmbedAuiWrap* mTheWrap;
@@ -80,13 +80,13 @@ public:
         removeView(surface);
     }
 
-    void flagUpdateLayout() override {
+    void markMinContentSizeInvalid() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
 
     void flagRedraw() override {
-        ABaseWindow::flagRedraw();
+        AWindowBase::flagRedraw();
         mRequiresRedraw = true;
     }
 
@@ -95,7 +95,7 @@ protected:
         if (mTheWrap->mCustomDpiRatio) {
             return *mTheWrap->mCustomDpiRatio;
         }
-        return ABaseWindow::fetchDpiFromSystem();
+        return AWindowBase::fetchDpiFromSystem();
     }
 };
 
@@ -117,14 +117,15 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    ARender::setWindow(mContainer.get());
+    auto& render = mContainer->getRenderingContext()->renderer();
+    render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
-        mContainer->updateLayout();
+        mContainer->applyGeometryToChildrenIfNecessary();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
@@ -133,7 +134,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
     mContainer->makeCurrent();
-    mContainer->flagUpdateLayout();
+    mContainer->markMinContentSizeInvalid();
     mContainer->flagRedraw();
 }
 
@@ -197,7 +198,7 @@ void AEmbedAuiWrap::clearFocus() {
     mContainer->setFocusedView(nullptr);
 }
 
-ABaseWindow* AEmbedAuiWrap::getWindow() {
+AWindowBase* AEmbedAuiWrap::getWindow() {
     return mContainer.get();
 }
 

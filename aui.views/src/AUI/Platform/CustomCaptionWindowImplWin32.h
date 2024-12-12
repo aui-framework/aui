@@ -36,15 +36,6 @@ public:
 
     virtual ~CustomCaptionWindowImplWin32() = default;
 
-    [[nodiscard]] const _<AViewContainer>& getCaptionContainer() const
-    {
-        return mCaptionContainer;
-    }
-
-    [[nodiscard]] const _<AViewContainer>& getContentContainer() const
-    {
-        return mContentContainer;
-    }
 };
 
 

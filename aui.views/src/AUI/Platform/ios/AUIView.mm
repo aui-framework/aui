@@ -9,13 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Platform/AWindowManager.h>
+#include <AUI/Platform/AWindow.h>
 #import "AUIView.h"
 #include <OpenGLES/EAGLDrawable.h>
 #include <OpenGLES/ES2/glext.h>
 
 #include <string>
-#include <AUI/Platform/AWindowManager.h>
-#include <AUI/Platform/AWindow.h>
 @implementation AUIView
 {
     CADisplayLink* displayLink;

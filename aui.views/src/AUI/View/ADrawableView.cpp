@@ -15,25 +15,29 @@
 
 #include <iostream>
 #include "ADrawableView.h"
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
 
-ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
+ADrawableView::ADrawableView(_<IDrawable> drawable) : mDrawable(std::move(drawable)) {
 
 }
 
-void ADrawableView::render(ClipOptimizationContext context) {
+void ADrawableView::render(ARenderContext context) {
     AView::render(context);
-    ARender::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
-    if (mDrawable) {
-        IDrawable::Params p;
-        p.size = getSize();
-        mDrawable->draw(p);
+    AUI_ASSERTX(!getAssHelper()->state.backgroundUrl.url, "BackgroundImage url of ADrawableView should be empty");
+    if (!mDrawable) {
+        return;
     }
+
+    ass::prop::Property<ass::BackgroundImage>::draw(context, this, mDrawable, getAssHelper()->state.backgroundUrl);
 }
 
 ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
+
+}
+
+ADrawableView::ADrawableView() {
 
 }
 

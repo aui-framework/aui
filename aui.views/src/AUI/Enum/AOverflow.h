@@ -42,7 +42,7 @@ enum class AOverflow {
 };
 
 /**
- * @brief Controls behavior of the overflowed text.
+ * @brief Controls behavior of the overflowed text. Relevant to AAbstractLabel and its derivatives only.
  * @ingroup ass
  * @ingroup views
  */

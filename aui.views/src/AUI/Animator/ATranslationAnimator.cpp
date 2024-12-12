@@ -14,11 +14,11 @@
 //
 
 #include "ATranslationAnimator.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 ATranslationAnimator::ATranslationAnimator(const glm::vec2& from, const glm::vec2& to) : mFrom(from), mTo(to) {}
 
-void ATranslationAnimator::doAnimation(AView* view, float theta) {
-    ARender::setTransform(glm::translate(glm::mat4(1.f),
+void ATranslationAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
+    render.setTransform(glm::translate(glm::mat4(1.f),
                                          glm::vec3(glm::mix(mFrom, mTo, theta), 0.f)));
 }

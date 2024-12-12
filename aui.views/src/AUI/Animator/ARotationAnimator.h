@@ -12,6 +12,7 @@
 #pragma once
 
 
+#include <AUI/Render/IRenderer.h>
 #include "AAnimator.h"
 #include "AUI/Util/AAngleRadians.h"
 
@@ -19,7 +20,7 @@ class API_AUI_VIEWS ARotationAnimator: public AAnimator {
 public:
     ARotationAnimator(AAngleRadians begin, AAngleRadians end) : mBegin(begin), mEnd(end) {}
 
-    void doAnimation(AView* view, float theta) override;
+    void doAnimation(AView* view, float theta, IRenderer& render) override;
 
 private:
     AAngleRadians mBegin;

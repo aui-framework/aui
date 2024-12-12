@@ -21,7 +21,7 @@ private:
 
 public:
     ASoftwareEmbedAuiWrap();
-    AImage render(ClipOptimizationContext context);
+    AImage render(ARenderContext context);
 
 };
 

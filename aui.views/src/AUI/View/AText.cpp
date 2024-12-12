@@ -9,41 +9,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 11/24/2021.
-//
-
-#include <AUI/Traits/callables.h>
-#include <AUI/IO/AStringStream.h>
-#include <AUI/Xml/AXml.h>
+#include <AUI/Util/AWordWrappingEngineImpl.h>
 #include "AText.h"
-#include "AButton.h"
-#include <stack>
-#include <AUI/Util/kAUI.h>
-#include <chrono>
-#include <utility>
-#include <AUI/Traits/strings.h>
-#include <AUI/Platform/AWindow.h>
+#include <AUI/Xml/AXml.h>
+#include <AUI/IO/AStringStream.h>
 #include <AUI/Util/AViewEntry.h>
+#include <stack>
 
-struct State {
-    AFontStyle fontStyle;
-    bool bold = false;
-    bool italic = false;
-};
+AText::AText() = default;
 
+AText::~AText() = default;
 
-void AText::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
-                     const AString& word,
+void AText::pushWord(Entries& entries,
+                     AString word,
                      const ParsedFlags& flags) {
-    if (!entries.empty()) {
-        entries << aui::ptr::fake(&mWhitespaceEntry);
-    }
     if (flags.wordBreak == WordBreak::NORMAL) {
-        mWordEntries.emplace_back(this, word);
+        mWordEntries.emplace_back(this, std::move(word));
         entries << aui::ptr::fake(&mWordEntries.last());
     } else {
-        for (const auto& c : word) {
+        for (const auto& c: word) {
             mCharEntries.emplace_back(this, c);
             entries << aui::ptr::fake(&mCharEntries.last());
         }
@@ -52,26 +36,58 @@ void AText::pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
 
 AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
     ParsedFlags pf;
-    for (auto& flag : flags) {
-        std::visit(aui::lambda_overloaded {
-            [&](WordBreak w) { pf.wordBreak = w; }
+    for (auto& flag: flags) {
+        std::visit(aui::lambda_overloaded{
+                [&](WordBreak w) { pf.wordBreak = w; }
         }, flag);
     }
     return pf;
+}
+
+void AText::clearContent() {
+    mWordEntries.clear();
+    mCharEntries.clear();
+    ATextBase::clearContent();
 }
 
 void AText::setString(const AString& string, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
-    AVector<_<AWordWrappingEngine::Entry>> entries;
-    auto splt = string.split(' ');
-    entries.reserve(splt.size());
-    for (auto& w : splt) {
-        pushWord(entries, w, parsedFlags);
-    }
+    Entries entries;
+    entries.reserve(string.length());
+    processString(string, parsedFlags, entries);
 
     mEngine.setEntries(std::move(entries));
+}
+
+void AText::processString(const AString& string, const AText::ParsedFlags& parsedFlags,
+                          Entries& entries) {
+    AString currentWord;
+    auto commitWord = [&] {
+        if (!currentWord.empty()) {
+            pushWord(entries, std::move(currentWord), parsedFlags);
+        }
+    };
+    for (auto c: string) {
+        switch (c) {
+            case '\r':
+                break;
+            case ' ':
+                commitWord();
+                entries << aui::ptr::fake(&mWhitespaceEntry);
+                break;
+            case '\n':
+                commitWord();
+                entries << aui::ptr::fake(&mNextLineEntry);
+                break;
+
+            default:
+                currentWord += c;
+                continue;
+        }
+    }
+    commitWord();
 }
 
 
@@ -79,19 +95,17 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
     clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
-    AVector<_<AWordWrappingEngine::Entry>> entries;
+    Entries entries;
     entries.reserve(init.size());
-    for (auto& item : init) {
-        std::visit(aui::lambda_overloaded {
-            [&](const AString& string) {
-                for (auto& w : string.split(' ')) {
-                    pushWord(entries, w, parsedFlags);
-                }
-            },
-            [&](const _<AView>& view) {
-                addView(view);
-                entries << _new<AViewEntry>(view);
-            },
+    for (auto& item: init) {
+        std::visit(aui::lambda_overloaded{
+                [&](const AString& string) {
+                    processString(string, parsedFlags, entries);
+                },
+                [&](const _<AView>& view) {
+                    addView(view);
+                    entries << _new<AViewEntry>(view);
+                },
         }, item);
     }
 
@@ -102,9 +116,9 @@ void AText::setHtml(const AString& html, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
-    struct CommonEntityVisitor: IXmlDocumentVisitor {
+    struct CommonEntityVisitor : IXmlDocumentVisitor {
         AText& text;
-        AVector<_<AWordWrappingEngine::Entry>> entries;
+        Entries entries;
         ParsedFlags& parsedFlags;
 
         struct State {
@@ -117,9 +131,10 @@ void AText::setHtml(const AString& html, const Flags& flags) {
         CommonEntityVisitor(AText& text, ParsedFlags& parsedFlags) : text(text), parsedFlags(parsedFlags) {}
 
         void visitAttribute(const AString& name, AString value) override {};
+
         _<IXmlEntityVisitor> visitEntity(AString entityName) override {
 
-            struct ViewEntityVisitor: IXmlEntityVisitor {
+            struct ViewEntityVisitor : IXmlEntityVisitor {
                 CommonEntityVisitor& parent;
                 AString name;
                 AMap<AString, AString> attrs;
@@ -139,16 +154,14 @@ void AText::setHtml(const AString& html, const Flags& flags) {
                 }
 
                 ~ViewEntityVisitor() override {
-                    auto view = _new<AButton>("hello {}"_format(name));
-                    parent.text.addView(view);
-                    parent.entries << _new<AViewEntry>(view);
                 }
             };
 
             return _new<ViewEntityVisitor>(*this, std::move(entityName));
         };
+
         void visitTextEntity(const AString& entity) override {
-            for (auto& w : entity.split(' ')) {
+            for (auto& w: entity.split(' ')) {
                 text.pushWord(entries, w, parsedFlags);
             }
         };
@@ -160,128 +173,16 @@ void AText::setHtml(const AString& html, const Flags& flags) {
     mEngine.setEntries(std::move(entityVisitor.entries));
 }
 
-int AText::getContentMinimumWidth(ALayoutDirection layout) {
-    if (!mPrerenderedString) {
-        prerenderString();
+void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+    for (auto& wordEntry: mWordEntries) {
+        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
     }
-
-    return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
-}
-
-int AText::getContentMinimumHeight(ALayoutDirection layout) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
-    auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
-    auto engineHeight = mEngine.getHeight();
-    if (engineHeight.has_value()) {
-        height = std::max(height, *engineHeight);
-    }
-
-    return height;
-}
-
-void AText::render(ClipOptimizationContext context) {
-    if (!mPrerenderedString) {
-        prerenderString();
-    }
-
-    AViewContainer::render(context);
-
-    if (mPrerenderedString) {
-        mPrerenderedString->draw();
-    }
-}
-
-void AText::prerenderString() {
-    mEngine.setTextAlign(getFontStyle().align);
-    mEngine.setLineHeight(getFontStyle().lineSpacing);
-    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
-    {
-        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
-
-        if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
-            for (auto& wordEntry: mWordEntries) {
-                multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
-            }
-        } else {
-            AString str(1, ' ');
-            for (auto& charEntry: mCharEntries) {
-                auto c = charEntry.getChar();
-                if (c != ' ') {
-                    str.first() = c;
-                    multiStringCanvas->addString(charEntry.getPosition(), str);
-                }
-            }
+    AString str(1, ' ');
+    for (auto& charEntry: mCharEntries) {
+        auto c = charEntry.getChar();
+        if (c != ' ') {
+            str.first() = c;
+            canvas->addString(charEntry.getPosition(), str);
         }
-        mPrerenderedString = multiStringCanvas->finalize();
     }
-}
-
-void AText::setSize(glm::ivec2 size) {
-    bool widthDiffers = size.x != getWidth();
-    int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
-    AViewContainer::setSize(size);
-    if (widthDiffers) {
-        prerenderString();
-        AWindow::current()->flagUpdateLayout();
-    }
-}
-
-glm::ivec2 AText::WordEntry::getSize() {
-    return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
-}
-
-void AText::WordEntry::setPosition(const glm::ivec2& position) {
-    mPosition = position;
-}
-
-Float AText::WordEntry::getFloat() const {
-    return Float::NONE;
-}
-
-glm::ivec2 AText::WhitespaceEntry::getSize() {
-    return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
-}
-
-void AText::WhitespaceEntry::setPosition(const glm::ivec2& position) {
-
-}
-
-Float AText::WhitespaceEntry::getFloat() const {
-    return Float::NONE;
-}
-
-bool AText::WhitespaceEntry::escapesEdges() {
-    return true;
-}
-
-
-glm::ivec2 AText::CharEntry::getSize() {
-    return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
-}
-
-void AText::CharEntry::setPosition(const glm::ivec2& position) {
-    mPosition = position;
-}
-
-Float AText::CharEntry::getFloat() const {
-    return Float::NONE;
-}
-
-void AText::invalidateFont() {
-    mPrerenderedString.reset();
-}
-
-void AText::updateLayout() {
-    AViewContainer::updateLayout();
-    mPrerenderedString.reset();
-}
-
-void AText::clearContent() {
-    mWordEntries.clear();
-    mCharEntries.clear();
-    removeAllViews();
-    mPrerenderedString = nullptr;
 }

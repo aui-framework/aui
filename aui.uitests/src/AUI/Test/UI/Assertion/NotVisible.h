@@ -16,11 +16,13 @@
 #pragma once
 
 
+#include <AUI/Enum/Visibility.h>
+
 struct ViewAssertionNotVisible {
     using IGNORE_VISIBILITY = std::true_type;
 
     bool operator()(const _<AView>& v) {
-        return v->getVisibility() != Visibility::VISIBLE && v->getVisibility() != Visibility::UNREACHABLE;
+        return !(v->getVisibility() & Visibility::FLAG_RENDER_NEEDED);
     }
 };
 

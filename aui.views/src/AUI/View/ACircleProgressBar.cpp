@@ -20,7 +20,7 @@
 #include "AUI/Util/AAngleRadians.h"
 
 ACircleProgressBar::ACircleProgressBar() : mInner(_new<Inner>()) {
-    setLayout(_new<AStackedLayout>());
+    setLayout(std::make_unique<AStackedLayout>());
     addView(mInner);
 }
 
@@ -32,12 +32,12 @@ ACircleProgressBar::~ACircleProgressBar() {
 
 }
 
-void ACircleProgressBar::render(ClipOptimizationContext context) {
-    AView::render(context);
-    RenderHints::PushMask mask([&] {
-        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));
+void ACircleProgressBar::render(ARenderContext context) {
+    AView::render(context); // NOLINT(*-parent-virtual-call)
+    RenderHints::PushMask mask(context.render, [&] {
+        context.render.squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, AAngleRadians(glm::radians(mValue * 360.f)));
 
     });
-    AViewContainer::renderChildren(context);
+    AViewContainerBase::renderChildren(context);
 }
 

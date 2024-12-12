@@ -14,6 +14,7 @@
 #include "AVector.h"
 #include "AException.h"
 #include <utility>
+#include <span>
 
 
 #define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
@@ -50,10 +51,45 @@ public:
     constexpr AStaticVector(std::initializer_list<StoredType> rhs) noexcept: AStaticVector() {
         insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
     }
+    template<typename Iterator>
+    constexpr AStaticVector(Iterator begin, Iterator end) noexcept: AStaticVector() {
+        for (auto it = begin; it != end; ++it) { // range-v3 fix: basic range traversal instead of insert
+            push_back(*it);
+        }
+    }
     constexpr ~AStaticVector() {
         for (auto& v : *this) {
             v.~StoredType();
         }
+    }
+
+    [[nodiscard]]
+    static constexpr size_t capacity() noexcept {
+        return MaxSize;
+    }
+
+    AStaticVector& operator=(const AStaticVector& rhs) {
+        if (this == &rhs) {
+            return *this;
+        }
+        clear();
+        insert(mBegin, rhs.begin(), rhs.end());
+        return *this;
+    }
+
+    AStaticVector& operator=(AStaticVector&& rhs) noexcept {
+        if (this == &rhs) {
+            return *this;
+        }
+        clear();
+        insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
+        rhs.clear();
+        return *this;
+    }
+
+    [[nodiscard]]
+    constexpr bool full() const noexcept {
+        return size() >= MaxSize;
     }
 
     [[nodiscard]]
@@ -106,18 +142,18 @@ public:
 
     template<typename... Args>
     constexpr void emplace_back(Args&&... args) noexcept {
-        AUI_ASSERTX(size() + 1 <= MaxSize, "insufficient size in AStaticVector");
+        AUI_ASSERTX(!full(), "insufficient size in AStaticVector");
         new (mEnd++) StoredType(std::forward<Args>(args)...);
     }
 
 
     constexpr void push_back(StoredType value) noexcept {
-        AUI_ASSERTX(size() + 1 <= MaxSize, "insufficient size in AStaticVector");
+        AUI_ASSERTX(!full(), "insufficient size in AStaticVector");
         new (mEnd++) StoredType(std::move(value));
     }
 
     constexpr void push_front(StoredType value) noexcept {
-        AUI_ASSERTX(size() + 1 <= MaxSize, "insufficient size in AStaticVector");
+        AUI_ASSERTX(!full(), "insufficient size in AStaticVector");
         insert(begin(), std::move(value));
     }
 
@@ -491,6 +527,15 @@ public:
         return result;
     }
 
+    [[nodiscard]]
+    operator std::span<StoredType>() {
+        return std::span(data(), size());
+    }
+
+    [[nodiscard]]
+    operator std::span<const StoredType>() const {
+        return std::span(data(), size());
+    }
 
 private:
     iterator mBegin;

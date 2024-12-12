@@ -21,7 +21,7 @@
  * A progress bar is used to express a long operation (i.e. file copy) with known progress and reassure the user that
  * application is still running.
  */
-class API_AUI_VIEWS AProgressBar: public AViewContainer {
+class API_AUI_VIEWS AProgressBar: public AViewContainerBase {
 public:
     class Inner: public AView {
     public:
@@ -55,7 +55,7 @@ public:
     AProgressBar();
 
     void setSize(glm::ivec2 size) override;
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

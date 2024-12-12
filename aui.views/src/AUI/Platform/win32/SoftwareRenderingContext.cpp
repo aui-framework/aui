@@ -22,16 +22,13 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
-    if (ARender::getRenderer() == nullptr) {
-        ARender::setRenderer(std::make_unique<SoftwareRenderer>());
-    }
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void SoftwareRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(ABaseWindow& window) {
+void SoftwareRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
     for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
@@ -40,7 +37,7 @@ void SoftwareRenderingContext::beginPaint(ABaseWindow& window) {
     }
 }
 
-void SoftwareRenderingContext::endPaint(ABaseWindow& window) {
+void SoftwareRenderingContext::endPaint(AWindowBase& window) {
     if (mPainterDC != 0) {
         StretchDIBits(mPainterDC,
                       0, 0,
@@ -55,14 +52,14 @@ void SoftwareRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(ABaseWindow& window) {
+void SoftwareRenderingContext::beginResize(AWindowBase& window) {
 }
 
-void SoftwareRenderingContext::endResize(ABaseWindow& window) {
+void SoftwareRenderingContext::endResize(AWindowBase& window) {
     reallocateImageBuffers(window);
 }
 
-void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow &window) {
+void SoftwareRenderingContext::reallocateImageBuffers(const AWindowBase &window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
@@ -89,4 +86,9 @@ AImage SoftwareRenderingContext::makeScreenshot() {
         data.at<std::uint8_t>(i + 3) = ptr[3];
     }
     return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
+}
+
+IRenderer& SoftwareRenderingContext::renderer() {
+    static SoftwareRenderer r;
+    return r;
 }

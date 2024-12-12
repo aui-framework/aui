@@ -44,7 +44,7 @@ namespace {
     };
 }
 
-void ADragNDrop::perform(ABaseWindow* sourceWindow) {
+void ADragNDrop::perform(AWindowBase* sourceWindow) {
     Ole::inst();
     auto obj = AComPtr(Ole::fromMime(mData));
     auto source = AComPtr(new MyDropSource);

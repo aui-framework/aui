@@ -103,6 +103,8 @@ public:
     constexpr AOptional<T>& operator=(const AOptional& rhs) noexcept {
         if (rhs) {
             operator=(rhs.value());
+        } else {
+            reset();
         }
         return *this;
     }
@@ -111,6 +113,8 @@ public:
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
+        } else {
+            reset();
         }
         return *this;
     }
@@ -119,6 +123,8 @@ public:
     constexpr AOptional<T>& operator=(const AOptional<U>& rhs) noexcept {
         if (rhs) {
             operator=(rhs.value());
+        } else {
+            reset();
         }
         return *this;
     }

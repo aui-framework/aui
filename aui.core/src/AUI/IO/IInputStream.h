@@ -22,7 +22,7 @@ class IOutputStream;
  * @brief Represents an input stream.
  * @ingroup io
  */
-class IInputStream: public aui::noncopyable
+class IInputStream
 {
 public:
     virtual ~IInputStream() = default;

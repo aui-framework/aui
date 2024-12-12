@@ -462,8 +462,9 @@ namespace aui::impl::future {
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
          *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
-        void wait(AFutureWait flags = AFutureWait::DEFAULT) const noexcept {
+        void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
             (*mInner)->wait(mInner, flags);
+            checkForSelfWait();
         }
 
         /**
@@ -476,7 +477,9 @@ namespace aui::impl::future {
          */
         typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) const {
             AThread::interruptionPoint();
+
             (*mInner)->wait(mInner, flags);
+
             AThread::interruptionPoint();
             if ((*mInner)->exception) {
                 throw *(*mInner)->exception;
@@ -484,6 +487,7 @@ namespace aui::impl::future {
             if ((*mInner)->interrupted) {
                 throw AInvocationTargetException("Future execution interrupted");
             }
+            checkForSelfWait();
             if constexpr(!isVoid) {
                 return *(*mInner)->value;
             }
@@ -526,16 +530,11 @@ namespace aui::impl::future {
             return &operator*();
         }
 
-        /**
-         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        Value const * operator->() {
-            return &operator*();
+    private:
+        void checkForSelfWait() const {
+            if (!(*mInner)->hasResult() && AThread::current() == (*mInner)->thread) {
+                throw AException("self wait?");
+            }
         }
     };
 
@@ -909,6 +908,10 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
             }
         }
         while ((thread || !cancelled) && !hasResult()) {
+            if (thread == AThread::current()) [[unlikely]] {
+                // self wait?
+                return;
+            }
             cv.wait(lock);
         }
     } catch (const AThread::Interrupted& e) {
