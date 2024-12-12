@@ -13,6 +13,7 @@
 #include <AUI/Util/ARaiiHelper.h>
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Util/AImageDrawable.h>
 
 #include <AppKit/AppKit.h>
 #include <Availability.h>
@@ -157,7 +158,49 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
     return AFuture(APath());
 }
 
-_<IDrawable> ADesktop::iconOfFile(const APath& file) { return nullptr; }
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    NSString* filePath = [NSString stringWithUTF8String:file.toStdString().c_str()];
+
+    NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
+    NSImage* icon = [workspace iconForFile:filePath];
+
+    if (icon) {
+        NSBitmapImageRep* bitmapRep = [[NSBitmapImageRep alloc]
+            initWithBitmapDataPlanes:nil
+                          pixelsWide:icon.size.width
+                          pixelsHigh:icon.size.height
+                       bitsPerSample:8
+                     samplesPerPixel:4
+                            hasAlpha:YES
+                            isPlanar:NO
+                      colorSpaceName:NSCalibratedRGBColorSpace
+                         // bitmapFormat:NSBitmapFormatAlphaFirst
+                         bytesPerRow:0
+                        bitsPerPixel:0];
+
+        [NSGraphicsContext saveGraphicsState];
+        [NSGraphicsContext setCurrentContext:[NSGraphicsContext graphicsContextWithBitmapImageRep:bitmapRep]];
+
+        [icon
+            drawInRect:NSMakeRect(0, 0, icon.size.width, icon.size.height)
+              fromRect:NSZeroRect
+             operation:NSCompositingOperationCopy
+              fraction:1.0];
+
+        [NSGraphicsContext restoreGraphicsState];
+
+        unsigned char* rawData = [bitmapRep bitmapData];
+        NSUInteger dataLength = icon.size.width * icon.size.height * 4;   // 4 bytes per pixel (RGBA)
+
+        AImage image(
+            AByteBufferView(reinterpret_cast<const char*>(rawData), dataLength),
+            glm::uvec2(icon.size.width, icon.size.height), APixelFormat::RGBA | APixelFormat::BYTE);
+
+        return _new<AImageDrawable>(_new<AImage>(image));
+    }
+
+    return nil;
+}
 
 void ADesktop::playSystemSound(ADesktop::SystemSound s) {
     @autoreleasepool {
