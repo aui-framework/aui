@@ -70,7 +70,9 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
                 beginSheetModalForWindow:nativeParentWindow
                        completionHandler:^(NSModalResponse result) {
                          response = result;
+                         [NSApp stopModal];
                        }];
+            [NSApp runModalForWindow:panel];
         } else {
             response = [panel runModal];
         }
@@ -144,7 +146,9 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                 beginSheetModalForWindow:nativeParentWindow
                        completionHandler:^(NSModalResponse result) {
                          response = result;
+                         [NSApp stopModal];
                        }];
+            [NSApp runModalForWindow:panel];
         } else {
             response = [panel runModal];
         }
