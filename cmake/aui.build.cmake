@@ -741,15 +741,16 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
+set(AUI_VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
 file(
         DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
-            VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
+            VERSION ${AUI_VERSION})
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 

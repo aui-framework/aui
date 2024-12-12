@@ -51,8 +51,11 @@ int AAbstractLabel::getContentMinimumHeight() {
 
 
 void AAbstractLabel::setSize(glm::ivec2 size) {
-    auto oldWidth = getWidth();
     AView::setSize(size);
+    if (mTextOverflow != ATextOverflow::NONE) {
+        mPrerendered = nullptr;
+        redraw();
+    }
 }
 
 template<class Iterator>
