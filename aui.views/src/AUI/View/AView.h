@@ -644,6 +644,7 @@ public:
 
     /**
      * @brief Changes the expanding of view.
+     * @sa layout_managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
@@ -655,6 +656,13 @@ public:
         mExpanding = expanding;
         markMinContentSizeInvalid();
     }
+
+    /**
+     * @brief Changes the expanding of view.
+     * @sa layout_managers
+     * @sa mExpanding
+     * @sa ass::Expanding
+     */
     void setExpanding(int expanding)
     {
         setExpanding({expanding, expanding});

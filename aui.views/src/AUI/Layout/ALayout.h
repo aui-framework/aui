@@ -100,7 +100,29 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * You can specify the expanding if you want the view to grow inside it's container (AView::setExpanding):
+ * # Expanding
+ * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
+ * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
+ * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
+ *
+ * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
+ *
+ * Views are normally created without any expanding set. When Expanding views appear in a layout they are given a share
+ * of space in accordance with their expanding or their minimum size whichever gives more space to them. Expanding is
+ * used to change how much space views are given in proportion to one another.
+ *
+ * Expanding view does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
+ * ::Expanding variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding,
+ * Stacked::Expanding) for such case.
+ *
+ * Expanding views use free space of their container to grow.
+ *
+ * Free space of a container is determined by its size subtracted by sum of minimum sizes of its children. Please note
+ * that your container would probably occupy minimum possible size (determined by minimum sizes of its children). It
+ * order to make container larger than minimum possible size, you can specify FixedSize or MinSize or Expanding to the
+ * container.
+ *
+ * You can use ass::Expanding @ref ass "ass" rule, or AView::setExpanding method to specify Expanding:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -113,9 +135,10 @@ class AViewContainer;
  *         Vertical {
  *           _new<AButton>("Up"),
  *           Horizontal {
- *               _new<AButton>("Left"),
- *               _new<AButton>("Center"),
- *               _new<AButton>("Right") let { it->setExpanding(); },
+ *             _new<AButton>("Left"),
+ *             _new<AButton>("Center"),
+ *             _new<AButton>("Right") let { it->setExpanding(); },
+ *                  // alias to it->setExpanding(2) ^^^^^^
  *           },
  *           _new<AButton>("Down"),
  *         }
@@ -126,7 +149,7 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * Expanding views push other views in their container if necessary. This is how AExpandingSpacer works.
+ * Expanding views push remaining views in their container:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -151,6 +174,30 @@ class AViewContainer;
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_174121.png" /></td>
  *   </tr>
  * </table>
+ *
+ * Expanding view does affect expanding environment inside a single container. If there's one view with expanding set to
+ * any positive value it would occupy all free space in the container. If there is a view with expanding equal to 1 and
+ * another view with expanding equal to 2 the first view would occupy one third of free space, the second view would
+ * occupy two thirds of free space:
+ * @code{cpp}
+ * Vertical {
+ *   _new<AButton>("Left") let { it->setExpanding(1); },
+ *   _new<AButton>("Right") let { it->setExpanding(2); }, // will be twice as big as "Left"
+ * }
+ * @endcode
+ *
+ * You can use ASpacerExpanding as blank expanding view:
+ * @code{cpp}
+ * Vertical {
+ *   _new<AButton>("Left"),
+ *   SpacerExpanding(),
+ *   _new<AButton>("Right"),
+ * }
+ * @endcode
+ *
+ * @note
+ * FixedSize nullifies Expanding's action (on per axis basic).
+ *
  */
 
 /**
