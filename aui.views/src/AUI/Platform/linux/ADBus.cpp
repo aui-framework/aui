@@ -111,11 +111,9 @@ DBusHandlerResult ADBus::listener(DBusConnection     *connection,
 }
 void ADBus::deleter(void* userdata) noexcept {
     auto listener = reinterpret_cast<RawMessageListener*>(userdata);
-    auto listenerIt = std::find_if(listener->parent->mListeners.begin(),
-                                   listener->parent->mListeners.end(),
-                                   [&](const RawMessageListener& lhs) {
-        return &lhs == userdata;
-    });
+    auto listenerIt = std::find_if(
+        listener->parent->mListeners.begin(), listener->parent->mListeners.end(),
+        [&](const RawMessageListener& lhs) { return &lhs == userdata; });
 
     if (listenerIt == listener->parent->mListeners.end()) {
         return;
@@ -123,9 +121,13 @@ void ADBus::deleter(void* userdata) noexcept {
     listener->parent->mListeners.erase(listenerIt);
 }
 
-void ADBus::addListener(RawMessageListener::Callback listener) {
-    auto it = mListeners.insert(mListeners.end(), { this, std::move(listener)});
+std::function<void()> ADBus::addListener(RawMessageListener::Callback listener) {
+    const auto it = mListeners.insert(mListeners.end(), { this, std::move(listener) });
     dbus_connection_add_filter(mConnection, ADBus::listener, &(*it), deleter);
+
+    return [this, it] {
+        dbus_connection_remove_filter(mConnection, ADBus::listener, &(*it));
+    };
 }
 
 void ADBus::processMessages() {
@@ -133,6 +135,52 @@ void ADBus::processMessages() {
         dbus_connection_dispatch(mConnection);
 }
 
+void aui::dbus::converter<aui::dbus::Variant>::iter_append(DBusMessageIter* iter, const Variant& t) {
+    DBusMessageIter sub;
+
+    if (std::holds_alternative<std::uint8_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::uint8_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::uint8_t>(&sub, std::get<std::uint8_t>(t));
+    } else if (std::holds_alternative<bool>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<bool>::signature.c_str(), &sub);
+        aui::dbus::iter_append<bool>(&sub, std::get<bool>(t));
+    } else if (std::holds_alternative<std::int16_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::int16_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::int16_t>(&sub, std::get<std::int16_t>(t));
+    } else if (std::holds_alternative<std::uint16_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::uint16_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::uint16_t>(&sub, std::get<std::uint16_t>(t));
+    } else if (std::holds_alternative<std::int32_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::int32_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::int32_t>(&sub, std::get<std::int32_t>(t));
+    } else if (std::holds_alternative<std::uint32_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::uint32_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::uint32_t>(&sub, std::get<std::uint32_t>(t));
+    } else if (std::holds_alternative<std::int64_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::int64_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::int64_t>(&sub, std::get<std::int64_t>(t));
+    } else if (std::holds_alternative<std::uint64_t>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::uint64_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::uint64_t>(&sub, std::get<std::uint64_t>(t));
+    } else if (std::holds_alternative<double>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<double>::signature.c_str(), &sub);
+        aui::dbus::iter_append<double>(&sub, std::get<double>(t));
+    } else if (std::holds_alternative<std::string>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::string>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::string>(&sub, std::get<std::string>(t));
+    } else if (std::holds_alternative<ObjectPath>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<ObjectPath>::signature.c_str(), &sub);
+        aui::dbus::iter_append<ObjectPath>(&sub, std::get<ObjectPath>(t));
+    } else if (std::holds_alternative<AVector<std::uint8_t>>(t)) {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<AVector<std::uint8_t>>::signature.c_str(), &sub);
+        aui::dbus::iter_append<AVector<std::uint8_t>>(&sub, std::get<AVector<std::uint8_t>>(t));
+    } else {
+        dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<std::nullopt_t>::signature.c_str(), &sub);
+        aui::dbus::iter_append<std::nullopt_t>(&sub, std::nullopt);
+    }
+
+    dbus_message_iter_close_container(iter, &sub);
+}
 
 aui::dbus::Variant aui::dbus::converter<aui::dbus::Variant>::iter_get(DBusMessageIter* iter) {
     if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_VARIANT) {
