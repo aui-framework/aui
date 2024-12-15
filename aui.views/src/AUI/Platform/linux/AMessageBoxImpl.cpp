@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <libnotify/notify.h>
+#include <gtk/gtk.h>
 
 #include "AUI/Common/AException.h"
 #include "AUI/Platform/AMessageBox.h"
@@ -25,88 +25,81 @@ struct AMessageBoxContext {
     GMainLoop *loop;
 };
 
-static void on_notification_closed(NotifyNotification *notification, gpointer user_data) {
-    const auto *data = static_cast<AMessageBoxContext *>(user_data);
-    g_main_loop_quit(data->loop);
-}
+static void on_response(GtkDialog *dialog, gint resp, gpointer user_data) {
+    auto *ctx = static_cast<AMessageBoxContext *>(user_data);
 
-static void on_action(NotifyNotification *notification, char *action, gpointer user_data) {
-    auto *data = static_cast<AMessageBoxContext *>(user_data);
-
-    if (strcmp(action, "yes") == 0) {
-        data->result = AMessageBox::ResultButton::YES;
-    } else if (strcmp(action, "no") == 0) {
-        data->result = AMessageBox::ResultButton::NO;
-    } else if (strcmp(action, "ok") == 0) {
-        data->result = AMessageBox::ResultButton::OK;
-    } else if (strcmp(action, "cancel") == 0) {
-        data->result = AMessageBox::ResultButton::CANCEL;
-    } else {
-        data->result = AMessageBox::ResultButton::INVALID;
+    switch (resp) {
+        case GTK_RESPONSE_OK:
+            ctx->result = AMessageBox::ResultButton::OK;
+            break;
+        case GTK_RESPONSE_CANCEL:
+            ctx->result = AMessageBox::ResultButton::CANCEL;
+            break;
+        case GTK_RESPONSE_YES:
+            ctx->result = AMessageBox::ResultButton::YES;
+            break;
+        case GTK_RESPONSE_NO:
+            ctx->result = AMessageBox::ResultButton::NO;
+            break;
+        default:
+            ctx->result = AMessageBox::ResultButton::INVALID;
+            break;
     }
 
-    g_main_loop_quit(data->loop);
+    g_main_loop_quit(ctx->loop);
 }
 
-AMessageBox::ResultButton AMessageBox::show(
-    AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon, AMessageBox::Button b) {
-    if (!notify_init("AUI_App")) {
-        ALogger::err("AUI") << "Unable to initialize libnotify";
-        return AMessageBox::ResultButton::INVALID;
-    }
-
-    NotifyNotification *notification =
-        notify_notification_new(title.toStdString().c_str(), message.toStdString().c_str(), [icon] {
+AMessageBox::ResultButton
+AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
+    constexpr auto flags = static_cast<GtkDialogFlags>(GTK_DIALOG_DESTROY_WITH_PARENT | GTK_DIALOG_MODAL);
+    GtkWidget *dialog = gtk_message_dialog_new(
+        nullptr, flags,
+        [icon] {
             switch (icon) {
                 case Icon::INFO:
-                    return "dialog-information";
+                    return GTK_MESSAGE_INFO;
                 case Icon::WARNING:
-                    return "dialog-warning";
+                    return GTK_MESSAGE_WARNING;
                 case Icon::CRITICAL:
-                    return "dialog-error";
+                    return GTK_MESSAGE_ERROR;
                 default:
-                    return "dialog-question";
+                case Icon::NONE:
+                    return GTK_MESSAGE_OTHER;
             }
-        }());
+        }(),
+        GTK_BUTTONS_NONE, "%s", message.toUtf8().data());
+
+    if (b == Button::YES_NO_CANCEL || b == Button::YES_NO) {
+        gtk_dialog_add_button(GTK_DIALOG(dialog), "Yes"_i18n.toStdString().c_str(), GTK_RESPONSE_YES);
+        gtk_dialog_add_button(GTK_DIALOG(dialog), "No"_i18n.toStdString().c_str(), GTK_RESPONSE_NO);
+    }
+
+    if (b == Button::OK || b == Button::OK_CANCEL) {
+        gtk_dialog_add_button(GTK_DIALOG(dialog), "OK"_i18n.toStdString().c_str(), GTK_RESPONSE_OK);
+    }
+
+    if (b == Button::YES_NO_CANCEL || b == Button::OK_CANCEL) {
+        gtk_dialog_add_button(GTK_DIALOG(dialog), "Cancel"_i18n.toStdString().c_str(), GTK_RESPONSE_CANCEL);
+    }
+
+    gtk_window_set_title(GTK_WINDOW(dialog), title.toStdString().c_str());
 
     AMessageBoxContext c {};
     c.result = ResultButton::INVALID;
     c.loop = g_main_loop_new(nullptr, FALSE);
 
-    notify_notification_set_urgency(notification, NOTIFY_URGENCY_CRITICAL);
+    // Connect the response signal
+    g_signal_connect(dialog, "response", G_CALLBACK(on_response), &c);
 
-    if (b == Button::YES_NO_CANCEL || b == Button::YES_NO) {
-        notify_notification_add_action(notification, "yes", "Yes"_i18n.toStdString().c_str(), on_action, &c, nullptr);
+    // Show the dialog
+    gtk_widget_show(dialog);
 
-        notify_notification_add_action(notification, "no", "No"_i18n.toStdString().c_str(), on_action, &c, nullptr);
-
-        if (b == Button::YES_NO_CANCEL) {
-            notify_notification_add_action(
-                notification, "cancel", "Cancel"_i18n.toStdString().c_str(), on_action, &c, nullptr);
-        }
-    } else if (b == Button::OK_CANCEL || b == Button::OK) {
-        notify_notification_add_action(notification, "ok", "OK"_i18n.toStdString().c_str(), on_action, &c, nullptr);
-
-        if (b == Button::OK_CANCEL) {
-            notify_notification_add_action(
-                notification, "cancel", "Cancel"_i18n.toStdString().c_str(), on_action, &c, nullptr);
-        }
-    }
-
-    g_signal_connect(notification, "closed", G_CALLBACK(on_notification_closed), &c);
-
-    if (!notify_notification_show(notification, nullptr)) {
-        std::cerr << "Failed to show notification" << std::endl;
-        g_object_unref(notification);
-        notify_uninit();
-        return ResultButton::INVALID;
-    }
-
+    // Run the custom main loop
     g_main_loop_run(c.loop);
 
-    g_object_unref(notification);
+    // Clean up
     g_main_loop_unref(c.loop);
-    notify_uninit();
+    gtk_widget_destroy(dialog);
 
     return c.result;
 }

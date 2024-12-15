@@ -38,11 +38,11 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         include_directories(${DBUS_INCLUDE_DIRS})
         link_directories(${DBUS_LIBRARY_DIRS})
 
-        pkg_check_modules(LIBNOTIFY REQUIRED libnotify)
-        include_directories(${LIBNOTIFY_INCLUDE_DIRS})
-        link_directories(${LIBNOTIFY_LIBRARY_DIRS})
+        pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+        include_directories(${GTK3_INCLUDE_DIRS})
+        link_directories(${GTK3_INCLUDE_DIRS})
 
-        aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${LIBNOTIFY_LIBRARIES} Fontconfig::Fontconfig)
+        aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
     endif ()
 
     if (NOT AUI_PLATFORM_WINDOWS)
