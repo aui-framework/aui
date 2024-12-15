@@ -235,7 +235,7 @@ void AAbstractTextField::setSize(glm::ivec2 size) {
 }
 
 unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - glm::ivec2{ mPadding.left - mHorizontalScroll, 0 },
+    return mTextLayoutHelper.posToIndexFixedLineHeight(glm::ivec2{ pos.x - (mPadding.left - mHorizontalScroll), 0 },
                                                        getFontStyle());
 }
 
