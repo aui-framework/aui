@@ -893,6 +893,20 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
         #
         # thus, some libraries (such as aui.views) require wholearchive linking in order to import all
         # statically-initialized variables (like AStylesheet) to the final execution module.
+        #
+        # also, ordering matters (when it comes to static linking, again).
+        # if A depends on B; C depends on both A and B, you should write
+        # ```
+        # target_link_libraries(C PRIVATE A B)
+        # ```
+        #
+        # and not
+        # ```
+        # target_link_libraries(C PRIVATE B A)  #Wrong!
+        # ```
+        #
+        # and there's INTERFACE_AUI_WHOLEARCHIVE which specifies how the library should be linked.
+        # good luck!
         foreach(_visibility ${multiValueArgs})
             if (_visibility STREQUAL "PRIVATE")
                 set(_public_visibility PUBLIC)
@@ -900,15 +914,18 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                 set(_public_visibility ${_visibility})
             endif()
             foreach(_dep ${AUIL_${_visibility}})
-                # check for wholearchive target flag
-                set(_wholearchive OFF)
-                if (NOT BUILD_SHARED_LIBS)
-                    if (TARGET ${_dep})
-                        get_target_property(_wholearchive ${_dep} INTERFACE_AUI_WHOLEARCHIVE)
-                    endif()
+                get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
+                if (${_dep} IN_LIST _already_linked_libs)
+                    continue()
                 endif()
-                # set fallback value
-                set(_link_target_file ${_dep})
+                # check both :: and .
+                string(REPLACE "::" "." _already_linked_libs "${_already_linked_libs}")
+                if (${_dep} IN_LIST _already_linked_libs)
+                    continue()
+                endif()
+
+                # linking library preferring public visibility.
+                target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_dep})
                 if (TARGET ${_dep})
                     # adding target's interface include directories and definitions keeping original visibility.
                     get_target_property(_dep_includes ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
@@ -921,35 +938,6 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
                     endif()
                 endif()
-                if (_wholearchive)
-                    if (MSVC)
-                        # avoid duplicates when using wholearchive
-                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_OPTIONS)
-                        set(_link_target_file_opt $<TARGET_FILE:${_link_target_file}>)
-                        set(_link_target_file_opt "/WHOLEARCHIVE:${_link_target_file_opt}")
-
-                        if (${_link_target_file_opt} IN_LIST _already_linked_libs)
-                            continue()
-                        endif()
-
-                        # using both target_link_options and target_link_libraries here!!!
-                        target_link_options(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file_opt})
-                    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-                        # avoid duplicates when using wholearchive
-                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
-                        if (${_link_target_file} IN_LIST _already_linked_libs)
-                            continue()
-                        endif()
-                        if (APPLE)
-                            target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
-                        else()
-                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}>,--no-whole-archive)
-                        endif()
-                    endif()
-                endif()
-
-                # linking library preferring public visibility.
-                target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file})
             endforeach()
         endforeach()
     else()
@@ -1020,6 +1008,7 @@ function(aui_module AUI_MODULE_NAME)
     target_compile_definitions(${AUI_MODULE_NAME} PUBLIC GLM_FORCE_INLINE=1)
 
     aui_add_properties(${AUI_MODULE_NAME})
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_INTERFACE_MULTIPLICITY 1)
 
     string(REPLACE "." "::" BUILD_AS_IMPORTED_NAME ${AUI_MODULE_NAME})
 
@@ -1061,6 +1050,19 @@ function(aui_module AUI_MODULE_NAME)
                 target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry)
             else()
                 target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry_${BUILD_DEF_NAME})
+            endif()
+        endif()
+    endif()
+
+    get_target_property(_type ${AUI_MODULE_NAME} TYPE)
+    if (_type STREQUAL "STATIC_LIBRARY")
+        if (MSVC)
+            target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+        elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+            if (APPLE)
+                target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,-force_load,$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+            else()
+                target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${AUI_MODULE_NAME}>,--no-whole-archive>")
             endif()
         endif()
     endif()
