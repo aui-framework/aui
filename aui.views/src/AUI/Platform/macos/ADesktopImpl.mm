@@ -54,7 +54,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         [panel setCanCreateDirectories:YES];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toStdString().c_str()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
@@ -99,7 +99,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
         [panel setCanCreateDirectories:NO];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toStdString().c_str()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
@@ -112,8 +112,8 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                     break;
                 }
 
-                UTType* type = [UTType
-                    typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.toStdString().c_str()]];
+                UTType* type =
+                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
 
                 [allowedTypes addObject:type];
             }
@@ -127,7 +127,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                     break;
                 }
 
-                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.toStdString().c_str()]];
+                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
             }
 
             [panel setAllowedFileTypes:allowedExtensions];
@@ -163,7 +163,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
-    NSString* filePath = [NSString stringWithUTF8String:file.toStdString().c_str()];
+    NSString* filePath = [NSString stringWithUTF8String:file.toUtf8().data()];
 
     NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
     NSImage* icon = [workspace iconForFile:filePath];
@@ -178,7 +178,6 @@ _<IDrawable> ADesktop::iconOfFile(const APath& file) {
                             hasAlpha:YES
                             isPlanar:NO
                       colorSpaceName:NSCalibratedRGBColorSpace
-                         // bitmapFormat:NSBitmapFormatAlphaFirst
                          bytesPerRow:0
                         bitsPerPixel:0];
 
