@@ -64,6 +64,8 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 
 ```
 
+Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_IDE_plugins) to set up the project.
+
 # Key features
 - Extended common types (containers, strings, streams, etc...)
 - Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
@@ -126,6 +128,9 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 - `stbimage` for image loading
 - `freetype2` for font rendering
 
+## IDE Plugins
+
+[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_IDE_plugins)
 
 ## Examples
 Check the `examples/` folder.
