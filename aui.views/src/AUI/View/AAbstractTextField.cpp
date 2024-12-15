@@ -231,6 +231,7 @@ AString AAbstractTextField::toString() const {
 
 void AAbstractTextField::setSize(glm::ivec2 size) {
     AView::setSize(size);
+    onCursorIndexChanged(); // cursor and horizontal scroll should respond to size changes.
     updateTextAlignOffset();
 }
 
