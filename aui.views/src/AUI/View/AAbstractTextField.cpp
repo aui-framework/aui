@@ -76,8 +76,8 @@ void AAbstractTextField::setText(const AString& t) {
     }
 
     mCursorIndex = t.size();
+    onCursorIndexChanged();
     updateCursorBlinking();
-
     invalidateFont();
     emit textChanged(t);
 }
