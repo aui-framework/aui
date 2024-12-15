@@ -40,7 +40,10 @@ glm::ivec2 ADesktop::getMousePosition() {
     }
 }
 
-void ADesktop::setMousePos(const glm::ivec2& pos) {}
+void ADesktop::setMousePos(const glm::ivec2& pos) {
+    CGPoint cgPosition = CGPointMake(pos.x, pos.y);
+    CGWarpMouseCursorPosition(cgPosition);
+}
 
 AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
