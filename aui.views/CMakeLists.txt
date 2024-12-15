@@ -40,7 +40,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
         pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
         include_directories(${GTK3_INCLUDE_DIRS})
-        link_directories(${GTK3_INCLUDE_DIRS})
+        link_directories(${GTK3_LIBRARY_DIRS})
 
         aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
     endif ()
