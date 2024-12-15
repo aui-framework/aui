@@ -26,19 +26,19 @@
 static constexpr auto LOG_TAG = "AViewContainerBase";
 
 namespace aui::view::impl {
-    bool isDefinitelyInvisible(AView& view) {
-        if (!(view.getVisibility() & Visibility::FLAG_RENDER_NEEDED)) [[unlikely]] {
-            return true;
-        }
-
-        // consider anything below this value as effectively "zero" or negligible in terms of opacity.
-        view.ensureAssUpdated();
-        if (view.getOpacity() < 0.0001f) [[unlikely]] {
-            return true;
-        }
-
-        return false;
+bool isDefinitelyInvisible(AView& view) {
+    if (!(view.getVisibility() & Visibility::FLAG_RENDER_NEEDED)) [[unlikely]] {
+        return true;
     }
+
+    // consider anything below this value as effectively "zero" or negligible in terms of opacity.
+    view.ensureAssUpdated();
+    if (view.getOpacity() < 0.0001f) [[unlikely]] {
+        return true;
+    }
+
+    return false;
+}
 }
 
 void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
@@ -53,7 +53,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
     ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
     if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
-        return rectOfTheView.isIntersects(r);
+      return rectOfTheView.isIntersects(r);
     })) {
         return;
     }
@@ -61,21 +61,21 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
 
     const bool showRedraw = [&] {
-        if (view->mRedrawRequested) [[unlikely]] {
-            if (auto w = AWindow::current()) [[unlikely]] {
-                if (w->profiling().highlightRedrawRequests) {
-                    return true;
-                }
-            }
-        }
-        return false;
+      if (view->mRedrawRequested) [[unlikely]] {
+          if (auto w = AWindow::current()) [[unlikely]] {
+              if (w->profiling().highlightRedrawRequests) {
+                  return true;
+              }
+          }
+      }
+      return false;
     }();
     AUI_DEFER {
-        if (showRedraw) [[unlikely]] {
-            auto c = contextOfTheView.render.getColor();
-            AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-            contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
-        }
+      if (showRedraw) [[unlikely]] {
+          auto c = contextOfTheView.render.getColor();
+          AUI_DEFER { contextOfTheView.render.setColorForced(c); };
+          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+      }
     };
 
     RenderHints::PushState s(contextOfTheView.render);
@@ -191,8 +191,8 @@ void AViewContainerBase::setLayout(_unique<ALayout> layout) {
 
 void AViewContainerBase::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
-    if (!index) return;
     view->mParent = nullptr;
+    if (!index) return;
     AUI_NULLSAFE(mLayout)->removeView(view, *index);
     invalidateCaches();
     emit childrenChanged;
@@ -217,10 +217,10 @@ void AViewContainerBase::removeView(AView* view) {
 
 void AViewContainerBase::removeView(size_t index) {
     auto view = std::move(mViews[index]);
+    view->mParent = nullptr;
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
-    view->mParent = nullptr;
     invalidateCaches();
     emit childrenChanged;
 }
@@ -310,7 +310,7 @@ void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
         if (auto parent = getParent(); parent && !pointerEvent.isBlockClicksWhenPressed) {
             auto it = std::find_if(parent->mPointerEventsMapping.begin(), parent->mPointerEventsMapping.end(),
                                    [&](const auto &parentPointerEvent) {
-                                       return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
+                                     return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
                                    });
             if (it != parent->mPointerEventsMapping.end()) {
                 it->isBlockClicksWhenPressed = false;
@@ -336,7 +336,7 @@ void AViewContainerBase::onPointerReleased(const APointerReleasedEvent& event) {
     }
 
     mPointerEventsMapping.erase(std::remove_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
-        return v.pointerIndex == event.pointerIndex;
+      return v.pointerIndex == event.pointerIndex;
     }), mPointerEventsMapping.end());
 }
 
@@ -372,10 +372,10 @@ bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
 
     bool result = false;
     ARaiiHelper onExit = [&] {
-        mConsumesClickCache = ConsumesClickCache{
-            .position = pos,
-            .value = result,
-        };
+      mConsumesClickCache = ConsumesClickCache{
+          .position = pos,
+          .value = result,
+      };
     };
 
     // has layout check
@@ -474,7 +474,7 @@ void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
     AUI_ASSERT(!mRepaintTrap.hasValue());
     mRepaintTrap.emplace();
     AUI_DEFER {
-        mRepaintTrap.reset();
+      mRepaintTrap.reset();
     };
     applyGeometryToChildren();
     if (mRepaintTrap->triggered) {
@@ -491,6 +491,7 @@ void AViewContainerBase::removeAllViews() {
         std::size_t i = getViews().size();
         for (auto& x: aui::reverse_iterator_wrap(getViews())) {
             mLayout->removeView(x, --i);
+            x->mParent = nullptr;
         }
     }
     mViews.clear();
@@ -506,7 +507,7 @@ void AViewContainerBase::onDpiChanged() {
 
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
-        "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
+                "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v: mViews) {
@@ -597,7 +598,7 @@ void AViewContainerBase::onViewGraphSubtreeChanged() {
 
 _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
     auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
-        return v.pointerIndex == index;
+      return v.pointerIndex == index;
     });
     if (it == mPointerEventsMapping.end()) {
         return nullptr;
@@ -606,6 +607,7 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
 }
 
 void AViewContainerBase::setViews(AVector<_<AView>> views) {
+    removeAllViews();
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
     mViews = std::move(views);
 
