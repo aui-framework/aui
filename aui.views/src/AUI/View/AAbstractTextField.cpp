@@ -76,8 +76,8 @@ void AAbstractTextField::setText(const AString& t) {
     }
 
     mCursorIndex = t.size();
+    onCursorIndexChanged();
     updateCursorBlinking();
-
     invalidateFont();
     emit textChanged(t);
 }
@@ -201,7 +201,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getPosByIndex(text().length()).x;
+    auto w = getPosByIndexAbsolute(text().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -220,6 +220,10 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 }
+void AAbstractTextField::commitStyle() {
+    AAbstractTypeableView::commitStyle();
+    onCursorIndexChanged();
+}
 
 bool AAbstractTextField::isValidText(const AString& text) {
     return true;
@@ -231,26 +235,29 @@ AString AAbstractTextField::toString() const {
 
 void AAbstractTextField::setSize(glm::ivec2 size) {
     AView::setSize(size);
-    updateTextAlignOffset();
+    onCursorIndexChanged(); // cursor and horizontal scroll should respond to size changes.
 }
 
 unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - glm::ivec2{ mPadding.left - mHorizontalScroll, 0 },
+    return mTextLayoutHelper.posToIndexFixedLineHeight(glm::ivec2{ pos.x - mPadding.left + mHorizontalScroll - mTextAlignOffset, 0 },
                                                        getFontStyle());
 }
 
 glm::ivec2 AAbstractTextField::getPosByIndex(size_t index) {
-    int x = [&] {
-        if (auto r = mTextLayoutHelper.indexToPos(0, index)) [[unlikely]] {
-            return r->x;
-        }
-        // fallback as a slower implementation.
-        return int(getFontStyle().getWidth(getDisplayText().substr(0, index)));
-    }();
-    return { -mHorizontalScroll + x, 0 };
+    int x = getPosByIndexAbsolute(index);
+    return { -mHorizontalScroll + x + mTextAlignOffset, 0 };
+}
+
+int AAbstractTextField::getPosByIndexAbsolute(size_t index) {
+    if (auto r = mTextLayoutHelper.indexToPos(0, index)) [[unlikely]] {
+        return r->x;
+    }
+    // fallback as a slower implementation.
+    return int(getFontStyle().getWidth(getDisplayText().substr(0, index)));
 }
 
 void AAbstractTextField::onCursorIndexChanged() {
+    updateTextAlignOffset();
     auto absoluteCursorPos = getPosByIndex(mCursorIndex).x;
 
     if (absoluteCursorPos < 0)
@@ -267,7 +274,11 @@ void AAbstractTextField::onCursorIndexChanged() {
         absoluteCursorPos -= 1;
     }
     mAbsoluteCursorPos = absoluteCursorPos;
-    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
+    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
+    if (horizontalScroll != mHorizontalScroll) {
+        mAbsoluteCursorPos = mHorizontalScroll - horizontalScroll;
+        mHorizontalScroll = horizontalScroll;
+    }
 }
 
 glm::ivec2 AAbstractTextField::getCursorPosition() {

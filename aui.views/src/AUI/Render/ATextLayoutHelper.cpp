@@ -55,7 +55,7 @@ size_t ATextLayoutHelper::posToIndexFixedLineHeight(const glm::ivec2& position, 
     if (lineIndex >= mSymbols.size()) {
         if (mSymbols.last().empty()) return 0;
         auto& lastLine = mSymbols.last();
-        return lastLine.size();
+        return lastLine.size() - 1;
     }
     return xToIndex(mSymbols[lineIndex], position.x);
 }

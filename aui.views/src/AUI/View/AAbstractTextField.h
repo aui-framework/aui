@@ -99,6 +99,8 @@ protected:
     void doDrawString(IRenderer& render);
 
     void onCursorIndexChanged() override;
+    void commitStyle() override;
+
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     bool mIsPasswordTextField = false;
@@ -111,4 +113,5 @@ private:
 
     void updateTextAlignOffset();
 
+    int getPosByIndexAbsolute(size_t index);
 };
