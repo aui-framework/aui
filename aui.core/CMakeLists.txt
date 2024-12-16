@@ -148,10 +148,6 @@ auib_import(range-v3 https://github.com/ericniebler/range-v3
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
-if (AUI_PLATFORM_ANDROID)
-    target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
-endif()
-
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)
     if (AUI_COMPILER_GCC)

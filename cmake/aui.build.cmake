@@ -1017,9 +1017,9 @@ function(aui_module AUI_MODULE_NAME)
         install(
                 TARGETS ${AUI_MODULE_NAME}
                 EXPORT ${AUIE_EXPORT}
-                ARCHIVE       DESTINATION "${AUI_MODULE_NAME}/lib"
-                LIBRARY       DESTINATION "${AUI_MODULE_NAME}/lib"
-                RUNTIME       DESTINATION "${AUI_MODULE_NAME}/bin"
+                ARCHIVE       DESTINATION "lib"
+                LIBRARY       DESTINATION "lib"
+                RUNTIME       DESTINATION "bin"
                 PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
                 INCLUDES      DESTINATION "${AUI_MODULE_NAME}/include"
         )

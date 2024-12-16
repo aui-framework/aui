@@ -58,16 +58,16 @@ foreach(_module ${AUI_FIND_COMPONENTS})
             if (WIN32)
                 find_file(${CMAKE_FIND_PACKAGE_NAME}_${_module}_LIBRARY
                           NAMES "aui.${_module}.dll" "libaui.${_module}.dll"
-                          PATHS "${SELF_DIR}/aui.${_module}/bin"
+                          PATHS "${SELF_DIR}/bin" "${SELF_DIR}/aui.${_module}/bin"
                           NO_DEFAULT_PATH
                           NO_CACHE)
                 find_library(${CMAKE_FIND_PACKAGE_NAME}_${_module}_IMPLIBRARY "aui.${_module}"
-                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             PATHS "${SELF_DIR}/lib" "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
             else()
                 find_library(${CMAKE_FIND_PACKAGE_NAME}_${_module}_LIBRARY "aui.${_module}"
-                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             PATHS "${SELF_DIR}/lib" "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
             endif()
