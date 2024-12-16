@@ -16,13 +16,7 @@
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#elif AUI_PLATFORM_LINUX
-#include <gtk/gtk.h>
 
-namespace aui::detail {
-extern int argc;
-extern char** argv;
-}
 #endif
 
 /**
@@ -46,9 +40,6 @@ struct AViewsInit
             SetProcessDpiAwarenessContext((HANDLE) -4);
         }
 #endif
-
-#elif AUI_PLATFORM_LINUX
-    gtk_init(&aui::detail::argc, &aui::detail::argv);
 #endif
     }
 } init;

@@ -15,14 +15,13 @@
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include "Gtk.h"
 
 AMessageBox::ResultButton
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
-    AUI_DEFER {
-        while (gtk_events_pending()) {
-            gtk_main_iteration();
-        }
-    };
+    aui::detail::gtk::requires_gtk();
+
+    AUI_DEFER { aui::detail::gtk::main_iterations(); };
 
     auto dialog = aui::ptr::make_unique_with_deleter(gtk_message_dialog_new(
         nullptr, static_cast<GtkDialogFlags>(GTK_DIALOG_MODAL),
