@@ -225,14 +225,14 @@ macro(_auib_copy_runtime_dependencies)
             foreach(_config ${CMAKE_CONFIGURATION_TYPES})
                 set(_copy ${DESTINATION_DIR}/${_config}/${FILENAME})
                 if (NOT EXISTS ${_copy})
-                    message(STATUS "[AUI.BOOT] ${_item} -> ${DESTINATION_DIR}/${_config}/${FILENAME}")
+                    message(STATUS "[AUI.BOOT/Runtime Dependency] ${_item} -> ${DESTINATION_DIR}/${_config}/${FILENAME}")
                     file(MAKE_DIRECTORY ${DESTINATION_DIR}/${_config})
                     file(COPY ${_item} DESTINATION ${DESTINATION_DIR}/${_config})
                 endif()
             endforeach()
         else()
             if (NOT EXISTS ${DESTINATION_DIR}/${FILENAME})
-                message(STATUS "[AUI.BOOT] ${_item} -> ${DESTINATION_DIR}/${FILENAME}")
+                message(STATUS "[AUI.BOOT/Runtime Dependency] ${_item} -> ${DESTINATION_DIR}/${FILENAME}")
                 file(COPY ${_item} DESTINATION ${DESTINATION_DIR})
             endif()
         endif()
@@ -248,6 +248,50 @@ macro(_auib_update_imported_targets_list) # used for displaying imported target 
     list(APPEND _imported_targets_before ${_imported_targets_after})
     set_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS ${_imported_targets_before})
 endmacro()
+
+function(_auib_validate_target_installation _target)
+    if (AUIB_NO_PRECOMPILED)
+        return()
+    endif()
+    if (NOT TARGET ${_target})
+        message(FATAL_ERROR "${_target} expected to be a target")
+    endif()
+    get_target_property(_v ${_target} TYPE)
+    if (NOT _v MATCHES "_LIBRARY") # skip executables
+        return()
+    endif()
+
+    get_target_property(_v ${_target} INTERFACE_AUIB_SYSTEM_LIB)
+    if (_v) # skip system libraries
+        return()
+    endif()
+    foreach(_property IMPORTED_LOCATION IMPORTED_LOCATION_${CMAKE_BUILD_TYPE} IMPORTED_IMPLIB IMPORTED_OBJECTS INTERFACE_LINK_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_LINK_LIBRARIES)
+        get_target_property(_v ${_target} ${_property})
+        if (NOT _v)
+            continue()
+        endif()
+        string(REPLACE "/" "\/" _match_str "^${AUIB_CACHE_DIR}")
+        foreach (_property_item ${_v})
+            if (TARGET ${_property_item})
+                continue()
+            endif()
+            if (NOT _property_item MATCHES "(.:)?[\/\\]")
+                # does not contain path
+                continue()
+            endif()
+            if (NOT _property_item MATCHES ${_match_str})
+                message(FATAL_ERROR
+                        "While importing ${AUI_MODULE_NAME}:\n"
+                        "Imported target ${_target} has dependency on a system file\n${_property_item} IN ${_property}\n"
+                        "This effectively means that the library (and thus your project) is not portable.\n"
+                        "CMake targets should be used instead of hardcoded paths.\n"
+                        "You can silence this error by setting -DAUIB_NO_PRECOMPILED=TRUE\n"
+                        "(https://aui-framework.github.io/develop/md_docs_AUI_configure_flags.html)\n"
+                        "but you would probably encounter issues while deploying your app.")
+            endif()
+        endforeach()
+    endforeach ()
+endfunction()
 
 function(_auib_import_subdirectory DEP_SOURCE_DIR AUI_MODULE_NAME) # helper function to keep scope
     set(AUI_BOOT TRUE)
@@ -954,6 +998,9 @@ function(auib_import AUI_MODULE_NAME URL)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
         _auib_update_imported_targets_list()
         message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
+        foreach (_target ${_imported_targets_after})
+            _auib_validate_target_installation(${_target})
+        endforeach()
     else()
         message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
     endif()
@@ -962,12 +1009,25 @@ endfunction()
 
 
 macro(auib_use_system_libs_begin)
+    get_property(_imported_targets DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
+    set_property(GLOBAL PROPERTY AUIB_SYSTEM_LIBS_BEGIN ${_imported_targets})
+
     set(AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH TRUE)
 endmacro()
 
 macro(auib_use_system_libs_end)
+    get_property(_imported_targets_before GLOBAL PROPERTY AUIB_SYSTEM_LIBS_BEGIN)
+    get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
+
+    # find the new targets by excluding _imported_targets_before from _imported_targets_after
+    list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
+
+    foreach (_t ${_imported_targets_after})
+        set_target_properties(${_t} PROPERTIES INTERFACE_AUIB_SYSTEM_LIB ON)
+    endforeach()
+
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 endmacro()
@@ -975,7 +1035,7 @@ endmacro()
 macro(auib_precompiled_binary)
     set(CPACK_GENERATOR "TGZ")
     get_property(_auib_deps GLOBAL PROPERTY AUI_BOOT_DEPS)
-    set(AUIB_DEPS ${_auib_deps} CACHE STRING "" FORCE)
+    set(AUIB_DEPS ${_auib_deps})
     _auib_precompiled_archive_name(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
     message(STATUS "[AUI.BOOT] Output precompiled archive name: ${CPACK_PACKAGE_FILE_NAME}")
     set(CPACK_VERBATIM_VARIABLES YES)

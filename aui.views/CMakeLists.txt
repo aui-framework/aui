@@ -25,7 +25,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
     if (AUI_PLATFORM_WIN OR AUI_PLATFORM_LINUX OR AUI_PLATFORM_MACOS)
         auib_import(GLEW https://github.com/aui-framework/glew-cmake
-                CMAKE_WORKING_DIR "build/cmake")
+                CMAKE_WORKING_DIR "build/cmake"
+                VERSION a80a1dc)
     endif ()
 
     aui_module(aui.views EXPORT aui)
