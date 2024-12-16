@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2024 Alex2772 and Contributors
  *
@@ -9,10 +9,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/AMessageBox.h"
+#pragma once
 
+namespace aui::detail::gtk {
 
-AMessageBox::ResultButton AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
-    // TODO apple
-    return AMessageBox::ResultButton::INVALID;
+/**
+ * @brief Initializes gtk if didn't.
+ */
+void requires_gtk();
+
+/**
+ * @brief Processes all pending gtk events.
+ */
+void main_iterations();
+
 }

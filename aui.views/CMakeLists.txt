@@ -39,7 +39,11 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         include_directories(${DBUS_INCLUDE_DIRS})
         link_directories(${DBUS_LIBRARY_DIRS})
 
-        aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} Fontconfig::Fontconfig)
+        pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+        include_directories(${GTK3_INCLUDE_DIRS})
+        link_directories(${GTK3_LIBRARY_DIRS})
+
+        aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
     endif ()
 
     if (NOT AUI_PLATFORM_WINDOWS)
@@ -110,6 +114,9 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
                     "-framework CoreData"
                     "-framework Foundation"
                     "-framework QuartzCore")
+            if(CMAKE_SYSTEM_VERSION VERSION_GREATER_EQUAL "20.0")
+                target_link_libraries(aui.views PUBLIC "-framework UniformTypeIdentifiers")
+            endif()
         endif ()
     endif ()
 else ()
