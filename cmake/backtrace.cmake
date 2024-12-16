@@ -27,6 +27,6 @@ set_target_properties(backtrace PROPERTIES
                       INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
 ]])
 
-configure_file(backtrace-config.cmake.in ${CMAKE_BINARY_DIR}/backtrace-config.cmake @ONLY)
+configure_file(backtrace-config.cmake.in ${CMAKE_BINARY_DIR}/backtrace-config.cmake)
 
 install(FILES ${CMAKE_BINARY_DIR}/backtrace-config.cmake DESTINATION .)
