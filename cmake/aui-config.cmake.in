@@ -83,6 +83,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                 list(APPEND ${CMAKE_FIND_PACKAGE_NAME}_INCLUDE_DIRS ${_include})
                 list(APPEND ${CMAKE_FIND_PACKAGE_NAME}_IMPORTED_TARGETS "${_module_target_name}")
                 add_library(${_module_target_name} SHARED IMPORTED)
+                add_library(aui.${_module} ALIAS ${_module_target_name})
                 target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
                 target_link_options(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_OPTIONS})
                 set_target_properties(${_module_target_name} PROPERTIES
