@@ -104,8 +104,14 @@ const ACommandLineArgs& aui::args() noexcept {
     return argsImpl();
 }
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+namespace aui::detail {
+    int argc;
+    char** argv;
+}
 
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+    aui::detail::argc = argc;
+    aui::detail::argv = argv;
     setupUIThread();
     ATimer::scheduler();
 
