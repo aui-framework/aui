@@ -1,0 +1,51 @@
+name: Bug report
+description: Create a report to help us improve
+labels: ["bug"]
+body:
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What happened?
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output or stack trace
+      description: |
+        Please copy and paste any relevant log output.
+        You can find log location by `CTRL+F` for `[UI thread][Logger][INFO]: Log file:` in your application output.
+        Please remove any sensitive information before posting.
+        Add the full stack trace if available.
+        
+        *This will be automatically formatted into code, so there is no need for backticks.*
+      render: shell
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Steps to reproduce the behavior – provide your build configuration.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - Windows
+        - Linux
+        - macOS
+        - Android
+        - iOS
+        - Emscripten
+
+  - type: input
+    id: url
+    attributes:
+      label: Link to build, i.e. failing GitHub Action job (if any).
+      placeholder: https://github.com/username/project/actions/runs/1234567890
