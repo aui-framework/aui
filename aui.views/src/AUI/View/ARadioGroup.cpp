@@ -29,6 +29,7 @@ ARadioGroup::~ARadioGroup() {
 }
 
 void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
+    setLayout(std::make_unique<AVerticalLayout>());
     mModel = model;
 
     if (mModel) {

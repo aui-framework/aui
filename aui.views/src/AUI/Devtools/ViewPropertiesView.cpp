@@ -13,7 +13,7 @@
 // Created by Alex2772 on 11/11/2021.
 //
 
-#include <range/v3/range.hpp>
+#include <range/v3/all.hpp>
 
 #include "ViewPropertiesView.h"
 #include <AUI/ASS/ASS.h>
@@ -26,9 +26,13 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ALabel.h>
+#include <AUI/Model/AListModel.h>
 
 #include "AUI/View/AText.h"
 #include "Devtools.h"
+#include "AUI/View/ADropdownList.h"
+#include "AUI/View/ARadioGroup.h"
+#include "AUI/View/AGroupBox.h"
 
 using namespace ass;
 
@@ -60,47 +64,66 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
+    struct ViewModel {
+        bool enabled;
+        bool expanding;
+        Visibility visibility;
+    };
+
+    auto viewModel = _new<ADataBinding<ViewModel>>(ViewModel {
+      .enabled = targetView->isEnabled(),
+      .expanding = targetView->getExpanding() != glm::ivec2(0),
+      .visibility = targetView->getVisibility(),
+    });
+
+    targetView&& viewModel(&ViewModel::enabled, &AView::enabledState, &AView::setEnabled);
+    targetView&& viewModel(&ViewModel::expanding, aui::select_overload<int>(&AView::setExpanding));
+    targetView&& viewModel(&ViewModel::visibility, &AView::visibilityChanged, &AView::setVisibility);
+
+    viewModel->addObserver([this] { requestTargetUpdate(); });
+
     using namespace declarative;
     auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
-        _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
         Horizontal {
-          Label { addressStr },
-          Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
-        },
-
-        Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
-
-        CheckBoxWrapper {
-          Label { "Enabled" },
-        } let {
-                it->setChecked(targetView->isEnabled());
-                connect(it->checked, [this](bool v) {
-                    if (auto s = mTargetView.lock())
-                        s->setEnabled(v);
-                    requestTargetUpdate();
-                });
+          Vertical {
+            _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
+            Horizontal {
+              Label { addressStr },
+              Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
             },
-        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
-        Horizontal {
-          Button { "Add \"DevtoolsTest\" stylesheet name" } let {
-                  it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
-                  connect(it->clicked, [=] {
-                      targetView->addAssName("DevtoolsTest");
-                      setTargetView(targetView);
-                  });
-              },
-        },
-        CheckBoxWrapper {
-          Label { "Expanding" },
-        } let {
-                it->setChecked(targetView->getExpanding() != glm::ivec2(0));
-                connect(it->checked, [this](bool v) {
-                    if (auto s = mTargetView.lock())
-                        s->setExpanding(v);
-                    requestTargetUpdate();
-                });
+
+            Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
+
+            CheckBoxWrapper { Label { "Enabled" } } && viewModel(&ViewModel::enabled),
+            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+            Horizontal {
+              Button { "Add \"DevtoolsTest\" stylesheet name" } let {
+                      it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
+                      connect(it->clicked, [=] {
+                          targetView->addAssName("DevtoolsTest");
+                          setTargetView(targetView);
+                      });
+                  },
             },
+            CheckBoxWrapper {
+              Label { "Expanding" },
+            } && viewModel(&ViewModel::expanding),
+            GroupBox {
+              Label { "Visibility" },
+              _new<ARadioGroup>() let {
+                      it->setModel(AListModel<AString>::fromVector(
+                          AEnumerate<Visibility>::nameToValueMap() | ranges::view::keys | ranges::to_vector));
+                      static auto mapping =
+                          AEnumerate<Visibility>::nameToValueMap() | ranges::view::values |
+                          ranges::to<AVector<Visibility>>;
+                      it->setSelectedId(mapping.indexOf((*viewModel)->visibility));
+                      connect(it->selectionChanged, [viewModel](AListModelIndex selectionId) {
+                          viewModel->setValue(&ViewModel::visibility, mapping[selectionId.getRow()]);
+                      });
+                  },
+            } },
+        },
 
         _new<ALabel>("view's custom style"),
         _new<ALabel>("{") << ".declaration_br",

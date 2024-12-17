@@ -700,6 +700,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
+    emit visibilityChanged(visibility);
 }
 
 namespace aui::view::impl {
