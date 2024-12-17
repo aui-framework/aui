@@ -16,66 +16,46 @@
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Vulkan/Instance.h"
 
-class VulkanRenderer: public IRenderer {
-friend class VulkanPrerenderedString;
-friend class VulkanMultiStringCanvas;
+class VulkanRenderer : public IRenderer {
+    friend class VulkanPrerenderedString;
+    friend class VulkanMultiStringCanvas;
+
 public:
-    struct FontEntryData: aui::noncopyable {
+    struct FontEntryData : aui::noncopyable {
         Util::SimpleTexturePacker texturePacker;
         gl::Texture2D texture;
         bool isTextureInvalid = true;
 
-        FontEntryData() {
-            texture.bind();
-        }
+        FontEntryData() { texture.bind(); }
     };
+
 protected:
-    ITexture* createNewTexture() override;
+    _unique<ITexture> createNewTexture() override;
 
 public:
     VulkanRenderer();
     ~VulkanRenderer() override = default;
 
-    void drawRect(const ABrush& brush,
-                  glm::vec2 position,
-                  glm::vec2 size) override;
+    void rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) override;
 
-    void drawRoundedRect(const ABrush& brush,
-                         glm::vec2 position,
-                         glm::vec2 size,
-                         float radius) override;
+    void roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) override;
 
-    void drawRectBorder(const ABrush& brush,
-                       glm::vec2 position,
-                       glm::vec2 size,
-                       float lineWidth) override;
+    void rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) override;
 
-    void drawRoundedRectBorder(const ABrush& brush,
-                               glm::vec2 position,
-                               glm::vec2 size,
-                               float radius,
-                               int borderWidth) override;
+    void roundedRectangleBorder(
+        const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) override;
 
-    void drawBoxShadow(glm::vec2 position,
-                       glm::vec2 size,
-                       float blurRadius,
-                       const AColor& color) override;
-        
-    void drawBoxShadowInner(glm::vec2 position,
-                            glm::vec2 size,
-                            float blurRadius,
-                            float spreadRadius,
-                            float borderRadius,
-                            const AColor& color,
-                            glm::vec2 offset) override;   
+    void boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) override;
 
-    void drawString(glm::vec2 position,
-                    const AString& string,
-                    const AFontStyle& fs) override;
+    void boxShadowInner(
+        glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
+        const AColor& color, glm::vec2 offset) override;
+
+    void string(glm::vec2 position, const AString& string, const AFontStyle& fs) override;
 
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
-    void drawRectImpl(glm::vec2 position, glm::vec2 size);
+    void rectImpl(glm::vec2 position, glm::vec2 size);
 
     void setBlending(Blending blending) override;
 
@@ -83,17 +63,16 @@ public:
 
     glm::mat4 getProjectionMatrix() const override;
 
-    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
+    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
+    void
+    lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style,
+          AMetric width) override;
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
 
-    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
-
-    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
-
-    void drawSquareSector(const ABrush& brush,
-                          const glm::vec2& position,
-                          const glm::vec2& size,
-                          AAngleRadians begin,
-                          AAngleRadians end) override;
+    void squareSector(
+        const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin,
+        AAngleRadians end) override;
 
     void pushMaskBefore() override;
     void pushMaskAfter() override;
@@ -102,7 +81,7 @@ public:
 
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
-    
+
     void bindViewport() const noexcept;
 
     [[nodiscard]]
@@ -147,9 +126,7 @@ private:
     ADeque<CharacterData> mCharData;
     ADeque<FontEntryData> mFontEntryData;
 
-
-    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
-                                          glm::vec2 size);
+    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
 
     void uploadToShaderCommon();
     void identityUv();
@@ -158,5 +135,3 @@ private:
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 };
-
-

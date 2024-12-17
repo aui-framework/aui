@@ -94,7 +94,7 @@ void VulkanRenderingContext::init(const Init& init) {
     }
     initX11Window(init, swa, vi);
 
-    ARender::setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
 
     auto& instance = mRenderer->instance();
     auto& logicalDevice = mRenderer->logicalDevice();
@@ -268,14 +268,14 @@ void VulkanRenderingContext::init(const Init& init) {
 
 }
 
-void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void VulkanRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(ourDisplay, w->mHandle);
     }
 }
 
-void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
+void VulkanRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
 
     const VkDevice device = mRenderer->logicalDevice();
@@ -356,7 +356,7 @@ void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void VulkanRenderingContext::endPaint(ABaseWindow& window) {
+void VulkanRenderingContext::endPaint(AWindowBase& window) {
     CommonRenderingContext::endPaint(window);
     mRenderer->endPaint();
 
@@ -432,12 +432,12 @@ void VulkanRenderingContext::endPaint(ABaseWindow& window) {
     }
 }
 
-void VulkanRenderingContext::beginResize(ABaseWindow& window) {
+void VulkanRenderingContext::beginResize(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
     }
 }
 
-void VulkanRenderingContext::endResize(ABaseWindow& window) {
+void VulkanRenderingContext::endResize(AWindowBase& window) {
 
 }
 
@@ -455,7 +455,7 @@ _<VulkanRenderer> VulkanRenderingContext::ourRenderer() {
     return temp;
 }
 void VulkanRenderingContext::recreateObjectsDueToResize() {
-    printf("\n");
 }
 
 const VulkanRenderingContext::VulkanObjects& VulkanRenderingContext::vulkan() const noexcept { return **mVulkan; }
+IRenderer& VulkanRenderingContext::renderer() { return *mRenderer; }

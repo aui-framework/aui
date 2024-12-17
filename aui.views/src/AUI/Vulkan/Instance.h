@@ -31,7 +31,7 @@ namespace aui::vk {
     static constexpr auto VULKAN_DEFAULT_PATH = "libvulkan.so.1";
 #endif
 
-    struct Instance: public aui::noncopyable {
+    struct Instance {
     public:
         Instance();
         Instance(VkInstance instance): instance(instance) {} // updates function pointers, as instance is present
