@@ -5,7 +5,7 @@ body:
   - type: checkboxes
     id: terms
     attributes:
-      label: One More Step Before opening the issue
+      label: One More Step Before opening this issue
       description: |
         By submitting this issue, I'm agree:
       options:

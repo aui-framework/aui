@@ -2,6 +2,17 @@ name: Feature request
 description: Suggest an idea for this project
 labels: ["feature request"]
 body:
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: One More Step Before opening this issue
+      description: |
+        By submitting this issue, I'm agree:
+      options:
+        - label: To follow our [Code of Conduct](https://github.com/aui-framework/aui/blob/master/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I've considered [existing issues on GitHub page](https://github.com/aui-framework/aui/issues) and didn't find a similar issue
+          required: true
 
   - type: textarea
     id: cause
