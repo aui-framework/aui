@@ -1,35 +1,32 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <glm/glm.hpp>
 #include <AUI/Reflect/AEnumerate.h>
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
 #include <AUI/Util/APool.h>
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
+#include "AUI/Render/ABorderStyle.h"
+#include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
+#include "IRenderViewToTexture.h"
 
 class AColor;
-class ABaseWindow;
+class AWindowBase;
 
 
 
@@ -140,10 +137,15 @@ enum class Blending {
 };
 
 /**
- * @brief Base class for rendering (for drawing use ARender facade instead).
+ * @brief Base class for rendering.
  * @ingroup views
+ * @details
+ * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
+ * specific routines.
+ *
+ * @sa IRenderingContext
  */
-class IRenderer {
+class IRenderer: public aui::noncopyable {
 public:
     class IPrerenderedString {
     public:
@@ -162,9 +164,10 @@ public:
          * @brief Notifies IMultiStringCanvas than a symbol was added used to construct a ATextLayoutHelper.
          * @details
          * @note should be called by the implementation of IMultiStringCanvas.
-         * @param symbol symbol to add
+         * @param symbol symbol data to add
+         * @note at the end of line, implementation must add extra symbol to mark last position.
          */
-        void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) noexcept {
+        void notifySymbolAdded(const ATextLayoutHelper::Boundary& symbol) noexcept {
             if (mSymbols) mSymbols->last().push_back(symbol);
         }
 
@@ -196,7 +199,7 @@ public:
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
-         * @return instance of <code>ARender::PrerenderedString</code> to drawElements with.
+         * @return instance of <code>_<IRenderer::IPrerenderedString></code> to drawElements with.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
@@ -210,19 +213,10 @@ public:
          * @note can be called only once.
          */
         ATextLayoutHelper getTextLayoutHelper() noexcept {
-            assert(("call enableCachingForTextLayoutHelper() before using getTextLayoutHelper" && bool(mSymbols)));
+            AUI_ASSERTX(bool(mSymbols), "call enableCachingForTextLayoutHelper() before using getTextLayoutHelper");
             return ATextLayoutHelper(std::move(*mSymbols));
         }
     };
-
-protected:
-    AColor mColor;
-    glm::mat4 mTransform;
-    ABaseWindow* mWindow = nullptr;
-    APool<ITexture> mTexturePool;
-    uint8_t mStencilDepth = 0;
-
-    virtual ITexture* createNewTexture() = 0;
 
 public:
     IRenderer(): mTexturePool([this] { return createNewTexture(); }) {}
@@ -247,9 +241,9 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      */
-    virtual void drawRect(const ABrush& brush,
-                          glm::vec2 position,
-                          glm::vec2 size) = 0;
+    virtual void rectangle(const ABrush& brush,
+                           glm::vec2 position,
+                           glm::vec2 size) = 0;
 
 
     /**
@@ -259,10 +253,10 @@ public:
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
-    virtual void drawRoundedRect(const ABrush& brush,
-                                 glm::vec2 position,
-                                 glm::vec2 size,
-                                 float radius) = 0;
+    virtual void roundedRectangle(const ABrush& brush,
+                                  glm::vec2 position,
+                                  glm::vec2 size,
+                                  float radius) = 0;
 
     /**
      * @brief Draws rectangle's border.
@@ -271,10 +265,10 @@ public:
      * @param size rectangle size (px)
      * @param lineWidth border line width (px)
      */
-    virtual void drawRectBorder(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size,
-                                float lineWidth = 1.f) = 0;
+    virtual void rectangleBorder(const ABrush& brush,
+                                 glm::vec2 position,
+                                 glm::vec2 size,
+                                 float lineWidth = 1.f) = 0;
     /**
      * @brief Draws rounded rectangle's border.
      * @param brush brush to use
@@ -283,11 +277,11 @@ public:
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    virtual void drawRoundedRectBorder(const ABrush& brush,
-                                       glm::vec2 position,
-                                       glm::vec2 size,
-                                       float radius,
-                                       int borderWidth) = 0;
+    virtual void roundedRectangleBorder(const ABrush& brush,
+                                        glm::vec2 position,
+                                        glm::vec2 size,
+                                        float radius,
+                                        int borderWidth) = 0;
 
 
     /**
@@ -297,10 +291,10 @@ public:
      * @param blurRadius blur radius
      * @param color shadow color
      */
-    virtual void drawBoxShadow(glm::vec2 position,
-                               glm::vec2 size,
-                               float blurRadius,
-                               const AColor& color) = 0;
+    virtual void boxShadow(glm::vec2 position,
+                           glm::vec2 size,
+                           float blurRadius,
+                           const AColor& color) = 0;
 
     /**
      * @brief Draws inner (inset) rectangle-shaped shadow.
@@ -310,36 +304,31 @@ public:
      * @param spreadRadius spread (offset) radius
      * @param borderRadius border radius of the rectangle.
      * @param color shadow color
-     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     * @param offset shadow offset. Unlike outer shadow (ctx.render.boxShadow), the offset is passed to the shader instead
      *               of a simple rectangle position offset.
      */
-    virtual void drawBoxShadowInner(glm::vec2 position,
-                                    glm::vec2 size,
-                                    float blurRadius,
-                                    float spreadRadius,
-                                    float borderRadius,
-                                    const AColor& color,
-                                    glm::vec2 offset) = 0;
+    virtual void boxShadowInner(glm::vec2 position,
+                                glm::vec2 size,
+                                float blurRadius,
+                                float spreadRadius,
+                                float borderRadius,
+                                const AColor& color,
+                                glm::vec2 offset) = 0;
 
     /**
      * @brief Draws string.
      * @param position string's top left point
      * @param string string to render
      * @param fs font style (optional)
-     * @details
-     * <dl>
-     *     <dt><b>Warning!</b></dt>
-     *     <dd>
-     *         This function is dramatically inefficient since it does symbol lookup for every character is the
-     *         <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
-     *         times (frames), consider using the IRenderer::prerenderString function or high level views (such as
-     *         ALabel) instead.
-     *     </dd>
-     * </dl>
+     * @note
+     * This function is dramatically inefficient since it does symbol lookup for every character is the
+     * <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
+     * times (frames), consider using the IRenderer::prerenderString function or high level views (such as
+     * ALabel) instead.
      */
-    virtual void drawString(glm::vec2 position,
-                            const AString& string,
-                            const AFontStyle& fs = {}) = 0;
+    virtual void string(glm::vec2 position,
+                        const AString& string,
+                        const AFontStyle& fs = {}) = 0;
 
     /**
      * @brief Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
@@ -351,34 +340,63 @@ public:
      */
     virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
-
-
     /**
-     * @brief Draws a line between <code>p1</code> and <code>p2</code>.
-     * @param brush brush
-     * @param p1 first point
-     * @param p2 second point
-     * @details
-     * <dl>
-     *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
-     * </dl>
-     */
-    virtual void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) = 0;
+    * @details
+    * <dl>
+    *   <dt><b>Performance note</b></dt>
+    *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
+    * </dl>
+    */
+    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        glm::vec2 points[] = { p1, p2 };
+        lines(brush, points, style, width);
+    }
 
     /**
      * @brief Draws polyline (non-loop line strip).
      * @param brush brush
      * @param points polyline points
+     * @param style style
+     * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
+
+    /**
+     * @brief Draws points list.
+     * @param brush brush
+     * @param points points
+     * @param size point size
+     */
+    virtual void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
 
     /**
      * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points
+     * @param style style
+     * @param width line width
      */
-    virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
+    virtual void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
 
     /**
      * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
@@ -386,13 +404,13 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @details
-     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
      */
-    virtual void drawSquareSector(const ABrush& brush,
-                                  const glm::vec2& position,
-                                  const glm::vec2& size,
-                                  AAngleRadians begin,
-                                  AAngleRadians end) = 0;
+    virtual void squareSector(const ABrush& brush,
+                              const glm::vec2& position,
+                              const glm::vec2& size,
+                              AAngleRadians begin,
+                              AAngleRadians end) = 0;
  
     /**
      * @brief Sets the color which is multiplied with any brush.
@@ -475,16 +493,29 @@ public:
      */
     virtual void setBlending(Blending blending) = 0;
 
+
+    /**
+     * @brief Returns a new instance of IRenderViewToTexture interface associated with this renderer.
+     * @return A new instance. Can return null if unsupported.
+     */
+    [[nodiscard]]
+    virtual _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept = 0;
+
     /**
      * @brief Sets the window to render on.
      * @param window target window
      */
-    virtual void setWindow(ABaseWindow* window)
+    virtual void setWindow(AWindowBase* window)
     {
         mWindow = window;
         setColorForced(1.f);
         setTransformForced(getProjectionMatrix());
         mStencilDepth = 0;
+    }
+
+    [[nodiscard]]
+    AWindowBase* getWindow() const noexcept {
+        return mWindow;
     }
 
     virtual glm::mat4 getProjectionMatrix() const = 0;
@@ -502,6 +533,54 @@ public:
     void setStencilDepth(uint8_t stencilDepth) {
         mStencilDepth = stencilDepth;
     }
+
+
+    /**
+     * @brief Wrapper for setTransform applying matrix translate transformation.
+     * @param offset offset in pixels to translate.
+     */
+    void translate(const glm::vec2& offset) {
+        setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+    }
+
+    /**
+     * @brief wrapper for setTransform applying matrix rotation along the specified axis.
+     * @param axis axis
+     * @param angle angle to rotate
+     */
+    void rotate(const glm::vec3& axis, AAngleRadians angle) {
+        setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
+    }
+
+    /**
+     * @brief wrapper for setTransform applying matrix rotation along z axis.
+     * @param angle angle to rotate
+     */
+    void rotate(AAngleRadians angle) {
+        rotate({0.f, 0.f, 1.f}, angle);
+    }
+
+    void setAllowRenderToTexture(bool allowRenderToTexture) {
+        mAllowRenderToTexture = allowRenderToTexture;
+    }
+
+    [[nodiscard]]
+    bool allowRenderToTexture() const noexcept {
+        return mAllowRenderToTexture;
+    }
+
+protected:
+    AColor mColor;
+    glm::mat4 mTransform;
+    AWindowBase* mWindow = nullptr;
+    APool<ITexture> mTexturePool;
+    uint8_t mStencilDepth = 0;
+
+    virtual _unique<ITexture> createNewTexture() = 0;
+
+private:
+    bool mAllowRenderToTexture = false;
+
 };
 
 

@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/ARaiiHelper.h>
@@ -28,7 +23,6 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Thread/ACutoffSignal.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;
@@ -41,7 +35,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 }
 
 
-AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
@@ -52,7 +46,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
         auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                                    IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
 
 
         ARaiiHelper d = [&] {
@@ -69,7 +63,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
             for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                 APath current = i;
                 current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                SHCreateItemFromParsingName(aui::win32::toWchar(current), nullptr, IID_IShellItem,
                                             reinterpret_cast<void**>(&psiFolder));
             }
             if (psiFolder) {
@@ -101,7 +95,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    result = pszFilePath;
+                    result = aui::win32::fromWchar(pszFilePath);
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();
@@ -112,7 +106,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
     };
 }
 
-AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
@@ -132,7 +126,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
                 });
         };
 
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
         AVector<COMDLG_FILTERSPEC> filter;
         AVector<AString> storage;
         filter.reserve(extensions.size());
@@ -141,19 +135,19 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
             auto extFilter = "*." + ext.extension;
             storage << extFilter;
             storage << ext.name + " (" + extFilter + ")";
-            filter << COMDLG_FILTERSPEC{ (storage.end()-1)->c_str(), (storage.end()-2)->c_str() };
+            filter << COMDLG_FILTERSPEC{ aui::win32::toWchar(*(storage.end()-1)), aui::win32::toWchar(*(storage.end()-2)) };
         }
 
 
         hr = pFileOpen->SetFileTypes(filter.size(), filter.data());
-        assert(SUCCEEDED(hr));
+        AUI_ASSERT(SUCCEEDED(hr));
 
         {
             IShellItem* psiFolder = nullptr;
             for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                 APath current = i;
                 current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                SHCreateItemFromParsingName(aui::win32::toWchar(current), nullptr, IID_IShellItem,
                                             reinterpret_cast<void**>(&psiFolder));
             }
             if (psiFolder) {
@@ -184,7 +178,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    result = pszFilePath;
+                    result = aui::win32::fromWchar(pszFilePath);
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();
@@ -198,7 +192,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     SHFILEINFO info;
-    if (SUCCEEDED(SHGetFileInfo(file.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
+    if (SUCCEEDED(SHGetFileInfo(aui::win32::toWchar(file), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
 
         ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };
         return _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(info.hIcon)));

@@ -1,31 +1,26 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
+#include <AUI/Platform/AWindowManager.h>
+#include <AUI/Platform/AWindow.h>
 #import "AUIView.h"
 #include <OpenGLES/EAGLDrawable.h>
 #include <OpenGLES/ES2/glext.h>
 
 #include <string>
-#include <AUI/Platform/AWindowManager.h>
-#include <AUI/Platform/AWindow.h>
 @implementation AUIView
 {
     CADisplayLink* displayLink;
     BOOL animating;
-    NSMutableArray<UITouch*>* trackedTouches;
+    std::vector<UITouch*> trackedTouches;
 }
 
 @synthesize context;
@@ -69,14 +64,14 @@ static GLuint defaultFb, colorBuffer = 0;
         
         if (!context || ![EAGLContext setCurrentContext:context])
 		{
-            assert(0);
+            AUI_ASSERT(0);
             return nil;
 		}
         
-        trackedTouches = [[NSMutableArray<UITouch*> alloc] init];
         animating = NO;
         displayLink = nil;
         view = self;
+        [self setMultipleTouchEnabled:true];
         
         // setup "default" framebuffer
         glGenFramebuffers(1, &defaultFb);
@@ -102,10 +97,10 @@ static GLuint defaultFb, colorBuffer = 0;
     if (!initialized) {
         initialized = true;
         
-        assert(defaultFb == 1);
+        AUI_ASSERT(defaultFb == 1);
         
         [self layoutSubviews];
-        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+        AUI_ASSERT(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
     }
     
     if (!AWindow::getWindowManager().getWindows().empty()) {
@@ -130,7 +125,7 @@ static GLuint defaultFb, colorBuffer = 0;
     glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBuffer);glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
     if (![self.context renderbufferStorage:GL_RENDERBUFFER fromDrawable:eaglLayer]) {
-        assert(0);
+        AUI_ASSERT(0);
     }
     
     CGSize size = self.bounds.size;
@@ -175,8 +170,12 @@ static GLuint defaultFb, colorBuffer = 0;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
         auto vec = glm::ivec2{location.x * scale, location.y * scale};
-        auiWindow()->onPointerPressed({vec, APointerIndex::finger([trackedTouches count])});
-        [trackedTouches addObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), nullptr);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerPressed({vec, APointerIndex::finger(index)});
+
+        trackedTouches.insert(it, touch);
+        
     }
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -184,7 +183,8 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerMove(glm::vec2{location.x * scale, location.y * scale}, APointerMoveEvent{APointerIndex::finger([trackedTouches indexOfObject:touch])});
+        auto index = std::find(trackedTouches.begin(), trackedTouches.end(), touch) - trackedTouches.begin();
+        auiWindow()->onPointerMove(glm::vec2{location.x * scale, location.y * scale}, APointerMoveEvent{APointerIndex::finger(index)});
     }
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -192,8 +192,10 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger([trackedTouches indexOfObject:touch])});
-        [trackedTouches removeObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), touch);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger(index)});
+        *it = nullptr;
     }
 }
 - (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -201,14 +203,31 @@ static GLuint defaultFb, colorBuffer = 0;
     float scale = (float)self.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self];
-        auiWindow()->onPointerReleased({.position = glm::ivec2{location.x * scale, location.y * scale}, .pointerIndex = APointerIndex::finger([trackedTouches indexOfObject:touch]), .triggerClick = false});
-        [trackedTouches removeObject:touch];
+        auto it = std::find(trackedTouches.begin(), trackedTouches.end(), touch);
+        auto index = it - trackedTouches.begin();
+        auiWindow()->onPointerReleased({.position = glm::ivec2{location.x * scale, location.y * scale}, .pointerIndex = APointerIndex::finger(index), .triggerClick = false});
+        *it = nullptr;
     }
 }
 
 extern "C" void _aui_ios_redraw() {
     dispatch_async(dispatch_get_main_queue(), ^{
         [view setNeedsDisplay];
+    });
+}
+
+extern "C" void _aui_ios_setMobileScreenOrientation(AScreenOrientation orientation) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIInterfaceOrientation currentOrientation = [UIApplication sharedApplication].statusBarOrientation;
+        NSNumber *value = [&] {
+            switch (orientation) {
+                case AScreenOrientation::PORTRAIT: return [NSNumber numberWithInt:UIInterfaceOrientationPortrait];
+                case AScreenOrientation::LANDSCAPE: return [NSNumber numberWithInt:UIInterfaceOrientationLandscapeLeft];
+                default: return [NSNumber numberWithInt:UIInterfaceOrientationUnknown];
+            }
+        }();
+        [[UIDevice currentDevice] setValue:value forKey:@"orientation"];    
+        [UIViewController attemptRotationToDeviceOrientation];
     });
 }
 

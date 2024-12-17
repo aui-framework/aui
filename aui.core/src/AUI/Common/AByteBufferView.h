@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -37,6 +32,10 @@ public:
     explicit AByteBufferView(const std::string& string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
     explicit AByteBufferView(std::string_view string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
 
+    static AByteBufferView fromRange(const char* begin, const char* end) noexcept {
+        return AByteBufferView(begin, std::distance(begin, end));
+    }
+
     /**
      * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
      * @tparam T data type
@@ -55,13 +54,13 @@ public:
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset) const noexcept {
+    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
         return slice(offset, size() - offset);
     }
 
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
-        assert(("out of bounds", offset + size <= mSize));
+        AUI_ASSERTX(offset + size <= mSize, "out of bounds");
         return { mBuffer + offset, size };
     }
 
@@ -106,7 +105,7 @@ public:
     }
 
 
-    _<IInputStream> toStream() const;
+    _unique<IInputStream> toStream() const;
 };
 
 inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {

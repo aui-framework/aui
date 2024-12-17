@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -20,10 +15,9 @@
 #include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
-#include "ARender.h"
+#include "IRenderer.h"
 
-namespace RenderHints
-{
+namespace RenderHints {
     /**
      * @brief Increases mask stack. Used by AView.
      * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
@@ -31,10 +25,10 @@ namespace RenderHints
      * @param maskRenderer function - mask renderer
      */
     template<aui::invocable Callable>
-    static void pushMask(Callable&& maskRenderer) {
-        ARender::getRenderer()->pushMaskBefore();
+    static void pushMask(IRenderer& render, Callable&& maskRenderer) {
+        render.pushMaskBefore();
         maskRenderer();
-        ARender::getRenderer()->pushMaskAfter();
+        render.pushMaskAfter();
     }
 
     /**
@@ -44,56 +38,60 @@ namespace RenderHints
      * @param maskRenderer function - mask renderer
      */
     template<aui::invocable Callable>
-    static void popMask(Callable&& maskRenderer) {
-        ARender::getRenderer()->popMaskBefore();
+    static void popMask(IRenderer& render, Callable&& maskRenderer) {
+        render.popMaskBefore();
         maskRenderer();
-        ARender::getRenderer()->popMaskAfter();
+        render.popMaskAfter();
     }
 
     template<aui::invocable Callable>
-    class PushMask
-    {
-    private:
-        Callable mMaskRenderer;
-
+    struct PushMask {
     public:
-        inline explicit PushMask(Callable&& maskRenderer):
-                mMaskRenderer(std::forward<Callable>(maskRenderer))
-        {
-            pushMask(std::forward<Callable>(mMaskRenderer));
+        inline explicit PushMask(IRenderer& render, Callable&& maskRenderer) :
+                render(render),
+                maskRenderer(std::forward<Callable>(maskRenderer)) {
+            pushMask(render, std::forward<Callable>(maskRenderer));
         }
+
         inline ~PushMask() {
-            popMask(std::forward<Callable>(mMaskRenderer));
+            popMask(render, std::forward<Callable>(maskRenderer));
         }
+
+    private:
+        IRenderer& render;
+        Callable maskRenderer;
     };
 
-    class PushMatrix
-	{
-	private:
-		glm::mat4 mStored;
-		
-	public:
-        inline PushMatrix() {
-            mStored = ARender::getTransform();
-		}
-		inline ~PushMatrix() {
-            ARender::setTransformForced(mStored);
-		}
-	};
-	class PushColor
-	{
-	private:
-		AColor mStored;
-		
-	public:
-        inline PushColor() {
-            mStored = ARender::getColor();
-		}
-		inline ~PushColor() {
-            ARender::setColorForced(mStored);
-		}
-	};
-	class PushState: PushColor, PushMatrix
-	{
-	};
-};
+    struct PushMatrix {
+    public:
+        inline explicit PushMatrix(IRenderer& render) : render(render), stored(render.getTransform()) {
+        }
+
+        inline ~PushMatrix() {
+            render.setTransformForced(stored);
+        }
+
+    private:
+        IRenderer& render;
+        glm::mat4 stored;
+    };
+
+    struct PushColor {
+    public:
+        inline explicit PushColor(IRenderer& render): render(render), stored(render.getColor()) {
+        }
+
+        inline ~PushColor() {
+            render.setColorForced(stored);
+        }
+
+    private:
+        IRenderer& render;
+        AColor stored;
+    };
+
+    class PushState : PushColor, PushMatrix {
+    public:
+        inline explicit PushState(IRenderer& render): PushColor(render), PushMatrix(render) {}
+    };
+}

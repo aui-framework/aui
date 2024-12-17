@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -22,11 +17,12 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 #include "AWindowNativePtr.h"
 #include <AUI/Enum/WindowStyle.h>
+#include <AUI/Enum/AScreenOrientation.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -41,7 +37,11 @@
 class ARender;
 class AWindowManager;
 
-class API_AUI_VIEWS AWindow: public ABaseWindow
+/**
+ * @brief Represents a window in the underlying windowing system.
+ * @ingroup views
+ */
+class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
@@ -52,7 +52,6 @@ class API_AUI_VIEWS AWindow: public ABaseWindow
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
-        ARender::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -148,6 +147,9 @@ public:
     void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
+#if AUI_PLATFORM_LINUX
+    void applyGeometryToChildren() override;
+#endif
 
     void onFocusAcquired() override;
     void onFocusLost() override;
@@ -170,7 +172,7 @@ public:
     /**
      * @return Current window for current thread.
      */
-    static ABaseWindow* current();
+    static AWindowBase* current();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
@@ -201,7 +203,7 @@ public:
 
     void forceUpdateCursor() override;
 
-    void requestTouchscreenKeyboardImpl() override;
+    void showTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;
 
     /**
@@ -211,10 +213,15 @@ public:
      */
     void moveToCenter();
 
+    /**
+     * @brief Controls mobile device's screen orientation when this window is on the foreground.
+     * @details
+     * Affects only mobile OSes. On window-based interfaces (desktop) does nothing.
+     */
+    void setMobileScreenOrientation(AScreenOrientation screenOrientation);
+
 signals:
     emits<> closed;
-    emits<int, int> resized;
-    emits<> redrawn;
     emits<> shown;
 
     /**
@@ -242,7 +249,6 @@ signals:
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void flagUpdateLayout() override;
 protected:
 #if AUI_PLATFORM_WIN
     HICON mIcon = nullptr;
@@ -270,6 +276,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+
     float fetchDpiFromSystem() const override;
 
     /**
@@ -299,7 +306,6 @@ private:
 #else
     bool mRedrawFlag = true;
 #endif
-    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
 

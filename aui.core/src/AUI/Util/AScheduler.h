@@ -1,30 +1,24 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <chrono>
-#include <memory>
 #include <functional>
 #include <list>
+#include "AUI/Reflect/AEnumerate.h"
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AConditionVariable.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Util/ABitField.h>
-#include "EnumUtil.h"
 
 
 /**
@@ -74,10 +68,10 @@ private:
     struct Task {
         std::chrono::high_resolution_clock::time_point executionTime;
         std::function<void()> callback;
-        Timer* timer;
+        _weak<Timer> timer;
     };
 public:
-    using TimerHandle = std::list<Timer>::iterator;
+    using TimerHandle = _weak<Timer>;
 
     AScheduler();
 
@@ -113,63 +107,67 @@ public:
     template<typename Duration>
     TimerHandle timer(Duration timeout, std::function<void()> callback) {
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-        Timer asTimer = {
+        Timer t = {
                 millis,
                 millis + currentTime(),
                 std::move(callback)
         };
+        auto asTimer = _new<Timer>(std::move(t));
 
         std::unique_lock lock(mSync);
-        mTimers.push_back(std::move(asTimer));
-        auto t = std::prev(mTimers.end());
-        lock.unlock();
-        enqueueTimer(&*t);
-        return t;
+        mTimers.push_back(asTimer);
+        enqueueTimer(asTimer);
+        return asTimer;
     }
 
 
-    void removeTimer(TimerHandle t);
+    void removeTimer(const TimerHandle& t);
 
+    [[nodiscard]]
     bool emptyTasks() const noexcept {
         return mTasks.empty();
+    }
+
+    void stop() {
+        mIsRunning = false;
+        mCV.notify_all();
     }
 
 
 private:
     AMutex mSync;
     AConditionVariable mCV;
+    bool mIsRunning = false;
 
     std::list<Task> mTasks;
-    std::list<Timer> mTimers;
+    std::list<_<Timer>> mTimers;
 
     static std::chrono::high_resolution_clock::time_point currentTime() noexcept {
         return std::chrono::high_resolution_clock::now();
     }
 
-    void enqueueTimer(Timer* timer) {
+    void enqueueTimer(const _<Timer>& timer) {
         Task t = {
-            timer->nextExecution,
-            [this, timer]() {
-                timer->callback();
-                enqueueTimer(timer);
-            },
-            timer
+                timer->nextExecution,
+                [this, timer]() {
+                    timer->callback();
+                    std::unique_lock lock(mSync);
+                    enqueueTimer(timer);
+                },
+                timer
         };
         timer->nextExecution += timer->timeout;
         enqueueTask(std::move(t));
     }
 
 
-    Task* enqueueTask(Task&& asTask) {
+    void enqueueTask(Task&& asTask) {
         auto whereToInsert = std::find_if(mTasks.begin(), mTasks.end(), [&](const Task& rhs) {
             return asTask.executionTime < rhs.executionTime;
         });
 
-        auto p = &*mTasks.insert(whereToInsert, std::move(asTask));
+        mTasks.insert(whereToInsert, std::move(asTask));
         mCV.notify_all();
-        return p;
     }
 
 };
-
-

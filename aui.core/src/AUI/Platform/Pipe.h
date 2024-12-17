@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -29,6 +24,9 @@
 #endif
 
 
+/**
+ * @brief Unix pipe RAII wrapper.
+ */
 class Pipe: public aui::noncopyable {
 public:
 #if AUI_PLATFORM_WIN
@@ -51,26 +49,30 @@ public:
     }
 
 
-    [[nodiscard]]
-    pipe_t in() const noexcept {
-        return mIn;
-    }
-
+    /**
+     * @brief Out pipe. Also known as pipe[0].
+     */
     [[nodiscard]]
     pipe_t out() const noexcept {
         return mOut;
     }
 
-    void closeIn() noexcept;
-    void closeOut() noexcept;
-
+    /**
+     * @brief In pipe. Also known as pipe[1].
+     */
     [[nodiscard]]
-    pipe_t stealIn() noexcept {
-        auto copy = mIn;
-        mIn = 0;
-        return copy;
+    pipe_t in() const noexcept {
+        return mIn;
     }
 
+    void closeOut() noexcept;
+    void closeIn() noexcept;
+
+    /**
+     * @brief Steals ownership of the out pipe outside of the Pipe class.
+     * @details
+     * Resets the pipe value to zero. Caller is responsible for closing the pipe.
+     */
     [[nodiscard]]
     pipe_t stealOut() noexcept {
         auto copy = mOut;
@@ -78,7 +80,27 @@ public:
         return copy;
     }
 
+    /**
+     * @brief Steals ownership of the in pipe outside of the Pipe class.
+     * @details
+     * Resets the pipe value to zero. Caller is responsible for closing the pipe.
+     */
+    [[nodiscard]]
+    pipe_t stealIn() noexcept {
+        auto copy = mIn;
+        mIn = 0;
+        return copy;
+    }
+
+
 private:
+    /**
+     * @brief Out pipe. Also known as pipe[0].
+     */
     pipe_t mOut;
+
+    /**
+     * @brief In pipe. Also known as pipe[1].
+     */
     pipe_t mIn;
 };

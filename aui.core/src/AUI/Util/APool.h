@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -21,31 +16,32 @@
 #include <AUI/Common/SharedPtrTypes.h>
 
 template<typename T>
-class APool {
+class APool: public aui::noncopyable {
 private:
-    std::function<T*()> mFactory;
-    AQueue<T*> mQueue;
+    using Factory = std::function<_unique<T>()>;
+    Factory mFactory;
+    AQueue<_unique<T>> mQueue;
     std::shared_ptr<bool> mPoolAlive = std::make_shared<bool>(true);
 
 
     template <typename Ptr = _<T>>
     Ptr getImpl() noexcept {
-        T* t;
+        _unique<T> t;
         if (mQueue.empty()) {
             t = mFactory();
         } else {
-            t = mQueue.front();
+            t = std::move(mQueue.front());
             mQueue.pop();
         }
         if constexpr (std::is_same_v<Ptr, _<T>>) {
-            return aui::ptr::manage(t, APoolDeleter(this));
+            return aui::ptr::manage(t.release(), APoolDeleter(this));
         } else {
-            return std::unique_ptr<T, APoolDeleter>(t, APoolDeleter(this));
+            return std::unique_ptr<T, APoolDeleter>(t.release(), APoolDeleter(this));
         }
     }
 
 public:
-    explicit APool(const std::function<T*()>& factory) noexcept : mFactory(factory) {}
+    explicit APool(Factory factory) noexcept : mFactory(std::move(factory)) {}
 
     struct APoolDeleter {
         APool<T>* pool;
@@ -55,7 +51,7 @@ public:
 
         void operator()(T* t) {
             if (*poolAlive) {
-                pool->mQueue.push(t);
+                pool->mQueue.push(_unique<T>(t));
             } else {
                 delete t;
             }
@@ -64,10 +60,6 @@ public:
 
     ~APool() {
         *mPoolAlive = false;
-        while (!mQueue.empty()) {
-            delete mQueue.front();
-            mQueue.pop();
-        }
     }
     auto get() noexcept {
         return getImpl<_<T>>();

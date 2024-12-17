@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
+option(AUI_COROUTINES "Use C++20 coroutines" OFF)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
+aui_enable_benchmarks(aui.core)
 
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -26,8 +28,17 @@ if(AUI_DEBUG)
 else()
     target_compile_definitions(aui.core PUBLIC AUI_DEBUG=0)
 endif()
+
 if (AUI_CATCH_UNHANDLED)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
+endif()
+
+if (AUI_COROUTINES)
+    target_compile_definitions(aui.core PUBLIC AUI_COROUTINES=1)
+endif()
+
+if (AUI_PROFILING)
+    target_compile_definitions(aui.core PUBLIC AUI_PROFILING=1)
 endif()
 
 if (NOT WIN32)
@@ -35,53 +46,37 @@ if (NOT WIN32)
         set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
     endif()
 
-    # probe for backtrace
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test)
-    file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp [[
-    #include <execinfo.h>
-    #include <backtrace.h>
-    int main() {
-        void* buffer[1024];
-        int n = backtrace(buffer, 1024);
-        return 0;
-    }
-    ]])
+    if (AUI_PLATFORM_LINUX)
+        auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
+                    CMAKELISTS_CUSTOM cmake/backtrace.cmake)
+        set(_use_backtrace TRUE)
+    else()
 
-    try_compile(_use_backtrace ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test/b ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp OUTPUT_VARIABLE _tmp)
-
-    if (NOT _use_backtrace)
-        if (AUI_PLATFORM_LINUX)
-            auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
-                        CMAKELISTS_CUSTOM cmake/backtrace.cmake)
-            set(_use_backtrace TRUE)
-        else()
-
-            # probe for unwind
-            file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unwind_test)
-            file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp [[
+        # probe for unwind
+        file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unwind_test)
+        file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp [[
 #include <dlfcn.h>
 #include <unwind.h>
 
 static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg)
 {
-    uintptr_t pc = _Unwind_GetIP(context);
-    return _URC_NO_REASON;
+uintptr_t pc = _Unwind_GetIP(context);
+return _URC_NO_REASON;
 }
 
 size_t captureBacktrace(void** buffer, size_t max)
 {
-    _Unwind_Backtrace(unwindCallback, nullptr);
+_Unwind_Backtrace(unwindCallback, nullptr);
 
-    return 0;
+return 0;
 }
 int main() {
-    captureBacktrace(nullptr, 0);
-    return 0;
+captureBacktrace(nullptr, 0);
+return 0;
 }
-            ]])
+        ]])
 
-            try_compile(_use_unwind ${CMAKE_CURRENT_BINARY_DIR}/unwind_test/b ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp OUTPUT_VARIABLE _tmp)
-        endif ()
+        try_compile(_use_unwind ${CMAKE_CURRENT_BINARY_DIR}/unwind_test/b ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp OUTPUT_VARIABLE _tmp)
     endif ()
 endif()
 
@@ -123,6 +118,7 @@ foreach(_var AUI_PLATFORM_WIN
              AUI_PLATFORM_IOS
              AUI_PLATFORM_ANDROID
              AUI_PLATFORM_UNIX
+             AUI_PLATFORM_EMSCRIPTEN
 
              AUI_COMPILER_CLANG
              AUI_COMPILER_GCC
@@ -130,6 +126,8 @@ foreach(_var AUI_PLATFORM_WIN
              
              AUI_ARCH_X86
              AUI_ARCH_X86_64
+             AUI_ARCH_ARM_64
+             AUI_ARCH_ARM_V7
         )
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
@@ -150,13 +148,9 @@ auib_import(range-v3 https://github.com/ericniebler/range-v3
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
-if (AUI_PLATFORM_ANDROID)
-    target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
-endif()
-
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)
     if (AUI_COMPILER_GCC)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
-    endif ()
+    endif()
 endif()

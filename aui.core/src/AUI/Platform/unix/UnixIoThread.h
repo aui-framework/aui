@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 4/19/22.
@@ -23,8 +18,7 @@
 #include <AUI/Thread/AThread.h>
 #include <sys/poll.h>
 #include "UnixEventFd.h"
-#include <AUI/Thread/ACutoffSignal.h>
-#include <AUI/Util/EnumUtil.h>
+#include <AUI/Thread/AFuture.h>
 #include <AUI/Util/ABitField.h>
 #include <unordered_map>
 
@@ -43,6 +37,9 @@ AUI_ENUM_FLAG(UnixPollEvent) {
 #endif
 
 
+/**
+ * @brief Poll-based event loop to handle events of file descriptors.
+ */
 class API_AUI_CORE UnixIoThread {
 public:
     using Callback = std::function<void(ABitField<UnixPollEvent> triggeredFlags)>;
@@ -72,6 +69,7 @@ private:
     AVector<pollfd> mPollFd;
     AVector<Callback> mCallbacks;
 #endif
+    AMessageQueue<> mMessageQueue;
 
     template<aui::invocable Callback>
     void executeOnIoThreadBlocking(Callback&& callback) {
@@ -80,12 +78,13 @@ private:
             return;
         }
 
-        ACutoffSignal cv;
-        mThread->enqueue([&]() noexcept {
+        AFuture<> cs;
+        mMessageQueue.enqueue([&] {
             callback();
-            cv.makeSignal();
+            cs.supplyValue();
         });
-        cv.waitForSignal();
+        mNotifyEvent.set();
+        cs.wait();
     }
 
     UnixIoThread() noexcept;

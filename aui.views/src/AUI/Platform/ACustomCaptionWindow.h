@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 #include "ACustomWindow.h"
@@ -23,22 +18,70 @@
 
 using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
 
-class API_AUI_VIEWS ACustomCaptionWindow: public ACustomWindow, public CustomCaptionWindowImplCurrent
-{
+
+/**
+ * @brief Represents a window with customizable caption bar.
+ * @ingroup views
+ * @details
+ * ACustomCaptionWindow implements a fully custom window with customizable caption (title) bar. The way it's done is
+ * platform dependent. The goal is to implement a customizable caption bar yet preserve native system caption bar look
+ * and feel.
+ *
+ * Use getCaptionContainer to fill up window caption.
+ *
+ * Use getContentContainer to fill up the window contents.
+ * @note
+ * Do not use setContents/setLayout.
+ *
+ * Depending on the platform, AUI provides following ASS classes to customize:
+ * - ".window-title" for whole window caption container. It has BackgroundSolid by default.
+ * - ".title" for window title label
+ * - ".window-title-content" for your contents
+ * - ".minimize" for minimize button
+ * - ".close" for close button
+ * - ".middle" for maximize button
+ *
+ * # Windows
+ * Since Windows does not provide APIs to the customize caption, AUI implements and renders caption by itself, including
+ * window icon, title and buttons.
+ */
+class API_AUI_VIEWS ACustomCaptionWindow : public ACustomWindow, private CustomCaptionWindowImplCurrent {
+public:
+    ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false);
+
+    ACustomCaptionWindow() : ACustomCaptionWindow("Custom Caption Window", 240, 124) {}
+
+    ~ACustomCaptionWindow() override = default;
+
+    /**
+     * @return customizable container inside caption.
+     */
+    [[nodiscard]]
+    const _<AViewContainer>& getCaptionContainer() const
+    {
+        return mCaptionContainer;
+    }
+
+    /**
+     * @return actual window contents.
+     */
+    [[nodiscard]]
+    const _<AViewContainer>& getContentContainer() const
+    {
+        return mContentContainer;
+    }
 
 protected:
     bool isCustomCaptionMaximized() override;
 
-public:
+private:
+    // these functions are hidden; use ACustomCaptionWindow::getContentContainer() instead
+    using ACustomWindow::setLayout;
+    using ACustomWindow::setViews;
+    using ACustomWindow::addView;
+    using ACustomWindow::addViews;
+    using ACustomWindow::removeAllViews;
+    using ACustomWindow::removeView;
+    using ACustomWindow::setContents;
 
-	ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false);
-
-	ACustomCaptionWindow():
-            ACustomCaptionWindow("Custom Caption Window", 240, 124)
-	{
-	}
-
-
-
-	virtual ~ACustomCaptionWindow() = default;
 };

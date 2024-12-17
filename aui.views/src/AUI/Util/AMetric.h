@@ -1,26 +1,21 @@
-﻿//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <AUI/Core.h>
 #include <type_traits>
-#include <cassert>
 #include <ostream>
 #include <tuple>
+#include "AUI/Util/Assert.h"
 
 class AString;
 
@@ -116,8 +111,9 @@ public:
     constexpr AMetric(T value):
         AMetric(value, T_PX)
     {
-        assert(("please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to initialise "
-                "AMetric without literal", value == 0));
+        AUI_ASSERTX(value == 0,
+                    "please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to "
+                    "initialise AMetric without literal");
     }
 
     constexpr AMetric(float value, Unit unit): mValue(value), mUnit(unit) {
@@ -149,28 +145,78 @@ public:
         return {-mValue, mUnit};
     }
 
-    AMetric& operator+=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator+=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue += rhs.mValue;
         return *this;
     }
 
-    AMetric& operator-=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator-=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue -= rhs.mValue;
         return *this;
     }
 
-    AMetric& operator*=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator*=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue *= rhs.mValue;
         return *this;
     }
 
-    AMetric& operator/=(AMetric rhs) {
-        assert(mUnit == rhs.mUnit);
+    AMetric& operator/=(AMetric rhs) noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
         mValue /= rhs.mValue;
         return *this;
+    }
+
+    AMetric operator+(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy += rhs;
+        return copy;
+    }
+
+    AMetric operator-(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy -= rhs;
+        return copy;
+    }
+
+    AMetric operator*(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy *= rhs;
+        return copy;
+    }
+
+    AMetric operator/(AMetric rhs) const noexcept {
+        AUI_ASSERT(mUnit == rhs.mUnit);
+        auto copy = *this;
+        copy /= rhs;
+        return copy;
+    }
+
+    AMetric& operator*=(float rhs) noexcept {
+        mValue *= rhs;
+        return *this;
+    }
+
+    AMetric& operator/=(float rhs) noexcept {
+        mValue /= rhs;
+        return *this;
+    }
+
+    AMetric operator*(float rhs) const noexcept {
+        auto copy = *this;
+        copy *= rhs;
+        return copy;
+    }
+
+    AMetric operator/(float rhs) const noexcept {
+        auto copy = *this;
+        copy /= rhs;
+        return copy;
     }
 
     bool operator==(const AMetric& rhs) const {
@@ -183,15 +229,15 @@ public:
 };
 
 
-constexpr inline AMetric operator"" _px(unsigned long long v)
+constexpr inline AMetric operator""_px(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PX);
 }
-constexpr inline AMetric operator"" _dp(unsigned long long v)
+constexpr inline AMetric operator""_dp(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_DP);
 }
-constexpr inline AMetric operator"" _pt(unsigned long long v)
+constexpr inline AMetric operator""_pt(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
 }

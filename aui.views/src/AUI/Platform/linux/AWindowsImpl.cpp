@@ -1,25 +1,26 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
+#include <X11/Xlib.h>
+#include <unistd.h>
+#include <poll.h>
+#include <fcntl.h>
 
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Platform/ErrorToException.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -262,9 +263,8 @@ void AWindow::show() {
     }
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
         AThread::current() << [&]() {
-            redraw();
+            XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
         };
-        XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
     emit shown();
@@ -363,19 +363,63 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 
 void AWindowManager::notifyProcessMessages() {
-    if (!mWindows.empty()) {
-        if (CommonRenderingContext::ourDisplay) XClearArea(CommonRenderingContext::ourDisplay, mWindows.first()->mHandle, 0, 0, 1, 1, true);
-        mXNotifyCV.notify_all();
+    if (mWindows.empty()) {
+        return;
     }
+    if (mFastPathNotify.exchange(true)) {
+        return;
+    }
+    char dummy = 0;
+    int unused = write(mNotifyPipe.in(), &dummy, sizeof(dummy));
 }
 
 void AWindowManager::loop() {
+    // make sure notifyProcessMessages would not block as it syscalls write to the pipe
+    fcntl(mNotifyPipe.in(), F_SETFL, O_NONBLOCK);
+    pollfd ps[] = {
+        {
+            .fd = XConnectionNumber(CommonRenderingContext::ourDisplay),
+            .events = POLLIN,
+        },
+        {
+            .fd = mNotifyPipe.out(),
+            .events = POLLIN,
+        },
+    };
+
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
         try {
             xProcessEvent(ev);
         } catch (const AException& e) {
             ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
+
+        AThread::processMessages();
+        if (AWindow::isRedrawWillBeEfficient()) {
+            for (auto &window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    AWindow::currentWindowStorage() = window.get();
+                    mWatchdog.runOperation([&] {
+                        window->redraw();
+                    });
+                }
+            }
+        }
+
+        // [1000 ms timeout] sometimes, leaving an always rerendering window (game) work a long time deadlocks the loop
+        // in infinite poll.
+        const auto timeout = mFastPathNotify || ranges::any_of(mWindows, [](const _<AWindow>& window) { return window->mRedrawFlag; }) ? 0 : 1000;
+        if (int p = poll(ps, std::size(ps), timeout); p < 0) {
+            aui::impl::unix_based::lastErrorToException("eventloop poll failed");
+        } else if (p == 0) {
+            continue;
+        }
+        mFastPathNotify = false;
+        if (ps[1].revents & POLLIN) {
+            char unused[0xff];
+            while (read(mNotifyPipe.out(), unused, std::size(unused)) == std::size(unused));
         }
     }
 }
@@ -399,14 +443,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 switch (ev.type) {
                     case Expose: {
                         window = locateWindow(ev.xexpose.window);
-                        window->mRedrawFlag = false;
-                        window->redraw();
-                        XSyncValue syncValue;
-                        XSyncIntsToValue(&syncValue,
-                                        window->mXsyncRequestCounter.lo,
-                                        window->mXsyncRequestCounter.hi);
-                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
-
+                        window->flagRedraw();
                         break;
                     }
                     case ClientMessage: {
@@ -436,7 +473,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         if (buf[0] != 127) {
                             if (count) {
                                 AString s(buf);
-                                assert(!s.empty());
+                                AUI_ASSERT(!s.empty());
                                 window->onCharEntered(s[0]);
                             }
                         }
@@ -469,15 +506,13 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->mRenderingContext)->beginResize(*window);
-                            AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
                             window->AViewContainer::setSize(size);
                             AUI_NULLSAFE(window->mRenderingContext)->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
                             w->handleXConfigureNotify();
                         }
-                        window->mRedrawFlag = false;
-                        window->redraw();
+                        window->mRedrawFlag = true;
 
                         XSyncValue syncValue;
                         XSyncIntsToValue(&syncValue,
@@ -620,22 +655,6 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             });
         }
 
-        {
-            std::unique_lock lock(mXNotifyLock);
-            mXNotifyCV.wait_for(lock, std::chrono::microseconds(10000));
-        }
-        AThread::processMessages();
-        if (AWindow::isRedrawWillBeEfficient()) {
-            for (auto &window : mWindows) {
-                if (window->mRedrawFlag) {
-                    window->mRedrawFlag = false;
-                    AWindow::currentWindowStorage() = window.get();
-                    mWatchdog.runOperation([&] {
-                        window->redraw();
-                    });
-                }
-            }
-        }
     } catch(NotFound e) {
 
     }
@@ -653,13 +672,13 @@ AString AWindowManager::xClipboardPasteImpl() {
     if (!auiWindow)
         return {};
     auto nativeHandle = auiWindow->getNativeHandle();
-    assert(nativeHandle);
+    AUI_ASSERT(nativeHandle);
 
     XConvertSelection(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, CommonRenderingContext::ourAtoms.utf8String, CommonRenderingContext::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);
 
     XEvent ev;
-    for (;;)
+    for (int i = 0; i < 30; ++i)
     {
         XNextEvent(CommonRenderingContext::ourDisplay, &ev);
         switch (ev.type)
@@ -697,6 +716,7 @@ AString AWindowManager::xClipboardPasteImpl() {
                 };
         }
     }
+    return "";
 }
 
 void AWindowManager::xClipboardCopyImpl(const AString& text) {
@@ -708,7 +728,7 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
-    ABaseWindow::blockUserInput(blockUserInput);
+    AWindowBase::blockUserInput(blockUserInput);
     // TODO linux impl
 }
 
@@ -716,14 +736,21 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
-    ABaseWindow::requestTouchscreenKeyboardImpl();
+void AWindow::showTouchscreenKeyboardImpl() {
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {
 
+}
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+
+}
+void AWindow::applyGeometryToChildren() {
+    AWindowBase::applyGeometryToChildren();
 }

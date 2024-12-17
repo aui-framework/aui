@@ -1,25 +1,19 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 4/19/2022.
 //
 
 #include "WinIoThread.h"
-#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Thread/AFuture.h>
 #include <Windows.h>
@@ -34,7 +28,7 @@ namespace {
     class MyEventLoop: public IEventLoop {
     public:
         MyEventLoop(): mNotifyHandle(CreateEvent(nullptr, false, false, nullptr)) {
-            assert(mNotifyHandle != nullptr);
+            AUI_ASSERT(mNotifyHandle != nullptr);
         }
 
         ~MyEventLoop() override {
@@ -43,7 +37,7 @@ namespace {
 
         void notifyProcessMessages() override {
             auto r = SetEvent(mNotifyHandle);
-            assert(r);
+            AUI_ASSERT(r);
         }
 
         void loop() override {
@@ -65,9 +59,10 @@ WinIoThread::WinIoThread() noexcept: mThread(_new<AThread>([] {
     AThread::current()->getCurrentEventLoop()->loop();
 })) {
     mThread->start();
-    ACutoffSignal cutoff;
+
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cutoff.makeSignal();
+        cs.supplyValue();
     });
-    cutoff.waitForSignal();
+    cs.wait();
 }

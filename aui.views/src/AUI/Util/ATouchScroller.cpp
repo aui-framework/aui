@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "ATouchScroller.h"
 #include "AUI/Logging/ALogger.h"
@@ -24,7 +19,7 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     mState = WaitingForThresholdState {
         .pointer = e.pointerIndex,
         .origin  = e.position,
@@ -32,10 +27,12 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 }
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
-    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    AUI_ASSERTX(e.pointerIndex.isFinger(), "ATouchScroller is intended only for touchscreen events");
     if (auto s = std::get_if<ScrollingState>(&mState)) {
         auto direction = glm::normalize(s->currentVelocity);
-        auto velocity = glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
+        auto velocity = glm::max(glm::length(s->prevPrevVelocity),
+                                 glm::length(s->prevVelocity),
+                                 glm::length(s->currentVelocity));
         auto fps = static_cast<float>(AWindow::current()->getFps());
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
@@ -73,6 +70,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
     s.lastFrameTime = now;
 
     auto delta = s.previousPosition - pos;
+    s.prevPrevVelocity = s.prevVelocity;
     s.prevVelocity = s.currentVelocity;
     s.currentVelocity = delta * INITIAL_ACCELERATION_COEFFICIENT;
 
@@ -87,7 +85,7 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
             return r.origin;
         },
         [](std::nullopt_t) -> glm::ivec2 {
-            assert((0, "ATouchScroller::origin is called in invalid state"));
+            AUI_ASSERTX(0, "ATouchScroller::origin is called in invalid state");
             return {0, 0};
         },
     }, mState);

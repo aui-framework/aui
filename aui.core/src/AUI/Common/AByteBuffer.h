@@ -1,24 +1,21 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
+#include "AUI/Util/Assert.h"
 #include "SharedPtr.h"
 
 #include <cstddef>
+#include <cstring>
 #include <string>
 #include <stdexcept>
 #include <cassert>
@@ -38,6 +35,8 @@ private:
     size_t mSize = 0;
 
 public:
+    using iterator = char*;
+
     AByteBuffer();
     AByteBuffer(const char* buffer, size_t size);
     explicit AByteBuffer(size_t initialCapacity);
@@ -59,6 +58,11 @@ public:
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
         return operator AByteBufferView().slice(offset, size);
+    }
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
+        return operator AByteBufferView().slice(offset);
     }
 
     /**
@@ -94,7 +98,7 @@ public:
      * @brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
      *        enough to store <code>size</code> bytes.
      */
-    void ensureReserved(size_t size) {
+    void grow(size_t size) {
         auto availableToWrite = getAvailableToWrite();
         if (availableToWrite < size) {
             increaseInternalBuffer((glm::max)(getReserved() * 2, size_t(size - availableToWrite)));
@@ -154,7 +158,7 @@ public:
      * @param s new size of the payload
      */
     void setSize(size_t s) {
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mCapacity));
+        AUI_ASSERTX(s <= mCapacity, "size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?");
         mSize = s;
     }
     /**
@@ -170,7 +174,7 @@ public:
      */
     void increaseSize(size_t s) {
         mSize += s;
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && mSize <= mCapacity));
+        AUI_ASSERTX(mSize <= mCapacity, "size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?");
     }
 
     /**
@@ -243,6 +247,7 @@ public:
             return *this;
         }
 
+        delete[] mBuffer;
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;
@@ -258,8 +263,10 @@ public:
             return *this;
         }
 
-        mBuffer = other.mBuffer;
-        mCapacity = other.mCapacity;
+        if (mCapacity < other.size()) {
+            reallocate(other.size());
+        }
+        std::memcpy(mBuffer, other.data(), other.size());
         mSize = other.mSize;
 
         return *this;
@@ -303,6 +310,19 @@ public:
     [[nodiscard]]
     AString toBase64String() const {
         return AByteBufferView(*this).toBase64String();
+    }
+
+    iterator erase(iterator begin, iterator end) noexcept {
+        AUI_ASSERT(ownsIterator(begin));
+        AUI_ASSERT(ownsIterator(end));
+        std::memmove(begin, end, std::distance(end, AByteBuffer::end()));
+        setSize(size() - std::distance(begin, end));
+        return begin;
+    }
+
+    [[nodiscard]]
+    bool ownsIterator(iterator i) const noexcept {
+        return i >= begin() && i <= end();
     }
 
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 30.08.2020.
@@ -79,8 +74,11 @@ inline std::ostream& operator<<(std::ostream& o, EnumWithoutEnumValue t) {
 
 
 AUI_ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
+
 AUI_ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
-AUI_ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
+
+AUI_ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2,
+                namespaceeee::ATest2::TEST2_3)
 
 
 TEST(Reflect, NameClass) {
@@ -98,16 +96,6 @@ TEST(Reflect, NameEnum) {
     ASSERT_EQ((AClass<ATest>::name()), "ATest");
 }
 
-TEST(Reflect, EnumerateNames) {
-    AMap<AString, ATest> ref = {
-        {"VALUE1", VALUE1},
-        {"VALUE2", VALUE2},
-        {"VALUE3", VALUE3},
-    };
-
-    ASSERT_TRUE((AEnumerate<ATest>::mapValueByName<VALUE1, VALUE2, VALUE3>() == ref));
-}
-
 TEST(Reflect, EnumerateAll) {
     AMap<AString, ATest> ref = {
             {"VALUE1", VALUE1},
@@ -116,7 +104,7 @@ TEST(Reflect, EnumerateAll) {
             {"VALUE4", VALUE4},
     };
 
-    auto test = AEnumerate<ATest>::all();
+    auto test = AEnumerate<ATest>::nameToValueMap();
     ASSERT_EQ(test, ref);
 }
 
@@ -126,7 +114,7 @@ TEST(Reflect, NamespaceEnumerateNames) {
             {"V2", namespaceeee::V2},
             {"V3", namespaceeee::V3},
     };
-    auto test = AEnumerate<namespaceeee::ATest>::all();
+    auto test = AEnumerate<namespaceeee::ATest>::nameToValueMap();
     ASSERT_EQ(test, ref);
 }
 
@@ -136,7 +124,7 @@ TEST(Reflect, NamespaceEnumerateEnumClassNames) {
             {"TEST2_2", namespaceeee::ATest2::TEST2_2},
             {"TEST2_3", namespaceeee::ATest2::TEST2_3},
     };
-    auto test = AEnumerate<namespaceeee::ATest2>::all();
+    auto test = AEnumerate<namespaceeee::ATest2>::nameToValueMap();
     ASSERT_TRUE((test == ref));
 }
 

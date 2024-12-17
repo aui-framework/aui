@@ -1,0 +1,43 @@
+name: Feature request
+description: Suggest an idea for this project
+labels: ["feature request"]
+body:
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: One More Step Before opening this issue
+      description: |
+        By submitting this issue, I'm agree:
+      options:
+        - label: To follow our [Code of Conduct](https://github.com/aui-framework/aui/blob/master/CODE_OF_CONDUCT.md)
+          required: true
+        - label: I've considered [existing issues on GitHub page](https://github.com/aui-framework/aui/issues) and didn't find a similar issue
+          required: true
+
+  - type: textarea
+    id: cause
+    attributes:
+      label: Describe the need of your project
+      description: A clear and concise description of what the need or problem is.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: A clear and concise description of what you want to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: What did you try so far to accomplish the goal?
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add any other context (e.g., link to you repo) or screenshots about the feature request here.

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 21.09.2020.
@@ -23,7 +18,8 @@
 #include "AViewContainer.h"
 #include "ARadioButton.h"
 #include "AUI/Model/AListModel.h"
-#include "AUI/Layout/AVerticalLayout.h"
+#include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Model/IListModel.h>
 
 /**
@@ -40,15 +36,21 @@ private:
 
 public:
     template<typename... RadioButtons>
-    explicit ARadioGroup(RadioButtons&&... radioButtons): mGroup(_new<ARadioButton::Group>()) {
-        setLayout(_new<AVerticalLayout>());
-        aui::parameter_pack::for_each([&](const _<ARadioButton>& v) {
-            mGroup->addRadioButton(v);
-            addView(v);
-        }, std::forward<RadioButtons>(radioButtons)...);
+    explicit ARadioGroup(RadioButtons&&... radioButtons): ARadioGroup() {
+        setLayout(std::make_unique<AVerticalLayout>());
+        setViews({ std::forward<RadioButtons>(radioButtons)... });
     }
     ARadioGroup();
     ~ARadioGroup() override;
+
+    void setViews(AVector<_<AView>> views) {
+        for (const _<AView>& v : views) {
+            if (auto rb = _cast<ARadioButton>(v)) {
+                mGroup->addRadioButton(rb);
+                addView(v);
+            }
+        }
+    }
 
     void setModel(const _<IListModel<AString>>& model);
 
@@ -58,6 +60,7 @@ public:
     [[nodiscard]] int getSelectedId() const {
         return mGroup->getSelectedId();
     }
+    void setSelectedId(int id) const;
 
 signals:
     emits<AListModelIndex> selectionChanged;
@@ -65,9 +68,10 @@ signals:
 
 
 namespace declarative {
-    struct RadioGroup: aui::ui_building::view<ARadioGroup> {
-    public:
-        using view<ARadioGroup>::view;
-
+    struct RadioGroup: aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup> {
+        using aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup>::layouted_container_factory;
+        struct Horizontal: aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup> {
+            using aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
+        };
     };
 }

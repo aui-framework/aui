@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 3/7/2022.
@@ -23,10 +18,11 @@
 #include <dbghelp.h>
 #include <AUI/IO/APath.h>
 #include <mutex>
+#include "AUI/Thread/AMutex.h"
 
 struct Win32SymService {
     HANDLE process;
-    std::mutex mutex;
+    AMutex mutex;
 
     Win32SymService() noexcept {
         process = GetCurrentProcess();
@@ -40,18 +36,22 @@ static Win32SymService& symService() noexcept {
 }
 
 AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
-    symService();
-    void* backtrace[128];
-    assert(("too many", maxFrames <= std::size(backtrace)));
-    std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, maxFrames, backtrace, nullptr);
+    try {
+        symService();
+        void* backtrace[128];
+        AUI_ASSERTX(maxFrames <= std::size(backtrace), "too many");
+        std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, maxFrames, backtrace, nullptr);
 
-    AVector<Entry> entries;
-    entries.reserve(entryCount);
-    for (std::size_t i = 0; i < entryCount; ++i) {
-        entries << Entry{backtrace[i]};
+        AVector<Entry> entries;
+        entries.reserve(entryCount);
+        for (std::size_t i = 0; i < entryCount; ++i) {
+            entries << Entry{backtrace[i]};
+        }
+
+        return AStacktrace(std::move(entries));
+    } catch (...) {
+        return AStacktrace({});
     }
-
-    return AStacktrace(std::move(entries));
 }
 
 

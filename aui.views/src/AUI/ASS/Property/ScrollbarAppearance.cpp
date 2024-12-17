@@ -5,8 +5,8 @@
 #include "ScrollbarAppearance.h"
 #include <AUI/View/AScrollArea.h>
 
-void ass::prop::Property<ScrollbarAppearance>::applyFor(AView* view) {
-    if (auto scrollArea = _cast<AViewContainer>(view->sharedPtr())) {
+void ass::prop::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
+    if (auto scrollArea = _cast<AScrollArea>(view->sharedPtr())) {
         scrollArea->setScrollbarAppearance(mInfo);
     }
 }

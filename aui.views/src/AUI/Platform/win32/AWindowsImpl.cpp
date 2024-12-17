@@ -1,25 +1,20 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -33,7 +28,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 #include <AUI/Platform/ACustomWindow.h>
 
 #include <chrono>
@@ -61,7 +56,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
 
-    assert(mHandle == hwnd);
+    AUI_ASSERT(mHandle == hwnd);
 
     static glm::ivec2 lastWindowSize;
 
@@ -88,7 +83,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 auto w = rect->right - rect->left;
                 auto h = rect->bottom - rect->top;
                 wglMakeCurrent(mDC, context.hrc);
-                emit resized(w, h);
                 AViewContainer::setSize(w, h);
             }
             return true;
@@ -153,7 +147,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
                 AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
-                emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
                 switch (wParam) {
@@ -201,7 +194,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_LBUTTONDOWN:
             if (isPressed(APointerIndex::button(AInput::LBUTTON))) {
-                // fix assert(!mPressed);
+                // fix AUI_ASSERT(!mPressed);
                 onPointerReleased({
                     .position = POS,
                     .pointerIndex = APointerIndex::button(AInput::LBUTTON)
@@ -441,7 +434,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.format() & APixelFormat::BYTE);
+    AUI_ASSERT(image.format() & APixelFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);
@@ -499,7 +492,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
     class DropTarget: public AComBase<DropTarget, IDropTarget> {
     public:
-        DropTarget(ABaseWindow* window) : mWindow(window) {}
+        DropTarget(AWindowBase* window) : mWindow(window) {}
 
         HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             auto effect = DROPEFFECT_NONE;
@@ -534,21 +527,21 @@ void AWindow::allowDragNDrop() {
 
     private:
         AMimedData mMimed;
-        ABaseWindow* mWindow;
+        AWindowBase* mWindow;
         DWORD mOleEffect;
     };
     Ole::inst();
 
     auto r = RegisterDragDrop(mHandle, new DropTarget(this));
-    assert(r == S_OK);
+    AUI_ASSERT(r == S_OK);
 }
 
-void AWindow::requestTouchscreenKeyboardImpl() {
-    ABaseWindow::requestTouchscreenKeyboardImpl();
+void AWindow::showTouchscreenKeyboardImpl() {
+    AWindowBase::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    ABaseWindow::hideTouchscreenKeyboardImpl();
+    AWindowBase::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {
@@ -559,4 +552,8 @@ void AWindow::moveToCenter() {
     glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
     glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
     setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
+}
+
+void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
+
 }

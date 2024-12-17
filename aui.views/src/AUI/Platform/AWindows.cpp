@@ -1,22 +1,19 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Performance/APerformanceFrame.h"
+#include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/VulkanRenderingContext.h"
 #include "AUI/Thread/AThread.h"
@@ -41,11 +38,15 @@ bool AWindow::consumesClick(const glm::ivec2& pos) {
 }
 
 void AWindow::onClosed() {
+    emit closed();
     quit();
 }
 
 void AWindow::doDrawWindow() {
-    render({.position = glm::ivec2(0), .size = getSize()});
+    APerformanceSection s("AWindow::doDrawWindow");
+    auto& renderer = mRenderingContext->renderer();
+    renderer.setWindow(this);
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {
@@ -77,27 +78,49 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
+#if AUI_PROFILING
+    APerformanceFrame frame([&](APerformanceSection::Datas sections) {
+        emit performanceFrameComplete(sections);
+    });
+    APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
+#endif
+
     {
         if (isClosed()) {
             return;
         }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        mRenderingContext->beginPaint(*this);
-        ARaiiHelper endPaintCaller = [&] {
+        {
+            APerformanceSection s("IRenderingContext::beginPaint");
+            mRenderingContext->beginPaint(*this);
+        }
+        AUI_DEFER {
+            APerformanceSection s("IRenderingContext::endPaint");
             mRenderingContext->endPaint(*this);
         };
-        AUI_REPEAT(2) { // AText may trigger extra layout update
-            if (mUpdateLayoutFlag) {
-                mUpdateLayoutFlag = false;
-                updateLayout();
+
+        if (mMarkedMinContentSizeInvalid) {
+            AUI_REPEAT(2) { // AText may trigger extra layout update
+                applyGeometryToChildrenIfNecessary();
             }
+            mMarkedMinContentSizeInvalid = false;
+#if AUI_PLATFORM_LINUX
+            if (CommonRenderingContext::ourDisplay != nullptr) {
+                auto sizeHints = aui::ptr::make_unique_with_deleter(XAllocSizeHints(), XFree);
+                sizeHints->flags = PMinSize | PMaxSize;
+                sizeHints->min_width = getMinimumWidth();
+                sizeHints->min_height = getMinimumHeight();
+                sizeHints->max_width = getMaxSize().x;
+                sizeHints->max_height = getMaxSize().y;
+                XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizeHints.get());
+            }
+#endif
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time
@@ -115,8 +138,10 @@ void AWindow::redraw() {
             }
         }
     }
-
-    emit redrawn();
+    {
+        APerformanceSection s2("emit redrawn");
+        emit redrawn();
+    }
 }
 
 _<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
@@ -140,19 +165,20 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    ABaseWindow::onPointerMove(pos, event);
+    AWindowBase::onPointerMove(pos, event);
+    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
-    ABaseWindow::onFocusLost();
+    AWindowBase::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
     }
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
-    ABaseWindow::onKeyDown(key);
+    AWindowBase::onKeyDown(key);
     if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
         focusNextView();
     }
@@ -163,18 +189,12 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-ABaseWindow* AWindow::current() {
+AWindowBase* AWindow::current() {
     return currentWindowStorage();
 }
 
-void AWindow::flagUpdateLayout() {
-    flagRedraw();
-    mUpdateLayoutFlag = true;
-}
-
-
 void AWindow::onCloseButtonClicked() {
-    emit closed();
+    close();
 }
 
 
@@ -216,19 +236,13 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     currentWindowStorage() = this;
 
-    connect(closed, this, &AWindow::close);
-
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
 
-#if !AUI_PLATFORM_WIN
-    // windows sends resize event during window initialization but other platforms doesn't.
-    // simulate the same behaviour here.
     ui_thread {
-        emit resized(getWidth(), getHeight());
+        emit sizeChanged(getSize());
     };
-#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
@@ -281,8 +295,14 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
 }
 
 void AWindow::forceUpdateCursor() {
-    ABaseWindow::forceUpdateCursor();
-    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+    if (mForceUpdateCursorGuard) {
+        return;
+    }
+    AWindowBase::forceUpdateCursor();
+    if (!mCursor) {
+        mCursor = ACursor::DEFAULT;
+    }
+    mCursor->applyNativeCursor(this);
 }
 
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.10.2020.
@@ -39,9 +34,9 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 
 
     sei.lpVerb = L"runas";
-    sei.lpFile = applicationFile.c_str();
-    sei.lpParameters = args.c_str();
-    sei.lpDirectory = workingDirectory.c_str();
+    sei.lpFile = aui::win32::toWchar(applicationFile.c_str());
+    sei.lpParameters = aui::win32::toWchar(args.c_str());
+    sei.lpDirectory = aui::win32::toWchar(workingDirectory.c_str());
     sei.hwnd = NULL;
     sei.nShow = SW_NORMAL;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -69,9 +64,11 @@ public:
     }
 
     APath getPathToExecutable() override {
-        wchar_t buf[0x800];
-        auto length = GetModuleFileNameEx(mHandle, nullptr, buf, sizeof(buf));
-        return APath(buf, length);
+        APath result;
+        result.resize(0x1000);
+        result.resize(GetModuleFileNameEx(mHandle, nullptr, aui::win32::toWchar(result), result.length()));
+        result.replaceAll('\\', '/');
+        return result;
     }
 
     int waitForExitCode() override {
@@ -79,19 +76,27 @@ public:
         DWORD exitCode;
         waitForExitCode();
         int r = GetExitCodeProcess(mHandle, &exitCode);
-        assert(r && r != STILL_ACTIVE);
+        AUI_ASSERT(r && r != STILL_ACTIVE);
         return exitCode;
     }
 
     APath getModuleName() override {
-        wchar_t buf[0x800];
-        auto length = GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return APath(buf, length).filename();
+        APath result;
+        result.resize(0x1000);
+        result.resize(GetProcessImageFileName(mHandle, aui::win32::toWchar(result), result.length()));
+        result.replaceAll('\\', '/');
+        return result;
     }
 
     uint32_t getPid() const noexcept override {
         return GetProcessId(mHandle);
     }
+    size_t processMemory() const override { 
+        PROCESS_MEMORY_COUNTERS info;
+        GetProcessMemoryInfo(mHandle, &info, sizeof(info));
+        return (size_t)info.WorkingSetSize; 
+    }
+    
 };
 
 AVector<_<AProcess>> AProcess::all() {
@@ -158,7 +163,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
     for (auto handle : {pipeStdout.out(), pipeStderr.out(), pipeStdin.in() }) {
         if (!SetHandleInformation(handle, HANDLE_FLAG_INHERIT, 0)) {
-            assert((!"SetHandleInformation failed"));
+            AUI_ASSERT((!"SetHandleInformation failed"));
         }
     }
 
@@ -172,13 +177,13 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     });
 
     if (!CreateProcess(nullptr,
-                       const_cast<wchar_t*>(commandLine.c_str()),
+                       const_cast<wchar_t*>(aui::win32::toWchar(commandLine.c_str())),
                        nullptr,
                        nullptr,
                        true,
                        0,
                        nullptr,
-                       mWorkingDirectory.empty() ? nullptr : mWorkingDirectory.c_str(),
+                       mWorkingDirectory.empty() ? nullptr : aui::win32::toWchar(mWorkingDirectory),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mApplicationFile;
@@ -192,7 +197,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
         assert(("process already finished; os signaled process termination second time",
                 !isFinished()));
-        mExitCode.supplyResult(waitForExitCode());
+        mExitCode.supplyValue(waitForExitCode());
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
@@ -224,11 +229,11 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
 
 int AChildProcess::waitForExitCode() {
-    assert(("process handle is null; have you ever run the process?", mProcessInformation.hProcess != nullptr));
+    AUI_ASSERTX(mProcessInformation.hProcess != nullptr, "process handle is null; have you ever run the process?");
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
     DWORD exitCode;
     int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
-    assert(r && r != STILL_ACTIVE);
+    AUI_ASSERT(r && r != STILL_ACTIVE);
     return exitCode;
 }
 
@@ -248,6 +253,12 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mProcessInformation.dwProcessId;
+}
+
+size_t AChildProcess::processMemory() const {
+    PROCESS_MEMORY_COUNTERS info;
+    GetProcessMemoryInfo(mProcessInformation.hProcess, &info, sizeof(info));
+    return (size_t)info.WorkingSetSize; 
 }
 
 

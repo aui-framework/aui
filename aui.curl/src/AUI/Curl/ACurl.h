@@ -1,24 +1,22 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
+#include <cstddef>
+#include <optional>
 #include <queue>
 #include <AUI/ACurl.h>
 
+#include "AUI/IO/AEOFException.h"
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
 #include "AFormMultipart.h"
@@ -108,8 +106,10 @@ public:
     };
 
     enum class Method {
-        GET,
-        POST,
+        HTTP_GET,
+        HTTP_POST,
+        HTTP_PUT,
+        HTTP_DELETE,
     };
 
     /**
@@ -122,11 +122,11 @@ public:
     };
 
 
-    struct ErrorDescription {
+    struct API_AUI_CURL ErrorDescription {
         int curlStatus;
         AString description;
 
-        API_AUI_CURL void throwException() const;
+        void throwException() const;
     };
 
     /**
@@ -184,7 +184,7 @@ public:
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
         AString mUrl, mParams;
-        Method mMethod = Method::GET;
+        Method mMethod = Method::HTTP_GET;
         std::function<void(ACurl&)> mOnSuccess;
 
     public:
@@ -199,7 +199,7 @@ public:
          * @see withDestinationBuffer
          */
         Builder& withWriteCallback(WriteCallback callback) {
-            assert(("write callback already set" && mWriteCallback == nullptr));
+            AUI_ASSERTX(mWriteCallback == nullptr, "write callback already set");
             mWriteCallback = std::move(callback);
             return *this;
         }
@@ -222,7 +222,7 @@ public:
          * @return this
          */
         Builder& withBody(ReadCallback callback) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
             mReadCallback = std::move(callback);
             return *this;
         }
@@ -244,10 +244,16 @@ public:
         }
 
         /**
+         * @brief Specifies acceptable response time.
+         * @return this
+         */
+        Builder& withTimeout(std::chrono::seconds timeout);
+
+        /**
          * @brief Like withBody with callback, but wrapped with string.
          */
         Builder& withBody(std::string contents) {
-            assert(("write callback already set" && mReadCallback == nullptr));
+            AUI_ASSERTX(mReadCallback == nullptr, "write callback already set");
 
             struct Body {
                 explicit Body(std::string b) : contents(std::move(b)), i(contents.begin()) {}
@@ -285,7 +291,7 @@ public:
          * @note Also disables throwing exception on error
          */
         Builder& withErrorCallback(ErrorCallback callback) {
-            assert(("error callback already set" && mErrorCallback == nullptr));
+            AUI_ASSERTX(mErrorCallback == nullptr, "error callback already set");
             mErrorCallback = std::move(callback);
             return *this;
         }
@@ -313,10 +319,36 @@ public:
          * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * @param begin start index of the part
-         * @param end end index of the part. Zero means end of the file.
+         * @param end end index of the part.
          * @return this
          */
         Builder& withRanges(size_t begin, size_t end);
+
+        /**
+         * @brief Sets: Accept-Ranges: begin-end
+         *        (download part of the file)
+         * @param begin start index of the part
+         * @param end end index of the part.
+         * @return this
+         */
+        Builder& withRanges(size_t begin) {
+            return withRanges(begin, 0);
+        }
+
+        /**
+         * @brief Set the average transfer speed in bytes per that the transfer should be below during 'low speed time'
+         * seconds to consider it to be too slow and abort.
+         * @param speed threshold speed (bytes per second).
+         */
+        Builder& withLowSpeedLimit(size_t speed);
+
+        /**
+         * @brief Duration that the transfer speed should be below the 'low speed limit' to consider it to be too slow
+         * and abort
+         * @param duration duration
+         */
+        Builder& withLowSpeedTime(std::chrono::seconds duration);
+
 
         Builder& withHttpVersion(Http version);
         Builder& withUpload(bool upload);
@@ -378,7 +410,7 @@ public:
          * @throws AIOException
          * @return input stream
          */
-        _<IInputStream> toInputStream();
+        _unique<IInputStream> toInputStream();
 
         /**
          * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if
@@ -419,6 +451,7 @@ public:
     ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
+    int64_t getNumberOfBytesDownloaded() const;
 	AString getContentType() const;
 
     void run();

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 30.08.2020.
@@ -23,13 +18,14 @@
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/Util.h>
+#include <chrono>
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Thread/AThread.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
 #include "AUI/Util/ARaiiHelper.h"
-#include "AUI/Thread/ACutoffSignal.h"
 
 using namespace std::chrono_literals;
 
@@ -93,11 +89,7 @@ TEST(Threading, Future1) {
         }
 
         for (auto& f : taskList) *f;
-
-        printf("Ok, supplyResult: %f\n", *taskList.first());
     }).count();
-
-    printf("Finished in %llu ms\n", time);
     ASSERT_EQ(*taskList.first(),
                       21430172143725346418968500981200036211228096234110672148875007767407021022498722449863967576313917162551893458351062936503742905713846280871969155149397149607869135549648461970842149210124742283755908364306092949967163882534797535118331087892154125829142392955373084335320859663305248773674411336138752.000000);
     ASSERT_TRUE(time < 1000);
@@ -164,7 +156,7 @@ TEST(Threading, ParallelVoid) {
                     }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
-            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyResult";
+            if (ints[j] != j + 2) ADD_FAILURE() << "invalid supplyValue";
         }
         watchdogTrigger = false;
     }
@@ -191,7 +183,7 @@ TEST(Threading, PararellWithResult) {
         for (auto& v : result) {
             accumulator += *v;
         }
-        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyResult";
+        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyValue";
     }
 }
 
@@ -277,12 +269,12 @@ TEST(Threading, FutureInterruptionCascade) {
 }
 
 
-TEST(Threading, FutureOnDone) {
+TEST(Threading, FutureOnDone1) {
 
     AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
-        localThreadPool.run([] {
-            AThread::sleep(10ms); // long tamssk
+        localThreadPool.run([&] {
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
         });
 
 
@@ -296,9 +288,37 @@ TEST(Threading, FutureOnDone) {
                 called = true;
             });
             // check that cancellation does not triggers here
-            future.wait(AFutureWait::ASYNC_ONLY);
+            future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
         }
-        ASSERT_TRUE(called) << "onSuccess callback has not called";
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
+    }
+}
+TEST(Threading, FutureOnDone2) {
+
+    AUI_REPEAT(100) {
+        AThreadPool localThreadPool(1);
+        localThreadPool.run([&] {
+        });
+
+
+        bool called = false;
+        {
+            auto future = localThreadPool * [] {
+                return 322;
+            };
+            AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
+            future.onSuccess([&](int i) {
+                ASSERT_EQ(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+            future.wait(AFutureWait::JUST_WAIT);
+
+            AThread::sleep(10ms); // extra delay for the callback to be called
+        }
+        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
     }
 }
 
@@ -313,7 +333,6 @@ TEST(Threading, FutureOnSuccess) {
     std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
         destructorCalled = true;                                                               //
     };                                                                                         //
-    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
 
     AAsyncHolder holder;
     bool called = false;
@@ -321,7 +340,8 @@ TEST(Threading, FutureOnSuccess) {
         auto future = localThreadPool * [] {
             return 322;
         };
-        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+        holder << future.onSuccess([&, destructorCallback = std::move(destructorCallback)](int i) {
+            ARaiiHelper raii = std::move(destructorCallback);
             ASSERT_EQ(i, 322);
             called = true;
         });
@@ -346,6 +366,50 @@ TEST(Threading, FutureExecuteOnCallingThread) {
     };
     future.wait();
     ASSERT_TRUE(called) << "callback has not called";
+}
+
+TEST(Threading, FutureSelfLock1) {
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<int> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            *future;
+            return 1;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            *future;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+}
+
+TEST(Threading, FutureSelfLock2) {
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<int> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            future.wait();
+            return 1;
+        };
+        EXPECT_ANY_THROW(*future);
+    }
+    {
+        AThreadPool localThreadPool(1);
+        AFuture<> future;
+        future = localThreadPool * [&future] {
+            AThread::sleep(1s);
+            future.wait();
+        };
+        EXPECT_ANY_THROW(*future);
+    }
 }
 
 TEST(Threading, AsyncHolder) {

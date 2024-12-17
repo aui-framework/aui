@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -26,7 +21,7 @@
 #include "AException.h"
 
 
-#define AUI_ASSERT_MY_ITERATOR(it) assert(("foreign iterator", (this->begin() <= it && it <= this->end())))
+#define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
 
 /**
  * @brief Vector implementation for ASmallVector.
@@ -116,17 +111,17 @@ public:
     }
 
     constexpr void pop_back() noexcept {
-        assert(("ADynamicVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ADynamicVector is empty");
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("ADynamicVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ADynamicVector is empty");
         erase(begin());
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) noexcept {
-        assert(("out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "out of bounds");
         return *(data() + index);
     }
 
@@ -404,7 +399,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -417,7 +412,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -430,7 +425,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -443,7 +438,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -28,7 +23,7 @@
  *
  * Unlike AProgressBar, this one is circle shaped; thus occupies less space.
  */
-class API_AUI_VIEWS ACircleProgressBar: public AViewContainer {
+class API_AUI_VIEWS ACircleProgressBar: public AViewContainerBase {
 public:
     class Inner: public AView {
     public:
@@ -60,7 +55,7 @@ public:
 public:
     ACircleProgressBar();
 
-    void render(ClipOptimizationContext context) override;
+    void render(ARenderContext context) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

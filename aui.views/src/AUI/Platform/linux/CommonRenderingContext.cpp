@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/9/2021.
@@ -133,8 +128,6 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
     XSetICFocus((XIC)window.mIC);
 
 
-    XMapWindow(ourDisplay, window.mHandle);
-
     auto title = init.name.toStdString();
     XStoreName(ourDisplay, window.mHandle, title.c_str());
     XChangeProperty(ourDisplay, window.mHandle, XInternAtom(ourDisplay, "_NET_WM_NAME", false),
@@ -155,14 +148,14 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(ourDisplay, w->mHandle);
     }
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
 }

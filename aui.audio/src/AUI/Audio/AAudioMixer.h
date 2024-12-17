@@ -1,7 +1,6 @@
 #pragma once
 
 #include <list>
-#include <mutex>
 #include <span>
 
 #include <AUI/Common/AObject.h>
@@ -13,10 +12,6 @@ class API_AUI_AUDIO IAudioPlayer;
  * @ingroup audio
  */
 class API_AUI_AUDIO AAudioMixer {
-private:
-    std::mutex mMutex;
-    std::list<_<IAudioPlayer>> mPlayers;
-
 public:
     /**
      * @brief Add new sound source for mixing
@@ -37,5 +32,9 @@ public:
      * @return Number of bytes written
      */
     std::size_t readSoundData(std::span<std::byte> destination);
+
+private:
+    AMutex mMutex;
+    std::list<_<IAudioPlayer>> mPlayers;
 };
 

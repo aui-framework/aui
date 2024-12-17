@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 5/13/2021.
@@ -31,7 +26,7 @@ struct AMenuItem;
 
 using AMenuModel = AVector<AMenuItem>;
 
-class AMenu {
+class API_AUI_VIEWS AMenu {
 private:
     static _<IMenuProvider>& provider();
 public:
@@ -48,31 +43,11 @@ public:
 
 
 struct AMenuItem {
-    AMenu::Type type;
+    AMenu::Type type = AMenu::SINGLE;
     AString name;
     AShortcut shortcut;
     std::function<void()> onAction;
     AVector<AMenuItem> subItems;
-    bool enabled;
-
-
-    AMenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
-        type(AMenu::SINGLE),
-        name(name),
-        onAction(onAction),
-        shortcut(shortcut),
-        enabled(enabled) {
-
-    }
-    AMenuItem(const AString& name, const AVector<AMenuItem>& subItems, bool enabled = true):
-        type(AMenu::SUBLIST),
-        name(name),
-        subItems(subItems),
-        enabled(enabled) {
-
-    }
-    AMenuItem(AMenu::Type t): type(t) {
-
-    }
+    bool enabled = true;
 };
 

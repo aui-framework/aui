@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 05.12.2020.
@@ -25,7 +20,7 @@
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
-    caption->setLayout(_new<AHorizontalLayout>());
+    caption->setLayout(std::make_unique<AHorizontalLayout>());
     caption->addAssName(".window-title");
     caption->setExpanding({1, 0});
 
@@ -33,7 +28,7 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     caption->addView(titleLabel);
 
     mCaptionContainer = _new<AViewContainer>();
-    mCaptionContainer->setLayout(_new<AHorizontalLayout>());
+    mCaptionContainer->setLayout(std::make_unique<AHorizontalLayout>());
     mCaptionContainer->setExpanding({1, 0 });
     mCaptionContainer->addAssName(".window-title-content");
     caption->addView(mCaptionContainer);
@@ -55,14 +50,14 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     caption->addView(mCloseButton);
 
     if (stacked) {
-        to->setLayout(_new<AStackedLayout>());
+        to->setLayout(std::make_unique<AStackedLayout>());
         to->addView(mContentContainer = _new<AViewContainer>());
         to->addView(_container<AVerticalLayout>({
                                                     caption,
                                                     _new<ASpacerExpanding>(),
                                             }) let { it->setExpanding({1, 1}); });
     } else {
-        to->setLayout(_new<AVerticalLayout>());
+        to->setLayout(std::make_unique<AVerticalLayout>());
         to->addView(caption);
         to->addView(mContentContainer = _new<AViewContainer>());
     }

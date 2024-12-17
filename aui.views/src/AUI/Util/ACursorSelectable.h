@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 30.11.2020.
@@ -25,23 +20,28 @@
 #include <glm/glm.hpp>
 #include <AUI/Font/AFontStyle.h>
 #include <AUI/Render/ATextLayoutHelper.h>
+#include <AUI/Render/RenderHints.h>
 #include <AUI/Platform/AInput.h>
 #include <AUI/View/AView.h>
 
 class API_AUI_VIEWS ACursorSelectable {
 public:
+    virtual ~ACursorSelectable();
 
     struct Selection
     {
         unsigned begin;
         unsigned end;
 
-        bool operator==(const Selection& rhs) const noexcept {
-            return std::tie(begin, end) == std::tie(rhs.begin, rhs.end);
-        }
+        [[nodiscard]]
+        bool operator==(const Selection& rhs) const noexcept = default;
 
-        bool operator!=(const Selection& rhs) const noexcept {
-            return !(rhs == *this);
+        [[nodiscard]]
+        bool operator!=(const Selection& rhs) const noexcept = default;
+
+        [[nodiscard]]
+        bool empty() const noexcept {
+            return begin == end;
         }
     };
 
@@ -58,7 +58,7 @@ public:
     /**
      * @return Text field text length.
      */
-    [[nodiscard]] virtual size_t textLength() const = 0;
+    [[nodiscard]] virtual size_t length() const = 0;
     [[nodiscard]] AString selectedText() const
     {
         if (!hasSelection())
@@ -80,8 +80,17 @@ public:
     /**
      * @return Character index by pixel position.
      */
-    [[nodiscard]] unsigned cursorIndexByPos(glm::ivec2 pos);
-    [[nodiscard]] int getPosByIndex(int end, int begin = 0);
+    [[nodiscard]] virtual unsigned cursorIndexByPos(glm::ivec2 pos) = 0;
+
+    [[nodiscard]] virtual glm::ivec2 getPosByIndex(size_t index) = 0;
+
+    /**
+     * @return Cursor position relative to this view.
+     * @details
+     * Returns position relative to top left corner of the view. That is, if implementation supports scrolling (i.e.,
+     * ATextField) the returned position does not include overflowed contents.
+     */
+    [[nodiscard]] virtual glm::ivec2 getCursorPosition() = 0;
 
 
     /**
@@ -94,17 +103,26 @@ public:
      */
     void clearSelection();
 
+    void setSelection(int cursorIndex) {
+        mCursorIndex = cursorIndex;
+        mCursorSelection.reset();
+        onSelectionChanged();
+    }
+
+    void setSelection(Selection selection) {
+        mCursorIndex = selection.begin;
+        mCursorSelection = selection.end;
+        onSelectionChanged();
+    }
 
 protected:
     unsigned mCursorIndex = 0;
-    unsigned mCursorSelection = -1;
+    AOptional<unsigned> mCursorSelection;
 
-    virtual glm::ivec2 getMouseSelectionPadding() = 0;
-    virtual glm::ivec2 getMouseSelectionScroll() = 0;
-    virtual AFontStyle getMouseSelectionFont() = 0;
     virtual bool isLButtonPressed() = 0;
     virtual AString getDisplayText() = 0;
-    virtual void doRedraw() = 0;
+    virtual void cursorSelectableRedraw() = 0;
+    virtual void onSelectionChanged() = 0;
 
 
     void handleMouseDoubleClicked(const APointerPressedEvent& event);
@@ -112,23 +130,42 @@ protected:
     void handleMouseReleased(const APointerReleasedEvent& event);
     void handleMouseMove(const glm::ivec2& pos);
 
-    /**
-     * @return absoluteCursorPos
-     */
-    int drawSelectionPre();
+    template<aui::invocable Callback>
+    void drawSelectionBeforeAndAfter(IRenderer& render, std::span<ARect<int>> rects, Callback&& drawText) {
+        if (rects.empty()) {
+            drawText();
+            return;
+        }
 
-    void drawSelectionPost();
+        auto drawRects = [&] {
+            for (auto r : rects) {
+                render.rectangle(ASolidBrush{}, r.p1, r.size());
+            }
+        };
+        {
+            RenderHints::PushColor c(render);
+            render.setColor(AColor(1.f) - AColor(0x0078d700u));
+            drawRects();
+        }
 
-    void drawSelectionRects();
+        drawText();
 
-    void setTextLayoutHelper(ATextLayoutHelper textLayoutHelper) {
-        mTextLayoutHelper = std::move(textLayoutHelper);
+        render.setBlending(Blending::INVERSE_DST);
+        AUI_DEFER { render.setBlending(Blending::NORMAL); };
+        drawRects();
     }
 
 private:
-    int mAbsoluteBegin, mAbsoluteEnd;
     bool mIgnoreSelection = false;
-    ATextLayoutHelper mTextLayoutHelper;
+
 };
 
-
+inline std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e) noexcept{
+    o << "Selection";
+    if (e.empty()) {
+        o << "{" << e.begin << "}";
+    } else {
+        o << "[" << e.begin << ";" << e.end << ")";
+    }
+    return o;
+}

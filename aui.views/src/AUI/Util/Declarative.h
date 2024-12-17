@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -33,47 +28,47 @@ namespace aui::ui_building {
     template<typename ViewFactory>
     struct view_helper {
     public:
-        view_helper(ViewFactory& factory): mFactory(factory) {}
+        view_helper() {}
 
         operator View() const {
-            return mFactory();
+            return asViewFactory()->operator()();
         }
         operator ViewContainer() const {
-            return mFactory();
+            return asViewFactory()->operator()();
         }
         auto operator<<(const AString& assEntry) const {
-            return mFactory() << assEntry;
+            return asViewFactory()->operator()() << assEntry;
         }
         template<typename T>
         auto operator^(const T& t) const {
-            return mFactory() ^ t;
+            return asViewFactory()->operator()() ^ t;
         }
         template<typename T>
         auto operator+(const T& t) const {
-            return mFactory() + t;
+            return asViewFactory()->operator()() + t;
         }
 
         template<typename T>
         auto operator^(T&& t) const {
-            return mFactory() ^ std::forward<T>(t);
+            return asViewFactory()->operator()() ^ std::forward<T>(t);
         }
         template<typename T>
         auto operator&&(T&& t) const {
-            return mFactory() && std::forward<T>(t);
+            return asViewFactory()->operator()() && std::forward<T>(t);
         }
         template<typename T>
         auto operator+(T&& t) const {
-            return mFactory() + std::forward<T>(t);
+            return asViewFactory()->operator()() + std::forward<T>(t);
         }
 
         auto operator->() const {
-            return mFactory();
+            return asViewFactory()->operator()();
         }
 
 
         template<typename SignalField, typename Object, typename Function>
         auto connect(SignalField&& signalField, Object&& object, Function&& function) {
-            return mFactory().connect(std::forward<SignalField>(signalField), std::forward<Object>(object), std::forward<Function>(function));
+            return asViewFactory()->operator()().connect(std::forward<SignalField>(signalField), std::forward<Object>(object), std::forward<Function>(function));
         }
 
         template<typename Object, typename Function>
@@ -83,11 +78,13 @@ namespace aui::ui_building {
 
         template<typename SignalField, typename Function>
         auto connect(SignalField&& signalField, Function&& function) {
-            return mFactory().connect(std::forward<SignalField>(signalField), std::forward<Function>(function));
+            return asViewFactory()->operator()().connect(std::forward<SignalField>(signalField), std::forward<Function>(function));
         }
-
     private:
-        ViewFactory& mFactory;
+        [[nodiscard]]
+        ViewFactory* asViewFactory() const {
+            return const_cast<ViewFactory*>(static_cast<const ViewFactory*>(this));
+        }
     };
 
     template<typename View>
@@ -95,14 +92,14 @@ namespace aui::ui_building {
 
     public:
         template<typename... Args>
-        view(Args&&... args): view_helper<view<View>>(*this), mView(_new<View>(std::forward<Args>(args)...)) {}
+        view(Args&&... args): mView(_new<View>(std::forward<Args>(args)...)) {}
 
-        _<View> operator()() {
-            return std::move(mView);
+        _<View>& operator()() {
+            return mView;
         }
 
-        operator _<View>() {
-            return std::move(mView);
+        operator _<View>&() {
+            return mView;
         }
 
     private:
@@ -117,21 +114,6 @@ namespace aui::ui_building {
         AVector<View> mViews;
 
     public:
-        struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
-        public:
-            template<typename... Views>
-            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...),
-                                         view_helper<Expanding>(*this) {
-
-            }
-
-            ViewContainer operator()() {
-                return layouted_container_factory_impl<Layout>::operator()() let {
-                    it->setExpanding();
-                };
-            }
-        };
-
         template<typename... Views>
         layouted_container_factory_impl(Views&&... views) {
             mViews.reserve(sizeof...(views));
@@ -155,10 +137,10 @@ namespace aui::ui_building {
             }, std::forward<Views>(views)...);
         }
 
-        ViewContainer operator()() {
+        _<Container> operator()() {
             auto c = _new<Container>();
             if constexpr(!std::is_same_v<Layout, std::nullopt_t>) {
-                c->setLayout(_new<Layout>());
+                c->setLayout(std::make_unique<Layout>());
             }
             c->setViews(std::move(mViews));
             return c;
@@ -167,14 +149,31 @@ namespace aui::ui_building {
 
 
     template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
-    struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
+    struct layouted_container_factory_impl_with_expanding: layouted_container_factory_impl<Layout, Container> {
+    public:
+        using layouted_container_factory_impl<Layout, Container>::layouted_container_factory_impl;
 
-        template<typename... Views>
-        layouted_container_factory(Views&&... views): layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...),
-                                                      view_helper<layouted_container_factory<Layout, Container>>(*this) {
+        struct Expanding: view_helper<Expanding>, layouted_container_factory_impl<Layout, Container> {
+        public:
+            template<typename... Views>
+            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...) {
 
-        }
+            }
 
+            _<Container> operator()() {
+                return layouted_container_factory_impl<Layout>::operator()() let {
+                    it->setExpanding();
+                };
+            }
+        };
+    };
+
+    template <typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
+    struct layouted_container_factory : view_helper<layouted_container_factory<Layout, Container>>,
+                                        layouted_container_factory_impl_with_expanding<Layout, Container> {
+        template <typename... Views>
+        layouted_container_factory(Views&&... views)
+            : layouted_container_factory_impl_with_expanding<Layout, Container>(std::forward<Views>(views)...) {}
     };
 }
 
@@ -205,7 +204,7 @@ namespace declarative {
 
         Style& operator()(AVector<_<AView>> views) {
             for (const auto& view : views) {
-                assert(("extra stylesheet already specified", view->extraStylesheet() == nullptr));
+                AUI_ASSERTX(view->extraStylesheet() == nullptr, "extra stylesheet already specified");
                 view->setExtraStylesheet(mStylesheet);
             }
             mViews = std::move(views);

@@ -1,23 +1,54 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <cstring>
 #include "AString.h"
 #include "AStringVector.h"
+#include "AStaticVector.h"
 #include <AUI/Common/AByteBuffer.h>
+
+// utf8 stuff has a lot of magic
+// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
+
+inline static AStaticVector<char16_t, 4> toUtf16(char32_t i) {
+    if (i <= 0xffff) {
+        return { char16_t(i) };
+    }
+
+    i -= 0x10000;
+    return { char16_t((i >> 10) + 0xD800),
+             char16_t((i & 0x3FF) + 0xDC00) };
+}
+
+template<typename T>
+inline static char32_t fromUtf16(T& iterator, T last) {
+    auto c1 = *(iterator++);
+    if (iterator == last) {
+        // incomplete sequence?
+        return static_cast<char32_t >(c1);
+    }
+    if (*iterator < 0xD800) {
+        return static_cast<char32_t >(c1);
+    }
+    auto c2 = *(iterator++);
+
+    if (c2 < 0xDC00) {
+        // bad entity
+    }
+
+    c1 -= 0xD800;
+    c2 -= 0xDC00;
+
+    return (char32_t(c1) << 10 | char32_t(c2 & 0x3FF)) + 0x10000;
+}
 
 inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
     destination.reserve(length);
@@ -25,34 +56,51 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     // parse utf8
     for (; length && *str; --length)
     {
-        if (*str & 0x80)
-        {
-            wchar_t t;
-            // utf8 symbol
-            if (*str & 0b00100000)
-            {
-                // 3-byte symbol
-                t = *(str++) & 0b1111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                destination.push_back(t);
-                length -= 2;
-            } else
-            {
-                // 2-byte symbol
-                t = *(str++) & 0b11111;
-                t <<= 6;
-                t |= *(str++) & 0b111111;
-                destination.push_back(t);
-                length -= 1;
-            }
-        } else
-        {
+        if ((*str & 0b1000'0000) == 0) {
             // ascii symbol
             destination.push_back(*(str++));
+            continue;
         }
+        // utf8 symbol
+
+        if ((*str & 0b1110'0000) == 0b1100'0000) {
+            // 2-byte symbol
+            char16_t t = *(str++) & 0b11111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.push_back(t);
+            length -= 1;
+            continue;
+        }
+
+        if ((*str & 0b1111'0000) == 0b1110'0000) {
+            // 3-byte symbol
+            char16_t t = *(str++) & 0b1111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.push_back(t);
+            length -= 2;
+            continue;
+        }
+
+        if ((*str & 0b1111'1000) == 0b1111'0000) {
+            // 4-byte symbol
+            char32_t t = *(str++) & 0b111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            t <<= 6;
+            t |= *(str++) & 0b111111;
+            destination.insertAll(toUtf16(t));
+            length -= 3;
+            continue;
+        }
+
+
+        str++; // bad entity?
     }
 }
 
@@ -85,37 +133,55 @@ AString AString::fromUtf8(const char* buffer, size_t length) {
 AByteBuffer AString::toUtf8() const noexcept
 {
     AByteBuffer buf;
-    for (wchar_t c : *this)
+    for (auto it = begin(); it != end();)
     {
-        if (c >= 0x80)
+        auto c = *it;
+        if (c < 0x80) {
+            buf << static_cast<char>(c);
+            ++it;
+            continue;
+        }
+
+        if (c < 0x800) {
+            char b[] = {
+                static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
+                static_cast<char>(0b10000000 | (c      & 0b111111)),
+                0,
+            };
+            buf << b;
+            ++it;
+            continue;
+        }
+
+        if (c < 0xD800) {
+            char b[] = {
+                static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
+                static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
+                static_cast<char>(0b10000000 | (c       & 0b111111)),
+                0,
+            };
+            buf << b;
+            ++it;
+            continue;
+        }
+
         {
-            if (c >= 0x800)
-            {
-                char b[] = {
-                        static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
-                        static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
-                        static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
-                };
-                buf << b;
-            } else if (c >= 0x80)
-            {
-                char b[] = {
-                        static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
-                        static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
-                };
-                buf << b;
-            }
-        } else
-        {
-            buf << *reinterpret_cast<char*>(&c);
+            const auto c = fromUtf16(it, end());
+
+            char b[] = {
+                    static_cast<char>(0b11110000 | (c >> 18 & 0b111)),
+                    static_cast<char>(0b10000000 | (c >> 12 & 0b111111)),
+                    static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
+                    static_cast<char>(0b10000000 | (c & 0b111111)),
+                    0,
+            };
+            buf << b;
         }
     }
     return buf;
 }
 
-AStringVector AString::split(wchar_t c) const noexcept
+AStringVector AString::split(char16_t c) const noexcept
 {
     if (empty()) {
         return {};
@@ -124,7 +190,7 @@ AStringVector AString::split(wchar_t c) const noexcept
     result.reserve(length() / 10);
     for (size_type s = 0;;)
     {
-        auto next = std::wstring::find(c, s);
+        auto next = super::find(c, s);
         if (next == npos)
         {
             result << substr(s);
@@ -137,7 +203,7 @@ AStringVector AString::split(wchar_t c) const noexcept
     return result;
 }
 
-AString AString::trimLeft(wchar_t symbol) const noexcept
+AString AString::trimLeft(char16_t symbol) const noexcept
 {
     for (auto i = begin(); i != end(); ++i)
     {
@@ -149,7 +215,7 @@ AString AString::trimLeft(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::trimRight(wchar_t symbol) const noexcept
+AString AString::trimRight(char16_t symbol) const noexcept
 {
     for (auto i = rbegin(); i != rend(); ++i)
     {
@@ -161,7 +227,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+AString& AString::replaceAll(char16_t from, char16_t to) noexcept {
     for (auto& s : *this) {
         if (s == from)
             s = to;
@@ -241,22 +307,32 @@ AString AString::fromLatin1(const char* buffer) {
 }
 
 
-int AString::toNumberDec() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%d", &n) < 0)
-        return -1;
+AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
+    int result = 0;
+    const auto NUMBER_LAST = std::min(int('0' + int(base) - 1), int('9'));
+    const auto LETTER_LAST = 'a' + int(base) - 11;
+    const auto LETTER_LAST_CAPITAL = 'A' + int(base) - 11;
+    for (auto c : *this) {
+        if (c >= '0' && c <= NUMBER_LAST) {
+            result = result * base + (c - '0');
+            continue;
+        }
 
-    return n;
-}
+        if (int(base) > 10) {
+            if (c >= 'a' && c <= LETTER_LAST) {
+                result = result * base + (c - 'a' + 10);
+                continue;
+            }
 
-int AString::toNumberHex() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%x", &n) < 0)
-        return -1;
+            if (c >= 'A' && c <= LETTER_LAST_CAPITAL) {
+                result = result * base + (c - 'A' + 10);
+                continue;
+            }
+        }
+        return std::nullopt;
+    }
 
-    return n;
+    return result;
 }
 
 std::string AString::toStdString() const noexcept
@@ -531,9 +607,9 @@ AString AString::uppercase() const {
                                     *pExtChar = 0x82;
                                     (*p) += 0x10;
                                 }
-                                else if ((*p >= 0xb0)
+                                else if (((*p >= 0xb0)
                                          && ((*p <= 0xb5)
-                                             || (*p == 0xb7))
+                                             || (*p == 0xb7)))
                                          || (*p == 0xbd))
                                     (*p) -= 0x30;
                                 break;
@@ -938,9 +1014,9 @@ AString AString::lowercase() const {
                                 }
                                 break;
                             case 0x83: // Georgian
-                                if ((*p >= 0x80)
+                                if (((*p >= 0x80)
                                     && ((*p <= 0x85)
-                                        || (*p == 0x87))
+                                        || (*p == 0x87)))
                                     || (*p == 0x8d))
                                     (*p) += 0x30;
                                 break;
@@ -1083,8 +1159,8 @@ AString AString::lowercase() const {
 }
 
 void AString::resizeToNullTerminator() {
-    wchar_t* i;
-    for (i = data(); *i; ++i);
+    char16_t* i = data();
+    for (; *i; ++i);
     resize(i - data());
 }
 
@@ -1244,3 +1320,5 @@ AOptional<double> AString::toDouble() const noexcept {
 AOptional<float> AString::toFloat() const noexcept {
     return toNumberImpl<float>();
 }
+
+// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

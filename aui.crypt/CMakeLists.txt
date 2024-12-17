@@ -8,14 +8,14 @@ auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/refs/
 # https://github.com/aui-framework/aui/issues/84
 get_target_property(_l OpenSSL::Crypto IMPORTED_LOCATION)
 if (_l)
-    if (NOT _l MATCHES "^${AUI_CACHE_DIR}")
+    if (NOT _l MATCHES "^${AUIB_CACHE_DIR}")
         message(FATAL_ERROR "Internal AUI error: OpenSSL links to the system library (${_l}).")
     endif()
 endif()
 
 get_target_property(_l OpenSSL::Crypto IMPORTED_LOCATION_DEBUG)
 if (_l AND NOT AUI_IGNORE_OPENSSL)
-    if(NOT LIB_EAY_DEBUG MATCHES "^${AUI_CACHE_DIR}")
+    if(NOT LIB_EAY_DEBUG MATCHES "^${AUIB_CACHE_DIR}")
         message(FATAL_ERROR "CMake linked to manually installed OpenSSL at ${LIB_EAY_DEBUG}. This library should be removed otherwise runtime linking may be broken. Set AUI_IGNORE_OPENSSL=TRUE to ignore.")
     endif()
 endif()

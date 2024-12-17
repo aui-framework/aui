@@ -1,21 +1,17 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
+#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -24,6 +20,7 @@
  * @brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
  *        connect function:
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * <table>
  *   <tr>
@@ -66,6 +63,7 @@ namespace aui::impl::slot {
  * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function (see examples).
  * @ingroup useful_macros
+ * @ingroup signal_slot
  * @details
  * Quick example:
  * <table>
@@ -184,6 +182,19 @@ namespace aui::impl::slot {
  * </table>
  */
 #define AUI_EMIT_FOREIGN_SIGNAL(object) (*object) ^ object
+
+/**
+ * @brief Defers execution of the next block to the end of current block (RAII scope).
+ * @ingroup useful_macros
+ * @details
+ * This example prints "Hello world\n":
+ * @code{cpp}
+ * AUI_DEFER { printf(" world\n") };
+ * printf("Hello");
+ * @endcode
+ * @sa ARaiiHelper
+ */
+#define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_,  __LINE__) = [&]
 
 
 /**

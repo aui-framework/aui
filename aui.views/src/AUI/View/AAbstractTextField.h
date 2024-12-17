@@ -1,100 +1,117 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <AUI/View/AAbstractTypeableView.h>
+#include "AUI/Enum/ATextInputType.h"
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 
 /**
  * @brief Text field implementation
  * @details ATextField is separated into the different class in order to simplify styling.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
-{
+class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView<AView>, public IStringable {
 public:
-	AAbstractTextField();
-	virtual ~AAbstractTextField();
+    AAbstractTextField();
 
-	int getContentMinimumHeight(ALayoutDirection layout) override;
-	void setText(const AString& t) override;
+    ~AAbstractTextField() override;
 
-    void render(ClipOptimizationContext context) override;
+    int getContentMinimumHeight() override;
+
+    void setText(const AString& t) override;
+
+    void setSuffix(const AString& s);
+
+    void render(ARenderContext ctx) override;
 
     AString toString() const override;
 
-    void setPasswordMode(bool isPasswordMode) {
-        mIsPasswordTextField = isPasswordMode;
-        setCopyable(!isPasswordMode);
+    void setTextInputType(ATextInputType textInputType) noexcept {
+        mTextInputType = textInputType;
     }
 
-	bool isPasswordMode() const {
-		return mIsPasswordTextField;
-	}
+    [[nodiscard]]
+    ATextInputType textInputType() const noexcept override {
+        return mTextInputType;
+    }
 
-	bool handlesNonMouseNavigation() override;
-    void onFocusAcquired() override;
+    void setPasswordMode(bool isPasswordField) {
+        mIsPasswordTextField = isPasswordField;
+        setCopyable(!isPasswordField);
+    }
+
+    [[nodiscard]]
+    bool isPasswordField() const noexcept override {
+        return mIsPasswordTextField;
+    }
+
+    bool handlesNonMouseNavigation() override;
 
     const AString& text() const override;
 
-    size_t textLength() const override;
-
-    void onCharEntered(wchar_t c) override;
-    void invalidateFont() override;
-
-    void onFocusLost() override;
-
-    bool wantsTouchscreenKeyboard() override;
+    void onCharEntered(char16_t c) override;
 
     void setSize(glm::ivec2 size) override;
 
+    glm::ivec2 getCursorPosition() override;
+
 protected:
-    ARender::PrerenderedString mPrerenderedString;
+    _<IRenderer::IPrerenderedString> mPrerenderedString;
     AString mContents;
+    AString mSuffix;
+
     virtual bool isValidText(const AString& text);
 
-    void prerenderStringIfNeeded();
+    void prerenderStringIfNeeded(IRenderer& render);
 
     void typeableErase(size_t begin, size_t end) override;
+
     bool typeableInsert(size_t at, const AString& toInsert) override;
-    size_t typeableFind(wchar_t c, size_t startPos) override;
-    size_t typeableReverseFind(wchar_t c, size_t startPos) override;
+
+    size_t typeableFind(char16_t c, size_t startPos) override;
+
+    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+
     size_t length() const override;
 
-    bool typeableInsert(size_t at, wchar_t toInsert) override;
+    bool typeableInsert(size_t at, char16_t toInsert) override;
 
     AString getDisplayText() override;
 
-    void doRedraw() override;
+    void cursorSelectableRedraw() override;
 
+    unsigned cursorIndexByPos(glm::ivec2 pos) override;
+    glm::ivec2 getPosByIndex(size_t index) override;
 
-    void doDrawString();
+    void doDrawString(IRenderer& render);
 
-    glm::ivec2 getMouseSelectionPadding() override;
+    void onCursorIndexChanged() override;
+    void commitStyle() override;
 
 private:
+    ATextInputType mTextInputType = ATextInputType::DEFAULT;
     bool mIsPasswordTextField = false;
     int mTextAlignOffset = 0;
+    int mHorizontalScroll = 0; // positive only
+    unsigned mAbsoluteCursorPos = 0;
+    ATextLayoutHelper mTextLayoutHelper;
 
-    void invalidatePrerenderedString() override;
-    AString getContentsPasswordWrap();
+    void invalidateFont() override;
 
     void updateTextAlignOffset();
+
+    int getPosByIndexAbsolute(size_t index);
 };

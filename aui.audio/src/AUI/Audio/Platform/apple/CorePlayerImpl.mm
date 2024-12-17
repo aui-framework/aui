@@ -126,31 +126,20 @@ static CoreAudioInstance& coreAudio() {
 
 
 void CoreAudioPlayer::playImpl() {
-    assert(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<CoreAudioPlayer>(sharedPtr()));
+    initializeIfNeeded();
     ::loop().addSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
-    
     coreAudio().thread()->enqueue([this] {
         coreAudio().enqueueIfNot();
     });
 }
 
 void CoreAudioPlayer::pauseImpl() {
-    assert(mResampled != nullptr);
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
-    mResampled.reset();
 }
 
 void CoreAudioPlayer::stopImpl() {
-    assert(mResampled != nullptr);
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
-    source()->rewind();
-    mResampled.reset();
-}
-
-
-void CoreAudioPlayer::onSourceSet() {
-
+    release();
 }
 
 void CoreAudioPlayer::onVolumeSet() {

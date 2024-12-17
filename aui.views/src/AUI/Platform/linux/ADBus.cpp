@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 5/28/23.
@@ -100,7 +95,7 @@ DBusHandlerResult ADBus::listener(DBusConnection     *connection,
 
     auto listener = reinterpret_cast<RawMessageListener*>(user_data);
     try {
-        assert(connection == listener->parent->mConnection);
+        AUI_ASSERT(connection == listener->parent->mConnection);
         auto r = listener->function(message);
         return r;
     } catch (const AException& e) {
@@ -116,11 +111,9 @@ DBusHandlerResult ADBus::listener(DBusConnection     *connection,
 }
 void ADBus::deleter(void* userdata) noexcept {
     auto listener = reinterpret_cast<RawMessageListener*>(userdata);
-    auto listenerIt = std::find_if(listener->parent->mListeners.begin(),
-                                   listener->parent->mListeners.end(),
-                                   [&](const RawMessageListener& lhs) {
-        return &lhs == userdata;
-    });
+    auto listenerIt = std::find_if(
+        listener->parent->mListeners.begin(), listener->parent->mListeners.end(),
+        [&](const RawMessageListener& lhs) { return &lhs == userdata; });
 
     if (listenerIt == listener->parent->mListeners.end()) {
         return;
@@ -128,9 +121,13 @@ void ADBus::deleter(void* userdata) noexcept {
     listener->parent->mListeners.erase(listenerIt);
 }
 
-void ADBus::addListener(RawMessageListener::Callback listener) {
-    auto it = mListeners.insert(mListeners.end(), { this, std::move(listener)});
+std::function<void()> ADBus::addListener(RawMessageListener::Callback listener) {
+    const auto it = mListeners.insert(mListeners.end(), { this, std::move(listener) });
     dbus_connection_add_filter(mConnection, ADBus::listener, &(*it), deleter);
+
+    return [this, it] {
+        dbus_connection_remove_filter(mConnection, ADBus::listener, &(*it));
+    };
 }
 
 void ADBus::processMessages() {
@@ -138,6 +135,14 @@ void ADBus::processMessages() {
         dbus_connection_dispatch(mConnection);
 }
 
+void aui::dbus::converter<aui::dbus::Variant>::iter_append(DBusMessageIter* iter, const Variant& t) {
+    std::visit([&]<typename T>(const T& containedValue) {
+      DBusMessageIter sub;
+      dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<T>::signature.c_str(), &sub);
+      AUI_DEFER { dbus_message_iter_close_container(iter, &sub); };
+      aui::dbus::iter_append<T>(&sub, containedValue);
+    }, t);
+}
 
 aui::dbus::Variant aui::dbus::converter<aui::dbus::Variant>::iter_get(DBusMessageIter* iter) {
     if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_VARIANT) {

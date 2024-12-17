@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.10.2020.
@@ -39,6 +34,25 @@
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
 
+namespace {
+    size_t processMemory(pid_t pid) {
+        // avoid fancy apis here for performance reasons.
+        long rss = 0L;
+        FILE* fp = NULL;
+        char path[0x100];
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/statm", pid).out = '\0';
+        if ((fp = fopen(path, "r")) == nullptr) {
+            return (size_t)0L;
+        }
+        if (fscanf(fp, "%*s%ld", &rss ) != 1) {
+            fclose(fp);
+            return (size_t)0L;
+        }
+        fclose(fp);
+        return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+    }
+}
+
 class AOtherProcess: public AProcess {
 private:
     pid_t mHandle;
@@ -62,12 +76,16 @@ public:
     APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
-        sprintf(path, "/proc/%u/exe", mHandle);
+        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
     uint32_t getPid() const noexcept override {
         return mHandle;
+    }
+
+    size_t processMemory() const override { 
+        return ::processMemory(mHandle); 
     }
 };
 
@@ -81,26 +99,19 @@ AVector<_<AProcess>> AProcess::all() {
     return result;
 }
 
+#if !AUI_PLATFORM_APPLE
 _<AProcess> AProcess::self() {
-#if AUI_PLATFORM_APPLE
-    return _new<AOtherProcess>(getpid());
-#else
     char buf[0x100];
     return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
-#endif
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-#if !AUI_PLATFORM_APPLE
-    if (!(APath("/proc") / AString::number(pid)).isDirectoryExists()) {
-        return nullptr;
-    }
-#endif
     return _new<AOtherProcess>(pid_t(pid));
 }
+#endif
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
-    assert(0);
+    AUI_ASSERT(0);
 }
 extern char **environ;
 
@@ -155,13 +166,10 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
         exit(-1);
     } else {
-        // we are in old process
-        ALOG_DEBUG("AProcess") << "Started new process: " << pid;
-
         mWatchdog = _new<AThread>([&] {
             int loc;
             waitpid(mPid, &loc, 0);
-            mExitCode.supplyResult(WEXITSTATUS(loc));
+            mExitCode.supplyValue(WEXITSTATUS(loc));
             emit finished;
         });
         mWatchdog->start();
@@ -190,6 +198,10 @@ int AChildProcess::waitForExitCode() {
 
 uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
+}
+
+size_t AChildProcess::processMemory() const {
+    return ::processMemory(mPid); 
 }
 
 void AProcess::kill() const noexcept {

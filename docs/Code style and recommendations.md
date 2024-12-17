@@ -74,7 +74,7 @@ Quick example:
 connect(mLoginButton->clicked, me::loginButtonClicked);
 ...
 void loginButtonClicked() {
-  assert(mUsername->text().length() < 32); // bad! throw an exception instead so it can be handled: throw AException("username is too long!")
+  AUI_ASSERT(mUsername->text().length() < 32); // bad! throw an exception instead so it can be handled: throw AException("username is too long!")
 }
 ```
 

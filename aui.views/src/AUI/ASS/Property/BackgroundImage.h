@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 3.12.2020.
@@ -20,7 +15,7 @@
 
 #pragma once
 
-#include <AUI/Render/ARender.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
@@ -44,6 +39,11 @@ namespace ass {
          * @brief Center the image.
          */
         CENTER,
+
+        /**
+         * @brief Tile texture. Use with Repeat::X_y.
+         */
+        TILE,
 
         /**
          * @brief Resize image to view's content area without keeping aspect ratio.
@@ -168,7 +168,7 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
-            void renderFor(AView* view) override;
+            void renderFor(AView* view, const ARenderContext& ctx) override;
 
             PropertySlot getPropertySlot() const override;
 
@@ -178,6 +178,9 @@ namespace ass {
             }
 
             AString toString() const override;
+
+
+            static void draw(const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info);
 
         };
 
@@ -193,4 +196,4 @@ AUI_ENUM_VALUES(ass::Sizing,
                 ass::Sizing::CONTAIN,
                 ass::Sizing::SPLIT_2X2,
                 ass::Sizing::CROPPED
-            )
+)

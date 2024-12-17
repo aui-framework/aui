@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/9/2021.
@@ -32,11 +27,11 @@ void CommonRenderingContext::init(const Init& init) {
     auto& window = init.window;
     MacosApp::inst();
     auto delegate = [[WindowDelegate alloc] initWithWindow: &window];
-    assert(delegate != nullptr);
+    AUI_ASSERT(delegate != nullptr);
     auto windowRect = NSMakeRect(100, 100, init.width, init.height);
     NSWindowStyleMask windowStyle = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
     NSWindow* nsWindow = [[NSWindow alloc] initWithContentRect:windowRect styleMask:windowStyle backing:NSBackingStoreBuffered defer:NO];
-    assert(nsWindow != nullptr);
+    AUI_ASSERT(nsWindow != nullptr);
     window.mHandle = nsWindow;
     window.updateDpi();
     [nsWindow setContentSize:NSMakeSize(init.width / window.getDpiRatio(), init.height / window.getDpiRatio())];
@@ -79,16 +74,16 @@ void CommonRenderingContext::init(const Init& init) {
 
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
-    assert(mDisplayLink != nullptr);
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+    AUI_ASSERT(mDisplayLink != nullptr);
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
     mDisplayLink = nullptr;
     [static_cast<NSWindow*>(mWindow->nativeHandle()) close];
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
 }

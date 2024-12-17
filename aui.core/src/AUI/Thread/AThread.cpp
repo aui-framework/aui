@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AThread.h"
 
@@ -61,12 +56,14 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         }
     } s;
     if (s) {
-        s(handle, name.c_str());
+        s(handle, aui::win32::toWchar(name));
     }
 }
 #else
 #include <signal.h>
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_EMSCRIPTEN
 #include <execinfo.h>
+#endif
 #include <pthread.h>
 #endif
 namespace aui::impl::AThread {
@@ -103,9 +100,9 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		AFuture<AStacktrace> future;
 		payloads.value()[mId] = [future] {
 #if AUI_PLATFORM_WIN
-			  future.supplyResult(AStacktrace::capture(1));
+			  future.supplyValue(AStacktrace::capture(1));
 #else
-			  future.supplyResult(AStacktrace::capture(6));
+			  future.supplyValue(AStacktrace::capture(6));
 #endif
 		};
 		lock.unlock();
@@ -126,7 +123,10 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		ARaiiHelper contextReturner = [&] {
 				SetThreadContext(h, &context);
 		};
-#if AUI_ARCH_X86_64
+#if AUI_ARCH_ARM_64
+	#define REG_SP Sp
+	#define REG_IP Pc
+#elif AUI_ARCH_X86_64
 	#define REG_SP Rsp
 	#define REG_IP Rip
 #else
@@ -250,39 +250,32 @@ void AThread::resetInterruptFlag()
 
 void AThread::join()
 {
-	if (mThread->joinable()) mThread->join();
+	if (mThread->get_id() == std::this_thread::get_id()) {
+		throw AException("AThread::join to the self thread");
+	}
+	if (!mThread->joinable()) {
+		return;
+	}
+	mThread->join();
 }
 
-void AAbstractThread::enqueue(std::function<void()> f)
+void AAbstractThread::enqueue(AMessageQueue<>::Message f)
 {
-	{
-		std::unique_lock lock(mQueueLock);
-		mMessageQueue << Message{ AStacktrace::capture(2, 4), std::move(f) };
-	}
-	{
-		if (mCurrentEventLoop) {
-			std::unique_lock lock(mEventLoopLock);
-			if (mCurrentEventLoop)
-			{
-				mCurrentEventLoop->notifyProcessMessages();
-			}
-		}
-	}
+    mMessageQueue.enqueue(std::move(f));
+    if (mCurrentEventLoop) {
+        std::unique_lock lock(mEventLoopLock);
+        if (mCurrentEventLoop)
+        {
+            mCurrentEventLoop->notifyProcessMessages();
+        }
+    }
 }
 
 void AAbstractThread::processMessagesImpl()
 {
-    assert(("AAbstractThread::processMessages() should not be called from other thread",
-            mId == std::this_thread::get_id()));
-	std::unique_lock lock(mQueueLock);
-	while (!mMessageQueue.empty())
-	{
-        auto f = std::move(mMessageQueue.front());
-		mMessageQueue.pop_front();
-		lock.unlock();
-		f.proc();
-		lock.lock();
-	}
+    AUI_ASSERTX(mId == std::this_thread::get_id(),
+                "AAbstractThread::processMessages() should not be called from other thread");
+    mMessageQueue.processMessages();
 }
 
 AThread::~AThread()
@@ -316,11 +309,11 @@ void AAbstractThread::updateThreadName() noexcept {
         setThreadNameImpl((HANDLE) GetCurrentThread(), mThreadName);
 #elif AUI_PLATFORM_APPLE
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
-#else
+#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
         auto name = mThreadName.toStdString();
-        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());
 #endif
     }
@@ -332,6 +325,5 @@ AThread::AThread(std::function<void()> functor)
 }
 
 bool AAbstractThread::messageQueueEmpty() noexcept {
-	std::unique_lock lock(mQueueLock);
-	return mMessageQueue.empty();
+	return mMessageQueue.messages().empty();
 }

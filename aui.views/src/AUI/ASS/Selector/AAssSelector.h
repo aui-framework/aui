@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.12.2020.
@@ -22,6 +17,7 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/kAUI.h>
+#include <type_traits>
 #include <utility>
 
 class AView;
@@ -37,7 +33,7 @@ namespace ass {
         virtual ~IAssSubSelector() = default;
     };
 
-    class API_AUI_VIEWS AAssSelector {
+    class API_AUI_VIEWS AAssSelector final: public IAssSubSelector {
     private:
         AVector<_<IAssSubSelector>> mSubSelectors;
 
@@ -64,7 +60,7 @@ namespace ass {
         AAssSelector(SubSelectors&&... subSelectors) {
             processSubSelectors(std::forward<SubSelectors>(subSelectors)...);
         }
-        AAssSelector(AAssSelector&& move): mSubSelectors(std::move(move.mSubSelectors)) {
+        AAssSelector(AAssSelector&& move) noexcept: mSubSelectors(std::move(move.mSubSelectors)) {
 
         }
         explicit AAssSelector(std::nullptr_t) {}
@@ -84,6 +80,11 @@ namespace ass {
             }
             return false;
         }
+
+        bool isPossiblyApplicable(AView* view) override {
+            return constMe()->isPossiblyApplicable(view);
+        }
+
         bool isStateApplicable(AView* view) const {
             for (const auto& s : mSubSelectors) {
                 if (s->isStateApplicable(view)) {
@@ -92,7 +93,13 @@ namespace ass {
             }
             return false;
         }
+        bool isStateApplicable(AView* view) override {
+            return constMe()->isStateApplicable(view);
+        }
         void setupConnections(AView* view, const _<AAssHelper>& helper) const;
+        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+            constMe()->setupConnections(view, helper);
+        }
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void addSubSelector(SubSelector&& subSelector) {
             processSubSelector(std::forward<SubSelector>(subSelector));
@@ -101,6 +108,18 @@ namespace ass {
         [[nodiscard]]
         const AVector<_<IAssSubSelector>>& getSubSelectors() const {
             return mSubSelectors;
+        }
+
+        static AAssSelector makeCopy(const AAssSelector& from) {
+            AAssSelector result;
+            result.mSubSelectors = from.mSubSelectors;
+            return result;
+        }
+
+    private:
+        const AAssSelector* constMe() {
+            // NOLINTNEXTLINE(*-const-cast)
+            return const_cast<const AAssSelector*>(this);
         }
     };
 

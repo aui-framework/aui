@@ -7,15 +7,7 @@
 #include "AUI/Url/AUrl.h"
 #include "AUI/Audio/ABadFormatException.h"
 
-AWavSoundStream::AWavSoundStream(AUrl url) : mUrl(std::move(url)) {
-    mStream = getInputStream(*mUrl);
-    if (mStream == nullptr) {
-        throw AException("Failed to get input source for wav file from {}"_format(mUrl->full()));
-    }
-    readHeader();
-}
-
-AWavSoundStream::AWavSoundStream(aui::non_null<_<IInputStream>> stream) : mStream(std::move(stream)) {
+AWavSoundStream::AWavSoundStream(aui::non_null<_unique<IInputStream>> stream) : mStream(std::move(stream.value)) {
     readHeader();
 }
 
@@ -27,31 +19,11 @@ AAudioFormat AWavSoundStream::info() {
     };
 }
 
-void AWavSoundStream::rewind() {
-    if (mUrl) {
-        mChunkReadPos = 0;
-        mStream.reset();
-        mStream = getInputStream(*mUrl);
-        if (mStream) {
-            readHeader();
-        }
-    }
-}
-
 size_t AWavSoundStream::read(char* dst, size_t size) {
     size -= size % (mHeader.byteRate / mHeader.sampleRate);
-    auto remaining = mHeader.subchunk2Size - mChunkReadPos;
-    if (remaining == 0) {
-        return 0;
-    }
-
-    size_t r = mStream->read(dst, std::min(size, remaining));
+    size_t r = mStream->read(dst, size);
     mChunkReadPos += r;
     return r;
-}
-
-_<AWavSoundStream> AWavSoundStream::fromUrl(AUrl url) {
-    return _new<AWavSoundStream>(std::move(url));
 }
 
 void AWavSoundStream::readHeader() {
