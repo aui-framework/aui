@@ -41,7 +41,7 @@ body:
       label: Steps to reproduce
       description: Steps to reproduce the behavior – provide your build configuration.
       value: |
-        1. Open `aui.example.vies`
+        1. Open `aui.example.views`
         2. Click on '....'
         3. Scroll down to '....'
         4. See error
