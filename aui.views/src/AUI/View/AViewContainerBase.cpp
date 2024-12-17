@@ -190,8 +190,10 @@ void AViewContainerBase::setLayout(_unique<ALayout> layout) {
 }
 
 void AViewContainerBase::removeView(const _<AView>& view) {
+    if (view->mParent == this) {
+        view->mParent = nullptr;
+    }
     auto index = mViews.removeFirst(view);
-    view->mParent = nullptr;
     if (!index) return;
     AUI_NULLSAFE(mLayout)->removeView(view, *index);
     invalidateCaches();
@@ -199,17 +201,20 @@ void AViewContainerBase::removeView(const _<AView>& view) {
 }
 
 void AViewContainerBase::removeView(AView* view) {
-    auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
-    if (it != mViews.end()) {
-        if (mLayout) {
-            auto sharedPtr = *it;
-            auto index = std::distance(mViews.begin(), it);
-            mViews.erase(it);
-            mLayout->removeView(sharedPtr, index);
-        } else {
-            mViews.erase(it);
-        }
+    if (view->mParent == this) {
         view->mParent = nullptr;
+    }
+    auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
+    if (it == mViews.end()) {
+        return;
+    }
+    if (mLayout) {
+        auto sharedPtr = *it;
+        auto index = std::distance(mViews.begin(), it);
+        mViews.erase(it);
+        mLayout->removeView(sharedPtr, index);
+    } else {
+        mViews.erase(it);
     }
     invalidateCaches();
     emit childrenChanged;
