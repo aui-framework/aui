@@ -654,6 +654,7 @@ public:
             return;
         }
         mExpanding = expanding;
+        if (expandingChanged) emit expandingChanged(expanding);
         markMinContentSizeInvalid();
     }
 
@@ -1085,6 +1086,16 @@ signals:
      * @brief Geometry (position and size) changed.
      */
     emits<glm::ivec2, glm::ivec2> geometryChanged;
+
+    /**
+     * @brief Expanding changed.
+     */
+    emits<glm::ivec2> expandingChanged;
+
+    /**
+     * @brief Visibility changed.
+     */
+    emits<Visibility> visibilityChanged;
 
     /**
      * @brief Scroll event.
