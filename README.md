@@ -157,12 +157,15 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 | clang                        | Full          |
 
 ## Used libraries
-- `libcurl` for http/https requests
-- `OpenSSL` for encryption
+- [libcurl](https://curl.se/) for http/https requests
+- [OpenSSL](https://github.com/openssl/openssl) for encryption
 - `OpenGL` as graphics hardware acceleration backend
-- `glm` for linear algebra
-- `stbimage` for image loading
-- `freetype2` for font rendering
+- [glm](https://github.com/g-truc/glm) for linear algebra
+- [stbimage](https://github.com/nothings/stb) for image loading
+- [freetype2](https://github.com/freetype/freetype) for font rendering
+- [LunaSVG](https://github.com/sammycage/lunasvg) for font rendering
+- [GTest](https://github.com/google/googletest) for unit testing
+- [Google Benchmark](https://github.com/google/benchmark) for benchmark testing
 
 ## IDE Plugins
 
