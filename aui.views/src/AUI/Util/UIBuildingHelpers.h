@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 #include "AUI/Common/AVector.h"
@@ -44,7 +39,7 @@ template<typename Layout, typename... Args>
 inline auto _container(AVector<_<AView>> views, Args&&... args)
 {
     auto c = _new<AViewContainer>();
-    c->setLayout(_new<Layout>(std::forward<Args>(args)...));
+    c->setLayout(std::make_unique<Layout>(std::forward<Args>(args)...));
 
     c->setViews(std::move(views));
 
@@ -54,7 +49,7 @@ inline auto _container(AVector<_<AView>> views, Args&&... args)
 inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views)
 {
 	auto c = _new<AViewContainer>();
-	c->setLayout(_new<AAdvancedGridLayout>(2, views.size()));
+	c->setLayout(std::make_unique<AAdvancedGridLayout>(2, views.size()));
 	c->setExpanding({2, 0});
 	for (const auto& v : views) {
 		try {
@@ -109,6 +104,17 @@ using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayou
  * </p>
  */
 using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
+
+/**
+ * Places views according to specified xy coordinates.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AAbsoluteLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Absolute = aui::ui_building::layouted_container_factory<AAbsoluteLayout>;
 
 /**
  * Does not actually set the layout. The views' geometry is determined manually.

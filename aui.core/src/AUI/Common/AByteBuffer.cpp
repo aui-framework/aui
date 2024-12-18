@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <memory.h>
 #include <cassert>
@@ -21,6 +16,7 @@
 #include <glm/glm.hpp>
 
 
+#include "AUI/Common/AException.h"
 #include "AUI/IO/IInputStream.h"
 #include "AUI/IO/AIOException.h"
 
@@ -80,22 +76,34 @@ bool AByteBuffer::operator!=(const AByteBuffer& r) const {
 AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is)
 {
     AByteBuffer buf;
-    char tmp[0x10000];
+    buf.reserve(0x1000);
 
-    for (size_t last; (last = is->read(tmp, sizeof(tmp))) > 0;)
+    for (size_t last; (last = is->read(buf.end(), buf.getAvailableToWrite())) > 0;)
     {
-        buf.write(tmp, last);
+        buf.mSize += last;
+
+        if (buf.getAvailableToWrite() < 0x100) {
+            buf.grow(buf.capacity());
+        }
     }
     return buf;
 }
 
 AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction) {
     AByteBuffer buf;
-    buf.reserve(sizeRestriction);
-    char tmp[4096];
-    for (size_t last; (last = is->read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
+    buf.reserve(0x1000);
+
+    for (size_t last; (last = is->read(buf.end(), buf.getAvailableToWrite())) > 0;)
     {
-        buf.write(tmp, last);
+        buf.mSize += last;
+
+        if (buf.getAvailableToWrite() < 0x100) {
+            auto newCapacity = glm::min(buf.capacity() * 2, sizeRestriction);
+            if (buf.capacity() == newCapacity && buf.getAvailableToWrite()) {
+                break;
+            }
+            buf.reserve(newCapacity);
+        }
     }
     return buf;
 }
@@ -138,6 +146,9 @@ uint8_t hexCharToNumber(char c) {
 }
 
 AByteBuffer AByteBuffer::fromHexString(const AString& string) {
+    if (string.length() % 2 != 0) {
+        throw AException("invalid string length");
+    }
     AByteBuffer result;
     result.reserve(string.length() / 2);
 

@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #define GLM_FORCE_SWIZZLE
 
@@ -35,34 +30,34 @@ AColor::AColor(const AString& s)
 
 			// #fff
 			case 4:
-				r = static_cast<float>(s.substr(1, 1).toNumberHex()) / 15.f;
-				g = static_cast<float>(s.substr(2, 1).toNumberHex()) / 15.f;
-				b = static_cast<float>(s.substr(3, 1).toNumberHex()) / 15.f;
+				r = static_cast<float>(s.substr(1, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				g = static_cast<float>(s.substr(2, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				b = static_cast<float>(s.substr(3, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
 				a = 1.f;
 				break;
 
 			// #ffff
 			case 5:
-				r = static_cast<float>(s.substr(1, 1).toNumberHex()) / 15.f;
-				g = static_cast<float>(s.substr(2, 1).toNumberHex()) / 15.f;
-				b = static_cast<float>(s.substr(3, 1).toNumberHex()) / 15.f;
-				a = static_cast<float>(s.substr(4, 1).toNumberHex()) / 15.f;
+				r = static_cast<float>(s.substr(1, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				g = static_cast<float>(s.substr(2, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				b = static_cast<float>(s.substr(3, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
+				a = static_cast<float>(s.substr(4, 1).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 15.f;
 				break;
 				
 			// #ffffff
 			case 7:
-				r = static_cast<float>(s.substr(1, 2).toNumberHex()) / 255.f;
-				g = static_cast<float>(s.substr(3, 2).toNumberHex()) / 255.f;
-				b = static_cast<float>(s.substr(5, 2).toNumberHex()) / 255.f;
+				r = static_cast<float>(s.substr(1, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				g = static_cast<float>(s.substr(3, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				b = static_cast<float>(s.substr(5, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
 				a = 1.f;
 				break;
 				
 			// #ffffffff
 			case 9:
-				r = static_cast<float>(s.substr(1, 2).toNumberHex()) / 255.f;
-				g = static_cast<float>(s.substr(3, 2).toNumberHex()) / 255.f;
-				b = static_cast<float>(s.substr(5, 2).toNumberHex()) / 255.f;
-				a = static_cast<float>(s.substr(7, 2).toNumberHex()) / 255.f;
+				r = static_cast<float>(s.substr(1, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				g = static_cast<float>(s.substr(3, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				b = static_cast<float>(s.substr(5, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
+				a = static_cast<float>(s.substr(7, 2).toNumberOrException(AString::TO_NUMBER_BASE_HEX)) / 255.f;
 				break;
 			}
 		}

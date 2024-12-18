@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 6/25/2021.
@@ -34,11 +29,11 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
     }
 }
 
-void ARulerView::render(ClipOptimizationContext context) {
-    AView::render(context);
+void ARulerView::render(ARenderContext ctx) {
+    AView::render(ctx);
 
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
-        ARender::setTransform(glm::translate(
+        ctx.render.setTransform(glm::translate(
                     glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3{0, 0, 1.f}),
                     glm::vec3{0, -getWidth(), 0}));
     }
@@ -56,31 +51,32 @@ void ARulerView::render(ClipOptimizationContext context) {
      *
      */
     {
-        RenderHints::PushColor c;
-        ARender::setColor(getFontStyle().color);
+        RenderHints::PushColor c(ctx.render);
+        ctx.render.setColor(getTextColor());
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
             // large dashes
-            ARender::rect(ASolidBrush{},
-                          {mOffsetPx + operator ""_dp(i * delayLarge), 0.f},
-                          {1, totalHeight});
+            ctx.render.rectangle(ASolidBrush{},
+                                 {mOffsetPx + operator ""_dp(i * delayLarge), 0.f},
+                                 {1, totalHeight});
 
             // medium dashes
-            ARender::rect(ASolidBrush{},
-                          {mOffsetPx + operator ""_dp(i * delayLarge + delayMedium), totalHeight / 2},
-                          {1, totalHeight / 2});
+            ctx.render.rectangle(ASolidBrush{},
+                                 {mOffsetPx + operator ""_dp(i * delayLarge + delayMedium), totalHeight / 2},
+                                 {1, totalHeight / 2});
 
 
             // small dashes
             for (int j = 1; j <= 4; ++j) {
                 int smallDashOffset = j * delaySmall;
-                ARender::rect(ASolidBrush{},
-                              {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset), 3 * totalHeight / 4},
-                              {1, totalHeight / 4});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset),
+                                      3 * totalHeight / 4},
+                                     {1, totalHeight / 4});
 
-                ARender::rect(ASolidBrush{},
-                              {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset + delayMedium),
-                              3 * totalHeight / 4},
-                              {1, totalHeight / 4});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset + delayMedium),
+                                      3 * totalHeight / 4},
+                                     {1, totalHeight / 4});
             }
         }
     }
@@ -88,7 +84,7 @@ void ARulerView::render(ClipOptimizationContext context) {
     // number display
     {
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
-            ARender::string({mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
+            ctx.render.string({mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
                             AString::number(i * delayLarge),
                             getFontStyle());
         }
@@ -112,5 +108,9 @@ int ARulerView::getShortestSide() const {
             return getHeight();
     }
     return -1;
+}
+
+void ARulerView::invalidateFont() {
+
 }
 

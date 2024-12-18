@@ -1,36 +1,38 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <AUI/Platform/AWindow.h>
 
 struct ViewActionKeyDownAndUp: ViewActionClick<> {
-    AInput::Key key;
+    AShortcut key;
 
-    explicit ViewActionKeyDownAndUp(AInput::Key key) : key(key) {}
+    explicit ViewActionKeyDownAndUp(AShortcut key) : key(std::move(key)) {}
 
     void operator()(const _<AView>& view) {
         // click on it to acquire focus
-        ViewActionClick::operator()(view);
+        view->focus();
 
         auto window = view->getWindow();
 
-        window->onKeyDown(key);
-        window->onKeyUp(key);
+        uitest::frame();
+        for (const auto& k : key.getKeys()) {
+            AInput::overrideStateForTesting(k, true);
+            window->onKeyDown(k);
+        }
+        for (const auto& k : key.getKeys()) {
+            AInput::overrideStateForTesting(k, false);
+            window->onKeyUp(k);
+        }
     }
 };
 

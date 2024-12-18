@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "ACurl.h"
 #include "ACurlMulti.h"
@@ -110,7 +105,7 @@ ACurl::Builder::~Builder() {
 	assert(mCURL == nullptr);
 }
 
-_<IInputStream> ACurl::Builder::toInputStream() {
+_unique<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
         _<ACurl> mCurl;
@@ -136,7 +131,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
         }
     };
 
-    return _new<CurlInputStream>(_new<ACurl>(*this));
+    return std::make_unique<CurlInputStream>(_new<ACurl>(*this));
 }
 
 
@@ -190,7 +185,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
 
 
     switch (builder.mMethod) {
-        case Method::GET: {
+        case Method::HTTP_GET: {
             std::string url = builder.mUrl.toStdString();
             if (!builder.mParams.empty()) {
                 url += '?';
@@ -201,12 +196,38 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             break;
         }
 
-        case Method::POST: {
+        case Method::HTTP_DELETE: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "DELETE");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
+        case Method::HTTP_PUT: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            AUI_ASSERT(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, "PUT");
+            AUI_ASSERT(res == 0);
+            break;
+        }
+
+        case Method::HTTP_POST: {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             AUI_ASSERT(res == 0);
             res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
-
             AUI_ASSERT(res == 0);
+
             if (!builder.mParams.empty()) {
                 mPostFieldsStorage = builder.mParams.toStdString();
                 res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
@@ -221,7 +242,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
-    if (builder.mMethod == Method::POST && !mReadCallback) {
+    if (builder.mMethod == Method::HTTP_POST && !mReadCallback) {
         // if read func is not set, curl would block.
         res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
         AUI_ASSERT(res == 0);
@@ -255,6 +276,9 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             success(*this);
         });
     }
+
+    res = curl_easy_setopt(mCURL, CURLOPT_ACCEPT_ENCODING, "");
+    AUI_ASSERT(res == CURLE_OK);
 
     return *this;
 }

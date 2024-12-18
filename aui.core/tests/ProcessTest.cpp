@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.08.2020.
@@ -30,7 +25,7 @@
 
 using namespace std::chrono_literals;
 
-class Process : public ::testing::Test {
+class ProcessTest : public ::testing::Test {
 protected:
     APath mSelf;
 
@@ -38,9 +33,23 @@ protected:
         Test::SetUp();
         mSelf = AProcess::self()->getPathToExecutable();
     }
+
+    auto info() {
+        AProcess::ProcessCreationInfo info[] = {
+            {
+              .executable = mSelf,
+              .args = AProcess::ArgSingleString { "--help -a" },
+            },
+            {
+              .executable = mSelf,
+              .args = AProcess::ArgStringList { { "--help", "-a" } },
+            },
+        };
+        return std::to_array(info);
+    }
 };
 
-TEST_F(Process, Self) {
+TEST_F(ProcessTest, Self) {
 #if AUI_PLATFORM_WIN
     EXPECT_EQ(mSelf.filename(), "Tests.exe");
 #else
@@ -50,21 +59,21 @@ TEST_F(Process, Self) {
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
 
-TEST_F(Process, ExitCode) {
+TEST_F(ProcessTest, ExitCode) {
     EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
 }
 
-TEST_F(Process, Stdout) {
-    auto p = AProcess::make(mSelf, "--help");
+TEST_F(ProcessTest, Stdout) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
 
-    AString accumulator;
-    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) {
-        accumulator += AString::fromUtf8(buffer);
-    });
-    p->run();
-    p->waitForExitCode();
-    AThread::processMessages();
-    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+        AString accumulator;
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        p->run();
+        p->waitForExitCode();
+        AThread::processMessages();
+        EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+    }
 }
 
 class ProcessSignalReceiver: public AObject {
@@ -72,34 +81,38 @@ public:
     MOCK_METHOD(void, slotMock, ());
 };
 
-TEST_F(Process, FinishedSignal) {
-    auto receiver = _new<ProcessSignalReceiver>();
-    EXPECT_CALL(*receiver, slotMock()).Times(1);
-    auto p = AProcess::make(mSelf, "--help");
-    AObject::connect(p->finished, slot(receiver)::slotMock);
-    p->run();
-    p->waitForExitCode();
+TEST_F(ProcessTest, FinishedSignal) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
+        auto receiver = _new<ProcessSignalReceiver>();
+        EXPECT_CALL(*receiver, slotMock()).Times(1);
+        AObject::connect(p->finished, slot(receiver)::slotMock);
+        p->run();
+        p->waitForExitCode();
 
-    AThread::sleep(500ms);
+        AThread::sleep(500ms);
 
-    AThread::processMessages();
+        AThread::processMessages();
 
-    receiver = nullptr; // gmock wants object to be removed
+        receiver = nullptr;   // gmock wants object to be removed
+    }
 }
 
 
-TEST_F(Process, StdoutSignal) {
-    auto receiver = _new<ProcessSignalReceiver>();
-    EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
-    auto p = AProcess::make(mSelf, "--help");
-    AObject::connect(p->stdOut, slot(receiver)::slotMock);
-    p->run();
-    p->waitForExitCode();
+TEST_F(ProcessTest, StdoutSignal) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
+        auto receiver = _new<ProcessSignalReceiver>();
+        EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
+        AObject::connect(p->stdOut, slot(receiver)::slotMock);
+        p->run();
+        p->waitForExitCode();
 
-    AThread::sleep(500ms);
+        AThread::sleep(500ms);
 
-    AThread::processMessages();
+        AThread::processMessages();
 
-    receiver = nullptr; // gmock wants object to be removed
+        receiver = nullptr;   // gmock wants object to be removed
+    }
 }
 

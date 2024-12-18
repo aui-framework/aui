@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -111,8 +106,10 @@ public:
     };
 
     enum class Method {
-        GET,
-        POST,
+        HTTP_GET,
+        HTTP_POST,
+        HTTP_PUT,
+        HTTP_DELETE,
     };
 
     /**
@@ -125,11 +122,11 @@ public:
     };
 
 
-    struct ErrorDescription {
+    struct API_AUI_CURL ErrorDescription {
         int curlStatus;
         AString description;
 
-        API_AUI_CURL void throwException() const;
+        void throwException() const;
     };
 
     /**
@@ -187,7 +184,7 @@ public:
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
         AString mUrl, mParams;
-        Method mMethod = Method::GET;
+        Method mMethod = Method::HTTP_GET;
         std::function<void(ACurl&)> mOnSuccess;
 
     public:
@@ -413,7 +410,7 @@ public:
          * @throws AIOException
          * @return input stream
          */
-        _<IInputStream> toInputStream();
+        _unique<IInputStream> toInputStream();
 
         /**
          * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if

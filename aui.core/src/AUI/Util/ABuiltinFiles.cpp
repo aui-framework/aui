@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "ABuiltinFiles.h"
 
@@ -20,36 +15,11 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 
-void ABuiltinFiles::loadBuffer(AByteBuffer& data)
-{
-	AByteBuffer unpacked;
-	LZ::decompress(data, unpacked);
-    AByteBufferInputStream bis(unpacked);
-	while (bis.available())
-	{
-		std::string file;
-        AByteBuffer b;
-        bis >> aui::serialize_sized(file);
-        bis >> aui::serialize_sized(b);
-        inst().mBuffers[AString(file)] = std::move(b);
-	}
-}
-
-_<IInputStream> ABuiltinFiles::open(const AString& file)
-{
-	if (auto c = inst().mBuffers.contains(file))
-	{
-		return _new<AByteBufferInputStream>(c->second);
-	}
-	return nullptr;
-}
-
-AOptional<AByteBufferView> ABuiltinFiles::getBuffer(const AString& file) {
-    if (auto c = inst().mBuffers.contains(file))
-    {
-        return AByteBufferView(c->second);
+_unique<IInputStream> ABuiltinFiles::open(const AString& file) {
+    if (auto c = inst().mBuffers.contains(file.toStdString())) {
+        return aui::zlib::decompressToStream(c->second);
     }
-    return std::nullopt;
+    return nullptr;
 }
 
 ABuiltinFiles& ABuiltinFiles::inst() {
@@ -57,11 +27,11 @@ ABuiltinFiles& ABuiltinFiles::inst() {
     return f;
 }
 
-void ABuiltinFiles::load(const unsigned char* data, size_t size) {
-    AByteBuffer b(data, size);
-    inst().loadBuffer(b);
+void ABuiltinFiles::registerAsset(std::string_view path, const unsigned char* data, size_t size,
+                                  std::string_view programModule) {
+    inst().mBuffers[path] = AByteBufferView(reinterpret_cast<const char*>(data), size);
 }
 
 bool ABuiltinFiles::contains(const AString& file) {
-    return inst().mBuffers.contains(file);
+    return inst().mBuffers.contains(file.toStdString());
 }

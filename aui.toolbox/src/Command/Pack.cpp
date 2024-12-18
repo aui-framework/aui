@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 11/6/20.
@@ -67,9 +62,6 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
     try
     {
 
-        AByteBuffer buffer;
-
-        buffer << aui::serialize_sized(assetPath.toStdString());
         auto fis = _new<AFileInputStream>(inputFile);
 
         AByteBuffer data;
@@ -115,10 +107,8 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
 
         }
 
-        buffer << aui::serialize_sized(data);
-
         AByteBuffer packed;
-        LZ::compress(buffer, packed);
+        aui::zlib::compress(data, packed);
 
         auto cppObjectName = outputCpp.filenameWithoutExtension();
 
@@ -152,7 +142,9 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
 
         out << "struct Assets" << cppObjectName << " {\n"
              << "    Assets" << cppObjectName << "(){\n"
-                     "        ABuiltinFiles::load(AUI_PACKED_asset"
+                     "        ABuiltinFiles::registerAsset(\""
+             << assetPath
+             << "\", AUI_PACKED_asset"
              << cppObjectName
              << ", sizeof(AUI_PACKED_asset"
              << cppObjectName << "));\n    }\n};\n"

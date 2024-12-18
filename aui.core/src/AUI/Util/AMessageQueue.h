@@ -25,9 +25,10 @@
  * @details
  * Thread-safe message queue. The implementation supports enqueueing new messages inside the callbacks.
  */
+template<typename Mutex = AMutex, typename... Args>
 class AMessageQueue {
 public:
-    using Message = std::function<void()>;
+    using Message = std::function<void(Args...)>;
 
     /**
      * @brief Add message to the queue to process in processMessages().
@@ -40,18 +41,20 @@ public:
     /**
      * @brief Process messages submitted by enqueue method.
      */
-    void processMessages() {
+    void processMessages(Args... args) {
         // cheap lookahead that does not require mutex lock.
         if (mMessages.empty()) {
             return;
         }
         std::unique_lock lock(mSync);
         while (!mMessages.empty()) {
-            auto queue = std::move(mMessages);
-            lock.unlock();
-            for (auto& message : queue) {
-                message();
-            }
+            {
+                auto queue = std::move(mMessages);
+                lock.unlock();
+                for (auto &message: queue) {
+                    message(args...);
+                }
+            } // destroy queue before mutex lock
 
             // cheap lookahead that does not require mutex lock.
             if (mMessages.empty()) {
@@ -63,7 +66,7 @@ public:
     }
 
     [[nodiscard]]
-    AMutex& sync() noexcept {
+    Mutex& sync() noexcept {
         return mSync;
     }
 
@@ -73,7 +76,7 @@ public:
     }
 
     [[nodiscard]]
-    const AMutex& sync() const noexcept {
+    const Mutex& sync() const noexcept {
         return mSync;
     }
 
@@ -88,5 +91,5 @@ private:
     /**
      * @brief Message queue mutex.
      */
-    AMutex mSync;
+    Mutex mSync;
 };

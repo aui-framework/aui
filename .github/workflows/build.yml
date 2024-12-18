@@ -10,6 +10,10 @@ on:
   pull_request:
     branches: [ master, develop ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   GIT_SUBMODULE_STRATEGY: recursive
@@ -37,6 +41,7 @@ jobs:
         run: tree -aI .
 
       - name: Deploy
+        if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
         uses: peaceiris/actions-gh-pages@v3
         with:
           publish_dir: ./doxygen/out/html
@@ -66,7 +71,7 @@ jobs:
        run: cmake --build ${{github.workspace}}/build -t apps
 
      - name: Upload
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
          path: ${{github.workspace}}/build/app_project/app/build/outputs/apk/release/app-release-unsigned.apk
          name: aui.example.views-release-unsigned.apk
@@ -97,7 +102,7 @@ jobs:
        run: cpack -G TGZ -C Debug . 
 
      - name: Upload framework
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
          path: ${{github.workspace}}/build/app_project/*.tar.gz
          name: ios static Debug.tar.gz
@@ -107,7 +112,7 @@ jobs:
        run: tar -cvf app.tar.gz aui.example.views.app 
 
      - name: Upload app
-       uses: actions/upload-artifact@v3
+       uses: actions/upload-artifact@v4
        with:
          path: ${{github.workspace}}/build/app_project/bin/Debug/*.tar.gz
          name: aui.example.views-debug-unsigned.app.tar.gz 
@@ -194,7 +199,7 @@ jobs:
         run: cpack . -C ${{ matrix.debug_or_release }}
 
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
@@ -246,9 +251,15 @@ jobs:
             generator: "Ninja"
             additional_cmake_flags: ''
 
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+
     steps:
       - name: Download artifact
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
           path: ./
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}

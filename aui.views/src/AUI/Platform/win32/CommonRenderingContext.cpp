@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/9/2021.
@@ -49,7 +44,7 @@ void CommonRenderingContext::init(const Init& init) {
     ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = mWindowClass.c_str();
+        winClass.lpszClassName = aui::win32::toWchar(mWindowClass);
         winClass.cbSize = sizeof(WNDCLASSEX);
         winClass.style = CS_HREDRAW | CS_VREDRAW;
         winClass.lpfnWndProc = WindowProc;
@@ -61,7 +56,7 @@ void CommonRenderingContext::init(const Init& init) {
         winClass.hIconSm = icon;
         winClass.hbrBackground = nullptr;
         winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = mWindowClass.c_str();
+        winClass.lpszMenuName = aui::win32::toWchar(mWindowClass);
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
         if (RegisterClassEx(&winClass)) {
@@ -71,7 +66,7 @@ void CommonRenderingContext::init(const Init& init) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
 
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), init.name.c_str(), style,
+    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, aui::win32::toWchar(mWindowClass), aui::win32::toWchar(init.name), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -94,16 +89,16 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         ReleaseDC(w->mHandle, mWindowDC);
 
         DestroyWindow(w->mHandle);
     }
-    UnregisterClass(mWindowClass.c_str(), GetModuleHandle(nullptr));
+    UnregisterClass(aui::win32::toWchar(mWindowClass), GetModuleHandle(nullptr));
 }
 
-void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+void CommonRenderingContext::beginPaint(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             AUI_ASSERT(mPainterDC == nullptr);
@@ -112,7 +107,7 @@ void CommonRenderingContext::beginPaint(ABaseWindow& window) {
     }
 }
 
-void CommonRenderingContext::endPaint(ABaseWindow& window) {
+void CommonRenderingContext::endPaint(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             EndPaint(w->mHandle, &mPaintstruct);

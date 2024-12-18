@@ -1,23 +1,19 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AView.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/IStringable.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Enum/Visibility.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
@@ -42,14 +38,13 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
-#include "glm/common.hpp"
 
 // windows.h
 #undef max
 #undef min
 
 
-ABaseWindow* AView::getWindow() const
+AWindowBase* AView::getWindow() const
 {
 
     AView* parent = nullptr;
@@ -58,7 +53,7 @@ ABaseWindow* AView::getWindow() const
         parent = target;
     }
 
-    return dynamic_cast<ABaseWindow*>(parent);
+    return dynamic_cast<AWindowBase*>(parent);
 }
 
 AView::AView()
@@ -68,53 +63,69 @@ AView::AView()
     setSlotsCallsOnlyOnMyThread(true);
 }
 
+AView::~AView() = default;
+
 void AView::redraw()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
     if (mRedrawRequested) {
         return;
     }
+    static constexpr auto EXTRA_OFFSET = 8;
+    auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
+    for (auto s : mAss) {
+        AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
+    }
+    markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
-    AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
-
 }
-void AView::requestLayoutUpdate()
+void AView::markMinContentSizeInvalid()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
-    AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    mCachedMinContentSize.reset();
+    if (mMarkedMinContentSizeInvalid) {
+        // already marked.
+        // TODO uncomment this
+//        for (auto i = getParent(); i; i = i->getParent()) {
+//            AUI_ASSERT(i->mMarkedMinContentSizeInvalid);
+//        }
+        // return;
+    }
+    mMarkedMinContentSizeInvalid = true;
+    AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
-void AView::drawStencilMask()
+void AView::drawStencilMask(ARenderContext ctx)
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                ARender::roundedRect(ASolidBrush{},
+                ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      mBorderRadius);
             } else {
-                ARender::rect(ASolidBrush{},
-                              {mPadding.left, mPadding.top},
-                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ctx.render.rectangle(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
             if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
-                s->renderFor(this);
+                s->renderFor(this, ctx);
             }
             break;
     }
 }
 
-void AView::postRender() {
+void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
-        mAnimator->postRender(this);
-    popStencilIfNeeded();
+        mAnimator->postRender(this, ctx.render);
+    popStencilIfNeeded(ctx);
 }
 
-void AView::popStencilIfNeeded() {
+void AView::popStencilIfNeeded(ARenderContext ctx) {
     if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
     {
         /*
@@ -123,23 +134,23 @@ void AView::popStencilIfNeeded() {
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::popMask([&]() {
-            drawStencilMask();
+        RenderHints::popMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 }
-void AView::render(ClipOptimizationContext context)
+void AView::render(ARenderContext ctx)
 {
     if (mAnimator)
-        mAnimator->animate(this);
+        mAnimator->animate(this, ctx.render);
 
     ensureAssUpdated();
 
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
@@ -147,26 +158,28 @@ void AView::render(ClipOptimizationContext context)
     for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
         if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
         if (auto w = mAss[i]) {
-            w->renderFor(this);
+            w->renderFor(this, ctx);
         }
     }
 
     //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
+        RenderHints::pushMask(ctx.render, [&] {
+            drawStencilMask(ctx);
         });
     }
 
     if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
-        w->renderFor(this);
+        w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
 }
 
 void AView::invalidateAllStyles()
 {
+    static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
@@ -175,7 +188,7 @@ void AView::invalidateAllStyles()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    mFontStyle = {};
+    mOpacity = 1;
 
     auto applyStylesheet = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {
@@ -201,12 +214,12 @@ void AView::invalidateAllStyles()
         viewTree.pop();
     }
 
-    invalidateStateStyles();
+    invalidateStateStylesImpl(prevMinSize);
 }
 
-void AView::invalidateStateStyles() {
-    aui::zero(mAss);
+void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     if (!mAssHelper) return;
+    aui::zero(mAss);
     mAssHelper->state.backgroundCropping.size.reset();
     mAssHelper->state.backgroundCropping.offset.reset();
     mAssHelper->state.backgroundImage.reset();
@@ -223,28 +236,20 @@ void AView::invalidateStateStyles() {
         }
     }
     applyAssRule(mCustomStyleRule);
+    commitStyle();
 
+    if (prevMinimumSizePlusField != getMinimumSizePlusMargin()) {
+        mMarkedMinContentSizeInvalid = true;
+        AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
+    }
     redraw();
 }
 
-
-float AView::getTotalFieldHorizontal() const
-{
-    return mPadding.horizontal() + mMargin.horizontal();
-}
-
-float AView::getTotalFieldVertical() const
-{
-    return mPadding.vertical() + mMargin.vertical();
-}
-
-int AView::getContentMinimumWidth(ALayoutDirection layout)
-{
+int AView::getContentMinimumWidth() {
     return 0;
 }
 
-int AView::getContentMinimumHeight(ALayoutDirection layout)
-{
+int AView::getContentMinimumHeight() {
     return 0;
 }
 
@@ -253,16 +258,14 @@ bool AView::hasFocus() const
     return mHasFocus;
 }
 
-int AView::getMinimumWidth(ALayoutDirection layout)
-{
+int AView::getMinimumWidth() {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x, mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
-int AView::getMinimumHeight(ALayoutDirection layout)
-{
+int AView::getMinimumHeight() {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y, mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -270,15 +273,9 @@ void AView::getTransform(glm::mat4& transform) const
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
-AFontStyle& AView::getFontStyle()
-{
-    return mFontStyle;
-}
-
-
 void AView::pack()
 {
-    setSize({getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection())});
+    setSize({ getMinimumWidth(), getMinimumHeight() });
 }
 
 void AView::addAssName(const AString& assName)
@@ -291,7 +288,11 @@ void AView::addAssName(const AString& assName)
     invalidateAssHelper();
 }
 
-void AView::invalidateAssHelper() { mAssHelper = nullptr; }
+void AView::invalidateAssHelper() {
+    mAssHelper = nullptr;
+    aui::zero(mAss);
+    redraw();
+}
 
 void AView::removeAssName(const AString& assName)
 {
@@ -341,7 +342,9 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
 {
-    AWindow::current()->setCursor(mCursor);
+    if (mCursor) {
+        AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
+    }
 }
 
 void AView::onMouseLeave()
@@ -429,7 +432,7 @@ void AView::onFocusLost()
     mHasFocus.set(this, false);
 }
 
-void AView::onCharEntered(wchar_t c)
+void AView::onCharEntered(char16_t c)
 {
 
 }
@@ -472,14 +475,18 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
+    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) {
         return;
     }
     mPosition = position;
+    redraw();
     emit positionChanged(position);
 }
 void AView::setSize(glm::ivec2 size)
 {
+    mMarkedMinContentSizeInvalid = false;
+    mSkipUntilLayoutUpdate = false;
     auto newSize = mSize;
     if (mFixedSize.x != 0)
     {
@@ -507,10 +514,12 @@ void AView::setSize(glm::ivec2 size)
         return;
     }
     mSize = newSize;
+    redraw();
     emit sizeChanged(newSize);
 }
 
 void AView::setGeometry(int x, int y, int width, int height) {
+    mSkipUntilLayoutUpdate = false;
     auto oldPosition = mPosition;
     auto oldSize = mSize;
     setPosition({ x, y });
@@ -523,6 +532,9 @@ void AView::setGeometry(int x, int y, int width, int height) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
+    if (mSkipUntilLayoutUpdate) {
+        return false;
+    }
     return true;
 }
 
@@ -578,9 +590,6 @@ void AView::onDpiChanged() {
     mAssHelper = nullptr;
 }
 
-void AView::invalidateFont() {
-
-}
 void AView::notifyParentEnabledStateChanged(bool enabled) {
     mParentEnabled = enabled;
     updateEnableState();
@@ -640,7 +649,7 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
-    mAssHelper = nullptr;
+    invalidateAssHelper();
 }
 
 
@@ -672,7 +681,7 @@ void AView::onClickPrevented() {
 
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
-    if (mParent) { // ABaseWindow does not have parent
+    if (mParent) { // AWindowBase does not have parent
         AWindow::current()->forceUpdateCursor();
     }
 }
@@ -686,11 +695,129 @@ void AView::setVisibility(Visibility visibility) noexcept
     if (mVisibility == visibility) {
         return;
     }
-    mVisibility = visibility;
-    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+    auto prev = std::exchange(mVisibility, visibility);
+    if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
+        mMarkedMinContentSizeInvalid = false; // force
+        markMinContentSizeInvalid();
+    }
+    emit visibilityChanged(visibility);
 }
+
+namespace aui::view::impl {
+    bool isDefinitelyInvisible(AView& view);
+}
+
+void AView::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (getOverflow() != AOverflow::VISIBLE) {
+        // clip by overflow
+        invalidArea.p1 = glm::max(invalidArea.p1, glm::ivec2(0));
+        invalidArea.p2 = glm::min(invalidArea.p2, getSize());
+    }
+    if (mRenderToTexture) {
+        if (glm::all(glm::lessThanEqual(invalidArea.p1, glm::ivec2(0, 0))) &&
+            glm::all(glm::greaterThanEqual(invalidArea.p2, getSize()))) {
+            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
+        }
+        mRenderToTexture->invalidArea.addRectangle(invalidArea);
+        if (std::exchange(mRedrawRequested, true)) {
+            // this view already requested a redraw.
+            return;
+        }
+        // temporary disable drawing from texture. this will be set back to true by the callback below.
+        mRenderToTexture->drawFromTexture = false;
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+                // dead interface?
+                return;
+            }
+
+            if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
+                // last frame we draw here was not used.
+                // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
+                // results are actually displayed.
+                mRedrawRequested = false;
+                return;
+            }
+
+            if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+                // unable to render to zero-area texture
+                mRedrawRequested = false;
+                mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
+                return;
+            }
+
+            if (mRenderToTexture->invalidArea.empty()) {
+                // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
+                // but why not safe check?
+                return;
+            }
+
+            APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
+            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
+            if (!mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea)) {
+                // unsuccessful
+                mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+                return;
+            }
+            AUI_DEFER {
+                mRenderToTexture->rendererInterface->end(renderer);
+            };
+
+            ARenderContext contextOfTheView {
+                .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
+                                                                                       invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
+                .render = renderer,
+            };
+            ARect<int> initialRect {
+                .p1 = { 0, 0 },
+                .p2 = getSize(),
+            };
+            if (contextOfTheView.clippingRects.empty()) {
+                contextOfTheView.clippingRects << initialRect;
+            } else {
+                contextOfTheView.clip(initialRect);
+            }
+            RenderHints::PushState state(renderer);
+            try {
+                render(contextOfTheView);
+                postRender(contextOfTheView);
+            }
+            catch (const AException& e) {
+                ALogger::err("AView") << "Unable to render view: " << e;
+                return;
+            }
+            mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+            mRenderToTexture->drawFromTexture = true;
+        });
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
+        return;
+    }
+
+    if (mRedrawRequested) {
+        // this view already requested a redraw.
+        return;
+    }
+
+    AUI_NULLSAFE(mParent)->markPixelDataInvalid(invalidArea.translate(getPosition()));
+}
+
+AString AView::debugString() const {
+    return "{} at {}"_format(mAssNames.empty() ? IStringable::toString(this) : mAssNames.last(), getPositionInWindow());
+}
+
+void AView::forceUpdateLayoutRecursively() {
+    do_once {
+        ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
+    }
+    mMarkedMinContentSizeInvalid = true;
+    mCachedMinContentSize.reset();
+}
+
+void AView::commitStyle() {
+
+}
+
 std::ostream& operator<<(std::ostream& os, const AView& view) {
-    os << "{ name = " << IStringable::toString(&view) << ", win_pos = " << view.getPositionInWindow()
-       << ", size = " << view.getSize() << " }";
+    os << view.debugString();
     return os;
 }

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "AThread.h"
 
@@ -24,7 +19,6 @@
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
-#include "AUI/Util/AMessageQueue.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
@@ -62,12 +56,12 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         }
     } s;
     if (s) {
-        s(handle, name.c_str());
+        s(handle, aui::win32::toWchar(name));
     }
 }
 #else
 #include <signal.h>
-#if !AUI_PLATFORM_ANDROID
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_EMSCRIPTEN
 #include <execinfo.h>
 #endif
 #include <pthread.h>
@@ -265,7 +259,7 @@ void AThread::join()
 	mThread->join();
 }
 
-void AAbstractThread::enqueue(AMessageQueue::Message f)
+void AAbstractThread::enqueue(AMessageQueue<>::Message f)
 {
     mMessageQueue.enqueue(std::move(f));
     if (mCurrentEventLoop) {
@@ -317,7 +311,7 @@ void AAbstractThread::updateThreadName() noexcept {
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(name.c_str());
-#else
+#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
         auto name = mThreadName.toStdString();
         AUI_ASSERTX(name.size() < 16, "on unix thread name restricted to 15 chars length");
         pthread_setname_np(pthread_self(), name.c_str());

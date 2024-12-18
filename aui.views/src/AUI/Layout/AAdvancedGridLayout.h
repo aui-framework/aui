@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -23,28 +18,6 @@
  * @ingroup layout_managers
  */
 class API_AUI_VIEWS AAdvancedGridLayout: public ALayout {
-private:
-    int mCurrentIndex = 0;
-    int cellsX, cellsY;
-    unsigned mSpacing = 0;
-
-    struct GridCell {
-        _<AView> view;
-        int x, y;
-
-        operator _<AView>() const {
-            return view;
-        }
-    };
-    AVector<GridCell> mCells;
-    AVector<int> mIndices;
-
-
-    int& indexAt(int x, int y);
-
-    AVector<_<AView>> getRow(int row);
-    AVector<_<AView>> getColumn(int column);
-
 public:
 
     AAdvancedGridLayout(int cellsX, int cellsY);
@@ -73,6 +46,39 @@ public:
     int indexOf(_<AView> view);
 
     AVector<_<AView>> getAllViews() override;
+
+protected:
+    struct CompositionCache {
+        unsigned expandingSum = 0;
+        int minSize = 0;
+
+        int finalPos = 0;
+        int finalSize = 0;
+    };
+
+    struct GridCell {
+        _<AView> view;
+        int x, y;
+
+        operator _<AView>() const {
+            return view;
+        }
+    };
+
+    int mCurrentIndex = 0;
+    int cellsX, cellsY;
+    unsigned mSpacing = 0;
+
+    AVector<GridCell> mCells;
+    AVector<int> mIndices;
+
+protected:
+    int& indexAt(int x, int y);
+
+    AVector<_<AView>> getRow(int row);
+    AVector<_<AView>> getColumn(int column);
+
+    virtual void prepareCache(AVector<CompositionCache>& columns, AVector<CompositionCache>& rows);
 
 };
 

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/7/2021.
@@ -153,20 +148,20 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info("OpenGL context is ready");
     }
 
-    ARender::setRenderer(mRenderer = ourRenderer());
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
+    mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(ourDisplay, w->mHandle);
     }
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
 
     if (auto w = dynamic_cast<AWindow*>(&window)) {
@@ -176,7 +171,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     CommonRenderingContext::endPaint(window);
     endFramebuffer();
     mRenderer->endPaint();
@@ -185,13 +180,13 @@ void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     }
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(ourDisplay, w->mHandle, ourContext);
     }
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
 
 }
 

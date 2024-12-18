@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -34,7 +29,7 @@
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
@@ -48,16 +43,17 @@
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
+#include <AUI/Render/ITexture.h>
+#include <AUI/Render/IRenderViewToTexture.h>
+#include <AUI/Enum/AFloat.h>
 
 
-class ARender;
 class AWindow;
-class ABaseWindow;
-class AViewContainer;
+class AWindowBase;
+class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
-
 
 /**
  * @defgroup useful_views Views
@@ -79,7 +75,9 @@ class AStylesheet;
  */
 class API_AUI_VIEWS AView: public AObject
 {
+    friend class AViewContainerBase;
     friend class AViewContainer;
+    friend class IRenderViewToTexture;
 private:
     /**
      * @brief Animation.
@@ -112,14 +110,9 @@ private:
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
     /**
-     * @brief Font style for this AView.
-     */
-    AFontStyle mFontStyle;
-
-    /**
      * @brief opacity, specified in ASS.
      */
-    float mOpacity = 1;
+    aui::float_within_0_1 mOpacity = 1;
 
     /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
@@ -152,15 +145,6 @@ private:
     [[nodiscard]]
     ALayoutDirection parentLayoutDirection() const noexcept;
 
-    /**
-     * @brief Redraw requested flag for this particular view/
-     * @details
-     * This flag is set in redraw() method and reset in AView::render(ClipOptimizationContext context). redraw() method does not actually requests
-     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
-     * drawn.
-     */
-    bool mRedrawRequested = false;
-
 
     /**
      * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
@@ -168,16 +152,18 @@ private:
      */
     bool mMouseEntered = false;
 
+    /**
+     * @brief Determines if pressing the view allows triggering click on other views
+     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     */
+    bool mBlockClicksWhenPressed = true;
+
 protected:
     /**
      * @brief Parent AView.
      */
-    AViewContainer* mParent = nullptr;
-
-    /**
-     * @brief Determines how to display text that go out of the bounds.
-     */
-    ATextOverflow mTextOverflow = ATextOverflow::NONE;
+    AViewContainerBase* mParent = nullptr;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -218,6 +204,18 @@ protected:
      */
     glm::ivec2 mExpanding = {0, 0};
 
+    AOptional<glm::ivec2> mCachedMinContentSize;
+    bool mMarkedMinContentSizeInvalid = false;
+
+    /**
+     * @brief Redraw requested flag for this particular view/
+     * @details
+     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
+     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
+     * drawn.
+     */
+    bool mRedrawRequested = false;
+
     /**
      * @brief Minimal size.
      */
@@ -250,7 +248,14 @@ protected:
      */
     AVector<AString> mAssNames;
 
-    void requestLayoutUpdate();
+    /**
+     * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
+     * AView::setGeometry.
+     * @details
+     * This flag addresses the issue when some container is filled with views by addView during several frames, causing
+     * to draw them in wrong place (then their layout is not processed yet).
+     */
+    bool mSkipUntilLayoutUpdate = true;
 
     /**
      * @brief Converts touch screen events to desktop.
@@ -276,7 +281,6 @@ protected:
      */
     virtual AMenuModel composeContextMenu();
 
-
     /**
      * @brief Called when direct or indirect parent has changed.
      * @details
@@ -287,9 +291,19 @@ protected:
      */
     virtual void onViewGraphSubtreeChanged();
 
+
+    /**
+     * @brief A view requests to redraw it and passes it's coords relative to this.
+     * @param invalidArea area to invalidate. Must be in this view's coordinate space.
+     * @return A window that manages this invalidation event.
+     */
+    virtual void markPixelDataInvalid(ARect<int> invalidArea);
+
+    virtual void commitStyle();
+
 public:
     AView();
-    virtual ~AView() = default;
+    ~AView() override;
     /**
      * @brief Request window manager to redraw this AView.
      */
@@ -299,24 +313,27 @@ public:
      * @brief Determines window which this AView belongs to.
      * @return window which this AView belongs to. Could be nullptr
      */
-    ABaseWindow* getWindow() const;
+    AWindowBase* getWindow() const;
 
-    virtual void drawStencilMask();
+    virtual void drawStencilMask(ARenderContext ctx);
 
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
+     * @details
+     * AView::render is not guaranteed to be called on per-frame basis. Moreover, this method can be called multiple
+     * times if render-to-texture caching decides to do so.
      */
-    virtual void render(ClipOptimizationContext context);
+    virtual void render(ARenderContext ctx);
 
     /**
      * @brief Performs post-draw routines of this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
      */
-    virtual void postRender();
+    virtual void postRender(ARenderContext ctx);
 
-    void popStencilIfNeeded();
+    void popStencilIfNeeded(ARenderContext ctx);
 
     [[nodiscard]]
     const AVector<AString>& getAssNames() const noexcept {
@@ -326,8 +343,8 @@ public:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-    const glm::ivec2& getPosition() const
-
+    [[nodiscard]]
+    glm::ivec2 getPosition() const noexcept
     {
         return mPosition;
     }
@@ -341,7 +358,7 @@ public:
      * @endcode
      */
     [[nodiscard]]
-    glm::ivec2 getCenterPointInWindow() const
+    glm::ivec2 getCenterPointInWindow() const noexcept
     {
         return getPositionInWindow() + getSize() / 2;
     }
@@ -349,7 +366,8 @@ public:
     /**
      * @brief Size, including content area, border and padding.
      */
-    const glm::ivec2& getSize() const
+    [[nodiscard]]
+    glm::ivec2 getSize() const noexcept
     {
         return mSize;
     }
@@ -357,14 +375,15 @@ public:
     /**
      * @return minSize (ignoring fixedSize)
      */
-    const glm::ivec2& getMinSize() const {
+    glm::ivec2 getMinSize() const noexcept {
         return mMinSize;
     }
 
-    void setMinSize(const glm::ivec2& minSize) {
+    void setMinSize(glm::ivec2 minSize) noexcept {
         mMinSize = minSize;
     }
 
+    virtual void markMinContentSizeInvalid();
 
     /**
      * @see mExtraStylesheet
@@ -397,10 +416,6 @@ public:
     void setOverflow(AOverflow overflow)
     {
         mOverflow = overflow;
-    }
-
-    void setTextOverflow(ATextOverflow textOverflow) {
-        mTextOverflow = textOverflow;
     }
 
     /**
@@ -438,17 +453,28 @@ public:
     /**
      * @return pixel count which this AView acquired by width including content area, padding, border and margin.
      */
-    float getTotalOccupiedWidth() const
+    int getTotalOccupiedWidth() const
     {
-        return mVisibility == Visibility::GONE ? 0 : mSize.x + getTotalFieldHorizontal();
+        return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
 
     /**
      * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
-    float getTotalOccupiedHeight() const
+    int getTotalOccupiedHeight() const
     {
-        return mVisibility == Visibility::GONE ? 0 : mSize.y + getTotalFieldVertical();
+        return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
+    }
+
+    /**
+     * @return minimum content size plus margin.
+     * @details
+     * This value is bare minimum space required for this view. It includes minimal content size + padding + margin which
+     * is exact space the view requires.
+     */
+    [[nodiscard]]
+    glm::ivec2 getMinimumSizePlusMargin() {
+        return getMinimumSize() + mMargin.occupiedSize();
     }
 
     /**
@@ -456,8 +482,9 @@ public:
      * @return margin
      */
     [[nodiscard]]
-    const ABoxFields& getMargin() const
+    const ABoxFields& getMargin()
     {
+        ensureAssUpdated();
         return mMargin;
     }
 
@@ -483,8 +510,9 @@ public:
      * @return padding
      */
     [[nodiscard]]
-    const ABoxFields& getPadding() const
+    const ABoxFields& getPadding()
     {
+        ensureAssUpdated();
         return mPadding;
     }
 
@@ -496,25 +524,41 @@ public:
         mPadding = padding;
     }
 
+    /**
+     * @brief String which helps to identify this object in debug string output (i.e., for logging)
+     */
+    virtual AString debugString() const;
 
 
     /**
      * @return pixel count which this AView's margin and padding acquired by width.
      */
     [[nodiscard]]
-    float getTotalFieldHorizontal() const;
+    int getTotalFieldHorizontal() const {
+        return mPadding.horizontal() + mMargin.horizontal();
+    }
 
     /**
      * @return pixel count which this AView's margin and padding acquired by height.
      */
     [[nodiscard]]
-    float getTotalFieldVertical() const;
+    int getTotalFieldVertical() const {
+        return mPadding.vertical() + mMargin.vertical();
+    }
+
+    /**
+     * @return pixel count which this AView's margin and padding acquired.
+     */
+    [[nodiscard]]
+    glm::ivec2 getTotalFieldSize() const {
+        return { getTotalFieldHorizontal(), getTotalFieldVertical() };
+    }
 
 
     /**
      * @brief Parent AView.
      */
-    AViewContainer* getParent() const
+    AViewContainerBase* getParent() const
     {
         return mParent;
     }
@@ -531,22 +575,44 @@ public:
     /**
      * @return minimal content-area width.
      */
-    virtual int getContentMinimumWidth(ALayoutDirection layout);
+    [[nodiscard]]
+    virtual int getContentMinimumWidth();
 
 
     /**
      * @return minimal content-area height.
      */
-    virtual int getContentMinimumHeight(ALayoutDirection layout);
+    [[nodiscard]]
+    virtual int getContentMinimumHeight();
+
+    /**
+     * @return minimal content-area size.
+     */
+    [[nodiscard]]
+    glm::ivec2 getContentMinimumSize() noexcept {
+        if (!mCachedMinContentSize) {
+            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(), getContentMinimumHeight());
+            mCachedMinContentSize = minContentSize;
+            return minContentSize;
+        }
+        // TODO ignore layout?
+        return *mCachedMinContentSize;
+    }
+
+    [[nodiscard]]
+    bool isContentMinimumSizeInvalidated() noexcept {
+        return !mCachedMinContentSize.hasValue();
+    }
+
 
     bool hasFocus() const;
 
 
-    virtual int getMinimumWidth(ALayoutDirection layout = ALayoutDirection::NONE);
-    virtual int getMinimumHeight(ALayoutDirection layout = ALayoutDirection::NONE);
+    virtual int getMinimumWidth();
+    virtual int getMinimumHeight();
 
     glm::ivec2 getMinimumSize() {
-        return {getMinimumWidth(), getMinimumHeight()};
+        return { getMinimumWidth(), getMinimumHeight() };
     }
 
     void setMaxSize(const glm::ivec2& maxSize) {
@@ -578,20 +644,33 @@ public:
 
     /**
      * @brief Changes the expanding of view.
+     * @sa layout_managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
-    void setExpanding(const glm::ivec2& expanding)
+    void setExpanding(glm::ivec2 expanding)
     {
+        if (mExpanding == expanding) [[unlikely]] {
+            return;
+        }
         mExpanding = expanding;
+        if (expandingChanged) emit expandingChanged(expanding);
+        markMinContentSizeInvalid();
     }
+
+    /**
+     * @brief Changes the expanding of view.
+     * @sa layout_managers
+     * @sa mExpanding
+     * @sa ass::Expanding
+     */
     void setExpanding(int expanding)
     {
-        mExpanding = { expanding, expanding };
+        setExpanding({expanding, expanding});
     }
     void setExpanding()
     {
-        mExpanding = glm::ivec2(2);
+        setExpanding(2);
     }
 
     const _<AAnimator>& getAnimator() const {
@@ -603,24 +682,25 @@ public:
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
 
+    [[nodiscard]]
     int getExpandingHorizontal() const
     {
         return mExpanding.x;
     }
+
+    [[nodiscard]]
     int getExpandingVertical() const
     {
         return mExpanding.y;
     }
-    AFontStyle& getFontStyle();
 
-    [[nodiscard]] float getOpacity() const {
+    [[nodiscard]] aui::float_within_0_1 getOpacity() const {
         return mOpacity;
     }
-    void setOpacity(float opacity) {
+    void setOpacity(aui::float_within_0_1 opacity) {
         mOpacity = opacity;
     }
 
-    virtual void invalidateFont();
     virtual void setPosition(glm::ivec2 position);
 
     /**
@@ -636,6 +716,13 @@ public:
         setGeometry(position.x, position.y, size.x, size.y);
     }
 
+    bool isBlockClicksWhenPressed() const noexcept {
+        return mBlockClicksWhenPressed;
+    }
+
+    void setBlockClicksWhenPressed(bool value) noexcept {
+        mBlockClicksWhenPressed = value;
+    }
 
     /**
      * @brief Fixed size.
@@ -646,7 +733,11 @@ public:
     }
     void setFixedSize(glm::ivec2 size) {
         AUI_ASSERTX(glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000))), "abnormal fixed size");
+        if (size == mFixedSize) [[unlikely]] {
+            return;
+        }
         mFixedSize = size;
+        markMinContentSizeInvalid();
     }
 
     [[nodiscard]]
@@ -847,11 +938,13 @@ public:
     virtual void onKeyUp(AInput::Key key);
     virtual void onFocusAcquired();
     virtual void onFocusLost();
-    virtual void onCharEntered(wchar_t c);
+    virtual void onCharEntered(char16_t c);
     /**
      * @return true if this AView accepts tab focus
      */
     virtual bool handlesNonMouseNavigation();
+
+    virtual void forceUpdateLayoutRecursively();
 
     virtual void setEnabled(bool enabled = true);
 
@@ -870,6 +963,7 @@ public:
         setEnabled(false);
     }
 
+
     /**
      * @brief Helper function for kAUI.h:with_style
      */
@@ -878,7 +972,7 @@ public:
     }
 
     /**
-     * @brief Called on ABaseWindow::preventClickOnPointerRelease.
+     * @brief Called on AWindowBase::preventClickOnPointerRelease.
      */
     virtual void onClickPrevented();
 
@@ -910,7 +1004,9 @@ public:
      *   <li>Changed state (hover, active, focus) of this view</li>
      * </ul>
      */
-    void invalidateStateStyles();
+    void invalidateStateStyles() {
+        invalidateStateStylesImpl(getMinimumSizePlusMargin());
+    }
 
 
     /**
@@ -923,6 +1019,30 @@ public:
      */
     [[nodiscard]]
     virtual bool wantsTouchscreenKeyboard();
+
+    /**
+     * @see AView::mSkipUntilLayoutUpdate
+     */
+    void setSkipUntilLayoutUpdate(bool skipUntilLayoutUpdate) {
+        mSkipUntilLayoutUpdate = skipUntilLayoutUpdate;
+    }
+
+    /**
+     * @brief Set floating value for AText.
+     */
+    void setFloating(AFloat f) noexcept
+    {
+        mFloating = f;
+    }
+
+    /**
+     * @brief Floating value for AText.
+     */
+    [[nodiscard]]
+    AFloat getFloating() const noexcept
+    {
+        return mFloating;
+    }
 
 signals:
     /**
@@ -966,6 +1086,16 @@ signals:
      * @brief Geometry (position and size) changed.
      */
     emits<glm::ivec2, glm::ivec2> geometryChanged;
+
+    /**
+     * @brief Expanding changed.
+     */
+    emits<glm::ivec2> expandingChanged;
+
+    /**
+     * @brief Visibility changed.
+     */
+    emits<Visibility> visibilityChanged;
 
     /**
      * @brief Scroll event.
@@ -1015,7 +1145,30 @@ private:
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
 
-    void notifyParentChildFocused(const _<AView> &view);
+    /**
+     * @brief Floating value for AText.
+     */
+    AFloat mFloating = AFloat::NONE;
+
+    struct RenderToTexture {
+        _unique<IRenderViewToTexture> rendererInterface;
+        IRenderViewToTexture::InvalidArea invalidArea;
+
+        bool drawFromTexture = true;
+
+        /**
+         * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
+         */
+        bool skipRedrawUntilTextureIsPresented = false;
+    };
+    AOptional<RenderToTexture> mRenderToTexture;
+
+    /**
+     * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
+     */
+    virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
+
+    void notifyParentChildFocused(const _<AView>& view);
 };
 
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);

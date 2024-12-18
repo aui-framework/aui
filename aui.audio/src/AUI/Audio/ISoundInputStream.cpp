@@ -7,8 +7,9 @@
 #include "AUI/Logging/ALogger.h"
 
 _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
+
     try {
-        return AWavSoundStream::fromUrl(url);
+        return _new<AWavSoundStream>(Cache::get(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }
@@ -17,7 +18,7 @@ _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
     }
 
     try {
-        return AOggSoundStream::fromUrl(url);
+        return _new<AOggSoundStream>(Cache::get(url));
     }
     catch (const aui::audio::ABadFormatException&) {
     }
@@ -33,20 +34,16 @@ ISoundInputStream::Cache& ISoundInputStream::Cache::inst() {
     return inst;
 }
 
-_<IInputStream> ISoundInputStream::loadSourceInputStream(const AUrl &key) {
-    if (auto result = Cache::get(key)) {
-        return _new<AByteBufferInputStream>(*result);
+_unique<IInputStream> ISoundInputStream::Cache::get(const AUrl& key) {
+    if (auto c = inst().mEntries.contains(key)) {
+        return std::make_unique<AStrongByteBufferInputStream>(c->second);
     }
-
-    return key.open();
-}
-
-_<AByteBuffer> ISoundInputStream::Cache::load(const AUrl &key) {
     try {
         auto stream = key.open();
-        if (auto file = _cast<AFileInputStream>(stream); file && file->size() < MAX_FILE_SIZE_TO_CACHE) {
-            return _new<AByteBuffer>(AByteBuffer::fromStream(*file));
+        if (auto file = dynamic_cast<AFileInputStream*>(stream.get()); file && file->size() < MAX_FILE_SIZE_TO_CACHE) {
+            return std::make_unique<AStrongByteBufferInputStream>(inst().mEntries[key] = _new<AByteBuffer>(AByteBuffer::fromStream(file)));
         }
+        return stream;
     }
     catch(...) {
     }

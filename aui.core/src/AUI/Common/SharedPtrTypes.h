@@ -1,24 +1,20 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <memory>
 #include <functional>
 #include <optional>
+#include <type_traits>
 
 class AObject;
 
@@ -34,7 +30,7 @@ class API_AUI_CORE AStacktrace;
 
 namespace aui::impl::shared_ptr {
     struct InstancesDict {
-        ARecursiveMutex sync;
+        std::recursive_mutex sync;
         std::map<void*, std::set<void*>> map;
     };
 
@@ -120,9 +116,13 @@ namespace aui {
          * @brief Creates unique_ptr from raw pointer and a deleter.
          * @details
          * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
+         * By using this function, lifetime of the pointer is delegated to std::unique_ptr. The wrapped pointer will
+         * be freed by specified Deleter. Default deleter is std::default_delete. You may want to specialize
+         * `std::default_delete<T>` struct in order to specify default deleter for T, in this case you can omit deleter
+         * argument of this function.
          */
         template<typename T, typename Deleter = std::default_delete<T>>
-        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter) {
+        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter = Deleter{}) {
             return { ptr, std::move(deleter) };
         }
 
@@ -309,6 +309,11 @@ public:
         return *this;
     }
 
+    template<typename... Arg>
+    auto operator()(Arg&&... value) const requires std::is_invocable_v<T, Arg...> {
+        return (*super::get())(std::forward<Arg>(value)...);
+    }
+
     template<typename Arg>
     const _<T>& operator+(Arg&& value) const {
         (*super::get()) + std::forward<Arg>(value);
@@ -328,7 +333,7 @@ public:
     }
 
     [[nodiscard]]
-    T& operator*() const noexcept {
+    std::add_lvalue_reference_t<T> operator*() const noexcept {
         return super::operator*();
     }
 
@@ -382,13 +387,37 @@ namespace aui {
     }
 }
 
-
+template<typename TO, typename FROM>
+inline TO* _cast(const _unique<FROM>& object)
+{
+    return dynamic_cast<TO*>(object.get());
+}
 
 template<typename TO, typename FROM>
-inline _<TO> _cast(_<FROM> object)
+inline _<TO> _cast(const _<FROM>& object)
 {
     return std::dynamic_pointer_cast<TO, FROM>(object);
 }
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(_<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(const std::shared_ptr<FROM>& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(object);
+}
+
+
+template<typename TO, typename FROM>
+inline _<TO> _cast(std::shared_ptr<FROM>&& object)
+{
+    return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
+}
+
 
 
 /**

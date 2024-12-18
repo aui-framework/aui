@@ -1,23 +1,21 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.10.2020.
 //
 
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/concat.hpp>
 #include <AUI/Platform/AProcess.h>
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/Platform/Pipe.h"
@@ -40,33 +38,32 @@
 #include <fcntl.h>
 
 namespace {
-    size_t processMemory(pid_t pid) {
-        // avoid fancy apis here for performance reasons.
-        long rss = 0L;
-        FILE* fp = NULL;
-        char path[0x100];
-        *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/statm", pid).out = '\0';
-        if ((fp = fopen(path, "r")) == nullptr) {
-            return (size_t)0L;
-        }
-        if (fscanf(fp, "%*s%ld", &rss ) != 1) {
-            fclose(fp);
-            return (size_t)0L;
-        }
-        fclose(fp);
-        return (size_t)rss * (size_t)sysconf(_SC_PAGESIZE);
+size_t processMemory(pid_t pid) {
+    // avoid fancy apis here for performance reasons.
+    long rss = 0L;
+    FILE* fp = nullptr;
+    char path[0x100];
+    *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/statm", pid).out = '\0';
+    if ((fp = fopen(path, "r")) == nullptr) {
+        return (size_t) 0L;
     }
+    if (fscanf(fp, "%*s%ld", &rss) != 1) {
+        fclose(fp);
+        return (size_t) 0L;
+    }
+    fclose(fp);
+    return (size_t) rss * (size_t) sysconf(_SC_PAGESIZE);
 }
+}   // namespace
 
-class AOtherProcess: public AProcess {
+class AOtherProcess : public AProcess {
 private:
     pid_t mHandle;
 
 public:
     AOtherProcess(pid_t handle) : mHandle(handle) {}
 
-    ~AOtherProcess() {
-    }
+    ~AOtherProcess() {}
 
     int waitForExitCode() override {
         int loc;
@@ -74,9 +71,7 @@ public:
         return WEXITSTATUS(loc);
     }
 
-    APath getModuleName() override {
-        return getPathToExecutable().filename();
-    }
+    APath getModuleName() override { return getPathToExecutable().filename(); }
 
     APath getPathToExecutable() override {
         char buf[0x800];
@@ -85,13 +80,9 @@ public:
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
-    uint32_t getPid() const noexcept override {
-        return mHandle;
-    }
+    uint32_t getPid() const noexcept override { return mHandle; }
 
-    size_t processMemory() const override { 
-        return ::processMemory(mHandle); 
-    }
+    size_t processMemory() const override { return ::processMemory(mHandle); }
 };
 
 AVector<_<AProcess>> AProcess::all() {
@@ -110,65 +101,72 @@ _<AProcess> AProcess::self() {
     return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
-_<AProcess> AProcess::fromPid(uint32_t pid) {
-    return _new<AOtherProcess>(pid_t(pid));
-}
+_<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
 #endif
 
-void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
-    AUI_ASSERT(0);
-}
-extern char **environ;
+extern char** environ;
 
 void AChildProcess::run(ASubProcessExecutionFlags flags) {
-    if (!APath(mApplicationFile).isRegularFileExists()) {
-        throw AFileNotFoundException(mApplicationFile);
+    if (!getApplicationFile().isRegularFileExists()) {
+        throw AFileNotFoundException(getApplicationFile());
     }
 
     bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
     bool tieStdout = bool(flags & ASubProcessExecutionFlags::TIE_STDOUT);
     bool tieStderr = bool(flags & ASubProcessExecutionFlags::TIE_STDERR);
 
-    AVector<std::string> argsStdString;
-    {
-        auto splt = mArgs.split(' ');
-        argsStdString.reserve(splt.size() + 1);
-        argsStdString << mApplicationFile.toStdString();
-        for (auto& arg: splt) {
-            argsStdString << arg.toStdString();
-        }
-    }
-    AVector<char*> argv;
-    argv.reserve(argsStdString.size());
-    for (auto& arg : argsStdString) {
-        argv << arg.data();
-    }
-    argv << nullptr;
+    auto argsStdString = std::visit(
+        aui::lambda_overloaded {
+          [](const ArgSingleString& singleString) {
+              auto split = singleString.arg.split(' ');
+              return split | ranges::view::transform(&AString::toStdString) | ranges::to_vector;
+          },
+          [](const ArgStringList& singleString) {
+              return singleString.list | ranges::view::transform(&AString::toStdString) | ranges::to_vector;
+          },
+        },
+        mInfo.args);
 
+    auto executable = mInfo.executable.toStdString();
+
+    auto argv = [&] {
+        auto executableRange = std::to_array({ executable.data() });
+        static constexpr auto nullRange = std::to_array({ (char*) nullptr });
+        return ranges::view::concat(executableRange,
+                                    argsStdString | ranges::view::transform([](auto& s) { return s.data(); }),
+                                    nullRange)
+               | ranges::to_vector;
+    }();
 
     Pipe pipeStdin;
     Pipe pipeStdout;
     Pipe pipeStderr;
 
-    //fcntl(pipeStdout.out(), F_SETOWN, callback);
+    // fcntl(pipeStdout.out(), F_SETOWN, callback);
 
     auto pid = fork();
     if (pid == 0) {
-        while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {}
+        while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {
+        }
         if (!tieStdout) {
-            while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+            while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {
+            }
         }
         if (!tieStderr) {
-            while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) && (errno == EINTR)) {}
+            while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) &&
+                   (errno == EINTR)) {
+            }
         }
 
-        //ipeStdin.closeIn();
-        //ipeStdout.closeOut();
-        //ipeStderr.closeOut();
+        // ipeStdin.closeIn();
+        // ipeStdout.closeOut();
+        // ipeStderr.closeOut();
 
         // we are in a new process
-        chdir(mWorkingDirectory.toStdString().c_str());
-        execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
+        if (!mInfo.workDir.empty()) {
+            chdir(mInfo.workDir.toStdString().c_str());
+        }
+        execve(executable.c_str(), argv.data(), environ);
         exit(-1);
     } else {
         mWatchdog = _new<AThread>([&] {
@@ -185,30 +183,20 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         pipeStderr.closeIn();
 
         mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& b) {
-            if (stdOut && b.size() > 0) emit stdOut(b);
+            if (stdOut && b.size() > 0)
+                emit stdOut(b);
         });
 
         mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
     }
 }
 
-AChildProcess::~AChildProcess() {
+AChildProcess::~AChildProcess() {}
 
-}
+int AChildProcess::waitForExitCode() { return *mExitCode; }
 
-int AChildProcess::waitForExitCode() {
-   return *mExitCode;
-}
+uint32_t AChildProcess::getPid() const noexcept { return mPid; }
 
+size_t AChildProcess::processMemory() const { return ::processMemory(mPid); }
 
-uint32_t AChildProcess::getPid() const noexcept {
-    return mPid;
-}
-
-size_t AChildProcess::processMemory() const {
-    return ::processMemory(mPid); 
-}
-
-void AProcess::kill() const noexcept {
-    ::kill(getPid(), SIGKILL);
-}
+void AProcess::kill() const noexcept { ::kill(getPid(), SIGKILL); }

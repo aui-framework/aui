@@ -1,25 +1,19 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.10.2020.
 //
 
 #pragma once
-
 
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AException.h>
@@ -57,20 +51,18 @@ AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
     /**
      * @brief If set, child and parent processes have the same stderr stream
      */
-    TIE_STDERR = 0b100,
-    DEFAULT = 0
+    TIE_STDERR = 0b100, DEFAULT = 0
 };
 
-class AProcessException: public AException {
+class AProcessException : public AException {
 public:
-    AProcessException(const AString& message): AException(message) {}
+    AProcessException(const AString& message) : AException(message) {}
 };
 
 /**
  * Retrieves data about processes.
  */
-class API_AUI_CORE AProcess: public aui::noncopyable {
-
+class API_AUI_CORE AProcess : public aui::noncopyable {
 public:
     virtual ~AProcess() = default;
 
@@ -101,16 +93,92 @@ public:
     virtual size_t processMemory() const = 0;
 
     /**
-     * @brief Launches executable.
+     * @brief Process arguments represented as a single string.
+     * @details
+     * @note
+     * In general, prefer using AProcess::Args.
+     */
+    struct ArgSingleString {
+        AString arg;
+    };
+
+    /**
+     * @brief Process arguments represented as array of strings.
+     */
+    struct ArgStringList {
+        /**
+         * @details
+         * Argument list.
+         */
+        AStringVector list;
+
+        /**
+         * @details
+         * Takes action only on Windows platform.
+         *
+         * If true, during conversion to a single command line string on Windows platforms elements of list containing
+         * whitespaces are wrapped with quots escaping existing quots. As it's the only way on Windows platforms to
+         * supply paths with whitespaces, executables generally handle these quots properly.
+         *
+         * If it does not work for your particular case, you may try setting this to false or use
+         * AProcess::ArgSingleString to take full control of command line during process creation.
+         *
+         * Defaults to true.
+         */
+        bool win32WrapWhitespaceArgumentsWithQuots = true;
+    };
+
+    /**
+     * @brief Process creation info.
+     */
+    struct ProcessCreationInfo {
+        /**
+         * @details Target executable file. Mandatory.
+         */
+        APath executable;
+
+        /**
+         * @details
+         * Child process arguments.
+         *
+         * In common, prefer Args variant.
+         *
+         * Unix native APIs use arguments as array of strings. If ArgSingleString variant is chosen, AUI splits it with
+         * whitespaces.
+         *
+         * Windows native APIs use arguments as a single string. If ArgStringList variant is chosen, AUI converts array
+         * of strings to a single command line string value. See ArgStringList for details of this conversion.
+         */
+        std::variant<ArgSingleString, ArgStringList> args;
+
+        /**
+         * @details
+         * Process working directory. Defaults to working directory of the calling process.
+         */
+        APath workDir;
+    };
+
+    /**
+     * @brief Launches an executable.
+     * @param args designated initializer. See ProcessCreationInfo
+     * @return AChildProcess instance. Use AChildProcess::run to execute.
+     */
+    static _<AChildProcess> create(ProcessCreationInfo args);
+
+    /**
+     * @brief Launches an executable.
      * @param applicationFile executable file
      * @param args arguments
      * @param workingDirectory working directory
-     * @return AChildProcess instance
+     * @return AChildProcess instance. Use AChildProcess::run to execute.
      */
-    static _<AChildProcess> make(AString applicationFile,
-                                       AString args = {},
-                                       APath workingDirectory = {});
-
+    [[deprecated("use AProcess::create instead")]]
+    static _<AChildProcess> make(AString applicationFile, AString args = {}, APath workingDirectory = {}) {
+        return create(
+            { .executable = std::move(applicationFile),
+              .args = ArgSingleString { std::move(args) },
+              .workDir = std::move(workingDirectory) });
+    }
 
     /**
      * @brief Launches executable.
@@ -119,22 +187,22 @@ public:
      * @param workingDirectory working directory
      * @return exit code
      */
-    static int executeWaitForExit(AString applicationFile,
-                                  AString args = {},
-                                  APath workingDirectory = {},
-                                  ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
+    [[deprecated("use auto process = AProcess::make(); process->run(); process->waitForExitCode()")]]
+    static int executeWaitForExit(
+        AString applicationFile, AString args = {}, APath workingDirectory = {},
+        ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
-
+#if AUI_PLATFORM_WIN
     /**
-     * @brief Launches executable with administrator rights.
+     * @brief Launches executable with administrator rights. (Windows only)
      * @param applicationFile executable file
      * @param args arguments
      * @param workingDirectory pro
      * @note This function could not determine exit code because of MS Windows restrictions
      */
-    static void executeAsAdministrator(const AString& applicationFile,
-                                      const AString& args = {},
-                                      const APath& workingDirectory = {});
+    static void executeAsAdministrator(
+        const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});
+#endif
 
     /**
      * @return data about all other running processes.
@@ -152,7 +220,6 @@ public:
      */
     static _<AProcess> findAnotherSelfInstance(const AString& yourProjectName);
 
-
     /**
      * @return process by id
      */
@@ -164,40 +231,30 @@ public:
 /**
  * Creates child process of this application.
  */
-class API_AUI_CORE AChildProcess: public AProcess, public AObject {
-friend class AProcess;
+class API_AUI_CORE AChildProcess : public AProcess, public AObject {
+    friend class AProcess;
+
 public:
-    AChildProcess() = default;
     ~AChildProcess();
-    
-    void setApplicationFile(AString applicationFile) noexcept {
-        mApplicationFile = std::move(applicationFile);
-    }
 
-    void setArgs(AString args) noexcept {
-        mArgs = std::move(args);
-    }
-
-    void setWorkingDirectory(APath workingDirectory) noexcept {
-        mWorkingDirectory = std::move(workingDirectory);
+    [[nodiscard]]
+    const auto& getApplicationFile() const {
+        return mInfo.executable;
     }
 
     [[nodiscard]]
-    const AString& getApplicationFile() const {
-        return mApplicationFile;
+    const auto& getArgs() const {
+        return mInfo.args;
     }
 
     [[nodiscard]]
-    const AString& getArgs() const {
-        return mArgs;
+    const auto& getWorkingDirectory() const {
+        return mInfo.workDir;
     }
 
-    [[nodiscard]]
-    const APath& getWorkingDirectory() const {
-        return mWorkingDirectory;
+    APath getPathToExecutable() override {
+        return getApplicationFile();
     }
-
-    APath getPathToExecutable() override;
 
     [[nodiscard]]
     AOptional<int> exitCodeNonBlocking() const noexcept {
@@ -240,11 +297,11 @@ signals:
     emits<AByteBuffer> stdErr;
 
 private:
-    AString mApplicationFile;
-    AString mArgs;
-    APath mWorkingDirectory;
+    AChildProcess() = default;
+    ProcessCreationInfo mInfo;
 
     _<IOutputStream> mStdInStream;
+
 
     AFuture<int> mExitCode;
 #if AUI_PLATFORM_WIN
@@ -257,5 +314,3 @@ private:
     UnixIoAsync mStdoutAsync;
 #endif
 };
-
-

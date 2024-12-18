@@ -118,6 +118,7 @@ foreach(_var AUI_PLATFORM_WIN
              AUI_PLATFORM_IOS
              AUI_PLATFORM_ANDROID
              AUI_PLATFORM_UNIX
+             AUI_PLATFORM_EMSCRIPTEN
 
              AUI_COMPILER_CLANG
              AUI_COMPILER_GCC
@@ -146,10 +147,6 @@ auib_import(range-v3 https://github.com/ericniebler/range-v3
         CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
-
-if (AUI_PLATFORM_ANDROID)
-    target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
-endif()
 
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)

@@ -1,18 +1,13 @@
-﻿//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -31,22 +26,22 @@ class AString;
 class AColor: public glm::vec4
 {
 public:
-	AColor(): glm::vec4(0, 0, 0, 1.f)
+	constexpr AColor(): glm::vec4(0, 0, 0, 1.f)
 	{
 	}
-	AColor(const glm::vec4& v): glm::vec4(v){}
+	constexpr AColor(const glm::vec4& v): glm::vec4(v){}
 
     API_AUI_CORE AColor(const AString& s);
-	AColor(float scalar) : glm::vec4(scalar) {}
-	AColor(float r, float g, float b) : glm::vec4(r, g, b, 1.f) {}
-	AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
+	constexpr AColor(float scalar) : glm::vec4(scalar) {}
+	constexpr AColor(float r, float g, float b) : glm::vec4(r, g, b, 1.f) {}
+	constexpr AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
 
 	/**
 	 * @brief Construct with hex integer
 	 * @param color integer representing color in 0xRRGGBBAA
 	 * \example AColor(0xff0000ff) will represent opaque bright red
 	 */
-	AColor(unsigned int color) : glm::vec4(
+	constexpr AColor(unsigned int color) : glm::vec4(
 		((color >> 24) & 0xff) / 255.f, 
 		((color >> 16) & 0xff) / 255.f, 
 		((color >> 8) & 0xff) / 255.f, 
@@ -57,7 +52,7 @@ public:
      * @param color integer representing color in 0xAARRGGBB
      * \example AColor(0xff0000ff) will represent opaque bright blue
      */
-	static AColor fromAARRGGBB(unsigned int color)
+	static constexpr AColor fromAARRGGBB(unsigned int color)
 	{
 		return {
 		((color >> 16) & 0xff) / 255.f,
@@ -72,7 +67,7 @@ public:
      * @param color integer representing color in 0xRRGGBB
      * \example AColor(0x00ff00) will represent opaque bright green
      */
-	static AColor fromRRGGBB(unsigned int color)
+	static constexpr AColor fromRRGGBB(unsigned int color)
 	{
 		return {
 		((color >> 16) & 0xff) / 255.f,
@@ -82,7 +77,7 @@ public:
 		};
 	}
 	
-	AColor operator*(float other) const
+	constexpr AColor operator*(float other) const
 	{
 		return AColor(x * other, y * other, z * other, w * other);
 	}
@@ -117,13 +112,13 @@ public:
      * @param multiplier
      * @return supplyValue color
      */
-    inline AColor mul(float d) const {
+    inline constexpr AColor mul(float d) const {
         return glm::clamp(glm::vec4(r * d, g * d, b * d, a), glm::vec4(0.f), glm::vec4(1.f));
     }
-    inline AColor darker(float d) const {
+    inline constexpr AColor darker(float d) const {
         return mul(1.f - d);
     }
-    inline AColor lighter(float d) const {
+    inline constexpr AColor lighter(float d) const {
         return mul(1.f + d);
     }
 
@@ -147,6 +142,7 @@ public:
     static const AColor RED;
     static const AColor GREEN;
     static const AColor BLUE;
+    static const AColor GRAY;
 };
 
 inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
@@ -154,6 +150,7 @@ inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
 inline const AColor AColor::RED   = {1.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::GREEN = {0.f, 1.f, 0.f, 1.f};
 inline const AColor AColor::BLUE  = {0.f, 0.f, 1.f, 1.f};
+inline const AColor AColor::GRAY  = {0.5f, 0.5f, 0.5f, 1.f};
 
 
 inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
@@ -173,7 +170,7 @@ inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
  * @param color integer representing color in 0xAARRGGBB
  * \example AColor(0xff0000ff) will represent opaque bright blue
  */
-inline AColor operator"" _argb(unsigned long long v)
+inline constexpr AColor operator""_argb(unsigned long long v)
 {
     return AColor::fromAARRGGBB(unsigned(v));
 }
@@ -184,7 +181,7 @@ inline AColor operator"" _argb(unsigned long long v)
  * @param color integer representing color in 0xRRGGBB
  * \example AColor(0x00ff00) will represent opaque bright green
  */
-inline AColor operator"" _rgb(unsigned long long v)
+inline constexpr AColor operator""_rgb(unsigned long long v)
 {
 	assert(("_rgb literal should be in 0xrrggbb format, not 0xaarrggbb" && !(v & 0xff000000u)));
     return AColor::fromRRGGBB(unsigned(v));

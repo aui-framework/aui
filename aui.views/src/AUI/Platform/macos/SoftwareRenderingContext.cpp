@@ -1,20 +1,16 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
@@ -24,19 +20,19 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow &window) {
+void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
     CommonRenderingContext::beginPaint(window);
 }
 
-void SoftwareRenderingContext::endPaint(ABaseWindow &window) {
+void SoftwareRenderingContext::endPaint(AWindowBase &window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
+void SoftwareRenderingContext::beginResize(AWindowBase &window) {
 
 }
 
@@ -44,12 +40,17 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
 }
 
-void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+void SoftwareRenderingContext::endResize(AWindowBase &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
     return AImage{};
 }
-void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
+void SoftwareRenderingContext::reallocateImageBuffers(const AWindowBase& window) {
     mBitmapSize = window.getSize();
+}
+
+IRenderer& SoftwareRenderingContext::renderer() {
+    static SoftwareRenderer r;
+    return r;
 }

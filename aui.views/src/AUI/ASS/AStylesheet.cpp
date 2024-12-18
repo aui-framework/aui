@@ -1,25 +1,20 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 29.12.2020.
 //
 
 #include "AUI/Enum/AOverflow.h"
-#include "AUI/View/AScrollAreaInner.h"
+#include "AUI/View/AScrollAreaViewport.h"
 #if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
@@ -48,6 +43,7 @@
 #include "AUI/View/ASpinner.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
+#include "AUI/View/ATextArea.h"
 
 
 AStylesheet::AStylesheet() {
@@ -86,16 +82,28 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            t<AText>(),
+            { t<AText>(), t<ATextArea>() },
             Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
+            Expanding { 1, 0 },
+            LineHeight::NORMAL,
+        },
+
+        {
+            t<ATextArea>(),
+            Expanding { 1 },
         },
         // AAbstractLabel
         {
             t<AAbstractLabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
+        },
+        {
+            t<AText>() > t<AAbstractLabel>(),
+            Margin { 0 },
+            Padding { 0 },
         },
         {
             t<AAbstractLabel>::disabled(),
@@ -115,8 +123,8 @@ AStylesheet::AStylesheet() {
             MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
-                ATextAlign::CENTER,
-                VerticalAlign::MIDDLE,
+            ATextAlign::CENTER,
+            VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -138,7 +146,7 @@ AStylesheet::AStylesheet() {
             Padding { 0 },
         },
         {
-            { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
+            { button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
@@ -156,7 +164,6 @@ AStylesheet::AStylesheet() {
         },
         {
             { t<AButton>::active(), c::active(".btn")},
-            Padding { 4_dp, {}, 2_dp },
             BoxShadow { nullptr },
         },
         {
@@ -182,7 +189,7 @@ AStylesheet::AStylesheet() {
 
         // Text fields
         {
-            t<AAbstractTypeableView>(),
+            t<AAbstractTypeable>(),
             Padding { 3_dp, 6_dp },
             ACursor::TEXT,
         },
@@ -346,7 +353,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-                ATextAlign::LEFT,
+            ATextAlign::LEFT,
         },
 
         // AListView
@@ -480,7 +487,7 @@ AStylesheet::AStylesheet() {
         },
         // scrollbar
         {
-            t<AScrollAreaInner>(),
+            t<AScrollAreaViewport>(),
             AOverflow::HIDDEN,
             Expanding(),
         },

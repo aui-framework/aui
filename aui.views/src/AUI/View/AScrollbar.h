@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 06.12.2020.
@@ -60,11 +55,11 @@ public:
 
     }
 
-    int getMinimumWidth(ALayoutDirection) override {
+    int getMinimumWidth() override {
         return 0;
     }
 
-    int getMinimumHeight(ALayoutDirection) override {
+    int getMinimumHeight() override {
         return 0;
     }
 };
@@ -73,8 +68,9 @@ public:
  * @brief A single scrollbar
  * @ingroup useful_views
  * @see AScrollArea
+ * @see ASlider
  */
-class API_AUI_VIEWS AScrollbar: public AViewContainer {
+class API_AUI_VIEWS AScrollbar: public AViewContainerBase {
     friend class AScrollbarHandle;
 public:
 
@@ -114,7 +110,7 @@ public:
         }
     }
 
-    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+    void setAppearance(ass::ScrollbarAppearance::AxisValue appearance) {
         mAppearance = appearance;
     }
 
@@ -133,6 +129,21 @@ public:
     void setSize(glm::ivec2 size) override;
 
     static const _<ATimer>& buttonTimer();
+
+
+    /**
+     * @return max scroll of this scrollbar.
+     * @details
+     * If viewport size is larger than content size (in the case when contents are smaller than AScrollArea), 0 is
+     * returned.
+     */
+    std::size_t getMaxScroll() const noexcept {
+        if (mFullSize <= mViewportSize) {
+            return 0;
+        }
+
+        return mFullSize - mViewportSize;
+    }
 
 signals:
 
@@ -159,13 +170,6 @@ protected:
 
     void handleScrollbar(int s);
 
-    std::size_t getMaxScroll() const noexcept {
-        if (mFullSize <= mViewportSize) {
-            return 0;
-        }
-
-        return mFullSize - mViewportSize;
-    }
 
 private:
     struct StickToEnd {
@@ -182,7 +186,7 @@ private:
      * @see AScrollbar::setStickToEnd()
      */
     AOptional<StickToEnd> mStickToEnd;
-    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
+    ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
 };
 
 

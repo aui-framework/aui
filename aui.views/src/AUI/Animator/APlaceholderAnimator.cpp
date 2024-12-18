@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 28.11.2020.
@@ -21,13 +16,13 @@
 #include "APlaceholderAnimator.h"
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 
 APlaceholderAnimator::APlaceholderAnimator() {
 
 }
 
-void APlaceholderAnimator::doPostRender(AView* view, float theta) {
+void APlaceholderAnimator::doPostRender(AView* view, float theta, IRenderer& render) {
     float width;
     if (auto cs = dynamic_cast<ICustomWidth*>(view)) {
         width = cs->getCustomWidthForPlaceholderAnimator();
@@ -43,7 +38,7 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
     float posX = theta * (view->getWidth() + WIDTH * 2.f) - WIDTH;
 
     /*
-    ARender::rect(
+    ctx.render.rect(
             ALinearGradientBrush{
                     0x00ffffff_argb, BRIGHT_COLOR,
                     0x00ffffff_argb, BRIGHT_COLOR
@@ -51,7 +46,7 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
             {posX, 0},
             {WIDTH / 2, view->getHeight()});
 
-    ARender::rect(
+    ctx.render.rect(
             ALinearGradientBrush{
                     BRIGHT_COLOR, 0x00ffffff_argb,
                     BRIGHT_COLOR, 0x00ffffff_argb

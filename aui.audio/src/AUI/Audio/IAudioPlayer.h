@@ -2,9 +2,9 @@
 
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
-
-class ISoundInputStream;
-class AUrl;
+#include <AUI/Url/AUrl.h>
+#include <AUI/Audio/ASoundResampler.h>
+#include <AUI/Audio/VolumeLevel.h>
 
 /**
  * @brief Interface for audio playback.
@@ -12,9 +12,9 @@ class AUrl;
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
-    static _<IAudioPlayer> fromSoundStream(_<ISoundInputStream>);
+    explicit IAudioPlayer(AUrl url);
 
-    static _<IAudioPlayer> fromUrl(const AUrl& url);
+    static _<IAudioPlayer> fromUrl(AUrl url);
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
      */
@@ -27,32 +27,17 @@ public:
     /**
      * @brief Starts audio playback, if playback was previously paused, it will continue from where it was paused.
      */
-    void play() {
-        if (mPlaybackStatus != PlaybackStatus::PLAYING) {
-            playImpl();
-            mPlaybackStatus = PlaybackStatus::PLAYING;
-        }
-    }
+    void play();
 
     /**
      * @brief Pauses audio playback keeping playback progress.
      */
-    void pause() {
-        if (mPlaybackStatus == PlaybackStatus::PLAYING) {
-            pauseImpl();
-            mPlaybackStatus = PlaybackStatus::PAUSED;
-        }
-    }
+    void pause();
 
     /**
      * @brief Pauses audio playback without keeping playback progress.
      */
-    void stop() {
-        if (mPlaybackStatus != PlaybackStatus::STOPPED) {
-            stopImpl();
-            mPlaybackStatus = PlaybackStatus::STOPPED;
-        }
-    }
+    void stop();
 
     /**
      * @return Current playback status.
@@ -62,31 +47,11 @@ public:
     }
 
     /**
-     * @brief Sets new source for playback.
-     * @param src
-     */
-    void setSource(_<ISoundInputStream> src) {
-        if (mPlaybackStatus != PlaybackStatus::STOPPED) {
-            stop();
-        }
-        mSource = std::move(src);
-        onSourceSet();
-    }
-
-    /**
-     * @brief Get source for playback.
-     */
-    [[nodiscard]]
-    const _<ISoundInputStream>& source() const noexcept {
-        return mSource;
-    }
-
-    /**
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    const _<ISoundInputStream>& resampledStream() const noexcept {
-        return mResampled != nullptr ? mResampled : mSource;
+    const _<ASoundResampler>& resampledStream() const noexcept {
+        return mResampledStream;
     }
 
     /**
@@ -94,10 +59,7 @@ public:
      * sound stream would be rewind.
      * @param loop New loop flag
      */
-    void setLoop(bool loop) {
-        mLoop = loop;
-        onLoopSet();
-    }
+    void setLoop(bool loop);
 
     /**
      * @return Current loop flag
@@ -107,28 +69,18 @@ public:
         return mLoop;
     }
 
-    using VolumeLevel = aui::ranged_number<uint32_t, 0, 256>;
-
     /**
      * @brief Set level of volume.
-     * @param volume Float number from 0 to 1 inclusively
+     * @param volume Integer number from 0 to 256 inclusively, works linear
      */
-    void setVolume(VolumeLevel volume) {
-        mVolume = volume;
-        onVolumeSet();
-    }
+    void setVolume(aui::audio::VolumeLevel volume);
 
     /**
      * @return Current volume level.
      */
     [[nodiscard]]
-    VolumeLevel volume() const noexcept {
+    aui::audio::VolumeLevel volume() const noexcept {
         return mVolume;
-    }
-
-    void rewind() {
-        stop();
-        play();
     }
 
     /**
@@ -136,10 +88,13 @@ public:
      * @details
      * See IAudioPlayer::finished for listening for this event.
      */
-    void onFinished() {
-        stop();
-        emit finished;
+    void onFinished();
+
+    const AUrl& url() const noexcept {
+        return mUrl;
     }
+
+    void rewind();
 
 signals:
     /**
@@ -147,24 +102,38 @@ signals:
      */
     emits<> finished;
 
+    /**
+     * @brief On sound stream read.
+     */
+    emits<> read;
+
 protected:
-    _<ISoundInputStream> mResampled;
+    bool isInitialized() const noexcept {
+        return mResampledStream != nullptr;
+    }
+
+    void initialize();
+
+    void initializeIfNeeded() {
+        if (!isInitialized()) {
+            initialize();
+        }
+    }
+
+    void release();
 
 private:
-    _<ISoundInputStream> mSource;
+    aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
+    AUrl mUrl;
+    _<ISoundInputStream> mSourceStream;
+    _<ASoundResampler> mResampledStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
-
-    /**
-     * @brief Volume level, integer from 0 to 256, works linear
-     */
-    VolumeLevel mVolume = 256;
 
     virtual void playImpl() = 0;
     virtual void pauseImpl() = 0;
     virtual void stopImpl() = 0;
 
-    virtual void onSourceSet() { }
     virtual void onVolumeSet() { }
     virtual void onLoopSet() { }
 };

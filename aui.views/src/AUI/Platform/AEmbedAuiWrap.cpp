@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 6/6/2021.
@@ -20,7 +15,7 @@
 
 
 #include "AEmbedAuiWrap.h"
-#include "ABaseWindow.h"
+#include "AWindowBase.h"
 #include "glm/fwd.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
@@ -28,7 +23,7 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
 
-class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
+class AEmbedAuiWrap::EmbedWindow: public AWindowBase {
     friend class AEmbedAuiWrap;
 private:
     AEmbedAuiWrap* mTheWrap;
@@ -85,13 +80,13 @@ public:
         removeView(surface);
     }
 
-    void flagUpdateLayout() override {
+    void markMinContentSizeInvalid() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
 
     void flagRedraw() override {
-        ABaseWindow::flagRedraw();
+        AWindowBase::flagRedraw();
         mRequiresRedraw = true;
     }
 
@@ -100,7 +95,7 @@ protected:
         if (mTheWrap->mCustomDpiRatio) {
             return *mTheWrap->mCustomDpiRatio;
         }
-        return ABaseWindow::fetchDpiFromSystem();
+        return AWindowBase::fetchDpiFromSystem();
     }
 };
 
@@ -122,14 +117,15 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     AThread::processMessages();
-    ARender::setWindow(mContainer.get());
+    auto& render = mContainer->getRenderingContext()->renderer();
+    render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
-        mContainer->updateLayout();
+        mContainer->applyGeometryToChildrenIfNecessary();
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
@@ -138,7 +134,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
     mContainer->makeCurrent();
-    mContainer->flagUpdateLayout();
+    mContainer->markMinContentSizeInvalid();
     mContainer->flagRedraw();
 }
 
@@ -202,7 +198,7 @@ void AEmbedAuiWrap::clearFocus() {
     mContainer->setFocusedView(nullptr);
 }
 
-ABaseWindow* AEmbedAuiWrap::getWindow() {
+AWindowBase* AEmbedAuiWrap::getWindow() {
     return mContainer.get();
 }
 

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 1/24/2022.
@@ -22,7 +17,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/GL/OpenGLRenderer.h"
 
-void AGLEmbedAuiWrap::render(ClipOptimizationContext context) {
+void AGLEmbedAuiWrap::render(ARenderContext context) {
     windowMakeCurrent();
     AThread::processMessages();
 
@@ -37,8 +32,8 @@ void AGLEmbedAuiWrap::render(ClipOptimizationContext context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    ARender::setColorForced(1.f);
-    ARender::setTransformForced(glm::ortho(0.f,
+    context.render.setColorForced(1.f);
+    context.render.setTransformForced(glm::ortho(0.f,
                                            static_cast<float>(mSize.x),
                                            static_cast<float>(mSize.y),
                                            0.f));
@@ -60,5 +55,4 @@ AGLEmbedAuiWrap::AGLEmbedAuiWrap() {
     auto r = glewInit();
     AUI_ASSERT(r == 0);
 #endif
-    ARender::setRenderer(std::make_unique<OpenGLRenderer>());
 }

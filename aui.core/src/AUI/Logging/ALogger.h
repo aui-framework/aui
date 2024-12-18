@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -217,7 +212,7 @@ public:
     ALogger(AString filename) {
         setLogFileImpl(std::move(filename));
     }
-
+    ALogger();
     ~ALogger();
 
     static ALogger& global();
@@ -317,7 +312,6 @@ public:
 
 
 private:
-	ALogger();
 
     AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;
@@ -349,7 +343,31 @@ namespace glm {
 
         return o;
     }
+
 }
+
+template<glm::length_t L, typename T, glm::qualifier Q>
+struct fmt::formatter<glm::vec<L, T, Q>> {
+    constexpr auto parse (format_parse_context& ctx) { return ctx.begin(); }
+
+    template <typename Context>
+    constexpr auto format(glm::vec<L, T, Q> vec, Context& ctx) const {
+        auto out = ctx.out();
+        out = format_to(out, FMT_STRING("{{ "));
+        for (glm::length_t i = 0; i < L; ++i) {
+            if (i == 0) {
+                out = format_to(out, FMT_STRING("{}"), vec[i]);
+            } else {
+                out = format_to(out, FMT_STRING(", {}"), vec[i]);
+            }
+        }
+        out = format_to(out, FMT_STRING(" }}"));
+        return out;
+    }
+
+private:
+};
+
 #define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

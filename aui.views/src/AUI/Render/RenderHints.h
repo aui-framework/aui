@@ -1,98 +1,97 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
+#include <glm/glm.hpp>
+#include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
-#include <AUI/Views.h>
-
-#include <glm/glm.hpp>
-
-#include "ARender.h"
-#include "AUI/Render/IRenderer.h"
-#include "AUI/Util/Assert.h"
-#include "AUI/Util/kAUI.h"
+#include "IRenderer.h"
 
 namespace RenderHints {
-/**
- * @brief Increases mask stack. Used by AView.
- * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
- *       wrapper class instead.
- * @param maskRenderer function - mask renderer
- */
-template <aui::invocable Callable>
-static void pushMask(Callable&& maskRenderer, IRenderer& renderer) {
-    renderer.pushMaskBefore();
-    AUI_DEFER { renderer.pushMaskAfter(); };
-    maskRenderer();
+    /**
+     * @brief Increases mask stack. Used by AView.
+     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     *       wrapper class instead.
+     * @param maskRenderer function - mask renderer
+     */
+    template<aui::invocable Callable>
+    static void pushMask(IRenderer& render, Callable&& maskRenderer) {
+        render.pushMaskBefore();
+        maskRenderer();
+        render.pushMaskAfter();
+    }
+
+    /**
+     * @brief Decreases mask stack. Used by AView.
+     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     *       wrapper class instead.
+     * @param maskRenderer function - mask renderer
+     */
+    template<aui::invocable Callable>
+    static void popMask(IRenderer& render, Callable&& maskRenderer) {
+        render.popMaskBefore();
+        maskRenderer();
+        render.popMaskAfter();
+    }
+
+    template<aui::invocable Callable>
+    struct PushMask {
+    public:
+        inline explicit PushMask(IRenderer& render, Callable&& maskRenderer) :
+                render(render),
+                maskRenderer(std::forward<Callable>(maskRenderer)) {
+            pushMask(render, std::forward<Callable>(maskRenderer));
+        }
+
+        inline ~PushMask() {
+            popMask(render, std::forward<Callable>(maskRenderer));
+        }
+
+    private:
+        IRenderer& render;
+        Callable maskRenderer;
+    };
+
+    struct PushMatrix {
+    public:
+        inline explicit PushMatrix(IRenderer& render) : render(render), stored(render.getTransform()) {
+        }
+
+        inline ~PushMatrix() {
+            render.setTransformForced(stored);
+        }
+
+    private:
+        IRenderer& render;
+        glm::mat4 stored;
+    };
+
+    struct PushColor {
+    public:
+        inline explicit PushColor(IRenderer& render): render(render), stored(render.getColor()) {
+        }
+
+        inline ~PushColor() {
+            render.setColorForced(stored);
+        }
+
+    private:
+        IRenderer& render;
+        AColor stored;
+    };
+
+    class PushState : PushColor, PushMatrix {
+    public:
+        inline explicit PushState(IRenderer& render): PushColor(render), PushMatrix(render) {}
+    };
 }
-
-/**
- * @brief Decreases mask stack. Used by AView.
- * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
- *       wrapper class instead.
- * @param maskRenderer function - mask renderer
- */
-template <aui::invocable Callable>
-static void popMask(Callable&& maskRenderer, IRenderer& renderer) {
-    renderer.popMaskBefore();
-    AUI_DEFER { renderer.pushMaskAfter(); };
-    maskRenderer();
-}
-
-template <aui::invocable Callable>
-class PushMask {
-   private:
-    Callable mMaskRenderer;
-    IRenderer& mRenderer;
-
-   public:
-    inline explicit PushMask(Callable&& maskRenderer, IRenderer& renderer = *ARender::getRenderer())
-        : mMaskRenderer(std::forward<Callable>(maskRenderer)), mRenderer(renderer) {
-        pushMask(std::forward<Callable>(mMaskRenderer), renderer);
-    }
-    inline ~PushMask() { popMask(std::forward<Callable>(mMaskRenderer), mRenderer); }
-};
-
-class PushMatrix {
-   private:
-    glm::mat4 mStored;
-    IRenderer& mRenderer;
-
-   public:
-    inline PushMatrix(IRenderer& renderer = *ARender::getRenderer()) : mRenderer(renderer) {
-        mStored = mRenderer.getTransform();
-    }
-
-    inline ~PushMatrix() { mRenderer.setTransformForced(mStored); }
-};
-class PushColor {
-   private:
-    AColor mStored;
-    IRenderer& mRenderer;
-
-   public:
-    inline PushColor(IRenderer& renderer = *ARender::getRenderer()) : mRenderer(renderer) {
-        mStored = mRenderer.getColor();
-    }
-    inline ~PushColor() { mRenderer.setColorForced(mStored); }
-};
-class PushState : PushColor, PushMatrix {
-   public:
-    inline PushState(IRenderer& renderer = *ARender::getRenderer()) : PushColor(renderer), PushMatrix(renderer) {}
-};
-};   // namespace RenderHints

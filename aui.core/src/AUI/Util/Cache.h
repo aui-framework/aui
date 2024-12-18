@@ -1,59 +1,58 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Thread/AMutex.h"
 
 template<typename T, typename Container, typename K = AString>
-class Cache
-{
+class Cache {
 private:
-	AMap<K, _<T>> mContainer;
+    AMap<K, _<T>> mContainer;
+    AMutex mSync;
 
 protected:
     virtual _<T> load(const K& key) = 0;
+
     virtual bool isShouldBeCached(const K& key, const _<T>& image) {
-		return true;
-	}
+        return true;
+    }
 
 public:
-	
-	static _<T> get(const K& key)
-	{
-		if (auto i = Container::inst().mContainer.contains(key))
-		{
-			return i->second;
-		}
-		Cache& i = Container::inst();
-		auto value = i.load(key);
-		if (i.isShouldBeCached(key, value)) {
-			put(key, value);
-		}
-		return value;
-	}
-	
-	static void put(const K& key, _<T> value)
-	{
+
+    static _<T> get(const K& key) {
+        Cache& i = Container::inst();
+        {
+            std::unique_lock lock(i.mSync);
+            if (auto i = Container::inst().mContainer.contains(key)) {
+                return i->second;
+            }
+        }
+        auto value = i.load(key);
+        if (i.isShouldBeCached(key, value)) {
+            put(key, value);
+        }
+        return value;
+    }
+
+    static void put(const K& key, _<T> value) {
+        std::unique_lock lock(Container::inst().mSync);
         Container::inst().mContainer[key] = value;
-	}
+    }
 
     static void cleanup() {
+        std::unique_lock lock(Container::inst().mSync);
         Container::inst().mContainer.clear();
     }
 };
