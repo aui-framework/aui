@@ -47,6 +47,7 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Curl/ACurl.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -109,7 +110,26 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
-      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework"),
+      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style {
+        Expanding(1, 0),
+      },
+      Horizontal {} let {
+              mAsync << async {
+                  auto drawable = IDrawable::fromUrl("https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
+                  ui_thread {
+                      auto view = Icon { drawable } with_style {
+                          FixedSize { 80_dp, 20_dp },
+                          BackgroundImage { {}, {}, {}, Sizing::COVER },
+                          Margin { 4_dp },
+                          ACursor::POINTER,
+                      };
+                      connect(view->clicked, [] {
+                          APlatform::openUrl("https://github.com/aui-framework/aui/stargazers");
+                      });
+                      it->addView(view);
+                  };
+              };
+          },
     });
 
     _<ATabView> tabView;
