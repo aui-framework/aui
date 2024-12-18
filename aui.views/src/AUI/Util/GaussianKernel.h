@@ -9,12 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "IRenderer.h"
+#pragma once
 
-void IRenderer::stub(glm::vec2 position, glm::vec2 size) {
-    rectangle(ASolidBrush{0xa0a0a0_rgb}, {0, 0}, size);
-}
+#include "AUI/Util/AArrayView.h"
 
-void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
-    stub(position, size);
+namespace aui::detail {
+AArrayView<float> gaussianKernel(unsigned radius);
 }

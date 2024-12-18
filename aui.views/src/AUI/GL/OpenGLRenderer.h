@@ -60,10 +60,12 @@ private:
     ADeque<FontEntryData> mFontEntryData;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
+    using OffscreenFramebufferPool = AVector<std::unique_ptr<gl::Framebuffer>>;
+
     /**
      * @brief use getFramebufferForMultiPassEffect
      */
-    AVector<gl::Framebuffer> mFramebuffersForMultiPassEffects;
+    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
@@ -77,11 +79,17 @@ private:
      */
     bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
 
+    struct FramebufferBackToPool {
+        OpenGLRenderer* renderer;
+        void operator()(gl::Framebuffer* framebuffer) const;
+    };
+
+    using FramebufferFromPool = std::unique_ptr<gl::Framebuffer, FramebufferBackToPool>;
+
     /**
      * @brief get a framebuffer for rendering multi pass effects (i.e., blur)
      * @param minRequiredSize minimum required size of the framebuffer
-     * @param bufferIndex framebuffer index (see details)
-     * @return non-owning pointer to framebuffer, or null if unsupported
+     * @return framebuffer, or null if unsupported
      * @details
      * Returns a shared color-only framebuffer that can be used for rendering multi pass effects. The size of
      * framebuffer is guaranteed to be no lower than minRequiredSize. Generally, the buffer would be larger than
@@ -89,10 +97,13 @@ private:
      *
      * Buffer may contain dirty data.
      *
-     * Sequential calls with uniform parameters would return the same buffer. If your algorithm requires several
-     * framebuffers, pass bufferIndex with a different value (i.e, 1, 2, etc...).
+     * The function acts like pool aggregator.
+     *
+     * The returned framebuffer object is wrapped by smart pointer. Caller takes unique ownership of the framebuffer.
+     * When smart pointer is destroyed, the framebuffer object is returned back to the pool. Thus, while caller owns
+     * framebuffer object, the function would never return the same object until caller releases ownership.
      */
-    gl::Framebuffer* getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize, size_t bufferIndex = 0);
+    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
 protected:
     _unique<ITexture> createNewTexture() override;
@@ -175,7 +186,7 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
-    void blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel) override;
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) override;
 };
 
 

@@ -59,6 +59,7 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/GL/RenderTarget/TextureRenderTarget.h>
+#include <range/v3/algorithm/min_element.hpp>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
 
@@ -1228,33 +1229,54 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
     return nullptr;
 }
 
-void OpenGLRenderer::blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel) {
-    AUI_ASSERT(downscale > 0);
-    AUI_ASSERT(kernel.size() % 2 == 1);
-    AUI_ASSERT(glm::all(glm::greaterThan(size, glm::vec2(0))));
+void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
+    AUI_ASSERT(glm::all(glm::greaterThan(size, glm::ivec2(0))));
 
-    auto iSize = glm::uvec2(size);
-    auto iSizeDownscaled = iSize / downscale;
-
-    auto* offscreen0 = getFramebufferForMultiPassEffect(size, 0);
-    auto* offscreen1 = getFramebufferForMultiPassEffect(size, 1);
-    if (!offscreen0 || !offscreen1) {
-        IRenderer::blur(position, size, downscale, kernel);
+    if (backdrops.empty()) {
         return;
     }
-    auto renderingFb = gl::Framebuffer::current();
-    AUI_DEFER { renderingFb->bind(); };
+    auto source = gl::Framebuffer::current();
+    if (!source) {
+        IRenderer::backdrops(position, size, backdrops);
+        return;
+    }
 
-    renderingFb->bindForRead();
-    offscreen0->bindForWrite();
-    offscreen0->bindViewport();
+    struct AreaOfInterest {
+        gl::Framebuffer* framebuffer;
+        glm::ivec2 position {}, size {};
+    };
 
-    RenderHints::PushState s(*this);
-    setTransformForced(glm::ortho(0.0f, static_cast<float>(offscreen0->size().x) - 0.0f,
+    AOptional<AreaOfInterest> areaOfInterest = AreaOfInterest {
+        .framebuffer = source,
+        .position = position,
+        .size = size,
+    };
+
+    AUI_DEFER { source->bind(); };
+
+    for (const auto& backdrop : backdrops) {
+        RenderHints::PushState s(*this);
+        std::visit(
+            aui::lambda_overloaded {
+              [&](const ass::Backdrop::GaussianBlur& gaussianBlur) {
+                  AUI_ASSERT(gaussianBlur.downscale > 0);
+                  auto sizeDownscaled = size / gaussianBlur.downscale;
+                  auto offscreen1 = getFramebufferForMultiPassEffect(sizeDownscaled);
+
+                  areaOfInterest->framebuffer->bindForRead();
+                  offscreen1->bindForWrite();
+                  offscreen1->bindViewport();
+
+                  setTransformForced(glm::ortho(
+                      0.0f, static_cast<float>(offscreen1->size().x) - 0.0f,
                       static_cast<float>(offscreen1->size().y) - 0.0f, 0.0f, -1.f, 1.f));
+              },
+            },
+            backdrop);
+    }
 }
-
-gl::Framebuffer* OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize, size_t bufferIndex) {
+std::unique_ptr<gl::Framebuffer, OpenGLRenderer::FramebufferBackToPool>
+    OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) {
     auto ctx = dynamic_cast<OpenGLRenderingContext*>(getWindow()->getRenderingContext().get());
     if (!ctx) {
         return nullptr;
@@ -1266,20 +1288,44 @@ gl::Framebuffer* OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 min
     minRequiredSize.x = std::bit_ceil(minRequiredSize.x);
     minRequiredSize.y = std::bit_ceil(minRequiredSize.y);
 
-    if (mFramebuffersForMultiPassEffects.size() <= bufferIndex) {
-        while (mFramebuffersForMultiPassEffects.size() <= bufferIndex) {
-            mFramebuffersForMultiPassEffects.emplace_back();
-            mFramebuffersForMultiPassEffects.last().resize(minRequiredSize);
-            mFramebuffersForMultiPassEffects.last().attach(
+    return aui::ptr::make_unique_with_deleter(
+        [&]() -> gl::Framebuffer* {
+            auto applicableSizeOnly =
+                mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
+                    return glm::all(glm::greaterThanEqual(fb->size(), minRequiredSize));
+                });
+            auto smallestFb = [](ranges::range auto& rng) {
+                return ranges::min_element(rng, std::less<> {}, [](const auto& fb) {
+                    return fb->size().x * fb->size().y;
+                });
+            };
+
+            auto release = [&](OffscreenFramebufferPool::iterator it) {
+                auto object = std::exchange(*it, {});
+                mFramebuffersForMultiPassEffectsPool.erase(it);
+                return object.release();
+            };
+
+            if (auto it = smallestFb(applicableSizeOnly); it != applicableSizeOnly.end()) {
+                return release(it.base());
+            }
+
+            if (auto it = smallestFb(mFramebuffersForMultiPassEffectsPool);
+                it != mFramebuffersForMultiPassEffectsPool.end()) {
+                return release(it);
+            }
+
+            auto object = std::make_unique<gl::Framebuffer>();
+            object->resize(minRequiredSize);
+            object->attach(
                 _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>(),
                 GL_COLOR_ATTACHMENT0);
-        }
-        return &mFramebuffersForMultiPassEffects.last();
-    }
 
-    auto& fb = mFramebuffersForMultiPassEffects[bufferIndex];
-    if (!glm::any(glm::lessThan(fb.size(), minRequiredSize))) {
-        fb.resize(minRequiredSize);
-    }
-    return &fb;
+            return object.release();
+        }(),
+        FramebufferBackToPool { this });
+}
+
+void OpenGLRenderer::FramebufferBackToPool::operator()(gl::Framebuffer* framebuffer) const {
+    renderer->mFramebuffersForMultiPassEffectsPool.emplace_back(framebuffer);
 }

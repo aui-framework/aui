@@ -20,6 +20,7 @@
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Render/ABorderStyle.h"
+#include "AUI/ASS/Property/Backdrop.h"
 #include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
@@ -570,26 +571,14 @@ public:
     }
 
     /**
-     * @brief Draws rectangular gaussian blur effect.
+     * @brief Draws rectangular backdrop effects.
      * @param position rectangle position (px)
      * @param size rectangle size (px)
-     * @param radius blur radius (px)
-     * @param downscale downscale factor. =1 equals don't affect
-     */
-    void blurGaussian(glm::vec2 position, glm::vec2 size, int radius, unsigned downscale = 1);
-
-    /**
-     * @brief Draws rectangular blur effect.
-     * @param position rectangle position (px)
-     * @param size rectangle size (px)
-     * @param downscale downscale factor. =1 equals don't affect
-     * @param kernel blur kernel (use IRenderer::blurGaussian for pre-calculated gaussian blur)
+     * @param backdrops array of backdrop effects. Impl might apply optimizations on using several effects at once.
      * @details
-     * Blur radius is determined by kernel size.
-     *
-     * Size of kernel is expected to be an odd number.
+     * Implementation might draw stub (i.e., gray rectangle) instead of drawing complex backdrop effects.
      */
-    virtual void blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel);
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
 
 protected:
     AColor mColor;

@@ -31,7 +31,15 @@ namespace ass {
      */
     struct Backdrop {
         struct GaussianBlur {
+            /*
+             * @brief blur radius. Must be odd number
+             */
             int radius = 13;
+
+            /*
+             * @brief downscale factor. =1 equals don't affect
+             */
+            int downscale = 1;
         };
 
         using Any = std::variant<GaussianBlur>;
