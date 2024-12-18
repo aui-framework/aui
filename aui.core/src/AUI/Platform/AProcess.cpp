@@ -24,21 +24,19 @@
 #include "AUI/IO/AFileOutputStream.h"
 
 _<AChildProcess>
-AProcess::make(AString applicationFile, AString args, APath workingDirectory) {
-    auto p = _new<AChildProcess>();
-    p->mApplicationFile = std::move(applicationFile);
-    p->mArgs = std::move(args);
-    p->mWorkingDirectory = std::move(workingDirectory);
-
+AProcess::create(AProcess::ProcessCreationInfo info) {
+    auto p = aui::ptr::manage(new AChildProcess);
+    p->mInfo = std::move(info);
     return p;
 }
 
 int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory,
                                  ASubProcessExecutionFlags flags) {
     AChildProcess p;
-    p.mApplicationFile = APath(std::move(applicationFile)).absolute();
-    p.mArgs = std::move(args);
-    p.mWorkingDirectory = APath(std::move(workingDirectory)).absolute();
+    p.mInfo = {
+        .executable = std::move(applicationFile),
+        .args = ArgSingleString { std::move(args) },
+    };
     p.run(flags);
 
     return p.waitForExitCode();
@@ -102,9 +100,5 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
 
 APath AChildProcess::getModuleName() {
-    return APath(mApplicationFile).filename();
-}
-
-APath AChildProcess::getPathToExecutable() {
-    return mApplicationFile;
+    return APath(getApplicationFile()).filename();
 }
