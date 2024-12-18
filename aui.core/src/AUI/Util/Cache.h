@@ -14,11 +14,13 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Thread/AMutex.h"
 
 template<typename T, typename Container, typename K = AString>
 class Cache {
 private:
     AMap<K, _<T>> mContainer;
+    AMutex mSync;
 
 protected:
     virtual _<T> load(const K& key) = 0;
@@ -30,10 +32,13 @@ protected:
 public:
 
     static _<T> get(const K& key) {
-        if (auto i = Container::inst().mContainer.contains(key)) {
-            return i->second;
-        }
         Cache& i = Container::inst();
+        {
+            std::unique_lock lock(i.mSync);
+            if (auto i = Container::inst().mContainer.contains(key)) {
+                return i->second;
+            }
+        }
         auto value = i.load(key);
         if (i.isShouldBeCached(key, value)) {
             put(key, value);
@@ -42,10 +47,12 @@ public:
     }
 
     static void put(const K& key, _<T> value) {
+        std::unique_lock lock(Container::inst().mSync);
         Container::inst().mContainer[key] = value;
     }
 
     static void cleanup() {
+        std::unique_lock lock(Container::inst().mSync);
         Container::inst().mContainer.clear();
     }
 };
