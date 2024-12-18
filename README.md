@@ -32,6 +32,7 @@ sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-dev
 
 To link AUI to your project, use the following CMake script:
 
+`CMakeLists.txt`:
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
@@ -61,8 +62,42 @@ aui_executable(${PROJECT_NAME})
 
 # Link required libs
 aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
-
 ```
+
+`src/main.cpp`:
+```cpp
+#include <AUI/Platform/Entry.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Platform/APlatform.h>
+
+using namespace declarative;
+
+AUI_ENTRY {
+    auto w = _new<AWindow>("Window title", 300_dp, 200_dp);
+    w->setContents(Centered {
+      Vertical {
+        Centered { Label { "Hello world from AUI!" } },
+        Centered {
+          Button { "Visit GitHub page" }.clicked(w, [] {
+              APlatform::openUrl("https://github.com/aui-framework/aui");
+          }),
+        },
+      },
+    });
+    w->show();
+    return 0;
+}
+```
+
+Result:
+![Example window](https://github.com/aui-framework/aui/blob/develop/docs/imgs/Screenshot_20241218_144940.png?raw=true)
+
+
+Visit [layout building page](https://aui-framework.github.io/master/group__layout__managers.html) and our [introduction
+guide](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) for more info.
 
 Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_IDE_plugins) to set up the project.
 
