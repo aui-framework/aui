@@ -93,6 +93,7 @@ AUI_ENTRY {
 ```
 
 Result:
+
 ![Example window](https://github.com/aui-framework/aui/blob/develop/docs/imgs/Screenshot_20241218_144940.png?raw=true)
 
 
