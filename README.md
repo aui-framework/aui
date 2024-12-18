@@ -100,7 +100,7 @@ Result:
 Visit [layout building page](https://aui-framework.github.io/master/group__layout__managers.html) and our [introduction
 guide](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) for more info.
 
-Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_IDE_plugins) to set up the project.
+Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_IDE_Plugins) to set up the project.
 
 # Key features
 - Extended common types (containers, strings, streams, etc...)
