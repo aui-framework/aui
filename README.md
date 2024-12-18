@@ -163,7 +163,7 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 - [glm](https://github.com/g-truc/glm) for linear algebra
 - [stbimage](https://github.com/nothings/stb) for image loading
 - [freetype2](https://github.com/freetype/freetype) for font rendering
-- [LunaSVG](https://github.com/sammycage/lunasvg) for font rendering
+- [LunaSVG](https://github.com/sammycage/lunasvg) for SVG rendering
 - [GTest](https://github.com/google/googletest) for unit testing
 - [Google Benchmark](https://github.com/google/benchmark) for benchmark testing
 
