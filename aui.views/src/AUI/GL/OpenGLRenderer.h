@@ -60,6 +60,11 @@ private:
     ADeque<FontEntryData> mFontEntryData;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
+    /**
+     * @brief use getFramebufferForMultiPassEffect
+     */
+    AVector<gl::Framebuffer> mFramebuffersForMultiPassEffects;
+
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
 
@@ -71,6 +76,23 @@ private:
      * @return true, if the caller should compute distances
      */
     bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
+
+    /**
+     * @brief get a framebuffer for rendering multi pass effects (i.e., blur)
+     * @param minRequiredSize minimum required size of the framebuffer
+     * @param bufferIndex framebuffer index (see details)
+     * @return non-owning pointer to framebuffer, or null if unsupported
+     * @details
+     * Returns a shared color-only framebuffer that can be used for rendering multi pass effects. The size of
+     * framebuffer is guaranteed to be no lower than minRequiredSize. Generally, the buffer would be larger than
+     * requested.
+     *
+     * Buffer may contain dirty data.
+     *
+     * Sequential calls with uniform parameters would return the same buffer. If your algorithm requires several
+     * framebuffers, pass bufferIndex with a different value (i.e, 1, 2, etc...).
+     */
+    gl::Framebuffer* getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize, size_t bufferIndex = 0);
 
 protected:
     _unique<ITexture> createNewTexture() override;
@@ -153,6 +175,7 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
+    void blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel) override;
 };
 
 

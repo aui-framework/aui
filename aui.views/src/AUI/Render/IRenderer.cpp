@@ -23,7 +23,7 @@ static float gaussian(float x, float mu, float sigma) {
     return glm::exp(-0.5f * a * a);
 }
 
-void IRenderer::blurGaussian(glm::vec2 position, glm::vec2 size, int radius, int downscale) {
+void IRenderer::blurGaussian(glm::vec2 position, glm::vec2 size, int radius, unsigned downscale) {
     using Kernel = AVector<float>;
     static AUnorderedMap<int /* radius */, Kernel> kernels;
     const auto& kernel = kernels.getOrInsert(radius, [radius]() {
@@ -39,9 +39,9 @@ void IRenderer::blurGaussian(glm::vec2 position, glm::vec2 size, int radius, int
       ranges::transform(result, result.begin(), [&](float i) { return i / sum; });
       return result;
     });
-    blur(position, size, radius, downscale, kernel);
+    blur(position, size, downscale, kernel);
 }
 
-void IRenderer::blur(glm::vec2 position, glm::vec2 size, int radius, int downscale, AArrayView<float> kernel) {
+void IRenderer::blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel) {
     stub(position, size);
 }

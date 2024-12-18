@@ -70,3 +70,6 @@ gl::Framebuffer* gl::Framebuffer::current() {
     return gFramebufferCurrent;
 }
 
+void gl::Framebuffer::bindViewport() {
+    glViewport(0, 0, supersampledSize().x, supersampledSize().y);
+}

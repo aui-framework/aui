@@ -576,17 +576,20 @@ public:
      * @param radius blur radius (px)
      * @param downscale downscale factor. =1 equals don't affect
      */
-    void blurGaussian(glm::vec2 position, glm::vec2 size, int radius, int downscale = 1);
+    void blurGaussian(glm::vec2 position, glm::vec2 size, int radius, unsigned downscale = 1);
 
     /**
      * @brief Draws rectangular blur effect.
      * @param position rectangle position (px)
      * @param size rectangle size (px)
-     * @param radius blur radius (px)
      * @param downscale downscale factor. =1 equals don't affect
      * @param kernel blur kernel (use IRenderer::blurGaussian for pre-calculated gaussian blur)
+     * @details
+     * Blur radius is determined by kernel size.
+     *
+     * Size of kernel is expected to be an odd number.
      */
-    virtual void blur(glm::vec2 position, glm::vec2 size, int radius, int downscale, AArrayView<float> kernel);
+    virtual void blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel);
 
 protected:
     AColor mColor;

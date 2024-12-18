@@ -1227,3 +1227,59 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
 #endif
     return nullptr;
 }
+
+void OpenGLRenderer::blur(glm::vec2 position, glm::vec2 size, unsigned downscale, AArrayView<float> kernel) {
+    AUI_ASSERT(downscale > 0);
+    AUI_ASSERT(kernel.size() % 2 == 1);
+    AUI_ASSERT(glm::all(glm::greaterThan(size, glm::vec2(0))));
+
+    auto iSize = glm::uvec2(size);
+    auto iSizeDownscaled = iSize / downscale;
+
+    auto* offscreen0 = getFramebufferForMultiPassEffect(size, 0);
+    auto* offscreen1 = getFramebufferForMultiPassEffect(size, 1);
+    if (!offscreen0 || !offscreen1) {
+        IRenderer::blur(position, size, downscale, kernel);
+        return;
+    }
+    auto renderingFb = gl::Framebuffer::current();
+    AUI_DEFER { renderingFb->bind(); };
+
+    renderingFb->bindForRead();
+    offscreen0->bindForWrite();
+    offscreen0->bindViewport();
+
+    RenderHints::PushState s(*this);
+    setTransformForced(glm::ortho(0.0f, static_cast<float>(offscreen0->size().x) - 0.0f,
+                      static_cast<float>(offscreen1->size().y) - 0.0f, 0.0f, -1.f, 1.f));
+}
+
+gl::Framebuffer* OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize, size_t bufferIndex) {
+    auto ctx = dynamic_cast<OpenGLRenderingContext*>(getWindow()->getRenderingContext().get());
+    if (!ctx) {
+        return nullptr;
+    }
+    if (!ctx->framebuffer()) {
+        return nullptr;
+    }
+
+    minRequiredSize.x = std::bit_ceil(minRequiredSize.x);
+    minRequiredSize.y = std::bit_ceil(minRequiredSize.y);
+
+    if (mFramebuffersForMultiPassEffects.size() <= bufferIndex) {
+        while (mFramebuffersForMultiPassEffects.size() <= bufferIndex) {
+            mFramebuffersForMultiPassEffects.emplace_back();
+            mFramebuffersForMultiPassEffects.last().resize(minRequiredSize);
+            mFramebuffersForMultiPassEffects.last().attach(
+                _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>(),
+                GL_COLOR_ATTACHMENT0);
+        }
+        return &mFramebuffersForMultiPassEffects.last();
+    }
+
+    auto& fb = mFramebuffersForMultiPassEffects[bufferIndex];
+    if (!glm::any(glm::lessThan(fb.size(), minRequiredSize))) {
+        fb.resize(minRequiredSize);
+    }
+    return &fb;
+}

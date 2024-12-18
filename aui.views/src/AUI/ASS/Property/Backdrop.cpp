@@ -19,18 +19,18 @@
 #include "IProperty.h"
 
 void ass::prop::Property<ass::Backdrop>::renderFor(AView* view, const ARenderContext& ctx) {
-    for (const auto& effect: mInfo.effects) {
-        std::visit(aui::lambda_overloaded {
-            [&](const Backdrop::GaussianBlur& i) {
-
-            }
-        }, effect);
+    for (const auto& effect : mInfo.effects) {
+        std::visit(
+            aui::lambda_overloaded {
+              [&](const Backdrop::GaussianBlur& i) {
+                  ctx.render.blurGaussian(view->getPosition(), view->getSize(), i.radius);
+              },
+            },
+            effect);
     }
 }
 
-bool ass::prop::Property<ass::Backdrop>::isNone() {
-    return mInfo.effects.empty();
-}
+bool ass::prop::Property<ass::Backdrop>::isNone() { return mInfo.effects.empty(); }
 
 ass::prop::PropertySlot ass::prop::Property<ass::Backdrop>::getPropertySlot() const {
     return ass::prop::PropertySlot::BACKDROP;
