@@ -65,6 +65,10 @@ namespace ass {
              * but 16 times cheaper.
              */
             int downscale = 1;
+
+
+            [[nodiscard]]
+            bool operator==(const GaussianBlurCustom&) const = default;
         };
 
         /**
@@ -79,6 +83,7 @@ namespace ass {
          */
         struct GaussianBlur {
             AMetric radius;
+            GaussianBlurCustom findOptimalParams() const;
         };
 
         using Any = std::variant<GaussianBlur, GaussianBlurCustom>;

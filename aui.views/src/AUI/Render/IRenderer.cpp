@@ -24,14 +24,7 @@ void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::B
             return std::visit(
                 aui::lambda_overloaded {
                   [](const ass::Backdrop::GaussianBlur& v) -> Preprocessed {
-                      auto px = v.radius.getValuePx();
-
-                      auto downscale = glm::sqrt(px);
-
-                      return ass::Backdrop::GaussianBlurCustom {
-                          .radius = AMetric(px / downscale, AMetric::T_PX),
-                          .downscale = int(downscale),
-                      };
+                      return v.findOptimalParams();
                   },
                   [](const auto& v) -> Preprocessed { return v; },
                 },

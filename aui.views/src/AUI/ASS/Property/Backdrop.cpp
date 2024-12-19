@@ -13,6 +13,7 @@
 // Created by alex2 on 29.12.2020.
 //
 
+#include <range/v3/all.hpp>
 #include "Backdrop.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Render/IRenderer.h"
@@ -26,4 +27,23 @@ bool ass::prop::Property<ass::Backdrop>::isNone() { return mInfo.effects.empty()
 
 ass::prop::PropertySlot ass::prop::Property<ass::Backdrop>::getPropertySlot() const {
     return ass::prop::PropertySlot::BACKDROP;
+}
+ass::Backdrop::GaussianBlurCustom ass::Backdrop::GaussianBlur::findOptimalParams() const {
+    static constexpr auto MIN_OPTIMAL_RADIUS = 3;
+    static constexpr auto MAX_OPTIMAL_RADIUS = 9;
+    auto originalRadiusPx = int(radius.getValuePx());
+    if (originalRadiusPx <= MIN_OPTIMAL_RADIUS) {
+        return ass::Backdrop::GaussianBlurCustom {
+            .radius = radius,
+            .downscale = 1,
+        };
+    }
+
+    auto radiusCandidate = ranges::min(
+        ranges::view::closed_iota(MIN_OPTIMAL_RADIUS, MAX_OPTIMAL_RADIUS), std::less<> {},
+        [&](int i) { return originalRadiusPx % i; });
+    return ass::Backdrop::GaussianBlurCustom {
+        .radius = AMetric(float(radiusCandidate), AMetric::T_PX),
+        .downscale = originalRadiusPx / radiusCandidate,
+    };
 }
