@@ -608,10 +608,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Stacked {
                         Icon { ":img/logo.svg" } with_style { FixedSize(32_dp) },
                         Centered {
-                            Label { "Blur" } with_style { Margin { 2_dp, 16_dp } },
+                            Label { "Blur" } with_style { Margin { 1_dp, 16_dp } },
                         } with_style {
                             Expanding(1, 0),
-                            Backdrop { Backdrop::GaussianBlur {} },
+                            Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
                             BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                         },
                     },

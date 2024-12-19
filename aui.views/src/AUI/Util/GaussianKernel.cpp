@@ -13,6 +13,7 @@
 #include <range/v3/algorithm/transform.hpp>
 
 #include "GaussianKernel.h"
+#include "AUI/Common/AMap.h"
 
 static float gaussian(float x, float mu, float sigma) {
     const float a = (x - mu) / sigma;
@@ -21,8 +22,8 @@ static float gaussian(float x, float mu, float sigma) {
 
 AArrayView<float> aui::detail::gaussianKernel(unsigned int radius) {
     using Kernel = AVector<float>;
-    static AUnorderedMap<int /* radius */, Kernel> kernels;
-    const auto& kernel = kernels.getOrInsert(radius, [radius]() {
+    static AUnorderedMap<unsigned /* radius */, Kernel> kernels;
+    return kernels.getOrInsert(radius, [radius]() {
         const float sigma = float(radius) / 2.f;
 
         // generate values by gaussian function
@@ -35,6 +36,4 @@ AArrayView<float> aui::detail::gaussianKernel(unsigned int radius) {
         ranges::transform(result, result.begin(), [&](float i) { return i / sum; });
         return result;
     });
-    blur(position, size, downscale, kernel);
-    return AArrayView<float>(nullptr, 0);
 }

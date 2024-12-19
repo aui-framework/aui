@@ -33,6 +33,7 @@
 #include "ShaderUniforms.h"
 #include "AUI/Render/IRenderer.h"
 #include "glm/fwd.hpp"
+#include "AUI/Util/GaussianKernel.h"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
@@ -1229,7 +1230,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
     return nullptr;
 }
 
-void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
+void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) {
     AUI_ASSERT(glm::all(glm::greaterThan(size, glm::ivec2(0))));
 
     if (backdrops.empty()) {
@@ -1242,41 +1243,192 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
     }
 
     struct AreaOfInterest {
-        gl::Framebuffer* framebuffer;
-        glm::ivec2 position {}, size {};
+        FramebufferFromPool framebuffer;
+        glm::ivec2 size {};
     };
 
-    AOptional<AreaOfInterest> areaOfInterest = AreaOfInterest {
-        .framebuffer = source,
-        .position = position,
-        .size = size,
+    AOptional<AreaOfInterest> areaOfInterest;
+
+    auto initAreaOfInterestIfEmpty = [&](glm::ivec2 fbSize){
+        if (areaOfInterest) {
+            return;
+        }
+
+        auto fb = getFramebufferForMultiPassEffect(fbSize);
+        source->bindForRead();
+        fb->framebuffer.bindForWrite();
+
+        auto vertices = getVerticesForRect(position, size);
+        std::array<glm::ivec2, vertices.size()> transformedVertices{};
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            auto ndc = glm::vec2(mTransform * glm::vec4(vertices[i], 0, 1));
+            transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->supersampledSize()));
+        }
+
+        auto p1 = transformedVertices.front();
+        auto p2 = transformedVertices.back();
+        glBlitFramebuffer(p1.x, p1.y, p2.x, p2.y, 0, 0, fbSize.x, fbSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        areaOfInterest = AreaOfInterest{
+            .framebuffer = std::move(fb),
+            .size = fbSize,
+        };
     };
 
-    AUI_DEFER { source->bind(); };
+    {
+        glDisable(GL_STENCIL_TEST);
+        glStencilMask(0);
+        AUI_DEFER {
+            source->bind();
+            source->bindViewport();
+            glEnable(GL_STENCIL_TEST);
+            glStencilMask(0xff);
+        };
 
-    for (const auto& backdrop : backdrops) {
-        RenderHints::PushState s(*this);
-        std::visit(
-            aui::lambda_overloaded {
-              [&](const ass::Backdrop::GaussianBlur& gaussianBlur) {
-                  AUI_ASSERT(gaussianBlur.downscale > 0);
-                  auto sizeDownscaled = size / gaussianBlur.downscale;
-                  auto offscreen1 = getFramebufferForMultiPassEffect(sizeDownscaled);
+        for (const auto& backdrop : backdrops) {
+            RenderHints::PushState s(*this);
+            std::visit(
+                aui::lambda_overloaded {
+                  [&](const ass::Backdrop::GaussianBlurCustom& gaussianBlur) {
+                      const auto radius = int(gaussianBlur.radius.getValuePx());
+                      if (radius <= 1) {
+                          return;
+                      }
+                      AUI_ASSERT(gaussianBlur.downscale > 0);
 
-                  areaOfInterest->framebuffer->bindForRead();
-                  offscreen1->bindForWrite();
-                  offscreen1->bindViewport();
+                      auto sizeDownscaled = size / gaussianBlur.downscale;
 
-                  setTransformForced(glm::ortho(
-                      0.0f, static_cast<float>(offscreen1->size().x) - 0.0f,
-                      static_cast<float>(offscreen1->size().y) - 0.0f, 0.0f, -1.f, 1.f));
-              },
-            },
-            backdrop);
+                      initAreaOfInterestIfEmpty(sizeDownscaled);
+                      areaOfInterest->framebuffer->rendertarget->texture().bind();
+                      areaOfInterest->framebuffer->rendertarget->texture().setupNearest();
+                      areaOfInterest->framebuffer->rendertarget->texture().setupClampToEdge();
+
+                      auto offscreen1 = getFramebufferForMultiPassEffect(sizeDownscaled);
+                      offscreen1->framebuffer.bind();
+                      offscreen1->framebuffer.bindViewport();
+
+                      setTransformForced(glm::ortho(
+                          0.0f, static_cast<float>(offscreen1->framebuffer.size().x) - 0.0f,
+                          0.f, static_cast<float>(offscreen1->framebuffer.size().y) - 0.0f, -1.f, 1.f));
+
+                      struct BlurShaders {
+                          std::unique_ptr<gl::Program> shader;
+                      };
+                      static AUnorderedMap<unsigned /* radius */, BlurShaders> blurShaders;
+                      auto& blurShader = blurShaders.getOrInsert(radius, [&] {
+                          BlurShaders result {
+                              .shader = std::make_unique<gl::Program>(),
+                          };
+
+                          auto kernel = aui::detail::gaussianKernel(radius);
+
+                          auto kernelStr =
+                              kernel | ranges::view::transform([](float v) { return std::to_string(v); }) |
+                              ranges::view::join(',') | ranges::to<std::string>();
+                          result.shader->loadRaw(
+                              std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()),
+                              fmt::format(
+                                  R"(
+#version 120
+varying vec2 SL_inter_uv;
+uniform vec2 SL_uniform_m2;
+uniform vec2 SL_uniform_pixel_to_uv;
+uniform sampler2D SL_uniform_albedo;
+const float KERNEL[{kernel_size}] = float[{kernel_size}]({kernel});
+void main() {{
+  vec4 accumulator = vec4(0.0, 0.0, 0.0, 0.0);
+  vec2 base_uv = SL_uniform_m2 * SL_inter_uv;
+  for (int i = -{radius}; i <= {radius}; ++i) {{
+    float f = float(i);
+    vec2 uv = SL_uniform_pixel_to_uv * vec2(f, f);
+    uv += base_uv;
+    uv = clamp(uv, vec2(0.0), SL_uniform_m2);
+    accumulator += texture2D(SL_uniform_albedo, uv) * KERNEL[{radius} + i];
+  }}
+  gl_FragColor = accumulator;
+}}
+)",
+                                  fmt::arg("kernel", kernelStr), fmt::arg("radius", radius),
+                                  fmt::arg("kernel_size", kernel.size())));
+
+                          result.shader->compile();
+                          aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
+
+                          return result;
+                      });
+
+                      blurShader.shader->use();
+                      {
+                          auto stepSize = glm::vec2(1.f / areaOfInterest->framebuffer->framebuffer.size().x, 0.f);
+                          blurShader.shader->set(aui::ShaderUniforms::PIXEL_TO_UV, stepSize);
+                          blurShader.shader->set(
+                              aui::ShaderUniforms::M2,
+                              glm::vec2(areaOfInterest->size) /
+                                      glm::vec2(areaOfInterest->framebuffer->framebuffer.supersampledSize()) -
+                                  stepSize / 2.f /* small bias to avoid dirty edges */);
+                      }
+                      uploadToShaderCommon();
+                      drawRectImpl({}, sizeDownscaled);
+
+                      areaOfInterest.reset();   // release borrowed framebuffer before requesting another one
+
+                      auto offscreen2 = getFramebufferForMultiPassEffect(sizeDownscaled);
+                      offscreen1->rendertarget->texture().bind();
+                      offscreen2->framebuffer.bind();
+                      offscreen2->framebuffer.bindViewport();
+
+                      setTransformForced(glm::ortho(
+                          0.0f, static_cast<float>(offscreen2->framebuffer.size().x) - 0.0f,
+                          0.f, static_cast<float>(offscreen2->framebuffer.size().y) - 0.0f, -1.f, 1.f));
+
+                      blurShader.shader->set(aui::ShaderUniforms::M1, glm::vec2(0.0));
+
+                      {
+                          auto stepSize = glm::vec2(0.f, 1.f / float(offscreen1->framebuffer.size().y));
+                          blurShader.shader->set(aui::ShaderUniforms::PIXEL_TO_UV, stepSize);
+                          blurShader.shader->set(
+                              aui::ShaderUniforms::M2,
+                              glm::vec2(sizeDownscaled) / glm::vec2(offscreen1->framebuffer.supersampledSize()) -
+                                  stepSize / 2.f);
+                      }
+                      uploadToShaderCommon();
+                      drawRectImpl({}, sizeDownscaled);
+
+                      areaOfInterest = AreaOfInterest {
+                          .framebuffer = std::move(offscreen2),
+                          .size = sizeDownscaled,
+                      };
+                  },
+                },
+                backdrop);
+        }
     }
+
+    auto& shader = *mTexturedShader;
+    shader.use();
+    shader.set(aui::ShaderUniforms::COLOR, getColor());
+    {
+        auto uv =
+            glm::vec2(areaOfInterest->size - 1 /* small bias to avoid dirty edges */) /
+            glm::vec2(areaOfInterest->framebuffer->framebuffer.supersampledSize());
+        const glm::vec2 uvs[] = {
+            { 0, 0},
+            { uv.x, 0 },
+            { 0, uv.y  },
+            { uv.x, uv.y },
+        };
+        mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "backdrops");
+    }
+
+    auto& texture = areaOfInterest->framebuffer->rendertarget->texture();
+    texture.bind();
+    texture.setupClampToEdge();
+    texture.setupLinear();
+
+    uploadToShaderCommon();
+    drawRectImpl(position, size);
 }
-std::unique_ptr<gl::Framebuffer, OpenGLRenderer::FramebufferBackToPool>
-    OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) {
+
+OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) {
     auto ctx = dynamic_cast<OpenGLRenderingContext*>(getWindow()->getRenderingContext().get());
     if (!ctx) {
         return nullptr;
@@ -1289,14 +1441,14 @@ std::unique_ptr<gl::Framebuffer, OpenGLRenderer::FramebufferBackToPool>
     minRequiredSize.y = std::bit_ceil(minRequiredSize.y);
 
     return aui::ptr::make_unique_with_deleter(
-        [&]() -> gl::Framebuffer* {
+        [&]() -> FramebufferWithTextureRT* {
             auto applicableSizeOnly =
                 mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
-                    return glm::all(glm::greaterThanEqual(fb->size(), minRequiredSize));
+                    return glm::all(glm::greaterThanEqual(fb->framebuffer.size(), minRequiredSize));
                 });
             auto smallestFb = [](ranges::range auto& rng) {
                 return ranges::min_element(rng, std::less<> {}, [](const auto& fb) {
-                    return fb->size().x * fb->size().y;
+                    return fb->framebuffer.size().x * fb->framebuffer.size().y;
                 });
             };
 
@@ -1315,17 +1467,16 @@ std::unique_ptr<gl::Framebuffer, OpenGLRenderer::FramebufferBackToPool>
                 return release(it);
             }
 
-            auto object = std::make_unique<gl::Framebuffer>();
-            object->resize(minRequiredSize);
-            object->attach(
-                _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>(),
-                GL_COLOR_ATTACHMENT0);
+            auto object = std::make_unique<FramebufferWithTextureRT>();
+            object->framebuffer.resize(minRequiredSize);
+            object->rendertarget = _new<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>>();
+            object->framebuffer.attach(object->rendertarget, GL_COLOR_ATTACHMENT0);
 
             return object.release();
         }(),
         FramebufferBackToPool { this });
 }
 
-void OpenGLRenderer::FramebufferBackToPool::operator()(gl::Framebuffer* framebuffer) const {
+void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {
     renderer->mFramebuffersForMultiPassEffectsPool.emplace_back(framebuffer);
 }

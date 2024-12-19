@@ -578,7 +578,7 @@ public:
      * @details
      * Implementation might draw stub (i.e., gray rectangle) instead of drawing complex backdrop effects.
      */
-    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
 
 protected:
     AColor mColor;
@@ -595,6 +595,8 @@ protected:
      * This can be used if implementation does not support or can't draw complex effects (i.e., blur)
      */
     void stub(glm::vec2 position, glm::vec2 size);
+
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops);
 
 private:
     bool mAllowRenderToTexture = false;

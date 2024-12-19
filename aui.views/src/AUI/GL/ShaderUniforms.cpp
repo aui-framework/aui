@@ -22,7 +22,7 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
     gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
     gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");
-    gl::Program::Uniform PIXEL_TO_UV("SL_uniform_pixelToUv");
+    gl::Program::Uniform PIXEL_TO_UV("SL_uniform_pixel_to_uv");
     gl::Program::Uniform OUTER_SIZE("SL_uniform_outerSize");
     gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
     gl::Program::Uniform OUTER_TO_INNER("SL_uniform_outerToInner");

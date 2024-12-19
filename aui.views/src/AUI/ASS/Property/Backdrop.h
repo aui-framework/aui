@@ -30,19 +30,59 @@ namespace ass {
      * transparent or partially transparent.
      */
     struct Backdrop {
-        struct GaussianBlur {
-            /*
-             * @brief blur radius. Must be odd number
+        /**
+         * @brief Underlying type of GaussianBlur but with customizable downscale. Generally, use GaussianBlur.
+         */
+        struct GaussianBlurCustom {
+            /**
+             * @brief blur radius.
+             * @details
+             * Performance costs of radius is O^2. Please use downscale factor to approximate large blur radius.
              */
-            int radius = 13;
+            AMetric radius = 6_dp;
 
-            /*
-             * @brief downscale factor. =1 equals don't affect
+            /**
+             * @brief downscale factor. =1 equals don't affect. Must be positive.
+             * @details
+             * Effective blur radius is `radius * downscale`. However, the downscale part is done by cheap downscaling
+             * of the framebuffer texture. Thus, by raising downscale factor you can achieve larger blur radius with
+             * approximately same visual result.
+             *
+             * Performance benefit of downscale factor { .radius = 6_dp, .downscale = x } in comparison to
+             * { .radius = 6_dp * x, .downscale = 1 } is x^2.
+             *
+             * @code{cpp}
+             * view with_style {
+             *   Backdrop { Backdrop::GaussianBlur { .radius = 6_dp, .downscale = 4 } },
+             * }
+             * @endcode
+             * is visually approximately same as
+             * @code{cpp}
+             * view with_style {
+             *   Backdrop { Backdrop::GaussianBlur { .radius = 24_dp } },
+             * }
+             * @endcode
+             * but 16 times cheaper.
              */
             int downscale = 1;
         };
 
-        using Any = std::variant<GaussianBlur>;
+        /**
+         * @brief Fast gaussian blur.
+         * @details
+         * Strictly speaking, it's not an actual gaussian blur but a faster implementation of it.
+         *
+         * GaussianBlur calculates best downscale parameter applicable for passed radius.
+         *
+         * Downscale factor allows to produce approximately same visual result at drastically lower cost. You can use
+         * GaussianBlurCustom directly to specify your downscale factor.
+         */
+        struct GaussianBlur {
+            AMetric radius;
+        };
+
+        using Any = std::variant<GaussianBlur, GaussianBlurCustom>;
+        using Preprocessed = std::variant<GaussianBlurCustom>;
         AVector<Any> effects;
 
         Backdrop(std::initializer_list<Any> effects): effects(std::move(effects)) {}

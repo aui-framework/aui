@@ -19,7 +19,7 @@
 #include "IProperty.h"
 
 void ass::prop::Property<ass::Backdrop>::renderFor(AView* view, const ARenderContext& ctx) {
-    ctx.render.backdrops(view->getPosition(), view->getSize(), mInfo.effects);
+    ctx.render.backdrops({}, view->getSize(), mInfo.effects);
 }
 
 bool ass::prop::Property<ass::Backdrop>::isNone() { return mInfo.effects.empty(); }

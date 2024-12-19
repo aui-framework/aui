@@ -9,12 +9,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
 #include "IRenderer.h"
 
-void IRenderer::stub(glm::vec2 position, glm::vec2 size) {
-    rectangle(ASolidBrush{0xa0a0a0_rgb}, {0, 0}, size);
-}
+void IRenderer::stub(glm::vec2 position, glm::vec2 size) { rectangle(ASolidBrush { 0xa0a0a0_rgb }, { 0, 0 }, size); }
 
-void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
+void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) {
     stub(position, size);
+}
+void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
+    using Preprocessed = ass::Backdrop::Preprocessed;
+    auto preprocessed =
+        backdrops | ranges::view::transform([](const ass::Backdrop::Any& v) -> Preprocessed {
+            return std::visit(
+                aui::lambda_overloaded {
+                  [](const ass::Backdrop::GaussianBlur& v) -> Preprocessed {
+                      auto px = v.radius.getValuePx();
+
+                      auto downscale = glm::sqrt(px);
+
+                      return ass::Backdrop::GaussianBlurCustom {
+                          .radius = AMetric(px / downscale, AMetric::T_PX),
+                          .downscale = int(downscale),
+                      };
+                  },
+                  [](const auto& v) -> Preprocessed { return v; },
+                },
+                v);
+        }) |
+        ranges::to_vector;
+    this->backdrops(position, size, preprocessed);
 }

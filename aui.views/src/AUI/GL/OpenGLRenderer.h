@@ -17,6 +17,7 @@
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
+#include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
 class OpenGLRenderer final: public IRenderer {
 friend class OpenGLPrerenderedString;
@@ -60,7 +61,18 @@ private:
     ADeque<FontEntryData> mFontEntryData;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
-    using OffscreenFramebufferPool = AVector<std::unique_ptr<gl::Framebuffer>>;
+    struct FramebufferWithTextureRT {
+        gl::Framebuffer framebuffer;
+        _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> rendertarget;
+    };
+
+    struct FramebufferBackToPool {
+        OpenGLRenderer* renderer;
+        void operator()(FramebufferWithTextureRT* framebuffer) const;
+    };
+
+    using FramebufferFromPool = std::unique_ptr<FramebufferWithTextureRT, FramebufferBackToPool>;
+    using OffscreenFramebufferPool = AVector<FramebufferFromPool>;
 
     /**
      * @brief use getFramebufferForMultiPassEffect
@@ -79,12 +91,6 @@ private:
      */
     bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
 
-    struct FramebufferBackToPool {
-        OpenGLRenderer* renderer;
-        void operator()(gl::Framebuffer* framebuffer) const;
-    };
-
-    using FramebufferFromPool = std::unique_ptr<gl::Framebuffer, FramebufferBackToPool>;
 
     /**
      * @brief get a framebuffer for rendering multi pass effects (i.e., blur)
@@ -104,6 +110,8 @@ private:
      * framebuffer object, the function would never return the same object until caller releases ownership.
      */
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
+
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) override;
 
 protected:
     _unique<ITexture> createNewTexture() override;
@@ -186,7 +194,6 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) override;
 };
 
 
