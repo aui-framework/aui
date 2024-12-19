@@ -29,21 +29,14 @@ ass::prop::PropertySlot ass::prop::Property<ass::Backdrop>::getPropertySlot() co
     return ass::prop::PropertySlot::BACKDROP;
 }
 ass::Backdrop::GaussianBlurCustom ass::Backdrop::GaussianBlur::findOptimalParams() const {
-    static constexpr auto MIN_OPTIMAL_RADIUS = 3;
-    static constexpr auto MAX_OPTIMAL_RADIUS = 9;
+    static constexpr auto MIN_OPTIMAL_DOWNSCALE = 1;
+    static constexpr auto MAX_OPTIMAL_DOWNSCALE = 8; // larger values are too noisy
+    static constexpr auto DOWNSCALE_DIVISOR = 8;
     auto originalRadiusPx = int(radius.getValuePx());
-    if (originalRadiusPx <= MIN_OPTIMAL_RADIUS) {
-        return ass::Backdrop::GaussianBlurCustom {
-            .radius = radius,
-            .downscale = 1,
-        };
-    }
 
-    auto radiusCandidate = ranges::min(
-        ranges::view::closed_iota(MIN_OPTIMAL_RADIUS, MAX_OPTIMAL_RADIUS), std::less<> {},
-        [&](int i) { return originalRadiusPx % i; });
+    auto downscale = glm::clamp(originalRadiusPx / DOWNSCALE_DIVISOR, MIN_OPTIMAL_DOWNSCALE, MAX_OPTIMAL_DOWNSCALE);
     return ass::Backdrop::GaussianBlurCustom {
-        .radius = AMetric(float(radiusCandidate), AMetric::T_PX),
-        .downscale = originalRadiusPx / radiusCandidate,
+        .radius = AMetric(float(originalRadiusPx) / downscale, AMetric::T_PX),
+        .downscale = downscale,
     };
 }

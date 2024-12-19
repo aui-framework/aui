@@ -90,133 +90,133 @@ static constexpr auto UV_BIAS = 0.001f;
 
 namespace {
 
-    template<typename Brush>
-    struct UnsupportedBrushHelper {
-        void operator()(const Brush& brush) const {
-            AUI_ASSERT(("this brush is unsupported"));
+template<typename Brush>
+struct UnsupportedBrushHelper {
+    void operator()(const Brush& brush) const {
+        AUI_ASSERT(("this brush is unsupported"));
+    }
+};
+
+struct GradientShaderHelper {
+    OpenGLRenderer& renderer;
+    gl::Program& shader;
+    gl::Texture2D& tex;
+
+    GradientShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Texture2D& tex) : renderer(renderer),
+                                                                                              shader(shader),
+                                                                                              tex(tex) {}
+
+    void operator()(const ALinearGradientBrush& brush) const {
+        shader.use();
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
+        aui::render::brush::gradient::Helper h(brush);
+        shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
+
+        if (h.colors.size() == 2) {
+            // simple gradient can be used
+            shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors[0]) / 255.f);
+            shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors[1]) / 255.f);
+        } else {
+            // complex gradient needs a texture
+            // tex.tex2D(h.gradientMap());
+
+            // TODO complex shader is broken, use simple shader instead with first and last color
+            shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors.first()) / 255.f);
+            shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors.last()) / 255.f);
         }
-    };
 
-    struct GradientShaderHelper {
-        OpenGLRenderer& renderer;
-        gl::Program& shader;
-        gl::Texture2D& tex;
+        renderer.identityUv();
+    }
+};
 
-        GradientShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Texture2D& tex) : renderer(renderer),
-                                                                                                  shader(shader),
-                                                                                                  tex(tex) {}
+struct SolidShaderHelper {
+    OpenGLRenderer& renderer;
+    gl::Program& shader;
 
-        void operator()(const ALinearGradientBrush& brush) const {
-            shader.use();
-            shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
-            aui::render::brush::gradient::Helper h(brush);
-            shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
+    SolidShaderHelper(OpenGLRenderer& renderer, gl::Program& shader) : renderer(renderer), shader(shader) {}
 
-            if (h.colors.size() == 2) {
-                // simple gradient can be used
-                shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors[0]) / 255.f);
-                shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors[1]) / 255.f);
-            } else {
-                // complex gradient needs a texture
-                // tex.tex2D(h.gradientMap());
+    void operator()(const ASolidBrush& brush) const {
+        shader.use();
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor() * brush.solidColor);
+    }
+};
 
-                // TODO complex shader is broken, use simple shader instead with first and last color
-                shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors.first()) / 255.f);
-                shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors.last()) / 255.f);
-            }
+struct CustomShaderHelper {
 
+    CustomShaderHelper() {}
+
+    void operator()(const ACustomShaderBrush& brush) const {
+    }
+};
+
+struct TexturedShaderHelper {
+    OpenGLRenderer& renderer;
+    gl::Program& shader;
+    gl::Vao& tempVao;
+
+    TexturedShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Vao& tempVao) : renderer(renderer),
+                                                                                            shader(shader),
+                                                                                            tempVao(tempVao) {}
+
+    void operator()(const ATexturedBrush& brush) const {
+        shader.use();
+        shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
+        if (brush.uv1 || brush.uv2) {
+            glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
+            glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
+
+            const glm::vec2 uvs[] = {
+                {uv1.x, uv2.y},
+                {uv2.x, uv2.y},
+                {uv1.x, uv1.y},
+                {uv2.x, uv1.y},
+            };
+            tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
+        } else {
             renderer.identityUv();
         }
-    };
 
-    struct SolidShaderHelper {
-        OpenGLRenderer& renderer;
-        gl::Program& shader;
-
-        SolidShaderHelper(OpenGLRenderer& renderer, gl::Program& shader) : renderer(renderer), shader(shader) {}
-
-        void operator()(const ASolidBrush& brush) const {
-            shader.use();
-            shader.set(aui::ShaderUniforms::COLOR, renderer.getColor() * brush.solidColor);
-        }
-    };
-
-    struct CustomShaderHelper {
-
-        CustomShaderHelper() {}
-
-        void operator()(const ACustomShaderBrush& brush) const {
-        }
-    };
-
-    struct TexturedShaderHelper {
-        OpenGLRenderer& renderer;
-        gl::Program& shader;
-        gl::Vao& tempVao;
-
-        TexturedShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Vao& tempVao) : renderer(renderer),
-                                                                                                shader(shader),
-                                                                                                tempVao(tempVao) {}
-
-        void operator()(const ATexturedBrush& brush) const {
-            shader.use();
-            shader.set(aui::ShaderUniforms::COLOR, renderer.getColor());
-            if (brush.uv1 || brush.uv2) {
-                glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
-                glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
-
-                const glm::vec2 uvs[] = {
-                        {uv1.x, uv2.y},
-                        {uv2.x, uv2.y},
-                        {uv1.x, uv1.y},
-                        {uv2.x, uv1.y},
-                };
-                tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
-            } else {
-                renderer.identityUv();
-            }
-
-            auto tex = _cast<OpenGLTexture2D>(brush.texture);
-            tex->bind();
-            tex->texture().setupRepeat();
-            switch (brush.repeat) {
-                case Repeat::NONE:
-                    tex->texture().setupClampToEdge();
-                    break;
-                case Repeat::X_Y:
-                    tex->texture().setupRepeat();
-                    break;
-                case Repeat::X:
-                case Repeat::Y: {
-                    AUI_ASSERT_NO_CONDITION("Repeat::X and Repeat::Y are deprecated");
-                }
-            }
-            switch (brush.imageRendering) {
-                case ImageRendering::PIXELATED:
-                    tex->texture().setupNearest();
-                    break;
-                case ImageRendering::SMOOTH:
-                    tex->texture().setupLinear();
-                    break;
+        auto tex = _cast<OpenGLTexture2D>(brush.texture);
+        tex->bind();
+        tex->texture().setupRepeat();
+        switch (brush.repeat) {
+            case Repeat::NONE:
+                tex->texture().setupClampToEdge();
+                break;
+            case Repeat::X_Y:
+                tex->texture().setupRepeat();
+                break;
+            case Repeat::X:
+            case Repeat::Y: {
+                AUI_ASSERT_NO_CONDITION("Repeat::X and Repeat::Y are deprecated");
             }
         }
-    };
-
-
-    template<typename C>
-    concept AuiSLShader = requires(C&& c) {
-        { C::code() } -> std::same_as<const char*>;
-        C::setup(0);
-    };
-
-    template<AuiSLShader Vertex, AuiSLShader Fragment>
-    inline void useAuislShader(AOptional<gl::Program>& out) {
-        out.emplace();
-        out->loadRaw(Vertex::code(), Fragment::code());
-        Vertex::setup(out->handle());
-        Fragment::setup(out->handle());
-        out->compile();
+        switch (brush.imageRendering) {
+            case ImageRendering::PIXELATED:
+                tex->texture().setupNearest();
+                break;
+            case ImageRendering::SMOOTH:
+                tex->texture().setupLinear();
+                break;
+        }
     }
+};
+
+
+template<typename C>
+concept AuiSLShader = requires(C&& c) {
+    { C::code() } -> std::same_as<const char*>;
+    C::setup(0);
+};
+
+template<AuiSLShader Vertex, AuiSLShader Fragment>
+inline void useAuislShader(AOptional<gl::Program>& out) {
+    out.emplace();
+    out->loadRaw(Vertex::code(), Fragment::code());
+    Vertex::setup(out->handle());
+    Fragment::setup(out->handle());
+    out->compile();
+}
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -225,46 +225,46 @@ OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
     ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
     ALogger::info(LOG_TAG) << "GL_EXTENSIONS = " << [] {
-        if (auto ext = ((const char*) glGetString(GL_EXTENSIONS))) {
-            return ext;
-        } else {
-            return "null";
-        }
+      if (auto ext = ((const char*) glGetString(GL_EXTENSIONS))) {
+          return ext;
+      } else {
+          return "null";
+      }
     }();
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
-            aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
+        aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
+        aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
+        aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+        aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
+        aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+        aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
+        aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
+        aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::rect_unblend::fsh::glsl120::Shader>(mUnblendShader);
+        aui::sl_gen::rect_unblend::fsh::glsl120::Shader>(mUnblendShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
+        aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
 
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
-            aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
+        aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
-            aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
+        aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-            aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
+        aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
 
     {
         constexpr GLuint INDICES[] = {0, 1, 2, 2, 1, 3};
@@ -292,20 +292,20 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
     float h = y + size.y;
 
     return
-            {
-                    glm::vec2{x, h,},
-                    glm::vec2{w, h,},
-                    glm::vec2{x, y,},
-                    glm::vec2{w, y,},
-            };
+        {
+            glm::vec2{x, h,},
+            glm::vec2{w, h,},
+            glm::vec2{x, y,},
+            glm::vec2{w, y,},
+        };
 }
 
 void OpenGLRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded{
-            GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
-            TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-            SolidShaderHelper(*this, *mSolidShader),
-            CustomShaderHelper{},
+        GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+        TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+        SolidShaderHelper(*this, *mSolidShader),
+        CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -322,10 +322,10 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
 
 void OpenGLRenderer::identityUv() {
     const glm::vec2 uvs[] = {
-            {0, 1},
-            {1, 1},
-            {0, 0},
-            {1, 0}
+        {0, 1},
+        {1, 1},
+        {0, 0},
+        {1, 0}
     };
     mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "identityUv");
 }
@@ -335,10 +335,10 @@ void OpenGLRenderer::roundedRectangle(const ABrush& brush,
                                       glm::vec2 size,
                                       float radius) {
     std::visit(aui::lambda_overloaded{
-            GradientShaderHelper(*this, *mRoundedGradientShader, mGradientTexture),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*this, *mRoundedSolidShader),
-            CustomShaderHelper{},
+        GradientShaderHelper(*this, *mRoundedGradientShader, mGradientTexture),
+        UnsupportedBrushHelper<ATexturedBrush>(),
+        SolidShaderHelper(*this, *mRoundedSolidShader),
+        CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
     identityUv();
@@ -352,10 +352,10 @@ void OpenGLRenderer::rectangleBorder(const ABrush& brush,
                                      glm::vec2 size,
                                      float lineWidth) {
     std::visit(aui::lambda_overloaded{
-            UnsupportedBrushHelper<ALinearGradientBrush>(),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*this, *mSolidShader),
-            CustomShaderHelper{},
+        UnsupportedBrushHelper<ALinearGradientBrush>(),
+        UnsupportedBrushHelper<ATexturedBrush>(),
+        SolidShaderHelper(*this, *mSolidShader),
+        CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
     identityUv();
@@ -370,17 +370,17 @@ void OpenGLRenderer::rectangleBorder(const ABrush& brush,
 
     mRectangleVao.insert(0,
                          AArrayView(std::array<glm::vec3, 8>{
-                                 glm::vec3(glm::vec4{x + lineWidth, y + lineDelta, 1, 1}),
-                                 glm::vec3(glm::vec4{w, y + lineDelta, 1, 1}),
+                             glm::vec3(glm::vec4{x + lineWidth, y + lineDelta, 1, 1}),
+                             glm::vec3(glm::vec4{w, y + lineDelta, 1, 1}),
 
-                                 glm::vec3(glm::vec4{w - lineDelta, y + lineWidth, 1, 1}),
-                                 glm::vec3(glm::vec4{w - lineDelta, h, 1, 1}),
+                             glm::vec3(glm::vec4{w - lineDelta, y + lineWidth, 1, 1}),
+                             glm::vec3(glm::vec4{w - lineDelta, h, 1, 1}),
 
-                                 glm::vec3(glm::vec4{w - lineWidth, h - lineDelta - 0.15f, 1, 1}),
-                                 glm::vec3(glm::vec4{x, h - lineDelta - 0.15f, 1, 1}),
+                             glm::vec3(glm::vec4{w - lineWidth, h - lineDelta - 0.15f, 1, 1}),
+                             glm::vec3(glm::vec4{x, h - lineDelta - 0.15f, 1, 1}),
 
-                                 glm::vec3(glm::vec4{x + lineDelta, h - lineWidth - 0.15f, 1, 1}),
-                                 glm::vec3(glm::vec4{x + lineDelta, y, 1, 1}),
+                             glm::vec3(glm::vec4{x + lineDelta, h - lineWidth - 0.15f, 1, 1}),
+                             glm::vec3(glm::vec4{x + lineDelta, y, 1, 1}),
                          }), "rectangleBorder");
 
     glLineWidth(lineWidth);
@@ -393,10 +393,10 @@ void OpenGLRenderer::roundedRectangleBorder(const ABrush& brush,
                                             float radius,
                                             int borderWidth) {
     std::visit(aui::lambda_overloaded{
-            UnsupportedBrushHelper<ALinearGradientBrush>(),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*this, *mRoundedSolidShaderBorder),
-            CustomShaderHelper{},
+        UnsupportedBrushHelper<ALinearGradientBrush>(),
+        UnsupportedBrushHelper<ATexturedBrush>(),
+        SolidShaderHelper(*this, *mRoundedSolidShaderBorder),
+        CustomShaderHelper{},
     }, brush);
 
     identityUv();
@@ -437,10 +437,10 @@ void OpenGLRenderer::boxShadow(glm::vec2 position,
     h += blurRadius;
 
     const glm::vec2 uvs[] = {
-            {x, h},
-            {w, h},
-            {x, y},
-            {w, y},
+        {x, h},
+        {w, h},
+        {x, y},
+        {w, y},
     };
     mRectangleVao.insert(0, AArrayView(uvs), "boxShadow");
 
@@ -474,10 +474,10 @@ void OpenGLRenderer::boxShadowInner(glm::vec2 position,
     float h = y + size.y;
 
     const glm::vec2 uvs[] = {
-            {x, h},
-            {w, h},
-            {x, y},
-            {w, y},
+        {x, h},
+        {w, h},
+        {x, y},
+        {w, y},
     };
     mRectangleVao.insert(0, AArrayView(uvs), "boxShadowInner");
 
@@ -511,7 +511,7 @@ void OpenGLRenderer::setBlending(Blending blending) {
                 return;
         }
     }
-//    glBlendEquation(GL_FUNC_ADD);
+    //    glBlendEquation(GL_FUNC_ADD);
     switch (blending) {
         case Blending::NORMAL:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -553,13 +553,13 @@ public:
                             int textHeight,
                             OpenGLRenderer::FontEntryData* entryData,
                             FontRendering fontRendering) :
-            mRenderer(renderer),
-            mVertexBuffer(std::move(vertexBuffer)),
-            mIndexBuffer(std::move(indexBuffer)),
-            mTextWidth(textWidth),
-            mTextHeight(textHeight),
-            mEntryData(entryData),
-            mFontRendering(fontRendering) {
+        mRenderer(renderer),
+        mVertexBuffer(std::move(vertexBuffer)),
+        mIndexBuffer(std::move(indexBuffer)),
+        mTextWidth(textWidth),
+        mTextHeight(textHeight),
+        mEntryData(entryData),
+        mFontRendering(fontRendering) {
         if (mRenderer->isVaoAvailable()) {
             mVao.emplace();
             mVao->bind();
@@ -653,9 +653,9 @@ private:
 
 public:
     OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle) :
-            mRenderer(renderer),
-            mFontStyle(fontStyle),
-            mEntryData(renderer->getFontEntryData(fontStyle)) {
+        mRenderer(renderer),
+        mFontStyle(fontStyle),
+        mEntryData(renderer->getFontEntryData(fontStyle)) {
         mVertices.reserve(1000);
     }
 
@@ -776,7 +776,7 @@ public:
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
-//    ALOG_DEBUG("OpenGL") << "prerenderString: " << text;
+    //    ALOG_DEBUG("OpenGL") << "prerenderString: " << text;
     if (text.empty()) return nullptr;
 
     OpenGLMultiStringCanvas c(this, fs);
@@ -837,41 +837,41 @@ void OpenGLRenderer::popMaskAfter() {
 
 bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx) {
     return std::visit(aui::lambda_overloaded{
-            [&](const ABorderStyle::Solid&) {
-                std::visit(aui::lambda_overloaded{
-                        GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
-                        TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-                        SolidShaderHelper(*this, *mSolidShader),
-                        CustomShaderHelper{},
-                }, brush);
+        [&](const ABorderStyle::Solid&) {
+          std::visit(aui::lambda_overloaded{
+              GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+              TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+              SolidShaderHelper(*this, *mSolidShader),
+              CustomShaderHelper{},
+          }, brush);
 
-                return false;
-            },
-            [&](const ABorderStyle::Dashed& dashed) {
-                std::visit(aui::lambda_overloaded{
-                        GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
-                        TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-                        SolidShaderHelper(*this, *mLineSolidDashedShader),
-                        CustomShaderHelper{},
-                }, brush);
-                float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
-                float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
-                dashWidth *= APlatform::getDpiRatio();
-                sumOfLengths *= APlatform::getDpiRatio();
-                gl::Program::currentShader()->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
-                gl::Program::currentShader()->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
+          return false;
+        },
+        [&](const ABorderStyle::Dashed& dashed) {
+          std::visit(aui::lambda_overloaded{
+              GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+              TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+              SolidShaderHelper(*this, *mLineSolidDashedShader),
+              CustomShaderHelper{},
+          }, brush);
+          float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
+          float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
+          dashWidth *= APlatform::getDpiRatio();
+          sumOfLengths *= APlatform::getDpiRatio();
+          gl::Program::currentShader()->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
+          gl::Program::currentShader()->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
 
-                return true;
-            }
+          return true;
+        }
     }, style.value());
 }
 
 namespace {
-    struct LineVertex {
-        glm::vec2 position;
-        float distance;
-        float unused;
-    };
+struct LineVertex {
+    glm::vec2 position;
+    float distance;
+    float unused;
+};
 }
 
 void
@@ -915,14 +915,14 @@ void OpenGLRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, 
 
     for (const auto& [p1, p2]: points) {
         positions << LineVertex{
-                p1,
-                0.f,
-                1.f
+            p1,
+            0.f,
+            1.f
         };
         positions << LineVertex{
-                p2,
-                glm::distance(p1, p2),
-                1.f
+            p2,
+            glm::distance(p1, p2),
+            1.f
         };
     }
 
@@ -936,10 +936,10 @@ void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, A
     }
 
     std::visit(aui::lambda_overloaded{
-            GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
-            TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
-            SolidShaderHelper(*this, *mSolidShader),
-            CustomShaderHelper{},
+        GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
+        TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
+        SolidShaderHelper(*this, *mSolidShader),
+        CustomShaderHelper{},
     }, brush);
 
     const auto widthPx = size.getValuePx();
@@ -948,9 +948,9 @@ void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, A
 
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
     // TODO slow, use instancing instead
-    for (auto point : points) {
-        drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
-    }
+   for (auto point : points) {
+       drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
+   }
 #else
     glPointSize(widthPx);
 
@@ -966,20 +966,20 @@ void OpenGLRenderer::squareSector(const ABrush& brush,
                                   AAngleRadians begin,
                                   AAngleRadians end) {
     std::visit(aui::lambda_overloaded{
-            UnsupportedBrushHelper<ALinearGradientBrush>(),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(*this, *mSquareSectorShader),
-            CustomShaderHelper{},
+        UnsupportedBrushHelper<ALinearGradientBrush>(),
+        UnsupportedBrushHelper<ATexturedBrush>(),
+        SolidShaderHelper(*this, *mSquareSectorShader),
+        CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
 
     auto calculateLineMatrix = [](AAngleRadians angle) {
-        auto s = glm::sin(angle.radians());
-        auto c = glm::cos(angle.radians());
-        return glm::mat3{c, 0, 0,
-                         s, 0, 0,
-                         -0.5f * (s + c), 0, 0};
+      auto s = glm::sin(angle.radians());
+      auto c = glm::cos(angle.radians());
+      return glm::mat3{c, 0, 0,
+                       s, 0, 0,
+                       -0.5f * (s + c), 0, 0};
     };
     auto m1 = calculateLineMatrix(begin + 180_deg);
     auto m2 = calculateLineMatrix(end);
@@ -1090,7 +1090,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                         mFramebuffer.bindForRead();
                         mainRenderingFB->bindForWrite();
                         const auto supersampledRenderingFBSize =
-                                mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
+                            mFramebuffer.size() * mainRenderingFB->supersamlingRatio();
                         glBlitFramebuffer(0, 0, mFramebuffer.size().x, mFramebuffer.size().y,
                                           0, mainRenderingFB->supersampledSize().y - supersampledRenderingFBSize.y, supersampledRenderingFBSize.x, mainRenderingFB->supersampledSize().y,
                                           GL_COLOR_BUFFER_BIT, GL_NEAREST);
@@ -1104,35 +1104,35 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     // pixels.
                     glDisable(GL_BLEND);
                     AUI_DEFER {
-                        glEnable(GL_BLEND);
-                        glStencilMask(0x00);
-                        glStencilFunc(GL_EQUAL, ++mRenderer.mStencilDepth, 0xff);
+                      glEnable(GL_BLEND);
+                      glStencilMask(0x00);
+                      glStencilFunc(GL_EQUAL, ++mRenderer.mStencilDepth, 0xff);
                     };
                     static constexpr auto MAX_RECTANGLE_COUNT = std::decay_t<decltype(*rectangles)>::capacity();
                     using Vertices = AStaticVector<glm::vec2, MAX_RECTANGLE_COUNT * 4>;
                     using Indices = AStaticVector<GLuint, MAX_RECTANGLE_COUNT * 6>;
                     auto vertices =  ranges::views::transform(*rectangles, [&](const ARect<int>& r) {
-                        return getVerticesForRect(r.p1, r.size());
+                      return getVerticesForRect(r.p1, r.size());
                     }) | ranges::views::join | ranges::to<Vertices>();
                     mRenderer.mRectangleVao.insert(0, AArrayView(vertices), "render-to-texture invalid areas");
                     auto indices = ranges::views::generate([i = 0]() mutable {
-                        int offset = 4 * i++;
-                        return std::array<GLuint, 6>{GLuint(offset + 0),
-                                                     GLuint(offset + 1),
-                                                     GLuint(offset + 2),
-                                                     GLuint(offset + 2),
-                                                     GLuint(offset + 1),
-                                                     GLuint(offset + 3)};
+                      int offset = 4 * i++;
+                      return std::array<GLuint, 6>{GLuint(offset + 0),
+                                                   GLuint(offset + 1),
+                                                   GLuint(offset + 2),
+                                                   GLuint(offset + 2),
+                                                   GLuint(offset + 1),
+                                                   GLuint(offset + 3)};
                     }) | ranges::views::take_exactly(rectangles->size())
-                       | ranges::views::join
-                       | ranges::to<Indices>()
-                               ;
+                                   | ranges::views::join
+                                   | ranges::to<Indices>()
+                    ;
                     static constexpr auto DEFAULT_INDICES_SIZE = 6;
                     if (indices.size() != DEFAULT_INDICES_SIZE) mRenderer.mRectangleVao.indices(AArrayView(indices));
                     AUI_DEFER {
-                        if (indices.size() != DEFAULT_INDICES_SIZE) {
-                            mRenderer.mRectangleVao.indices(AArrayView(indices.data(), 6));
-                        }
+                      if (indices.size() != DEFAULT_INDICES_SIZE) {
+                          mRenderer.mRectangleVao.indices(AArrayView(indices.data(), 6));
+                      }
                     };
                     mRenderer.mSolidShader->use();
                     mRenderer.uploadToShaderCommon();
@@ -1150,13 +1150,13 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 auto mainRenderingFB = gl::Framebuffer::current();
                 AUI_ASSERT(mainRenderingFB != nullptr);
                 AUI_DEFER {
-                    mainRenderingFB->bind();
-                    glStencilMask(0xff);
-                    glClearColor(0, 0, 0, 0);
-                    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                    glStencilFunc(GL_EQUAL, 0x00, 0xff);
-                    glStencilMask(0);
-                    mRenderer.setStencilDepth(0);
+                  mainRenderingFB->bind();
+                  glStencilMask(0xff);
+                  glClearColor(0, 0, 0, 0);
+                  glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                  glStencilFunc(GL_EQUAL, 0x00, 0xff);
+                  glStencilMask(0);
+                  mRenderer.setStencilDepth(0);
                 };
 
                 // copy render results from mainRenderingFB (main render buffer) to our texture render target.
@@ -1177,10 +1177,10 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 mRenderer.uploadToShaderCommon();
 
                 const glm::vec2 uvs[] = {
-                        {0, 0},
-                        {1, 0},
-                        {0, 1},
-                        {1, 1}
+                    {0, 0},
+                    {1, 0},
+                    {0, 1},
+                    {1, 1}
                 };
                 mRenderer.mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "OpenGLRenderViewToTexture");
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
@@ -1199,12 +1199,12 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                     auto mainRenderingFB = gl::Framebuffer::current();
                     AUI_ASSERT(mainRenderingFB != nullptr);
                     AUI_DEFER {
-                        // restore.
-                        glColorMask(true, true, true, true);
-                        mainRenderingFB->bind();
-                        glEnable(GL_STENCIL_TEST);
-                        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-                        renderer.setStencilDepth(0);
+                      // restore.
+                      glColorMask(true, true, true, true);
+                      mainRenderingFB->bind();
+                      glEnable(GL_STENCIL_TEST);
+                      glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+                      renderer.setStencilDepth(0);
                     };
                     mFramebuffer.bind();
                     glDisable(GL_STENCIL_TEST);
@@ -1231,7 +1231,9 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
 }
 
 void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) {
-    AUI_ASSERT(glm::all(glm::greaterThan(size, glm::ivec2(0))));
+    if (!glm::all(glm::greaterThan(size, glm::ivec2(0)))) {
+        return;
+    }
 
     if (backdrops.empty()) {
         return;
@@ -1250,45 +1252,44 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
     AOptional<AreaOfInterest> areaOfInterest;
 
     auto initAreaOfInterestIfEmpty = [&](glm::ivec2 fbSize){
-        if (areaOfInterest) {
-            return;
-        }
+      if (areaOfInterest) {
+          return;
+      }
 
-        auto fb = getFramebufferForMultiPassEffect(fbSize);
-        source->bindForRead();
-        fb->framebuffer.bindForWrite();
+      auto fb = getFramebufferForMultiPassEffect(fbSize);
+      AUI_ASSERT(glm::all(glm::lessThanEqual(glm::u32vec2(fbSize), fb->framebuffer.size())));
+      source->bindForRead();
+      fb->framebuffer.bindForWrite();
 
-        auto vertices = getVerticesForRect(position, size);
-        std::array<glm::ivec2, vertices.size()> transformedVertices{};
-        for (size_t i = 0; i < vertices.size(); ++i) {
-            auto ndc = glm::vec2(mTransform * glm::vec4(vertices[i], 0, 1));
-            transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->supersampledSize()));
-        }
+      auto vertices = getVerticesForRect(position, size);
+      std::array<glm::ivec2, vertices.size()> transformedVertices{};
+      for (size_t i = 0; i < vertices.size(); ++i) {
+          auto ndc = glm::vec2(mTransform * glm::vec4(vertices[i], 0, 1));
+          transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->supersampledSize()));
+      }
 
-        auto p1 = transformedVertices.front();
-        auto p2 = transformedVertices.back();
-        glBlitFramebuffer(p1.x, p1.y, p2.x, p2.y, 0, 0, fbSize.x, fbSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
-        areaOfInterest = AreaOfInterest{
-            .framebuffer = std::move(fb),
-            .size = fbSize,
-        };
+      auto p1 = transformedVertices.front();
+      auto p2 = transformedVertices.back();
+      glBlitFramebuffer(p1.x, p1.y, p2.x, p2.y, 0, 0, fbSize.x, fbSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+      areaOfInterest = AreaOfInterest{
+          .framebuffer = std::move(fb),
+          .size = fbSize,
+      };
     };
 
     {
         glDisable(GL_STENCIL_TEST);
-        glStencilMask(0);
         AUI_DEFER {
-            source->bind();
-            source->bindViewport();
-            glEnable(GL_STENCIL_TEST);
-            glStencilMask(0xff);
+          source->bind();
+          source->bindViewport();
+          glEnable(GL_STENCIL_TEST);
         };
 
         for (const auto& backdrop : backdrops) {
             RenderHints::PushState s(*this);
             std::visit(
                 aui::lambda_overloaded {
-                  [&](const ass::Backdrop::GaussianBlurCustom& gaussianBlur) {
+                    [&](const ass::Backdrop::GaussianBlurCustom& gaussianBlur) {
                       const auto radius = int(gaussianBlur.radius.getValuePx());
                       if (radius <= 1) {
                           return;
@@ -1315,19 +1316,19 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                       };
                       static AUnorderedMap<unsigned /* radius */, BlurShaders> blurShaders;
                       auto& blurShader = blurShaders.getOrInsert(radius, [&] {
-                          BlurShaders result {
-                              .shader = std::make_unique<gl::Program>(),
-                          };
+                        BlurShaders result {
+                            .shader = std::make_unique<gl::Program>(),
+                        };
 
-                          auto kernel = aui::detail::gaussianKernel(radius);
+                        auto kernel = aui::detail::gaussianKernel(radius);
 
-                          auto kernelStr =
-                              kernel | ranges::view::transform([](float v) { return std::to_string(v); }) |
-                              ranges::view::join(',') | ranges::to<std::string>();
-                          result.shader->loadRaw(
-                              std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()),
-                              fmt::format(
-                                  R"(
+                        auto kernelStr =
+                            kernel | ranges::view::transform([](float v) { return std::to_string(v); }) |
+                            ranges::view::join(',') | ranges::to<std::string>();
+                        result.shader->loadRaw(
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()),
+                            fmt::format(
+                                R"(
 #version 120
 varying vec2 SL_inter_uv;
 uniform vec2 SL_uniform_m2;
@@ -1335,38 +1336,44 @@ uniform vec2 SL_uniform_pixel_to_uv;
 uniform sampler2D SL_uniform_albedo;
 const float KERNEL[{kernel_size}] = float[{kernel_size}]({kernel});
 void main() {{
-  vec4 accumulator = vec4(0.0, 0.0, 0.0, 0.0);
-  vec2 base_uv = SL_uniform_m2 * SL_inter_uv;
-  for (int i = -{radius}; i <= {radius}; ++i) {{
-    float f = float(i);
-    vec2 uv = SL_uniform_pixel_to_uv * vec2(f, f);
-    uv += base_uv;
-    uv = clamp(uv, vec2(0.0), SL_uniform_m2);
-    accumulator += texture2D(SL_uniform_albedo, uv) * KERNEL[{radius} + i];
-  }}
-  gl_FragColor = accumulator;
+ vec3 accumulator = vec3(0.0, 0.0, 0.0);
+ vec2 base_uv = SL_uniform_m2 * SL_inter_uv;
+ for (int i = -{radius}; i <= {radius}; ++i) {{
+   float f = float(i);
+   vec2 uv = SL_uniform_pixel_to_uv * vec2(f, f);
+   uv += base_uv;
+   uv = clamp(uv, vec2(0.0), SL_uniform_m2);
+   accumulator += texture2D(SL_uniform_albedo, uv).xyz * KERNEL[{radius} + i];
+ }}
+ gl_FragColor = vec4(accumulator, 1.0);
 }}
 )",
-                                  fmt::arg("kernel", kernelStr), fmt::arg("radius", radius),
-                                  fmt::arg("kernel_size", kernel.size())));
+                                fmt::arg("kernel", kernelStr), fmt::arg("radius", radius),
+                                fmt::arg("kernel_size", kernel.size())));
 
-                          result.shader->compile();
-                          aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
+                        result.shader->compile();
+                        aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
 
-                          return result;
+                        return result;
                       });
+
+                      if (!blurShader.shader) {
+                          // can't compile shader; actually, it would result in blur like behaviour
+                          return;
+                      }
 
                       blurShader.shader->use();
                       {
-                          auto stepSize = glm::vec2(1.f / areaOfInterest->framebuffer->framebuffer.size().x, 0.f);
+                          auto stepSize = glm::vec2(1.f / areaOfInterest->framebuffer->framebuffer.supersampledSize().x, 0.f);
                           blurShader.shader->set(aui::ShaderUniforms::PIXEL_TO_UV, stepSize);
                           blurShader.shader->set(
                               aui::ShaderUniforms::M2,
                               glm::vec2(areaOfInterest->size) /
-                                      glm::vec2(areaOfInterest->framebuffer->framebuffer.supersampledSize()) -
-                                  stepSize / 2.f /* small bias to avoid dirty edges */);
+                              glm::vec2(areaOfInterest->framebuffer->framebuffer.supersampledSize()) -
+                              stepSize / 2.f /* small bias to avoid dirty edges */);
                       }
                       uploadToShaderCommon();
+                      identityUv();
                       drawRectImpl({}, sizeDownscaled);
 
                       areaOfInterest.reset();   // release borrowed framebuffer before requesting another one
@@ -1383,12 +1390,12 @@ void main() {{
                       blurShader.shader->set(aui::ShaderUniforms::M1, glm::vec2(0.0));
 
                       {
-                          auto stepSize = glm::vec2(0.f, 1.f / float(offscreen1->framebuffer.size().y));
+                          auto stepSize = glm::vec2(0.f, 1.f / float(offscreen1->framebuffer.supersampledSize().y));
                           blurShader.shader->set(aui::ShaderUniforms::PIXEL_TO_UV, stepSize);
                           blurShader.shader->set(
                               aui::ShaderUniforms::M2,
                               glm::vec2(sizeDownscaled) / glm::vec2(offscreen1->framebuffer.supersampledSize()) -
-                                  stepSize / 2.f);
+                              stepSize / 2.f);
                       }
                       uploadToShaderCommon();
                       drawRectImpl({}, sizeDownscaled);
@@ -1397,7 +1404,7 @@ void main() {{
                           .framebuffer = std::move(offscreen2),
                           .size = sizeDownscaled,
                       };
-                  },
+                    },
                 },
                 backdrop);
         }
@@ -1442,37 +1449,38 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
 
     return aui::ptr::make_unique_with_deleter(
         [&]() -> FramebufferWithTextureRT* {
-            auto applicableSizeOnly =
-                mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
-                    return glm::all(glm::greaterThanEqual(fb->framebuffer.size(), minRequiredSize));
-                });
-            auto smallestFb = [](ranges::range auto& rng) {
-                return ranges::min_element(rng, std::less<> {}, [](const auto& fb) {
-                    return fb->framebuffer.size().x * fb->framebuffer.size().y;
-                });
-            };
+          auto applicableSizeOnly =
+              mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
+                return glm::all(glm::greaterThanEqual(fb->framebuffer.size(), minRequiredSize));
+              });
+          auto smallestFb = [](ranges::range auto& rng) {
+            return ranges::min_element(rng, std::less<> {}, [](const auto& fb) {
+              return fb->framebuffer.size().x * fb->framebuffer.size().y;
+            });
+          };
 
-            auto release = [&](OffscreenFramebufferPool::iterator it) {
-                auto object = std::exchange(*it, {});
-                mFramebuffersForMultiPassEffectsPool.erase(it);
-                return object.release();
-            };
-
-            if (auto it = smallestFb(applicableSizeOnly); it != applicableSizeOnly.end()) {
-                return release(it.base());
-            }
-
-            if (auto it = smallestFb(mFramebuffersForMultiPassEffectsPool);
-                it != mFramebuffersForMultiPassEffectsPool.end()) {
-                return release(it);
-            }
-
-            auto object = std::make_unique<FramebufferWithTextureRT>();
-            object->framebuffer.resize(minRequiredSize);
-            object->rendertarget = _new<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>>();
-            object->framebuffer.attach(object->rendertarget, GL_COLOR_ATTACHMENT0);
-
+          auto release = [&](OffscreenFramebufferPool::iterator it) {
+            auto object = std::exchange(*it, {});
+            mFramebuffersForMultiPassEffectsPool.erase(it);
             return object.release();
+          };
+
+          if (auto it = smallestFb(applicableSizeOnly); it != applicableSizeOnly.end()) {
+              return release(it.base());
+          }
+
+          if (auto it = smallestFb(mFramebuffersForMultiPassEffectsPool);
+              it != mFramebuffersForMultiPassEffectsPool.end()) {
+              (*it)->framebuffer.resize(minRequiredSize);
+              return release(it);
+          }
+
+          auto object = std::make_unique<FramebufferWithTextureRT>();
+          object->framebuffer.resize(minRequiredSize);
+          object->rendertarget = _new<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>>();
+          object->framebuffer.attach(object->rendertarget, GL_COLOR_ATTACHMENT0);
+
+          return object.release();
         }(),
         FramebufferBackToPool { this });
 }

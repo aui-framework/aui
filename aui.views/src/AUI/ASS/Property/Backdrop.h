@@ -83,6 +83,8 @@ namespace ass {
          */
         struct GaussianBlur {
             AMetric radius;
+
+            [[nodiscard]]
             GaussianBlurCustom findOptimalParams() const;
         };
 
