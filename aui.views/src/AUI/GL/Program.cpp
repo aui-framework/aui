@@ -53,9 +53,13 @@ void gl::Program::load(
 
     compile();
 }
+
+void gl::Program::loadVertexShader(const AString& vertex, bool raw) { mVertex = load(vertex, GL_VERTEX_SHADER, raw); }
+void gl::Program::loadFragmentShader(const AString& fragment, bool raw) { mFragment = load(fragment, GL_FRAGMENT_SHADER, raw); }
+
 void gl::Program::loadRaw(const AString& vertex, const AString& fragment) {
-    mVertex = load(vertex, GL_VERTEX_SHADER, true);
-    mFragment = load(fragment, GL_FRAGMENT_SHADER, true);
+    loadVertexShader(vertex, true);
+    loadFragmentShader(fragment, true);
 }
 
 gl::Program::~Program() {
@@ -69,34 +73,15 @@ gl::Program::~Program() {
     glDeleteProgram(mProgram);
 }
 
-uint32_t gl::Program::load(const std::string& code, uint32_t type, bool raw) {
+uint32_t gl::Program::load(std::string code, uint32_t type, bool raw) {
     assert(!code.empty());
 
     if (!raw) {
 #if AUI_PLATFORM_APPLE
-        if (type == GL_VERTEX_SHADER) {
-            code =
-                "#define attribute in\n"
-                "#define varying out\n" +
-                code;
-        } else {
-            code =
-                "#define varying in\n"
-                "out vec4 resultColor;\n"
-                "#define gl_FragColor resultColor\n"
-                "#define texture2D texture\n" +
-                code;
-        }
-#endif
-
-#if AUI_PLATFORM_IOS
-        code =
-            "#version 300 es\n"
+        code = "#version 100\n"
             "precision mediump float;\n"
             "precision mediump int;\n" +
-            code;
-#elif AUI_PLATFORM_MACOS
-        code = "#version 150\n" + code;
+                code;
 #endif
     }
 
@@ -233,12 +218,12 @@ int32_t gl::Program::getLocation(const gl::Program::Uniform& uniform) const {
     return location;
 }
 
-/*
-void gl::Shader::setArray(const gl::Shader::Uniform& uniform, const Vector<float>& value) {
-        for (size_t i = 0; i < value.size(); ++i) {
-                set(uniform + "[" + AString::number(i) + "]", value[i]);
-        }
-}*/
+void gl::Program::setArray(const gl::Program::Uniform& uniform, AArrayView<float> value) const {
+    auto loc = getLocation(uniform);
+    if (loc >= 0) {
+        glUniform1fv(loc, value.size(), value.data());
+    }
+}
 unsigned gl::Program::Uniform::next() {
     static unsigned id = 0;
     return id++;

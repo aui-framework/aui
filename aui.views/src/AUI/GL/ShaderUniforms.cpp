@@ -31,4 +31,5 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform M2("SL_uniform_m2");
     gl::Program::Uniform DIVIDER("SL_uniform_divider");
     gl::Program::Uniform THRESHOLD("SL_uniform_threshold");
+    gl::Program::Uniform KERNEL("SL_uniform_kernel");
 }

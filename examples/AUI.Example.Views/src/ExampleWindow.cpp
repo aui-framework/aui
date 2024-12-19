@@ -107,6 +107,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       c(".all_views_wrap") > t<AViewContainer>(),
       Padding { 16_dp },
     } });
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    setCustomStyle({
+        Padding { 64_dp, {}, 16_dp },
+    });
+#endif
 
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },

@@ -1322,19 +1322,16 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
 
                         auto kernel = aui::detail::gaussianKernel(radius);
 
-                        auto kernelStr =
-                            kernel | ranges::view::transform([](float v) { return std::to_string(v); }) |
-                            ranges::view::join(',') | ranges::to<std::string>();
-                        result.shader->loadRaw(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()),
+                        result.shader->loadVertexShader(
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                        result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
-#version 120
 varying vec2 SL_inter_uv;
 uniform vec2 SL_uniform_m2;
 uniform vec2 SL_uniform_pixel_to_uv;
 uniform sampler2D SL_uniform_albedo;
-const float KERNEL[{kernel_size}] = float[{kernel_size}]({kernel});
+uniform float SL_uniform_kernel[{kernel_size}];
 void main() {{
  vec3 accumulator = vec3(0.0, 0.0, 0.0);
  vec2 base_uv = SL_uniform_m2 * SL_inter_uv;
@@ -1343,16 +1340,18 @@ void main() {{
    vec2 uv = SL_uniform_pixel_to_uv * vec2(f, f);
    uv += base_uv;
    uv = clamp(uv, vec2(0.0), SL_uniform_m2);
-   accumulator += texture2D(SL_uniform_albedo, uv).xyz * KERNEL[{radius} + i];
+   accumulator += texture2D(SL_uniform_albedo, uv).xyz * SL_uniform_kernel[{radius} + i];
  }}
  gl_FragColor = vec4(accumulator, 1.0);
 }}
 )",
-                                fmt::arg("kernel", kernelStr), fmt::arg("radius", radius),
-                                fmt::arg("kernel_size", kernel.size())));
+                                fmt::arg("radius", radius),
+                                fmt::arg("kernel_size", kernel.size())), false);
 
-                        result.shader->compile();
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
+                        result.shader->compile();
+                        result.shader->use();
+                        result.shader->setArray(aui::ShaderUniforms::KERNEL, kernel);
 
                         return result;
                       });

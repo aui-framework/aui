@@ -23,6 +23,7 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Views.h>
+#include <AUI/Util/AArrayView.h>
 
 class AString;
 
@@ -51,6 +52,8 @@ public:
     void
     load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {},
          const AString& version = {});
+    void loadVertexShader(const AString& vertex, bool raw);
+    void loadFragmentShader(const AString& fragment, bool raw);
     void loadRaw(const AString& vertex, const AString& fragment);
     void compile();
     void bindAttribute(uint32_t index, const AString& name);
@@ -72,7 +75,7 @@ public:
     void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;
 
-    void setArray(const gl::Program::Uniform& uniform, const AVector<float>& value) const;
+    void setArray(const gl::Program::Uniform& uniform, AArrayView<float> value) const;
 
     static gl::Program*& currentShader() {
         static gl::Program* c;
@@ -119,6 +122,6 @@ private:
     uint32_t load(const AString& code, uint32_t type, bool raw) {
         return load(code.toStdString(), type, raw);
     }
-    uint32_t load(const std::string& data, uint32_t type, bool raw);
+    uint32_t load(std::string code, uint32_t type, bool raw);
 };
 }   // namespace gl
