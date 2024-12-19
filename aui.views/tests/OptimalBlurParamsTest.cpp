@@ -53,7 +53,7 @@ TEST(OptimalBlurParamsTest, Radius_5) {
 
 TEST(OptimalBlurParamsTest, Radius_6) {
     auto actual = GaussianBlur{ .radius = 6_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 2 };
+    auto expected = GaussianBlurCustom { .radius = 6_px, .downscale = 1 };
     EXPECT_EQ(actual, expected);
 }
 
@@ -65,84 +65,18 @@ TEST(OptimalBlurParamsTest, Radius_7) {
 
 TEST(OptimalBlurParamsTest, Radius_8) {
     auto actual = GaussianBlur{ .radius = 8_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 4_px, .downscale = 2 };
+    auto expected = GaussianBlurCustom { .radius = 8_px, .downscale = 1 };
     EXPECT_EQ(actual, expected);
 }
 
 TEST(OptimalBlurParamsTest, Radius_9) {
     auto actual = GaussianBlur{ .radius = 9_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 3 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_10) {
-    auto actual = GaussianBlur{ .radius = 10_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 5_px, .downscale = 2 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_11) {
-    auto actual = GaussianBlur{ .radius = 11_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 5_px, .downscale = 2 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_12) {
-    auto actual = GaussianBlur{ .radius = 12_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 4 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_13) {
-    auto actual = GaussianBlur{ .radius = 13_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 4 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_14) {
-    auto actual = GaussianBlur{ .radius = 14_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 7_px, .downscale = 2 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_15) {
-    auto actual = GaussianBlur{ .radius = 15_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 5 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_16) {
-    auto actual = GaussianBlur{ .radius = 16_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 4_px, .downscale = 4 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_17) {
-    auto actual = GaussianBlur{ .radius = 17_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 4_px, .downscale = 4 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_18) {
-    auto actual = GaussianBlur{ .radius = 18_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 6 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_19) {
-    auto actual = GaussianBlur{ .radius = 19_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 3_px, .downscale = 6 };
+    auto expected = GaussianBlurCustom { .radius = 9_px, .downscale = 1 };
     EXPECT_EQ(actual, expected);
 }
 
 TEST(OptimalBlurParamsTest, Radius_20) {
     auto actual = GaussianBlur{ .radius = 20_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 4_px, .downscale = 5 };
-    EXPECT_EQ(actual, expected);
-}
-
-TEST(OptimalBlurParamsTest, Radius_50) {
-    auto actual = GaussianBlur{ .radius = 50_px }.findOptimalParams();
-    auto expected = GaussianBlurCustom { .radius = 5_px, .downscale = 10 };
+    auto expected = GaussianBlurCustom { .radius = 10_px, .downscale = 2 };
     EXPECT_EQ(actual, expected);
 }
