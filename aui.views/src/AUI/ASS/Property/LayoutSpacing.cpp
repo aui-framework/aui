@@ -18,7 +18,7 @@
 
 
 void ass::prop::Property<ass::LayoutSpacing>::applyFor(AView* view) {
-    auto container = dynamic_cast<AViewContainer*>(view);
+    auto container = dynamic_cast<AViewContainerBase*>(view);
     if (container) {
         if (const auto& l = container->getLayout()) {
             l->setSpacing(mInfo.spacing);
