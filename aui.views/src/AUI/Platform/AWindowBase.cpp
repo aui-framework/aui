@@ -340,7 +340,13 @@ void AWindowBase::forceUpdateCursor() {
 }
 
 void AWindowBase::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+    if (AInput::isKeyDown(AInput::LSHIFT) || AInput::isKeyDown(AInput::RSHIFT)) {
+        auto copy = event;
+        std::swap(copy.delta.x, copy.delta.y);
+        AViewContainer::onScroll(copy);
+    } else {
+        AViewContainer::onScroll(event);
+    }
     AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
