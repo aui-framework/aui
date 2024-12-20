@@ -140,6 +140,9 @@ namespace aui {
     /**
      * @brief Concept shortcut to std::is_arithmetic_v
      */
-    template<typename F>
-    concept arithmetic = requires(F&&) { std::is_arithmetic_v<F>; };
+    template<typename T>
+    concept arithmetic = std::is_arithmetic_v<T>;
+
+    template<typename T>
+    concept unsigned_integral = std::is_unsigned_v<T>;
 }

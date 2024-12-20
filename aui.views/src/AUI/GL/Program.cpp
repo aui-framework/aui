@@ -82,6 +82,11 @@ uint32_t gl::Program::load(std::string code, uint32_t type, bool raw) {
             "precision mediump float;\n"
             "precision mediump int;\n" +
                 code;
+#elif AUI_PLATFORM_ANDROID
+        code = "#version 100\n"
+               "precision mediump float;\n"
+               "precision mediump int;\n" +
+               code;
 #endif
     }
 

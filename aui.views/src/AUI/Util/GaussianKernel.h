@@ -14,5 +14,5 @@
 #include "AUI/Util/AArrayView.h"
 
 namespace aui::detail {
-AArrayView<float> gaussianKernel(unsigned radius);
+API_AUI_VIEWS AArrayView<float> gaussianKernel(unsigned radius);
 }

@@ -34,6 +34,7 @@
 #include "AUI/Render/IRenderer.h"
 #include "glm/fwd.hpp"
 #include "AUI/Util/GaussianKernel.h"
+#include "AUI/Traits/bit.h"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
@@ -1443,8 +1444,8 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
         return nullptr;
     }
 
-    minRequiredSize.x = std::bit_ceil(minRequiredSize.x);
-    minRequiredSize.y = std::bit_ceil(minRequiredSize.y);
+    minRequiredSize.x = aui::bit_ceil(minRequiredSize.x);
+    minRequiredSize.y = aui::bit_ceil(minRequiredSize.y);
 
     return aui::ptr::make_unique_with_deleter(
         [&]() -> FramebufferWithTextureRT* {

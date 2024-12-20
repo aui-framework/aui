@@ -85,7 +85,7 @@ namespace ass {
             AMetric radius;
 
             [[nodiscard]]
-            GaussianBlurCustom findOptimalParams() const;
+            API_AUI_VIEWS GaussianBlurCustom findOptimalParams() const;
         };
 
         using Any = std::variant<GaussianBlur, GaussianBlurCustom>;
