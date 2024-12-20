@@ -36,9 +36,7 @@ public:
         char mBuffer[0x1000]{};
     };
 
-    AStdIStream(_<IInputStream> is): std::istream(new StreamBuf(std::move(is))) {
-
-    }
+    explicit AStdIStream(_<IInputStream> is);
     ~AStdIStream() {
         delete rdbuf();
     }

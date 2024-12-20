@@ -15,7 +15,11 @@
 
 #include <Windows.h>
 #include <cassert>
+#if AUI_COMPILER_GCC
+#include <shlobj.h>
+#else
 #include <ShlObj_core.h>
+#endif
 #include "Ole.h"
 #include "AComPtr.h"
 #include "AUI/Logging/ALogger.h"

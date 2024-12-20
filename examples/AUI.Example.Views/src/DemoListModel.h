@@ -27,7 +27,7 @@ private:
     size_t mListSize = 3;
 
 public:
-    virtual ~DemoListModel() = default;
+    ~DemoListModel() override = default;
 
     size_t listSize() override;
     AString listItemAt(const AListModelIndex& index) override;

@@ -26,3 +26,7 @@ int AStdIStream::StreamBuf::underflow() {
     setg(mBuffer, mBuffer, mBuffer + r);
     return std::basic_ios<char>::traits_type::to_int_type(*gptr());
 }
+
+AStdIStream::AStdIStream(_<IInputStream> is) : std::istream(new StreamBuf(std::move(is))) {
+
+}

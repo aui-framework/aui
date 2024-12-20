@@ -15,11 +15,16 @@
     #define AUI_IMPORT
     #define AUI_EXPORT
 #else
-    #if defined(_WIN32)
+    #if AUI_PLATFORM_WIN
         #define AUI_IMPORT __declspec(dllimport)
         #define AUI_EXPORT __declspec(dllexport)
     #else
         #define AUI_IMPORT
         #define AUI_EXPORT __attribute__((visibility("default")))
     #endif
+#endif
+
+
+#if !__cpp_rtti
+#error "You have RTTI disabled."
 #endif
