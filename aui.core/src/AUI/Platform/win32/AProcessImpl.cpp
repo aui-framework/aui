@@ -183,7 +183,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 return list.list.join(' ');
             }
             AString result;
-            result.reserve(list.list.size() + ranges::accumulate(list.list, 0, std::plus<>{}, &AString::length));
+            result.reserve(list.list.size() + ranges::accumulate(list.list, size_t(0), std::plus<>{}, [](const AString& s) { return s.length(); }));
             for (const auto& i : list.list) {
                 if (!result.empty()) {
                     result += " ";

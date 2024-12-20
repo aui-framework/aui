@@ -171,6 +171,29 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        `Platform/unix`
      </td>
    </tr>
+
+   <tr>
+     <td>
+       Emscripten
+     </td>
+     <td>
+       @code{cpp}
+        #if AUI_PLATFORM_EMSCRIPTEN
+          // ...
+        #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_EMSCRIPTEN)
+          # ...
+        endif()
+       @endcode
+     </td>
+     <td>
+       `Platform/emscripten`
+     </td>
+   </tr>
 </table>
 
 
@@ -254,3 +277,13 @@ one of the supported platforms (see the table above).
 ## AUI_MODULE_NAME
 
 Target name exposed by [aui_module](@ref md_docs_aui_module) and [aui_executable](@ref md_docs_aui_executable).
+
+## API_\<module name\>
+
+\c dllexport (on Windows) or \c visibility (on other platforms) policy for the symbol.
+
+@code{cpp}
+class API_AUI_VIEWS AView ... { // defined in aui.views module
+  ...
+};
+@endcode
