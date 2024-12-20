@@ -31,5 +31,5 @@ void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::B
                 v);
         }) |
         ranges::to_vector;
-    this->backdrops(position, size, preprocessed);
+    this->backdrops(position, size, std::span<Preprocessed>(preprocessed));
 }
