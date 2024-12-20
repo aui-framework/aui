@@ -9,15 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by dervisdev on 1/26/2023.
-//
+#pragma once
 
-#include "ScrollbarAppearance.h"
-#include <AUI/View/AScrollArea.h>
+#include "AUI/Util/AArrayView.h"
 
-void ass::prop::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
-    if (auto scrollArea = _cast<AScrollArea>(view->sharedPtr())) {
-        scrollArea->setScrollbarAppearance(mInfo);
-    }
+namespace aui::detail {
+API_AUI_VIEWS AArrayView<float> gaussianKernel(unsigned radius);
 }

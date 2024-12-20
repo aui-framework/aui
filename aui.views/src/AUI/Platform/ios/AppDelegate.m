@@ -30,7 +30,7 @@
     return YES;
 }
 - (NSUInteger)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window{
-    return UIInterfaceOrientationMaskLandscape;
+    return UIInterfaceOrientationMaskAll;
 }
 
 #pragma mark - UISceneSession lifecycle

@@ -23,99 +23,105 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Views.h>
+#include <AUI/Util/AArrayView.h>
 
 class AString;
 
 namespace gl {
-	class API_AUI_VIEWS Program {
-	public:
+class API_AUI_VIEWS Program: public aui::noncopyable {
+public:
+    class API_AUI_VIEWS Uniform {
+    private:
+        const char* mUniformString;
+        unsigned mId = -1;
 
-        class API_AUI_VIEWS Uniform
-        {
-        private:
-            const char* mUniformString;
-            unsigned mId = -1;
+        static unsigned next();
 
-            static unsigned next();
+    public:
+        explicit Uniform(const char* uniformString) : mUniformString(uniformString), mId(next()) {}
 
-        public:
-            explicit Uniform(const char* uniformString)
-                    : mUniformString(uniformString), mId(next())
-            {
-            }
+        const char* getUniformName() const { return mUniformString; }
 
-
-            const char* getUniformName() const
-            {
-                return mUniformString;
-            }
-
-            unsigned getId() const
-            {
-                return mId;
-            }
-        };
-
-		Program();
-		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {}, const AString& version = {});
-		void loadRaw(const AString& vertex, const AString& fragment);
-		void compile();
-		void bindAttribute(uint32_t index, const AString& name);
-		void use() const;
-		~Program();
-		Program(const Program&) = delete;
-
-        uint32_t handle() const {
-            return mProgram;
-        }
-
-        int32_t getLocation(const Uniform& uniform) const;
-
-		void set(const gl::Program::Uniform& uniform, int value) const;
-		void set(const gl::Program::Uniform& uniform, float value) const;
-		void set(const gl::Program::Uniform& uniform, double value) const;
-		void set(const gl::Program::Uniform& uniform, glm::mat4 value) const;
-		void set(const gl::Program::Uniform& uniform, glm::mat3 value) const;
-		void set(const gl::Program::Uniform& uniform, glm::dmat4 value) const;
-		void set(const gl::Program::Uniform& uniform, glm::vec2 value) const;
-		void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
-		void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;
-
-		void setArray(const gl::Program::Uniform& uniform, const AVector<float>& value) const;
-
-		static gl::Program*& currentShader()
-		{
-			static gl::Program* c;
-			return c;
-		}
-
-	private:
-		uint32_t mProgram;
-		uint32_t mVertex = 0;
-		uint32_t mFragment = 0;
-		uint32_t load(const AString&, uint32_t type, bool raw);
-
-        struct UniformCache {
-            int32_t id = UniformState::UNINITIALIZED;
-            using Value = std::variant<std::nullopt_t, int, float, double ,glm::vec2, glm::vec3, glm::vec4, glm::mat3, glm::mat4, glm::dmat4>;
-            Value lastValue = std::nullopt;
-        };
-        mutable UniformCache mUniforms[64];
-
-        class UniformState {
-        public:
-            enum Value {
-                UNINITIALIZED = -2,
-                DOES_NOT_EXIST = -1
-            };
-        };
-
-        template<typename T>
-        inline bool sameAsCache(const gl::Program::Uniform& uniform, T value) const {
-            if (auto p = std::get_if<T>(&mUniforms[uniform.getId()].lastValue)) {
-                return *p == value;
-            }
-            return false;
-        }
+        unsigned getId() const { return mId; }
     };
-}
+
+    Program();
+    explicit Program(Program&& program) noexcept {
+        operator=(std::move(program));
+    }
+    void
+    load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {},
+         const AString& version = {});
+    void loadVertexShader(const AString& vertex, bool raw);
+    void loadFragmentShader(const AString& fragment, bool raw);
+    void loadRaw(const AString& vertex, const AString& fragment);
+    void compile();
+    void bindAttribute(uint32_t index, const AString& name);
+    void use() const;
+    ~Program();
+    Program(const Program&) = delete;
+
+    uint32_t handle() const { return mProgram; }
+
+    int32_t getLocation(const Uniform& uniform) const;
+
+    void set(const gl::Program::Uniform& uniform, int value) const;
+    void set(const gl::Program::Uniform& uniform, float value) const;
+    void set(const gl::Program::Uniform& uniform, double value) const;
+    void set(const gl::Program::Uniform& uniform, glm::mat4 value) const;
+    void set(const gl::Program::Uniform& uniform, glm::mat3 value) const;
+    void set(const gl::Program::Uniform& uniform, glm::dmat4 value) const;
+    void set(const gl::Program::Uniform& uniform, glm::vec2 value) const;
+    void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
+    void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;
+
+    void setArray(const gl::Program::Uniform& uniform, AArrayView<float> value) const;
+
+    static gl::Program*& currentShader() {
+        static gl::Program* c;
+        return c;
+    }
+
+    Program& operator=(Program&& program) noexcept {
+        if (this == &program) {
+            return *this;
+        }
+        mProgram = std::exchange(program.mProgram, 0);
+        mUniforms = std::exchange(program.mUniforms, {});
+        mVertex = std::exchange(program.mVertex, 0);
+        mFragment = std::exchange(program.mFragment, 0);
+
+        return *this;
+    }
+
+private:
+    uint32_t mProgram;
+    uint32_t mVertex = 0;
+    uint32_t mFragment = 0;
+
+    struct UniformCache {
+        int32_t id = UniformState::UNINITIALIZED;
+        using Value = std::variant<
+            std::nullopt_t, int, float, double, glm::vec2, glm::vec3, glm::vec4, glm::mat3, glm::mat4, glm::dmat4>;
+        Value lastValue = std::nullopt;
+    };
+    mutable std::array<UniformCache, 64> mUniforms;
+
+    class UniformState {
+    public:
+        enum Value { UNINITIALIZED = -2, DOES_NOT_EXIST = -1 };
+    };
+
+    template <typename T>
+    inline bool sameAsCache(const gl::Program::Uniform& uniform, T value) const {
+        if (auto p = std::get_if<T>(&mUniforms[uniform.getId()].lastValue)) {
+            return *p == value;
+        }
+        return false;
+    }
+    uint32_t load(const AString& code, uint32_t type, bool raw) {
+        return load(code.toStdString(), type, raw);
+    }
+    uint32_t load(std::string code, uint32_t type, bool raw);
+};
+}   // namespace gl
