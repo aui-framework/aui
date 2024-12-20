@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/7/2021.
@@ -31,26 +26,26 @@
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
-    ARender::setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     endFramebuffer();
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);

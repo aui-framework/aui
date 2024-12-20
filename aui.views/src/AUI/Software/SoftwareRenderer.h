@@ -1,24 +1,19 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 
 #include <AUI/Render/IRenderer.h>
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
 class API_AUI_VIEWS SoftwareRenderer: public IRenderer {
@@ -44,7 +39,7 @@ public:
      *        ignored.
      */
     inline void putPixel(glm::ivec2 position, AColor color, AOptional<Blending> blending = std::nullopt) noexcept {
-        assert(("context is null" && mContext != nullptr));
+        AUI_ASSERTX(mContext != nullptr, "context is null");
         color = glm::clamp(color, glm::vec4(0), glm::vec4(1));
         auto actualBlending = blending ? *blending : mBlending;
         glm::uvec2 uposition(position);
@@ -110,42 +105,42 @@ public:
     }
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
-    void drawRect(const ABrush& brush,
-                  glm::vec2 position,
-                  glm::vec2 size) override;
+    void rectangle(const ABrush& brush,
+                   glm::vec2 position,
+                   glm::vec2 size) override;
 
-    void drawRoundedRect(const ABrush& brush,
+    void roundedRectangle(const ABrush& brush,
+                          glm::vec2 position,
+                          glm::vec2 size,
+                          float radius) override;
+
+    void rectangleBorder(const ABrush& brush,
                          glm::vec2 position,
                          glm::vec2 size,
-                         float radius) override;
+                         float lineWidth) override;
 
-    void drawRectBorder(const ABrush& brush,
-                        glm::vec2 position,
-                        glm::vec2 size,
-                        float lineWidth) override;
+    void roundedRectangleBorder(const ABrush& brush,
+                                glm::vec2 position,
+                                glm::vec2 size,
+                                float radius,
+                                int borderWidth) override;
 
-    void drawRoundedRectBorder(const ABrush& brush,
-                               glm::vec2 position,
-                               glm::vec2 size,
-                               float radius,
-                               int borderWidth) override;
-
-    void drawBoxShadow(glm::vec2 position,
-                       glm::vec2 size,
-                       float blurRadius,
-                       const AColor& color) override;
+    void boxShadow(glm::vec2 position,
+                   glm::vec2 size,
+                   float blurRadius,
+                   const AColor& color) override;
     
-    void drawBoxShadowInner(glm::vec2 position,
-                            glm::vec2 size,
-                            float blurRadius,
-                            float spreadRadius,
-                            float borderRadius,
-                            const AColor& color,
-                            glm::vec2 offset) override;   
+    void boxShadowInner(glm::vec2 position,
+                        glm::vec2 size,
+                        float blurRadius,
+                        float spreadRadius,
+                        float borderRadius,
+                        const AColor& color,
+                        glm::vec2 offset) override;
 
-    void drawString(glm::vec2 position,
-                    const AString& string,
-                    const AFontStyle& fs) override;
+    void string(glm::vec2 position,
+                const AString& string,
+                const AFontStyle& fs) override;
 
     _<IPrerenderedString> prerenderString(glm::vec2 position,
                                           const AString& text,
@@ -153,30 +148,29 @@ public:
 
     void setBlending(Blending blending) override;
 
-    void setWindow(ABaseWindow* window) override;
+    void setWindow(AWindowBase* window) override;
 
     glm::mat4 getProjectionMatrix() const override;
 
     void pushMaskBefore() override;
-
     void pushMaskAfter() override;
-
     void popMaskBefore() override;
-
     void popMaskAfter() override;
 
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
 
-    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
+    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
 
-    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
+    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
 
-    void drawSquareSector(const ABrush& brush,
-                          const glm::vec2& position,
-                          const glm::vec2& size,
-                          AAngleRadians begin,
-                          AAngleRadians end) override;
+    void squareSector(const ABrush& brush,
+                      const glm::vec2& position,
+                      const glm::vec2& size,
+                      AAngleRadians begin,
+                      AAngleRadians end) override;
 protected:
-    ITexture* createNewTexture() override;
+    _unique<ITexture> createNewTexture() override;
 
     void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
 

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include "OpenGLRenderingContext.h"
 #include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
@@ -28,23 +23,22 @@ void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
     }
 #endif
     try {
-        gl::Framebuffer framebuffer;
-        framebuffer.setSupersamplingRatio(2);
-        framebuffer.resize(windowSize);
-        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-        framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        if constexpr (true) {
-            auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
-        } else {
-            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
-        }
-        mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
+        mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
         mFramebuffer = Failed{};
     }
+}
+
+gl::Framebuffer OpenGLRenderingContext::newOffscreenRenderingFramebuffer(glm::uvec2 initialSize) {
+    gl::Framebuffer framebuffer;
+    framebuffer.setSupersamplingRatio(2);
+    framebuffer.resize(initialSize);
+    auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
+    framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+    auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
+    framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
+    return framebuffer;
 }
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
@@ -64,6 +58,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderingContext::endFramebuffer() {
+#if !AUI_PLATFORM_EMSCRIPTEN
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         fb->bindForRead();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
@@ -75,6 +70,7 @@ void OpenGLRenderingContext::endFramebuffer() {
                           GL_LINEAR);                // filter
         gl::Framebuffer::unbind();
     }
+#endif
 }
 
 void OpenGLRenderingContext::bindViewport() {

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -33,7 +28,7 @@ public:
         mMutex.lock();
 
 #if AUI_DEBUG
-        mOwnerThread = std::this_thread::get_id();
+        mOwnerThread = AThread::current();
 #endif
     }
 
@@ -54,14 +49,14 @@ public:
 
     void unlock() {
 #if AUI_DEBUG
-        aui::zero(mOwnerThread);
+        mOwnerThread = nullptr;
 #endif
         mMutex.unlock();
     }
 
     T& value() noexcept {
 #if AUI_DEBUG
-        assert(("AMutexWrapper should be locked by this thread in order to get access to the underlying object", mOwnerThread == std::this_thread::get_id()));
+        AUI_ASSERTX(mOwnerThread == AThread::current(), "AMutexWrapper should be locked by this thread in order to get access to the underlying object");
 #endif
         return mValue;
     }
@@ -75,6 +70,6 @@ private:
     AMutex mMutex;
 
 #if AUI_DEBUG
-    std::thread::id mOwnerThread;
+    _<AAbstractThread> mOwnerThread;
 #endif
 };

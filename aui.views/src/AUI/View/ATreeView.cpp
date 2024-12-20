@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 7/1/2021.
@@ -37,29 +32,28 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        updateLayout();
+        applyGeometryToChildren();
     }
 
-    void updateLayout() override {
-        if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
-                                  getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    void applyGeometryToChildren() override {
+        getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
+                              getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
     }
 
     size_t getIndex() const {
         return mIndex;
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override {
+    int getContentMinimumWidth() override {
         return 40;
     }
 
-    int getContentMinimumHeight(ALayoutDirection layout) override {
+    int getContentMinimumHeight() override {
         return 40;
     }
 };
 
-class ATreeView::ItemView: public AViewContainer, public ass::ISelectable
+class ATreeView::ItemView: public AViewContainerBase, public ass::ISelectable
 {
 public:
     ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeModelIndex& index)
@@ -68,7 +62,7 @@ public:
               mTreeView(treeView)
     {
         addAssName(".list-item");
-        setLayout(_new<AHorizontalLayout>());
+        setLayout(std::make_unique<AHorizontalLayout>());
 
         if (hasChildren) {
             addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) let {
@@ -155,19 +149,19 @@ public:
     }
 
     void onPointerPressed(const APointerPressedEvent& event) override {
-        AViewContainer::onPointerPressed(event);
+        AViewContainerBase::onPointerPressed(event);
 
         mTreeView->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
-        AViewContainer::onPointerDoubleClicked(event);
+        AViewContainerBase::onPointerDoubleClicked(event);
 
         mTreeView->handleMouseDoubleClicked(this);
     }
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override {
-        AViewContainer::onPointerMove(pos, event);
+        AViewContainerBase::onPointerMove(pos, event);
         mTreeView->handleMouseMove(this);
     }
 
@@ -219,41 +213,74 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         clearSignals();
     }
     mModel = model;
-    setLayout(_new<AHorizontalLayout>());
+    setLayout(std::make_unique<AHorizontalLayout>());
 
     addView(mContent = _new<ContainerView>());
     addView(mScrollbar = _new<AScrollbar>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        fillViewsRecursively(mContent, model->root());
+        fillViewsRecursively(mContent, ATreeModelIndex::ROOT);
         connect(mModel->dataInserted, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
             try {
-                auto itemView = indexToView(parent);
+                auto parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
                 bool group = mModel->childrenCount(i) != 0;
                 auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
-                makeElement(itemView->childrenContainer(), i, group, item);
+                makeElement(itemContainer, i, group, item);
+                redraw();
             } catch (const AException& e) {
                 ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
             }
         });
         connect(mModel->dataRemoved, [this](ATreeModelIndex i) {
-            auto parent = mModel->parent(i);
             try {
-                auto itemView = indexToView(parent);
-                itemView->childrenContainer()->removeView(i.row() * 2);
-                itemView->childrenContainer()->removeView(i.row() * 2);
+                ATreeModelIndexOrRoot parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
+                itemContainer->removeView(i.row() * 2);
+                itemContainer->removeView(i.row() * 2);
+                redraw();
+            } catch (const AException& e) {
+                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+            }
+        });
+        connect(mModel->dataChanged, [this](ATreeModelIndex i) {
+            try {
+                auto parent = mModel->parent(i);
+                _<AViewContainer> itemContainer;
+                if (parent == ATreeModelIndex::ROOT) {
+                    itemContainer = mContent;
+                } else {
+                    itemContainer = indexToView(*parent)->childrenContainer();
+                }
+                // remove old view
+                itemContainer->removeView(i.row() * 2);
+                itemContainer->removeView(i.row() * 2);
+                // add new view
+                bool group = mModel->childrenCount(i) != 0;
+                auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
+                makeElement(itemContainer, i, group, item);
+                redraw();
             } catch (const AException& e) {
                 ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
             }
         });
     }
-    updateLayout();
+    markMinContentSizeInvalid();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
@@ -278,7 +305,7 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
                 wrapper->setVisibility(Visibility::GONE);
             }
 
-            updateLayout();
+            applyGeometryToChildrenIfNecessary();
             updateScrollbarDimensions();
             redraw();
         });
@@ -287,15 +314,14 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
 
 
 void ATreeView::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
 
     updateScrollbarDimensions();
 }
 
 void ATreeView::updateScrollbarDimensions() {
     if (mContent) {
-        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight(
-                ALayoutDirection::NONE));
+        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
     }
 }
 
@@ -318,7 +344,7 @@ void ATreeView::handleSelected(ATreeView::ItemView* v) {
     emit itemSelected(v->getIndex());
 }
 
-void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index) {
+void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
         bool group = mModel->childrenCount(childIndex) != 0;
@@ -328,7 +354,7 @@ void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATr
 
 }
 
-int ATreeView::getContentMinimumHeight(ALayoutDirection layout) {
+int ATreeView::getContentMinimumHeight() {
     return 40;
 }
 
@@ -336,18 +362,29 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
     emit itemMouseHover(pView->getIndex());
 }
 
-template<aui::invocable<std::size_t /* row */> Callable>
-static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeModelIndex& indexToSelect) {
-    if (!indexToSelect.hasValue()) {
+/**
+ * @brief Determines rows path from root node to the target node.
+ * @details
+ * Supplies the callable with row indices from root node directly to the specified target. The indices are passed to 
+ * callback function.
+ */
+template <aui::invocable<std::size_t /* row */> Callback>
+static void traverseFromRootToTarget(const Callback& callback, const _<ITreeModel<AString>>& model,
+                                     const ATreeModelIndexOrRoot& target) {
+    if (target == ATreeModelIndex::ROOT) {
         return;
     }
-    findRoot(callable, model, model->parent(indexToSelect));
-    callable(indexToSelect.row());
+    auto& asIndex = *target;
+    traverseFromRootToTarget(callback, model, model->parent(asIndex));
+    callback(asIndex.row());
 }
 
 void ATreeView::select(const ATreeModelIndex& indexToSelect) {
     try {
         auto itemView = indexToView(indexToSelect);
+        if (itemView == nullptr) {
+            return;
+        }
         itemView->focus();
         itemView->setSelected(true);
 
@@ -362,15 +399,10 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
 }
 
 _<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
-    auto currentTarget = _cast<AViewContainer>(mContent);
+    auto currentTarget = _cast<AViewContainerBase>(mContent);
     _<ATreeView::ItemView> itemView;
-    bool ignore = true;
-    findRoot([&](std::size_t row) {
+    traverseFromRootToTarget([&](std::size_t row) {
         if (!currentTarget) {
-            return;
-        }
-        if (ignore) {
-            ignore = false;
             return;
         }
         auto c = _cast<ATreeView::ItemView>(currentTarget->getViews().at(row * 2));

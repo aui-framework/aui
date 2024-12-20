@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 7/14/2022.
@@ -25,21 +20,23 @@
 using namespace declarative;
 
 namespace {
-    class Inner: public AViewContainer {
+    class Inner: public AViewContainerBase {
     friend class AGroupBox;
     public:
         Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
             setContents(contents);
         }
 
-        void drawStencilMask() override {
-            AView::drawStencilMask();
+        void drawStencilMask(ARenderContext ctx) override {
+            AView::drawStencilMask(ctx);
 
-            RenderHints::PushMatrix transform;
+            RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            ARender::rect(ASolidBrush{},
-                          d,
-                          mTitle->getSize());
+            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
+                ctx.render.rectangle(ASolidBrush{},
+                                     d,
+                                     mTitle->getSize());
+            }
         }
 
     private:
@@ -52,7 +49,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     mContent(std::move(contentView)) {
 
 
-    setLayout(_new<AVerticalLayout>());
+    setLayout(std::make_unique<AVerticalLayout>());
 
     using namespace declarative;
     setContents(Vertical {
@@ -82,14 +79,9 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     }
 }
 
-void AGroupBox::updateLayout() {
-    AViewContainer::updateLayout();
-
+void AGroupBox::applyGeometryToChildren() {
+    AViewContainerBase::applyGeometryToChildren();
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
-}
-
-int AGroupBox::getContentMinimumHeight(ALayoutDirection layout) {
-    return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE) + mFrame->getPosition().y - getFrameForcedPosition();
 }
 
 int AGroupBox::getFrameForcedPosition() const noexcept {

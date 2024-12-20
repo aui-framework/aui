@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 1/27/2023.
@@ -50,7 +45,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                 } reply;
 
                 Icmp(AFuture<std::chrono::high_resolution_clock::duration> result) : result(std::move(result)) {
-                    assert(handle != INVALID_HANDLE_VALUE);
+                    AUI_ASSERT(handle != INVALID_HANDLE_VALUE);
                 }
 
                 ~Icmp() {
@@ -69,7 +64,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                                            if (result->Status != 0) {
                                                throw AIOException(aui::impl::formatSystemError(result->Status).description);
                                            }
-                                           icmp->result.supplyResult(
+                                           icmp->result.supplyValue(
                                                    std::chrono::milliseconds(icmp->reply.icmp.RoundTripTime));
                                        } catch (...) {
                                            icmp->result.supplyException();
@@ -86,7 +81,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
                                    timeout.count() // timeout in ms
             );
 
-            assert(r == 0);
+            AUI_ASSERT(r == 0);
             if (auto lastError = GetLastError(); lastError != ERROR_IO_PENDING) {
                 delete icmp;
                 throw AIOException(aui::impl::formatSystemError(lastError).description);

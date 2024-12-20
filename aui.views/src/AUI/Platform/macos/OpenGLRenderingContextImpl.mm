@@ -1,26 +1,21 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 12/7/2021.
 //
 
 #include <AUI/GL/gl.h>
-#import <Cocoa/Cocoa.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#import <Cocoa/Cocoa.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/GL/GLDebug.h>
@@ -30,59 +25,56 @@
 #include <AUI/Platform/AWindow.h>
 
 
+void* OpenGLRenderingContext::ourContext = nullptr;
+
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
     auto& window = init.window;
 
     // INITIALIZE OPENGL
+    if (ourContext == nullptr) {
+        // set up pixel format
+        constexpr int kMaxAttributes = 19;
+        NSOpenGLPixelFormatAttribute attributes[kMaxAttributes];
+        int numAttributes = 0;
+        attributes[numAttributes++] = NSOpenGLPFAAccelerated;
+        attributes[numAttributes++] = NSOpenGLPFAClosestPolicy;
+        attributes[numAttributes++] = NSOpenGLPFADoubleBuffer;
+        attributes[numAttributes++] = NSOpenGLPFAOpenGLProfile;
+        attributes[numAttributes++] = NSOpenGLProfileVersion3_2Core;
+        attributes[numAttributes++] = NSOpenGLPFAColorSize;
+        attributes[numAttributes++] = 24;
+        attributes[numAttributes++] = NSOpenGLPFAAlphaSize;
+        attributes[numAttributes++] = 8;
+        attributes[numAttributes++] = NSOpenGLPFADepthSize;
+        attributes[numAttributes++] = 24;
+        attributes[numAttributes++] = NSOpenGLPFAStencilSize;
+        attributes[numAttributes++] = 8;
+        attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
+        attributes[numAttributes++] = 0;
+        // }
+        attributes[numAttributes++] = 0;
 
-    // set up pixel format
-    constexpr int kMaxAttributes = 19;
-    NSOpenGLPixelFormatAttribute attributes[kMaxAttributes];
-    int numAttributes = 0;
-    attributes[numAttributes++] = NSOpenGLPFAAccelerated;
-    attributes[numAttributes++] = NSOpenGLPFAClosestPolicy;
-    attributes[numAttributes++] = NSOpenGLPFADoubleBuffer;
-    attributes[numAttributes++] = NSOpenGLPFAOpenGLProfile;
-    attributes[numAttributes++] = NSOpenGLProfileVersion3_2Core;
-    attributes[numAttributes++] = NSOpenGLPFAColorSize;
-    attributes[numAttributes++] = 24;
-    attributes[numAttributes++] = NSOpenGLPFAAlphaSize;
-    attributes[numAttributes++] = 8;
-    attributes[numAttributes++] = NSOpenGLPFADepthSize;
-    attributes[numAttributes++] = 24;
-    attributes[numAttributes++] = NSOpenGLPFAStencilSize;
-    attributes[numAttributes++] = 8;
-    // if (fMSAASampleCount > 1) {
-    //     attributes[numAttributes++] = NSOpenGLPFAMultisample;
-    //     attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
-    //     attributes[numAttributes++] = 1;
-    //     attributes[numAttributes++] = NSOpenGLPFASamples;
-    //     attributes[numAttributes++] = fMSAASampleCount;
-    // } else {
-    attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
-    attributes[numAttributes++] = 0;
-    // }
-    attributes[numAttributes++] = 0;
+        auto pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributes];
+        if (nil == pixelFormat) {
+            throw AException("Failed to initialize NSOpenGLPixelFormat");
+        }
 
-    auto pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributes];
-    if (nil == pixelFormat) {
-        throw AException("Failed to initialize NSOpenGLPixelFormat");
-    }
-
-    // create context
-    auto context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
-    if (nil == context) {
-        [pixelFormat release];
-        throw AException("Failed to initialize NSOpenGLContext");
+        // create context
+        auto context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
+        if (nil == context) {
+            [pixelFormat release];
+            throw AException("Failed to initialize NSOpenGLContext");
+        }
+        ourContext = context;
     }
 
     auto contentView  = [static_cast<NSWindow*>(window.mHandle) contentView];
     [contentView setWantsBestResolutionOpenGLSurface:YES];
-    [context setView:contentView];
+    [ourContext setView:contentView];
 
-    [context makeCurrentContext];
+    [ourContext makeCurrentContext];
 
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
@@ -93,43 +85,45 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
     }
-    ARender::setRenderer(mRenderer = ourRenderer());
+    mRenderer = ourRenderer();
     ALogger::info("OpenGL context is ready");
-    mContext = context;
-    //assert(("no stencil bits" && stencilBits > 0));
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
     CommonRenderingContext::destroyNativeWindow(window);
-    //wglMakeCurrent(nullptr, nullptr);
 }
 
-void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
-    //bool ok = wglMakeCurrent(mPainterDC, ourHrc);
-    //assert(ok);
+    if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
+        auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
+        [ourContext setView:contentView];
+    }
 
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
-    //wglMakeCurrent(mWindowDC, ourHrc);
+void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+    [static_cast<NSOpenGLContext*>(ourContext) update];
+    [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
+    if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
+        auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
+        [ourContext setView:contentView];
+    }
     GLint swapInterval = 0;
-    [static_cast<NSOpenGLContext*>(mContext) setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+    [static_cast<NSOpenGLContext*>(ourContext) setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 }
 
-void OpenGLRenderingContext::endResize(ABaseWindow& window) {
-    [static_cast<NSOpenGLContext*>(mContext) update];
-    [static_cast<NSOpenGLContext*>(mContext) makeCurrentContext];
+void OpenGLRenderingContext::endResize(AWindowBase& window) {
+    [static_cast<NSOpenGLContext*>(ourContext) update];
+    [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+void OpenGLRenderingContext::endPaint(AWindowBase& window) {
     endFramebuffer();
     mRenderer->endPaint();
-    //SwapBuffers(mPainterDC);
-    //wglMakeCurrent(mWindowDC, ourHrc);
-    [static_cast<NSOpenGLContext*>(mContext) flushBuffer];
+    [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];
     CommonRenderingContext::endPaint(window);
 }
 

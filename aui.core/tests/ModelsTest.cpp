@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 31.08.2020.
@@ -21,10 +16,42 @@
 #include <gtest/gtest.h>
 #include <AUI/Model/AModels.h>
 #include <AUI/Model/AListModel.h>
+#include <gmock/gmock.h>
+#include "AUI/Util/kAUI.h"
 
 
-_<AListModel<int>> testModel() {
-    return AListModel<int>::make({1, 5, 72, 23, 14, 35, 66, 37, 28, 19});
+namespace {
+    _<AListModel<int>> testModel() {
+        return AListModel<int>::make({1, 5, 72, 23, 14, 35, 66, 37, 28, 19});
+    }
+
+    class Receiver : public AObject {
+    public:
+        MOCK_METHOD(void, receive, (AListModelRange<int>));
+    };
+}
+
+TEST(Models, Insert) {
+    auto model = _new<AListModel<int>>();
+    auto receiver = _new<Receiver>();
+    AObject::connect(model->dataInserted, slot(receiver)::receive);
+
+    testing::InSequence s;
+    EXPECT_CALL(*receiver, receive(AListModelRange<int>(AListModelIndex(0), AListModelIndex(1), model)));
+    EXPECT_CALL(*receiver, receive(AListModelRange<int>(AListModelIndex(1), AListModelIndex(2), model)));
+    EXPECT_CALL(*receiver, receive(AListModelRange<int>(AListModelIndex(0), AListModelIndex(1), model)));
+
+    model << 228;
+    EXPECT_EQ(*std::prev(model->end()), 228);
+    EXPECT_EQ(model->listSize(), 1);
+
+    model << 322;
+    EXPECT_EQ(*std::prev(model->end()), 322);
+    EXPECT_EQ(model->listSize(), 2);
+
+    model->insert(model->begin(), 0);
+    EXPECT_EQ(*model->begin(), 0);
+    EXPECT_EQ(model->listSize(), 3);
 }
 
 TEST(Models, RangesIncluding) {

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <range/v3/action.hpp>
 #include <range/v3/algorithm.hpp>
@@ -38,14 +33,14 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/AWindowBase.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
-#include "AUI/Render/ARender.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
-#include "AUI/Util/ClipOptimizationContext.h"
+#include "AUI/Render/ARenderContext.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -64,15 +59,17 @@ namespace {
         static constexpr auto DEFAULT_SIZE = 256;
         GraphView(): mImage({DEFAULT_SIZE, DEFAULT_SIZE}) {
             setExpanding();
-            mTexture = ARender::getNewTexture();
             mImage.fill({0, 0, 0, 0});
             mFrames.resize(DEFAULT_SIZE);
         }
 
-        void render(ClipOptimizationContext c) override {
-            AView::render(c);
+        void render(ARenderContext ctx) override {
+            AView::render(ctx);
+            if (mTexture == nullptr) {
+                mTexture = ctx.render.getNewTexture();
+            }
 
-            ARender::rect(ATexturedBrush {
+            ctx.render.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -82,11 +79,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ARender::rect(ASolidBrush { AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 
@@ -126,7 +123,7 @@ namespace {
             populateSectionStat(sectionStatsMap, sections);
 
             auto sectionStatsList = sectionStatsMap
-                                    | ranges::view::values
+                                    | ranges::views::values
                                     | ranges::to_vector
                                     | ranges::actions::sort([](const auto& l, const auto& r) {
                                         return l.durationIncludingChildren > r.durationIncludingChildren;
@@ -149,7 +146,8 @@ namespace {
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(16'600us) - 1}, AFormattedColorConverter(AColor::RED)); // 60 fps
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
 
-            mTexture->setImage(mImage);
+            // nullsafe lol?
+            AUI_NULLSAFE(mTexture)->setImage(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
             redraw();
@@ -238,9 +236,9 @@ namespace {
 
     };
 
-    class PerformanceSectionsTreeView: public AViewContainer {
+    class PerformanceSectionsTreeView: public AViewContainerBase {
     public:
-        static constexpr auto MAX_DEPTH = 7;
+        static constexpr auto MAX_DEPTH = 20;
         PerformanceSectionsTreeView() {
         }
 
@@ -300,7 +298,7 @@ namespace {
 }
 
 
-DevtoolsPerformanceTab::DevtoolsPerformanceTab(ABaseWindow* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
 #if AUI_PROFILING

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 11/28/2021.
@@ -22,18 +17,15 @@
 #include "ATextLayoutHelper.h"
 #include <limits>
 
-size_t ATextLayoutHelper::xToIndex(int x) const {
-    if (mSymbols.empty()) return -1;
-    return xToIndex(mSymbols.first(), x);
-}
-
-size_t ATextLayoutHelper::xToIndex(const AVector<Symbol>& line, int pos) {
+size_t ATextLayoutHelper::xToIndex(const AVector<Boundary>& line, int pos) {
     pos += 2; // magic offset
     if (line.empty()) return 0;
     if (pos < 0) return 0;
-    if (pos > line.last().position.x + 3) return line.size(); // hardcoded char width
+    if (pos > line.last().position.x + 3) { // hardcoded char width
+        return line.size() - 1; // last symbol boundary is the right border of the last character; hence -1
+    }
     // perform binary search in order to find index
-    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Symbol>::const_iterator& it) {
+    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Boundary>::const_iterator& it) {
         int posCurrent = it->position.x;
 
         int leftBound = it == line.begin()
@@ -51,7 +43,8 @@ size_t ATextLayoutHelper::xToIndex(const AVector<Symbol>& line, int pos) {
         return aui::BinarySearchResult::MATCH;
     });
     if (it != line.end()) {
-        return it - line.begin();
+        const auto MAX = line.size() - 1; // last symbol boundary is the right border of the last character; hence -1
+        return glm::min(size_t(it - line.begin()), MAX);
     }
     return 0;
 }
@@ -62,7 +55,18 @@ size_t ATextLayoutHelper::posToIndexFixedLineHeight(const glm::ivec2& position, 
     if (lineIndex >= mSymbols.size()) {
         if (mSymbols.last().empty()) return 0;
         auto& lastLine = mSymbols.last();
-        return lastLine.size();
+        return lastLine.size() - 1;
     }
     return xToIndex(mSymbols[lineIndex], position.x);
+}
+
+AOptional<glm::ivec2> ATextLayoutHelper::indexToPos(size_t line, size_t column) {
+    if (mSymbols.size() <= line) {
+        return std::nullopt;
+    }
+    const auto& l = mSymbols[line];
+    if (l.size() <= column) {
+        return std::nullopt;
+    }
+    return l[column].position;
 }

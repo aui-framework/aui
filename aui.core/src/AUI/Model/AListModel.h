@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -81,19 +76,20 @@ public:
     }
 
 
-    void push_back(const StoredType& data) noexcept {
-        mVector.push_back(data);
-        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
-                                            AListModelIndex(mVector.size()    )));
+    void push_back(const StoredType& data) {
+        insert(end(), std::move(data));
     }
 
-
-    void push_back(StoredType&& data) noexcept {
-        mVector.push_back(std::forward<StoredType>(data));
-        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
-                                            AListModelIndex(mVector.size()    )));
+    void push_back(StoredType&& data) {
+        insert(end(), std::forward<StoredType>(data));
     }
 
+    const_iterator insert(const_iterator at, StoredType data) {
+        at = mVector.insert(at, std::move(data));
+        emit this->dataInserted(this->range(AListModelIndex(at - begin()),
+                                            AListModelIndex(at - begin() + 1)));
+        return at;
+    }
 
     void pop_back() noexcept {
         mVector.pop_back();
@@ -101,11 +97,11 @@ public:
                                            AListModelIndex(mVector.size() + 1)));
     }
 
-    AListModel& operator<<(const StoredType& data) noexcept {
+    AListModel& operator<<(const StoredType& data) {
         push_back(data);
         return *this;
     }
-    AListModel& operator<<(StoredType&& data) noexcept {
+    AListModel& operator<<(StoredType&& data) {
         push_back(std::forward<StoredType>(data));
         return *this;
     }
@@ -119,6 +115,10 @@ public:
     }
     void invalidate(size_t index) {
         emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
+    }
+
+    void invalidate(iterator index) {
+        invalidate(std::distance(begin(), index));
     }
 
     void clear() noexcept {
@@ -185,7 +185,7 @@ public:
      * </dl>
      */
     const StoredType& operator[](size_t index) const {
-        assert(("index out of bounds" && size() > index));
+        AUI_ASSERTX(size() > index, "index out of bounds");
         return *(mVector.begin() + index);
     }
 
@@ -244,6 +244,20 @@ public:
     static _<AListModel<StoredType>> fromVector(AVector<V> t) {
         auto list = _new<AListModel<StoredType>>();
         list->mVector = std::move(t);
+        return list;
+    }
+
+    /**
+     * Create AListModel from initializer list. Applicable for initializing AListModel<AString> from
+     * const char* initializer list.
+     *
+     * @tparam V type that converts to T
+     * @return a new AListModel
+     */
+    template<typename V>
+    static _<AListModel<StoredType>> fromVector(std::vector<V> t) {
+        auto list = _new<AListModel<StoredType>>();
+        list->mVector = AVector<StoredType>(std::vector<StoredType>(std::move(t)));
         return list;
     }
 

@@ -1,22 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <AUI/IO/IOutputStream.h>
+#include "AUI/Common/AException.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
@@ -32,7 +28,46 @@
 
 class AJson;
 namespace aui::impl {
-    using JsonObject = AMap<AString, AJson>;
+    struct JsonObject: AVector<std::pair<AString, AJson>> {
+    public:
+        using AVector<std::pair<AString, AJson>>::AVector;
+
+        /**
+         * @brief If container contains key, returns pointer to the element. nullptr otherwise.
+         */
+        [[nodiscard]]
+        API_AUI_JSON std::pair<AString, AJson>* contains(const AString& key) noexcept;
+
+        /**
+         * @brief If container contains key, returns pointer to the element. nullptr otherwise.
+         */
+        [[nodiscard]]
+        const std::pair<AString, AJson>* contains(const AString& key) const noexcept {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            return const_cast<JsonObject&>(*this).contains(key);
+        }
+
+        [[nodiscard]] API_AUI_JSON AJson& operator[](const AString& key);
+
+        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const {
+            return at(key);
+        }
+
+        /**
+         * @brief If container contains key, returns reference to the element.
+         * @throws AException if key is not found.
+         */
+        [[nodiscard]] API_AUI_JSON AJson& at(const AString& key);
+
+        /**
+         * @brief If container contains key, returns reference to the element.
+         * @throws AException if key is not found.
+         */
+        [[nodiscard]] API_AUI_JSON const AJson& at(const AString& key) const {
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
+            return const_cast<JsonObject&>(*this).at(key);
+        }
+    };
     using JsonArray = AVector<AJson>;
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
@@ -83,7 +118,7 @@ public:
     using Array = aui::impl::JsonArray;
     using Object = aui::impl::JsonObject;
 
-    AJson(std::initializer_list<std::pair<const AString, AJson>> elems): aui::impl::JsonVariant(aui::impl::JsonObject(std::move(elems))) {
+    AJson(std::initializer_list<std::pair<AString, AJson>> elems): aui::impl::JsonVariant(aui::impl::JsonObject(std::move(elems))) {
 
     }
 
@@ -223,10 +258,11 @@ public:
     }
 
     AJson& operator[](const AString& mapKey) {
-        return as<Object>()[mapKey];
+        return asObject()[mapKey];
     }
 
     const AJson& operator[](const AString& mapKey) const {
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
         return const_cast<AJson&>(*this)[mapKey];
     }
 
@@ -270,7 +306,7 @@ public:
      * }
      * @endcode
      */
-    AJson mergedWith(const AJson& other);
+    API_AUI_JSON AJson mergedWith(const AJson& other);
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);

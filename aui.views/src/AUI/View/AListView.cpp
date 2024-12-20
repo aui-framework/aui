@@ -1,42 +1,36 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
-#include <AUI/Layout/AHorizontalLayout.h>
-#include <AUI/Util/UIBuildingHelpers.h>
 #include "AListView.h"
+
+#include <AUI/ASS/Property/ScrollbarAppearance.h>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Enum/Visibility.h>
+#include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+
 #include "ALabel.h"
-#include "AUI/ASS/Property/ScrollbarAppearance.h"
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Enum/Visibility.h"
-#include "AUI/Layout/AVerticalLayout.h"
-#include "AUI/Platform/AWindow.h"
 
-
-
-class AListViewContainer: public AViewContainer {
-private:
+class AListViewContainer : public AViewContainer {
+   private:
     int mScrollY = 0;
     mutable std::size_t mIndex = -1;
 
-public:
-    void updateLayout() override {
+   public:
+    void applyGeometryToChildren() override {
         if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
-                                  getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
+            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
+                                  getSize().y - mPadding.vertical());
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
@@ -44,7 +38,7 @@ public:
             case 0:
                 return nullptr;
             case 1: {
-                auto v = AViewContainer::getViewAt(pos, flags);
+                auto v = AViewContainerBase::getViewAt(pos, flags);
                 mIndex = v ? 0 : -1;
                 return v;
             }
@@ -62,62 +56,46 @@ public:
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        updateLayout();
+        applyGeometryToChildrenIfNecessary();
     }
 
-    size_t getIndex() const {
-        return mIndex;
-    }
+    size_t getIndex() const { return mIndex; }
 };
 
-class AListItem: public ALabel, public ass::ISelectable
-{
-private:
-	bool mSelected = false;
+class AListItem : public ALabel, public ass::ISelectable {
+   private:
+    bool mSelected = false;
 
-public:
-	AListItem()
-	{
-        addAssName(".list-item");
-	}
+   public:
+    AListItem() { addAssName(".list-item"); }
 
-	AListItem(const AString& text)
-		: ALabel(text)
-	{
-        addAssName(".list-item");
-	}
+    AListItem(const AString& text) : ALabel(text) { addAssName(".list-item"); }
 
-	virtual ~AListItem() = default;
+    virtual ~AListItem() = default;
 
-	void setSelected(const bool selected)
-	{
-		mSelected = selected;
-		emit customCssPropertyChanged;
-	}
-
-protected:
-    bool selectableIsSelectedImpl() override {
-        return mSelected;
+    void setSelected(const bool selected) {
+        mSelected = selected;
+        emit customCssPropertyChanged;
     }
 
-public:
+   protected:
+    bool selectableIsSelectedImpl() override { return mSelected; }
 
+   public:
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMousePressed(this);
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 
-AListView::~AListView()
-{
-}
+AListView::~AListView() {}
 
 AListView::AListView(const _<IListModel<AString>>& model) {
     mObserver = _new<AListModelObserver<AString>>(this);
@@ -125,32 +103,36 @@ AListView::AListView(const _<IListModel<AString>>& model) {
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
-    horizontalScrollbar()->setAppearance(ScrollbarAppearance::GONE);
+    horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
     setContents(mContent = _new<AListViewContainer>());
 
-    mContent->setLayout(_new<AVerticalLayout>());
+    mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
 
     mObserver->setModel(model);
     if (model) {
-        connect(model->dataRemoved, [&] {
-            mSelectionModel.clear();
-        });
+        connect(model->dataRemoved, [&] { mSelectionModel.clear(); });
     }
 }
 
 void AListView::handleMousePressed(AListItem* item) {
-
-    if (!AInput::isKeyDown(AInput::LCONTROL) || !mAllowMultipleSelection) {
-        clearSelection();
+    if (!(AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) || !mAllowMultipleSelection) {
+        clearSelectionInternal();
     }
-    mSelectionModel << AListModelIndex(mContent->getIndex());
-    item->setSelected(true);
+
+    auto index = AListModelIndex(mContent->getIndex());
+    if (mSelectionModel.contains(index)) {
+        mSelectionModel.erase(index);
+        item->setSelected(false);
+    } else {
+        mSelectionModel << index;
+        item->setSelected(true);
+    }
 
     emit selectionChanged(getSelectionModel());
 }
 
-void AListView::clearSelection() {
+void AListView::clearSelectionInternal() {
     for (auto& s : mSelectionModel) {
         _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
     }
@@ -158,41 +140,60 @@ void AListView::clearSelection() {
     mSelectionModel.clear();
 }
 
-void AListView::handleMouseDoubleClicked(AListItem* item) {
-    emit itemDoubleClicked(mContent->getIndex());
-}
+void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClicked(mContent->getIndex()); }
 
-void AListView::insertItem(size_t at, const AString& value) {
-    mContent->addView(at, _new<AListItem>(value));
-}
+void AListView::insertItem(size_t at, const AString& value) { mContent->addView(at, _new<AListItem>(value)); }
 
 void AListView::updateItem(size_t at, const AString& value) {
     _cast<AListItem>(mContent->getViews()[at])->setText(value);
 }
 
-void AListView::removeItem(size_t at) {
-    mContent->removeView(at);
-}
+void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() {
-    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
-}
+void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
 
-void AListView::onDataChanged() {
-    redraw();
-}
+void AListView::onDataChanged() { redraw(); }
 
-void AListView::selectItem(size_t i) {
-    clearSelection();
-    mSelectionModel = { AListModelIndex(i) };
-    _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
-}
+void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
+    switch (action) {
+        case SelectAction::CLEAR_SELECTION_AND_SET:
+            clearSelectionInternal();
+            mSelectionModel = {AListModelIndex(i)};
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            break;
+        case SelectAction::SET:
+            if (mAllowMultipleSelection) {
+                mSelectionModel << AListModelIndex(i);
+            } else {
+                clearSelectionInternal();
+                mSelectionModel = {AListModelIndex(i)};
+            }
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            break;
+        case SelectAction::UNSET:
+            mSelectionModel.erase(i);
+            _cast<AListItem>(mContent->getViews()[i])->setSelected(false);
+            break;
+        case SelectAction::TOGGLE:
+            if (mSelectionModel.contains(i)) {
+                updateSelectionOnItem(i, SelectAction::UNSET);
+            } else {
+                updateSelectionOnItem(i, SelectAction::SET);
+            }
+            break;
+    }
 
-bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
-    return AViewContainer::onGesture(origin, event);
+    emit selectionChanged(getSelectionModel());
 }
 
 void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {
     mAllowMultipleSelection = allowMultipleSelection;
-    clearSelection();
+
+    if (!allowMultipleSelection)
+        clearSelection();
+}
+
+void AListView::clearSelection() {
+    clearSelectionInternal();
+    emit selectionChanged(getSelectionModel());
 }

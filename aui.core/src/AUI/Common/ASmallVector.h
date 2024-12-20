@@ -1,25 +1,22 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
 #include <cstddef>
+#include <functional>
 
 #include "ADynamicVector.h"
 #include "AStaticVector.h"
+#include "AUI/Traits/concepts.h"
 
 /**
  * @brief Vector-like container consisting of few elements on stack and switches to dynamic allocation vector if needed.
@@ -123,17 +120,17 @@ public:
     }
 
     constexpr void pop_back() noexcept {
-        assert(("ASmallVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ASmallVector is empty");
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("ASmallVector is empty", size() > 0));
+        AUI_ASSERTX(size() > 0, "ASmallVector is empty");
         erase(begin());
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) noexcept {
-        assert(("out of bounds", index < size()));
+        AUI_ASSERTX(index < size(), "out of bounds");
         return *(data() + index);
     }
 
@@ -149,7 +146,7 @@ public:
 
     constexpr void clear() noexcept {
         deallocate();
-        new (inplace()) StaticVector();
+        new (&mBase.inplace) StaticVector();
     }
 
     /**
@@ -293,6 +290,18 @@ public:
     }
 
     /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename T, aui::mapper<const StoredType&, const T&> Projection>
+    void removeAll(const T& item, Projection projection) noexcept
+    {
+        aui::container::remove_all(*this, item, projection);
+    }
+
+    /**
      * Removes first occurrence of <code>item</code>.
      * @param item element to remove.
      */
@@ -396,7 +405,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -409,7 +418,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the first element");
         return super::front();
     }
 
@@ -422,7 +431,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -435,7 +444,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !super::empty()));
+        AUI_ASSERTX(!super::empty(), "empty container could not have the last element");
         return super::back();
     }
 
@@ -457,6 +466,39 @@ public:
     template<typename Comparator>
     void sort(Comparator&& comparator) noexcept {
         std::sort(super::begin(), super::end(), std::forward<Comparator>(comparator));
+    }
+
+    /**
+     * @brief Finds element by predicate
+     * @param predicate predicate
+     * @return Pointer to the value on which the predicate returned true, nullptr otherwise
+     */
+    template<aui::predicate<StoredType> Predicate>
+    StoredType* findIf(Predicate&& predicate) noexcept
+    {
+        if (auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate)); i != super::end()) {
+            return &*i;
+        }
+        return nullptr;
+    }
+
+    /**
+     * @brief Finds element by value
+     * @param value value
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     * @return Pointer to the value on which the predicate returned true, nullptr otherwise
+     */
+    template<typename T, aui::mapper<const StoredType&, const T&> Projection>
+    StoredType* findIf(const T& value, Projection&& projection) noexcept
+    {
+        if (auto i = std::find_if(super::begin(),
+                                  super::end(),
+                                  [&](const StoredType& s) { return value == std::invoke(projection, s); }
+                                  ); i != super::end()) {
+            return &*i;
+        }
+        return nullptr;
     }
 
     /**
@@ -525,7 +567,6 @@ public:
     template<aui::predicate<const StoredType&> Predicate>
     self filter(Predicate&& predicate) {
         self result;
-        result.reserve(super::size());
         for (const auto& element : *this) {
             if (predicate(element)) {
                 result.push_back(element);
@@ -548,12 +589,12 @@ private:
 
 
     StaticVector* inplace() {
-        assert(isInplaceAllocated());
+        AUI_ASSERT(isInplaceAllocated());
         return reinterpret_cast<StaticVector*>(&mBase.inplace);
     }
 
     DynamicVector * dynamic() {
-        assert(!isInplaceAllocated());
+        AUI_ASSERT(!isInplaceAllocated());
         return reinterpret_cast<DynamicVector*>(&mBase.dynamic);
     }
 

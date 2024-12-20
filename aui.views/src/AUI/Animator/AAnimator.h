@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -24,6 +19,7 @@
 #include "Curves/viscous_fluid.h"
 
 class AView;
+class IRenderer;
 
 using AAnimationCurve = std::function<float(float)>;
 
@@ -46,15 +42,15 @@ protected:
      * @brief Does the animation (sets matrix, colors, etc...)
      * @param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation
      */
-    virtual void doAnimation(AView* view, float theta) {};
+    virtual void doAnimation(AView* view, float theta, IRenderer& render) {};
 
-    virtual void doPostRender(AView* view, float theta) {};
+    virtual void doPostRender(AView* view, float theta, IRenderer& render) {};
 
-    void translateToCenter();
-    void translateToCorner();
+    void translateToCenter(IRenderer& render);
+    void translateToCorner(IRenderer& render);
 
-    static void translateToCenter(AView* view);
-    static void translateToCorner(AView* view);
+    static void translateToCenter(AView* view, IRenderer& render);
+    static void translateToCorner(AView* view, IRenderer& render);
 
 public:
 
@@ -62,8 +58,8 @@ public:
         mCurve = curve;
     }
 
-    void animate(AView* view);
-    void postRender(AView* view);
+    void animate(AView* view, IRenderer& render);
+    void postRender(AView* view, IRenderer& render);
     void pause();
 
     void setDuration(float period) {

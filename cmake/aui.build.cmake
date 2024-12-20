@@ -1,21 +1,8 @@
-# ======================================================================================================================
-# Copyright (c) 2021 Alex2772
+# SPDX-License-Identifier: MPL-2.0
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# Original code located at https://github.com/aui-framework/aui
-# ======================================================================================================================
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # CMake AUI building functions
 
@@ -34,6 +21,10 @@ define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         FULL_DOCS "Use wholearchive when linking this library to another")
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
+
+if (AUIB_TRACE_BUILD_SYSTEM)
+    message(STATUS "AUIB_TRACE_BUILD_SYSTEM=TRUE (build system verbose logging is enabled)")
+endif()
 
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
@@ -58,7 +49,7 @@ set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries"
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix emscripten)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
@@ -72,7 +63,7 @@ if (WIN32)
 else()
     set(AUI_PLATFORM_WIN 0 CACHE INTERNAL "Platform")
 endif()
-if (UNIX AND NOT APPLE AND NOT ANDROID)
+if (CMAKE_SYSTEM_NAME STREQUAL Linux)
     set(AUI_PLATFORM_LINUX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
@@ -107,7 +98,14 @@ else()
     set(AUI_PLATFORM_IOS 0 CACHE INTERNAL "Platform")
 endif()
 
-if (UNIX)
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    set(AUI_PLATFORM_EMSCRIPTEN 1 CACHE INTERNAL "Platform")
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS emscripten)
+else()
+    set(AUI_PLATFORM_EMSCRIPTEN 0 CACHE INTERNAL "Platform")
+endif()
+
+if (UNIX AND NOT AUI_PLATFORM_EMSCRIPTEN)
     set(AUI_PLATFORM_UNIX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
@@ -210,10 +208,11 @@ function(aui_add_properties AUI_MODULE_NAME)
     endif()
 endfunction(aui_add_properties)
 
+# gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                    VERSION release-1.11.0
+                    VERSION v1.14.0
                     CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
                     LINK STATIC)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
@@ -222,13 +221,13 @@ macro(_aui_import_gtest)
 endmacro()
 
 macro(aui_enable_tests AUI_MODULE_NAME)
-    _aui_import_gtest()
-    if (NOT TARGET GTest::gtest)
-        message(FATAL_ERROR "GTest::gtest not found!")
-    endif()
+    if (NOT CMAKE_CROSSCOMPILING)
+        _aui_import_gtest()
+        if (NOT TARGET GTest::gtest)
+            message(FATAL_ERROR "GTest::gtest not found!")
+        endif()
 
-    enable_testing()
-    if (NOT ANDROID AND NOT IOS)
+        enable_testing()
         get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
         unset(TESTS_SRCS)
 
@@ -241,13 +240,13 @@ macro(aui_enable_tests AUI_MODULE_NAME)
             set(TESTS_MODULE_NAME Tests)
 
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gmock/gmock.h>
-int main(int argc, char **argv) {
+    #include <gmock/gmock.h>
+    int main(int argc, char **argv) {
     // Since Google Mock depends on Google Test, InitGoogleMock() is
     // also responsible for initializing Google Test.  Therefore there's
     testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
-}]])
+    }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             #gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
@@ -300,10 +299,103 @@ int main(int argc, char **argv) {
     endif()
 endmacro()
 
+# google benchmark
+
+macro(_aui_import_google_benchmark)
+    if (NOT TARGET benchmark::benchmark)
+        auib_import(benchmark https://github.com/google/benchmark
+                    VERSION v1.8.3
+                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                    LINK STATIC)
+        set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+    endif()
+endmacro()
+
+macro(aui_enable_benchmarks AUI_MODULE_NAME)
+    if (NOT CMAKE_CROSSCOMPILING)
+        _aui_import_gtest()
+        _aui_import_google_benchmark()
+        if (NOT TARGET benchmark::benchmark)
+            message(FATAL_ERROR "benchmark::benchmark not found!")
+        endif()
+
+        get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
+        unset(benchmarks_SRCS)
+
+        if (NOT EXISTS ${_source_dir}/benchmarks)
+            message(FATAL_ERROR "aui_enable_benchmarks expects ${_source_dir}/benchmarks to exist")
+        endif()
+        file(GLOB_RECURSE benchmarks_SRCS ${_source_dir}/benchmarks/*.cpp)
+
+        if (NOT TARGET Benchmarks)
+            set(benchmarks_MODULE_NAME Benchmarks)
+
+            file(WRITE ${CMAKE_BINARY_DIR}/benchmarks_main_${benchmarks_MODULE_NAME}.cpp [[
+    #include <benchmark/benchmark.h>
+    int main(int argc, char** argv)
+    {
+        ::benchmark::Initialize(&argc, argv);
+        ::benchmark::RunSpecifiedBenchmarks();
+    }
+    ]])
+            add_executable(${benchmarks_MODULE_NAME} ${benchmarks_SRCS} ${CMAKE_BINARY_DIR}/benchmarks_main_${benchmarks_MODULE_NAME}.cpp)
+            set_property(TARGET ${benchmarks_MODULE_NAME} PROPERTY CXX_STANDARD 20)
+            target_include_directories(${benchmarks_MODULE_NAME} PUBLIC benchmarks)
+            target_link_libraries(${benchmarks_MODULE_NAME} PUBLIC benchmark::benchmark benchmark::benchmark_main)
+
+            target_compile_definitions(${benchmarks_MODULE_NAME} PUBLIC AUI_benchmarks_MODULE=1)
+
+            if (TARGET aui::core)
+                aui_link(${benchmarks_MODULE_NAME} PUBLIC aui::core)
+            endif()
+
+            if (TARGET aui::uibenchmarks)
+                aui_link(${benchmarks_MODULE_NAME} PUBLIC aui::uibenchmarks)
+            endif()
+
+            aui_add_properties(${benchmarks_MODULE_NAME})
+            set_target_properties(${benchmarks_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+        else()
+            target_sources(Benchmarks PRIVATE ${benchmarks_SRCS}) # append sources
+        endif()
+
+        if (TARGET Benchmarks)
+            # if the specified target is an executable, we should add it's srcs to the Benchmarks target, otherwise just link it.
+            get_property(_type TARGET ${AUI_MODULE_NAME} PROPERTY TYPE)
+            if (_type STREQUAL EXECUTABLE)
+                get_target_property(_t ${AUI_MODULE_NAME} SOURCES)
+
+                # remove unexisting sources; otherwise cmake would fail for unknown reason
+                foreach(_e ${_t})
+                    if (NOT EXISTS ${_e})
+                        list(REMOVE_ITEM _t ${_e})
+                    endif()
+                endforeach()
+
+                target_sources(Benchmarks PRIVATE ${_t})
+                get_target_property(_t ${AUI_MODULE_NAME} INCLUDE_DIRECTORIES)
+                target_include_directories(Benchmarks PRIVATE ${_t})
+                get_target_property(_t ${AUI_MODULE_NAME} COMPILE_DEFINITIONS)
+                if(_t)
+                    target_compile_definitions(Benchmarks PRIVATE ${_t})
+                endif()
+                get_target_property(_t ${AUI_MODULE_NAME} LINK_LIBRARIES)
+                aui_link(Benchmarks PRIVATE ${_t})
+            else()
+                aui_link(Benchmarks PRIVATE ${AUI_MODULE_NAME})
+            endif()
+        endif()
+    endif()
+endmacro()
+
+
+# common function fo aui_executable and aui_module
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
+
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
@@ -489,11 +581,14 @@ function(aui_common AUI_MODULE_NAME)
             ]])
         endif()
 
-        install(CODE [[
-            if (EXISTS ${AUI_MODULE_PATH})
-                file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
-            endif()
-        ]])
+        if (WIN32)
+            # Install dependencies (dlls) that are located in bin/ directory.
+            install(CODE [[
+                if (EXISTS ${AUI_MODULE_PATH})
+                    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+                endif()
+            ]])
+        endif()
     endif()
     if (CMAKE_GENERATOR STREQUAL "Xcode")
         if (BUILD_SHARED_LIBS)
@@ -599,6 +694,8 @@ function(aui_executable AUI_MODULE_NAME)
 
         )
     endif()
+
+    configure_file(${AUI_BUILD_AUI_ROOT}/platform/emscripten/index.html.in ${CMAKE_BINARY_DIR}/bin/${AUI_MODULE_NAME}.html)
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
@@ -623,7 +720,7 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
@@ -644,15 +741,16 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
+set(AUI_VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
 file(
         DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
-            VERSION 03bfb4f86094784124728ba803007b22de3aaf29)
+            VERSION ${AUI_VERSION})
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -664,7 +762,7 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUI_CACHE_DIR}/crosscompile-host
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
@@ -795,6 +893,20 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
         #
         # thus, some libraries (such as aui.views) require wholearchive linking in order to import all
         # statically-initialized variables (like AStylesheet) to the final execution module.
+        #
+        # also, ordering matters (when it comes to static linking, again).
+        # if A depends on B; C depends on both A and B, you should write
+        # ```
+        # target_link_libraries(C PRIVATE A B)
+        # ```
+        #
+        # and not
+        # ```
+        # target_link_libraries(C PRIVATE B A)  #Wrong!
+        # ```
+        #
+        # and there's INTERFACE_AUI_WHOLEARCHIVE which specifies how the library should be linked.
+        # good luck!
         foreach(_visibility ${multiValueArgs})
             if (_visibility STREQUAL "PRIVATE")
                 set(_public_visibility PUBLIC)
@@ -802,15 +914,18 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                 set(_public_visibility ${_visibility})
             endif()
             foreach(_dep ${AUIL_${_visibility}})
-                # check for wholearchive target flag
-                set(_wholearchive OFF)
-                if (NOT BUILD_SHARED_LIBS)
-                    if (TARGET ${_dep})
-                        get_target_property(_wholearchive ${_dep} INTERFACE_AUI_WHOLEARCHIVE)
-                    endif()
+                get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
+                if (${_dep} IN_LIST _already_linked_libs)
+                    continue()
                 endif()
-                # set fallback value
-                set(_link_target_file ${_dep})
+                # check both :: and .
+                string(REPLACE "::" "." _already_linked_libs "${_already_linked_libs}")
+                if (${_dep} IN_LIST _already_linked_libs)
+                    continue()
+                endif()
+
+                # linking library preferring public visibility.
+                target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_dep})
                 if (TARGET ${_dep})
                     # adding target's interface include directories and definitions keeping original visibility.
                     get_target_property(_dep_includes ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
@@ -823,35 +938,6 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
                     endif()
                 endif()
-                if (_wholearchive)
-                    if (MSVC)
-                        # avoid duplicates when using wholearchive
-                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_OPTIONS)
-                        set(_link_target_file_opt $<TARGET_FILE:${_link_target_file}>)
-                        set(_link_target_file_opt "/WHOLEARCHIVE:${_link_target_file_opt}")
-
-                        if (${_link_target_file_opt} IN_LIST _already_linked_libs)
-                            continue()
-                        endif()
-
-                        # using both target_link_options and target_link_libraries here!!!
-                        target_link_options(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file_opt})
-                    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
-                        # avoid duplicates when using wholearchive
-                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
-                        if (${_link_target_file} IN_LIST _already_linked_libs)
-                            continue()
-                        endif()
-                        if (APPLE)
-                            target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
-                        else()
-                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}>,--no-whole-archive)
-                        endif()
-                    endif()
-                endif()
-
-                # linking library preferring public visibility.
-                target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file})
             endforeach()
         endforeach()
     else()
@@ -922,6 +1008,7 @@ function(aui_module AUI_MODULE_NAME)
     target_compile_definitions(${AUI_MODULE_NAME} PUBLIC GLM_FORCE_INLINE=1)
 
     aui_add_properties(${AUI_MODULE_NAME})
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_INTERFACE_MULTIPLICITY 1)
 
     string(REPLACE "." "::" BUILD_AS_IMPORTED_NAME ${AUI_MODULE_NAME})
 
@@ -930,9 +1017,9 @@ function(aui_module AUI_MODULE_NAME)
         install(
                 TARGETS ${AUI_MODULE_NAME}
                 EXPORT ${AUIE_EXPORT}
-                ARCHIVE       DESTINATION "${AUI_MODULE_NAME}/lib"
-                LIBRARY       DESTINATION "${AUI_MODULE_NAME}/lib"
-                RUNTIME       DESTINATION "${AUI_MODULE_NAME}/bin"
+                ARCHIVE       DESTINATION "lib"
+                LIBRARY       DESTINATION "lib"
+                RUNTIME       DESTINATION "bin"
                 PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
                 INCLUDES      DESTINATION "${AUI_MODULE_NAME}/include"
         )
@@ -963,6 +1050,19 @@ function(aui_module AUI_MODULE_NAME)
                 target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry)
             else()
                 target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry_${BUILD_DEF_NAME})
+            endif()
+        endif()
+    endif()
+
+    get_target_property(_type ${AUI_MODULE_NAME} TYPE)
+    if (_type STREQUAL "STATIC_LIBRARY")
+        if (MSVC)
+            target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+        elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+            if (APPLE)
+                target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,-force_load,$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+            else()
+                target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${AUI_MODULE_NAME}>,--no-whole-archive>")
             endif()
         endif()
     endif()
@@ -1175,7 +1275,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
         set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
         set(MACOSX_BUNDLE_ICON_FILE "app.icns")
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})

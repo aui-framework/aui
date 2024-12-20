@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -32,28 +27,6 @@ namespace aui::dbus {
         using std::string::string;
     };
 
-    struct Unknown;
-
-    using VariantImpl = std::variant<
-            std::nullopt_t,      // DBUS_TYPE_INVALID
-            std::uint8_t,        // DBUS_TYPE_BYTE
-            bool,                // DBUS_TYPE_BOOLEAN
-            std::int16_t,        // DBUS_TYPE_INT16
-            std::uint16_t,       // DBUS_TYPE_UINT16
-            std::int32_t,        // DBUS_TYPE_INT32
-            std::uint32_t,       // DBUS_TYPE_UINT32
-            std::int64_t,        // DBUS_TYPE_INT64
-            std::uint64_t,       // DBUS_TYPE_UINT64
-            double,              // DBUS_TYPE_DOUBLE
-            std::string,         // DBUS_TYPE_STRING
-            ObjectPath,          // DBUS_TYPE_OBJECT_PATH
-            AVector<Unknown>     // DBUS_TYPE_ARRAY
-    >;
-    struct Variant: VariantImpl {
-        using VariantImpl::variant;
-        Variant(): VariantImpl(std::nullopt) {}
-    };
-
     template<typename T>
     struct converter;
 
@@ -61,6 +34,41 @@ namespace aui::dbus {
     concept convertible = requires(T t) {
         { converter<T>::iter_append(static_cast<DBusMessageIter*>(nullptr), t) };
         { converter<T>::signature } -> aui::convertible_to<std::string>;
+    };
+
+    struct Unknown {
+    public:
+        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
+
+        template<convertible T>
+        T as();
+
+        template<convertible T>
+        bool as(T& v);
+
+    private:
+        DBusMessageIter mIter;
+    };
+
+    using VariantImpl = std::variant<
+            std::nullopt_t,         // DBUS_TYPE_INVALID
+            std::uint8_t,           // DBUS_TYPE_BYTE
+            bool,                   // DBUS_TYPE_BOOLEAN
+            std::int16_t,           // DBUS_TYPE_INT16
+            std::uint16_t,          // DBUS_TYPE_UINT16
+            std::int32_t,           // DBUS_TYPE_INT32
+            std::uint32_t,          // DBUS_TYPE_UINT32
+            std::int64_t,           // DBUS_TYPE_INT64
+            std::uint64_t,          // DBUS_TYPE_UINT64
+            double,                 // DBUS_TYPE_DOUBLE
+            std::string,            // DBUS_TYPE_STRING
+            ObjectPath,             // DBUS_TYPE_OBJECT_PATH
+            AVector<Unknown>,       // DBUS_TYPE_ARRAY
+            AVector<std::uint8_t>   // DBUS_TYPE_ARRAY
+    >;
+    struct Variant: VariantImpl {
+        using VariantImpl::variant;
+        Variant(): VariantImpl(std::nullopt) {}
     };
 
     template<typename T>
@@ -75,6 +83,22 @@ namespace aui::dbus {
     T iter_get(DBusMessageIter* iter) {
         return converter<T>::iter_get(iter);
     }
+
+    template<convertible T>
+    T Unknown::as() {
+        return aui::dbus::iter_get<T>(&mIter);
+    }
+
+    template<convertible T>
+    bool Unknown::as(T& v) {
+        if (auto got = dbus_message_iter_get_arg_type(&mIter); got != converter<T>::signature[0]) {
+            return false;
+        }
+
+        v = aui::dbus::iter_get<T>(&mIter);
+        return true;
+    }
+
 
     namespace impl {
         template<typename T, char dbusType = DBUS_TYPE_INVALID>
@@ -112,7 +136,6 @@ namespace aui::dbus {
     };
 
     template<> struct converter<std::uint8_t  >: impl::basic_converter<std::uint8_t  , DBUS_TYPE_BYTE> {};
-    template<> struct converter<bool          >: impl::basic_converter<bool          , DBUS_TYPE_BOOLEAN> {};
     template<> struct converter<std::int16_t  >: impl::basic_converter<std::int16_t  , DBUS_TYPE_INT16> {};
     template<> struct converter<std::uint16_t >: impl::basic_converter<std::uint16_t , DBUS_TYPE_UINT16> {};
     template<> struct converter<std::int32_t  >: impl::basic_converter<std::int32_t  , DBUS_TYPE_INT32> {};
@@ -121,6 +144,17 @@ namespace aui::dbus {
     template<> struct converter<std::uint64_t >: impl::basic_converter<std::uint64_t , DBUS_TYPE_UINT64> {};
     template<> struct converter<double        >: impl::basic_converter<double        , DBUS_TYPE_DOUBLE> {};
     template<> struct converter<const char*   >: impl::basic_converter<const char*   , DBUS_TYPE_STRING> {};
+    template<> struct converter<bool> {
+        static inline std::string signature = DBUS_TYPE_BOOLEAN_AS_STRING;
+
+        static void iter_append(DBusMessageIter* iter, const bool& t) {
+            impl::basic_converter<std::int32_t, DBUS_TYPE_BOOLEAN>::iter_append(iter, t ? 1 : 0);
+        }
+        static bool iter_get(DBusMessageIter* iter) {
+            return impl::basic_converter<std::int32_t, DBUS_TYPE_BOOLEAN>::iter_get(iter);
+        }
+    };
+
     template<> struct converter<std::string>: converter<const char*> {
         static void iter_append(DBusMessageIter* iter, const std::string& t) {
             converter<const char*>::iter_append(iter, t.c_str());
@@ -153,7 +187,7 @@ namespace aui::dbus {
 
     template<convertible T>
     struct converter<AVector<T>> {
-        static inline std::string signature = fmt::format("a", converter<T>::signature);
+        static inline std::string signature = fmt::format("a{}", converter<T>::signature);
 
         static void iter_append(DBusMessageIter* iter, const AVector<T>& t) {
             DBusMessageIter sub;
@@ -201,7 +235,7 @@ namespace aui::dbus {
 
             for (const auto&[k, v] : t) {
                 DBusMessageIter item;
-                dbus_message_iter_open_container(&sub, DBUS_TYPE_DICT_ENTRY, fmt::format("{}{}", converter<K>::signature, converter<V>::signature).c_str(), &item);
+                dbus_message_iter_open_container(&sub, DBUS_TYPE_DICT_ENTRY, nullptr, &item);
                 ARaiiHelper r = [&] {
                     dbus_message_iter_close_container(&sub, &item);
                 };
@@ -219,7 +253,7 @@ namespace aui::dbus {
 
             AMap<K, V> result;
             for (;;) {
-                assert(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
+                AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
                 DBusMessageIter item;
                 dbus_message_iter_recurse(&sub, &item);
                 auto k = aui::dbus::iter_get<K>(&item);
@@ -276,25 +310,9 @@ namespace aui::dbus {
     struct API_AUI_VIEWS converter<Variant> {
         static inline std::string signature = "v";
 
-        static void iter_append(DBusMessageIter* iter, const Variant & t) {
-            // TODO
-            assert(0);
-        }
+        static void iter_append(DBusMessageIter* iter, const Variant& t);
 
         static Variant iter_get(DBusMessageIter* iter);
-    };
-
-    struct Unknown {
-    public:
-        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
-
-        template<convertible T>
-        T as() {
-            return aui::dbus::iter_get<T>(&mIter);
-        }
-
-    private:
-        DBusMessageIter mIter;
     };
 
     template<>
@@ -303,7 +321,7 @@ namespace aui::dbus {
 
         static void iter_append(DBusMessageIter* iter, const Unknown& t) {
             // TODO
-            assert(0);
+            AUI_ASSERT(0);
         }
 
         static Unknown iter_get(DBusMessageIter* iter);
@@ -383,8 +401,8 @@ public:
     }
 
     template<aui::not_overloaded_lambda Callback>
-    void addSignalListener(aui::dbus::ObjectPath object, const AString& interface, const AString& signal, Callback&& callback) {
-        addListener([object = std::move(object),
+    std::function<void()> addSignalListener(aui::dbus::ObjectPath object, const AString& interface, const AString& signal, Callback&& callback) {
+        return addListener([object = std::move(object),
                      interface = interface.toStdString(),
                      signal = signal.toStdString(),
                      callback = std::forward<Callback>(callback)](DBusMessage* msg) {
@@ -443,9 +461,9 @@ private:
     ADBus();
     ~ADBus();
 
-    template<aui::invocable Callback>
+    template <aui::invocable Callback>
     void throwExceptionOnError(Callback&& callback);
-    void addListener(RawMessageListener::Callback listener);
+    std::function<void()> addListener(RawMessageListener::Callback listener);
     static dbus_bool_t addWatch(DBusWatch* watch, void* data);
 
     static DBusHandlerResult listener(DBusConnection     *connection,

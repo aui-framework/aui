@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -20,6 +15,7 @@
 #include <variant>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include "parameter_pack.h"
 #include "macros.h"
 
@@ -94,12 +90,12 @@ namespace aui {
         }
 
         [[nodiscard]]
-        constexpr Iterator& begin() const noexcept {
+        constexpr Iterator begin() const noexcept {
             return mBegin;
         }
 
         [[nodiscard]]
-        constexpr Iterator& end() const noexcept {
+        constexpr Iterator end() const noexcept {
             return mEnd;
         }
 
@@ -111,6 +107,14 @@ namespace aui {
         [[nodiscard]]
         constexpr const auto& last() const {
             return *std::prev(mEnd);
+        }
+
+        [[nodiscard]]
+        constexpr bool operator==(const range& rhs) const noexcept;
+
+        [[nodiscard]]
+        constexpr bool operator!=(const range& rhs) const noexcept {
+            return !(*this == rhs);
         }
     };
 
@@ -229,4 +233,32 @@ namespace aui {
 
         return std::make_reverse_iterator(iterator + 1);
     }
+}
+
+template<typename Iterator>
+inline constexpr bool aui::range<Iterator>::operator==(const range& rhs) const noexcept {
+    if (size() != rhs.size()) {
+        return false;
+    }
+    for (const auto&[l, r] : aui::zip(*this, rhs)) {
+        if (l != r) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& os, aui::range<T> range) {
+    os << "[ ";
+    bool isFirst = true;
+    for (const auto& v : range) {
+        if (isFirst) {
+            isFirst = false;
+        } else {
+            os << ", ";
+        }
+        os << v;
+    }
+    return os << " ]";
 }

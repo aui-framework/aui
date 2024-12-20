@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -44,6 +39,7 @@ class API_AUI_CORE AThreadPool {
         AThreadPool& mTP;
 
         void iteration(std::unique_lock<std::mutex>& tpLock);
+        void wait(std::unique_lock<std::mutex>& tpLock);
 
        public:
         Worker(AThreadPool& tp, size_t index);
@@ -55,6 +51,10 @@ class API_AUI_CORE AThreadPool {
             std::unique_lock lock(mTP.mQueueLock);
             while (shouldContinue()) {
                 iteration(lock);
+                if (!shouldContinue()) {
+                    return;
+                }
+                wait(lock);
             }
         }
 
@@ -86,7 +86,7 @@ class API_AUI_CORE AThreadPool {
     AThreadPool(size_t size);
 
     /**
-     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads.
+     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads or --aui-threadpool-size=SIZE passed to your application.
      */
     AThreadPool();
     ~AThreadPool();
@@ -104,7 +104,7 @@ class API_AUI_CORE AThreadPool {
     }
 
     /**
-     * @return a global thread pool created with the default constructor.
+     * @brief Global thread pool created with the default constructor.
      */
     static AThreadPool& global();
 

@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -26,66 +21,29 @@
 #include <AUI/View/ASpacerExpanding.h>
 
 /**
- * @brief A spinner view to display some long operation.
+ * @brief A resizeable horizontal or vertical layout.
  * @ingroup useful_views
  * @details
- * A progress bar is used to express a long operation (i.e. file copy) with unknown progress and reassure the user that
- * application is still running.
+ * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views
+ * may be controlled by a single splitter.
+ *
+ * Generally, ASplitter mimics behaviour of linear layouts (i.e., `Vertical` and `Horizontal`):
+ * 1. if there's no expanding view, both linear layouts and ASplitter leave blank space at the end
+ * 2. expanding views use all available space.
+ *
+ * ASplitter is applying geometry via min size-like logic by custom ALayout implementation.
+ *
+ * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there should be at
+ * least 1 view with expanding. If there's no such view, ASplitter adds ASpacerFixed to the end.
+ *
+ * @note
+ * Valid expandings should be applied before constructing ASplitter. ASplitter does not support changing expanding on
+ * the fly.
+ *
+ * ASplitter is constructed by builder. Use `ASplitter::Horizontal()` and `ASplitter::Vertical()`.
  */
-class API_AUI_VIEWS ASplitter: public AViewContainer
+class API_AUI_VIEWS ASplitter: public AViewContainerBase
 {
-private:
-    template<typename Layout>
-    friend class Builder;
-
-    ASplitterHelper mHelper;
-
-    ASplitter();
-
-    template<typename Layout>
-    class Builder {
-    friend class ASplitter;
-    private:
-        AVector<_<AView>> mItems;
-
-    public:
-       Builder& withItems(const AVector<_<AView>>& items) {
-           mItems = items;
-           return *this;
-       }
-
-       _<AView> build() {
-           auto splitter = aui::ptr::manage(new ASplitter);
-           splitter->mHelper.setDirection(Layout::DIRECTION);
-
-
-           if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
-               splitter->setLayout(_new<AVerticalLayout>());
-           } else {
-               splitter->setLayout(_new<AHorizontalLayout>());
-           }
-
-           bool atLeastOneItemHasExpanding = false;
-           for (auto& item : mItems) {
-               splitter->addView(item);
-               atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
-           }
-           if (!atLeastOneItemHasExpanding) {
-               auto spacer = _new<ASpacerExpanding>();
-               splitter->addView(spacer);
-               mItems << spacer;
-           }
-
-           splitter->mHelper.mItems = std::move(mItems);
-
-           return splitter;
-       }
-
-       operator _<AView>() {
-           return build();
-       }
-    };
-
 public:
     virtual ~ASplitter() = default;
 
@@ -99,7 +57,42 @@ public:
 
     void onClickPrevented() override;
 
+    template<typename Layout>
+    class Builder;
     using Vertical = Builder<AVerticalLayout>;
     using Horizontal = Builder<AHorizontalLayout>;
 
+private:
+    template<typename Layout>
+    friend class Builder;
+
+    ASplitterHelper mHelper;
+
+    ASplitter();
+
+};
+
+template<typename Layout>
+class ASplitter::Builder {
+    friend class ASplitter;
+private:
+    AVector<_<AView>> mItems;
+    glm::ivec2 mExpanding{};
+
+public:
+    Builder& withItems(AVector<_<AView>> items) {
+        mItems = std::move(items);
+        return *this;
+    }
+
+    Builder& withExpanding(glm::ivec2 expanding = { 2, 2 }) {
+        mExpanding = expanding;
+        return *this;
+    }
+
+    API_AUI_VIEWS _<AView> build();
+
+    operator _<AView>() {
+        return build();
+    }
 };

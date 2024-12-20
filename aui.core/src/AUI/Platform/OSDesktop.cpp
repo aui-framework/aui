@@ -1,19 +1,15 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
+#include <chrono>
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -33,6 +29,10 @@
 #endif
 
 
+using namespace std::chrono_literals;
+static constexpr auto MAX_PROCESSING_ITERATIONS_PER_FRAME = 100'000;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ALL_TASKS = 10ms;
+static constexpr auto MAX_PROCESSING_TIME_FOR_ONE_TASK = 1ms;
 
 class UIThread: public AAbstractThread {
 public:
@@ -40,19 +40,18 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        assert(("AAbstractThread::processMessages() should not be called from other thread",
-                mId == std::this_thread::get_id()));
-        std::unique_lock lock(mQueueLock, std::defer_lock);
+        AUI_ASSERTX(mId == std::this_thread::get_id(), "AAbstractThread::processMessages() should not be called from other thread");
+        std::unique_lock lock(mMessageQueue.sync(), std::defer_lock);
 
         using namespace std::chrono;
-        using namespace std::chrono_literals;
 
-        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
+        auto beginTime = system_clock::now();
+        for (std::size_t i = 0; i <= MAX_PROCESSING_ITERATIONS_PER_FRAME && !mMessageQueue.messages().empty() && lock.try_lock(); ++i)
         {
-            auto f = std::move(mMessageQueue.front());
-            mMessageQueue.pop_front();
+            auto f = std::move(mMessageQueue.messages().front());
+            mMessageQueue.messages().pop_front();
             lock.unlock();
-            auto time = util::measureExecutionTime<microseconds>(f.proc);
+            auto time = util::measureExecutionTime<microseconds>(f);
             // TODO dynamically enable/disable logging
             /*
             ALOG_DEBUG("Performance")
@@ -61,22 +60,28 @@ protected:
                     << " - ...\n";
             */
 
-            if (time >= 1ms) {
+            if (time >= MAX_PROCESSING_TIME_FOR_ONE_TASK) {
                 ALogger::warn("Performance")
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
                     << " - ...\n";
+            }
+
+            if (i % 10000 == 0) {
+                if (system_clock::now() - beginTime >= MAX_PROCESSING_TIME_FOR_ALL_TASKS) {
+                    break;
+                }
             }
         }
         lock.lock();
         {
             static std::size_t prevRecord = 1;
-            auto currentSize = mMessageQueue.size();
+            auto currentSize = mMessageQueue.messages().size();
             if (auto r = currentSize / 10000; r > prevRecord) {
                 prevRecord = r;
                 ALogger::warn("Performance") << currentSize << " tasks for UI thread?";
             }
             if (currentSize > 1'000'000) {
-                throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
+                // throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
             }
         }
     }
@@ -99,8 +104,14 @@ const ACommandLineArgs& aui::args() noexcept {
     return argsImpl();
 }
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+namespace aui::detail {
+    int argc;
+    char** argv;
+}
 
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+    aui::detail::argc = argc;
+    aui::detail::argv = argv;
     setupUIThread();
     ATimer::scheduler();
 
@@ -109,7 +120,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
         // remove quotation marks
-        AString argsRaw = GetCommandLineW();
+        AString argsRaw = aui::win32::fromWchar(GetCommandLineW());
         bool wrappedWithQuots = false;
         AString currentArg;
         for (auto& c : argsRaw) {
@@ -122,7 +133,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
                     if (!wrappedWithQuots) {
                         argsImpl() << std::move(currentArg);
                         currentArg = {};
-                        assert(currentArg.empty());
+                        AUI_ASSERT(currentArg.empty());
                         break;
                     }
                 default:

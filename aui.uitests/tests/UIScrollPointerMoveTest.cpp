@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <gmock/gmock.h>
 #include <AUI/UITest.h>
@@ -21,6 +16,7 @@
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AScrollArea.h"
 
+namespace {
 class ViewMock: public AView {
 public:
     ViewMock() {
@@ -39,7 +35,7 @@ public:
     MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
 };
-
+}
 
 class UIScrollPointerMove: public testing::UITest {
 public:
@@ -53,9 +49,9 @@ protected:
                                  Vertical {
                                    Centered {
                                      AScrollArea::Builder().withContents(Vertical {
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                        mView = _new<ViewMock>() with_style {
                                          MinSize { 16_dp },
                                          BackgroundSolid { AColor::BLACK },
@@ -63,12 +59,12 @@ protected:
                                              BackgroundSolid { AColor::RED },
                                          },
                                        },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
-                                       Label { "Some bullshit to complicate layout" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
+                                       Label { "Some bullshit" },
                                      }).build() with_style {
                                        MinSize { 100_dp },
                                      }
@@ -170,11 +166,13 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
     //pressing LMB and moving out of view
     {
         testing::InSequence s;
-        APointerPressedEvent event;
+
+        EXPECT_CALL(*mView, onMouseLeave);
+
+        APointerPressedEvent event;        
         event.position = mView->getCenterPointInWindow();
         event.asButton = AInput::LBUTTON;
         mWindow->onPointerPressed(event);
-        EXPECT_CALL(*mView, onMouseLeave);
         mWindow->onPointerMove(posOutOfView, {});
     }
 

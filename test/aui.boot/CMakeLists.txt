@@ -2,9 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 
 
 list(APPEND TEST_CMAKE_ARGS "-G${CMAKE_GENERATOR}")
+list(APPEND TEST_CMAKE_ARGS "-DAUIB_TRACE_BUILD_SYSTEM=ON")
 
 foreach(_varname
-        BUILD_SHARED_LIBS
+        BUILD_SHARED_LIBS AUI_TEST_DEPLOY_VERSION
         )
     list(APPEND TEST_CMAKE_ARGS "-D${_varname}=${${_varname}}")
 endforeach()
@@ -37,10 +38,17 @@ function(define_aui_boot_test NAME)
 
 endfunction()
 
-define_aui_boot_test(BasicProgram)
-define_aui_boot_test(ImportAUIDependency)
-define_aui_boot_test(Tests)
-define_aui_boot_test(BuildSharedLibsAddSubdirectory)
+if (DEFINED AUI_TEST_DEPLOY_VERSION)
+    message(STATUS "AUI_TEST_DEPLOY_VERSION=${AUI_TEST_DEPLOY_VERSION} (deployment tests only)")
+    define_aui_boot_test(Precompiled1)
+    define_aui_boot_test(Precompiled2)
+else()
+    define_aui_boot_test(ViewsProgram)
+    define_aui_boot_test(BasicProgram)
+    define_aui_boot_test(ImportAUIDependency)
+    define_aui_boot_test(Tests)
+    define_aui_boot_test(BuildSharedLibsAddSubdirectory)
+endif()
 
 # github ci/cd  could not handle this test for unknown reason
 # define_aui_boot_test(Assets)

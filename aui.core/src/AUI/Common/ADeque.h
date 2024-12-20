@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 #include <deque>
@@ -116,7 +111,7 @@ public:
      */
     inline self& operator<<(StoredType&& rhs) noexcept
     {
-        p::push_back(std::forward<StoredType>(rhs));
+        p::push_back(std::move(rhs));
         return *this;
     }
 
@@ -142,7 +137,7 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the first element");
         return p::front();
     }
 
@@ -155,7 +150,7 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the first element");
         return p::front();
     }
 
@@ -168,7 +163,7 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the last element");
         return p::back();
     }
 
@@ -181,7 +176,7 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
+        AUI_ASSERTX(!p::empty(), "empty container could not have the last element");
         return p::back();
     }
 

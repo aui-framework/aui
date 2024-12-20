@@ -1,18 +1,13 @@
-﻿//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -24,7 +19,7 @@
 
 class ACursor;
 
-class ABaseWindow;
+class AWindowBase;
 
 
 /**
@@ -57,7 +52,7 @@ namespace ADesktop
 
     /**
      * @brief Opens native browse for directory dialog.
-     * @param parent parent window which is put in the ABaseWindow::blockUserInput state while the dialog is active. Can be
+     * @param parent parent window which is put in the AWindowBase::blockUserInput state while the dialog is active. Can be
      *               nullptr.
      * @param startingLocation path where the file browser dialog opened initially. Can be empty.
      * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
@@ -65,12 +60,12 @@ namespace ADesktop
      * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
      * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
      */
-    API_AUI_VIEWS AFuture<APath> browseForDir(ABaseWindow* parent,
+    API_AUI_VIEWS AFuture<APath> browseForDir(AWindowBase* parent,
                                               const APath& startingLocation = {});
 
     /**
      * @brief Opens native browse for file dialog.
-     * @param parent parent window which is put in the ABaseWindow::blockUserInput state while the dialog is active. Can be
+     * @param parent parent window which is put in the AWindowBase::blockUserInput state while the dialog is active. Can be
      *               nullptr.
      * @param startingLocation path where the file browser dialog opened initially. Can be empty.
      * @param extensions extensions.
@@ -79,7 +74,7 @@ namespace ADesktop
      * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
      * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
      */
-	API_AUI_VIEWS AFuture<APath> browseForFile(ABaseWindow* parent,
+	API_AUI_VIEWS AFuture<APath> browseForFile(AWindowBase* parent,
                                                const APath& startingLocation = {},
                                                const AVector<FileExtension>& extensions = { {"All", "*"} });
 

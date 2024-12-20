@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/ARaiiHelper.h>
@@ -30,117 +25,135 @@
 
 #undef signals
 
-glm::ivec2 ADesktop::getMousePosition()
-{
+glm::ivec2 ADesktop::getMousePosition() {
     glm::ivec2 p;
     Window w;
     int unused1;
     unsigned unused2;
-    XQueryPointer(CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), &w, &w, &p.x, &p.y, &unused1, &unused1, &unused2);
+    XQueryPointer(
+        CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), &w, &w, &p.x, &p.y,
+        &unused1, &unused1, &unused2);
     return p;
 }
 
-void ADesktop::setMousePos(const glm::ivec2& pos)
-{
+void ADesktop::setMousePos(const glm::ivec2 &pos) {
     auto rootWindow = XRootWindow(CommonRenderingContext::ourDisplay, 0);
     XSelectInput(CommonRenderingContext::ourDisplay, rootWindow, KeyReleaseMask);
     XWarpPointer(CommonRenderingContext::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
     XFlush(CommonRenderingContext::ourDisplay);
 }
 
+AFuture<APath>
+ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, const AVector<FileExtension> &extensions) {
+    AUI_NULLSAFE(parent)->blockUserInput();
+    AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
-AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    parent->blockUserInput();
-    auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>("org.freedesktop.portal.Desktop",     // bus
-                                                               "/org/freedesktop/portal/desktop",    // object
-                                                               "org.freedesktop.portal.FileChooser", // interface
-                                                               "OpenFile",                           // method
-                                                               "", // parent
-                                                               "Open File"_i18n,
-                                                               AMap<std::string, aui::dbus::Variant>()
+    AMap<std::string, aui::dbus::Variant> options;
+
+    if (!startingLocation.empty()) {
+        AVector<std::uint8_t> locationBytes;
+        for (const AByteBufferView buffer = startingLocation.toUtf8(); const auto &byte : buffer) {
+            locationBytes.push_back(byte);
+        }
+
+        options.insert_or_assign("current_folder", locationBytes);
+    }
+
+    auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>(
+        "org.freedesktop.portal.Desktop",       // bus
+        "/org/freedesktop/portal/desktop",      // object
+        "org.freedesktop.portal.FileChooser",   // interface
+        "OpenFile",                             // method
+        "",                                     // parent_window
+        "Open File"_i18n,                       // title,
+        options                                 // options
     );
+
     AFuture<APath> f;
-    ADBus::inst().addSignalListener(std::move(p),
-                                    "org.freedesktop.portal.Request",
-                                    "Response",
-                                    [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
-        try {
-            if (auto c = results.contains("uris")) {
-                if (auto p = std::get_if<AVector<aui::dbus::Unknown>>(&c->second)) {
-                    if (!p->empty()) {
-                        AUrl result = p->first().as<AString>();
-                        f.supplyResult(result.path());
-                        return;
+
+    const auto unsubscribe = ADBus::inst().addSignalListener(
+        std::move(p), "org.freedesktop.portal.Request", "Response",
+        [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
+            try {
+                if (const auto c = results.contains("uris")) {
+                    if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
+                        if (AString path; !t->empty() && t->first().as(path)) {
+                            const AUrl result = path;
+                            f.supplyValue(result.path());
+                            return;
+                        }
                     }
                 }
+                f.supplyValue({});
+            } catch (...) {
+                f.supplyException();
+                throw;
             }
-            throw AException("path not specified");
-        } catch (...) {
-            f.supplyException();
-            throw;
-        }
+        });
+
+    f.onFinally([parent, unsubscribe]() {
+        unsubscribe();
+        AUI_NULLSAFE(parent)->blockUserInput(false);
     });
+
     return f;
 }
 
-AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
-    parent->blockUserInput();
-    return async {
-        /*
-        ARaiiHelper windowUnblocker = [&] {
-            parent->getThread()->enqueue([parent] {
-                parent->blockUserInput(false);
-            });
-        };
-        aui_gtk_init();
-        GtkWidget *dialog;
-        GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
-        gint res;
+AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &startingLocation) {
+    AUI_NULLSAFE(parent)->blockUserInput();
 
-        dialog = gtk_file_chooser_dialog_new ("Open folder"_i18n.toStdString().c_str(),
-                                              nullptr,
-                                              action,
-                                              "Cancel"_i18n.toStdString().c_str(),
-                                              GTK_RESPONSE_CANCEL,
-                                              "Open"_i18n.toStdString().c_str(),
-                                              GTK_RESPONSE_ACCEPT,
-                                              nullptr);
+    AMap<std::string, aui::dbus::Variant> options;
+    options.insert_or_assign("directory", true);
 
-
-        gtk_file_chooser_set_current_folder(reinterpret_cast<GtkFileChooser*>(dialog), startingLocation.toStdString().c_str());
-
-        gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
-        gtk_window_activate_focus(GTK_WINDOW(dialog));
-
-        res = gtk_dialog_run (GTK_DIALOG (dialog));
-        if (res == GTK_RESPONSE_ACCEPT)
-        {
-            char *filename;
-            GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
-            filename = gtk_file_chooser_get_filename (chooser);
-            APath f = filename;
-            g_free(filename);
-            gtk_widget_destroy (dialog);
-
-            while (gtk_events_pending()) {
-                gtk_main_iteration();
-            }
-            return f;
+    if (!startingLocation.empty()) {
+        AVector<std::uint8_t> locationBytes;
+        for (const AByteBufferView buffer = startingLocation.toUtf8(); const auto &byte : buffer) {
+            locationBytes.push_back(byte);
         }
 
-        gtk_widget_destroy (dialog);
+        options.insert_or_assign("current_folder", locationBytes);
+    }
 
-        while (gtk_events_pending()) {
-            gtk_main_iteration();
-        }*/
-        return APath{};
-    };
+    auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>(
+        "org.freedesktop.portal.Desktop",       // bus
+        "/org/freedesktop/portal/desktop",      // object
+        "org.freedesktop.portal.FileChooser",   // interface
+        "OpenFile",                             // method
+        "",                                     // parent_window
+        "Open Folder"_i18n,                     // title,
+        options                                 // options
+    );
+
+    AFuture<APath> f;
+
+    const auto unsubscribe = ADBus::inst().addSignalListener(
+        std::move(p), "org.freedesktop.portal.Request", "Response",
+        [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
+            try {
+                if (const auto c = results.contains("uris")) {
+                    if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
+                        if (AString path; !t->empty() && t->first().as(path)) {
+                            const AUrl result = path;
+                            f.supplyValue(result.path());
+                            return;
+                        }
+                    }
+                }
+                f.supplyValue({});
+            } catch (...) {
+                f.supplyException();
+                throw;
+            }
+        });
+
+    f.onFinally([parent, unsubscribe]() {
+        unsubscribe();
+        AUI_NULLSAFE(parent)->blockUserInput(false);
+    });
+
+    return f;
 }
 
-_<IDrawable> ADesktop::iconOfFile(const APath& file) {
-    return nullptr;
-}
+_<IDrawable> ADesktop::iconOfFile(const APath &file) { return nullptr; }
 
-void ADesktop::playSystemSound(ADesktop::SystemSound s) {
-
-}
+void ADesktop::playSystemSound(ADesktop::SystemSound s) {}

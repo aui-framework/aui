@@ -7,7 +7,10 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++20.
 
-[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html)
+The project aims to provide developers with the best possible experience (including, but not limited to: dependency
+management, packaging, ui building, styling, debugger visualizing).
+
+[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -17,7 +20,7 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static libpulse-dev
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev libglew-dev libstdc++-static libpulse-dev libdbus-1-dev
 ```
 
 ### Fedora
@@ -29,14 +32,15 @@ sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-dev
 
 To link AUI to your project, use the following CMake script:
 
+`CMakeLists.txt`:
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
 
-# Tip: in a production project don't use branch name, use a specific name tag (i.e. v1.1.1), but for a sandbox project
-# branch name is perfectly enough
+# Tip: in a production project don't use branch name, use a specific name tag (i.e. v1.1.1),
+# but for a sandbox project branch name is perfectly enough
 set(AUI_VERSION master)
 
 # Use AUI.Boot
@@ -52,14 +56,51 @@ auib_import(aui https://github.com/aui-framework/aui
         VERSION ${AUI_VERSION})
 
 
-# Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
-# places the resulting executable to bin/ folder.
+# Create the executable. This function automatically links all sources from the src/ folder,
+# creates CMake target and places the resulting executable to bin/ folder.
 aui_executable(${PROJECT_NAME})
 
 # Link required libs
 aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
-
 ```
+
+`src/main.cpp`:
+```cpp
+#include <AUI/Platform/Entry.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Platform/APlatform.h>
+
+using namespace declarative;
+
+AUI_ENTRY {
+    auto w = _new<AWindow>("Window title", 300_dp, 200_dp);
+    w->setContents(Centered {
+      Vertical {
+        Centered { Label { "Hello world from AUI!" } },
+        Centered {
+          Button { "Visit GitHub page" }.clicked(w, [] {
+              APlatform::openUrl("https://github.com/aui-framework/aui");
+          }),
+        },
+      },
+    });
+    w->show();
+    return 0;
+}
+```
+
+Result:
+
+![Example window](https://github.com/aui-framework/aui/blob/develop/docs/imgs/Screenshot_20241218_144940.png?raw=true)
+
+
+Visit [layout building page](https://aui-framework.github.io/master/group__layout__managers.html) and our [introduction
+guide](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) for more info.
+
+Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_IDE_Plugins) to set up the project.
 
 # Key features
 - Extended common types (containers, strings, streams, etc...)
@@ -68,26 +109,21 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 - Internationalization (i18n)
 - DPI support
 - CMake deployment scripts
-- Model binding and ORM
+- Model binding
 - Encryption
 - IO streams
 - Networking, including http(s) requests
-- DBMS integration including SQL query builder
 - Both asynchronous and synchronous application architecture support
 
 ## Module list
 - `aui.core` - basic types (containers, strings, streams, etc...)
 - `aui.crypt` - wrapper around OpenSSL for encryption functionality
 - `aui.curl` - wrapper around libcurl for http/https requests
-- `aui.designer` - UI Designer (in dev)
-- `aui.data` - DBMS interface and ORM
 - `aui.image` - popular image format loader 
 - `aui.json` - JSON parser
-- `aui.mysql` - MySQL driver for `aui.data`
 - `aui.network` - networking
-- `aui.sqlite` - SQLite driver for `aui.data`
-- `aui.svg` - SVG image loader
 - `aui.toolbox` - resource compiler
+- `aui.uitests` - UI testing based on GTest
 - `aui.views` - UI toolkit
 - `aui.xml` - XML parser
 
@@ -97,42 +133,43 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
  - `+` equals almost completely supported
  - `#` equals fully supported
 
-| Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
-|-------------------|--------------------------|------------|-------|---------|-------|-----|
-| aui.core          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.crypt         |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.curl          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.data          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
-| aui.image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
-| aui.views         |             #            |     ?      |   +   |    +    |   +   |  ?  |
-| aui.xml           |             #            |     #      |   #   |    #    |   #   |  ?  |
-| Assets            |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
-| Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |
+| Feature or module | Windows Vista+ | Windows XP | Linux | Android | MacOS | iOS |
+|-------------------|----------------|------------|-------|---------|-------|-----|
+| aui.core          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.crypt         | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.curl          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.image         | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.json          | #              |     #      |   #   |    #    |   #   |  #  |
+| aui.network       | #              |     #      |   #   |    #    |   +   |  +  |
+| aui.toolbox       | #              |     #      |   #   |    -    |   #   |  -  |
+| aui.views         | #              |     ?      |   +   |    +    |   +   |  +  |
+| aui.xml           | #              |     #      |   #   |    #    |   #   |  #  |
+| Assets            | #              |     #      |   #   |    #    |   +   |  +  |
+| Filesystem        | #              |     #      |   #   |    #    |   +   |  +  |
+| Process creation  | #              |     #      |   #   |    -    |   ?   |  -  |
 
-| Compiler                     | Support |
-|------------------------------|---------|
-| MSVC 19+ (Visual Studio 20+) | Full    |
-| gcc (8+)                     | Full    |
-| MinGW (8+)                   | Partial |
-| Cross-compile MinGW          | Partial |
-| clang                        | Full    |
+| Compiler                     | Support       |
+|------------------------------|---------------|
+| MSVC 19+ (Visual Studio 20+) | Full          |
+| gcc (8+)                     | Full          |
+| MinGW (8+)                   | Won't compile |
+| Cross-compile MinGW          | Won't compile |
+| clang                        | Full          |
 
 ## Used libraries
-- `libcurl` for http/https requests
-- `OpenSSL` for encryption
+- [libcurl](https://curl.se/) for http/https requests
+- [OpenSSL](https://github.com/openssl/openssl) for encryption
 - `OpenGL` as graphics hardware acceleration backend
-- `glm` for linear algebra
-- `stbimage` for image loading
-- `freetype2` for font rendering
+- [glm](https://github.com/g-truc/glm) for linear algebra
+- [stbimage](https://github.com/nothings/stb) for image loading
+- [freetype2](https://github.com/freetype/freetype) for font rendering
+- [LunaSVG](https://github.com/sammycage/lunasvg) for SVG rendering
+- [GTest](https://github.com/google/googletest) for unit testing
+- [Google Benchmark](https://github.com/google/benchmark) for benchmark testing
 
+## IDE Plugins
+
+[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_IDE_plugins)
 
 ## Examples
 Check the `examples/` folder.
@@ -143,11 +180,36 @@ Check the `examples/` folder.
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
-# Contributing
-You are always free to contribute to this project and add yourself to the authors list :)
-## Workflow
-`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
-all tests on all supported platforms.
-Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
-`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
-and tests.
+# Licensing
+
+Please refer to [LICENSE](https://github.com/aui-framework/aui/blob/master/LICENSE).
+
+Our project is published under Mozilla Public License Version 2.0 (the License). In short, you can use AUI for free in
+your private (i.e, that does not go outside your company) projects.
+
+If you would like to publish your project (including, but not limited to: sell, sign, release in software stores like
+Google Play or App Store), does not matter open source, closed source or proprietary, the License obligates you to:
+ - Mention your project uses "AUI Framework" in your legal notice.
+ - Release your changes to AUI (if any) under the same terms (the License).
+
+As for the latter, you are welcome to upstream your changes (i.e., propose your changes to
+[this repository](https://github.com/aui-framework/aui)). If you decided to not do so, please keep in mind that the
+License allows us to take your changes and upstream them.
+
+You are not obligated to disclose your own sources nor release your own project under the same terms (License).
+
+# Maintaining
+
+The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)
+with contributions from many other people.
+
+Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
+
+## Contributing
+
+You are welcome to open issues and pull requests on our GitHub repository. This project is maintained by a team of
+volunteers on a reasonable-effort basis. As such, we can accept your issue, but we can't guarantee resolution. It's all
+depends on severity and our own needs. In fact, we'd be happy if you submit a pull request. In this case we'll do our
+best to help you merge your changes to upstream.
+
+Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/master/CONTRIBUTING.md)

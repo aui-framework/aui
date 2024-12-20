@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 21.11.2020.
@@ -23,6 +18,7 @@
 #include <AUI/GL/gl.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/strings.h>
+#include <string_view>
 
 #ifndef GLAPIENTRY
 #define GLAPIENTRY
@@ -62,6 +58,15 @@ static void GLAPIENTRY debugProc(GLenum source,
                                  const GLchar* message,
                                  const void* userParam)
 {
+    // filter out repeated messages; they are spamming and annoying
+    const auto h = std::hash<std::string_view>{}(std::string_view(message));
+    static ASet<size_t> messages;
+    if (messages.contains(h)) {
+        return;
+    }
+    messages << h;
+
+
     if (gl::silenceDebug) {
         return;
     }
@@ -85,7 +90,7 @@ static void GLAPIENTRY debugProc(GLenum source,
 }
 
 void gl::setupDebug() {
-#if !AUI_PLATFORM_IOS
+#if !AUI_PLATFORM_IOS && !AUI_PLATFORM_EMSCRIPTEN
     if (glDebugMessageCallback) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(debugProc, nullptr);

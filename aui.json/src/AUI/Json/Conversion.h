@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -20,7 +15,6 @@
 #include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
-#include <AUI/Util/EnumUtil.h>
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
 
@@ -98,7 +92,7 @@ namespace aui::impl::json {
 
         void operator()(const AJson::Object& object) {
             if (auto c = object.contains(name)) {
-                value = aui::from_json<T>(c->second);
+                aui::from_json<T>(c->second, value);
             } else {
                 if (!(flags & AJsonFieldFlags::OPTIONAL)) {
                     throw AJsonException(R"(field "{}" is not present)"_format(name));
@@ -112,8 +106,6 @@ namespace aui::impl::json {
 
     template<typename... Items>
     struct my_tuple: std::tuple<Items...> {
-        using std::tuple<Items...>::tuple;
-
         my_tuple(Items... items): std::tuple<Items...>(std::move(items)...) {}
 
         template<typename T>
@@ -179,6 +171,13 @@ struct AJsonConvFieldDescriptor;
  *     (value1, "value1")
  *     (value2, "value2")
  * )
+ *
+ * // or
+ *
+ * AJSON_FIELDS(SomeModel,
+ *     AJSON_FIELDS_ENTRY(value1)
+ *     AJSON_FIELDS_ENTRY(value2)
+ * )
  * @endcode
  */
 #define AJSON_FIELDS(N, ...) \
@@ -190,6 +189,11 @@ template<> struct AJsonConvFieldDescriptor<N>: N { \
     } \
 };
 
+/**
+ * @brief Json entry of the same C++ and JSON field name.
+ * @see AJSON_FIELDS
+ */
+#define AJSON_FIELDS_ENTRY(name) (name, AUI_PP_STRINGIZE(name))
 
 /**
  * Simplified conversion for class fields.
@@ -269,6 +273,21 @@ struct AJsonConv<double> {
     }
 };
 
+template<aui::arithmetic UnderlyingType, auto min, auto max>
+    requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+struct AJsonConv<aui::ranged_number<UnderlyingType, min, max>> {
+    static AJson toJson(aui::ranged_number<UnderlyingType, min, max> v) {
+        return (UnderlyingType) v;
+    }
+    static void fromJson(const AJson& json, aui::ranged_number<UnderlyingType, min, max>& dst) {
+        if constexpr (aui::same_as<UnderlyingType, float> || aui::same_as<UnderlyingType, double>) {
+            dst = (UnderlyingType) json.asNumber();
+        } else {
+            dst = (UnderlyingType) json.asLongInt();
+        }
+    }
+};
+
 template<>
 struct AJsonConv<bool> {
     static AJson toJson(bool v) {
@@ -341,6 +360,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
     }
     static void fromJson(const AJson& json, AVector<T>& dst) {
         auto& array = json.asArray();
+        dst.clear();
         dst.reserve(array.size());
         for (const auto& elem : array) {
             dst << aui::from_json<T>(elem);
@@ -352,7 +372,7 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
 template<typename T>
 struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
     static AJson toJson(const T& v) {
-        return AEnumerate<T>::names()[v];
+        return AEnumerate<T>::valueToNameMap()[v];
     }
     static void fromJson(const AJson& json, T& dst) {
         dst = AEnumerate<T>::byName(json.asString());

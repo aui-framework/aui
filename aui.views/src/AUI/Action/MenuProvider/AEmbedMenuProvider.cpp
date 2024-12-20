@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 5/13/2021.
@@ -26,15 +21,16 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AEmbedMenuProvider.h"
 
-class AEmbedMenuProvider::MenuContainer: public AViewContainer {
+class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
+    AWindowBase* mWindow;
     _<MenuContainer> mSubWindow;
 public:
-    MenuContainer(const AVector<AMenuItem>& vector)
+    MenuContainer(AWindowBase* window, const AVector<AMenuItem>& vector): mWindow(window)
     {
         addAssName(".menu");
         addAssName(".menu-background");
-        setLayout(_new<AVerticalLayout>());
+        setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
             _<AView> view;
 
@@ -80,11 +76,10 @@ public:
                                 mSubWindow->close();
                             }
 
-                            mSubWindow = _new<MenuContainer>(items);
+                            mSubWindow = _new<MenuContainer>(mWindow, items);
                             auto pos = (view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
-                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(),
-                                                    mSubWindow->getMinimumHeight());
-                            getParent()->addViewCustomLayout(mSubWindow);
+                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(), mSubWindow->getMinimumHeight());
+                            mWindow->addViewCustomLayout(mSubWindow);
                         });
                     } else {
                         view->disable();
@@ -102,21 +97,19 @@ public:
 
 
     void close() {
-        getParent()->removeView(this);
+        mWindow->removeView(this);
         if (mSubWindow) {
             mSubWindow->close();
         }
     }
+
 };
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
-    mWindow = _new<MenuContainer>(vector);
+    mWindow = _new<MenuContainer>(AWindow::current(), vector);
     auto mousePos = AWindow::current()->getMousePos();
-    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(),
-                         mWindow->getMinimumHeight(
-                                 ALayoutDirection::NONE));
-    AWindow::current()->addViewCustomLayout(mWindow);
+    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(), mWindow->getMinimumHeight());
 }
 
 void AEmbedMenuProvider::closeMenu() {

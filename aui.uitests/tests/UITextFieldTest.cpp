@@ -1,33 +1,38 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATextField.h>
 
 using namespace ass;
+using std::operator""sv;
 
-std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e) noexcept{
-    o << "Selection";
-    if (e.end == -1) {
-        o << "{" << e.begin << "}";
-    } else {
-        o << "(" << e.begin << ";" << e.end << "]";
-    }
-    return o;
+namespace {
+    struct SelectionMatchesAssert {
+        ACursorSelectable::Selection selection;
+
+        SelectionMatchesAssert(unsigned begin, unsigned end) : selection{begin, end} {}
+
+        SelectionMatchesAssert(unsigned s) : selection{s, s} {}
+
+        bool operator()(const _<AView>& view) const {
+            if (auto t = _cast<ACursorSelectable>(view)) {
+                EXPECT_EQ(t->selection(), selection);
+            }
+            return true;
+        }
+    };
+
+    using selectionMatches = SelectionMatchesAssert;
 }
 
 class UITextField: public testing::UITest {
@@ -58,22 +63,6 @@ protected:
         UITest::TearDown();
     }
 };
-
-struct SelectionMatchesAssert {
-    ACursorSelectable::Selection selection;
-
-    SelectionMatchesAssert(unsigned begin, unsigned end) : selection{begin, end} {}
-    SelectionMatchesAssert(unsigned s) : selection{s, static_cast<unsigned>(-1)} {}
-
-    bool operator()(const _<AView>& view) const {
-        if (auto t = _cast<ACursorSelectable>(view)) {
-            EXPECT_EQ(t->selection(), selection);
-        }
-        return true;
-    }
-};
-
-using selectionMatches = SelectionMatchesAssert;
 
 /**
  * Checks that then clicking at the left border of the text field, cursor jumps to the first symbol.
@@ -114,10 +103,62 @@ TEST_F(UITextField, CursorClickPos1) {
     By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
+
 /**
  * Checks cursor position when clicking between 'o' and 'r'.
  */
 TEST_F(UITextField, CursorClickPos2) {
     By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(8));
+}
+
+TEST_F(UITextField, LeftRight) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .check(selectionMatches(0))
+            .perform(keyDownAndUp(AInput::RIGHT))
+            .check(selectionMatches(1))
+            .perform(keyDownAndUp(AInput::LEFT))
+            .check(selectionMatches(0))
+            ;
+}
+
+TEST_F(UITextField, HomeEnd) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .check(selectionMatches(0))
+            .perform(keyDownAndUp(AInput::END))
+            .check(selectionMatches("hello world!"sv.length()))
+            .perform(keyDownAndUp(AInput::HOME))
+            .check(selectionMatches(0))
+            ;
+}
+
+TEST_F(UITextField, CtrlA) {
+    By::type<ATextField>()
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
+            .perform(type("replace"))
+            .check(text("replace"));
+}
+
+TEST_F(UITextField, CtrlLeftRight) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .check(selectionMatches(0))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::RIGHT))
+            .check(selectionMatches("hello "sv.length()))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::LEFT))
+            .check(selectionMatches(0))
+            ;
+}
+
+TEST_F(UITextField, CtrlShiftLeftRight) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .check(selectionMatches(0))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::LSHIFT + AInput::RIGHT))
+            .check(selectionMatches(0, "hello "sv.length()))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::LSHIFT + AInput::LEFT))
+            .check(selectionMatches(0))
+            ;
 }

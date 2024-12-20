@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 06.12.2020.
@@ -45,13 +40,13 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
 
     switch (direction) {
         case ALayoutDirection::HORIZONTAL:
-            setLayout(_new<AHorizontalLayout>());
+            setLayout(std::make_unique<AHorizontalLayout>());
 
             mForwardButton << ".scrollbar_right";
             mBackwardButton << ".scrollbar_left";
             break;
         case ALayoutDirection::VERTICAL:
-            setLayout(_new<AVerticalLayout>());
+            setLayout(std::make_unique<AVerticalLayout>());
             mForwardButton << ".scrollbar_down";
             mBackwardButton << ".scrollbar_up";
             break;
@@ -79,19 +74,52 @@ void AScrollbar::setOffset(size_t o) {
 }
 
 void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
+    if (std::tie(mViewportSize, mFullSize) == std::tie(viewportSize, fullSize)) {
+        return;
+    }
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
+    bool isOverflowing = mViewportSize < mFullSize;
+    if (isOverflowing) {
+        enable();
+    }
+
     updateScrollHandleSize();
+    setScroll(mCurrentScroll); // validates mCurrentScroll since mViewportSize and mFullSize are updated
 
     if (mStickToEnd && mStickToEnd->locked) {
         scrollToEnd();
     }
     emit updatedMaxScroll(getMaxScroll());
+
+    if (!isOverflowing) {
+        disable();
+    }
 }
 
 void AScrollbar::updateScrollHandleSize() {
-    float scrollbarSpace = 0;
+    using namespace ass;
+
+    if (mAppearance == ScrollbarAppearance::NEVER) {
+        setVisibility(Visibility::GONE);
+        return;
+    }
+
+    if (mViewportSize >= mFullSize) {
+        switch (mAppearance) {
+            case ScrollbarAppearance::ALWAYS:
+                setVisibility(Visibility::VISIBLE);
+                mHandle->setVisibility(Visibility::GONE);
+                break;
+            case ScrollbarAppearance::ON_DEMAND:
+                setVisibility(Visibility::GONE);
+                break;
+        }
+        return;
+    }
+
+    int scrollbarSpace = 0;
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
@@ -101,44 +129,18 @@ void AScrollbar::updateScrollHandleSize() {
             scrollbarSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight());
             break;
     }
-    scrollbarSpace = glm::max(scrollbarSpace, 0.f);
+    scrollbarSpace = glm::max(scrollbarSpace, 0);
 
-    int o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
-                          : 0;
+    auto handleSize = mFullSize > 0 ? int(scrollbarSpace * mViewportSize / mFullSize) : 0;
 
-    if (mAppearance == ScrollbarAppearance::NO_SCROLL_HIDE_CONTENT || mAppearance == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT) {
-        setVisibility(Visibility::GONE);
-        setEnabled(false);
-    } else {
-        if (o < scrollbarSpace) {
-            setVisibility(Visibility::VISIBLE);
-            mHandle->setVisibility(Visibility::VISIBLE);
-            mHandle->setOverridenSize(o);
-            setEnabled();
-        } else {
-            switch (mAppearance) {
-                case ScrollbarAppearance::VISIBLE:
-                    mHandle->setVisibility(Visibility::VISIBLE);
-                    mHandle->setOverridenSize(scrollbarSpace);
-                    break;
-                case ScrollbarAppearance::INVISIBLE:
-                    mHandle->setVisibility(Visibility::GONE);
-                    break;
-                case ScrollbarAppearance::GONE:
-                    setVisibility(Visibility::GONE);
-                    mHandle->setVisibility(Visibility::GONE);
-                    break;
-            }
-
-            emit scrolled(mCurrentScroll);
-        }
-    }
-
+    setVisibility(Visibility::VISIBLE);
+    mHandle->setVisibility(Visibility::VISIBLE);
+    mHandle->setOverridenSize(handleSize);
+    setEnabled();
     updateScrollHandleOffset(getMaxScroll());
 }
 
 void AScrollbar::setScroll(int scroll) {
-    updateScrollHandleSize();
     int max = getMaxScroll();
     auto newScroll = glm::clamp(scroll, 0, max);
     if (mCurrentScroll != newScroll) {
@@ -161,6 +163,8 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     int handlePos = max > 0 ? float(mCurrentScroll) / max * availableSpace
                             : 0;
 
+    handlePos = glm::max(handlePos, 0);
+
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
             mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
@@ -169,7 +173,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
             break;
     }
-    updateLayout();
+    applyGeometryToChildren();
     redraw();
 }
 
@@ -221,7 +225,7 @@ void AScrollbar::scrollBackward() {
 }
 
 void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainer::onPointerPressed(event);
+    AViewContainerBase::onPointerPressed(event);
 }
 
 void AScrollbar::handleScrollbar(int s) {
@@ -232,10 +236,10 @@ float AScrollbar::getAvailableSpaceForSpacer() {
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return glm::max(0.f, getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth()));
+            return glm::max(0, getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth()));
 
         case ALayoutDirection::VERTICAL:
-            return glm::max(0.f, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
+            return glm::max(0, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
 
     }
     return 0;
@@ -290,15 +294,15 @@ void AScrollbarHandle::setSize(glm::ivec2 size) {
 }
 
 void AScrollbar::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
+    AViewContainerBase::setSize(size);
     updateScrollHandleSize();
 }
 
 void AScrollbar::scrollToEnd() {
     setScroll(getMaxScroll());
-    assert(mCurrentScroll == getMaxScroll());
+    AUI_ASSERT(mCurrentScroll == getMaxScroll());
 }
 
 void AScrollbar::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+    AViewContainerBase::onScroll(event);
 }

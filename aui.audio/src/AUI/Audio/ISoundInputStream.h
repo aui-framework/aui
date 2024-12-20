@@ -20,20 +20,15 @@ public:
      */
     virtual AAudioFormat info() = 0;
 
-    /**
-     * @brief Rewind audio stream to begin
-     */
-    virtual void rewind() = 0;
-
-protected:
-    static _<IInputStream> getInputStream(const AUrl& key);
-
 private:
-    static constexpr size_t MAX_FILE_SIZE_TO_CACHE = 1 << 24;
-    class Cache : public ::Cache<AByteBuffer, Cache, AUrl> {
+    static constexpr size_t MAX_FILE_SIZE_TO_CACHE = 100 /* kb */ * 1024;
+    class Cache {
     public:
         static Cache& inst();
-    protected:
-        _<AByteBuffer> load(const AUrl& key) override;
+
+        static _unique<IInputStream> get(const AUrl& key);
+
+    private:
+        AMap<AUrl, _<AByteBuffer>> mEntries;
     };
 };

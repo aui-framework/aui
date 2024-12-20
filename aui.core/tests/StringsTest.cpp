@@ -1,18 +1,13 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
-//  Copyright (C) 2020-2023 Alex2772
-//
-//  This library is free software; you can redistribute it and/or
-//  modify it under the terms of the GNU Lesser General Public
-//  License as published by the Free Software Foundation; either
-//  version 2 of the License, or (at your option) any later version.
-//
-//  This library is distributed in the hope that it will be useful,
-//  but WITHOUT ANY WARRANTY; without even the implied warranty of
-//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-//  Lesser General Public License for more details.
-//
-//  You should have received a copy of the GNU Lesser General Public
-//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2 on 30.08.2020.
@@ -55,6 +50,18 @@ TEST(Strings, ToFloat) {
     EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }
 
+TEST(Strings, Uppercase1) {
+    EXPECT_EQ("å"_as.uppercase(), "Å");
+}
+
+TEST(Strings, Uppercase2) {
+    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_as.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
+}
+
+TEST(Strings, Downcase1) {
+    EXPECT_EQ("Å"_as.lowercase(), "å");
+}
+
 TEST(Strings, ReplaceAll1) {
     EXPECT_EQ("abcdef"_as.replaceAll("ab", "12"), "12cdef");
 }
@@ -85,4 +92,9 @@ TEST(Strings, ReplaceAll7) {
 
 TEST(Strings, ReplaceAll8) {
     EXPECT_EQ("abcdef"_as.replaceAll("bcd", ""), "aef");
+}
+
+TEST(Strings, Utf8) {
+    EXPECT_EQ("🤡"_as, "🤡");
+    EXPECT_EQ("🤡"_as.toStdString(), "🤡");
 }

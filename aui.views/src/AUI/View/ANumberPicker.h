@@ -1,40 +1,34 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
+
+#include <AUI/Traits/values.h>
+#include <AUI/Util/ADataBinding.h>
+
+#include "AAbstractTextField.h"
 #include "AViewContainer.h"
-#include "ATextField.h"
-#include <limits>
 
 /**
  * @brief A text field for numbers with increase/decrease buttons.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS ANumberPicker: public AViewContainer
-{
+class API_AUI_VIEWS ANumberPicker : public AViewContainerBase {
 private:
-    class ANumberPickerField: public AAbstractTextField
-    {
+    class ANumberPickerField : public AAbstractTextField {
     private:
         ANumberPicker& mPicker;
+
     public:
-        ANumberPickerField(::ANumberPicker& picker)
-                : mPicker(picker)
-        {
-        }
+        ANumberPickerField(::ANumberPicker& picker) : mPicker(picker) {}
 
         virtual ~ANumberPickerField() = default;
 
@@ -46,46 +40,39 @@ private:
 
     _<ANumberPickerField> mTextField;
 
-    int mMin = 0;
-    int mMax = 100;
+    int64_t mMin = 0;
+    int64_t mMax = 100;
 
 public:
     ANumberPicker();
 
-    int getContentMinimumHeight(ALayoutDirection layout) override;
+    void setValue(int64_t v);
 
-    void setValue(int v);
-    int getValue() const;
+    int64_t getValue() const;
 
-    [[nodiscard]]
-    const AString& text() const noexcept {
-        return mTextField->text();
-    }
+    void setSuffix(const AString& suffix);
+
+    [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
 
     void increase();
+
     void decrease();
-    void changeBy(int v);
 
+    void changeBy(int64_t v);
 
-    [[nodiscard]] int getMin() const
-    {
-        return mMin;
-    }
+    [[nodiscard]] int64_t getMin() const { return mMin; }
 
-    [[nodiscard]] int getMax() const
-    {
-        return mMax;
-    }
+    [[nodiscard]] int64_t getMax() const { return mMax; }
 
+    void setMin(int64_t min);
 
-    void setMin(int min);
-    void setMax(int max);
+    void setMax(int64_t max);
 
 signals:
     /**
      * @brief Number changed.
      */
-    emits<int> valueChanged;
+    emits<int64_t> valueChanged;
 
     /**
      * @brief Number is changing.
@@ -97,26 +84,58 @@ namespace aui::impl {
     template<typename Num>
     struct ADataBindingDefaultNumberPicker {
     public:
+        static void setup(const _<ANumberPicker>& view) {}
 
-        static void setup(const _<ANumberPicker>& view) {
-            view->setMin((std::numeric_limits<int>::min)());
-            view->setMax((std::numeric_limits<int>::max)());
-        }
+        static auto getGetter() { return &ANumberPicker::valueChanged; }
 
-        static auto getGetter() {
-            return &ANumberPicker::valueChanged;
-        }
-
-        static auto getSetter() {
-            return &ANumberPicker::setValue;
-        }
+        static auto getSetter() { return &ANumberPicker::setValue; }
     };
-}
 
-template<> struct ADataBindingDefault<ANumberPicker, uint8_t>: aui::impl::ADataBindingDefaultNumberPicker<uint8_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int8_t>: aui::impl::ADataBindingDefaultNumberPicker<int8_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, uint16_t>: aui::impl::ADataBindingDefaultNumberPicker<uint16_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int16_t>: aui::impl::ADataBindingDefaultNumberPicker<int16_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, uint32_t>: aui::impl::ADataBindingDefaultNumberPicker<uint32_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int32_t>: aui::impl::ADataBindingDefaultNumberPicker<int32_t> {};
+    template<aui::arithmetic UnderlyingType, auto min, auto max> requires
+    aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+    struct ADataBindingRangedNumberPicker {
+    public:
+        static void setup(const _<ANumberPicker>& view) {
+            view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
+            view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
+        }
 
+        static auto getGetter() { return &ANumberPicker::valueChanged; }
+
+        static auto getSetter() { return &ANumberPicker::setValue; }
+    };
+}   // namespace aui::impl
+
+template<>
+struct ADataBindingDefault<ANumberPicker, uint8_t> : aui::impl::ADataBindingDefaultNumberPicker<uint8_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, int8_t> : aui::impl::ADataBindingDefaultNumberPicker<int8_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, uint16_t> : aui::impl::ADataBindingDefaultNumberPicker<uint16_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, int16_t> : aui::impl::ADataBindingDefaultNumberPicker<int16_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, uint32_t> : aui::impl::ADataBindingDefaultNumberPicker<uint32_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, int32_t> : aui::impl::ADataBindingDefaultNumberPicker<int32_t> {
+};
+
+template<>
+struct ADataBindingDefault<ANumberPicker, int64_t> : aui::impl::ADataBindingDefaultNumberPicker<int64_t> {
+};
+
+template<aui::arithmetic UnderlyingType, auto min, auto max> requires
+aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>>
+        : aui::impl::ADataBindingRangedNumberPicker<UnderlyingType, min, max> {
+};

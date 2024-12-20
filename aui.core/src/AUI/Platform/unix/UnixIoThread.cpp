@@ -1,26 +1,23 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by alex2772 on 4/19/22.
 //
 
 #include "UnixIoThread.h"
+#include <range/v3/view.hpp>
+#include "AUI/Logging/ALogger.h"
+#include "AUI/Thread/AThread.h"
 #include "UnixEventFd.h"
-#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <sys/poll.h>
 #include <AUI/Thread/AFuture.h>
@@ -112,12 +109,11 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     });
 
     mThread->start();
-
-    ACutoffSignal cv;
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cv.makeSignal();
+        cs.supplyValue();
     });
-    cv.waitForSignal();
+    cs.wait();
 }
 
 #else
@@ -137,13 +133,24 @@ public:
     void loop() override {
         for (;;) {
             AThread::processMessages();
-            auto r = poll(mParent.mPollFd.data(), mParent.mPollFd.size(), -1);
-            assert(r > 0);
-            for (auto it = mParent.mPollFd.begin(); it != mParent.mPollFd.end() && r > 0; ++it) {
-                if (it->revents) {
-                    mParent.mCallbacks[it - mParent.mPollFd.begin()](static_cast<UnixPollEvent>(it->revents));
+            mParent.mMessageQueue.processMessages();
+            auto& pollFd = mParent.mPollFd;
+            auto& callbacks = mParent.mCallbacks;
+            /*
+            ALogger::info("UnixIoThread") << "poll:";
+            for (const auto& i : pollFd) {
+                ALogger::info("UnixIoThread") << i.fd;
+            }*/
+            auto r = poll(pollFd.data(), pollFd.size(), -1);
+            AUI_ASSERT(r > 0);
+            for (const auto&[pollInfo, callback] : ranges::zip_view(pollFd, callbacks)) {
+                if (pollInfo.revents) {
+                    callback(static_cast<UnixPollEvent>(pollInfo.revents));
+                    pollInfo.revents = 0;
                     r -= 1;
-                    it->revents = 0;
+                    if (r == 0) {
+                        break;
+                    }
                 }
             }
         }
@@ -153,16 +160,20 @@ private:
 };
 
 void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept {
-    executeOnIoThreadBlocking([&]() mutable {
+    executeOnIoThreadBlocking([this, fd, flags, callback = std::move(callback)]() mutable {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
+        AUI_ASSERT(callback != nullptr);
         mCallbacks << std::move(callback);
         mPollFd << pollfd {
             fd, static_cast<short>(flags.value()), 0
         };
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
 void UnixIoThread::unregisterCallback(int fd) noexcept {
-    executeOnIoThreadBlocking([&] {
+    executeOnIoThreadBlocking([this, fd] {
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
         std::size_t index = 0;
         mPollFd.removeIf([&](const pollfd& p) {
             if (p.fd == fd) {
@@ -172,6 +183,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
             ++index;
             return false;
         });
+        AUI_ASSERT(mCallbacks.size() == mPollFd.size());
     });
 }
 
@@ -190,10 +202,10 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     };
     mThread->start();
 
-    ACutoffSignal cv;
+    AFuture<> cs;
     mThread->enqueue([&] {
-        cv.makeSignal();
+        cs.supplyValue();
     });
-    cv.waitForSignal();
+    cs.wait();
 }
 #endif

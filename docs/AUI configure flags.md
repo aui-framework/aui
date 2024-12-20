@@ -22,6 +22,9 @@ Whether use C++ 20 coroutines support or not.
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
 performance information. See [Profiling](@ref profiling)
 
+## AUI_SHOW_TOUCHES
+When `true`, shows touches visually (like in Android Developer Tools) and performs additional trace logging on touches.
+
 # aui.build
 
 ## AUI_BUILD_EXAMPLES
@@ -30,8 +33,10 @@ Whether build examples or not.
 ## AUI_BUILD_FOR
 Specifies target platform for cross-compilation (see [cross-compiling](@ref md_docs_Crosscompiling)).
 
-## AUI_CACHE_DIR
-Changes aui.boot's cache dir (which is `~/.aui` by default)
+## AUIB_CACHE_DIR
+Changes aui.boot's cache dir (which is `~/.aui` by default).
+
+Can be defined as environment variable.
 
 ## AUI_INSTALL_RUNTIME_DEPENDENCIES
 When `true`, all AUI's dependencies will be installed along with it. **WARNING** on Linux doing `make install` with `AUI_INSTALL_RUNTIME_DEPENDENCIES=TRUE` is dangerous and may cause system instability. It will replace some system libraries with AUI's ones (i.e. `libssl`, `libcrypto`, `GLEW`, etc...) which may produce the following messages:

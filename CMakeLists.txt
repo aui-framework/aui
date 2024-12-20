@@ -1,21 +1,8 @@
-# ======================================================================================================================
-# Copyright (c) 2021 Alex2772
+# SPDX-License-Identifier: MPL-2.0
 #
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
-# documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
-# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
-# Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
-# WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-# COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-# OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#
-# Original code located at https://github.com/aui-framework/aui
-# ======================================================================================================================
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 cmake_minimum_required(VERSION 3.16)
 
@@ -66,7 +53,7 @@ auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 # define all components
 define_aui_component(core)
-if (NOT ANDROID AND NOT IOS)
+if (NOT CMAKE_CROSSCOMPILING)
     define_aui_component(toolbox)
     # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)
@@ -146,15 +133,19 @@ else()
 endif()
 
 set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\nset(AUI_AVAILABLE_COMPONENTS ${AUIB_COMPONENTS})\n")
-get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-# forward AUI's dependencies
-set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\nset(AUI_BOOT_ROOT_ENTRIES ${AUI_BOOT_ROOT_ENTRIES})\n")
 foreach(_module ${AUIB_COMPONENTS})
     set(_target "aui.${_module}")
     get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
     get_target_property(_wholearchive ${_target} INTERFACE_AUI_WHOLEARCHIVE)
     get_target_property(_link_options ${_target} INTERFACE_LINK_OPTIONS)
+    get_target_property(_kind ${_target} TYPE)
+    foreach (_kind_variant STATIC SHARED INTERFACE OBJECT)
+        if (_kind MATCHES "${_kind_variant}")
+            set(_kind ${_kind_variant})
+            break()
+        endif()
+    endforeach()
     unset(_link_libs2)
     foreach(_lib ${_link_libs})
         if (_lib) # skips NOTFOUNDs
@@ -167,6 +158,7 @@ foreach(_module ${AUIB_COMPONENTS})
 
 set(AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS ${_compile_definitions})
 set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
+set(AUI_COMPONENT_${_module}_KIND ${_kind})
 ")
     if (_link_options)
         set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\
@@ -180,11 +172,10 @@ set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
     endif()
 endforeach()
 
+auib_precompiled_binary()
 
 # test aui.boot on ci/cd
-if (DEFINED ENV{GITHUB_SHA})
-    add_subdirectory(test/)
-endif()
+add_subdirectory(test/)
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
@@ -198,5 +189,4 @@ install(DIRECTORY cmake/
 install(DIRECTORY platform/
         DESTINATION platform)
 
-auib_precompiled_binary()
 enable_testing()

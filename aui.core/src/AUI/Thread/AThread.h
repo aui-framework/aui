@@ -1,18 +1,13 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 #include <thread>
@@ -21,6 +16,7 @@
 #include "AMutex.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Common/AString.h"
+#include "AUI/Util/AMessageQueue.h"
 #include <AUI/Platform/AStacktrace.h>
 #include <functional>
 
@@ -58,7 +54,7 @@ public:
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
-	void enqueue(std::function<void()> f);
+	void enqueue(AMessageQueue<>::Message f);
 
 	virtual ~AAbstractThread();
 
@@ -132,19 +128,7 @@ protected:
 
     AString mThreadName;
 
-    /**
-     * @brief Message queue mutex.
-     */
-    AMutex mQueueLock;
-
-    struct Message {
-        std::function<void()> proc;
-    };
-
-    /**
-     * @brief Message queue.
-     */
-    ADeque<Message> mMessageQueue;
+    AMessageQueue<> mMessageQueue;
 
     AAbstractThread(const id& id) noexcept;
     void updateThreadName() noexcept;
@@ -222,7 +206,7 @@ private:
 	/**
 	 * @brief true if interrupt requested for this thread.
 	 */
-	bool mInterrupted = false;
+	std::atomic_bool mInterrupted = false;
 
 public:
 

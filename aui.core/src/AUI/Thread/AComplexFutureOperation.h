@@ -27,7 +27,7 @@ public:
     AComplexFutureOperation(): mFutureWeakReference(mFutureStrongReference.inner().weak()) {}
 
     ~AComplexFutureOperation() {
-        assert((mFutureStrongReference.inner() == nullptr, "makeFuture() is not called. Please check docs"));
+        AUI_ASSERTX(mFutureStrongReference.inner() == nullptr, "makeFuture() is not called. Please check docs");
         if (auto f = mFutureWeakReference.lock()) {
             if (!(*f)->hasResult()) {
                 try {
@@ -45,8 +45,10 @@ public:
      * AFuture<T> can be created only once.
      */
     [[nodiscard]]
-    AFuture<T> makeFuture() const noexcept {
-        return std::move(mFutureStrongReference);
+    AFuture<T> makeFuture() noexcept {
+        auto r = std::move(mFutureStrongReference);
+        AUI_ASSERT(mFutureStrongReference.inner() == nullptr);
+        return r;
     }
 
     /**
@@ -78,7 +80,7 @@ public:
      * @brief Pushes the result of operation to it's AFuture<T>.
      * @param value operation
      */
-    void supplyResult(T value) {
+    void supplyValue(T value) {
         if (auto l = mFutureWeakReference.lock()) {
             auto& inner = *l;
             std::unique_lock lock(inner->mutex);

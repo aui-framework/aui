@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 11/28/2021.
@@ -71,7 +66,7 @@ namespace aui::container {
             aui::range insertTargetRange(at, at + distance);
 
             // shift elements to the right
-            aui::range shiftRange(std::prev(insertTargetRange.end()), vectorEnd);
+            aui::range shiftRange(at, vectorEnd);
             if (!shiftRange.empty()) {
                 auto shiftFrom = std::prev(shiftRange.end());
                 auto shiftTo = shiftFrom + distance;
@@ -131,7 +126,7 @@ namespace aui::container {
      */
     template<typename Container>
     void remove_at(Container& c, size_t index) noexcept {
-        assert(("index out of bounds" && c.size() > index));
+        AUI_ASSERTX(c.size() > index, "index out of bounds");
         c.erase(c.begin() + index);
     }
 
@@ -181,6 +176,21 @@ namespace aui::container {
         }), container.end());
     }
 
+
+    /**
+     * Removes all occurrences of <code>item</code> with specified projection.
+     * @param item element to remove.
+     * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
+     *        operator() cappable object, including lambda and pointer-to-member.
+     */
+    template<typename Container, typename T, typename Projection>
+    void remove_all(Container& container, const T& value, const Projection& projection) noexcept {
+        container.erase(std::remove_if(container.begin(), container.end(), [&](typename Container::const_reference probe)
+        {
+            return value == std::invoke(projection, probe);
+        }), container.end());
+    }
+
     /**
      * @brief Removes first occurrence of <code>value</code>.
      * @ingroup core
@@ -205,6 +215,14 @@ namespace aui::container {
     template<typename Iterator, typename UnaryOperation>
     [[nodiscard]]
     auto to_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AMap.h
+
+    /**
+     * @brief Transforms sequence to unordered_map.
+     * @ingroup core
+     */
+    template<typename Iterator, typename UnaryOperation>
+    [[nodiscard]]
+    auto to_unordered_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AUnorderedMap.h
 
     /**
      * @ingroup core

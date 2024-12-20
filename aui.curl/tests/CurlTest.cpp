@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 //
 // Created by Alex2772 on 2/4/2022.
@@ -36,7 +31,8 @@ TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").runBlocking().body;
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
-
+/*
+ temporary disabled, this service does not work
 TEST(CurlTest, Post1) {
     auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
             .withMethod(ACurl::Method::POST)
@@ -60,6 +56,34 @@ TEST(CurlTest, Post2) {
         FAIL() << "Whoops! " << AJson::toString(buffer);
     }
 }
+
+TEST(CurlTest, StackfulCoroutine) {
+
+
+    AThreadPool localThreadPool(1);
+    int callOrder = 0;
+    auto f1 = localThreadPool * [&] {
+        EXPECT_EQ(callOrder, 0);
+
+        auto future = ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withHeaders({
+                "Content-Type: application/json; charset=utf-8"
+            })
+            .withBody("[\"hello\"]").runAsync();
+        auto buffer = AJson::fromBuffer(future->body);
+        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
+        EXPECT_EQ(callOrder++, 1);
+    };
+    auto f2 = localThreadPool * [&] {
+        // should be executed earlier despite of the task is pushed to threadpool later.
+        EXPECT_EQ(callOrder++, 0);
+    };
+    f1.wait(AFutureWait::JUST_WAIT);
+
+    EXPECT_EQ(callOrder, 2);
+}
+*/
 
 TEST(CurlTest, ToStream) {
     {
@@ -100,32 +124,6 @@ TEST(CurlTest, WebSocket) {
     EXPECT_EQ(c, 2) << "not enough payloads received";
 }
 
-TEST(CurlTest, WebSocketLong) {
-    auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
-
-
-    constexpr auto PAYLOAD_SIZE = 60'000;
-    std::string dataActual;
-    dataActual.reserve(PAYLOAD_SIZE);
-    std::default_random_engine re;
-    for (auto i = 0; i < PAYLOAD_SIZE; ++i) {
-        dataActual.push_back(std::uniform_int_distribution(int('a'), int('z'))(re));
-    }
-
-    std::string dataReceived;
-
-    AObject::connect(ws->connected, ws, [&] {
-
-        ws->write(dataActual.data(), dataActual.length());
-
-        AObject::connect(ws->received, ws, [&](AByteBufferView payload) {
-            dataReceived += std::string_view(payload.data(), payload.size());
-            if (dataReceived.size() == PAYLOAD_SIZE) ws->close();
-        });
-    });
-    ws->run();
-    EXPECT_EQ(dataActual, dataReceived);
-}
 
 
 class Slave: public AObject {
@@ -137,30 +135,3 @@ public:
         acceptMessage(msg);
     }
 };
-
-TEST(CurlTest, StackfulCoroutine) {
-
-
-    AThreadPool localThreadPool(1);
-    int callOrder = 0;
-    auto f1 = localThreadPool * [&] {
-        EXPECT_EQ(callOrder, 0);
-
-        auto future = ACurl::Builder("https://httpbin.org/post")
-            .withMethod(ACurl::Method::POST)
-            .withHeaders({
-                "Content-Type: application/json; charset=utf-8"
-            })
-            .withBody("[\"hello\"]").runAsync();
-        auto buffer = AJson::fromBuffer(future->body);
-        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
-        EXPECT_EQ(callOrder++, 1);
-    };
-    auto f2 = localThreadPool * [&] {
-        // should be executed earlier despite of the task is pushed to threadpool later.
-        EXPECT_EQ(callOrder++, 0);
-    };
-    f1.wait(AFutureWait::JUST_WAIT);
-
-    EXPECT_EQ(callOrder, 2);
-}

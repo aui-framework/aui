@@ -1,18 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -24,11 +19,13 @@ public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
 
-    void destroyNativeWindow(ABaseWindow& window) override;
-    void beginPaint(ABaseWindow& window) override;
-    void endPaint(ABaseWindow& window) override;
-    void beginResize(ABaseWindow& window) override;
+    void destroyNativeWindow(AWindowBase& window) override;
+    void beginPaint(AWindowBase& window) override;
+    void endPaint(AWindowBase& window) override;
+    void beginResize(AWindowBase& window) override;
     void init(const Init& init) override;
+
+    IRenderer& renderer() override;
 
     AImage makeScreenshot() override;
 
@@ -46,7 +43,7 @@ public:
     }
 #if AUI_PLATFORM_WIN
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
             + (mBitmapSize.x * position.y + position.x) * 4);
@@ -56,7 +53,8 @@ public:
         dataPtr[3] = color[3];
     }
     inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
+
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
                                                   + (mBitmapSize.x * position.y + position.x) * 4);
 
@@ -64,7 +62,7 @@ public:
     }
 #else
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
         dataPtr[0] = color[2];
@@ -73,7 +71,7 @@ public:
         dataPtr[3] = color[3];
     }
     inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
         return {
@@ -85,13 +83,13 @@ public:
     }
 #endif
 
-    void endResize(ABaseWindow& window) override;
+    void endResize(AWindowBase& window) override;
 
 protected:
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
 
-    void reallocateImageBuffers(const ABaseWindow& window);
+    void reallocateImageBuffers(const AWindowBase& window);
 
 private:
 #if AUI_PLATFORM_WIN

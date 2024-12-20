@@ -153,7 +153,7 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                         auto directiveName = mTokenizer.readString();
                         mTokenizer.readChar();
                         auto directiveArg = mTokenizer.readStringUntilUnescaped('\n');
-                        directiveArg.erase(std::remove_if(directiveArg.begin(), directiveArg.end(), [](wchar_t c) {
+                        directiveArg.erase(std::remove_if(directiveArg.begin(), directiveArg.end(), [](char16_t c) {
                             return c == '\r';
                         }), directiveArg.end());
                         result << PreprocessorDirectiveToken{
@@ -252,7 +252,7 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                                 mTokenizer.reverseByte();
                                 auto n = mTokenizer.readChar();
                                 if (n == 'D') {
-                                    result << IdentifierToken{AString{wchar_t(c), wchar_t('D')}};
+                                    result << IdentifierToken{AString{char16_t(c), char16_t('D')}};
                                     break;
                                 }
                                 mTokenizer.reverseByte();
@@ -262,7 +262,7 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                             if (n == '.') {
                                 // float
                                 AString d10 = mTokenizer.readStringWhile([](char c) -> bool { return isdigit(c); });
-                                auto v = (AString::number(i) + "." + d10).toDouble().valueOrException();
+                                auto v = (AString::number(i) + "." + d10).toDoubleOrException();
                                 result << FloatToken{v};
 
                                 if (mTokenizer.readChar() != 'f') {

@@ -1,0 +1,63 @@
+# options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+BasedOnStyle: Google
+IndentWidth: 4
+ColumnLimit: 120
+# does (int) x instead of (int)x
+SpaceAfterCStyleCast: true
+# spaces, not tabs!
+UseTab: Never
+# if (x) doStuff()  is not allowed, bad style
+AllowShortIfStatementsOnASingleLine: false
+AlignTrailingComments: true
+SpacesBeforeTrailingComments: 3
+AlignConsecutiveMacros: Consecutive
+
+# use \n instead of \r\n
+UseCRLF: false
+
+AccessModifierOffset: -4
+EmptyLineBeforeAccessModifier: Always
+EmptyLineAfterAccessModifier: Never
+
+NamespaceIndentation: None
+BreakConstructorInitializers: BeforeComma
+
+# we have some problems with ranges-v3 and AUI's let, so keep it disabled
+SortIncludes: Never
+
+
+################################################# UI BUILDING ##########################################################
+
+# use shorter indentation for UI building stuff (like in Dart/Flutter)
+BracedInitializerIndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+
+# better spacing around with_style and let.
+# before:
+# view with_style{Expanding()},
+# view let{printf("Hello");},
+#
+# after:
+# view with_style { Expanding() },
+# view let { printf("Hello"); },
+Cpp11BracedListStyle: false
+SpaceBeforeCpp11BracedList: true
+
+# forces nested initializer lists to begin with their own lines.
+# note: you should use comma after last element in initializer lists.
+# before:
+# Centered { Horizontal {
+#
+# after:
+# Centered {
+#   Horizontal {
+PenaltyIndentedWhitespace: 1000
+BreakBeforeBraces: Attach
+BreakBeforeBinaryOperators: None
+
+# fix AUI's scary macros.
+Macros:
+  - let=+[]
+  - async=[]
+  - AUI_DECLARATIVE_FOR(a,b,c)=[]
+  - AUI_DECLARATIVE_FOR_EX(a,b,c)=[]

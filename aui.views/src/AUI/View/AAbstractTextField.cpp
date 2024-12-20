@@ -1,21 +1,16 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
-//
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
-//
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
-//
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+﻿/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Platform/AClipboard.h>
-#include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/AWindowBase.h>
 #include "AAbstractTextField.h"
 
 
@@ -29,17 +24,7 @@
 AAbstractTextField::AAbstractTextField() {
 }
 
-void AAbstractTextField::onFocusAcquired() {
-    AView::onFocusAcquired();
-    updateCursorBlinking();
-}
-
-void AAbstractTextField::onFocusLost() {
-    AAbstractTypeableView::onFocusLost();
-}
-
-AAbstractTextField::~AAbstractTextField()
-{
+AAbstractTextField::~AAbstractTextField() {
 }
 
 bool AAbstractTextField::handlesNonMouseNavigation() {
@@ -47,92 +32,69 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 }
 
 
-int AAbstractTextField::getContentMinimumHeight(ALayoutDirection layout)
-{
-	return getFontStyle().size;
+int AAbstractTextField::getContentMinimumHeight() {
+    return getFontStyle().size;
 }
 
 
-void AAbstractTextField::render(ClipOptimizationContext context)
-{
-	AView::render(context);
+void AAbstractTextField::render(ARenderContext ctx) {
+    AView::render(ctx);
 
-    prerenderStringIfNeeded();
-	if (hasFocus()) {
-	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+    prerenderStringIfNeeded(ctx.render);
 
-	    // text
-        doDrawString();
-
-        ACursorSelectable::drawSelectionPost();
-
-        // cursor
-        if (hasFocus() && isCursorBlinkVisible()) {
-            if (absoluteCursorPos < 0) {
-                mHorizontalScroll += absoluteCursorPos;
-                redraw();
-            } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
-                mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
-                redraw();
-            }
-
-            auto p = getMouseSelectionPadding();
-            ARender::rect(ASolidBrush{},
-                          {p.x + absoluteCursorPos, p.y - 1},
-                          {1, getMouseSelectionFont().size + 2});
-        }
-
-        ARender::setBlending(Blending::NORMAL);
-    } else {
-        doDrawString();
-	}
-
+    AStaticVector<ARect<int>, 1> selectionRects;
+    if (hasSelection()) {
+        auto s = selection();
+        auto beginPos = getPosByIndex(s.begin).x;
+        auto endPos = getPosByIndex(s.end).x;
+        selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, mPadding.top + getVerticalAlignmentOffset()},
+                                                                        {endPos - beginPos, getFontStyle().size}));
+    }
+    drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
+        doDrawString(ctx.render);
+    });
+    drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, mPadding.top + getVerticalAlignmentOffset()});
 }
 
-glm::ivec2 AAbstractTextField::getMouseSelectionPadding() {
-    auto p = AAbstractTypeableView::getMouseSelectionPadding();
-    p.x += mTextAlignOffset;
-    return p;
-}
-
-void AAbstractTextField::doDrawString() {
-    RenderHints::PushMatrix m;
-    ARender::translate({ mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset() });
-    if (mPrerenderedString) mPrerenderedString->draw();
+void AAbstractTextField::doDrawString(IRenderer& render) {
+    if (!mPrerenderedString) {
+        return;
+    }
+    RenderHints::PushState m(render);
+    render.translate(
+            {mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset()});
+    render.setColor(getTextColor());
+    mPrerenderedString->draw();
 }
 
 
-void AAbstractTextField::setText(const AString& t)
-{
+void AAbstractTextField::setText(const AString& t) {
     mHorizontalScroll = 0;
-	mContents = t;
+    mContents = t;
     if (t.empty()) {
         clearSelection();
     }
 
     mCursorIndex = t.size();
-	updateCursorBlinking();
-
-    invalidatePrerenderedString();
-	emit textChanged(t);
+    onCursorIndexChanged();
+    updateCursorBlinking();
+    invalidateFont();
+    emit textChanged(t);
 }
 
-bool AAbstractTextField::wantsTouchscreenKeyboard() {
-    return true;
+void AAbstractTextField::setSuffix(const AString& s) {
+    mSuffix = s;
+    invalidateFont();
 }
 
-AString AAbstractTextField::getContentsPasswordWrap() {
+AString AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
         return AString(mContents.length(), L'•');
     }
     return mContents;
 }
 
-AString AAbstractTextField::getDisplayText() {
-    return getContentsPasswordWrap();
-}
-
-void AAbstractTextField::doRedraw() {
+void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 
@@ -156,7 +118,7 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     return true;
 }
 
-bool AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert
@@ -165,11 +127,11 @@ bool AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
     return true;
 }
 
-size_t AAbstractTextField::typeableFind(wchar_t c, size_t startPos) {
+size_t AAbstractTextField::typeableFind(char16_t c, size_t startPos) {
     return mContents.find(c, startPos);
 }
 
-size_t AAbstractTextField::typeableReverseFind(wchar_t c, size_t startPos) {
+size_t AAbstractTextField::typeableReverseFind(char16_t c, size_t startPos) {
     return mContents.rfind(c, startPos);
 }
 
@@ -177,15 +139,11 @@ size_t AAbstractTextField::length() const {
     return mContents.length();
 }
 
-void AAbstractTextField::invalidatePrerenderedString() {
-    mPrerenderedString = nullptr;
-}
-
 void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextField::onCharEntered(wchar_t c) {
+void AAbstractTextField::onCharEntered(char16_t c) {
     mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;
@@ -194,8 +152,7 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
     auto cursorIndexCopy = mCursorIndex;
 
     enterChar(c);
-    if (!isValidText(mContents))
-    {
+    if (!isValidText(mContents)) {
         mContents = std::move(contentsCopy);
         mCursorIndex = cursorIndexCopy;
         ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
@@ -203,29 +160,33 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
     emit textChanging(mContents);
 }
 
-void AAbstractTextField::prerenderStringIfNeeded() {
+void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getContentsPasswordWrap();
+        auto text = getDisplayText() + mSuffix;
         updateTextAlignOffset();
         if (!text.empty()) {
-            auto canvas = ARender::newMultiStringCanvas(getFontStyle());
+            auto canvas = render.newMultiStringCanvas(getFontStyle());
             canvas->enableCachingForTextLayoutHelper();
             switch (getFontStyle().align) {
                 case ATextAlign::LEFT:
-                    canvas->addString({ 0, 0 }, text);
+                    canvas->addString({0, 0}, text);
                     break;
                 case ATextAlign::CENTER:
-                    canvas->addString({ 0, 0 }, text);
+                    canvas->addString({0, 0}, text);
                     break;
 
                 case ATextAlign::RIGHT:
-                    canvas->addString({ 0, 0 }, text);
+                    canvas->addString({0, 0}, text);
+                    break;
+
+                case ATextAlign::JUSTIFY:
+                    // justify cannot be handled here
                     break;
             }
-            setTextLayoutHelper(canvas->getTextLayoutHelper());
+            mTextLayoutHelper = canvas->getTextLayoutHelper();
             mPrerenderedString = canvas->finalize();
         } else {
-            setTextLayoutHelper({});
+            mTextLayoutHelper = {};
         }
     }
 }
@@ -240,7 +201,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getFontStyle().getWidth(getContentsPasswordWrap());
+    auto w = getPosByIndexAbsolute(text().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -254,15 +215,18 @@ void AAbstractTextField::updateTextAlignOffset() {
         case ATextAlign::RIGHT:
             mTextAlignOffset = getContentWidth() - w;
             return;
+
+        default:
+            break;
     }
+}
+void AAbstractTextField::commitStyle() {
+    AAbstractTypeableView::commitStyle();
+    onCursorIndexChanged();
 }
 
 bool AAbstractTextField::isValidText(const AString& text) {
     return true;
-}
-
-size_t AAbstractTextField::textLength() const {
-    return mContents.length();
 }
 
 AString AAbstractTextField::toString() const {
@@ -271,6 +235,52 @@ AString AAbstractTextField::toString() const {
 
 void AAbstractTextField::setSize(glm::ivec2 size) {
     AView::setSize(size);
-    updateTextAlignOffset();
+    onCursorIndexChanged(); // cursor and horizontal scroll should respond to size changes.
 }
 
+unsigned AAbstractTextField::cursorIndexByPos(glm::ivec2 pos) {
+    return mTextLayoutHelper.posToIndexFixedLineHeight(glm::ivec2{ pos.x - mPadding.left + mHorizontalScroll - mTextAlignOffset, 0 },
+                                                       getFontStyle());
+}
+
+glm::ivec2 AAbstractTextField::getPosByIndex(size_t index) {
+    int x = getPosByIndexAbsolute(index);
+    return { -mHorizontalScroll + x + mTextAlignOffset, 0 };
+}
+
+int AAbstractTextField::getPosByIndexAbsolute(size_t index) {
+    if (auto r = mTextLayoutHelper.indexToPos(0, index)) [[unlikely]] {
+        return r->x;
+    }
+    // fallback as a slower implementation.
+    return int(getFontStyle().getWidth(getDisplayText().substr(0, index)));
+}
+
+void AAbstractTextField::onCursorIndexChanged() {
+    updateTextAlignOffset();
+    auto absoluteCursorPos = getPosByIndex(mCursorIndex).x;
+
+    if (absoluteCursorPos < 0)
+    {
+        mHorizontalScroll += absoluteCursorPos;
+        absoluteCursorPos = 0;
+    }
+    else if (absoluteCursorPos >= this->getContentWidth())
+    {
+        mHorizontalScroll += absoluteCursorPos - this->getContentWidth();
+        absoluteCursorPos = this->getContentWidth() - 1 /* -1 for cursor width */;
+    } else if (hasSelection() && selection().end == mCursorIndex) {
+        // apply -1 offset to cursor if cursor stays at the end of selection so it covers selection.
+        absoluteCursorPos -= 1;
+    }
+    mAbsoluteCursorPos = absoluteCursorPos;
+    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
+    if (horizontalScroll != mHorizontalScroll) {
+        mAbsoluteCursorPos = mHorizontalScroll - horizontalScroll;
+        mHorizontalScroll = horizontalScroll;
+    }
+}
+
+glm::ivec2 AAbstractTextField::getCursorPosition() {
+    return {mAbsoluteCursorPos, 0};
+}
