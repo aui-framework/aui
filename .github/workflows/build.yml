@@ -120,6 +120,9 @@ jobs:
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: ${{ matrix.shell }}
     strategy:
       fail-fast: false
       matrix:
@@ -127,6 +130,7 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
+        shell: []
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
@@ -144,6 +148,7 @@ jobs:
             additional_cmake_flags: ''
             shared_or_static: shared
             debug_or_release: Release
+            shell: bash
 
           - os: ubuntu-latest
             generator: "Ninja"
