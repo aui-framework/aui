@@ -1471,7 +1471,7 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
 
           if (auto it = smallestFb(mFramebuffersForMultiPassEffectsPool);
               it != mFramebuffersForMultiPassEffectsPool.end()) {
-              (*it)->framebuffer.resize(minRequiredSize);
+              (*it)->framebuffer.resize(glm::max((*it)->framebuffer.size(), minRequiredSize));
               return release(it);
           }
 
