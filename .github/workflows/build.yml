@@ -130,7 +130,7 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
-        shell: []
+        shell: ["default"]
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
