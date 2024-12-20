@@ -14,7 +14,7 @@
 //
 
 #include <AUI/Platform/AWindow.h>
-#include "MainView.h"
+#include "AUIView.h"
 
 glm::ivec2 pos(AWindow* window, NSEvent* event) {
     float s = window->getDpiRatio();
@@ -35,11 +35,11 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
     window->onPointerReleased({pos(window, event), APointerIndex::button(key)});
 }
 
-@implementation MainView {
+@implementation AUIView {
     AWindow* mAWindow;
 }
 
-- (MainView*)initWithWindow:(AWindow*)window {
+- (AUIView*)initWithWindow:(AWindow*)window {
     [super init];
     mAWindow = window;
     
@@ -58,20 +58,29 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
     return YES;
 }
 
-- (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
+- (BOOL)becomeFirstResponder {
+    return YES;
+}
 
+- (BOOL)resignFirstResponder {
+    return YES;
+}
+
+- (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
+    printf("\n");
 }
 
 - (void)doCommandBySelector:(SEL)selector {
-
+    printf("\n");
 }
 
 - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange {
+    printf("\n");
 
 }
 
 - (void)unmarkText {
-
+    printf("\n");
 }
 
 - (NSRange)selectedRange {
@@ -91,7 +100,12 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText {
-    return nil;
+    // This code is just copied from WebKit except renaming variables.
+    static NSArray* const kAttributes = @[
+      NSUnderlineStyleAttributeName, NSUnderlineColorAttributeName,
+      NSMarkedClauseSegmentAttributeName
+    ];
+    return kAttributes;
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
@@ -101,6 +115,20 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
     return 0;
 }
+
+- (void)keyDown:(NSEvent *)event
+{
+//    [super keyDown:event];
+    printf("\n");
+    
+    [[self window] makeFirstResponder:self];
+}
+
+- (void)keyUp:(NSEvent *)event
+{
+//    [super keyUp:event];
+}
+
 - (void)mouseMoved:(NSEvent *)event {
     onMouseMoved(mAWindow, event);
 }

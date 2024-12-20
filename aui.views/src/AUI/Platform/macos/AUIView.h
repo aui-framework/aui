@@ -15,6 +15,11 @@
 
 class AWindow;
 
-@interface MainView : NSView<NSTextInputClient>
-    - (MainView*) initWithWindow:(AWindow*)window;
+/**
+ * @brief AUI viewport representation for Cocoa.
+ * @details
+ * This is the view that lives in the Cocoa view hierarchy.
+ */
+@interface AUIView : NSView<NSTextInputClient>
+    - (AUIView*) initWithWindow:(AWindow*)window;
 @end

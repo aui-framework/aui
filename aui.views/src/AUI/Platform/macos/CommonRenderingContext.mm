@@ -16,7 +16,7 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "MacosApp.h"
 #import "WindowDelegate.h"
-#import "MainView.h"
+#import "AUIView.h"
 
 void CommonRenderingContext::requestFrame() {
     if (!CVDisplayLinkIsRunning(static_cast<CVDisplayLinkRef>(mDisplayLink)))
@@ -37,7 +37,7 @@ void CommonRenderingContext::init(const Init& init) {
     [nsWindow setContentSize:NSMakeSize(init.width / window.getDpiRatio(), init.height / window.getDpiRatio())];
 
     @try {
-        auto view = [[MainView alloc] initWithWindow:&window];
+        auto view = [[AUIView alloc] initWithWindow:&window];
         [nsWindow setContentView:view];
         [nsWindow makeFirstResponder:view];
         [nsWindow setDelegate:delegate];
