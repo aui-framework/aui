@@ -80,7 +80,7 @@ struct ATexturedBrush {
     AOptional<glm::vec2> uv1;
 
     /**
-     * Optional. Top left UV coords of the texture.
+     * Optional. Bottom right UV coords of the texture.
      * <dl>
      *     <dt><b>Warning!</b></dt>
      *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
