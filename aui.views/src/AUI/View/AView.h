@@ -46,6 +46,7 @@
 #include <AUI/Render/ITexture.h>
 #include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/Enum/AFloat.h>
+#include <AUI/Common/AProperty.h>
 
 
 class AWindow;
@@ -189,20 +190,6 @@ protected:
      * @brief Size, including content area, border and padding.
      */
     glm::ivec2 mSize = { 20, 20 };
-
-    /**
-     * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
-     *        AViews in the same container.
-     * @details
-     *
-     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
-     * for more info.
-     *
-     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
-     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
-     * such case.
-     */
-    glm::ivec2 mExpanding = {0, 0};
 
     AOptional<glm::ivec2> mCachedMinContentSize;
     bool mMarkedMinContentSizeInvalid = false;
@@ -636,10 +623,12 @@ public:
     {
         return static_cast<int>(mSize.y - mPadding.vertical());
     }
+
+    [[deprecated("use expanding directly")]]
     [[nodiscard]]
     const glm::ivec2& getExpanding() const
     {
-        return mExpanding;
+        return expanding;
     }
 
     /**
@@ -650,12 +639,7 @@ public:
      */
     void setExpanding(glm::ivec2 expanding)
     {
-        if (mExpanding == expanding) [[unlikely]] {
-            return;
-        }
-        mExpanding = expanding;
-        if (expandingChanged) emit expandingChanged(expanding);
-        markMinContentSizeInvalid();
+        this->expanding = expanding;
     }
 
     /**
@@ -666,7 +650,7 @@ public:
      */
     void setExpanding(int expanding)
     {
-        setExpanding({expanding, expanding});
+        this->expanding = glm::ivec2(expanding);
     }
     void setExpanding()
     {
@@ -678,20 +662,19 @@ public:
     }
 
 
-
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
 
     [[nodiscard]]
     int getExpandingHorizontal() const
     {
-        return mExpanding.x;
+        return expanding->x;
     }
 
     [[nodiscard]]
     int getExpandingVertical() const
     {
-        return mExpanding.y;
+        return expanding->y;
     }
 
     [[nodiscard]] aui::float_within_0_1 getOpacity() const {
@@ -1044,6 +1027,20 @@ public:
         return mFloating;
     }
 
+    /**
+     * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
+     *        AViews in the same container.
+     * @details
+     *
+     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
+     * for more info.
+     *
+     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
+     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
+     * such case.
+     */
+    AProperty<glm::ivec2> expanding = glm::ivec2(0, 0);
+
 signals:
     /**
      * @see onViewGraphSubtreeChanged()
@@ -1086,11 +1083,6 @@ signals:
      * @brief Geometry (position and size) changed.
      */
     emits<glm::ivec2, glm::ivec2> geometryChanged;
-
-    /**
-     * @brief Expanding changed.
-     */
-    emits<glm::ivec2> expandingChanged;
 
     /**
      * @brief Visibility changed.

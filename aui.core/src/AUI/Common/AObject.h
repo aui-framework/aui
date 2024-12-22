@@ -49,7 +49,7 @@ concept ACompatibleSlotFor = true;   // TODO
 class API_AUI_CORE AObject : public aui::noncopyable, public std::enable_shared_from_this<AObject> {
     friend class AAbstractSignal;
 
-   public:
+public:
     AObject();
     virtual ~AObject();
 
@@ -149,13 +149,13 @@ class API_AUI_CORE AObject : public aui::noncopyable, public std::enable_shared_
         mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
     }
 
-   protected:
+protected:
     /**
      * @brief Set thread of the object.
      */
     void setThread(_<AAbstractThread> thread) { mAttachedThread = std::move(thread); }
 
-   private:
+private:
     _<AAbstractThread> mAttachedThread;
     AMutex mSignalsLock;
     ASet<AAbstractSignal*> mSignals;

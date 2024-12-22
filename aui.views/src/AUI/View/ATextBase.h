@@ -219,7 +219,7 @@ public:
     }
 
     int getContentMinimumWidth() override {
-        if (mExpanding.x != 0 || mFixedSize.x != 0) {
+        if (expanding->x != 0 || mFixedSize.x != 0) {
             // there's no need to calculate min size because width is defined.
             return 0;
         }

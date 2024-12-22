@@ -12,49 +12,7 @@
 #include <AUI/Util/kAUI.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-
-template<typename T>
-struct AProperty: aui::noncopyable {
-    T raw;
-    emits<T> changed;
-
-    AProperty() requires requires { aui::default_initializable<T>; } = default;
-
-    template<aui::convertible_to<T> U>
-    AProperty(U&& value) noexcept: raw(std::forward<U>(value)) {}
-
-    template<aui::convertible_to<T> U>
-    AProperty& operator=(U&& value) noexcept {
-        this->raw = std::forward<U>(value);
-        emit changed(this->raw);
-        return *this;
-    }
-
-    template <ASignalInvokable SignalInvokable>
-    void operator^(SignalInvokable&& t) {
-        t.invokeSignal(nullptr);
-    }
-
-    [[nodiscard]]
-    bool operator==(const T& rhs) const noexcept {
-        return raw == rhs;
-    }
-
-    [[nodiscard]]
-    bool operator!=(const T& rhs) const noexcept {
-        return raw != rhs;
-    }
-
-    [[nodiscard]]
-    operator const T&() const noexcept {
-        return raw;
-    }
-
-    [[nodiscard]]
-    const T* operator->() const noexcept {
-        return &raw;
-    }
-};
+#include "AUI/Common/AProperty.h"
 
 namespace {
 struct User {
@@ -76,6 +34,10 @@ TEST(PropertyTest, DesignatedInitializer) {
 TEST(PropertyTest, ValueCanBeChanged) {
     auto u = aui::ptr::manage(User { .name = "Hello" });
     u->name = "World";
+
+    // this should not compile
+    // u->name = {"World"};
+
     EXPECT_EQ(u->name, "World");
 }
 

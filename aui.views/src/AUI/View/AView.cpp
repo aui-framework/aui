@@ -61,6 +61,8 @@ AView::AView()
     AUI_ASSERT_UI_THREAD_ONLY()
     aui::zero(mAss);
     setSlotsCallsOnlyOnMyThread(true);
+
+    connect(expanding.changed, me::markMinContentSizeInvalid);
 }
 
 AView::~AView() = default;
