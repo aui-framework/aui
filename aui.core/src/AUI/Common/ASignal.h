@@ -231,8 +231,10 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
 
     _<AObject> emitterPtr, receiverPtr;
 
-    if (auto sharedPtr = weakPtrFromObject(emitter).lock()) { // avoid emitter removal during signal processing
-        emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
+    if (emitter != nullptr) {
+        if (auto sharedPtr = weakPtrFromObject(emitter).lock()) { // avoid emitter removal during signal processing
+            emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
+        }
     }
 
     auto slots = std::move(mSlots); // needed to safely iterate through the slots
