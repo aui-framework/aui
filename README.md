@@ -171,6 +171,15 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 [Refer to documentation page](https://aui-framework.github.io/develop/md_docs_IDE_plugins)
 
+## Projects using AUI
+
+- [AUI Telegram Client](https://github.com/aui-framework/telegram_client)
+  ![AUI Telegram Client](https://github.com/aui-framework/telegram_client/blob/f985af77711be2b17b6aab11bfafb2a864800a1e/demo/demo.jpg?raw=true)
+- [MagicSea Online](https://magicseaonline.com/)
+  ![MagicSea Online](https://github.com/aui-framework/aui/blob/develop/docs/imgs/owrfuihw34iosdfjnfj.jpg?raw=true)
+- [Amplitude Studio](https://studio.amplitudeaudiosdk.com)
+  ![Amplitude Studio](https://github.com/aui-framework/aui/blob/develop/docs/imgs/2njkb4fhjkcbjkw.jpg?raw=true)
+
 ## Examples
 Check the `examples/` folder.
 
