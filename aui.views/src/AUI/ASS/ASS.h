@@ -314,6 +314,7 @@
  */
 
 // Declarations
+#include "Property/Backdrop.h"
 #include "Property/BackgroundImage.h"
 #include "Property/BackgroundSolid.h"
 #include "Property/BackgroundGradient.h"

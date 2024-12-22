@@ -25,7 +25,7 @@
 
 using namespace std::chrono_literals;
 
-class Process : public ::testing::Test {
+class ProcessTest : public ::testing::Test {
 protected:
     APath mSelf;
 
@@ -33,9 +33,23 @@ protected:
         Test::SetUp();
         mSelf = AProcess::self()->getPathToExecutable();
     }
+
+    auto info() {
+        AProcess::ProcessCreationInfo info[] = {
+            {
+              .executable = mSelf,
+              .args = AProcess::ArgSingleString { "--help -a" },
+            },
+            {
+              .executable = mSelf,
+              .args = AProcess::ArgStringList { { "--help", "-a" } },
+            },
+        };
+        return std::to_array(info);
+    }
 };
 
-TEST_F(Process, Self) {
+TEST_F(ProcessTest, Self) {
 #if AUI_PLATFORM_WIN
     EXPECT_EQ(mSelf.filename(), "Tests.exe");
 #else
@@ -45,21 +59,21 @@ TEST_F(Process, Self) {
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
 
-TEST_F(Process, ExitCode) {
+TEST_F(ProcessTest, ExitCode) {
     EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
 }
 
-TEST_F(Process, Stdout) {
-    auto p = AProcess::make(mSelf, "--help");
+TEST_F(ProcessTest, Stdout) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
 
-    AString accumulator;
-    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) {
-        accumulator += AString::fromUtf8(buffer);
-    });
-    p->run();
-    p->waitForExitCode();
-    AThread::processMessages();
-    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+        AString accumulator;
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        p->run();
+        p->waitForExitCode();
+        AThread::processMessages();
+        EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+    }
 }
 
 class ProcessSignalReceiver: public AObject {
@@ -67,34 +81,38 @@ public:
     MOCK_METHOD(void, slotMock, ());
 };
 
-TEST_F(Process, FinishedSignal) {
-    auto receiver = _new<ProcessSignalReceiver>();
-    EXPECT_CALL(*receiver, slotMock()).Times(1);
-    auto p = AProcess::make(mSelf, "--help");
-    AObject::connect(p->finished, slot(receiver)::slotMock);
-    p->run();
-    p->waitForExitCode();
+TEST_F(ProcessTest, FinishedSignal) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
+        auto receiver = _new<ProcessSignalReceiver>();
+        EXPECT_CALL(*receiver, slotMock()).Times(1);
+        AObject::connect(p->finished, slot(receiver)::slotMock);
+        p->run();
+        p->waitForExitCode();
 
-    AThread::sleep(500ms);
+        AThread::sleep(500ms);
 
-    AThread::processMessages();
+        AThread::processMessages();
 
-    receiver = nullptr; // gmock wants object to be removed
+        receiver = nullptr;   // gmock wants object to be removed
+    }
 }
 
 
-TEST_F(Process, StdoutSignal) {
-    auto receiver = _new<ProcessSignalReceiver>();
-    EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
-    auto p = AProcess::make(mSelf, "--help");
-    AObject::connect(p->stdOut, slot(receiver)::slotMock);
-    p->run();
-    p->waitForExitCode();
+TEST_F(ProcessTest, StdoutSignal) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
+        auto receiver = _new<ProcessSignalReceiver>();
+        EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
+        AObject::connect(p->stdOut, slot(receiver)::slotMock);
+        p->run();
+        p->waitForExitCode();
 
-    AThread::sleep(500ms);
+        AThread::sleep(500ms);
 
-    AThread::processMessages();
+        AThread::processMessages();
 
-    receiver = nullptr; // gmock wants object to be removed
+        receiver = nullptr;   // gmock wants object to be removed
+    }
 }
 

@@ -13,6 +13,7 @@
 // Created by alex2 on 31.10.2020.
 //
 
+#include <range/v3/numeric/accumulate.hpp>
 #include <AUI/Platform/AProcess.h>
 #include "AUI/IO/AFileOutputStream.h"
 #include "WinIoCompletionPort.h"
@@ -167,37 +168,63 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         }
     }
 
-
-    AString commandLine = "\"" + mApplicationFile + "\" " + mArgs;
-
     mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& buffer) {
         if (buffer.size() > 0 && bool(stdOut)) {
             emit stdOut(buffer);
         }
     });
 
-    if (!CreateProcess(nullptr,
-                       const_cast<wchar_t*>(aui::win32::toWchar(commandLine.c_str())),
+    auto args = "\"" + mInfo.executable + "\" " + std::visit(aui::lambda_overloaded {
+        [](const ArgSingleString& single) {
+            return single.arg;
+        },
+        [](const ArgStringList& list) {
+            if (!list.win32WrapWhitespaceArgumentsWithQuots) {
+                return list.list.join(' ');
+            }
+            AString result;
+            result.reserve(list.list.size() + ranges::accumulate(list.list, size_t(0), std::plus<>{}, [](const AString& s) { return s.length(); }));
+            for (const auto& i : list.list) {
+                if (!result.empty()) {
+                    result += " ";
+                }
+                if (i.contains(" ")) {
+                    result += "\"";
+                    result += i.replacedAll("\"", "\\\"");
+                    result += "\"";
+                } else {
+                    result += i;
+                }
+            }
+            return result;
+        },
+    }, mInfo.args);
+
+    if (!CreateProcess(aui::win32::toWchar(mInfo.executable.c_str()),
+                       aui::win32::toWchar(args),
                        nullptr,
                        nullptr,
                        true,
                        0,
                        nullptr,
-                       mWorkingDirectory.empty() ? nullptr : aui::win32::toWchar(mWorkingDirectory),
+                       mInfo.workDir.empty() ? nullptr : aui::win32::toWchar(mInfo.workDir),
                        &startupInfo,
                        &mProcessInformation)) {
-        AString message = "Could not create process " + mApplicationFile;
-        if (!mArgs.empty())
-            message += " with args " + mArgs;
-        if (!mWorkingDirectory.empty())
-            message += " in " + mWorkingDirectory;
+        AString message = "Could not create process " + mInfo.executable;
+        if (!args.empty())
+            message += " with args " + args;
+        if (!mInfo.workDir.empty())
+            message += " in " + mInfo.workDir;
         message += ": " + aui::impl::formatSystemError().description;
         throw AProcessException(message);
     }
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
         assert(("process already finished; os signaled process termination second time",
                 !isFinished()));
-        mExitCode.supplyValue(waitForExitCode());
+        DWORD exitCode;
+        int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
+        AUI_ASSERT(r && r != STILL_ACTIVE);
+        mExitCode.supplyValue(exitCode);
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
@@ -229,12 +256,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
 
 int AChildProcess::waitForExitCode() {
-    AUI_ASSERTX(mProcessInformation.hProcess != nullptr, "process handle is null; have you ever run the process?");
-    WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
-    DWORD exitCode;
-    int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
-    AUI_ASSERT(r && r != STILL_ACTIVE);
-    return exitCode;
+    return *mExitCode;
 }
 
 AChildProcess::~AChildProcess() = default;

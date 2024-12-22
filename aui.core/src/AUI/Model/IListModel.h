@@ -23,7 +23,7 @@ class IListModel: public AObject
 {
 public:
     using value_type = T;
-	virtual ~IListModel() = default;
+	~IListModel() override = default;
 
 	virtual size_t listSize() = 0;
 	virtual T listItemAt(const AListModelIndex& index) = 0;

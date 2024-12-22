@@ -33,4 +33,5 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform M2;
     extern gl::Program::Uniform DIVIDER;
     extern gl::Program::Uniform THRESHOLD;
+    extern gl::Program::Uniform KERNEL;
 }

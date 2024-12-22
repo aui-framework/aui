@@ -58,7 +58,6 @@ BreakBeforeBinaryOperators: None
 # fix AUI's scary macros.
 Macros:
   - let=+[]
-  - ui_thread=[]
   - async=[]
   - AUI_DECLARATIVE_FOR(a,b,c)=[]
   - AUI_DECLARATIVE_FOR_EX(a,b,c)=[]

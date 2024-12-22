@@ -9,15 +9,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by dervisdev on 1/26/2023.
-//
+#pragma once
 
-#include "ScrollbarAppearance.h"
-#include <AUI/View/AScrollArea.h>
+#include <AUI/Image/IDrawable.h>
+#include <AUI/Render/ITexture.h>
 
-void ass::prop::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
-    if (auto scrollArea = _cast<AScrollArea>(view->sharedPtr())) {
-        scrollArea->setScrollbarAppearance(mInfo);
-    }
-}
+class ANoiseDrawable: public IDrawable {
+public:
+    void draw(IRenderer& render, const Params& params) override;
+    glm::ivec2 getSizeHint() override;
+
+private:
+    _<ITexture> mNoise;
+};

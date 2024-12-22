@@ -19,6 +19,9 @@ class API_AUI_VIEWS AAssHelper;
 struct ARenderContext;
 
 namespace ass::prop {
+    /**
+     * @brief Defines the types of renderable properties and order of their rendering.
+     */
     enum class PropertySlot {
         NONE,
 
@@ -29,6 +32,7 @@ namespace ass::prop {
         SHADOW,
         RENDER_OVERFLOW,
         IMAGE_RENDERING,
+        BACKDROP,
         BACKGROUND_SOLID,
         BACKGROUND_IMAGE,
         BACKGROUND_EFFECT,
@@ -39,6 +43,9 @@ namespace ass::prop {
         COUNT,
     };
 
+    /**
+     * @brief Base class for all properties.
+     */
     struct API_AUI_VIEWS IPropertyBase {
     public:
         virtual void applyFor(AView* view) {};

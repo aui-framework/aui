@@ -1000,7 +1000,7 @@ function(aui_module AUI_MODULE_NAME)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
 
-    # AUI.Core -> BUILD_AUI_CORE
+    # AUI.Core -> AUI_CORE
     string(REPLACE "." "_" BUILD_DEF_NAME ${AUI_MODULE_NAME})
     string(TOUPPER "API_${BUILD_DEF_NAME}" BUILD_DEF_NAME)
     target_compile_definitions(${AUI_MODULE_NAME} INTERFACE ${BUILD_DEF_NAME}=AUI_IMPORT)

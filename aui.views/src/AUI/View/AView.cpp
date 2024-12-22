@@ -228,7 +228,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     mAssHelper->state.backgroundUrl.rep.reset();
     mAssHelper->state.backgroundUrl.scale.reset();
     mAssHelper->state.backgroundUrl.sizing.reset();
-    mAssHelper->state.backgroundUrl.url.reset();
+    mAssHelper->state.backgroundUrl.image.reset();
 
     for (const auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r.getSelector().isStateApplicable(this)) {

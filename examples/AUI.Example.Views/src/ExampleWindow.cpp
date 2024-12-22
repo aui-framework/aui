@@ -47,6 +47,7 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Curl/ACurl.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -106,10 +107,35 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       c(".all_views_wrap") > t<AViewContainer>(),
       Padding { 16_dp },
     } });
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    setCustomStyle({
+        Padding { 64_dp, {}, 16_dp },
+    });
+#endif
 
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
-      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework"),
+      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style {
+        Expanding(1, 0),
+      },
+      Horizontal {} let {
+              mAsync << async {
+                  auto drawable = IDrawable::fromUrl(
+                      "https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
+                  ui_thread {
+                      auto view = Icon { drawable } with_style {
+                          FixedSize { 80_dp, 20_dp },
+                          BackgroundImage { {}, {}, {}, Sizing::COVER },
+                          Margin { 4_dp },
+                          ACursor::POINTER,
+                      };
+                      connect(view->clicked, [] {
+                          APlatform::openUrl("https://github.com/aui-framework/aui/stargazers");
+                      });
+                      it->addView(view);
+                  };
+              };
+          },
     });
 
     _<ATabView> tabView;
@@ -542,45 +568,59 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         it->addTab(
             Vertical {
                 _new<A2FingerTransformArea>() let {
-                        it->setCustomStyle({
-                          MinSize { 256_dp },
-                          Border { 1_px, AColor::BLACK },
-                        });
+                    it->setCustomStyle({
+                      MinSize { 256_dp },
+                      Border { 1_px, AColor::BLACK },
+                    });
 
-                        _<AView> blackRect = Stacked { Stacked { _new<AButton>("Hi") } with_style {
-                          FixedSize { 200_dp, 100_dp },
-                          BackgroundSolid { AColor::BLACK },
-                          TextColor { AColor::WHITE },
-                          ATextAlign::CENTER,
-                        } };
-                        ALayoutInflater::inflate(it, Stacked { blackRect });
-                        connect(
-                            it->transformed, blackRect,
-                            [blackRect = blackRect.get(),
-                             keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
-                                keptTransform->applyDelta(transform);
-                                blackRect->setCustomStyle({
-                                  TransformOffset {
-                                    AMetric(keptTransform->offset.x, AMetric::T_PX),
-                                    AMetric(keptTransform->offset.y, AMetric::T_PX) },
-                                  TransformScale { keptTransform->scale },
-                                  TransformRotate { keptTransform->rotation },
-                                });
+                    _<AView> blackRect = Stacked { Stacked { _new<AButton>("Hi") } with_style {
+                      FixedSize { 200_dp, 100_dp },
+                      BackgroundSolid { AColor::BLACK },
+                      TextColor { AColor::WHITE },
+                      ATextAlign::CENTER,
+                    } };
+                    ALayoutInflater::inflate(it, Stacked { blackRect });
+                    connect(
+                        it->transformed, blackRect,
+                        [blackRect = blackRect.get(),
+                         keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
+                            keptTransform->applyDelta(transform);
+                            blackRect->setCustomStyle({
+                              TransformOffset {
+                                AMetric(keptTransform->offset.x, AMetric::T_PX),
+                                AMetric(keptTransform->offset.y, AMetric::T_PX) },
+                              TransformScale { keptTransform->scale },
+                              TransformRotate { keptTransform->rotation },
                             });
-                    },
-                    _new<ADragNDropView>(),
+                        });
+                },
+                _new<ADragNDropView>(),
 
-                    Label { "Custom cursor" } with_style {
-                        ACursor { ":img/logo.svg", 64 },
+                Horizontal {
+                    Centered {
+                      Vertical {
+                          Label { "Custom cursor" } with_style {
+                              ACursor { ":img/logo.svg", 64 },
+                          },
+                          Label { "github.com/aui-framework/aui" }.clicked(
+                            this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) with_style {
+                          TextColor { AColor::BLUE },
+                          BorderBottom { 1_px, AColor::BLUE },
+                          ACursor::POINTER,
+                        },
+                      },
                     },
-                    Horizontal {
-                    Label { "github.com/aui-framework/aui" }.clicked(
-                        this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) with_style {
-                        TextColor { AColor::BLUE },
-                        BorderBottom { 1_px, AColor::BLUE },
-                        ACursor::POINTER,
+                    Stacked {
+                        Icon { ":img/logo.svg" } with_style { FixedSize(32_dp) },
+                        Centered {
+                            Label { "Blur" } with_style { Margin { 1_dp, 16_dp } },
+                        } with_style {
+                            Expanding(1, 0),
+                            Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
+                            BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
+                        },
                     },
-                }
+                },
             } let { it->setExpanding(); },
             "Others");
 

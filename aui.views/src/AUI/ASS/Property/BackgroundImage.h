@@ -92,7 +92,7 @@ namespace ass {
          * @details
          * In example, ":icon.svg" references to `icon.svg` file in your assets. See AUrl for more info.
          */
-        unset_wrap<AString> url;
+        unset_wrap<std::variant<AString, _<IDrawable>>> image;
 
         /**
          * @brief Multiply color filter to the image.
@@ -131,24 +131,22 @@ namespace ass {
 
         BackgroundImage() {}
 
-        BackgroundImage(std::nullptr_t): url("") {
+        BackgroundImage(std::nullptr_t): image("") {
 
         }
 
-        BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor):
-                url(url),
+        BackgroundImage(const unset_wrap<std::variant<AString, _<IDrawable>>>& url, const unset_wrap<AColor>& overlayColor): image(std::move(url)),
                 overlayColor(overlayColor) {}
-        BackgroundImage(const AString& url):
-                url(url) {}
+        BackgroundImage(const unset_wrap<std::variant<AString, _<IDrawable>>>& url): image(url) {}
         BackgroundImage(const AColor& overlayColor):
                 overlayColor(overlayColor) {}
 
-        BackgroundImage(const unset_wrap<AString>& url,
+        BackgroundImage(const unset_wrap<std::variant<AString, _<IDrawable>>>& url,
                         const unset_wrap<AColor>& overlayColor,
                         const unset_wrap<Repeat>& rep,
                         const unset_wrap<Sizing>& sizing = {},
                         const unset_wrap<glm::vec2>& scale = {},
-                        const unset_wrap<float>& dpiMargin = {}) : url(url),
+                        const unset_wrap<float>& dpiMargin = {}) : image(url),
                                                                    overlayColor(overlayColor),
                                                                    rep(rep),
                                                                    sizing(sizing),
