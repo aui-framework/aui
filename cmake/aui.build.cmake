@@ -597,7 +597,6 @@ function(aui_common AUI_MODULE_NAME)
     endif()
 endfunction(aui_common)
 
-
 function(aui_deploy_library AUI_MODULE_NAME)
     if (TARGET ${AUI_MODULE_NAME})
         message(STATUS "link_libraries ${AUI_MODULE_NAME}")
@@ -607,14 +606,25 @@ function(aui_deploy_library AUI_MODULE_NAME)
     install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
 endfunction(aui_deploy_library)
 
-function(aui_executable AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+function(_auib_collect_srcs _out dir)
     file(GLOB_RECURSE SRCS
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
-            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+            ${dir}/*.cpp
+            ${dir}/src/*.c
+            ${dir}/src/*.mm
+            ${dir}/src/*.m)
+
+    set(${_out} ${SRCS} PARENT_SCOPE)
+endfunction()
+
+function(auib_add_srcs TARGET DIR)
+    _auib_collect_srcs(_src ${DIR})
+    target_sources(${TARGET} PRIVATE ${_src})
+    target_include_directories(${TARGET} PRIVATE ${DIR})
+endfunction()
+
+function(aui_executable AUI_MODULE_NAME)
+    _auib_collect_srcs(SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    _auib_collect_srcs(SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/)
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
