@@ -91,11 +91,6 @@ private:
     AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
 
     /**
-     * @see Visibility
-     */
-    Visibility mVisibility = Visibility::VISIBLE;
-
-    /**
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
     _<AAssHelper> mAssHelper;
@@ -442,7 +437,7 @@ public:
      */
     int getTotalOccupiedWidth() const
     {
-        return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
+        return !(visibility.raw & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
 
     /**
@@ -450,7 +445,7 @@ public:
      */
     int getTotalOccupiedHeight() const
     {
-        return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
+        return !(visibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }
 
     /**
@@ -753,10 +748,12 @@ public:
         return mMouseEntered;
     }
 
+    [[deprecated("use visibility directly")]]
     Visibility getVisibility() const
     {
-        return mVisibility;
+        return visibility;
     }
+
     Visibility getVisibilityRecursive() const;
 
     void setVisibility(Visibility visibility) noexcept;
@@ -1041,6 +1038,12 @@ public:
      */
     AProperty<glm::ivec2> expanding = glm::ivec2(0, 0);
 
+
+    /**
+     * @see Visibility
+     */
+    AProperty<Visibility> visibility = Visibility::VISIBLE;
+
 signals:
     /**
      * @see onViewGraphSubtreeChanged()
@@ -1083,11 +1086,6 @@ signals:
      * @brief Geometry (position and size) changed.
      */
     emits<glm::ivec2, glm::ivec2> geometryChanged;
-
-    /**
-     * @brief Visibility changed.
-     */
-    emits<Visibility> visibilityChanged;
 
     /**
      * @brief Scroll event.
