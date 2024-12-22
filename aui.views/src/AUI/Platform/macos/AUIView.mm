@@ -84,11 +84,11 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (NSRange)selectedRange {
-    return NSRange();
+    return NSMakeRange(0, 0);
 }
 
 - (NSRange)markedRange {
-    return NSRange();
+    return NSMakeRange(0, 0);
 }
 
 - (BOOL)hasMarkedText {
@@ -109,7 +109,7 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
-    return NSRect();
+    return NSMakeRect(0, 0, 0, 0);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
@@ -121,12 +121,14 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 //    [super keyDown:event];
     printf("\n");
     
-    [[self window] makeFirstResponder:self];
+    
+//    [[self inputContext] handleEvent:event];
+    [self interpretKeyEvents:[NSArray arrayWithObject:event]];
 }
 
 - (void)keyUp:(NSEvent *)event
 {
-//    [super keyUp:event];
+    
 }
 
 - (void)mouseMoved:(NSEvent *)event {
