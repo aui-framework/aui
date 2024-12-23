@@ -56,6 +56,7 @@ struct AProperty: aui::noncopyable {
     }
 };
 
+
 namespace {
 struct User {
     AProperty<AString> name;
@@ -99,5 +100,39 @@ TEST(PropertyTest, ChangedSignal) {
 
     EXPECT_CALL(*receiver, receive(AString("World")));
     u->name = "World";
+}
+
+template<typename M, typename SetterArg, typename Ignored1>
+struct Info {
+    using Field = std::decay_t<SetterArg>;
+    using Model = M;
+    Ignored1(Model::*setter)(SetterArg);
+};
+
+template<Info info>
+struct APropertyExternal {
+    using Info = decltype(info);
+    using T = Info::Field;
+    Info::Model* model;
+    T raw{};
+    emits<const T&> changed{};
+
+    template<aui::convertible_to<T> U>
+    APropertyExternal& operator=(U&& u) {
+        std::invoke(info.setter, model, std::forward<U>(u));
+        return *this;
+    }
+};
+
+TEST(PropertyTest, CustomSetter) {
+    class CustomSetter: public AObject {
+    public:
+        MOCK_METHOD(void, setName, (const AString& msg));
+
+        APropertyExternal<{.setter = &CustomSetter::setName}> name = {this};
+    } u;
+
+    EXPECT_CALL(u, setName(AString("World")));
+    u.name = "World";
 }
 
