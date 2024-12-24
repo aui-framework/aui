@@ -102,25 +102,21 @@ TEST(PropertyTest, ChangedSignal) {
     u->name = "World";
 }
 
-template<typename M, typename SetterArg, typename Ignored1>
-struct Info {
-    using Field = std::decay_t<SetterArg>;
-    using Model = M;
-    Ignored1(Model::*setter)(SetterArg);
-};
+template<typename Getter, typename Setter>
+struct APropertyDef {
+    Getter get;
+    Setter set;
+    using Field = decltype(std::invoke(get));
 
-template<Info info>
-struct APropertyExternal {
-    using Info = decltype(info);
-    using T = Info::Field;
-    Info::Model* model;
-    T raw{};
-    emits<const T&> changed{};
-
-    template<aui::convertible_to<T> U>
-    APropertyExternal& operator=(U&& u) {
-        std::invoke(info.setter, model, std::forward<U>(u));
+    template<aui::convertible_to<Field> U>
+    APropertyDef& operator=(U&& u) {
+        std::invoke(set, std::forward<U>(u));
         return *this;
+    }
+
+    [[nodiscard]]
+    operator Field() const noexcept {
+        return std::invoke(get);
     }
 };
 
@@ -128,11 +124,21 @@ TEST(PropertyTest, CustomSetter) {
     class CustomSetter: public AObject {
     public:
         MOCK_METHOD(void, setName, (const AString& msg));
+        AString getName() const {
+            return "can't change";
+        }
 
-        APropertyExternal<{.setter = &CustomSetter::setName}> name = {this};
+        auto name() {
+            return APropertyDef {
+                .get = [&] { return getName(); },
+                .set = [&] (auto&& args) { setName(std::forward<decltype(args)>(args)); },
+//              .set = std::bind(&CustomSetter::setName, this),
+            };
+        }
     } u;
 
     EXPECT_CALL(u, setName(AString("World")));
-    u.name = "World";
+    u.name() = "World";
+    EXPECT_EQ(AString(u.name()), "can't change");
 }
 
