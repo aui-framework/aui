@@ -63,3 +63,58 @@ TEST(PropertyTest, ChangedSignal) {
     u->name = "World";
 }
 
+
+/**
+ * @brief TODO
+ * @details
+ * # Performance considerations
+ * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and getter/setter.
+ */
+template<typename M, typename SetterArg, typename Ignored1, typename GetterReturnT, typename SignalArg>
+struct APropertyDef {
+    using Field = std::decay_t<SetterArg>;
+    using Model = M;
+    const Model* model;
+    Ignored1(Model::*set)(SetterArg);
+    GetterReturnT(Model::*get)() const;
+    const emits<SignalArg>& changed;
+
+    template<aui::convertible_to<Field> U>
+    APropertyDef& operator=(U&& u) {
+        std::invoke(set, const_cast<Model*>(model), std::forward<U>(u));
+        return *this;
+    }
+
+    operator GetterReturnT() const noexcept {
+        return std::invoke(get, model);
+    }
+};
+
+TEST(PropertyTest, CustomSetter) {
+    class CustomSetter: public AObject {
+    public:
+
+        auto name() const {
+            return APropertyDef {
+                .model = this,
+                .set = &CustomSetter::setName,
+                .get = &CustomSetter::getName,
+                .changed = nameChanged,
+            };
+        }
+
+        MOCK_METHOD(void, setName, (const AString& msg));
+
+    private:
+        emits<AString> nameChanged;
+
+        AString getName() const {
+            return "can't change";
+        }
+    } u;
+
+    EXPECT_CALL(u, setName(AString("World")));
+    u.name() = "World";
+    EXPECT_EQ(AString(u.name()), "can't change");
+    AObject::connect(u.name().changed, u, []{});
+}

@@ -70,6 +70,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         Visibility visibility;
     };
 
+    /*
     auto viewModel = _new<ADataBinding<ViewModel>>(ViewModel {
       .enabled = targetView->isEnabled(),
       .expanding = targetView->getExpanding() != glm::ivec2(0),
@@ -128,7 +129,6 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         _new<ALabel>("view's custom style"),
         _new<ALabel>("{") << ".declaration_br",
     };
-
     displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
 
     for (const auto& r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
@@ -154,6 +154,8 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     applyGeometryToChildrenIfNecessary();
     redraw();
+
+*/
 }
 
 void ViewPropertiesView::displayApplicableRule(

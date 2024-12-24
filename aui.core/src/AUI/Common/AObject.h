@@ -74,8 +74,8 @@ public:
      * @param function slot. Can be lambda
      */
     template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(Signal& signal, Object* object, Function&& function) {
-        signal.connect(object, std::forward<Function>(function));
+    static void connect(const Signal& signal, Object* object, Function&& function) {
+        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function));
     }
 
     /**
@@ -91,8 +91,8 @@ public:
      * @param function slot. Can be lambda
      */
     template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(Signal& signal, Object& object, Function&& function) {
-        signal.connect(&object, std::forward<Function>(function));
+    static void connect(const Signal& signal, Object& object, Function&& function) {
+        const_cast<Signal&>(signal).connect(&object, std::forward<Function>(function));
     }
 
     /**
@@ -107,8 +107,8 @@ public:
      * @param function slot. Can be lambda
      */
     template <AAnySignal Signal, ACompatibleSlotFor<Signal> Function>
-    void connect(Signal& signal, Function&& function) {
-        signal.connect(this, std::forward<Function>(function));
+    void connect(const Signal& signal, Function&& function) {
+        const_cast<Signal&>(signal).connect(this, std::forward<Function>(function));
     }
 
     /**
@@ -124,8 +124,8 @@ public:
      * @param function slot. Can be lambda
      */
     template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(Signal& signal, _<Object> object, Function&& function) {
-        signal.connect(object.get(), std::forward<Function>(function));
+    static void connect(const Signal& signal, _<Object> object, Function&& function) {
+        const_cast<Signal&>(signal).connect(object.get(), std::forward<Function>(function));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }
