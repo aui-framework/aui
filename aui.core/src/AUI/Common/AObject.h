@@ -20,22 +20,6 @@
 #include "AUI/Traits/values.h"
 #include "SharedPtrTypes.h"
 
-class AString;
-class AAbstractSignal;
-class AAbstractThread;
-class API_AUI_CORE AObject;
-
-template <typename T>
-concept AAnySignal = requires(T) {
-    std::is_base_of_v<AAbstractSignal, T>;
-    typename T::args_t;
-};
-
-template <typename C>
-concept ASignalInvokable = requires(C&& c) { c.invokeSignal(std::declval<AObject*>()); };
-
-template <typename F, typename Signal>
-concept ACompatibleSlotFor = true;   // TODO
 
 /**
  * @brief A base object class.

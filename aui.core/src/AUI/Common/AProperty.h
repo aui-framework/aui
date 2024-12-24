@@ -15,6 +15,8 @@
 
 template <typename T>
 struct AProperty : aui::noncopyable {
+    using Underlying = T;
+
     T raw;
     emits<T> changed;
 
@@ -57,6 +59,7 @@ struct AProperty : aui::noncopyable {
         return &raw;
     }
 };
+static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 
 /**
  * @brief TODO
@@ -73,10 +76,10 @@ struct APropertyDef {
     Getter get;
     Setter set;
     using GetterReturnT = decltype(std::invoke(get, base));
-    using Field = std::decay_t<GetterReturnT>;
+    using Underyling = std::decay_t<GetterReturnT>;
     const emits<SignalArg>& changed;
 
-    template <aui::convertible_to<Field> U>
+    template <aui::convertible_to<Underyling> U>
     APropertyDef& operator=(U&& u) {
         std::invoke(set, const_cast<Model*>(base), std::forward<U>(u));
         return *this;

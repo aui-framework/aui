@@ -154,3 +154,6 @@ if (NOT MSVC AND AUI_CATCH_UNHANDLED)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
     endif()
 endif()
+
+# uncomment this to debug concepts
+# target_compile_options(aui.core PUBLIC -fconcepts-diagnostics-depth=5)

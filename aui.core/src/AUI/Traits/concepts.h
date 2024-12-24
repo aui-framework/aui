@@ -146,3 +146,30 @@ namespace aui {
     template<typename T>
     concept unsigned_integral = std::is_unsigned_v<T>;
 }
+
+// AObject-related concepts
+class AString;
+class AAbstractSignal;
+class AAbstractThread;
+
+template <typename T>
+concept AAnySignal = requires(T) {
+    std::is_base_of_v<AAbstractSignal, T>;
+    typename T::args_t;
+};
+
+template <typename C>
+concept ASignalInvokable = requires(C&& c) { c.invokeSignal(nullptr); };
+
+template <typename F, typename Signal>
+concept ACompatibleSlotFor = true;   // TODO
+
+template <typename T>
+concept AAnyProperty = requires(T t) {
+    // Property must have Underlying type which it represents.
+    typename T::Underlying;
+
+    // Property must be convertible to it's underlying type.
+    { typename T::Underlying(t) };
+};
+
