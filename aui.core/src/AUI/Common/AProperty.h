@@ -13,17 +13,19 @@
 
 #include <AUI/Common/ASignal.h>
 
-template<typename T>
-struct AProperty: aui::noncopyable {
+template <typename T>
+struct AProperty : aui::noncopyable {
     T raw;
     emits<T> changed;
 
-    AProperty() requires aui::default_initializable<T> = default;
+    AProperty()
+        requires aui::default_initializable<T>
+    = default;
 
-    template<aui::convertible_to<T> U>
-    AProperty(U&& value) noexcept: raw(std::forward<U>(value)) {}
+    template <aui::convertible_to<T> U>
+    AProperty(U&& value) noexcept : raw(std::forward<U>(value)) {}
 
-    template<aui::convertible_to<T> U>
+    template <aui::convertible_to<T> U>
     AProperty& operator=(U&& value) noexcept {
         if (this->raw == value) [[unlikely]] {
             return *this;
@@ -48,10 +50,7 @@ struct AProperty: aui::noncopyable {
         return raw != rhs;
     }
 
-    [[nodiscard]]
-    operator const T&() const noexcept {
-        return raw;
-    }
+    [[nodiscard]] operator const T&() const noexcept { return raw; }
 
     [[nodiscard]]
     const T* operator->() const noexcept {
@@ -63,24 +62,26 @@ struct AProperty: aui::noncopyable {
  * @brief TODO
  * @details
  * # Performance considerations
- * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and getter/setter.
+ * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
+ * getter/setter.
  */
-template<typename M, typename SetterArg, typename Ignored1, typename GetterReturnT, typename SignalArg>
+
+template <typename M, typename Getter, typename Setter, typename SignalArg>
 struct APropertyDef {
-    using Field = std::decay_t<SetterArg>;
+    const M* base;
     using Model = M;
-    const Model* base;
-    GetterReturnT(Model::*get)() const;
-    Ignored1(Model::*set)(SetterArg);
+    Getter get;
+    Setter set;
+    using GetterReturnT = decltype(std::invoke(get, base));
+    using Field = std::decay_t<GetterReturnT>;
     const emits<SignalArg>& changed;
 
-    template<aui::convertible_to<Field> U>
+    template <aui::convertible_to<Field> U>
     APropertyDef& operator=(U&& u) {
         std::invoke(set, const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
 
-    operator GetterReturnT() const noexcept {
-        return std::invoke(get, base);
-    }
+    [[nodiscard]]
+    operator GetterReturnT() const noexcept { return std::invoke(get, base); }
 };

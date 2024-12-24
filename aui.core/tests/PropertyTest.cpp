@@ -69,9 +69,9 @@ TEST(PropertyTest, CustomSetter) {
 
         auto name() const {
             return APropertyDef {
-                .model = this,
-                .set = &CustomSetter::setName,
+                .base = this,
                 .get = &CustomSetter::getName,
+                .set = &CustomSetter::setName,
                 .changed = nameChanged,
             };
         }
