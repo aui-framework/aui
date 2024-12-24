@@ -69,18 +69,18 @@ template<typename M, typename SetterArg, typename Ignored1, typename GetterRetur
 struct APropertyDef {
     using Field = std::decay_t<SetterArg>;
     using Model = M;
-    const Model* model;
-    Ignored1(Model::*set)(SetterArg);
+    const Model* base;
     GetterReturnT(Model::*get)() const;
+    Ignored1(Model::*set)(SetterArg);
     const emits<SignalArg>& changed;
 
     template<aui::convertible_to<Field> U>
     APropertyDef& operator=(U&& u) {
-        std::invoke(set, const_cast<Model*>(model), std::forward<U>(u));
+        std::invoke(set, const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
 
     operator GetterReturnT() const noexcept {
-        return std::invoke(get, model);
+        return std::invoke(get, base);
     }
 };
