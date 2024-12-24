@@ -168,6 +168,7 @@ private:
           [lambda = std::forward<Lambda>(lambda),
            projection = std::forward<Projection>(projection)](Args... args) mutable {
               if constexpr (aui::signal::NoArgInvocation<Lambda>) {
+                  AUI_MARK_AS_USED(projection);
                   lambda();
               } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
                   lambda(std::invoke(projection, std::forward<Args>(args)...));
