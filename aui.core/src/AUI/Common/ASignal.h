@@ -19,6 +19,28 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 
+namespace aui::signal {
+template<typename Lambda>
+concept NoArgInvocation = requires(Lambda&& lambda) {
+    { lambda() };
+};
+
+template<typename Lambda, typename Projection, typename... Args>
+concept DirectInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
+    { lambda(std::invoke(projection, std::forward<Args>(args)...)) };
+};
+
+template<typename Lambda, typename Projection, typename... Args>
+concept TupleToValueInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
+    { lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) };
+};
+
+template<typename Lambda, typename Projection, typename... Args>
+concept TupleToTupleInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
+    { std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) };
+};
+}
+
 template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
@@ -56,7 +78,8 @@ private:
         {
         }
 
-        void operator()(Args... args) {
+        template<typename... Others>
+        void operator()(Others&... args) {
             l();
         }
     };
@@ -72,13 +95,8 @@ private:
         }
 
         template<typename... Others>
-        void call(A1&& a1, Others...)
-        {
-            l(std::move(a1));
-        }
-
-        void operator()(Args&&... args) {
-            call(std::move(args)...);
+        void operator()(A1&& a1, Others&...) {
+            l(std::forward<A1>(a1));
         }
     };
     template<typename Lambda, typename A1, typename A2>
@@ -92,13 +110,9 @@ private:
         }
 
         template<typename... Others>
-        void call(A1&& a1, A2&& a2, Others...)
+        void operator()(A1&& a1, A2&& a2, Others&...)
         {
-            l(std::move(a1), std::move(a2));
-        }
-
-        void operator()(Args&&... args) {
-            call(std::move(args)...);
+            l(std::forward<A1>(a1), std::forward<A2>(a2));
         }
     };
 
@@ -113,36 +127,56 @@ private:
         }
 
         template<typename... Others>
-        void call(A1&& a1, A2&& a2, A3&& a3, Others...)
+        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...)
         {
-            l(std::move(a1), std::move(a2), std::move<A3>(a3));
-        }
-
-        void operator()(Args&&... args) {
-            call(std::move(args)...);
+            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
         }
     };
 
 
 
     // Member function
-    template<class Derived, class Object, typename... FArgs>
-    void connect(Derived derived, void(Object::* memberFunction)(FArgs...))
+    template<class Derived, class Object, typename... FArgs, typename Projection>
+    void connect(Derived derived, void(Object::* memberFunction)(FArgs...), Projection&& projection)
     {
         Object* object = static_cast<Object*>(derived);
         connect(object, [object, memberFunction](FArgs... args)
         {
             (object->*memberFunction)(args...);
-        });
+        }, std::forward<Projection>(projection));
     }
 
     // Lambda function
-    template<class Object, class Lambda>
-    void connect(Object object, Lambda lambda)
+    template<class Object, class Lambda, typename Projection>
+    void connect(Object object, Lambda&& lambda, Projection&& projection)
     {
-        static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
+        static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
+        connectImpl(
+            object, argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda)),
+            std::forward<Projection>(projection));
+    }
 
-        mSlots.push_back(_new<slot>(slot{ object, argument_ignore_helper<decltype(&Lambda::operator())>(lambda) }));
+    template <class Object, class Lambda, typename Projection>
+    void connectImpl(Object object, Lambda&& lambda, Projection&& projection)
+        requires aui::signal::NoArgInvocation<Lambda> ||
+                 aui::signal::DirectInvocation<Lambda, Projection, Args...> ||         // hope this gives proper compile
+                 aui::signal::TupleToValueInvocation<Lambda, Projection, Args...> ||   // -time diagnostics
+                 aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>      //
+    {
+        mSlots.push_back(_new<slot>(slot {
+          object,
+          [lambda = std::forward<Lambda>(lambda),
+           projection = std::forward<Projection>(projection)](Args... args) mutable {
+              if constexpr (aui::signal::NoArgInvocation<Lambda>) {
+                  lambda();
+              } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
+                  lambda(std::invoke(projection, std::forward<Args>(args)...));
+              } else if constexpr (aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>) {
+                  std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
+              } else if constexpr (aui::signal::TupleToValueInvocation<Lambda, Projection, Args...>) {
+                  lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
+              }
+          } }));
 
         linkSlot(object);
     }

@@ -41,6 +41,7 @@ public:
     }
 
     MOCK_METHOD(void, acceptMessage, (const AString& msg));
+    MOCK_METHOD(void, acceptMessageInt, (int));
     MOCK_METHOD(void, acceptMessageNoArgs, ());
     MOCK_METHOD(void, die, ());
 };
@@ -83,6 +84,23 @@ TEST_F(SignalSlot, Basic) {
     master->broadcastMessage("hello");
 }
 
+TEST_F(SignalSlot, BasicProjection1) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slot(slave)::acceptMessageInt, [](const AString& s) { return s.length(); });
+
+    EXPECT_CALL(*slave, acceptMessageInt(5));
+    EXPECT_CALL(*slave, die());
+    master->broadcastMessage("hello");
+}
+
+TEST_F(SignalSlot, BasicProjection2) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slot(slave)::acceptMessageInt, &AString::length);
+
+    EXPECT_CALL(*slave, acceptMessageInt(5));
+    EXPECT_CALL(*slave, die());
+    master->broadcastMessage("hello");
+}
 
 TEST_F(SignalSlot, BasicNoArgs) {
     slave = _new<Slave>();

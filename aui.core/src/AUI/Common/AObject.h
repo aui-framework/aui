@@ -56,10 +56,11 @@ public:
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
+     * @param projection projection
      */
-    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(const Signal& signal, Object* object, Function&& function) {
-        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function));
+    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
+    static void connect(const Signal& signal, Object* object, Function&& function, Projection&& projection = {}) {
+        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
@@ -73,10 +74,11 @@ public:
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
+     * @param projection projection
      */
-    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(const Signal& signal, Object& object, Function&& function) {
-        const_cast<Signal&>(signal).connect(&object, std::forward<Function>(function));
+    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
+    static void connect(const Signal& signal, Object& object, Function&& function, Projection&& projection = {}) {
+        const_cast<Signal&>(signal).connect(&object, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
@@ -89,10 +91,12 @@ public:
      * @endcode
      * @param signal signal
      * @param function slot. Can be lambda
+     * @param projection projection
+     * @param projection projection
      */
-    template <AAnySignal Signal, ACompatibleSlotFor<Signal> Function>
-    void connect(const Signal& signal, Function&& function) {
-        const_cast<Signal&>(signal).connect(this, std::forward<Function>(function));
+    template <AAnySignal Signal, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
+    void connect(const Signal& signal, Function&& function, Projection&& projection = {}) {
+        const_cast<Signal&>(signal).connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
@@ -107,9 +111,9 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(const Signal& signal, _<Object> object, Function&& function) {
-        const_cast<Signal&>(signal).connect(object.get(), std::forward<Function>(function));
+    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
+    static void connect(const Signal& signal, _<Object> object, Function&& function, Projection&& projection = {}) {
+        const_cast<Signal&>(signal).connect(object.get(), std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }
