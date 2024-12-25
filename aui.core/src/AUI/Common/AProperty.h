@@ -100,5 +100,10 @@ struct APropertyDef {
     }
 
     [[nodiscard]]
+    const Underlying* operator->() const noexcept {
+        return &std::invoke(get, base);
+    }
+
+    [[nodiscard]]
     operator GetterReturnT() const noexcept { return std::invoke(get, base); }
 };

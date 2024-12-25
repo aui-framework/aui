@@ -59,7 +59,7 @@ class AStylesheet;
 /**
  * @defgroup useful_views Views
  * @ingroup views
- * @brief All views that ready to use
+ * @brief All ready-to-use views
  */
 
 /**
@@ -79,218 +79,10 @@ class API_AUI_VIEWS AView: public AObject
     friend class AViewContainerBase;
     friend class AViewContainer;
     friend class IRenderViewToTexture;
-private:
-    /**
-     * @brief Animation.
-     */
-    _<AAnimator> mAnimator;
-
-    /**
-     * @brief Controls how does the overflow (stencil) mask is produced.
-     */
-    AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
-
-    /**
-     * @see Visibility
-     */
-    Visibility mVisibility = Visibility::VISIBLE;
-
-    /**
-     * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
-     */
-    _<AAssHelper> mAssHelper;
-
-    /**
-     * @brief border-radius, specified in ASS.
-     */
-    float mBorderRadius = 0;
-
-    /**
-     * @brief Mouse collision policy. See MouseCollisionPolicy.
-     */
-    MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
-
-    /**
-     * @brief opacity, specified in ASS.
-     */
-    aui::float_within_0_1 mOpacity = 1;
-
-    /**
-     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
-     */
-    AOverflow mOverflow = AOverflow::VISIBLE;
-
-    /**
-     * @brief Extra stylesheet, specified by declarative::Style.
-     * @details
-     * Extra stylesheet is applied for this view and all his children recursively.
-     *
-     * Unlike custom style, extra stylesheet has multiple rules with selectors and it applies for the children
-     * recursively.
-     *
-     * Extra stylesheet overrides the global stylesheet on conflicts.
-     */
-    _<AStylesheet> mExtraStylesheet;
-
-    /**
-     * @brief Called when parent's enable state is changed. Overridden in AViewContainer.
-     * @param enabled
-     */
-    virtual void notifyParentEnabledStateChanged(bool enabled);
-
-
-    /**
-     * @brief Returns parent layout direction. If there's no parent, or parent does not have layout,
-     *        ALayoutDirection::NONE returned.
-     */
-    [[nodiscard]]
-    ALayoutDirection parentLayoutDirection() const noexcept;
-
-
-    /**
-     * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
-     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
-     */
-    bool mMouseEntered = false;
-
-    /**
-     * @brief Determines if pressing the view allows triggering click on other views
-     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
-     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
-     */
-    bool mBlockClicksWhenPressed = true;
-
-protected:
-    /**
-     * @brief Parent AView.
-     */
-    AViewContainerBase* mParent = nullptr;
-
-    /**
-     * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
-     */
-    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
-
-    /**
-     * @brief Custom ASS Rules
-     */
-    ass::PropertyListRecursive mCustomStyleRule;
-
-    /**
-     * @brief Determines shape which should pointer take when it's above this AView.
-     */
-    AOptional<ACursor> mCursor = ACursor::DEFAULT;
-
-    /**
-     * @brief Top left corner's position relative to top left corner's position of the parent AView.
-     */
-    glm::ivec2 mPosition = { 0, 0 };
-
-    /**
-     * @brief Size, including content area, border and padding.
-     */
-    glm::ivec2 mSize = { 20, 20 };
-
-    AOptional<glm::ivec2> mCachedMinContentSize;
-    bool mMarkedMinContentSizeInvalid = false;
-
-    /**
-     * @brief Redraw requested flag for this particular view/
-     * @details
-     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
-     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
-     * drawn.
-     */
-    bool mRedrawRequested = false;
-
-    /**
-     * @brief Minimal size.
-     */
-    glm::ivec2 mMinSize = {0, 0};
-
-    /**
-     * @brief Maximal size.
-     */
-    glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
-
-    /**
-     * @brief Fixed size.
-     */
-    glm::ivec2 mFixedSize = {0, 0};
-
-    /**
-     * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
-     */
-    ABoxFields mMargin;
-
-    /**
-     * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
-     */
-    ABoxFields mPadding;
-
-    /**
-     * @brief ASS class names.
-     * @details
-     * Needs keeping order.
-     */
-    AVector<AString> mAssNames;
-
-    /**
-     * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
-     * AView::setGeometry.
-     * @details
-     * This flag addresses the issue when some container is filled with views by addView during several frames, causing
-     * to draw them in wrong place (then their layout is not processed yet).
-     */
-    bool mSkipUntilLayoutUpdate = true;
-
-    /**
-     * @brief Converts touch screen events to desktop.
-     * @param origin position where the event(s) started to occur from.
-     * @param event gesture event.
-     * @return true if consumed (handled).
-     * @details
-     * <dl>
-     *   <dt><b>AFingerDragEvent</b></dt>
-     *   <dd>Emulates mouse wheel scroll</dd>
-     *   <dt><b>ALongPressEvent</b></dt>
-     *   <dd>Shows context menu (if exists) or AView::clickedRightOrLongPressed</dd>
-     * </dl>
-     */
-    bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
-
-    void applyAssRule(const ass::PropertyList& propertyList);
-    void applyAssRule(const ass::PropertyListRecursive& propertyList);
-
-    /**
-     * @brief Produce context (right click) menu.
-     * @return menu model
-     */
-    virtual AMenuModel composeContextMenu();
-
-    /**
-     * @brief Called when direct or indirect parent has changed.
-     * @details
-     * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
-     * the new (in)direct parent.
-     *
-     * Emits viewGraphSubtreeChanged signal.
-     */
-    virtual void onViewGraphSubtreeChanged();
-
-
-    /**
-     * @brief A view requests to redraw it and passes it's coords relative to this.
-     * @param invalidArea area to invalidate. Must be in this view's coordinate space.
-     * @return A window that manages this invalidation event.
-     */
-    virtual void markPixelDataInvalid(ARect<int> invalidArea);
-
-    virtual void commitStyle();
-
 public:
     AView();
     ~AView() override;
+
     /**
      * @brief Request window manager to redraw this AView.
      */
@@ -303,7 +95,6 @@ public:
     AWindowBase* getWindow() const;
 
     virtual void drawStencilMask(ARenderContext ctx);
-
 
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
@@ -516,7 +307,6 @@ public:
      */
     virtual AString debugString() const;
 
-
     /**
      * @return pixel count which this AView's margin and padding acquired by width.
      */
@@ -541,7 +331,6 @@ public:
         return { getTotalFieldHorizontal(), getTotalFieldVertical() };
     }
 
-
     /**
      * @brief Parent AView.
      */
@@ -565,7 +354,6 @@ public:
     [[nodiscard]]
     virtual int getContentMinimumWidth();
 
-
     /**
      * @return minimal content-area height.
      */
@@ -582,7 +370,6 @@ public:
             mCachedMinContentSize = minContentSize;
             return minContentSize;
         }
-        // TODO ignore layout?
         return *mCachedMinContentSize;
     }
 
@@ -591,9 +378,7 @@ public:
         return !mCachedMinContentSize.hasValue();
     }
 
-
     bool hasFocus() const;
-
 
     virtual int getMinimumWidth();
     virtual int getMinimumHeight();
@@ -624,11 +409,11 @@ public:
         return static_cast<int>(mSize.y - mPadding.vertical());
     }
 
-    [[deprecated("use expanding directly")]]
+    [[deprecated("use expanding() directly")]]
     [[nodiscard]]
     const glm::ivec2& getExpanding() const
     {
-        return expanding;
+        return mExpanding;
     }
 
     /**
@@ -639,7 +424,12 @@ public:
      */
     void setExpanding(glm::ivec2 expanding)
     {
-        this->expanding = expanding;
+        if (mExpanding == expanding) [[unlikely]] {
+            return;
+        }
+        mExpanding = expanding;
+        emit mExpandingChanged(expanding);
+        markMinContentSizeInvalid();
     }
 
     /**
@@ -650,7 +440,7 @@ public:
      */
     void setExpanding(int expanding)
     {
-        this->expanding = glm::ivec2(expanding);
+        setExpanding(glm::ivec2(expanding));
     }
     void setExpanding()
     {
@@ -668,13 +458,13 @@ public:
     [[nodiscard]]
     int getExpandingHorizontal() const
     {
-        return expanding->x;
+        return mExpanding.x;
     }
 
     [[nodiscard]]
     int getExpandingVertical() const
     {
-        return expanding->y;
+        return mExpanding.y;
     }
 
     [[nodiscard]] aui::float_within_0_1 getOpacity() const {
@@ -753,10 +543,12 @@ public:
         return mMouseEntered;
     }
 
+    [[deprecated("use visibility() directly")]]
     Visibility getVisibility() const
     {
         return mVisibility;
     }
+
     Visibility getVisibilityRecursive() const;
 
     void setVisibility(Visibility visibility) noexcept;
@@ -852,7 +644,6 @@ public:
 
     void ensureAssUpdated();
 
-
     [[nodiscard]]
     _<AView> sharedPtr() {
         return _cast<AView>(AObject::sharedPtr());
@@ -922,6 +713,7 @@ public:
     virtual void onFocusAcquired();
     virtual void onFocusLost();
     virtual void onCharEntered(char16_t c);
+
     /**
      * @return true if this AView accepts tab focus
      */
@@ -946,7 +738,6 @@ public:
         setEnabled(false);
     }
 
-
     /**
      * @brief Helper function for kAUI.h:with_style
      */
@@ -958,7 +749,6 @@ public:
      * @brief Called on AWindowBase::preventClickOnPointerRelease.
      */
     virtual void onClickPrevented();
-
 
     /**
      * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
@@ -990,7 +780,6 @@ public:
     void invalidateStateStyles() {
         invalidateStateStylesImpl(getMinimumSizePlusMargin());
     }
-
 
     /**
      * @brief Resets mAssHelper.
@@ -1031,7 +820,6 @@ public:
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
      * @details
-     *
      * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
      * for more info.
      *
@@ -1039,7 +827,26 @@ public:
      * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
      * such case.
      */
-    AProperty<glm::ivec2> expanding = glm::ivec2(0, 0);
+    auto expanding() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mExpanding,
+            .set = [](AView& self, glm::ivec2 expanding) { self.setExpanding(expanding); },
+            .changed = mExpandingChanged,
+        };
+    }
+
+    /**
+     * @brief Visibility value.
+     */
+    auto visibility() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mVisibility,
+            .set = &AView::setVisibility,
+            .changed = mVisibilityChanged,
+        };
+    }
 
 signals:
     /**
@@ -1085,11 +892,6 @@ signals:
     emits<glm::ivec2, glm::ivec2> geometryChanged;
 
     /**
-     * @brief Visibility changed.
-     */
-    emits<Visibility> visibilityChanged;
-
-    /**
      * @brief Scroll event.
      */
     emits<glm::ivec2> scrolled;
@@ -1128,7 +930,213 @@ signals:
 
     emits<_<AView>> childFocused;
 
+protected:
+    /**
+     * @brief Parent AView.
+     */
+    AViewContainerBase* mParent = nullptr;
+
+    /**
+     * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
+     */
+    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
+
+    /**
+     * @brief Custom ASS Rules
+     */
+    ass::PropertyListRecursive mCustomStyleRule;
+
+    /**
+     * @brief Determines shape which should pointer take when it's above this AView.
+     */
+    AOptional<ACursor> mCursor = ACursor::DEFAULT;
+
+    /**
+     * @brief Top left corner's position relative to top left corner's position of the parent AView.
+     */
+    glm::ivec2 mPosition = { 0, 0 };
+
+    /**
+     * @brief Size, including content area, border and padding.
+     */
+    glm::ivec2 mSize = { 20, 20 };
+
+    AOptional<glm::ivec2> mCachedMinContentSize;
+    bool mMarkedMinContentSizeInvalid = false;
+
+    /**
+     * @brief Redraw requested flag for this particular view/
+     * @details
+     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
+     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
+     * drawn.
+     */
+    bool mRedrawRequested = false;
+
+    /**
+     * @brief Minimal size.
+     */
+    glm::ivec2 mMinSize = {0, 0};
+
+    /**
+     * @brief Maximal size.
+     */
+    glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
+
+    /**
+     * @brief Fixed size.
+     */
+    glm::ivec2 mFixedSize = {0, 0};
+
+    /**
+     * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     */
+    ABoxFields mMargin;
+
+    /**
+     * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
+     */
+    ABoxFields mPadding;
+
+    /**
+     * @brief ASS class names.
+     * @details
+     * Needs keeping order.
+     */
+    AVector<AString> mAssNames;
+
+    /**
+     * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
+     * AView::setGeometry.
+     * @details
+     * This flag addresses the issue when some container is filled with views by addView during several frames, causing
+     * to draw them in wrong place (then their layout is not processed yet).
+     */
+    bool mSkipUntilLayoutUpdate = true;
+
+    /**
+     * @brief Converts touch screen events to desktop.
+     * @param origin position where the event(s) started to occur from.
+     * @param event gesture event.
+     * @return true if consumed (handled).
+     * @details
+     * <dl>
+     *   <dt><b>AFingerDragEvent</b></dt>
+     *   <dd>Emulates mouse wheel scroll</dd>
+     *   <dt><b>ALongPressEvent</b></dt>
+     *   <dd>Shows context menu (if exists) or AView::clickedRightOrLongPressed</dd>
+     * </dl>
+     */
+    bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
+
+    void applyAssRule(const ass::PropertyList& propertyList);
+    void applyAssRule(const ass::PropertyListRecursive& propertyList);
+
+    /**
+     * @brief Produce context (right click) menu.
+     * @return menu model
+     */
+    virtual AMenuModel composeContextMenu();
+
+    /**
+     * @brief Called when direct or indirect parent has changed.
+     * @details
+     * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
+     * the new (in)direct parent.
+     *
+     * Emits viewGraphSubtreeChanged signal.
+     */
+    virtual void onViewGraphSubtreeChanged();
+
+    /**
+     * @brief A view requests to redraw it and passes it's coords relative to this.
+     * @param invalidArea area to invalidate. Must be in this view's coordinate space.
+     * @return A window that manages this invalidation event.
+     */
+    virtual void markPixelDataInvalid(ARect<int> invalidArea);
+
+    virtual void commitStyle();
+
 private:
+    /**
+     * @brief Animation.
+     */
+    _<AAnimator> mAnimator;
+
+    /**
+     * @brief Controls how does the overflow (stencil) mask is produced.
+     */
+    AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
+
+    /**
+     * @see Visibility
+     */
+    Visibility mVisibility = Visibility::VISIBLE;
+    emits<Visibility> mVisibilityChanged;
+
+    /**
+     * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
+     */
+    _<AAssHelper> mAssHelper;
+
+    /**
+     * @brief border-radius, specified in ASS.
+     */
+    float mBorderRadius = 0;
+
+    /**
+     * @brief Mouse collision policy. See MouseCollisionPolicy.
+     */
+    MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
+
+    /**
+     * @brief opacity, specified in ASS.
+     */
+    aui::float_within_0_1 mOpacity = 1;
+
+    /**
+     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
+     */
+    AOverflow mOverflow = AOverflow::VISIBLE;
+
+    /**
+     * @brief Extra stylesheet, specified by declarative::Style.
+     * @details
+     * Extra stylesheet is applied for this view and all his children recursively.
+     *
+     * Unlike custom style, extra stylesheet has multiple rules with selectors and it applies for the children
+     * recursively.
+     *
+     * Extra stylesheet overrides the global stylesheet on conflicts.
+     */
+    _<AStylesheet> mExtraStylesheet;
+
+    /**
+     * @brief Called when parent's enable state is changed. Overridden in AViewContainer.
+     * @param enabled
+     */
+    virtual void notifyParentEnabledStateChanged(bool enabled);
+
+    /**
+     * @brief Returns parent layout direction. If there's no parent, or parent does not have layout,
+     *        ALayoutDirection::NONE returned.
+     */
+    [[nodiscard]]
+    ALayoutDirection parentLayoutDirection() const noexcept;
+
+    /**
+     * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
+     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
+     */
+    bool mMouseEntered = false;
+
+    /**
+     * @brief Determines if pressing the view allows triggering click on other views
+     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     */
+    bool mBlockClicksWhenPressed = true;
+
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
     ASmallVector<APointerIndex, 1> mPressed;
     //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
@@ -1136,6 +1144,9 @@ private:
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
+
+    glm::ivec2 mExpanding = glm::ivec2{0, 0};
+    emits<glm::ivec2> mExpandingChanged;
 
     /**
      * @brief Floating value for AText.
