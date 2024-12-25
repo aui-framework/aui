@@ -33,12 +33,18 @@ protected:
 public:
     ACheckBox();
 
-    void toggle() {
-        setChecked(!isChecked());
+    [[nodiscard]]
+    auto checked() const {
+        return APropertyDef {
+            .base = this,
+            .get = &ACheckBox::mChecked,
+            .set = &ACheckBox::setChecked,
+            .changed = checkedChanged,
+        };
     }
 
-    [[nodiscard]] bool isChecked() const {
-        return mChecked;
+    void toggle() {
+        setChecked(!checked());
     }
 
     void check() {
@@ -49,21 +55,21 @@ public:
         setChecked(false);
     }
 
-    void setChecked(bool checked = true) {
+    void setChecked(bool checked) {
         mChecked = checked;
         emit customCssPropertyChanged();
-        emit ACheckBox::checked(checked);
+        emit ACheckBox::checkedChanged(checked);
     }
 
-    void setUnchecked(bool unchecked = true) {
+    void setUnchecked(bool unchecked) {
         setChecked(!unchecked);
     }
 
     bool consumesClick(const glm::ivec2& pos) override;
 
 
-signals:
-    emits<bool> checked;
+private:
+    emits<bool> checkedChanged;
 };
 
 
@@ -75,12 +81,13 @@ class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
-    void toggle() {
-        setChecked(!isChecked());
+    [[nodiscard]]
+    auto checked() const {
+        return mCheckBox->checked();
     }
 
-    [[nodiscard]] bool isChecked() const {
-        return mCheckBox->isChecked();
+    void toggle() {
+        setChecked(!checked());
     }
 
     void check() {
@@ -91,49 +98,17 @@ public:
         setChecked(false);
     }
 
-    void setChecked(bool checked = true) {
+    void setChecked(bool checked) {
         mCheckBox->setChecked(checked);
     }
 
-    void setUnchecked(bool unchecked = true) {
+    void setUnchecked(bool unchecked) {
         setChecked(!unchecked);
     }
 
+
 private:
     _<ACheckBox> mCheckBox;
-
-signals:
-    emits<bool> checked;
-};
-
-
-template<>
-struct ADataBindingDefault<ACheckBox, bool> {
-public:
-    static void setup(const _<ACheckBox>& view) {}
-
-    static auto getGetter() {
-        return &ACheckBox::checked;
-    }
-
-    static auto getSetter() {
-        return &ACheckBox::setChecked;
-    }
-};
-
-
-template<>
-struct ADataBindingDefault<ACheckBoxWrapper, bool> {
-public:
-    static void setup(const _<ACheckBoxWrapper>& view) {}
-
-    static auto getGetter() {
-        return &ACheckBoxWrapper::checked;
-    }
-
-    static auto getSetter() {
-        return &ACheckBoxWrapper::setChecked;
-    }
 };
 
 namespace declarative {

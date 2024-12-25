@@ -167,7 +167,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
                   Vertical {
                     CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Selected checkbox" } } let { it->setChecked(true); },
+                    CheckBoxWrapper { Label { "Checked checkbox" } } let { it->setChecked(true); },
                     CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
                   },
                 },
@@ -629,18 +629,21 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
     addView(Horizontal {
       Centered {
-        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }) },
-      _new<ASpacerExpanding>(), _new<ASpinner>(),
+        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }),
+      },
+      _new<ASpacerExpanding>(),
+      _new<ASpinner>(),
       CheckBoxWrapper {
         Label { "Enabled" },
       } let {
-              it->setChecked();
-              connect(it->checked, slot(tabView)::setEnabled);
+              it->check();
+              connect(it->checked().changed, slot(tabView)::setEnabled);
           },
       _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
               it << "#copyright";
               it->setEnabled(false);
-          } });
+          },
+    });
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
