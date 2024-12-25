@@ -24,7 +24,7 @@ ARadioButton::ARadioButton()
     addView(checkbox);
     addView(mText);
 
-    connect(checked, checkbox, &ARadioButtonInner::update);
+    connect(mCheckedChanged, checkbox, &ARadioButtonInner::update);
 }
 
 ARadioButton::ARadioButton(const ::AString& text): ARadioButton()
@@ -38,14 +38,14 @@ ARadioButton::~ARadioButton()
 
 void ARadioButton::setText(const AString& text)
 {
-    mText->setText(text);
+    mText->text() = text;
 }
 
 void ARadioButton::onPointerReleased(const APointerReleasedEvent& event)
 {
     AView::onPointerReleased(event);
     if (!mChecked && event.triggerClick)
-        emit checked(mChecked = true);
+        emit mCheckedChanged(mChecked = true);
 }
 
 bool ARadioButton::selectableIsSelectedImpl() {
@@ -57,7 +57,7 @@ _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio
     AUI_ASSERTX(!mButtons.contains(id), "this id is already used; please choose another id");
     mButtons[id] = radio;
 
-    auto onChecked = [&, radio, id](bool checked) {
+    connect(radio->checked(), this, [&, radio, id](bool checked) {
         if (checked) {
             if (auto s = mSelectedRadio.lock()) {
                 s->setChecked(false);
@@ -66,9 +66,7 @@ _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio
             mSelectedId = id;
             emit selectionChanged(getSelectedId());
         }
-    };
-    if (radio->isChecked()) onChecked(true);
-    connect(radio->checked, this, std::move(onChecked));
+    });
     return radio;
 }
 

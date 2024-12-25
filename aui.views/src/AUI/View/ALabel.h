@@ -21,6 +21,7 @@
  * ALabel is used for displayed nonformatted single-line text.
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {
+    friend struct ADataBindingDefault<ALabel, AString>;
 public:
     using AAbstractLabel::AAbstractLabel;
 };

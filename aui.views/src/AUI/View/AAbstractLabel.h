@@ -28,8 +28,18 @@
  * @brief Represents an abstract text display view.
  */
 class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable, public IFontView {
+    friend struct ADataBindingDefault<AAbstractLabel, AString>;
 public:
     AAbstractLabel();
+
+    auto text() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AAbstractLabel::mText,
+            .set = &AAbstractLabel::setText,
+            .changed = mTextChanged,
+        };
+    }
 
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
@@ -59,12 +69,6 @@ public:
 
     void onDpiChanged() override;
 
-    void setText(AString newText);
-
-    [[nodiscard]]
-    const AString& text() const {
-        return mText;
-    }
 
     void invalidateFont() override;
 
@@ -111,8 +115,12 @@ protected:
     int mTextLeftOffset = 0;
     bool mIsTextTooLarge = false;
 
+protected:
+    void setText(AString newText);
+
 private:
     AString mText;
+    emits<AString> mTextChanged;
     _<IDrawable> mIcon;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
@@ -134,6 +142,7 @@ private:
 
     template<class Iterator>
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
+
 };
 
 

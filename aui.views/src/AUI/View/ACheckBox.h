@@ -25,11 +25,8 @@
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
-private:
-    bool mChecked = false;
-protected:
-    bool selectableIsSelectedImpl() override;
-
+    friend class API_AUI_VIEWS ACheckBoxWrapper;
+    friend struct ADataBindingDefault<ACheckBox, bool>;
 public:
     ACheckBox();
 
@@ -39,7 +36,7 @@ public:
             .base = this,
             .get = &ACheckBox::mChecked,
             .set = &ACheckBox::setChecked,
-            .changed = checkedChanged,
+            .changed = mCheckedChanged,
         };
     }
 
@@ -55,21 +52,20 @@ public:
         setChecked(false);
     }
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
+protected:
+    bool selectableIsSelectedImpl() override;
+
+private:
+    bool mChecked = false;
+    emits<bool> mCheckedChanged;
+
     void setChecked(bool checked) {
         mChecked = checked;
         emit customCssPropertyChanged();
-        emit ACheckBox::checkedChanged(checked);
+        emit ACheckBox::mCheckedChanged(checked);
     }
-
-    void setUnchecked(bool unchecked) {
-        setChecked(!unchecked);
-    }
-
-    bool consumesClick(const glm::ivec2& pos) override;
-
-
-private:
-    emits<bool> checkedChanged;
 };
 
 
@@ -78,6 +74,7 @@ private:
  * @ingroup userful_views
  */
 class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
+    friend struct ADataBindingDefault<ACheckBoxWrapper, bool>;
 public:
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
@@ -98,10 +95,6 @@ public:
         setChecked(false);
     }
 
-    void setChecked(bool checked) {
-        mCheckBox->setChecked(checked);
-    }
-
     void setUnchecked(bool unchecked) {
         setChecked(!unchecked);
     }
@@ -109,6 +102,40 @@ public:
 
 private:
     _<ACheckBox> mCheckBox;
+
+    void setChecked(bool checked) {
+        mCheckBox->setChecked(checked);
+    }
+};
+
+
+template<>
+struct ADataBindingDefault<ACheckBox, bool> {
+public:
+    static void setup(const _<ACheckBox>& view) {}
+
+    static auto getGetter() {
+        return &ACheckBox::mCheckedChanged;
+    }
+
+    static auto getSetter() {
+        return &ACheckBox::setChecked;
+    }
+};
+
+
+template<>
+struct ADataBindingDefault<ACheckBoxWrapper, bool> {
+public:
+    static void setup(const _<ACheckBoxWrapper>& view) {}
+
+    static auto getGetter() {
+        return &ACheckBoxWrapper::checked;
+    }
+
+    static auto getSetter() {
+        return &ACheckBoxWrapper::setChecked;
+    }
 };
 
 namespace declarative {

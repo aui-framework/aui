@@ -164,10 +164,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
                 // checkboxes
                 GroupBox {
-                  CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
+                  CheckBoxWrapper { Label { "Checkboxes" } } let { it->checked() = true; },
                   Vertical {
                     CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Checked checkbox" } } let { it->setChecked(true); },
+                    CheckBoxWrapper { Label { "Checked checkbox" } } let { it->checked() = true; },
                     CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
                   },
                 },
@@ -176,7 +176,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Radiobuttons" },
                   RadioGroup {
-                    RadioButton { "Radiobutton 1" } let { it->setChecked(true); },
+                    RadioButton { "Radiobutton 1" } let { it->checked() = true; },
                     RadioButton { "Radiobutton 2" },
                     RadioButton { "Radiobutton 3" },
                     RadioButton { "Disabled radiobutton" } let { it->disable(); },
@@ -675,8 +675,8 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
     ALayoutInflater::inflate(surface, popup);
     popup->pack();
 
-    surface->setOverlappingSurfaceSize(popup->getSize());
-    surface->setOverlappingSurfacePosition((getSize() - popup->getSize()) / 2);
+    surface->setOverlappingSurfaceSize(popup->size());
+    surface->setOverlappingSurfacePosition((size() - *popup->size()) / 2);
 }
 
 bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) { return true; }

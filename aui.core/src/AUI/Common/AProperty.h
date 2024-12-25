@@ -106,4 +106,16 @@ struct APropertyDef {
 
     [[nodiscard]]
     operator GetterReturnT() const noexcept { return std::invoke(get, base); }
+
+    template<typename Rhs>
+    [[nodiscard]]
+    auto operator+(Rhs&& rhs) const requires requires { **this + rhs; } {
+        return **this + std::forward<Rhs>(rhs);
+    }
+
+    template<typename Rhs>
+    [[nodiscard]]
+    auto operator-(Rhs&& rhs) const requires requires { **this - rhs; } {
+        return **this - std::forward<Rhs>(rhs);
+    }
 };

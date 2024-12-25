@@ -42,12 +42,6 @@ public:
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ARadioButton : public AViewContainerBase, public ass::ISelectable {
-private:
-    _<ALabel> mText;
-    bool mChecked = false;
-protected:
-    bool selectableIsSelectedImpl() override;
-
 public:
     ARadioButton();
     ARadioButton(const AString& text);
@@ -61,10 +55,14 @@ public:
         return mChecked;
     }
 
-    void setChecked(const bool checked) {
-        mChecked = checked;
-        emit customCssPropertyChanged();
-        emit ARadioButton::checked(checked);
+    [[nodiscard]]
+    auto checked() const {
+        return APropertyDef {
+            .base = this,
+            .get = &ARadioButton::mChecked,
+            .set = &ARadioButton::setChecked,
+            .changed = mCheckedChanged,
+        };
     }
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -101,8 +99,19 @@ public:
         emits<int> selectionChanged;
     };
 
-signals:
-    emits<bool> checked;
+protected:
+    bool selectableIsSelectedImpl() override;
+
+private:
+    _<ALabel> mText;
+    bool mChecked = false;
+    emits<bool> mCheckedChanged;
+
+    void setChecked(const bool checked) {
+        mChecked = checked;
+        emit customCssPropertyChanged();
+        emit ARadioButton::mCheckedChanged(checked);
+    }
 };
 
 namespace declarative {

@@ -240,7 +240,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     setWindowStyle(ws);
 
     ui_thread {
-        emit sizeChanged(getSize());
+        emit mSizeChanged(getSize());
     };
 }
 

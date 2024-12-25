@@ -84,6 +84,62 @@ public:
     ~AView() override;
 
     /**
+     * @brief Top left corner's position relative to top left corner's position of the parent AView.
+     */
+    auto position() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mPosition,
+            .set = &AView::setPosition,
+            .changed = mPositionChanged,
+        };
+    }
+
+    /**
+     * @brief Size, including content area, border and padding.
+     */
+    auto size() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mSize,
+            .set = &AView::setSize,
+            .changed = mSizeChanged,
+        };
+    }
+
+    /**
+     * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
+     *        AViews in the same container.
+     * @details
+     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
+     * for more info.
+     *
+     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
+     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
+     * such case.
+     */
+    auto expanding() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mExpanding,
+            .set = [](AView& self, glm::ivec2 expanding) { self.setExpanding(expanding); },
+            .changed = mExpandingChanged,
+        };
+    }
+
+    /**
+     * @brief Visibility value.
+     */
+    auto visibility() const {
+        return APropertyDef {
+            .base = this,
+            .get = &AView::mVisibility,
+            .set = &AView::setVisibility,
+            .changed = mVisibilityChanged,
+        };
+    }
+
+    /**
      * @brief Request window manager to redraw this AView.
      */
     void redraw();
@@ -138,7 +194,7 @@ public:
     [[nodiscard]]
     glm::ivec2 getCenterPointInWindow() const noexcept
     {
-        return getPositionInWindow() + getSize() / 2;
+        return getPositionInWindow() + *size() / 2;
     }
 
     /**
@@ -816,38 +872,6 @@ public:
         return mFloating;
     }
 
-    /**
-     * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
-     *        AViews in the same container.
-     * @details
-     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
-     * for more info.
-     *
-     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
-     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
-     * such case.
-     */
-    auto expanding() const {
-        return APropertyDef {
-            .base = this,
-            .get = &AView::mExpanding,
-            .set = [](AView& self, glm::ivec2 expanding) { self.setExpanding(expanding); },
-            .changed = mExpandingChanged,
-        };
-    }
-
-    /**
-     * @brief Visibility value.
-     */
-    auto visibility() const {
-        return APropertyDef {
-            .base = this,
-            .get = &AView::mVisibility,
-            .set = &AView::setVisibility,
-            .changed = mVisibilityChanged,
-        };
-    }
-
 signals:
     /**
      * @see onViewGraphSubtreeChanged()
@@ -875,16 +899,6 @@ signals:
      * @brief Left mouse button clicked.
      */
     emits<> clicked;
-
-    /**
-     * @brief Position changed.
-     */
-    emits<glm::ivec2> positionChanged;
-
-    /**
-     * @brief Size changed.
-     */
-    emits<glm::ivec2> sizeChanged;
 
     /**
      * @brief Geometry (position and size) changed.
@@ -957,9 +971,19 @@ protected:
     glm::ivec2 mPosition = { 0, 0 };
 
     /**
+     * @brief Position changed.
+     */
+    emits<glm::ivec2> mPositionChanged;
+
+    /**
      * @brief Size, including content area, border and padding.
      */
     glm::ivec2 mSize = { 20, 20 };
+
+    /**
+     * @brief Size changed.
+     */
+    emits<glm::ivec2> mSizeChanged;
 
     AOptional<glm::ivec2> mCachedMinContentSize;
     bool mMarkedMinContentSizeInvalid = false;
