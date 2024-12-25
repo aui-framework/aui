@@ -58,6 +58,16 @@ struct AProperty : aui::noncopyable {
     const T* operator->() const noexcept {
         return &raw;
     }
+
+    [[nodiscard]]
+    const T& operator*() const noexcept {
+        return raw;
+    }
+
+    [[nodiscard]]
+    T& operator*() noexcept {
+        return raw;
+    }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 
@@ -68,7 +78,6 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
  */
-
 template <typename M, typename Getter, typename Setter, typename SignalArg>
 struct APropertyDef {
     const M* base;
@@ -76,13 +85,18 @@ struct APropertyDef {
     Getter get;
     Setter set;
     using GetterReturnT = decltype(std::invoke(get, base));
-    using Underyling = std::decay_t<GetterReturnT>;
+    using Underlying = std::decay_t<GetterReturnT>;
     const emits<SignalArg>& changed;
 
-    template <aui::convertible_to<Underyling> U>
+    template <aui::convertible_to<Underlying> U>
     APropertyDef& operator=(U&& u) {
         std::invoke(set, const_cast<Model*>(base), std::forward<U>(u));
         return *this;
+    }
+
+    [[nodiscard]]
+    GetterReturnT operator*() const noexcept {
+        return std::invoke(get, base);
     }
 
     [[nodiscard]]

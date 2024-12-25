@@ -64,6 +64,13 @@ private:
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
+    template <class Object, class Lambda, typename Projection>
+    void connect(Object object, Lambda&& lambda, Projection&& projection) {
+        mSlots.push_back(_new<slot>(slot {object, makeCallable(object, std::forward<Lambda>(lambda), std::forward<Projection>(projection)) }));
+
+        linkSlot(object);
+    }
+
     template<typename Lambda, typename... A>
     struct argument_ignore_helper {};
 
@@ -133,53 +140,45 @@ private:
         }
     };
 
-
-
-    // Member function
-    template<class Derived, class Object, typename... FArgs, typename Projection>
-    void connect(Derived derived, void(Object::* memberFunction)(FArgs...), Projection&& projection)
-    {
-        Object* object = static_cast<Object*>(derived);
-        connect(object, [object, memberFunction](FArgs... args)
-        {
-            (object->*memberFunction)(args...);
-        }, std::forward<Projection>(projection));
-    }
-
-    // Lambda function
-    template<class Object, class Lambda, typename Projection>
-    void connect(Object object, Lambda&& lambda, Projection&& projection)
-    {
-        static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
-        connectImpl(
-            object, argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda)),
-            std::forward<Projection>(projection));
-    }
-
-    template <class Object, class Lambda, typename Projection>
-    void connectImpl(Object object, Lambda&& lambda, Projection&& projection)
+    template <class Lambda, typename Projection>
+    static auto makeCallableImpl(Lambda&& lambda, Projection&& projection)
         requires aui::signal::NoArgInvocation<Lambda> ||
                  aui::signal::DirectInvocation<Lambda, Projection, Args...> ||         // hope this gives proper compile
                  aui::signal::TupleToValueInvocation<Lambda, Projection, Args...> ||   // -time diagnostics
                  aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>      //
     {
-        mSlots.push_back(_new<slot>(slot {
-          object,
-          [lambda = std::forward<Lambda>(lambda),
-           projection = std::forward<Projection>(projection)](Args... args) mutable {
-              if constexpr (aui::signal::NoArgInvocation<Lambda>) {
-                  AUI_MARK_AS_USED(projection);
-                  lambda();
-              } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
-                  lambda(std::invoke(projection, std::forward<Args>(args)...));
-              } else if constexpr (aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>) {
-                  std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-              } else if constexpr (aui::signal::TupleToValueInvocation<Lambda, Projection, Args...>) {
-                  lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-              }
-          } }));
+        return [lambda = std::forward<Lambda>(lambda),
+                projection = std::forward<Projection>(projection)](Args... args) mutable {
+            if constexpr (aui::signal::NoArgInvocation<Lambda>) {
+                AUI_MARK_AS_USED(projection);
+                lambda();
+            } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
+                lambda(std::invoke(projection, std::forward<Args>(args)...));
+            } else if constexpr (aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>) {
+                std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
+            } else if constexpr (aui::signal::TupleToValueInvocation<Lambda, Projection, Args...>) {
+                lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
+            }
+        };
+    }
 
-        linkSlot(object);
+    // Lambda function
+    template<class Object, class Lambda, typename Projection>
+    static auto makeCallable(Object object, Lambda&& lambda, Projection&& projection)
+    {
+        static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
+        return makeCallableImpl(argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda)), std::forward<Projection>(projection));
+    }
+
+    // Member function
+    template<class Derived, class Object, typename... FArgs, typename Projection>
+    static auto makeCallable(Derived derived, void(Object::* memberFunction)(FArgs...), Projection&& projection)
+    {
+        auto* object = static_cast<Object*>(derived);
+        return makeCallable(object, [object, memberFunction](FArgs... args)
+        {
+          (object->*memberFunction)(args...);
+        }, std::forward<Projection>(projection));
     }
 
 public:

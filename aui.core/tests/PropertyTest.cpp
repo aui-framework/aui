@@ -22,7 +22,8 @@ struct User {
 
 class Receiver: public AObject {
 public:
-    MOCK_METHOD(void, receive, (const AString& msg));
+    MOCK_METHOD(void, receiveStr, (const AString& msg));
+    MOCK_METHOD(void, receiveInt, (int msg));
 };
 }
 
@@ -57,37 +58,86 @@ TEST(PropertyTest, ValueOperatorArrow) {
 TEST(PropertyTest, ChangedSignal) {
     auto u = aui::ptr::manage(User { .name = "Hello" });
     auto receiver = _new<Receiver>();
-    AObject::connect(u->name.changed, slot(receiver)::receive);
+    AObject::connect(u->name.changed, slot(receiver)::receiveStr);
 
-    EXPECT_CALL(*receiver, receive(AString("World")));
+    EXPECT_CALL(*receiver, receiveStr(AString("World")));
     u->name = "World";
 }
 
+TEST(PropertyTest, PropertyConnection) {
+    auto receiver = _new<Receiver>();
+    auto u = aui::ptr::manage(User { .name = "Hello" });
+
+    EXPECT_CALL(*receiver, receiveStr(AString("Hello"))).Times(1);
+    AObject::connect(u->name, slot(receiver)::receiveStr);
+
+    EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
+    u->name = "World";
+}
+
+TEST(PropertyTest, PropertyConnectionWithProjection) {
+    auto receiver = _new<Receiver>();
+    auto u = aui::ptr::manage(User { .name = "Hello" });
+
+    EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
+    AObject::connect(u->name, slot(receiver)::receiveInt, &AString::length);
+
+    EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
+    u->name = "World!";
+}
+
+namespace {
+class CustomSetter : public AObject {
+public:
+    CustomSetter() {
+        ON_CALL(*this, setName(testing::_)).WillByDefault([&](const AString& s) {
+            emit nameChanged(s);
+        });
+    }
+
+    auto name() const {
+        return APropertyDef {
+            .base = this,
+            .get = &CustomSetter::getName,
+            .set = &CustomSetter::setName,
+            .changed = nameChanged,
+        };
+    }
+
+    MOCK_METHOD(void, setName, (const AString& msg));
+
+private:
+    emits<AString> nameChanged;
+
+    AString getName() const { return "can't change"; }
+};
+}
+
 TEST(PropertyTest, CustomSetter) {
-    class CustomSetter: public AObject {
-    public:
+    CustomSetter u;
+    Receiver receiver;
 
-        auto name() const {
-            return APropertyDef {
-                .base = this,
-                .get = &CustomSetter::getName,
-                .set = &CustomSetter::setName,
-                .changed = nameChanged,
-            };
-        }
-
-        MOCK_METHOD(void, setName, (const AString& msg));
-
-    private:
-        emits<AString> nameChanged;
-
-        AString getName() const {
-            return "can't change";
-        }
-    } u;
+    static_assert(AAnyProperty<decltype(u.name())>);
 
     EXPECT_CALL(u, setName(AString("World")));
+    EXPECT_CALL(receiver, receiveStr(AString("World")));
+
+    AObject::connect(u.name().changed, slot(receiver)::receiveStr);
+
     u.name() = "World";
     EXPECT_EQ(AString(u.name()), "can't change");
-    AObject::connect(u.name().changed, u, []{});
+}
+
+TEST(PropertyTest, CustomSetterProperty) {
+    CustomSetter u;
+    auto receiver = _new<Receiver>();
+
+    EXPECT_CALL(u, setName(AString("World")));
+    EXPECT_CALL(*receiver, receiveStr(AString("can't change"))).Times(1);
+    EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
+
+    AObject::connect(u.name(), slot(receiver)::receiveStr);
+
+    u.name() = "World";
+    EXPECT_EQ(AString(u.name()), "can't change");
 }

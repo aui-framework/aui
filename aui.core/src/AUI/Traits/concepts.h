@@ -153,9 +153,9 @@ class AAbstractSignal;
 class AAbstractThread;
 
 template <typename T>
-concept AAnySignal = requires(T) {
+concept AAnySignal = requires(T&& t) {
     std::is_base_of_v<AAbstractSignal, T>;
-    typename T::args_t;
+    typename std::decay_t<T>::args_t;
 };
 
 template <typename C>
@@ -170,6 +170,12 @@ concept AAnyProperty = requires(T t) {
     typename T::Underlying;
 
     // Property must be convertible to it's underlying type.
-    { typename T::Underlying(t) };
+    { t } -> aui::convertible_to<typename T::Underlying>;
+
+    // Property has operator* to explicitly pull the underlying value.
+    { *t } -> aui::convertible_to<typename T::Underlying>;
+
+    // Property has the "changed" signal
+    { t.changed } -> AAnySignal;
 };
 

@@ -20,7 +20,6 @@
 #include "AUI/Traits/values.h"
 #include "SharedPtrTypes.h"
 
-
 /**
  * @brief A base object class.
  * @ingroup core signal_slot
@@ -64,56 +63,93 @@ public:
     }
 
     /**
-     * @brief Connects signal to the slot of the specified object.
+     * @brief Connects property to the slot of the specified object.
+     * @details
+     * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
+     * property (pre-fire).
+     *
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * @endcode
+     * @param property property
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     * @param projection projection
+     */
+    template <AAnyProperty Property, aui::derived_from<AObject> Object, typename Function, typename Projection = std::identity>
+    static void connect(const Property& property, Object* object, Function&& function, Projection&& projection = {}) {
+        std::decay_t<decltype(property.changed)>::makeCallable(object, function, projection)(*property);
+        connect(property.changed, object, std::forward<Function>(function), std::forward<Projection>(projection));
+    }
+
+
+
+    /**
+     * @brief Connects signal or property to the slot of the specified object.
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObject)::handleButtonClicked);
      * @endcode
-     * @param signal signal
+     * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      * @param projection projection
      */
-    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
-    static void connect(const Signal& signal, Object& object, Function&& function, Projection&& projection = {}) {
-        const_cast<Signal&>(signal).connect(&object, std::forward<Function>(function), std::forward<Projection>(projection));
+    template <
+        typename Connectable, aui::derived_from<AObject> Object, ACompatibleSlotFor<Connectable> Function,
+        typename Projection = std::identity>
+    static void
+    connect(const Connectable& connectable, Object& object, Function&& function, Projection&& projection = {})
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        connect(connectable, &object, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
-     * @brief Connects signal to slot of \c "this" object.
+     * @brief Connects signal or property to slot of \c "this" object.
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * @endcode
-     * @param signal signal
+     * @param connectable signal or property
      * @param function slot. Can be lambda
      * @param projection projection
      * @param projection projection
      */
-    template <AAnySignal Signal, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
-    void connect(const Signal& signal, Function&& function, Projection&& projection = {}) {
-        const_cast<Signal&>(signal).connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
+    template <typename Connectable, ACompatibleSlotFor<Connectable> Function, typename Projection = std::identity>
+    void connect(const Connectable& connectable, Function&& function, Projection&& projection = {})
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        const_cast<Connectable&>(connectable)
+            .connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
-     * @brief Connects signal to the slot of the specified object.
+     * @brief Connects signal or property to the slot of the specified object.
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObject)::handleButtonClicked);
      * @endcode
-     * @param signal signal
+     * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
-    static void connect(const Signal& signal, _<Object> object, Function&& function, Projection&& projection = {}) {
-        const_cast<Signal&>(signal).connect(object.get(), std::forward<Function>(function), std::forward<Projection>(projection));
+    template <
+        typename Connectable, aui::derived_from<AObject> Object, ACompatibleSlotFor<Connectable> Function,
+        typename Projection = std::identity>
+    static void
+    connect(const Connectable& connectable, _<Object> object, Function&& function, Projection&& projection = {})
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        connect(connectable, object.get(), std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }
