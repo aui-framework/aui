@@ -609,9 +609,9 @@ endfunction(aui_deploy_library)
 function(_auib_collect_srcs _out dir)
     file(GLOB_RECURSE SRCS
             ${dir}/*.cpp
-            ${dir}/src/*.c
-            ${dir}/src/*.mm
-            ${dir}/src/*.m)
+            ${dir}/*.c
+            ${dir}/*.mm
+            ${dir}/*.m)
 
     set(${_out} ${SRCS} PARENT_SCOPE)
 endfunction()

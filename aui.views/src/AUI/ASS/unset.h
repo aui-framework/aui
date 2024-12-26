@@ -15,7 +15,8 @@
 
 #pragma once
 
-#include "AUI/Util/Assert.h"
+#include <AUI/Traits/concepts.h>
+#include <AUI/Util/Assert.h>
 #include <algorithm>
 #include <ostream>
 
@@ -68,7 +69,8 @@ namespace ass {
             }
         }
 
-        unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
+        template<aui::convertible_to<T> U>
+        unset_wrap<T>& operator=(const unset_wrap<U>& v) noexcept;
 
         bool operator==(const unset_wrap<T>& other) const {
             if (set != other.set) {
@@ -90,19 +92,21 @@ namespace ass {
         operator bool() const {
             return set;
         }
+
+        struct unset_wrap_tag {};
     };
 
     namespace detail::unset {
-        template<typename T>
-        void init(unset_wrap<T>& wrap, T& dst, bool& set, const unset_wrap<T>& value) {
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const unset_wrap<U>& value) {
             if (value) {
-                dst = *value;
+                dst = static_cast<T>(*value);
                 set = true;
             }
         }
-        template<typename T, typename V>
-        void init(unset_wrap<T>& wrap, T& dst, bool& set, const V& value) {
-            dst = value;
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, U&& value) {
+            dst = static_cast<T>(std::forward<U>(value));
             set = true;
         }
     }
@@ -116,7 +120,8 @@ namespace ass {
     }
 
     template<typename T>
-    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) noexcept {
+    template<aui::convertible_to<T> U>
+    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<U>& v) noexcept {
         detail::unset::init(*this, stored, set, v);
         return *this;
     }
