@@ -172,6 +172,18 @@ struct APropertyDef {
 // binary operations for properties.
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
+inline auto operator==(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs == rhs; } {
+    return *lhs == std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator!=(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs != rhs; } {
+    return *lhs != std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
 inline auto operator+(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs + rhs; } {
     return *lhs + std::forward<Rhs>(rhs);
 }

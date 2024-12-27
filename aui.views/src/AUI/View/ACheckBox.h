@@ -25,8 +25,6 @@
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
-    friend class API_AUI_VIEWS ACheckBoxWrapper;
-    friend struct ADataBindingDefault<ACheckBox, bool>;
 public:
     ACheckBox();
 
@@ -52,6 +50,16 @@ public:
         setChecked(false);
     }
 
+    void setChecked(bool checked = true) {
+        mChecked = checked;
+        emit customCssPropertyChanged();
+        emit ACheckBox::mCheckedChanged(checked);
+    }
+
+    void setUnchecked(bool unchecked = true) {
+        setChecked(!unchecked);
+    }
+
     bool consumesClick(const glm::ivec2& pos) override;
 
 protected:
@@ -60,12 +68,6 @@ protected:
 private:
     bool mChecked = false;
     emits<bool> mCheckedChanged;
-
-    void setChecked(bool checked) {
-        mChecked = checked;
-        emit customCssPropertyChanged();
-        emit ACheckBox::mCheckedChanged(checked);
-    }
 };
 
 
@@ -74,7 +76,6 @@ private:
  * @ingroup userful_views
  */
 class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
-    friend struct ADataBindingDefault<ACheckBoxWrapper, bool>;
 public:
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
@@ -95,17 +96,17 @@ public:
         setChecked(false);
     }
 
-    void setUnchecked(bool unchecked) {
-        setChecked(!unchecked);
+    void setChecked(bool checked = true) {
+        mCheckBox->setChecked(checked);
     }
 
+    void setUnchecked(bool unchecked = true) {
+        setChecked(!unchecked);
+    }
 
 private:
     _<ACheckBox> mCheckBox;
 
-    void setChecked(bool checked) {
-        mCheckBox->setChecked(checked);
-    }
 };
 
 
@@ -115,7 +116,7 @@ public:
     static void setup(const _<ACheckBox>& view) {}
 
     static auto getGetter() {
-        return &ACheckBox::mCheckedChanged;
+        return &ACheckBox::checked;
     }
 
     static auto getSetter() {

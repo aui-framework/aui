@@ -28,7 +28,6 @@
  * @brief Represents an abstract text display view.
  */
 class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable, public IFontView {
-    friend struct ADataBindingDefault<AAbstractLabel, AString>;
 public:
     AAbstractLabel();
 
@@ -69,6 +68,7 @@ public:
 
     void onDpiChanged() override;
 
+    void setText(AString newText);
 
     void invalidateFont() override;
 
@@ -114,9 +114,6 @@ protected:
     // for correct selection positioning (used in ASelectableLabel)
     int mTextLeftOffset = 0;
     bool mIsTextTooLarge = false;
-
-protected:
-    void setText(AString newText);
 
 private:
     AString mText;

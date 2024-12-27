@@ -55,6 +55,12 @@ public:
         return mChecked;
     }
 
+    void setChecked(const bool checked) {
+        mChecked = checked;
+        emit customCssPropertyChanged();
+        emit ARadioButton::mCheckedChanged(checked);
+    }
+
     [[nodiscard]]
     auto checked() const {
         return APropertyDef {
@@ -106,12 +112,6 @@ private:
     _<ALabel> mText;
     bool mChecked = false;
     emits<bool> mCheckedChanged;
-
-    void setChecked(const bool checked) {
-        mChecked = checked;
-        emit customCssPropertyChanged();
-        emit ARadioButton::mCheckedChanged(checked);
-    }
 };
 
 namespace declarative {
