@@ -142,18 +142,12 @@ TEST(PropertyTest, CustomSetterProperty) {
     EXPECT_EQ(AString(u.name()), "can't change");
 }
 
-template <AAnyProperty PropertySource, AAnyProperty PropertyDestination>
-static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
-    AObject::connect(propertySource, propertyDestination.assignment());
-    AObject::connect(propertyDestination.changed, propertySource.assignment());
-}
-
 TEST(PropertyTest, Property2PropertyBoth) {
     auto u = aui::ptr::manage(User { .name = "initial" });
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    connect(u->name, r->name());
+    AObject::connect(u->name, r->name());
 
     EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
     u->name = "New Name1";

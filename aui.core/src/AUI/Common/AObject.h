@@ -88,25 +88,16 @@ public:
      * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
      * is unimportant at the moment of connection creation.
      *
+     * connect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
+     *
      * See @ref signal_slot "signal-slot system" for more info.
-     * @param propertySource source property, whose value is preserved at the moment of connect.
-     * @param object instance of <code>AObject</code> to connect to.
-     * @param propertyDestination destination property, whose value is overwritten at the moment of connect.
+     * @param propertySource source property, whose value is preserved on connection creation.
+     * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
-    template <AAnyProperty PropertySource, aui::derived_from<AObjectBase> Object, AAnyProperty PropertyDestination>
-    static void connect(const PropertySource& propertySource, Object* object, PropertyDestination&& propertyDestination) {
-        {
-            auto setter = [&propertyDestination](PropertyDestination::Underlying a) {
-                propertyDestination = std::move(a);
-            };
-            connect(propertySource, object, std::move(setter));
-        }
-        {
-            auto setter = [&propertySource](PropertySource::Underlying a) {
-              propertySource = std::move(a);
-            };
-            connect(propertyDestination.changed, object, std::move(setter));
-        }
+    template <AAnyProperty PropertySource, AAnyProperty PropertyDestination>
+    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+        AObject::connect(propertySource, propertyDestination.assignment());
+        AObject::connect(propertyDestination.changed, propertySource.assignment());
     }
 
     /**
