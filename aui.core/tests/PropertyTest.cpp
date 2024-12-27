@@ -97,10 +97,10 @@ public:
 
     auto name() const {
         return APropertyDef {
-            .base = this,
-            .get = &CustomSetter::getName,
-            .set = &CustomSetter::setName,
-            .changed = nameChanged,
+            this,
+            &CustomSetter::getName,
+            &CustomSetter::setName,
+            nameChanged,
         };
     }
 

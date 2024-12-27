@@ -34,10 +34,10 @@ public:
 
     auto text() const {
         return APropertyDef {
-            .base = this,
-            .get = &AAbstractLabel::mText,
-            .set = &AAbstractLabel::setText,
-            .changed = mTextChanged,
+            this,
+            &AAbstractLabel::mText,
+            &AAbstractLabel::setText,
+            mTextChanged,
         };
     }
 

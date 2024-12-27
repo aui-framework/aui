@@ -33,10 +33,10 @@ public:
     [[nodiscard]]
     auto checked() const {
         return APropertyDef {
-            .base = this,
-            .get = &ACheckBox::mChecked,
-            .set = &ACheckBox::setChecked,
-            .changed = mCheckedChanged,
+            this,
+            &ACheckBox::mChecked,
+            &ACheckBox::setChecked,
+            mCheckedChanged,
         };
     }
 

@@ -15,12 +15,13 @@
 
 namespace aui::detail::property {
 template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
-inline auto makeAssignment(Property& property) {
-    return ASlotDef {
+auto makeAssignment(Property& property) {
+    auto i = [&property](std::decay_t<Property>::Underlying value) {
+        property = std::move(value);
+    };
+    return ASlotDef<decltype(property.boundObject()), decltype(i)> {
         .boundObject = property.boundObject(),
-        .invocable = [&property](std::decay_t<Property>::Underlying value) {
-            property = std::move(value);
-        },
+        .invocable = std::move(i),
     };
 }
 }
@@ -114,6 +115,21 @@ struct APropertyDef {
     using GetterReturnT = decltype(std::invoke(get, base));
     using Underlying = std::decay_t<GetterReturnT>;
     const emits<SignalArg>& changed;
+
+    // this ctor effectively prohibits designated initialization, i.e., this one is not possible:
+    //
+    // auto size() const {
+    //     return APropertyDef {
+    //         .base = this,
+    //         .get = &AView::mSize,
+    //         .set = &AView::setSize,
+    //         .changed = mSizeChanged,
+    //     };
+    // }
+    //
+    // deduction in designated initializers is relatively recent feature.
+    APropertyDef(const M* base, Getter get, Setter set, const emits<SignalArg>& changed)
+      : base(base), get(std::move(get)), set(std::move(set)), changed(changed) {}
 
     template <aui::convertible_to<Underlying> U>
     APropertyDef& operator=(U&& u) {

@@ -88,10 +88,10 @@ public:
      */
     auto position() const {
         return APropertyDef {
-            .base = this,
-            .get = &AView::mPosition,
-            .set = &AView::setPosition,
-            .changed = mPositionChanged,
+            this,
+            &AView::mPosition,
+            &AView::setPosition,
+            mPositionChanged,
         };
     }
 
@@ -100,10 +100,10 @@ public:
      */
     auto size() const {
         return APropertyDef {
-            .base = this,
-            .get = &AView::mSize,
-            .set = &AView::setSize,
-            .changed = mSizeChanged,
+            this,
+            &AView::mSize,
+            &AView::setSize,
+            mSizeChanged,
         };
     }
 
@@ -120,10 +120,10 @@ public:
      */
     auto expanding() const {
         return APropertyDef {
-            .base = this,
-            .get = &AView::mExpanding,
-            .set = [](AView& self, glm::ivec2 expanding) { self.setExpanding(expanding); },
-            .changed = mExpandingChanged,
+            this,
+            &AView::mExpanding,
+            [](AView& self, glm::ivec2 expanding) { self.setExpanding(expanding); },
+            mExpandingChanged,
         };
     }
 
@@ -132,10 +132,10 @@ public:
      */
     auto visibility() const {
         return APropertyDef {
-            .base = this,
-            .get = &AView::mVisibility,
-            .set = &AView::setVisibility,
-            .changed = mVisibilityChanged,
+            this,
+            &AView::mVisibility,
+            &AView::setVisibility,
+            mVisibilityChanged,
         };
     }
 

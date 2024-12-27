@@ -58,10 +58,10 @@ public:
     [[nodiscard]]
     auto checked() const {
         return APropertyDef {
-            .base = this,
-            .get = &ARadioButton::mChecked,
-            .set = &ARadioButton::setChecked,
-            .changed = mCheckedChanged,
+            this,
+            &ARadioButton::mChecked,
+            &ARadioButton::setChecked,
+            mCheckedChanged,
         };
     }
 

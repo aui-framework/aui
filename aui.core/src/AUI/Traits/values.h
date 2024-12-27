@@ -234,7 +234,7 @@ namespace aui {
             value.reset();
         }
 
-        operator bool() const noexcept requires requires { !aui::same_as<T, bool>; } {
+        explicit operator bool() const noexcept requires requires { !aui::same_as<T, bool>; } {
             return hasValue();
         }
 
