@@ -41,7 +41,7 @@ protected:
                                                 mHelloLabel->setVisibility(Visibility::INVISIBLE);
                                                 return;
                                             }
-                                            mHelloLabel->setText("Hello, {}!"_format(mTextField->text()));
+                                            mHelloLabel->text() = "Hello, {}!"_format(mTextField->text());
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
                                         }) with_style { BackgroundSolid { 0xff0000_rgb } } let { it->setDefault(); },
                                 },

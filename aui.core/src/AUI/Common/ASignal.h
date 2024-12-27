@@ -55,7 +55,8 @@ public:
 private:
     struct slot
     {
-        AObject* object; // TODO replace with weak_ptr
+        AObjectBase* objectBase;
+        AObject* object;
         func_t func;
         bool isDisconnected = false;
     };
@@ -64,11 +65,16 @@ private:
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
-    template <class Object, class Lambda, typename Projection>
-    void connect(Object object, Lambda&& lambda, Projection&& projection) {
-        mSlots.push_back(_new<slot>(slot {object, makeCallable(object, std::forward<Lambda>(lambda), std::forward<Projection>(projection)) }));
-
-        linkSlot(object);
+    template <aui::convertible_to<AObjectBase*> Object, typename Invocable, typename Projection>
+    void connect(Object objectBase, Invocable&& invocable, Projection&& projection) {
+        AObject* object = nullptr;
+        if constexpr (requires { object = objectBase; }) {
+            object = objectBase;
+        }
+        mSlots.push_back(_new<slot>(slot {
+          objectBase, object,
+          makeCallable(objectBase, std::forward<Invocable>(invocable), std::forward<Projection>(projection)) }));
+        linkSlot(objectBase);
     }
 
     template<typename Lambda, typename... A>
@@ -204,7 +210,7 @@ public:
     {
         for (const _<slot>& slot : mSlots)
         {
-            unlinkSlot(slot->object);
+            unlinkSlot(slot->objectBase);
         }
     }
 
@@ -221,15 +227,15 @@ public:
     {
         clearAllConnectionsIf([](const auto&){ return true; });
     }
-    void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept override
+    void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) noexcept override
     {
-        clearAllConnectionsIf([&](const _<slot>& p){ return p->object == object.ptr(); });
+        clearAllConnectionsIf([&](const _<slot>& p){ return p->objectBase == object.ptr(); });
     }
 
     [[nodiscard]]
-    bool hasConnectionsWith(aui::no_escape<AObject> object) noexcept {
+    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) noexcept {
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
-            return s->object == object.ptr();
+            return s->objectBase == object.ptr();
         });
     }
 
@@ -275,56 +281,53 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     for (auto i = slots.begin(); i != slots.end();)
     {
         slot& slot = **i;
-        auto receiverWeakPtr = weakPtrFromObject(slot.object);
-        if (slot.object->isSlotsCallsOnlyOnMyThread() && slot.object->getThread() != AThread::current())
-        {
-            // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
+        _weak<AObject> receiverWeakPtr;
+        if (slot.object != nullptr) {
+            receiverWeakPtr = weakPtrFromObject(slot.object);
+            if (slot.object->isSlotsCallsOnlyOnMyThread() && slot.object->getThread() != AThread::current()) {
+                // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
 
-            /*
-             * That's because shared_ptr counting mechanism is used when doing a crossthread call.
-             * It could not track the object existence without shared_ptr block.
-             * Also, receiverWeakPtr.lock() may be null here because object is in different thread and being destructed
-             * by shared_ptr but have not reached clearSignals() yet.
-             */
-            if (receiverWeakPtr.lock() != nullptr) {
-                slot.object->getThread()->enqueue([this,
-                                                 receiverWeakPtr = std::move(receiverWeakPtr),
-                                                 slot = *i,
-                                                 args = args]() {
-                    if (slot->isDisconnected) {
-                        return;
-                    }
-                    if (auto receiverPtr = receiverWeakPtr.lock()) {
-                        AAbstractSignal::isDisconnected() = false;
-                        (std::apply)(slot->func, args);
-                        if (AAbstractSignal::isDisconnected()) {
-                            unlinkSlot(receiverPtr.get());
-                            slot->isDisconnected = true;
-                            mSlots.removeFirst(slot);
-                        }
-                    }
-                });
-            }
-            ++i;
-        }
-        else
-        {
-            AAbstractSignal::isDisconnected() = false;
-
-            if (auto sharedPtr = receiverWeakPtr.lock()) { // avoid receiver removal during signal processing
-                receiverPtr = std::move(sharedPtr);
-            }
-
-            if (!receiverPtr || receiverPtr->isSignalsEnabled()) {
-                (std::apply)(slot.func, args);
-                if (AAbstractSignal::isDisconnected()) {
-                    unlinkSlot(slot.object);
-                    i = slots.erase(i);
-                    continue;
+                /*
+                 * That's because shared_ptr counting mechanism is used when doing a crossthread call.
+                 * It could not track the object existence without shared_ptr block.
+                 * Also, receiverWeakPtr.lock() may be null here because object is in different thread and being destructed by shared_ptr but have not reached clearSignals() yet.
+                 */
+                if (receiverWeakPtr.lock() != nullptr) {
+                    slot.object->getThread()->enqueue(
+                        [this, receiverWeakPtr = std::move(receiverWeakPtr), slot = *i, args = args]() {
+                            if (slot->isDisconnected) {
+                                return;
+                            }
+                            if (auto receiverPtr = receiverWeakPtr.lock()) {
+                                AAbstractSignal::isDisconnected() = false;
+                                (std::apply)(slot->func, args);
+                                if (AAbstractSignal::isDisconnected()) {
+                                    unlinkSlot(receiverPtr.get());
+                                    slot->isDisconnected = true;
+                                    mSlots.removeFirst(slot);
+                                }
+                            }
+                        });
                 }
+                ++i;
+                continue;
             }
-            ++i;
         }
+        AAbstractSignal::isDisconnected() = false;
+
+        if (auto sharedPtr = receiverWeakPtr.lock()) { // avoid receiver removal during signal processing
+            receiverPtr = std::move(sharedPtr);
+        }
+
+        if (!receiverPtr || receiverPtr->isSignalsEnabled()) {
+            (std::apply)(slot.func, args);
+            if (AAbstractSignal::isDisconnected()) {
+                unlinkSlot(slot.object);
+                i = slots.erase(i);
+                continue;
+            }
+        }
+        ++i;
     }
     AUI_MARK_AS_USED(emitterPtr);
     AUI_MARK_AS_USED(receiverPtr);

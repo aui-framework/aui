@@ -465,7 +465,6 @@ public:
         return static_cast<int>(mSize.y - mPadding.vertical());
     }
 
-    [[deprecated("use expanding() directly")]]
     [[nodiscard]]
     const glm::ivec2& getExpanding() const
     {
@@ -599,7 +598,6 @@ public:
         return mMouseEntered;
     }
 
-    [[deprecated("use visibility() directly")]]
     Visibility getVisibility() const
     {
         return mVisibility;

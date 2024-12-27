@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <AUI/api.h>
 #include <concepts>
 #include <utility>
 #include <functional>
@@ -161,21 +162,35 @@ concept AAnySignal = requires(T&& t) {
 template <typename C>
 concept ASignalInvokable = requires(C&& c) { c.invokeSignal(nullptr); };
 
-template <typename F, typename Signal>
-concept ACompatibleSlotFor = true;   // TODO
+template <typename Slot, typename Signal>
+concept ACompatibleSlotFor = requires (Slot&& c) {
+    { &std::decay_t<Slot>::operator() };
+} || requires (Slot&& c) {
+    typename aui::member<std::decay_t<Slot>>::args;
+};
+
+class API_AUI_CORE AObjectBase;
+
+template<aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
+struct ASlotDef {
+    ObjectPtr boundObject;
+    Invocable invocable;
+};
 
 template <typename T>
-concept AAnyProperty = requires(T t) {
+concept AAnyProperty = requires(T&& t) {
     // Property must have Underlying type which it represents.
-    typename T::Underlying;
+    typename std::decay_t<T>::Underlying;
 
     // Property must be convertible to it's underlying type.
-    { t } -> aui::convertible_to<typename T::Underlying>;
+    { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
     // Property has operator* to explicitly pull the underlying value.
-    { *t } -> aui::convertible_to<typename T::Underlying>;
+    { *t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
     // Property has the "changed" signal
     { t.changed } -> AAnySignal;
-};
 
+    // Property has assignment() method which returns a slot definition.
+    { ASlotDef(t.assignment()) };
+};

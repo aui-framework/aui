@@ -155,7 +155,7 @@ public:
  *
  */
 template <typename Model>
-class ADataBinding: public AObject {
+class [[deprecated("consider using AProperty and signal/slot connections instead")]] ADataBinding: public AObject {
 private:
     using Observer = std::function<void(const Model& model, unsigned)>;
     ADeque<Observer> mLinkObservers;

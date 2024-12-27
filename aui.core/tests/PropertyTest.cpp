@@ -141,3 +141,51 @@ TEST(PropertyTest, CustomSetterProperty) {
     u.name() = "World";
     EXPECT_EQ(AString(u.name()), "can't change");
 }
+
+template <AAnyProperty PropertySource, AAnyProperty PropertyDestination>
+static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+    AObject::connect(propertySource, propertyDestination.assignment());
+    AObject::connect(propertyDestination.changed, propertySource.assignment());
+}
+
+TEST(PropertyTest, Property2PropertyBoth) {
+    auto u = aui::ptr::manage(User { .name = "initial" });
+    auto r = _new<CustomSetter>();
+
+    EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
+    connect(u->name, r->name());
+
+    EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
+    u->name = "New Name1";
+
+    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(2); // expected to call 2 times: 1st time by calling setName
+    r->setName("New Name2");                                 // here; 2nd time as a loopback response from u
+
+    // the setName "New Name2" call above should reflect its change to u.
+    EXPECT_EQ(u->name, "New Name2");
+
+    // death of r should clear the link with u->name.
+    r = nullptr;
+    u->name = "Should not crash";
+}
+
+TEST(PropertyTest, Property2PropertySetOnly) {
+    auto u = aui::ptr::manage(User { .name = "initial" });
+    auto r = _new<CustomSetter>();
+
+    EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
+    AObject::connect(u->name, r->name().assignment());
+
+    EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
+    u->name = "New Name1";
+
+    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(1);
+    r->setName("New Name2");
+
+    // the setName "New Name2" call above should NOT reflect its change to u.
+    EXPECT_EQ(u->name, "New Name1");
+
+    // death of r should clear the link with u->name.
+    r = nullptr;
+    u->name = "Should not crash";
+}

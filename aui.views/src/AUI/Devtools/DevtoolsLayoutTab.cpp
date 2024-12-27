@@ -140,7 +140,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
-        mTargetWindow->profiling().highlightView.reset();
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
         mTargetWindow->redraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {

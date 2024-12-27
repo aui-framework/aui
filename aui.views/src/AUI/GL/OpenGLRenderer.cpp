@@ -1185,7 +1185,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 };
                 mRenderer.mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "OpenGLRenderViewToTexture");
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-                if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
+                if (auto& p = AWindow::current()->profiling(); p && p->renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
                     using namespace std::chrono_literals;

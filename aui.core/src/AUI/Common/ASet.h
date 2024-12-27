@@ -24,8 +24,8 @@ template <class KeyType, class Comparator = std::less<KeyType>, class Allocator 
 class ASet: public std::set<KeyType, Comparator, Allocator>
 {
 private:
-	using p = std::set<KeyType, Comparator, Allocator>;
-	using self = ASet<KeyType, Comparator, Allocator>;
+    using p = std::set<KeyType, Comparator, Allocator>;
+    using self = ASet<KeyType, Comparator, Allocator>;
 
 public:
 
@@ -97,11 +97,10 @@ public:
         return *this;
     }
 
-
-	bool contains(const KeyType& value) const noexcept
-	{
-		return p::find(value) != p::end();
-	}
+    bool contains(const KeyType& value) const noexcept
+    {
+        return p::find(value) != p::end();
+    }
 };
 
 

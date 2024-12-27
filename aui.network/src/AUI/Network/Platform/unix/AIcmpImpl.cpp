@@ -235,7 +235,7 @@ private:
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
     auto impl = _new<IcmpImpl>(destination);
     auto timer = _new<ATimer>(timeout);
-    AObject::connect(timer->fired, timer, [impl]() {
+    AObject::connect(timer->fired, timer, [impl = impl.get()]() {
         impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
         UnixIoThread::inst().unregisterCallback(impl->mSocket);
     });

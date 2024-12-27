@@ -13,8 +13,20 @@
 
 #include <AUI/Common/ASignal.h>
 
+namespace aui::detail::property {
+template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
+inline auto makeAssignment(Property& property) {
+    return ASlotDef {
+        .boundObject = property.boundObject(),
+        .invocable = [&property](std::decay_t<Property>::Underlying value) {
+            property = std::move(value);
+        },
+    };
+}
+}
+
 template <typename T>
-struct AProperty : aui::noncopyable {
+struct AProperty: AObjectBase {
     using Underlying = T;
 
     T raw;
@@ -27,10 +39,17 @@ struct AProperty : aui::noncopyable {
     template <aui::convertible_to<T> U>
     AProperty(U&& value) noexcept : raw(std::forward<U>(value)) {}
 
+    AObjectBase* boundObject() {
+        return this;
+    }
+
     template <aui::convertible_to<T> U>
     AProperty& operator=(U&& value) noexcept {
-        if (this->raw == value) [[unlikely]] {
-            return *this;
+        static constexpr auto IS_COMPARABLE = requires { this->raw == value; };
+        if constexpr (IS_COMPARABLE) {
+            if (this->raw == value) [[unlikely]] {
+                return *this;
+            }
         }
         this->raw = std::forward<U>(value);
         emit changed(this->raw);
@@ -68,6 +87,14 @@ struct AProperty : aui::noncopyable {
     T& operator*() noexcept {
         return raw;
     }
+
+    /**
+     * @brief Makes a callable that assigns value to this property.
+     */
+    [[nodiscard]]
+    auto assignment() noexcept {
+        return aui::detail::property::makeAssignment(*this);
+    }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 
@@ -95,6 +122,11 @@ struct APropertyDef {
     }
 
     [[nodiscard]]
+    GetterReturnT value() const noexcept {
+        return std::invoke(get, base);
+    }
+
+    [[nodiscard]]
     GetterReturnT operator*() const noexcept {
         return std::invoke(get, base);
     }
@@ -107,15 +139,32 @@ struct APropertyDef {
     [[nodiscard]]
     operator GetterReturnT() const noexcept { return std::invoke(get, base); }
 
-    template<typename Rhs>
     [[nodiscard]]
-    auto operator+(Rhs&& rhs) const requires requires { **this + rhs; } {
-        return **this + std::forward<Rhs>(rhs);
+    M* boundObject() const {
+        return const_cast<M*>(base);
     }
 
-    template<typename Rhs>
+    /**
+     * @brief Makes a callable that assigns value to this property.
+     */
     [[nodiscard]]
-    auto operator-(Rhs&& rhs) const requires requires { **this - rhs; } {
-        return **this - std::forward<Rhs>(rhs);
+    auto assignment() noexcept {
+        return aui::detail::property::makeAssignment(*this);
     }
 };
+
+// binary operations for properties.
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator+(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs + rhs; } {
+    return *lhs + std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator-(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs - rhs; } {
+    return *lhs - std::forward<Rhs>(rhs);
+}
+
+// simple check above operators work.
+static_assert(requires { AProperty<int>() + 1; });
