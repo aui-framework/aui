@@ -83,6 +83,19 @@ public:
     AView();
     ~AView() override;
 
+
+    /**
+     * @brief Whether view is enabled (i.e., reacts to user).
+     */
+    auto enabled() const {
+        return APropertyDef {
+            this,
+            &AView::mEnabled,
+            &AView::setEnabled,
+            mEnabledChanged,
+        };
+    }
+
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
@@ -586,11 +599,6 @@ public:
         return mPressed.contains(index);
     }
 
-    [[nodiscard]]
-    bool isEnabled() const noexcept
-    {
-        return mEnabled;
-    }
     bool isFocused() const {
         return mHasFocus;
     }
@@ -884,10 +892,6 @@ signals:
     emits<APointerIndex> pressed;
     emits<APointerIndex> released;
 
-    emits<bool> enabledState;
-    emits<> enabled;
-    emits<> disabled;
-
     /**
      * @brief Some mouse button clicked.
      */
@@ -1161,8 +1165,10 @@ private:
 
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
     ASmallVector<APointerIndex, 1> mPressed;
-    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
-    AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
+
+    bool mEnabled = true;
+    emits<bool> mEnabledChanged;
+
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);

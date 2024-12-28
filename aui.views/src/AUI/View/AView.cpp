@@ -452,8 +452,14 @@ void AView::updateEnableState()
         onMouseLeave();
     }
 
-    mEnabled.set(this, mDirectlyEnabled && mParentEnabled);
-    emit customCssPropertyChanged();
+    bool newEnabled = mDirectlyEnabled && mParentEnabled;
+    if (mEnabled == newEnabled) {
+        return;
+    }
+
+    mEnabled = newEnabled;
+    emit mEnabledChanged(newEnabled);
+    emit customCssPropertyChanged;
     setSignalsEnabled(mEnabled);
     emit customCssPropertyChanged();
     redraw();

@@ -61,7 +61,7 @@ private:
         bool isDisconnected = false;
     };
 
-    AVector<_<slot>> mSlots;
+    mutable AVector<_<slot>> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
@@ -223,11 +223,11 @@ public:
         return !mSlots.empty();
     }
 
-    void clearAllConnections() noexcept override
+    void clearAllConnections() const noexcept override
     {
         clearAllConnectionsIf([](const auto&){ return true; });
     }
-    void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) noexcept override
+    void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override
     {
         clearAllConnectionsIf([&](const _<slot>& p){ return p->objectBase == object.ptr(); });
     }
@@ -242,7 +242,7 @@ public:
 private:
 
     template<typename Predicate>
-    void clearAllConnectionsIf(Predicate&& predicate) noexcept {
+    void clearAllConnectionsIf(Predicate&& predicate) const noexcept {
         /*
          * Removal of connections before end of execution of clearAllConnectionsIf may cause this ASignal destruction,
          * causing undefined behaviour. Destructing these connections after mSlotsLock unlocking solves the problem.

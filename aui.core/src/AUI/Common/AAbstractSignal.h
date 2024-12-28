@@ -376,8 +376,8 @@ public:
         return mDestroyed;
     }
 
-    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) noexcept = 0;
-    virtual void clearAllConnections() noexcept = 0;
+    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
+    virtual void clearAllConnections() const noexcept = 0;
 
 protected:
     void linkSlot(AObjectBase* object) noexcept;
