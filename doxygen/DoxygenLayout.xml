@@ -61,7 +61,6 @@
 
     <!-- Layout definition for a class page -->
     <class>
-        <briefdescription visible="yes"/>
         <detaileddescription title=""/>
         <memberdecl>
             <nestedclasses visible="yes" title=""/>
@@ -120,7 +119,6 @@
 
     <!-- Layout definition for a namespace page -->
     <namespace>
-        <briefdescription visible="yes"/>
         <detaileddescription title=""/>
         <memberdecl>
             <nestednamespaces visible="yes" title=""/>
@@ -151,7 +149,6 @@
 
     <!-- Layout definition for a file page -->
     <file>
-        <briefdescription visible="yes"/>
         <includes visible="$SHOW_INCLUDE_FILES"/>
         <includegraph visible="$INCLUDE_GRAPH"/>
         <includedbygraph visible="$INCLUDED_BY_GRAPH"/>
@@ -188,11 +185,7 @@
 
     <!-- Layout definition for a group page -->
     <group>
-        <briefdescription visible="yes"/>
-        <memberdecl>
-            <functions title=""/>
-        </memberdecl>
-        <detaileddescription title=""/>
+        <detaileddescription title="" />
         <memberdecl>
             <nestedgroups visible="yes" title=""/>
             <dirs visible="yes" title=""/>

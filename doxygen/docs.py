@@ -8,6 +8,23 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 
+import os
+import os
+import re
+import shutil
+from pathlib import Path
+
+########################################################################################################################
+
+
+CONFIG = {
+    'output': "doxygen/out/html/",
+    'copy_to_output': [ "docs/imgs" ]
+}
+
+
+########################################################################################################################
+
 # This Python script scans aui.*/tests/**.cpp files for the following line:
 #
 # // AUI_DOCS_OUTPUT: <path>
@@ -17,11 +34,6 @@
 #
 # This approach allows to generate decent docs with examples which would work based on the fact that they are generated
 # from real tests.
-
-import os
-import os
-import re
-from pathlib import Path
 
 REGEX_DIR = re.compile(r'.*(aui\..+)/tests')
 REGEX_AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
@@ -147,3 +159,7 @@ if __name__ == '__main__':
 
     os.system("doxygen doxygen/Doxyfile")
 
+    output_dir = Path(CONFIG['output'])
+    for file in CONFIG['copy_to_output']:
+        shutil.copytree(file, output_dir / Path(file).name, dirs_exist_ok=True)
+        pass

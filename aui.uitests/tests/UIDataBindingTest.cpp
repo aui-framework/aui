@@ -48,42 +48,61 @@ public:
 // [ask questions and open issues](https://github.com/aui-framework/aui/issues) on our GitHub page.
 //
 // Main difference between basic value lying somewhere inside your class and a property is that the latter explicitly
-// ties getter, setter and a signal reporting value changes. This is especially a key feature for editable UI controls,
-// i.e., ATextField:
+// ties getter, setter and a signal reporting value changes. Property acts almost transparently, as if there's no
+// property wrapper. This allows to read the intermediate value of a property and subscribe to its changes via a single
+// \c connect call:
 TEST_F(UIDataBindingTest, TextField1) {
     // AUI_DOCS_CODE_BEGIN
-    auto window = _new<AWindow>();
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Robert" });
     auto tf = _new<ATextField>();
-    tf->setText("Hello");
+    AObject::connect(user->name, tf->text());
+    auto window = _new<AWindow>();
     window->setContents(Centered { tf });
     window->show();
     // AUI_DOCS_CODE_END
 
     // The code above generates a window with a text field:
     saveScreenshot("1");
+    // ![text field](imgs/UIDataBindingTest.TextField1_1.png)
+    //
+    // A single call of AObject::connect:
+    //
 
-    // Let's observe _changes_ on our text field:
+    // - Prefilled text field with the current `user->name` value (pre fire):
     // AUI_DOCS_CODE_BEGIN
-    AObject::connect(tf->textChanging, tf, [](const AString& newText) {
-        ALogger::info("Text") << newText;
-    });
+    EXPECT_EQ(tf->text(), "Robert");
     // AUI_DOCS_CODE_END
 
-    // This, indeed, prints _changes_ to text field contents to console by typing \c ! , for example.
-    //
-    By::type<ATextField>().perform(type("!"));
+    // - Connected `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Angela";           // changing user->name programmatically...
+    EXPECT_EQ(tf->text(), "Angela"); // ...should reflect on the text field
+    // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // Possible output:
-    // ```
-    // [08:28:47][][Logger][INFO]: Log file: /tmp/aui.407357.log
-    // [08:28:47][][FontManager][INFO]: Using gtk theme font: SF UI Display Med (file:///home/alex2772/.fonts/s/SFUIDisplay_Medium.otf)
-    // [08:28:47][][Text][INFO]: Hello!
-    // Process finished with exit code 0
-    // ```
+    // ![text field](imgs/UIDataBindingTest.TextField1_2.png)
+
+    // - Connected `tf->text().changed` to notify the `user->name` property about changes in text field (i.e., if the
+    // user typed another value to the text field):
+    // ![text field](imgs/UIDataBindingTest.TextField1_3.png)
+    tf->selectAll();
+    By::value(tf).perform(type("Snezhana"));
+    saveScreenshot("3");
+    // AUI_DOCS_CODE_BEGIN
+    // user typed "Snezhana", now let's check the value in user->name:
+    EXPECT_EQ(user->name, "Snezhana");
+    // AUI_DOCS_CODE_END
+
+    //
+    // This is a basic example of setting up property-to-property connection.
 }
 
 
 //
+// # Declaring Properties
 // There are two ways to define a property in AUI:
 //
 TEST_F(UIDataBindingTest, AProperty) { // HEADER
@@ -158,7 +177,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = _new<User>(User { .name = "Roza" });
+    auto user = aui::ptr::manage(User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -212,7 +231,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = _new<User>(User { .name = "Roza" });
+    auto user = aui::ptr::manage(User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -280,7 +299,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = _new<User>(User { .name = "Roza" });
+    auto user = aui::ptr::manage(User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:

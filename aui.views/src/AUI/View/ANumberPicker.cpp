@@ -107,7 +107,7 @@ void ANumberPicker::setValue(int64_t v) {
 }
 
 int64_t ANumberPicker::getValue() const {
-    return mTextField->text().toInt().valueOr(0);
+    return mTextField->getText().toInt().valueOr(0);
 }
 
 void ANumberPicker::setSuffix(const AString& suffix) {

@@ -27,15 +27,6 @@ public:
     AAbstractTypeable();
     ~AAbstractTypeable() override;
 
-    auto textImmediate() const {
-        return APropertyDef {
-            this,
-            &AAbstractTypeable::text,
-            &AAbstractTypeable::setText,
-            textChanging,
-        };
-    }
-
     void clear() {
         setText({});
     }
@@ -44,7 +35,7 @@ public:
     }
 
     void trimText() {
-        setText(text().trim());
+        setText(getText().trim());
     }
 
     void setCopyable(bool isCopyable) {

@@ -60,7 +60,7 @@ public:
 
     bool handlesNonMouseNavigation() override;
 
-    const AString& text() const override;
+    const AString& getText() const override;
 
     void onCharEntered(char16_t c) override;
 

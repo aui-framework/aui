@@ -52,7 +52,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
 
     [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
 
-    [[nodiscard]] double getValue() const { return mTextField->text().toDouble().valueOr(0.0); }
+    [[nodiscard]] double getValue() const { return mTextField->getText().toDouble().valueOr(0.0); }
 
     [[nodiscard]] double getMin() const { return mMin; }
 
