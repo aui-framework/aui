@@ -31,6 +31,22 @@ public:
 // AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
 // @ref signal_slot "signal-slot system" for platform-independent C++ development.
 //
+// AUI property system is relatively complex, as it involves a lot of features in a single place:
+// 1. thread safe
+// 2. many-to-many relationships between objects
+// 3. optional data modification when passing values between objects (like STL projections)
+// 4. emitter can be either signal or property
+// 5. slot can be either lambda, method or property
+// 6. for the latter case, system must set up backward connection as well (including projection support)
+// 7. again, for the latter case, there's an option to make property-to-slot connection, where the "slot" is property's
+//    assignment operation
+// 8. 2 syntax variants: procedural (straightforward) and declarative
+// 9. two property variants: simple field (AProperty) and custom getter/setter (APropertyDef)
+// 10. some properties can be readonly
+//
+// Learning curve is relatively flat, so be sure to
+// [ask questions and open issues](https://github.com/aui-framework/aui/issues) on our GitHub page.
+//
 // Main difference between basic value lying somewhere inside your class and a property is that the latter explicitly
 // ties getter, setter and a signal reporting value changes. This is especially a key feature for editable UI controls,
 // i.e., ATextField:

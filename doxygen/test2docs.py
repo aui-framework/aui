@@ -25,13 +25,14 @@ from pathlib import Path
 
 REGEX_DIR = re.compile(r'.*(aui\..+)/tests')
 REGEX_AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
-REGEX_COMMENT = re.compile(r'.*// ?(.*)\n?$')
+REGEX_COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 
 # TEST_F(UIDataBindingTest, AProperty) { // HEADER
 REGEX_TESTCASE_HEADER = re.compile(r'TEST_F\(.+, (.+)\) ?\{ ?// ?HEADER')
 
 assert REGEX_DIR.match("/home/aui.views/tests")
 assert not REGEX_DIR.match("/home/aui.views/src")
+assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
 def scan_cpp_files(path: Path):
     for root, dirs, files in os.walk(path):
