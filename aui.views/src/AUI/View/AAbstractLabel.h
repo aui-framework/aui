@@ -31,6 +31,9 @@ class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable, public IF
 public:
     AAbstractLabel();
 
+    /**
+     * @brief Label's text property.
+     */
     auto text() const {
         return APropertyDef {
             this,

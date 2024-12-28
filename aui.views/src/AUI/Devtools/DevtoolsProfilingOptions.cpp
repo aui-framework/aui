@@ -35,6 +35,8 @@ namespace {
         });
         l->setCustomStyle({
             ACursor::POINTER,
+            Margin { 0 },
+            Padding { 0 },
             BorderBottom{1_px, AColor::BLACK}
         });
         return l;

@@ -29,8 +29,9 @@ namespace testing {
 
     protected:
         void SetUp() override;
-
         void TearDown() override;
+
+        void saveScreenshot(const AString& name);
 
     public:
 

@@ -27,6 +27,15 @@ public:
     AAbstractTypeable();
     ~AAbstractTypeable() override;
 
+    auto textImmediate() const {
+        return APropertyDef {
+            this,
+            &AAbstractTypeable::text,
+            &AAbstractTypeable::setText,
+            textChanging,
+        };
+    }
+
     void clear() {
         setText({});
     }

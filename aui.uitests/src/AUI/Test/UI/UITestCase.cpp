@@ -24,7 +24,9 @@
 #include <AUI/Util/AStubWindowManager.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
-private:
+public:
+    MyListener() noexcept = default;
+
     static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
@@ -36,9 +38,6 @@ private:
         PngImageLoader::save(fos, image);
         return p;
     }
-
-public:
-    MyListener() noexcept = default;
 
     void OnTestPartResult(const testing::TestPartResult& result) override {
         EmptyTestEventListener::OnTestPartResult(result);
@@ -118,4 +117,8 @@ void testing::UITest::TearDown() {
     AWindow::destroyWindowManager();
 
     Test::TearDown();
+}
+void testing::UITest::saveScreenshot(const AString& name) {
+    uitest::frame();
+    MyListener::saveScreenshot("", "{}.{}_{}.png"_format(testing::UnitTest::GetInstance()->current_test_case()->name(), testing::UnitTest::GetInstance()->current_test_info()->name(), name));
 }

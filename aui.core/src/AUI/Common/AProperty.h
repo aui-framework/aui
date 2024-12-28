@@ -15,9 +15,20 @@
 
 namespace aui::detail::property {
 template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
+auto makeAssignment(Property&& property) {
+    auto i = [property = std::forward<Property>(property)](std::decay_t<Property>::Underlying value) {
+        const_cast<Property&>(property) = std::move(value);
+    };
+    return ASlotDef<decltype(property.boundObject()), decltype(i)> {
+        .boundObject = property.boundObject(),
+        .invocable = std::move(i),
+    };
+}
+
+template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
 auto makeAssignment(Property& property) {
     auto i = [&property](std::decay_t<Property>::Underlying value) {
-        property = std::move(value);
+      property = std::move(value);
     };
     return ASlotDef<decltype(property.boundObject()), decltype(i)> {
         .boundObject = property.boundObject(),
@@ -165,7 +176,7 @@ struct APropertyDef {
      */
     [[nodiscard]]
     auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(*this);
+        return aui::detail::property::makeAssignment(std::move(*this));
     }
 };
 
@@ -186,6 +197,11 @@ template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
 inline auto operator+(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs + rhs; } {
     return *lhs + std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs) requires requires { *lhs += rhs; } {
+    return *lhs = *lhs + std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
