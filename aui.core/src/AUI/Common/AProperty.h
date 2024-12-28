@@ -37,6 +37,11 @@ auto makeAssignment(Property& property) {
 }
 }
 
+/**
+ * @brief TODO
+ * @ingroup property_system
+ * @details
+ */
 template <typename T>
 struct AProperty: AObjectBase {
     using Underlying = T;
@@ -112,6 +117,7 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
 
 /**
  * @brief TODO
+ * @ingroup property_system
  * @details
  * # Performance considerations
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and

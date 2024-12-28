@@ -37,11 +37,12 @@ public:
 
     /**
      * @brief Connects signal to the slot of the specified object.
+     * @ingroup signal_slot
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
-     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * connect(view->clicked, slot(otherObjectRawPtr)::handleButtonClicked);
      * @endcode
      * @param signal signal
      * @param object instance of <code>AObject</code>
@@ -55,6 +56,7 @@ public:
 
     /**
      * @brief Connects property to the slot of the specified object.
+     * @ingroup property_system
      * @details
      * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
      * property (pre-fire).
@@ -76,7 +78,8 @@ public:
     }
 
     /**
-     * @brief Connects property to the property of the specified object.
+     * @brief Connects source property to the destination property. _(1)_
+     * @ingroup property_system
      * @details
      * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
      * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
@@ -102,11 +105,13 @@ public:
 
     /**
      * @brief Connects signal or property to the slot of the specified object.
+     * @ingroup signal_slot
+     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
-     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * connect(view->clicked, slot(otherObjectRef)::handleButtonClicked);
      * @endcode
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
@@ -125,6 +130,8 @@ public:
 
     /**
      * @brief Connects signal or property to slot of \c "this" object.
+     * @ingroup signal_slot
+     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
@@ -146,11 +153,13 @@ public:
 
     /**
      * @brief Connects signal or property to the slot of the specified object.
+     * @ingroup signal_slot
+     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
-     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
      * @endcode
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>

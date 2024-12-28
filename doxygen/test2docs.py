@@ -145,3 +145,5 @@ if __name__ == '__main__':
     for path in suitable_cpp_files:
         process_cpp_file(path)
 
+    os.system("doxygen doxygen/Doxyfile")
+

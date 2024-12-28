@@ -189,6 +189,9 @@
     <!-- Layout definition for a group page -->
     <group>
         <briefdescription visible="yes"/>
+        <memberdecl>
+            <functions title=""/>
+        </memberdecl>
         <detaileddescription title=""/>
         <memberdecl>
             <nestedgroups visible="yes" title=""/>
