@@ -434,10 +434,10 @@ public:
 
     /**
      * @param value element to find.
-     * @return index of the specified element. If element is not found, -1 is returned.
+     * @return index of the specified element. If element is not found, std::nullopt is returned.
      */
     [[nodiscard]]
-    size_t indexOf(const StoredType& value) const noexcept
+    AOptional<size_t> indexOf(const StoredType& value) const noexcept
     {
         return aui::container::index_of(*this, value);
     }

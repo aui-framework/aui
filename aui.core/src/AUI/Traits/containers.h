@@ -134,13 +134,13 @@ namespace aui::container {
      * @brief Finds the index of the first occurrence of the value.
      * @ingroup core
      * @param value element to find.
-     * @return index of the specified element. If element is not found, -1 is returned.
+     * @return index of the specified element. If element is not found, std::nullopt is returned.
      */
     template<typename Container>
     [[nodiscard]]
-    size_t index_of(const Container& c, const typename Container::const_reference value) noexcept {
+    AOptional<size_t> index_of(const Container& c, const typename Container::const_reference value) noexcept {
         auto it = std::find(c.begin(), c.end(), value);
-        if (it == c.end()) return static_cast<size_t>(-1);
+        if (it == c.end()) return std::nullopt;
         return it - c.begin();
     }
 

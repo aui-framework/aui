@@ -117,6 +117,48 @@ public:
     }
 
     /**
+     * @brief Connects source property to the destination property with bidirectional projection.
+     * @ingroup property_system
+     * @details
+     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
+     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
+     * from left argument to the right argument.
+     *
+     * After pre-fire, connects \c propertyDestination.changed to the setter of \c propertySource . This way, when
+     * \c propertyDestination changes (i.e, \c propertyDestination belongs to some view and it's value is changed due to
+     * user action) it immediately reflects on \c propertySource . So, \c propertySource is typically a property of some
+     * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
+     * is unimportant at the moment of connection creation.
+     *
+     * connect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
+     *
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @param propertySource source property, whose value is preserved on connection creation.
+     * @param projectionSource2Destination projection to convert from source to destination.
+     * @param propertyDestination destination property, whose value is overwritten on connection creation.
+     * @param projectionDestination2Source projection to convert from destination to source.
+     */
+    template <AAnyProperty PropertySource,
+              AAnyProperty PropertyDestination,
+              aui::mapper<typename std::decay_t<PropertySource>::Underlying,      // from
+                          typename std::decay_t<PropertyDestination>::Underlying> // to
+                  ProjectionSource2Destination,
+              aui::mapper<typename std::decay_t<PropertyDestination>::Underlying, // from
+                          typename std::decay_t<PropertySource>::Underlying>      // to
+                  ProjectionDestination2Source>
+    static void connect(PropertySource&& propertySource,
+                        ProjectionSource2Destination&& projectionSource2Destination,
+                        PropertyDestination&& propertyDestination,
+                        ProjectionDestination2Source&& projectionDestination2Source) {
+        AObject::connect(propertySource,
+                         std::forward<ProjectionSource2Destination>(projectionSource2Destination),
+                         propertyDestination.assignment());
+        AObject::connect(propertyDestination.changed,
+                         std::forward<ProjectionDestination2Source>(projectionDestination2Source),
+                         propertySource.assignment());
+    }
+
+    /**
      * @brief Connects source property to the destination property.
      * @ingroup property_system
      * @details
@@ -138,8 +180,10 @@ public:
      */
     template <AAnyProperty PropertySource, AAnyProperty PropertyDestination>
     static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
-        AObject::connect(propertySource, propertyDestination.assignment());
-        AObject::connect(propertyDestination.changed, propertySource.assignment());
+        connect(std::forward<PropertySource>(propertySource),
+                std::identity{},
+                std::forward<PropertyDestination>(propertyDestination),
+                std::identity{});
     }
 
     /**

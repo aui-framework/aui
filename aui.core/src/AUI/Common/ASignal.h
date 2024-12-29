@@ -37,7 +37,9 @@ concept TupleToValueInvocation = requires(Lambda&& lambda, Projection&& projecti
 
 template<typename Lambda, typename Projection, typename... Args>
 concept TupleToTupleInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) };
+    { std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) }; // *** READ THIS ***
+    // if your code breaks above, it's because your call to AObject::connect is ill-formed. Please check that your
+    // arguments are compatible. Define a projection if necessary.
 };
 }
 

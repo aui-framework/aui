@@ -9,13 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/algorithm/find.hpp>
+
 #include <gmock/gmock.h>
+
 #include <AUI/UITest.h>
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/ACheckBox.h"
 #include "AUI/Test/UI/By.h"
 #include "AUI/View/ATextField.h"
+#include "AUI/View/ADropdownList.h"
+#include "AUI/Model/AListModel.h"
 
 class UIDataBindingTest : public testing::UITest {
 public:
@@ -26,10 +33,11 @@ public:
 // AUI_DOCS_OUTPUT: doxygen/intermediate/properties.h
 // @defgroup property_system Property System
 // @ingroup core
-// @brief Property System is a data binding technique based on @ref signal_slot "signal-slot system".
+// @brief Property System is a data binding mechanism based on @ref signal_slot "signal-slot system".
 // @details
 // AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
-// @ref signal_slot "signal-slot system" for platform-independent C++ development.
+// @ref signal_slot "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
+// involve external tools (like `moc`). They are written in pure C++.
 //
 // AUI property system is relatively complex, as it involves a lot of features in a single place:
 // 1. thread safe
@@ -69,15 +77,15 @@ TEST_F(UIDataBindingTest, TextField1) {
     saveScreenshot("1");
     // ![text field](imgs/UIDataBindingTest.TextField1_1.png)
     //
-    // A single call of AObject::connect:
+    // A single call of `connect`:
     //
 
-    // - Prefilled text field with the current `user->name` value (pre fire):
+    // - Prefills text field with the current `user->name` value (pre fire):
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(tf->text(), "Robert");
     // AUI_DOCS_CODE_END
 
-    // - Connected `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
+    // - Connects `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Angela";           // changing user->name programmatically...
     EXPECT_EQ(tf->text(), "Angela"); // ...should reflect on the text field
@@ -85,7 +93,7 @@ TEST_F(UIDataBindingTest, TextField1) {
     saveScreenshot("2");
     // ![text field](imgs/UIDataBindingTest.TextField1_2.png)
 
-    // - Connected `tf->text().changed` to notify the `user->name` property about changes in text field (i.e., if the
+    // - Connects `tf->text().changed` to notify the `user->name` property about changes in text field (i.e., if the
     // user typed another value to the text field):
     // ![text field](imgs/UIDataBindingTest.TextField1_3.png)
     tf->selectAll();
@@ -97,7 +105,7 @@ TEST_F(UIDataBindingTest, TextField1) {
     // AUI_DOCS_CODE_END
 
     //
-    // This is a basic example of setting up property-to-property connection.
+    // This is basic example of setting up property-to-property connection.
 }
 
 
@@ -106,7 +114,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 // There are two ways to define a property in AUI:
 //
 TEST_F(UIDataBindingTest, AProperty) { // HEADER
-    // To declare a property, use AProperty template inside your model struct:
+    // To declare a property inside your data model, use AProperty template:
     // AUI_DOCS_CODE_BEGIN
     struct User {
         AProperty<AString> name;
@@ -148,11 +156,6 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // AUI_DOCS_CODE_BEGIN
         doSomethingWithName(*u.name);
         //                 ^^^ HERE
-        // AUI_DOCS_CODE_END
-
-        // or use `.raw` field (AProperty only):
-        // AUI_DOCS_CODE_BEGIN
-        doSomethingWithName(u.name.raw);
         // AUI_DOCS_CODE_END
     }
 }
@@ -243,11 +246,11 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
                   // Data goes from left to right in the first place
                   // (i.e., user->name current value overrides it->text())
                   // if view's property gets changed (i.e., by user),
-                  // these changes DOES NOT reflect on model
+                  // these changes DO NOT reflect on model
                   // as we requested assignment() here
                   AObject::connect(user->name, it->text().assignment());
                   //                ->  ->  ->  ->  ->
-                  // in other words, this connection essentially the same
+                  // in other words, this connection is essentially the same
                   // as
                   // AObject::connect(user->name, slot(it)::setText);
                 },
@@ -275,7 +278,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
     // AUI_DOCS_CODE_END
 
     // Unlike property-to-property connection, property-to-slot is one-directional connection. So, if we try to change
-    // labels text directly, it would not reflect on the model.
+    // label's text directly, it would not reflect on the model.
     // AUI_DOCS_CODE_BEGIN
     label->text() = "Sanya";
 
@@ -284,11 +287,164 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
     // AUI_DOCS_CODE_END
 }
 
+TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
+    // Property-to-property is a bidirectional connection, so it requires two projections.
+    //
+    // By using ".assignment()" syntax, it's fairly easy to define a projection because property-to-slot requires
+    // exactly one projection.
+    using namespace declarative;
+
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+              // AUI_DOCS_CODE_BEGIN
+              label = _new<ALabel>() let {
+                  // Data goes from left to right:
+                  // current value (pre fire) or changed event
+                  // goes through projection (&AString::uppercase) first
+                  // then it goes to assignment operation of it->text()
+                  // property.
+                  AObject::connect(user->name, &AString::uppercase, it->text().assignment());
+                  //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
+                  // in other words, this connection is essentially the same as
+                  // AObject::connect(user->name, &AString::uppercase, slot(it)::setText);
+
+                  // if view's property gets changed (i.e., by user),
+                  // these changes DO NOT reflect on model
+                  // as we requested assignment() here
+              },
+              // AUI_DOCS_CODE_END
+            });
+
+            // Notice that label already displays a value stored in User.
+            // AUI_DOCS_CODE_BEGIN
+            EXPECT_EQ(user->name, "Roza");
+            EXPECT_EQ(label->text(), "ROZA"); // uppercased by projection!
+            // AUI_DOCS_CODE_END
+        }
+    };
+    _new<MyWindow>(user)->show();
+
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+
+    //
+    // Let's change the name:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
+    // AUI_DOCS_CODE_END
+}
+
+
+enum class Gender {
+    MALE,
+    FEMALE,
+    OTHER,
+};
+AUI_ENUM_VALUES(Gender,
+                Gender::MALE,
+                Gender::FEMALE,
+                Gender::OTHER)
+
+TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
+    using namespace declarative;
+    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It requires the
+    // projection to work in both sides.
+    //
+    // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
+    // know anything about underlying values.
+    //
+    // Define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
+    //
+    // @code{cpp}
+    // enum class Gender {
+    //     MALE,
+    //     FEMALE,
+    //     OTHER,
+    // };
+    // AUI_ENUM_VALUES(Gender,
+    //                 Gender::MALE,
+    //                 Gender::FEMALE,
+    //                 Gender::OTHER)
+    // @endcode
+    // AUI_DOCS_CODE_BEGIN
+    struct User {
+        AProperty<Gender> gender;
+        // we've omitted other fields for sake of simplicity
+    };
+    // AUI_DOCS_CODE_END
+
+    // Inside AUI_ENTRY, define user, window, and show the window
+    // AUI_DOCS_CODE_BEGIN
+    auto user = aui::ptr::manage(User { .gender = Gender::MALE });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+            // generate a string list model for genders
+            auto gendersStr = AListModel<AString>::fromVector(
+                GENDERS | ranges::view::transform(AEnumerate<Gender>::toName) | ranges::to_vector);
+
+            setContents(Centered {
+              _new<ADropdownList>(gendersStr) let {
+                  // AObject::connect(user->gender, it->selectionId());
+                  //
+                  // This code would break, because Gender and int
+                  // (selectionId() type) are incompatible.
+                  //
+                  // Instead, define bidirectional projection:
+                  AObject::connect(user->gender,
+                                   [](Gender g) {
+                                       return aui::container::index_of(GENDERS, g).valueOr(0);
+                                   },
+                                   it->selectionId(),
+                                   [](int i) { return GENDERS[i]; });
+              },
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    // AUI_DOCS_CODE_END
+    auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
+    saveScreenshot("1");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+
+    //
+    // - If we try to change `user->gender` programmatically, ADropdownList will respond:
+    // AUI_DOCS_CODE_BEGIN
+    user->gender = Gender::FEMALE;
+    EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
+    // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_2.png)
+
+    //
+    // - If the user changes the value of ADropdownList, it reflects on the model as well:
+    dropdownList->setSelectionId(2);
+    saveScreenshot("3");
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(user->gender, Gender::OTHER);
+    // AUI_DOCS_CODE_END
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
+}
+
 /*
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
     //
-    // Here's where declarative syntax comes into play. The example below is essentially the same as "Label via
+    // Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
+    // AObject::connect (for ease of replacement), besides that The example below is essentially the same as "Label via
     // declarative" but uses declarative connection set up syntax.
     //
     // Use \c && expression to connect the model's username property to the label's @ref ALabel::text "text()"

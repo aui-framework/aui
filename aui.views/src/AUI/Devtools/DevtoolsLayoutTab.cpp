@@ -73,7 +73,7 @@ public:
         }
         std::size_t row = 0;
         if (auto p = view->getParent()) {
-            row = p->getViews().indexOf(view->sharedPtr());
+            row = p->getViews().indexOf(view->sharedPtr()).valueOr(0);
         }
         return ATreeModelIndex(row, 0, view->sharedPtr());
     }
