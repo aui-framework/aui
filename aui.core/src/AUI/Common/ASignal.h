@@ -19,27 +19,24 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 
-namespace aui::signal {
-template<typename Lambda>
-concept NoArgInvocation = requires(Lambda&& lambda) {
-    { lambda() };
-};
+namespace aui::detail::signal {
+template<typename AnySignal, // can't use AAnySignal here, as concept would depend on itself
+         typename Projection>
+struct ProjectedSignal {
+    AnySignal& base;
+    Projection projection;
 
-template<typename Lambda, typename Projection, typename... Args>
-concept DirectInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { lambda(std::invoke(projection, std::forward<Args>(args)...)) };
-};
-
-template<typename Lambda, typename Projection, typename... Args>
-concept TupleToValueInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) };
-};
-
-template<typename Lambda, typename Projection, typename... Args>
-concept TupleToTupleInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) }; // *** READ THIS ***
-    // if your code breaks above, it's because your call to AObject::connect is ill-formed. Please check that your
-    // arguments are compatible. Define a projection if necessary.
+    template <aui::convertible_to<AObjectBase*> Object, typename Invocable>
+    void connect(Object objectBase, Invocable&& invocable) {
+        base.connect(objectBase, [invocable = std::forward<Invocable>(invocable), projection = projection]() {
+            auto result = std::invoke(projection, args...);
+            if constexpr (requires { std::apply(invocable, std::move(result)); }) {
+                std::apply(invocable, std::move(result));
+            } else {
+                std::invoke(invocable, std::move(result));
+            }
+        });
+    }
 };
 }
 
@@ -65,17 +62,22 @@ private:
 
     mutable AVector<_<slot>> mSlots;
 
+    template<typename Projection>
+    auto projected(Projection&& projection) {
+        return aui::detail::signal::ProjectedSignal(*this, std::forward<Projection>(projection));
+    }
+
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
-    template <aui::convertible_to<AObjectBase*> Object, typename Invocable, typename Projection>
-    void connect(Object objectBase, Invocable&& invocable, Projection&& projection) {
+    template <aui::convertible_to<AObjectBase*> Object, typename Invocable>
+    void connect(Object objectBase, Invocable&& invocable) {
         AObject* object = nullptr;
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
         mSlots.push_back(_new<slot>(slot {
           objectBase, object,
-          makeCallable(objectBase, std::forward<Invocable>(invocable), std::forward<Projection>(projection)) }));
+          makeCallable(objectBase, std::forward<Invocable>(invocable)) }));
         linkSlot(objectBase);
     }
 
@@ -148,45 +150,23 @@ private:
         }
     };
 
-    template <class Lambda, typename Projection>
-    static auto makeCallableImpl(Lambda&& lambda, Projection&& projection)
-        requires aui::signal::NoArgInvocation<Lambda> ||
-                 aui::signal::DirectInvocation<Lambda, Projection, Args...> ||         // hope this gives proper compile
-                 aui::signal::TupleToValueInvocation<Lambda, Projection, Args...> ||   // -time diagnostics
-                 aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>      //
-    {
-        return [lambda = std::forward<Lambda>(lambda),
-                projection = std::forward<Projection>(projection)](Args... args) mutable {
-            if constexpr (aui::signal::NoArgInvocation<Lambda>) {
-                AUI_MARK_AS_USED(projection);
-                lambda();
-            } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
-                lambda(std::invoke(projection, std::forward<Args>(args)...));
-            } else if constexpr (aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>) {
-                std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-            } else if constexpr (aui::signal::TupleToValueInvocation<Lambda, Projection, Args...>) {
-                lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-            }
-        };
-    }
-
     // Lambda function
     template<class Object, class Lambda, typename Projection>
-    static auto makeCallable(Object object, Lambda&& lambda, Projection&& projection)
+    static auto makeCallable(Object object, Lambda&& lambda)
     {
         static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
-        return makeCallableImpl(argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda)), std::forward<Projection>(projection));
+        return argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda));
     }
 
     // Member function
     template<class Derived, class Object, typename... FArgs, typename Projection>
-    static auto makeCallable(Derived derived, void(Object::* memberFunction)(FArgs...), Projection&& projection)
+    static auto makeCallable(Derived derived, void(Object::* memberFunction)(FArgs...))
     {
         auto* object = static_cast<Object*>(derived);
         return makeCallable(object, [object, memberFunction](FArgs... args)
         {
           (object->*memberFunction)(args...);
-        }, std::forward<Projection>(projection));
+        });
     }
 
 public:

@@ -18,6 +18,8 @@
 #include <type_traits>
 #include "callables.h"
 
+#include <AUI/Common/AObject.h>
+
 namespace aui {
 
     // the following concepts are partially copying stl functionality but android has no support for these
@@ -155,8 +157,8 @@ class AAbstractThread;
 
 template <typename T>
 concept AAnySignal = requires(T&& t) {
-    std::is_base_of_v<AAbstractSignal, T>;
     typename std::decay_t<T>::args_t;
+    { t.connect((AObject*)nullptr, [] {}, std::identity{}) };
 };
 
 template <typename C>

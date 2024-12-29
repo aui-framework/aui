@@ -288,6 +288,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
     EXPECT_EQ(user->name, "Vasil"); // still
     // AUI_DOCS_CODE_END
 }
+/*
 
 TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
     // Property-to-property is a bidirectional connection, so it requires two projections.

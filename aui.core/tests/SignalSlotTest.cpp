@@ -86,7 +86,7 @@ TEST_F(SignalSlot, Basic) {
 
 TEST_F(SignalSlot, BasicProjection1) {
     slave = _new<Slave>();
-    AObject::connect(master->message, [](const AString& s) { return s.length(); }, slot(slave)::acceptMessageInt);
+    AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), slot(slave)::acceptMessageInt);
 
     EXPECT_CALL(*slave, acceptMessageInt(5));
     EXPECT_CALL(*slave, die());
@@ -95,7 +95,7 @@ TEST_F(SignalSlot, BasicProjection1) {
 
 TEST_F(SignalSlot, BasicProjection2) {
     slave = _new<Slave>();
-    AObject::connect(master->message, &AString::length, slot(slave)::acceptMessageInt);
+    AObject::connect(master->message.projected(&AString::length), slot(slave)::acceptMessageInt);
 
     EXPECT_CALL(*slave, acceptMessageInt(5));
     EXPECT_CALL(*slave, die());
