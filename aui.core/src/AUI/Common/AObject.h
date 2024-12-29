@@ -36,6 +36,25 @@ public:
     [[nodiscard]] _weak<AObject> weakPtr() { return std::enable_shared_from_this<AObject>::weak_from_this(); }
 
     /**
+     * @brief Connects signal to the slot of the specified object with projection.
+     * @ingroup signal_slot
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(textField->text().changed, &AString::uppercase, slot(otherObjectRawPtr)::handleText);
+     * @endcode
+     * @param signal signal
+     * @param projection projection which transforms value between signal and slot.
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
+    template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
+    static void connect(const Signal& signal, Projection&& projection, Object* object, Function&& function) {
+        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function), std::forward<Projection>(projection));
+    }
+
+    /**
      * @brief Connects signal to the slot of the specified object.
      * @ingroup signal_slot
      * @details
@@ -47,11 +66,33 @@ public:
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
-     * @param projection projection
      */
-    template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function, typename Projection = std::identity>
-    static void connect(const Signal& signal, Object* object, Function&& function, Projection&& projection = {}) {
-        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function), std::forward<Projection>(projection));
+    template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
+    static void connect(const Signal& signal, Object* object, Function&& function) {
+        connect(signal, std::identity{}, object, function);
+    }
+
+    /**
+     * @brief Connects property to the slot of the specified object with projection.
+     * @ingroup property_system
+     * @details
+     * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
+     * property (pre-fire).
+     *
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(textField->text(), &AString::uppercase, slot(otherObjectRawPtr)::handleText);
+     * @endcode
+     * @param property property
+     * @param projection projection which transforms value between signal and slot.
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
+    template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function, typename Projection = std::identity>
+    static void connect(const Property& property, Projection&& projection, Object* object, Function&& function) {
+        std::decay_t<decltype(property.changed)>::makeCallable(object, function, projection)(*property);
+        connect(property.changed, std::forward<Projection>(projection), object, std::forward<Function>(function));
     }
 
     /**
@@ -64,21 +105,19 @@ public:
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
-     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * connect(textField->text(), slot(otherObjectRawPtr)::handleText);
      * @endcode
      * @param property property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
-     * @param projection projection
      */
-    template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function, typename Projection = std::identity>
-    static void connect(const Property& property, Object* object, Function&& function, Projection&& projection = {}) {
-        std::decay_t<decltype(property.changed)>::makeCallable(object, function, projection)(*property);
-        connect(property.changed, object, std::forward<Function>(function), std::forward<Projection>(projection));
+    template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function>
+    static void connect(const Property& property, Object* object, Function&& function) {
+        connect(property, std::identity{}, object, std::forward<Function>(function));
     }
 
     /**
-     * @brief Connects source property to the destination property. _(1)_
+     * @brief Connects source property to the destination property.
      * @ingroup property_system
      * @details
      * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
@@ -104,6 +143,31 @@ public:
     }
 
     /**
+     * @brief Connects signal or property to the slot of the specified object with projection.
+     * @ingroup signal_slot
+     * @ingroup property_system
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(textField->text(), &AString::uppercase, slot(otherObjectRef)::handleText);
+     * @endcode
+     * @param connectable signal or property
+     * @param projection projection which transforms value between signal and slot.
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
+    template <
+        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
+        typename Projection = std::identity>
+    static void
+    connect(const Connectable& connectable, Projection&& projection, Object& object, Function&& function)
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        connect(connectable, std::forward<Projection>(projection), &object, std::forward<Function>(function));
+    }
+
+    /**
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @ingroup property_system
@@ -118,14 +182,35 @@ public:
      * @param function slot. Can be lambda
      * @param projection projection
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
-        typename Projection = std::identity>
+    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, Object& object, Function&& function, Projection&& projection = {})
+    connect(const Connectable& connectable, Object& object, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
     {
-        connect(connectable, &object, std::forward<Function>(function), std::forward<Projection>(projection));
+        connect(connectable, std::identity{}, &object, std::forward<Function>(function));
+    }
+
+    /**
+     * @brief Connects signal or property to slot of \c "this" object with projection.
+     * @ingroup signal_slot
+     * @ingroup property_system
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(view->clicked, std::identity{}, [] { ALogger::info(LOG_TAG) << "Button clicked!"; });
+     * connect(textField->text(), &AString::uppercase, [](const AString& s) { ALogger::info(LOG_TAG) << "Uppercased: " << s; });
+     * @endcode
+     * @param connectable signal or property
+     * @param projection projection which transforms value between signal and slot.
+     * @param function slot. Can be lambda
+     */
+    template <typename Connectable, ACompatibleSlotFor<Connectable> Function, typename Projection = std::identity>
+    void connect(const Connectable& connectable, Projection&& projection, Function&& function)
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        const_cast<Connectable&>(connectable)
+            .connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
     }
 
     /**
@@ -137,18 +222,42 @@ public:
      * @example
      * @code{cpp}
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
+     * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
      * @endcode
      * @param connectable signal or property
+     * @param projection projection which transforms value between signal and slot.
      * @param function slot. Can be lambda
-     * @param projection projection
-     * @param projection projection
      */
-    template <typename Connectable, ACompatibleSlotFor<Connectable> Function, typename Projection = std::identity>
-    void connect(const Connectable& connectable, Function&& function, Projection&& projection = {})
+    template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
+    void connect(const Connectable& connectable, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
     {
-        const_cast<Connectable&>(connectable)
-            .connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
+        connect(connectable, std::identity{}, std::forward<Function>(function));
+    }
+
+    /**
+     * @brief Connects signal or property to the slot of the specified object with projection.
+     * @ingroup signal_slot
+     * @ingroup property_system
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * connect(view->clicked, std::identity{}, slot(otherObjectSharedPtr)::handleButtonClicked);
+     * connect(textField->text(), &AString::uppercase, slot(otherObjectSharedPtr)::handleText);
+     * @endcode
+     * @param connectable signal or property
+     * @param projection projection which transforms value between signal and slot.
+     * @param object instance of <code>AObject</code>
+     */
+    template <
+        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
+        typename Projection = std::identity>
+    static void
+    connect(const Connectable& connectable, Projection&& projection, _<Object> object, Function&& function)
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        connect(connectable, std::forward<Projection>(projection), object.get(), std::forward<Function>(function));
     }
 
     /**
@@ -160,32 +269,32 @@ public:
      * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
+     * connect(textField->text(), slot(otherObjectSharedPtr)::handleText);
      * @endcode
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
-        typename Projection = std::identity>
+    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, _<Object> object, Function&& function, Projection&& projection = {})
+    connect(const Connectable& connectable, _<Object> object, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
     {
-        connect(connectable, object.get(), std::forward<Function>(function), std::forward<Projection>(projection));
+        connect(connectable, std::identity{}, object.get(), std::forward<Function>(function));
     }
 
     /**
-     * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
+     * @brief Connects signal to the slot of the specified object with projection. Slot is packed to single argument.
      * @param connectable slot or signal
+     * @param projection projection which transforms value between signal and slot.
      * @param slotDef instance of <code>AObject</code> + slot
-     * @param projection projection
      *
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
-     * connect(view->clicked, ASlotDef { slot(otherObject)::handleButtonClicked });
+     * connect(view->clicked, std::identity{}, ASlotDef { slot(otherObject)::handleButtonClicked });
+     * connect(textField->text(), &AString::uppercase, ASlotDef { slot(otherObject)::handleText });
      * @endcode
      * @note
      * This overload is applicable for cases when you NEED to pass object and its slot via single argument. If possible,
@@ -198,21 +307,52 @@ public:
         typename Connectable, aui::derived_from<AObjectBase> Object, typename Function,
         typename Projection = std::identity>
     static void
-    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef, Projection&& projection = {})
+    connect(const Connectable& connectable, Projection&& projection, ASlotDef<Object*, Function> slotDef)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
     {
-        connect(connectable, slotDef.boundObject, std::move(slotDef.invocable), std::forward<Projection>(projection));
+        connect(connectable, std::forward<Projection>(projection), slotDef.boundObject, std::move(slotDef.invocable));
     }
 
     /**
-     * @brief Connects signal or property to the slot of the specified non-AObject type.
+     * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
+     * @param connectable slot or signal
+     * @param slotDef instance of <code>AObject</code> + slot
+     *
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @example
      * @code{cpp}
+     * connect(view->clicked, ASlotDef { slot(otherObject)::handleButtonClicked });
+     * connect(textField->text(), ASlotDef { slot(otherObject)::handleText });
+     * @endcode
+     * @note
+     * This overload is applicable for cases when you NEED to pass object and its slot via single argument. If possible,
+     * consider using shorter overload:
+     * @code{cpp}
      * connect(view->clicked, slot(otherObject)::handleButtonClicked);
      * @endcode
-     * @param property property
+     */
+    template <
+        typename Connectable, aui::derived_from<AObjectBase> Object, typename Function>
+    static void
+    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef)
+        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
+    {
+        connect(connectable, std::identity{}, slotDef.boundObject, std::move(slotDef.invocable));
+    }
+
+    /**
+     * @brief Connects signal or property to the slot of the specified non-AObject type.
+     * @ingroup property_system
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * struct User { AProperty<AString> name }; // user.name here is non-AObject type
+     * connect(textField->text(), &AString::uppercase, user->name.assignment());
+     * @endcode
+     * @param connectable slot or signal
+     * @param projection projection which transforms value between signal and slot.
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
@@ -220,12 +360,34 @@ public:
         AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function,
         typename Projection = std::identity>
     static void
-    connect(const Property& property, _<Object> object, Function&& function, Projection&& projection = {})
+    connect(const Property& property, Projection&& projection, _<Object> object, Function&& function)
         requires (!aui::derived_from<Object, AObject>)
     {
         std::decay_t<decltype(property.changed)>::makeCallable(nullptr, function, projection)(*property);
-        connect(property.changed, object, std::forward<Function>(function), std::forward<Projection>(projection));
-        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), std::forward<Function>(function), std::forward<Projection>(projection));
+        connect(property.changed, std::forward<Projection>(projection), object, std::forward<Function>(function));
+        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), std::forward<Projection>(projection), std::forward<Function>(function));
+    }
+
+    /**
+     * @brief Connects signal or property to the slot of the specified non-AObject type.
+     * @ingroup property_system
+     * @details
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @example
+     * @code{cpp}
+     * struct User { AProperty<AString> name }; // user.name here is non-AObject type
+     * connect(textField->text(), user->name.assignment());
+     * @endcode
+     * @param connectable slot or signal
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
+    template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
+    static void
+    connect(const Property& property, _<Object> object, Function&& function)
+        requires (!aui::derived_from<Object, AObject>)
+    {
+        connect(property, std::identity{}, std::move(object), std::forward<Function>(function));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }

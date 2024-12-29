@@ -80,7 +80,7 @@ TEST(PropertyTest, PropertyConnectionWithProjection) {
     auto u = aui::ptr::manage(User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name, slot(receiver)::receiveInt, &AString::length);
+    AObject::connect(u->name, &AString::length, slot(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";
