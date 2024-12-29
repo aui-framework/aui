@@ -201,13 +201,10 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
-        typename Projection = std::identity>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
+              ACompatibleSlotFor<Connectable> Function, typename Projection = std::identity>
     static void
-    connect(const Connectable& connectable, Projection&& projection, Object& object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, Projection&& projection, Object& object, Function&& function) {
         connect(connectable, std::forward<Projection>(projection), &object, std::forward<Function>(function));
     }
 
@@ -226,11 +223,10 @@ public:
      * @param function slot. Can be lambda
      * @param projection projection
      */
-    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
+        ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, Object& object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, Object& object, Function&& function) {
         connect(connectable, std::identity{}, &object, std::forward<Function>(function));
     }
 
@@ -249,10 +245,9 @@ public:
      * @param projection projection which transforms value between signal and slot.
      * @param function slot. Can be lambda
      */
-    template <typename Connectable, ACompatibleSlotFor<Connectable> Function, typename Projection = std::identity>
-    void connect(const Connectable& connectable, Projection&& projection, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    template <AAnySignalOrProperty Connectable, ACompatibleSlotFor<Connectable> Function,
+        typename Projection = std::identity>
+    void connect(const Connectable& connectable, Projection&& projection, Function&& function) {
         const_cast<Connectable&>(connectable)
             .connect(this, std::forward<Function>(function), std::forward<Projection>(projection));
     }
@@ -272,10 +267,8 @@ public:
      * @param projection projection which transforms value between signal and slot.
      * @param function slot. Can be lambda
      */
-    template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
-    void connect(const Connectable& connectable, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    template <AAnySignalOrProperty Connectable, ACompatibleSlotFor<Connectable> Function>
+    void connect(const Connectable& connectable, Function&& function) {
         connect(connectable, std::identity{}, std::forward<Function>(function));
     }
 
@@ -294,13 +287,10 @@ public:
      * @param projection projection which transforms value between signal and slot.
      * @param object instance of <code>AObject</code>
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function,
         typename Projection = std::identity>
     static void
-    connect(const Connectable& connectable, Projection&& projection, _<Object> object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, Projection&& projection, _<Object> object, Function&& function) {
         connect(connectable, std::forward<Projection>(projection), object.get(), std::forward<Function>(function));
     }
 
@@ -319,11 +309,9 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, _<Object> object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, _<Object> object, Function&& function) {
         connect(connectable, std::identity{}, object.get(), std::forward<Function>(function));
     }
 
@@ -348,12 +336,10 @@ public:
      * @endcode
      */
     template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, typename Function,
+        AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function,
         typename Projection = std::identity>
     static void
-    connect(const Connectable& connectable, Projection&& projection, ASlotDef<Object*, Function> slotDef)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, Projection&& projection, ASlotDef<Object*, Function> slotDef) {
         connect(connectable, std::forward<Projection>(projection), slotDef.boundObject, std::move(slotDef.invocable));
     }
 
@@ -376,12 +362,9 @@ public:
      * connect(view->clicked, slot(otherObject)::handleButtonClicked);
      * @endcode
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, typename Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static void
-    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef) {
         connect(connectable, std::identity{}, slotDef.boundObject, std::move(slotDef.invocable));
     }
 

@@ -194,3 +194,19 @@ concept AAnyProperty = requires(T&& t) {
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
 };
+
+template <typename T>
+concept AAnySignalOrProperty = AAnySignal<T> || AAnyProperty<T>;
+
+
+template<AAnySignalOrProperty T>
+struct AAnySignalOrPropertyTraits;
+
+template<AAnySignal T>
+struct AAnySignalOrPropertyTraits<T> {
+    using args = typename T::args_t;
+};
+template<AAnyProperty T>
+struct AAnySignalOrPropertyTraits <T>{
+    using args = std::tuple<typename T::Underlying>;
+};

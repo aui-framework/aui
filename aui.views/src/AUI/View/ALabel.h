@@ -32,7 +32,11 @@ namespace declarative {
 
 template<>
 struct ADataBindingDefault<ALabel, AString> {
-   public:
+public:
+    static auto property(const _<ALabel>& view) {
+        return view->text();
+    }
+
     static void setup(const _<ALabel>& view) {
     }
 
