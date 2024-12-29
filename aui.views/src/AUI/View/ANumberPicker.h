@@ -46,6 +46,18 @@ private:
 public:
     ANumberPicker();
 
+    /**
+     * @brief Value property.
+     */
+    auto value() const {
+        return APropertyDef {
+            this,
+            &ANumberPicker::getValue,
+            &ANumberPicker::setValue,
+            valueChanging
+        };
+    }
+
     void setValue(int64_t v);
 
     int64_t getValue() const;
@@ -77,7 +89,7 @@ signals:
     /**
      * @brief Number is changing.
      */
-    emits<> valueChanging;
+    emits<int64_t> valueChanging;
 };
 
 namespace aui::impl {

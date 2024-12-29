@@ -23,6 +23,7 @@
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ADropdownList.h"
 #include "AUI/Model/AListModel.h"
+#include "AUI/View/ANumberPicker.h"
 
 class UIDataBindingTest : public testing::UITest {
 public:
@@ -51,6 +52,7 @@ public:
 // 8. 2 syntax variants: procedural (straightforward) and declarative
 // 9. two property variants: simple field (AProperty) and custom getter/setter (APropertyDef)
 // 10. some properties can be readonly
+// 11. propagating strong types' traits on views
 //
 // Learning curve is relatively flat, so be sure to
 // [ask questions and open issues](https://github.com/aui-framework/aui/issues) on our GitHub page.
@@ -437,6 +439,45 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
     // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
+}
+
+TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
+    using namespace declarative;
+    // In AUI, there's aui::ranged_number template which stores valid value range right inside the type:
+    // AUI_DOCS_CODE_BEGIN
+    struct User {
+        AProperty<aui::ranged_number<int, 1, 99>> age;
+    };
+    // AUI_DOCS_CODE_END
+
+    //
+    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker:
+
+    auto user = aui::ptr::manage(User { .age = 18 });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+            setContents(Centered {
+                // AUI_DOCS_CODE_BEGIN
+                _new<ANumberPicker>() let {
+                  AObject::connect(user->age, it->value());
+                },
+                // AUI_DOCS_CODE_END
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    auto numberPicker = _cast<ANumberPicker>(By::type<ANumberPicker>().one());
+
+    //
+    // By creating this connection, we've done a little bit more. We've set ANumberPicker::setMin and
+    // ANumberPicker::setMax as well:
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(numberPicker->getMin(), 1);
+    EXPECT_EQ(numberPicker->getMax(), 99);
+    // AUI_DOCS_CODE_END
 }
 
 /*

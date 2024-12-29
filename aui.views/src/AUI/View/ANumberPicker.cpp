@@ -95,7 +95,7 @@ ANumberPicker::ANumberPicker() {
     });
 
     connect(mTextField->textChanging, this, [&]() {
-        emit valueChanging();
+        emit valueChanging(getValue());
     });
 
     addView(c);
@@ -138,5 +138,5 @@ void ANumberPicker::decrease() {
 
 void ANumberPicker::changeBy(int64_t v) {
     setValue(getValue() + v);
-    emit valueChanging();
+    emit valueChanging(getValue());
 }
