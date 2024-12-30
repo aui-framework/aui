@@ -50,7 +50,7 @@ public:
      */
     template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
     static void connect(const Signal& signal, Object* object, Function&& function) {
-        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function), std::identity{});
+        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function));
     }
 
     /**
@@ -144,8 +144,7 @@ public:
     void connect(const Connectable& connectable, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
     {
-        const_cast<Connectable&>(connectable)
-            .connect(this, std::forward<Function>(function), std::identity{});
+        connect(this, std::forward<Function>(function));
     }
 
     /**
@@ -218,9 +217,9 @@ public:
     connect(const Property& property, _<Object> object, Function&& function)
         requires (!aui::derived_from<Object, AObject>)
     {
-        std::decay_t<decltype(property.changed)>::makeCallable(nullptr, function, std::identity{})(*property);
+        std::decay_t<decltype(property.changed)>::makeCallable(nullptr, function)(*property);
         connect(property.changed, object, std::forward<Function>(function));
-        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), std::identity{}, std::forward<Function>(function));
+        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), std::forward<Function>(function));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }
