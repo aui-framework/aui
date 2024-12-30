@@ -26,20 +26,55 @@ struct ProjectedSignal {
     AnySignal& base;
     Projection projection;
 
+    static constexpr bool IS_PROJECTION_LAMBDA = aui::not_overloaded_lambda<Projection>;
+    using projection_info_t = decltype([] {
+        if constexpr (IS_PROJECTION_LAMBDA) {
+            return aui::lambda_info<std::decay_t<Projection>>{};
+        } else {
+            return aui::member<std::decay_t<Projection>>{};
+        }
+    }());
+
+    using projection_returns_t = typename projection_info_t::return_t;
+
+    static constexpr bool IS_PROJECTION_RETURNS_TUPLE = aui::is_tuple<projection_returns_t>;
+
+    using emits_args_t =  std::conditional_t<IS_PROJECTION_RETURNS_TUPLE,
+                                       projection_returns_t,
+                                       std::tuple<projection_returns_t>>;
+
     template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
     void connect(Object objectBase, Lambda&& lambda) {
-        tuple_visitor<typename lambda_info<Lambda>::args>::for_each_all([&]<typename... LambdaArgs>() {
+        tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... LambdaArgs>() {
+            /*
             base.connect(objectBase, [invocable = std::forward<Lambda>(lambda), projection = projection](LambdaArgs&&... args) {
                 auto result = std::invoke(projection, std::forward<LambdaArgs>(args)...);
-                if constexpr (requires { std::apply(invocable, std::move(result)); }) {
+                if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
                     std::apply(invocable, std::move(result));
                 } else {
                     std::invoke(invocable, std::move(result));
                 }
-            });
+            });*/
         });
     }
 };
+
+
+template<size_t I, typename TupleInitial, typename TupleAll>
+auto resizeTuple(TupleInitial initial, TupleAll all) {
+    if constexpr (I == 0) {
+        return initial;
+    } else {
+        return resizeTuple<I - 1>(std::tuple_cat(initial, std::make_tuple(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
+    }
+}
+
+template<aui::not_overloaded_lambda Lambda, typename... Args>
+inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
+    static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
+    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(args...));
+    std::apply(lambda, smallerTuple);
+}
 }
 
 template<typename... Args>
@@ -51,112 +86,12 @@ class ASignal final: public AAbstractSignal
     friend class AWatchable;
 public:
     using func_t = std::function<void(Args...)>;
-    using args_t = std::tuple<Args...>;
-
-private:
-    struct slot
-    {
-        AObjectBase* objectBase;
-        AObject* object;
-        func_t func;
-        bool isDisconnected = false;
-    };
-
-    mutable AVector<_<slot>> mSlots;
+    using emits_args_t = std::tuple<Args...>;
 
     template<typename Projection>
     auto projected(Projection&& projection) {
         return aui::detail::signal::ProjectedSignal(*this, std::forward<Projection>(projection));
     }
-
-    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
-
-    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
-    void connect(Object objectBase, Lambda&& lambda) {
-        AObject* object = nullptr;
-        if constexpr (requires { object = objectBase; }) {
-            object = objectBase;
-        }
-        mSlots.push_back(_new<slot>(slot { objectBase, object, makeCallable(std::forward<Lambda>(lambda)) }));
-        linkSlot(objectBase);
-    }
-
-    template<typename Lambda, typename... A>
-    struct argument_ignore_helper;
-
-    // empty arguments
-    template<typename Lambda>
-    struct argument_ignore_helper<void(Lambda::*)() const>
-    {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
-
-        template<typename... Others>
-        void operator()(Others&... args) const {
-            l();
-        }
-    };
-
-    template<typename Lambda, typename A1>
-    struct argument_ignore_helper<void(Lambda::*)(A1) const>
-    {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
-
-        template<typename... Others>
-        void operator()(A1&& a1, Others&...) const {
-            l(std::forward<A1>(a1));
-        }
-    };
-    template<typename Lambda, typename A1, typename A2>
-    struct argument_ignore_helper<void(Lambda::*)(A1, A2) const>
-    {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
-
-        template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, Others&...) const
-        {
-            l(std::forward<A1>(a1), std::forward<A2>(a2));
-        }
-    };
-
-    template<typename Lambda, typename A1, typename A2, typename A3>
-    struct argument_ignore_helper<void(Lambda::*)(A1, A2, A3) const>
-    {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
-
-        template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...) const
-        {
-            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
-        }
-    };
-
-    template<aui::not_overloaded_lambda Lambda>
-    static auto makeCallable(Lambda&& lambda)
-    {
-        return argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda));
-    }
-
-public:
 
     struct call_wrapper {
         ASignal& signal;
@@ -206,6 +141,38 @@ public:
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
             return s->objectBase == object.ptr();
         });
+    }
+
+
+private:
+    struct slot
+    {
+        AObjectBase* objectBase;
+        AObject* object;
+        func_t func;
+        bool isDisconnected = false;
+    };
+
+    mutable AVector<_<slot>> mSlots;
+
+    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
+
+    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
+    void connect(Object objectBase, Lambda&& lambda) {
+        AObject* object = nullptr;
+        if constexpr (requires { object = objectBase; }) {
+            object = objectBase;
+        }
+        mSlots.push_back(_new<slot>(slot { objectBase, object, ignoreExcessArgs(std::forward<Lambda>(lambda)) }));
+        linkSlot(objectBase);
+    }
+
+    template<aui::not_overloaded_lambda Lambda>
+    static auto ignoreExcessArgs(Lambda&& lambda)
+    {
+        return [lambda = std::forward<Lambda>(lambda)](Args... args){
+            aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
+        };
     }
 
 private:
@@ -322,3 +289,27 @@ template<typename... Args>
 using emits = ASignal<Args...>;
 
 #define signals public
+
+/*
+
+// UNCOMMENT THIS to test ProjectedSignal
+
+static_assert(requires (aui::detail::signal::ProjectedSignal<emits<int>, decltype([](int) { return double(0);})> t) {
+    requires decltype(t)::IS_PROJECTION_LAMBDA;
+    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
+    { decltype(t)::base } -> aui::same_as<ASignal<int>&>;
+    { decltype(t)::projection } -> aui::not_overloaded_lambda;
+    { decltype(t)::projection_returns_t{} } -> aui::same_as<double>;
+    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<double>>;
+    { decltype(t)::projection_info_t::args{} } -> aui::same_as<std::tuple<int>>;
+    { decltype(t)::projection_info_t::return_t{} } -> aui::same_as<double>;
+});
+
+static_assert(requires (aui::detail::signal::ProjectedSignal<emits<AString>, decltype(&AString::length)> t) {
+    requires !decltype(t)::IS_PROJECTION_LAMBDA;
+    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
+    { decltype(t)::base } -> aui::same_as<ASignal<AString>&>;
+    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<size_t>>;
+    { decltype(t)::projection_returns_t{} } -> aui::same_as<size_t>;
+});
+*/

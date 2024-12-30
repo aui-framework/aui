@@ -19,9 +19,9 @@ namespace aui::detail {
     return std::forward<Lambda>(lambda);
   }
 
-  template<typename Object, typename Returns, typename... Args>
-  auto makeLambda(Object* object, Returns(Object::*method)(Args...)) {
-    return [object, method](Args&&... args) {
+  template<typename Object1, typename Object2, typename Returns, typename... Args>
+  auto makeLambda(Object1* object, Returns(Object2::*method)(Args...)) {
+    return [object, method](Args... args) {
       (object->*method)(std::forward<Args>(args)...);
     };
   }
@@ -134,9 +134,7 @@ public:
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
         ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, Object& object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, Object& object, Function&& function) {
         connect(connectable, &object, std::forward<Function>(function));
     }
 
@@ -156,9 +154,7 @@ public:
      * @param function slot. Can be lambda
      */
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
-    void connect(const Connectable& connectable, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    void connect(const Connectable& connectable, Function&& function) {
         connect(this, std::forward<Function>(function));
     }
 
@@ -179,9 +175,7 @@ public:
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static void
-    connect(const Connectable& connectable, _<Object> object, Function&& function)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, _<Object> object, Function&& function) {
         connect(connectable, object.get(), std::forward<Function>(function));
     }
 
@@ -206,9 +200,7 @@ public:
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static void
-    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef)
-        requires AAnySignal<Connectable> || AAnyProperty<Connectable>
-    {
+    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef) {
         connect(connectable, slotDef.boundObject, std::move(slotDef.invocable));
     }
 

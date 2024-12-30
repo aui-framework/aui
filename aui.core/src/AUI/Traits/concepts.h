@@ -146,6 +146,14 @@ namespace aui {
 
     template<typename T>
     concept unsigned_integral = std::is_unsigned_v<T>;
+
+    template<typename T>
+    concept is_tuple = requires { std::tuple_size<T>::value; };
+    static_assert(is_tuple<std::tuple<>>);
+    static_assert(is_tuple<std::tuple<int>>);
+    static_assert(is_tuple<std::tuple<double>>);
+    static_assert(!is_tuple<int>);
+    static_assert(!is_tuple<double>);
 }
 
 // AObject-related concepts
@@ -156,8 +164,7 @@ class API_AUI_CORE AObjectBase;
 
 template <typename T>
 concept AAnySignal = requires(T&& t) {
-    typename std::decay_t<T>::args_t;
-    { t.connect((AObjectBase*)nullptr, [] {}) };
+    typename std::decay_t<T>::emits_args_t;
 };
 
 template <typename C>
@@ -205,7 +212,7 @@ struct AAnySignalOrPropertyTraits;
 
 template<AAnySignal T>
 struct AAnySignalOrPropertyTraits<T> {
-    using args = typename T::args_t;
+    using args = typename T::emits_args_t;
 };
 template<AAnyProperty T>
 struct AAnySignalOrPropertyTraits <T>{
