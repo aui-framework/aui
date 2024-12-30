@@ -163,11 +163,12 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
 }
 
 
-// # UI data building with let
+// # UI data binding with let
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
 // deeper understanding on how connections are made and what does declarative way do under the hood. This way may be
-// used in favour of declarative way if the latter not work for you.
+// used in favour of declarative way if the latter not work for you. For declarative way, search for `"UI declarative
+// data binding"` on this page.
 //
 // This approach allows more control over the binding process by using AObject::connect which is a procedural way of
 // setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill for such a simple
@@ -481,14 +482,34 @@ TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
     // AUI_DOCS_CODE_END
 }
 
-/*
+namespace declarative {
+    template<AAnySignalOrProperty Connectable>
+    struct binding {
+        const Connectable& connectable;
+    };
+
+    template<typename Object, AAnySignalOrProperty Connectable>
+    inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
+        aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+            using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+            AObject::connect(binding, Binding::property(object));
+        });
+        return object;
+    }
+}
+
+//
+// # UI declarative data binding
+// As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
+//
+// Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
+// `AObject::connect` (for ease of replacement), besides that
+//
+// Declarative syntax uses `&&` to set up connections. This particular operator was chosen intentionally: `&&` resembles
+// chain, so we "chaining view and property up".
+//
+// The example below is essentially the same as "Label via let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
-    // As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
-    //
-    // Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
-    // AObject::connect (for ease of replacement), besides that The example below is essentially the same as "Label via
-    // declarative" but uses declarative connection set up syntax.
-    //
     // Use \c && expression to connect the model's username property to the label's @ref ALabel::text "text()"
     // property.
     // AUI_DOCS_CODE_BEGIN
@@ -504,7 +525,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-                label = _new<ALabel>() && connection(&ALabel::text, std::identity{},)
+                (label = _new<ALabel>()) && user->name
             });
 
             // Both label and user should hold name Roza.
@@ -533,7 +554,6 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 }
-*/
 
 /*
 TEST_F(UIDataBindingTest, LabelViaLetAssignment) {

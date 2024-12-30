@@ -117,7 +117,8 @@ public:
      * @param function slot. Can be lambda
      * @param projection projection
      */
-    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
+        ACompatibleSlotFor<Connectable> Function>
     static void
     connect(const Connectable& connectable, Object& object, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
@@ -162,7 +163,7 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template <typename Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static void
     connect(const Connectable& connectable, _<Object> object, Function&& function)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>
@@ -189,8 +190,7 @@ public:
      * connect(view->clicked, slot(otherObject)::handleButtonClicked);
      * @endcode
      */
-    template <
-        typename Connectable, aui::derived_from<AObjectBase> Object, typename Function>
+    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static void
     connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef)
         requires AAnySignal<Connectable> || AAnyProperty<Connectable>

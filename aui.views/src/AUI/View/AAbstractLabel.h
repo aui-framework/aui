@@ -149,6 +149,10 @@ private:
 template<>
 struct ADataBindingDefault<AAbstractLabel, AString> {
 public:
+    static auto property(const _<AAbstractLabel>& view) {
+        return view->text();
+    }
+
     static void setup(const _<AAbstractLabel>& view) {}
 
     static auto getGetter() {

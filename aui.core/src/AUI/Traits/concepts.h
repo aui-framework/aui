@@ -18,8 +18,6 @@
 #include <type_traits>
 #include "callables.h"
 
-#include <AUI/Common/AObject.h>
-
 namespace aui {
 
     // the following concepts are partially copying stl functionality but android has no support for these
@@ -195,4 +193,20 @@ concept AAnyProperty = requires(T&& t) {
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
+};
+
+template <typename T>
+concept AAnySignalOrProperty = AAnySignal<T> || AAnyProperty<T>;
+
+
+template<AAnySignalOrProperty T>
+struct AAnySignalOrPropertyTraits;
+
+template<AAnySignal T>
+struct AAnySignalOrPropertyTraits<T> {
+    using args = typename T::args_t;
+};
+template<AAnyProperty T>
+struct AAnySignalOrPropertyTraits <T>{
+    using args = std::tuple<typename T::Underlying>;
 };
