@@ -13,6 +13,20 @@
 
 #include "AObjectBase.h"
 
+namespace aui::detail {
+  template<typename Object, typename Lambda>
+  Lambda&& makeLambda(Object*, Lambda&& lambda) requires requires { std::is_class_v<Lambda>; } {
+    return std::forward<Lambda>(lambda);
+  }
+
+  template<typename Object, typename Returns, typename... Args>
+  auto makeLambda(Object* object, Returns(Object::*method)(Args...)) {
+    return [object, method](Args&&... args) {
+      (object->*method)(std::forward<Args>(args)...);
+    };
+  }
+}
+
 /**
  * @brief A base object class.
  * @ingroup core signal_slot
@@ -50,7 +64,7 @@ public:
      */
     template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
     static void connect(const Signal& signal, Object* object, Function&& function) {
-        const_cast<Signal&>(signal).connect(object, std::forward<Function>(function));
+        const_cast<Signal&>(signal).connect(object, aui::detail::makeLambda(object, std::forward<Function>(function)));
     }
 
     /**
@@ -219,7 +233,7 @@ public:
     {
         std::decay_t<decltype(property.changed)>::makeCallable(nullptr, function)(*property);
         connect(property.changed, object, std::forward<Function>(function));
-        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), std::forward<Function>(function));
+        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), aui::detail::makeLambda(object,std::forward<Function>(function)));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }

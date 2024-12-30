@@ -21,6 +21,8 @@ namespace aui {
 
     template<typename F>
     concept not_overloaded_lambda = requires(F&& f) {
+        // we can't 100% guarantee that T is actual lambda, but C++ lambdas have following traits:
+        std::is_class_v<F>;
         { &F::operator() };
     };
 

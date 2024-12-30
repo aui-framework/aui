@@ -26,15 +26,17 @@ struct ProjectedSignal {
     AnySignal& base;
     Projection projection;
 
-    template <aui::convertible_to<AObjectBase*> Object, typename Invocable>
-    void connect(Object objectBase, Invocable&& invocable) {
-        base.connect(objectBase, [invocable = std::forward<Invocable>(invocable), projection = projection]() {
-            auto result = std::invoke(projection, args...);
-            if constexpr (requires { std::apply(invocable, std::move(result)); }) {
-                std::apply(invocable, std::move(result));
-            } else {
-                std::invoke(invocable, std::move(result));
-            }
+    template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
+    void connect(Object objectBase, Lambda&& lambda) {
+        tuple_visitor<typename lambda_info<Lambda>::args>::for_each_all([&]<typename... LambdaArgs>() {
+            base.connect(objectBase, [invocable = std::forward<Lambda>(lambda), projection = projection](LambdaArgs&&... args) {
+                auto result = std::invoke(projection, std::forward<LambdaArgs>(args)...);
+                if constexpr (requires { std::apply(invocable, std::move(result)); }) {
+                    std::apply(invocable, std::move(result));
+                } else {
+                    std::invoke(invocable, std::move(result));
+                }
+            });
         });
     }
 };
@@ -69,20 +71,18 @@ private:
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
-    template <aui::convertible_to<AObjectBase*> Object, typename Invocable>
-    void connect(Object objectBase, Invocable&& invocable) {
+    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
+    void connect(Object objectBase, Lambda&& lambda) {
         AObject* object = nullptr;
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
-        mSlots.push_back(_new<slot>(slot {
-          objectBase, object,
-          makeCallable(objectBase, std::forward<Invocable>(invocable)) }));
+        mSlots.push_back(_new<slot>(slot { objectBase, object, makeCallable(std::forward<Lambda>(lambda)) }));
         linkSlot(objectBase);
     }
 
     template<typename Lambda, typename... A>
-    struct argument_ignore_helper {};
+    struct argument_ignore_helper;
 
     // empty arguments
     template<typename Lambda>
@@ -96,7 +96,7 @@ private:
         }
 
         template<typename... Others>
-        void operator()(Others&... args) {
+        void operator()(Others&... args) const {
             l();
         }
     };
@@ -112,7 +112,7 @@ private:
         }
 
         template<typename... Others>
-        void operator()(A1&& a1, Others&...) {
+        void operator()(A1&& a1, Others&...) const {
             l(std::forward<A1>(a1));
         }
     };
@@ -127,7 +127,7 @@ private:
         }
 
         template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, Others&...)
+        void operator()(A1&& a1, A2&& a2, Others&...) const
         {
             l(std::forward<A1>(a1), std::forward<A2>(a2));
         }
@@ -144,29 +144,16 @@ private:
         }
 
         template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...)
+        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...) const
         {
             l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
         }
     };
 
-    // Lambda function
-    template<class Object, class Lambda, typename Projection>
-    static auto makeCallable(Object object, Lambda&& lambda)
+    template<aui::not_overloaded_lambda Lambda>
+    static auto makeCallable(Lambda&& lambda)
     {
-        static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
         return argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda));
-    }
-
-    // Member function
-    template<class Derived, class Object, typename... FArgs, typename Projection>
-    static auto makeCallable(Derived derived, void(Object::* memberFunction)(FArgs...))
-    {
-        auto* object = static_cast<Object*>(derived);
-        return makeCallable(object, [object, memberFunction](FArgs... args)
-        {
-          (object->*memberFunction)(args...);
-        });
     }
 
 public:

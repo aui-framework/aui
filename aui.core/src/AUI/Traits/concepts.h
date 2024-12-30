@@ -152,11 +152,12 @@ namespace aui {
 class AString;
 class AAbstractSignal;
 class AAbstractThread;
+class API_AUI_CORE AObjectBase;
 
 template <typename T>
 concept AAnySignal = requires(T&& t) {
     typename std::decay_t<T>::args_t;
-    { t.connect((AObject*)nullptr, [] {}, std::identity{}) };
+    { t.connect((AObjectBase*)nullptr, [] {}) };
 };
 
 template <typename C>
