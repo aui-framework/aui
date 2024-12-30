@@ -20,20 +20,38 @@
 #include "AUI/Traits/values.h"
 
 namespace aui::detail::signal {
+
+template<typename Projection>
+struct projection_info {
+private:
+    template <typename... T>
+    struct cat;
+
+    template <typename First, typename... T>
+    struct cat<First, std::tuple<T...>> {
+        using type = std::tuple<First, T...>;
+    };
+
+public:
+    using info = aui::member<Projection>;
+    using return_t = typename info::return_t;
+    using args = cat<typename info::clazz&, typename info::args>::type;
+};
+template<aui::not_overloaded_lambda Projection>
+struct projection_info<Projection> {
+    using info =  aui::lambda_info<Projection>;
+    using return_t = typename info::return_t;
+    using args = typename info::args;
+};
+
+
 template<typename AnySignal, // can't use AAnySignal here, as concept would depend on itself
          typename Projection>
 struct ProjectedSignal {
     AnySignal& base;
     Projection projection;
 
-    static constexpr bool IS_PROJECTION_LAMBDA = aui::not_overloaded_lambda<Projection>;
-    using projection_info_t = decltype([] {
-        if constexpr (IS_PROJECTION_LAMBDA) {
-            return aui::lambda_info<std::decay_t<Projection>>{};
-        } else {
-            return aui::member<std::decay_t<Projection>>{};
-        }
-    }());
+    using projection_info_t = aui::detail::signal::projection_info<Projection>;
 
     using projection_returns_t = typename projection_info_t::return_t;
 
@@ -46,7 +64,6 @@ struct ProjectedSignal {
     template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
     void connect(Object objectBase, Lambda&& lambda) {
         tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... LambdaArgs>() {
-            /*
             base.connect(objectBase, [invocable = std::forward<Lambda>(lambda), projection = projection](LambdaArgs&&... args) {
                 auto result = std::invoke(projection, std::forward<LambdaArgs>(args)...);
                 if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
@@ -54,7 +71,7 @@ struct ProjectedSignal {
                 } else {
                     std::invoke(invocable, std::move(result));
                 }
-            });*/
+            });
         });
     }
 };
@@ -81,6 +98,9 @@ template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
     friend class AObject;
+    template<typename AnySignal,
+              typename Projection>
+    friend struct aui::detail::signal::ProjectedSignal;
 
     template <typename T>
     friend class AWatchable;
@@ -295,7 +315,6 @@ using emits = ASignal<Args...>;
 // UNCOMMENT THIS to test ProjectedSignal
 
 static_assert(requires (aui::detail::signal::ProjectedSignal<emits<int>, decltype([](int) { return double(0);})> t) {
-    requires decltype(t)::IS_PROJECTION_LAMBDA;
     requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
     { decltype(t)::base } -> aui::same_as<ASignal<int>&>;
     { decltype(t)::projection } -> aui::not_overloaded_lambda;
@@ -306,7 +325,6 @@ static_assert(requires (aui::detail::signal::ProjectedSignal<emits<int>, decltyp
 });
 
 static_assert(requires (aui::detail::signal::ProjectedSignal<emits<AString>, decltype(&AString::length)> t) {
-    requires !decltype(t)::IS_PROJECTION_LAMBDA;
     requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
     { decltype(t)::base } -> aui::same_as<ASignal<AString>&>;
     { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<size_t>>;
