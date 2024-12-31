@@ -299,7 +299,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
 TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
     // Property-to-property is a bidirectional connection, so it requires two projections.
     //
-    // By using ".assignment()" syntax, it's fairly easy to define a projection because property-to-slot requires
+    // By using `".assignment()"` syntax, it's fairly easy to define a projection because property-to-slot requires
     // exactly one projection.
     using namespace declarative;
 
@@ -768,7 +768,7 @@ TEST_F(UIDataBindingTest, LabelViaLetAssignment) {
 }
 
 TEST_F(UIDataBindingTest, LabelViaLetAssignmentProjection) {
-    // by using ".assignment()" syntax, we can now use "projection" feature to modify the contents of string displayed
+    // by using `".assignment()"` syntax, we can now use "projection" feature to modify the contents of string displayed
     // by label yet keeping original value in Model.
 
     struct Model {
