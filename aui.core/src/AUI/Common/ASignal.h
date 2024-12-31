@@ -66,7 +66,9 @@ struct ProjectedSignal {
     friend class ::AObject;
 
     AnySignal& base;
-    Projection projection;
+    std::decay_t<Projection> projection;
+
+    ProjectedSignal(AnySignal& base, Projection projection) : base(base), projection(std::move(projection)) {}
 
     using projection_info_t = aui::detail::signal::projection_info<Projection>;
 

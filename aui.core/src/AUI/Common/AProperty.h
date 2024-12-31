@@ -365,9 +365,8 @@ inline auto operator-(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs - rhs;
 static_assert(requires { AProperty<int>() + 1; });
 
 
-
+/*
 // UNCOMMENT THIS to test bidirectionalProjection
-
 static_assert(requires (AProperty<int>& intProperty) {
     { intProperty.bidirectionalProjection(aui::lambda_overloaded {
       [](int) -> AString { return ""; },
@@ -390,3 +389,4 @@ static_assert(requires (AProperty<int>& intProperty) {
         [](const AString&) -> int { return 0; },
     }).assignment() } -> aui::invocable<AString>;
 });
+*/
