@@ -31,8 +31,30 @@ auto makeAssignment(Property&& property) {
 }
 
 template<typename Property, typename Projection>
-auto makeProjection(Property& property, Projection&& projection) {
-    return property;
+auto makeProjection(Property&& property, Projection&& projection) {
+    using Underlying = std::decay_t<decltype(*property)>;
+    using Signal = decltype(property.changed);
+    using ProjectionResult = std::invoke_result_t<Projection, Underlying>;
+    struct PropertyProjected {
+        Property wrappedProperty;
+        Projection projection;
+        Signal& changed;
+
+        using Underlying = ProjectionResult;
+
+        Underlying value() const {
+            return projection(wrappedProperty.value());
+        }
+
+        [[nodiscard]]
+        Underlying operator*() const noexcept {
+            return value();
+        }
+
+        [[nodiscard]] operator Underlying() const { return value(); }
+    };
+    static_assert(APropertyReadable<PropertyProjected>, "PropertyProjected must conform with APropertyReadable");
+    return PropertyProjected { std::forward<Property>(property), std::forward<Projection>(projection), property.changed };
 }
 }
 
@@ -77,16 +99,6 @@ struct AProperty: AObjectBase {
         t.invokeSignal(nullptr);
     }
 
-    [[nodiscard]]
-    bool operator==(const T& rhs) const noexcept {
-        return raw == rhs;
-    }
-
-    [[nodiscard]]
-    bool operator!=(const T& rhs) const noexcept {
-        return raw != rhs;
-    }
-
     [[nodiscard]] operator const T&() const noexcept { return raw; }
 
     [[nodiscard]]
@@ -96,6 +108,11 @@ struct AProperty: AObjectBase {
 
     [[nodiscard]]
     const T& operator*() const noexcept {
+        return raw;
+    }
+
+    [[nodiscard]]
+    const T& value() const noexcept {
         return raw;
     }
 
@@ -199,7 +216,7 @@ struct APropertyDef {
     template<aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
     auto projected(Projection&& projection) noexcept {
-        return aui::detail::property::makeProjection(*this, std::forward<Projection>(projection));
+        return aui::detail::property::makeProjection(std::move(*this), std::forward<Projection>(projection));
     }
 };
 

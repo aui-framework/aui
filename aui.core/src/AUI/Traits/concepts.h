@@ -186,11 +186,14 @@ struct ASlotDef {
 };
 
 template <typename T>
-concept AAnyProperty = requires(T&& t) {
+concept APropertyReadable = requires(T&& t) {
     // Property must have Underlying type which it represents.
     typename std::decay_t<T>::Underlying;
 
-    // Property must be convertible to it's underlying type.
+    // Property must have value() which returns its underlying value.
+    { t.value() } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
+
+    // Property must be convertible to its underlying type.
     { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
     // Property has operator* to explicitly pull the underlying value.
@@ -198,13 +201,18 @@ concept AAnyProperty = requires(T&& t) {
 
     // Property has the "changed" signal
     { t.changed } -> AAnySignal;
+};
+
+template <typename T>
+concept APropertyWritable = requires(T&& t) {
+    { t } -> APropertyReadable;
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
-
-    // Property has projected() method which returns a projection of that property.
-    { t.projected([](const typename std::decay_t<T>::Underlying& t) { return t; }) };
 };
+
+template <typename T>
+concept AAnyProperty = APropertyReadable<T> || APropertyWritable<T>;
 
 template <typename T>
 concept AAnySignalOrProperty = AAnySignal<T> || AAnyProperty<T>;
