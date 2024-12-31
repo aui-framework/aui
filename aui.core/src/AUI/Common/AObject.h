@@ -98,11 +98,11 @@ public:
      * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
      * from left argument to the right argument.
      *
-     * After pre-fire, connects \c propertyDestination.changed to the setter of \c propertySource . This way, when
-     * \c propertyDestination changes (i.e, \c propertyDestination belongs to some view and it's value is changed due to
-     * user action) it immediately reflects on \c propertySource . So, \c propertySource is typically a property of some
-     * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
-     * is unimportant at the moment of connection creation.
+     * `If propertySource conforms APropertyWriteable` After pre-fire, connects \c propertyDestination.changed to the
+     * setter of \c propertySource . This way, when \c propertyDestination changes (i.e, \c propertyDestination belongs
+     * to some view and it's value is changed due to user action) it immediately reflects on \c propertySource . So,
+     * \c propertySource is typically a property of some view model with prefilled interesting data, and
+     * propertyDestination is a property of some view whose value is unimportant at the moment of connection creation.
      *
      * connect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
      *
@@ -114,8 +114,10 @@ public:
     static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
         AObject::connect(propertySource,
                          propertyDestination.assignment());
-        AObject::connect(propertyDestination.changed,
-                         propertySource.assignment());
+        if constexpr (APropertyWritable<PropertySource>) {
+            AObject::connect(propertyDestination.changed,
+                             propertySource.assignment());
+        }
     }
 
     /**

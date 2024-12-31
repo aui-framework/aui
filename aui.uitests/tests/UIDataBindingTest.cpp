@@ -605,11 +605,51 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(label->text(), "Vasil");
     // AUI_DOCS_CODE_END
 
-    // By simply performing assignment operation on \c name field of \c User struct we changed ALabel display text.
-    // Magic, huh?
-
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
+
+    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in "Label via
+    // let" example) but using declarative syntax. The logic behind `&&` is almost the same as with `let` +
+    // `AObject::connect` so projection usecases can be adapted in a similar manner.
+}
+
+TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
+    // We can use same projections in the same way as `let`.
+    // AUI_DOCS_CODE_BEGIN
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+                (label = _new<ALabel>()) && user->name.readonlyProjection(&AString::uppercase)
+            });
+
+            // Both label and user should hold name Roza.
+            EXPECT_EQ(user->name, "Roza");
+            EXPECT_EQ(label->text(), "ROZA"); // UPPERCASED
+        }
+    };
+    _new<MyWindow>(user)->show();
+    // AUI_DOCS_CODE_END
+
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+
+    // Notice that label already displays projected value stored in User.
+    //
+    // Let's change the name:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "VASIL");
+    // AUI_DOCS_CODE_END
 }
 
 /*
