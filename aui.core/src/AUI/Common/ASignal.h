@@ -79,71 +79,53 @@ private:
         linkSlot(objectBase);
     }
 
-    template<typename Lambda, typename... A>
+    template <typename Lambda, typename... A>
     struct argument_ignore_helper {};
 
     // empty arguments
-    template<typename Lambda>
-    struct argument_ignore_helper<void(Lambda::*)() const>
-    {
+    template <typename Lambda>
+    struct argument_ignore_helper<void (Lambda::*)() const> {
         Lambda l;
 
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
+        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
 
-        template<typename... Others>
+        template <typename... Others>
         void operator()(Others&... args) {
             l();
         }
     };
 
-    template<typename Lambda, typename A1>
-    struct argument_ignore_helper<void(Lambda::*)(A1) const>
-    {
+    template <typename Lambda, typename A1>
+    struct argument_ignore_helper<void (Lambda::*)(A1) const> {
         Lambda l;
 
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
+        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
 
-        template<typename... Others>
+        template <typename... Others>
         void operator()(A1&& a1, Others&...) {
             l(std::forward<A1>(a1));
         }
     };
-    template<typename Lambda, typename A1, typename A2>
-    struct argument_ignore_helper<void(Lambda::*)(A1, A2) const>
-    {
+    template <typename Lambda, typename A1, typename A2>
+    struct argument_ignore_helper<void (Lambda::*)(A1, A2) const> {
         Lambda l;
 
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
+        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
 
-        template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, Others&...)
-        {
+        template <typename... Others>
+        void operator()(A1&& a1, A2&& a2, Others&...) {
             l(std::forward<A1>(a1), std::forward<A2>(a2));
         }
     };
 
-    template<typename Lambda, typename A1, typename A2, typename A3>
-    struct argument_ignore_helper<void(Lambda::*)(A1, A2, A3) const>
-    {
+    template <typename Lambda, typename A1, typename A2, typename A3>
+    struct argument_ignore_helper<void (Lambda::*)(A1, A2, A3) const> {
         Lambda l;
 
-        explicit argument_ignore_helper(Lambda l)
-                : l(l)
-        {
-        }
+        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
 
-        template<typename... Others>
-        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...)
-        {
+        template <typename... Others>
+        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...) {
             l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
         }
     };

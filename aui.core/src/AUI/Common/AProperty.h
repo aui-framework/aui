@@ -14,22 +14,16 @@
 #include <AUI/Common/ASignal.h>
 
 namespace aui::detail::property {
-template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
+template <typename Property>   // can't use AAnyProperty here, as concept would depend on itself
 auto makeAssignment(Property&& property) {
-    auto i = [property = std::forward<Property>(property)](std::decay_t<Property>::Underlying value) {
-        const_cast<Property&>(property) = std::move(value);
-    };
-    return ASlotDef<decltype(property.boundObject()), decltype(i)> {
-        .boundObject = property.boundObject(),
-        .invocable = std::move(i),
-    };
-}
+    using Underlying = std::decay_t<decltype(*property)>;
+    struct Invocable {
+        Property property;
+        void operator()(const Underlying& value) const {
+            const_cast<Property&>(property) = std::move(value);
+        };
+    } i = { std::forward<Property>(property) };
 
-template<typename Property> // can't use AAnyProperty here, as concept would depend on itself
-auto makeAssignment(Property& property) {
-    auto i = [&property](std::decay_t<Property>::Underlying value) {
-      property = std::move(value);
-    };
     return ASlotDef<decltype(property.boundObject()), decltype(i)> {
         .boundObject = property.boundObject(),
         .invocable = std::move(i),
