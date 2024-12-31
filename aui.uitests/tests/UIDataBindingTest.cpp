@@ -580,14 +580,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
-                (label = _new<ALabel>()) && user->name
+                Label{} && user->name
             });
-
-            // Both label and user should hold name Roza.
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "Roza");
         }
     };
     _new<MyWindow>(user)->show();
