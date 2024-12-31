@@ -241,3 +241,17 @@ namespace aui::container {
         return true;
     }
 }
+
+namespace aui {
+/**
+ * @brief Finds the index of the first occurrence of the value.
+ * @ingroup core
+ * @param value element to find.
+ * @return index of the specified element. If element is not found, std::nullopt is returned.
+ */
+template<typename Container>
+[[nodiscard]]
+AOptional<size_t> indexOf(const Container& c, const typename Container::const_reference value) noexcept {
+    return aui::container::index_of(c, value);
+}
+}

@@ -230,7 +230,13 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
 
 
 TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
-    // We can use ".assignment()" syntax to make a property-to-setter connection instead of property-to-property.
+    // We can use `".assignment()"` syntax to make a property-to-setter connection instead of property-to-property.
+    // This way we are not making connection from the destination property to source property, hence, we are not
+    // required to do extra boilerplate in some cases (like in "Label via let assignment with projection").
+    //
+    // In general, prefer using `".assignment()"` connection if you are making connection to a display-only view
+    // (i.e., to label).
+
     using namespace declarative;
 
     struct User {
@@ -289,7 +295,6 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
     EXPECT_EQ(user->name, "Vasil"); // still
     // AUI_DOCS_CODE_END
 }
-/*
 
 TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
     // Property-to-property is a bidirectional connection, so it requires two projections.
@@ -316,10 +321,10 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(user->name, &AString::uppercase, it->text().assignment());
+                  AObject::connect(user->name.readonlyProjection(&AString::uppercase), it->text().assignment());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
-                  // AObject::connect(user->name, &AString::uppercase, slot(it)::setText);
+                  // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
 
                   // if view's property gets changed (i.e., by user),
                   // these changes DO NOT reflect on model
@@ -388,6 +393,30 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     };
     // AUI_DOCS_CODE_END
 
+    //
+    // Now, let's get a mapping for our `Gender` enum:
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+    // AUI_DOCS_CODE_END
+    //
+    // The compile-time constant above is equivalent to:
+    // @code{cpp}
+    // /* pseudocode */
+    // GENDERS = std::array { Gender::MALE, Gender::FEMALE, GENDER::OTHER };
+    // @endcode
+    //
+    // We just using `aui::enumerate::ALL_VALUES` because it was provided conveniently by `AUI_ENUM_VALUES` for us.
+    //
+    // It's not hard to guess that we'll use indices of this array to uniquely identify `Gender` associated with this
+    // index:
+    // AUI_DOCS_CODE_BEGIN
+    /* pseudocode */
+    GENDERS[0]; // -> MALE
+    GENDERS[1]; // -> FEMALE
+    GENDERS[2]; // -> OTHER
+    // etc...
+    // AUI_DOCS_CODE_END
+
     // Inside AUI_ENTRY, define user, window, and show the window
     // AUI_DOCS_CODE_BEGIN
     auto user = aui::ptr::manage(User { .gender = Gender::MALE });
@@ -395,7 +424,6 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
             // generate a string list model for genders
             auto gendersStr = AListModel<AString>::fromVector(
                 GENDERS | ranges::view::transform(AEnumerate<Gender>::toName) | ranges::to_vector);
@@ -404,17 +432,19 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
               _new<ADropdownList>(gendersStr) let {
                   // AObject::connect(user->gender, it->selectionId());
                   //
-                  // This code would break, because Gender and int
+                  // The code above would break, because Gender and int
                   // (selectionId() type) are incompatible.
                   //
                   // Instead, define bidirectional projection:
-                  AObject::connect(user->gender,
-                                   [](Gender g) {
-                                       return aui::container::index_of(GENDERS, g).valueOr(0);
-                                   },
-                                   it->selectionId(),
-                                   [](int i) { return GENDERS[i]; });
-              },
+                   AObject::connect(
+                       user->gender.bidirectionalProjection(aui::lambda_overloaded {
+                         // tip: use trailing return type syntax of lambda: this makes
+                         // things way more clear.
+                         [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
+                         [](int i) -> Gender { return GENDERS[i]; },
+                       }),
+                       it->selectionId());
+                  },
             });
         }
     };

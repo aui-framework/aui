@@ -20,6 +20,21 @@
 #include "AUI/Traits/values.h"
 
 namespace aui::detail::signal {
+template<size_t I, typename TupleInitial, typename TupleAll>
+auto resizeTuple(TupleInitial initial, TupleAll all) {
+    if constexpr (I == 0) {
+        return initial;
+    } else {
+        return resizeTuple<I - 1>(std::tuple_cat(initial, std::make_tuple(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
+    }
+}
+
+template<aui::not_overloaded_lambda Lambda, typename... Args>
+inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
+    static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
+    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(args...));
+    std::apply(lambda, smallerTuple);
+}
 
 template<typename Projection>
 struct projection_info {
@@ -48,6 +63,8 @@ struct projection_info<Projection> {
 template<typename AnySignal, // can't use AAnySignal here, as concept would depend on itself
          typename Projection>
 struct ProjectedSignal {
+    friend class ::AObject;
+
     AnySignal& base;
     Projection projection;
 
@@ -63,35 +80,36 @@ struct ProjectedSignal {
 
     template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
     void connect(Object objectBase, Lambda&& lambda) {
-        tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... LambdaArgs>() {
-            base.connect(objectBase, [invocable = std::forward<Lambda>(lambda), projection = projection](LambdaArgs&&... args) {
-                auto result = std::invoke(projection, std::forward<LambdaArgs>(args)...);
-                if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
-                    std::apply(invocable, std::move(result));
-                } else {
-                    std::invoke(invocable, std::move(result));
-                }
-            });
+        base.connect(
+            objectBase,
+            tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... ProjectionArgs>() {
+                return [invocable = std::forward<Lambda>(lambda),
+                        projection = projection](const std::decay_t<ProjectionArgs>&... args) {
+                    auto result = std::invoke(projection, args...);
+                    if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
+                        std::apply(invocable, std::move(result));
+                    } else {
+                        std::invoke(invocable, std::move(result));
+                    }
+                };
+            }));
+    }
+
+    operator bool() const {
+        return bool(base);
+    }
+
+private:
+    template <not_overloaded_lambda Lambda>
+    auto makeRawInvocable(Lambda&& lambda) const {
+        return tuple_visitor<emits_args_t>::for_each_all([&]<typename... ProjectionResult>() {
+            return [lambda = std::forward<Lambda>(lambda)](const std::decay_t<ProjectionResult>&... args){
+                aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
+            };
         });
     }
 };
 
-
-template<size_t I, typename TupleInitial, typename TupleAll>
-auto resizeTuple(TupleInitial initial, TupleAll all) {
-    if constexpr (I == 0) {
-        return initial;
-    } else {
-        return resizeTuple<I - 1>(std::tuple_cat(initial, std::make_tuple(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
-    }
-}
-
-template<aui::not_overloaded_lambda Lambda, typename... Args>
-inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
-    static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
-    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(args...));
-    std::apply(lambda, smallerTuple);
-}
 }
 
 template<typename... Args>
@@ -183,14 +201,14 @@ private:
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
-        mSlots.push_back(_new<slot>(slot { objectBase, object, ignoreExcessArgs(std::forward<Lambda>(lambda)) }));
+        mSlots.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
         linkSlot(objectBase);
     }
 
     template<aui::not_overloaded_lambda Lambda>
-    static auto ignoreExcessArgs(Lambda&& lambda)
+    auto makeRawInvocable(Lambda&& lambda) const
     {
-        return [lambda = std::forward<Lambda>(lambda)](Args... args){
+        return [lambda = std::forward<Lambda>(lambda)](const Args&... args){
             aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
         };
     }

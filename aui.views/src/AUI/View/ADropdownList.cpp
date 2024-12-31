@@ -39,12 +39,15 @@ void ADropdownList::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
     setSelectionId(0);
 
-    connect(model->dataInserted, &ADropdownList::updateText);
-    connect(model->dataRemoved,  &ADropdownList::updateText);
-    connect(model->dataChanged,  &ADropdownList::updateText);
+    connect(model->dataInserted, me::updateText);
+    connect(model->dataRemoved,  me::updateText);
+    connect(model->dataChanged,  me::updateText);
 }
 
 void ADropdownList::setSelectionId(int id) {
+    if (mSelectionId == id) {
+        return;
+    }
     mSelectionId = id;
     if (mModel->listSize() > id) {
         updateText();

@@ -165,6 +165,9 @@ class API_AUI_CORE AObjectBase;
 template <typename T>
 concept AAnySignal = requires(T&& t) {
     typename std::decay_t<T>::emits_args_t;
+
+    // signal must be contextually convertible to bool (to check if there are any slots connected to it)
+    { t } -> aui::convertible_to<bool>;
 };
 
 template <typename C>
@@ -193,6 +196,9 @@ concept APropertyReadable = requires(T&& t) {
     // Property must have value() which returns its underlying value.
     { t.value() } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
+    // Property must have boundObject() which returns AObjectBase* associated with this property.
+    { t.boundObject() } -> aui::convertible_to<AObjectBase*>;
+
     // Property must be convertible to its underlying type.
     { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
@@ -206,6 +212,9 @@ concept APropertyReadable = requires(T&& t) {
 template <typename T>
 concept APropertyWritable = requires(T&& t) {
     { t } -> APropertyReadable;
+
+    // Property has operator= overloaded so it can be used in assignment statement.
+    { t = std::declval<typename std::decay_t<T>::Underlying> };
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
