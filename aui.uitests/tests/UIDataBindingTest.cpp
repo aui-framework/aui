@@ -540,11 +540,6 @@ TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
 }
 
 namespace declarative {
-    template<AAnySignalOrProperty Connectable>
-    struct binding {
-        const Connectable& connectable;
-    };
-
     template<typename Object, APropertyWritable Connectable>
     inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
@@ -561,6 +556,25 @@ namespace declarative {
           using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
           AObject::connect(binding, Binding::property(object).assignment());
         });
+        return object;
+    }
+
+    template<AAnyProperty Lhs, typename Destination>
+    struct Binding {
+        Lhs sourceProperty;
+        Destination destinationPointerToMember;
+        explicit Binding(Lhs sourceProperty, Destination destinationPointerToMember)
+          : sourceProperty(sourceProperty), destinationPointerToMember(destinationPointerToMember) {}
+    };
+
+    template<AAnyProperty Property, typename Destination>
+    inline decltype(auto) operator->*(Property&& sourceProperty, Destination&& rhs) {
+        return Binding(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
+    }
+
+    template<typename Object, APropertyWritable Property, typename Destination>
+    inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+        AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
         return object;
     }
 }
@@ -672,6 +686,63 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     user->name = "World";
     EXPECT_EQ(label->text(), "WORLD");
 }
+
+
+TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
+    // We can use same projections in the same way as `let`.
+    //
+    // Let's repeat the `"Bidirectional projection"` sample in declarative way:
+    using namespace declarative;
+    struct User {
+        AProperty<Gender> gender;
+    };
+
+    static constexpr auto GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+    static constexpr auto GENDER_INDEX_PROJECTION = aui::lambda_overloaded {
+        [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
+        [](int i) -> Gender { return GENDERS[i]; },
+    };
+    auto user = aui::ptr::manage(User { .gender = Gender::MALE });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            // generate a string list model for genders from GENDERS array defined earlier
+            auto gendersStr = AListModel<AString>::fromVector(
+                GENDERS
+                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::to_vector);
+
+            setContents(Centered {
+              _new<ADropdownList>(gendersStr) && user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    // AUI_DOCS_CODE_END
+    auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
+    saveScreenshot("1");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+
+    //
+    // - If we try to change `user->gender` programmatically, ADropdownList will respond:
+    // AUI_DOCS_CODE_BEGIN
+    user->gender = Gender::FEMALE;
+    EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
+    // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_2.png)
+
+    //
+    // - If the user changes the value of ADropdownList, it reflects on the model as well:
+    dropdownList->setSelectionId(2);
+    saveScreenshot("3");
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(user->gender, Gender::OTHER);
+    // AUI_DOCS_CODE_END
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
+}
+
 
 /*
 TEST_F(UIDataBindingTest, LabelViaLetAssignment) {

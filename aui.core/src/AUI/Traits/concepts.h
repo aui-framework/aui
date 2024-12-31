@@ -214,7 +214,7 @@ concept APropertyWritable = requires(T&& t) {
     { t } -> APropertyReadable;
 
     // Property has operator= overloaded so it can be used in assignment statement.
-    { t = std::declval<typename std::decay_t<T>::Underlying> };
+    { t = std::declval<typename std::decay_t<T>::Underlying>() };
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
