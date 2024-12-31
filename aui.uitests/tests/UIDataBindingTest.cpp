@@ -545,11 +545,21 @@ namespace declarative {
         const Connectable& connectable;
     };
 
-    template<typename Object, AAnySignalOrProperty Connectable>
+    template<typename Object, APropertyWritable Connectable>
     inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
             using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
             AObject::connect(binding, Binding::property(object));
+        });
+        return object;
+    }
+
+
+    template<typename Object, APropertyReadable Connectable>
+    inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
+        aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+          using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+          AObject::connect(binding, Binding::property(object).assignment());
         });
         return object;
     }
@@ -562,8 +572,11 @@ namespace declarative {
 // Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
 // `AObject::connect` (for ease of replacement), besides that
 //
-// Declarative syntax uses `&&` to set up connections. This particular operator was chosen intentionally: `&&` resembles
-// chain, so we "chaining view and property up".
+// Declarative syntax uses `&` and `&&` to set up connections. This particular operator was chosen intentionally: `&&`
+// resembles chain, so we "chaining view and property up".
+//
+// - `&` sets up one-directional connection.
+// - `&&` sets up bidirectional connection.
 //
 // The example below is essentially the same as "Label via let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
@@ -580,9 +593,14 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
+            _<ALabel> label;
             setContents(Centered {
-                Label{} && user->name
+              (label = _new<ALabel>()) & user->name
             });
+
+            // Both label and user should hold name Roza.
+            EXPECT_EQ(user->name, "Roza");
+            EXPECT_EQ(label->text(), "Roza");
         }
     };
     _new<MyWindow>(user)->show();
@@ -623,7 +641,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-                (label = _new<ALabel>()) && user->name.readonlyProjection(&AString::uppercase)
+                (label = _new<ALabel>()) & user->name.readonlyProjection(&AString::uppercase)
             });
 
             // Both label and user should hold name Roza.
