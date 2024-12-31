@@ -201,6 +201,9 @@ concept AAnyProperty = requires(T&& t) {
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
+
+    // Property has projected() method which returns a projection of that property.
+    { t.projected([](const typename std::decay_t<T>::Underlying& t) { return t; }) };
 };
 
 template <typename T>

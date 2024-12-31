@@ -75,12 +75,23 @@ TEST(PropertyTest, PropertyConnection) {
     u->name = "World";
 }
 
-TEST(PropertyTest, PropertyConnectionWithProjection) {
+TEST(PropertyTest, PropertyConnectionWithProjection1) {
     auto receiver = _new<Receiver>();
     auto u = aui::ptr::manage(User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-//    AObject::connect(u->name, &AString::length, slot(receiver)::receiveInt);
+//    AObject::connect(u->name.projected(&AString::length), slot(receiver)::receiveInt);
+
+    EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
+    u->name = "World!";
+}
+
+TEST(PropertyTest, PropertyConnectionWithProjection2) {
+    auto receiver = _new<Receiver>();
+    auto u = aui::ptr::manage(User { .name = "Hello" });
+
+    EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
+//    AObject::connect(u->name.projected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";

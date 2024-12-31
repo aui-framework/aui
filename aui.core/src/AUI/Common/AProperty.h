@@ -35,6 +35,11 @@ auto makeAssignment(Property& property) {
         .invocable = std::move(i),
     };
 }
+
+template<typename Property, typename Projection>
+auto makeProjection(Property& property, Projection&& projection) {
+    return property;
+}
 }
 
 /**
@@ -112,6 +117,15 @@ struct AProperty: AObjectBase {
     auto assignment() noexcept {
         return aui::detail::property::makeAssignment(*this);
     }
+
+    /**
+     * @brief Makes a projection of this property.
+     */
+    template<aui::invocable<const T&> Projection>
+    [[nodiscard]]
+    auto projected(Projection&& projection) noexcept {
+        return aui::detail::property::makeProjection(*this, std::forward<Projection>(projection));
+    }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 
@@ -183,6 +197,15 @@ struct APropertyDef {
     [[nodiscard]]
     auto assignment() noexcept {
         return aui::detail::property::makeAssignment(std::move(*this));
+    }
+
+    /**
+     * @brief Makes a projection of this property.
+     */
+    template<aui::invocable<const Underlying&> Projection>
+    [[nodiscard]]
+    auto projected(Projection&& projection) noexcept {
+        return aui::detail::property::makeProjection(*this, std::forward<Projection>(projection));
     }
 };
 

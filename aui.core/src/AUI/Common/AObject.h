@@ -85,7 +85,9 @@ public:
      */
     template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function>
     static void connect(const Property& property, Object* object, Function&& function) {
-        connect(property, object, std::forward<Function>(function));
+        auto lambda = aui::detail::makeLambda(object, std::forward<Function>(function));
+        std::decay_t<decltype(property.changed)>::ignoreExcessArgs(lambda)(*property);
+        connect(property.changed, object, std::move(lambda));
     }
 
     /**
@@ -223,7 +225,7 @@ public:
     connect(const Property& property, _<Object> object, Function&& function)
         requires (!aui::derived_from<Object, AObject>)
     {
-        std::decay_t<decltype(property.changed)>::makeCallable(nullptr, function)(*property);
+        std::decay_t<decltype(property.changed)>::ignoreExcessArgs(function)(*property);
         connect(property.changed, object, std::forward<Function>(function));
         const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), aui::detail::makeLambda(object,std::forward<Function>(function)));
     }
