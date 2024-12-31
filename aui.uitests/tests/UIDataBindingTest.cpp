@@ -202,7 +202,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
                 },
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "Roza");
         }
@@ -266,7 +266,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
                 // AUI_DOCS_CODE_END
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             // AUI_DOCS_CODE_BEGIN
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "Roza");
@@ -333,7 +333,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
               // AUI_DOCS_CODE_END
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             // AUI_DOCS_CODE_BEGIN
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "ROZA"); // uppercased by projection!
@@ -593,14 +593,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
-              (label = _new<ALabel>()) & user->name
+              _new<ALabel>() & user->name
             });
-
-            // Both label and user should hold name Roza.
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "Roza");
         }
     };
     _new<MyWindow>(user)->show();
@@ -608,7 +603,16 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
-    // Notice that label already displays a value stored in User.
+
+    // AUI_DOCS_CODE_BEGIN
+    // Both label and user should hold name Roza.
+    EXPECT_EQ(user->name, "Roza");
+    EXPECT_EQ(label->text(), "Roza");
+    // AUI_DOCS_CODE_END
+    saveScreenshot("1");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+
+    // Notice that label already displays the value stored in User.
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -617,6 +621,8 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
     // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -641,28 +647,30 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-                (label = _new<ALabel>()) & user->name.readonlyProjection(&AString::uppercase)
+                _new<ALabel>() & user->name.readonlyProjection(&AString::uppercase)
             });
-
-            // Both label and user should hold name Roza.
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "ROZA"); // UPPERCASED
         }
     };
     _new<MyWindow>(user)->show();
     // AUI_DOCS_CODE_END
-
     auto label = _cast<ALabel>(By::type<ALabel>().one());
-
-    // Notice that label already displays projected value stored in User.
+    saveScreenshot("1");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     //
-    // Let's change the name:
+    // Notice that label already displays the projected value stored in User.
+    //
+    // Projection applies to changing values as well. Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "VASIL");
+    EXPECT_EQ(label->text(), "VASIL"); // projected
     // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+
+    user->name = "World";
+    EXPECT_EQ(label->text(), "WORLD");
 }
 
 /*
