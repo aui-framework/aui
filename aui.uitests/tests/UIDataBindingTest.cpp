@@ -367,13 +367,14 @@ AUI_ENUM_VALUES(Gender,
 
 TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     using namespace declarative;
-    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It requires the
-    // projection to work in both sides.
+    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It's used for
+    // populating view from model and obtaining data from view back to the model. Hence. it requires the projection to
+    // work in both sides.
     //
     // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
     // know anything about underlying values.
     //
-    // Define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
+    // For example, define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
     //
     // @code{cpp}
     // enum class Gender {
@@ -414,19 +415,50 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     GENDERS[0]; // -> MALE
     GENDERS[1]; // -> FEMALE
     GENDERS[2]; // -> OTHER
-    // etc...
     // AUI_DOCS_CODE_END
-
-    // Inside AUI_ENTRY, define user, window, and show the window
+    //
+    // To perform opposite operation (i.e., `Gender` to int), we can use `aui::indexOf`:
+    // AUI_DOCS_CODE_BEGIN
+    /* pseudocode */
+    aui::indexOf(GENDERS, Gender::MALE);   // -> 0
+    aui::indexOf(GENDERS, Gender::FEMALE); // -> 1
+    aui::indexOf(GENDERS, Gender::OTHER);  // -> 2
+    // AUI_DOCS_CODE_END
+    //
+    // To bring these conversions together, let's use overloaded lambda:
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto GENDER_INDEX_PROJECTION = aui::lambda_overloaded {
+        [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
+        [](int i) -> Gender { return GENDERS[i]; },
+    };
+    // AUI_DOCS_CODE_END
+    // @note
+    // It's convenient to use lambda trailing return type syntax (i.e., `[](Gender g) -> int`, `[](int i) -> Gender`)
+    // to make it obvious what transformations you are doing and how one type is transformed to another.
+    //
+    // The function-like object above detects the direction of transformation and performs as follows:
+    // AUI_DOCS_CODE_BEGIN
+    GENDER_INDEX_PROJECTION(0); // -> MALE
+    GENDER_INDEX_PROJECTION(Gender::MALE); // -> 0
+    // AUI_DOCS_CODE_END
+    //
+    // It is all what we need to perform bidirectional transformations. Inside AUI_ENTRY:
     // AUI_DOCS_CODE_BEGIN
     auto user = aui::ptr::manage(User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            // generate a string list model for genders
+            // generate a string list model for genders from GENDERS array defined earlier
             auto gendersStr = AListModel<AString>::fromVector(
-                GENDERS | ranges::view::transform(AEnumerate<Gender>::toName) | ranges::to_vector);
+                GENDERS
+                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::to_vector);
+
+            // equivalent:
+            // gendersStr = { "MALE", "FEMALE", "OTHER" }
+            // you can customize the displaying strings by playing with
+            // ranges::view::transform argument.
 
             setContents(Centered {
               _new<ADropdownList>(gendersStr) let {
@@ -437,12 +469,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
                   //
                   // Instead, define bidirectional projection:
                    AObject::connect(
-                       user->gender.bidirectionalProjection(aui::lambda_overloaded {
-                         // tip: use trailing return type syntax of lambda: this makes
-                         // things way more clear.
-                         [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
-                         [](int i) -> Gender { return GENDERS[i]; },
-                       }),
+                       user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION),
                        it->selectionId());
                   },
             });
