@@ -95,6 +95,26 @@ public:
      * @ingroup property_system
      * @details
      * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
+     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, dataflow is from left
+     * argument to the right argument.
+     *
+     * connect pulls AObject from \c propertyDestination to maintain the connection.
+     *
+     * See @ref signal_slot "signal-slot system" for more info.
+     * @param propertySource source property, whose value is preserved on connection creation.
+     * @param propertyDestination destination property, whose value is overwritten on connection creation.
+     */
+    template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
+    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+        AObject::connect(propertySource,
+                         propertyDestination.assignment());
+    }
+
+    /**
+     * @brief Connects source property to the destination property and opposite (bidirectionally).
+     * @ingroup property_system
+     * @details
+     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
      * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
      * from left argument to the right argument.
      *
@@ -104,14 +124,14 @@ public:
      * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
      * is unimportant at the moment of connection creation.
      *
-     * connect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
+     * biConnect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
      *
      * See @ref signal_slot "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
-    template <AAnyProperty PropertySource, AAnyProperty PropertyDestination>
-    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+    template <APropertyWritable PropertySource, APropertyWritable PropertyDestination>
+    static void biConnect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
         AObject::connect(propertySource,
                          propertyDestination.assignment());
         AObject::connect(propertyDestination.changed,

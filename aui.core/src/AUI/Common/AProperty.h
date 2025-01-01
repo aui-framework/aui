@@ -97,6 +97,8 @@ struct PropertyReadWriteProjection: PropertyReadProjection {
         this->wrappedProperty = std::invoke(projectionWrite, std::forward<U>(value));
         return *this;
     }
+private:
+    friend class AObject;
 
     /**
      * @brief Makes a callable that assigns value to this property.
@@ -192,14 +194,6 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a callable that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(*this);
-    }
-
-    /**
      * @brief Makes a readonly projection of this property.
      */
     template<aui::invocable<const T&> Projection>
@@ -227,6 +221,16 @@ struct AProperty: AObjectBase {
     [[nodiscard]]
     auto biProjected(Projection&& projectionBidirectional) noexcept {
         return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
+    }
+
+private:
+    friend class AObject;
+    /**
+     * @brief Makes a callable that assigns value to this property.
+     */
+    [[nodiscard]]
+    auto assignment() noexcept {
+        return aui::detail::property::makeAssignment(*this);
     }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
@@ -293,14 +297,6 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a callable that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(std::move(*this));
-    }
-
-    /**
      * @brief Makes a readonly projection of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
@@ -329,6 +325,16 @@ struct APropertyDef {
     auto biProjected(Projection&& projectionBidirectional) noexcept {
         return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
     };
+
+private:
+    friend class AObject;
+    /**
+     * @brief Makes a callable that assigns value to this property.
+     */
+    [[nodiscard]]
+    auto assignment() noexcept {
+        return aui::detail::property::makeAssignment(std::move(*this));
+    }
 };
 
 // binary operations for properties.

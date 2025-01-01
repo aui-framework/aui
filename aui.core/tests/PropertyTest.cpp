@@ -80,7 +80,7 @@ TEST(PropertyTest, PropertyConnectionWithProjection1) {
     auto u = aui::ptr::manage(User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-//    AObject::connect(u->name.projected(&AString::length), slot(receiver)::receiveInt);
+    AObject::connect(u->name.readProjected(&AString::length), slot(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";
@@ -91,7 +91,7 @@ TEST(PropertyTest, PropertyConnectionWithProjection2) {
     auto u = aui::ptr::manage(User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-//    AObject::connect(u->name.projected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
+    AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";
@@ -158,7 +158,7 @@ TEST(PropertyTest, Property2PropertyBoth) {
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    AObject::connect(u->name, r->name());
+    AObject::biConnect(u->name, r->name());
 
     EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
     u->name = "New Name1";
@@ -179,7 +179,7 @@ TEST(PropertyTest, Property2PropertySetOnly) {
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    AObject::connect(u->name, r->name().assignment());
+    AObject::connect(u->name, r->name());
 
     EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
     u->name = "New Name1";

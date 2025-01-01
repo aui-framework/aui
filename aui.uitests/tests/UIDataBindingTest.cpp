@@ -60,7 +60,8 @@ public:
 // Main difference between basic value lying somewhere inside your class and a property is that the latter explicitly
 // ties getter, setter and a signal reporting value changes. Property acts almost transparently, as if there's no
 // property wrapper. This allows to read the intermediate value of a property and subscribe to its changes via a single
-// \c connect call:
+// \c connect call. Also, when connecting property to property, it is possible to make them observe changes of each
+// other bia \c biConnect call:
 TEST_F(UIDataBindingTest, TextField1) {
     // AUI_DOCS_CODE_BEGIN
     struct User {
@@ -69,7 +70,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 
     auto user = aui::ptr::manage(User { .name = "Robert" });
     auto tf = _new<ATextField>();
-    AObject::connect(user->name, tf->text());
+    AObject::biConnect(user->name, tf->text());
     auto window = _new<AWindow>();
     window->setContents(Centered { tf });
     window->show();
@@ -79,7 +80,7 @@ TEST_F(UIDataBindingTest, TextField1) {
     saveScreenshot("1");
     // ![text field](imgs/UIDataBindingTest.TextField1_1.png)
     //
-    // A single call of `connect`:
+    // A single call of `biConnect`:
     //
 
     // - Prefills text field with the current `user->name` value (pre fire):
@@ -170,9 +171,9 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
 // used in favour of declarative way if the latter not work for you. For declarative way, search for `"UI declarative
 // data binding"` on this page.
 //
-// This approach allows more control over the binding process by using AObject::connect which is a procedural way of
-// setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill for such a simple
-// operation.
+// This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
+// a procedural way of setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill
+// for such a simple operation.
 TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
     // Use \c let expression to connect the model's username property to the label's @ref ALabel::text "text()"
     // property.
@@ -194,11 +195,17 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
                   // Data goes from left to right in the first place
                   // (i.e., user->name current value overrides it->text())
                   // if view's property gets changed (i.e., by user),
-                  // these changes reflect on model as well
-                  // because the connection is bidirectional (left to right
-                  // is prioritized).
+                  // these changes DO NOT reflect on model as well
+                  // because the connection is one directional.
                   AObject::connect(user->name, it->text());
                   //                ->  ->  ->  ->  ->
+                  // in other words, this connection is essentially the
+                  // same as
+                  // AObject::connect(user->name, slot(it)::setText);
+                  //
+                  // if you want user->name to be aware or it->text()
+                  // changes (i.e., if it were an editable view
+                  // like ATextField) use AObject::biConnect instead.
                 },
             });
 
@@ -228,80 +235,8 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
     EXPECT_EQ(label->text(), "World");
 }
 
-
-TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
-    // We can use `".assignment()"` syntax to make a property-to-setter connection instead of property-to-property.
-    // This way we are not making connection from the destination property to source property, hence, we are not
-    // required to do extra boilerplate in some cases (like in "Label via let assignment with projection").
-    //
-    // In general, prefer using `".assignment()"` connection if you are making connection to a display-only view
-    // (i.e., to label).
-
-    using namespace declarative;
-
-    struct User {
-        AProperty<AString> name;
-    };
-
-    auto user = aui::ptr::manage(User { .name = "Roza" });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
-            setContents(Centered {
-                // AUI_DOCS_CODE_BEGIN
-                label = _new<ALabel>() let {
-                  // Data goes from left to right in the first place
-                  // (i.e., user->name current value overrides it->text())
-                  // if view's property gets changed (i.e., by user),
-                  // these changes DO NOT reflect on model
-                  // as we requested assignment() here
-                  AObject::connect(user->name, it->text().assignment());
-                  //                ->  ->  ->  ->  ->
-                  // in other words, this connection is essentially the same
-                  // as
-                  // AObject::connect(user->name, slot(it)::setText);
-                },
-                // AUI_DOCS_CODE_END
-            });
-
-            // Notice that label already displays the value stored in User.
-            // AUI_DOCS_CODE_BEGIN
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "Roza");
-            // AUI_DOCS_CODE_END
-        }
-    };
-    _new<MyWindow>(user)->show();
-
-    auto label = _cast<ALabel>(By::type<ALabel>().one());
-
-    //
-    // Let's change the name:
-    // AUI_DOCS_CODE_BEGIN
-    user->name = "Vasil";
-
-    EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "Vasil");
-    // AUI_DOCS_CODE_END
-
-    // Unlike property-to-property connection, property-to-slot is one-directional connection. So, if we try to change
-    // label's text directly, it would not reflect on the model.
-    // AUI_DOCS_CODE_BEGIN
-    label->text() = "Sanya";
-
-    EXPECT_EQ(label->text(), "Sanya");
-    EXPECT_EQ(user->name, "Vasil"); // still
-    // AUI_DOCS_CODE_END
-}
-
-TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
-    // Property-to-property is a bidirectional connection, so it requires two projections.
-    //
-    // By using `".assignment()"` syntax, we explicitly saying to `AObject::connect` we want the connection to be in one
-    // direction, despite being property-to-property connection which is normally bidirectional. Thus, it's fairly easy
-    // to define a projection because one-sided connection requires exactly one projection, obviously.
+TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
+    // It's fairly easy to define a projection because one-sided connection requires exactly one projection, obviously.
     using namespace declarative;
 
     struct User {
@@ -322,14 +257,14 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(user->name.readProjected(&AString::uppercase), it->text().assignment());
+                  AObject::connect(user->name.readProjected(&AString::uppercase), it->text());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
                   // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
 
-                  // if view's property gets changed (i.e., by user),
-                  // these changes DO NOT reflect on model
-                  // as we requested assignment() here
+                  // if view's property gets changed (i.e., by user or by occasional
+                  // ALabel::setText), these changes DO NOT reflect on model
+                  // as we requested connect() here instead of biConnect().
               },
               // AUI_DOCS_CODE_END
             });
@@ -352,6 +287,56 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
+    // AUI_DOCS_CODE_END
+}
+
+
+TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
+    // In previous examples, we've used `AObject::connect` to make one directional (one sided) connection. This is
+    // perfectly enough for ALabel because it cannot be changed by user.
+    //
+    // For this example, let's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
+    // `AObject::biConnect` because we do want `user->name` to be aware of changes of the view.
+
+    using namespace declarative;
+
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            setContents(Centered {
+                // AUI_DOCS_CODE_BEGIN
+                _new<ATextField>() let {
+                  // Data goes from left to right in the first place
+                  // (i.e., user->name current value overrides it->text())
+                  // if view's property gets changed (i.e., by user),
+                  // these changes reflect on model
+                  // as we requested biConnect here
+
+                  //                -> value + changes ->
+                  AObject::biConnect(user->name, it->text());
+                  //                <-  changes only   <-
+                },
+                // AUI_DOCS_CODE_END
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+
+    auto tf = _cast<ATextField>(By::type<ATextField>().one());
+
+    //
+    // Let's change the name:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(tf->text(), "Vasil");
     // AUI_DOCS_CODE_END
 }
 
@@ -555,7 +540,7 @@ namespace declarative {
     inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
           using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-          AObject::connect(binding, Binding::property(object).assignment());
+          AObject::connect(binding, Binding::property(object));
         });
         return object;
     }
