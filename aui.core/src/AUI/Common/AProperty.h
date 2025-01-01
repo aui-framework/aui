@@ -214,7 +214,7 @@ struct AProperty: AObjectBase {
     template<aui::invocable<const T&> ProjectionRead,
              aui::invocable<const std::invoke_result_t<ProjectionRead, T>&> ProjectionWrite>
     [[nodiscard]]
-    auto bidirectionalProjection(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
+    auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
         return aui::detail::property::makeBidirectionalProjection(*this,
                                                                   std::forward<ProjectionRead>(projectionRead),
                                                                   std::forward<ProjectionWrite>(projectionWrite));
@@ -225,7 +225,7 @@ struct AProperty: AObjectBase {
      */
     template<aui::detail::property::ProjectionBidirectional<T> Projection>
     [[nodiscard]]
-    auto bidirectionalProjection(Projection&& projectionBidirectional) noexcept {
+    auto biProjected(Projection&& projectionBidirectional) noexcept {
         return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
     }
 };
@@ -316,7 +316,7 @@ struct APropertyDef {
         aui::invocable<const Underlying&> ProjectionRead,
         aui::invocable<const std::invoke_result_t<ProjectionRead, Underlying>&> ProjectionWrite>
     [[nodiscard]]
-    auto bidirectionalProjection(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
+    auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
         return aui::detail::property::makeBidirectionalProjection(
             *this, std::forward<ProjectionRead>(projectionRead), std::forward<ProjectionWrite>(projectionWrite));
     }
@@ -326,7 +326,7 @@ struct APropertyDef {
      */
     template <aui::detail::property::ProjectionBidirectional<Underlying> Projection>
     [[nodiscard]]
-    auto bidirectionalProjection(Projection&& projectionBidirectional) noexcept {
+    auto biProjected(Projection&& projectionBidirectional) noexcept {
         return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
     };
 };
@@ -366,25 +366,25 @@ static_assert(requires { AProperty<int>() + 1; });
 
 
 /*
-// UNCOMMENT THIS to test bidirectionalProjection
+// UNCOMMENT THIS to test biProjected
 static_assert(requires (AProperty<int>& intProperty) {
-    { intProperty.bidirectionalProjection(aui::lambda_overloaded {
+    { intProperty.biProjected(aui::lambda_overloaded {
       [](int) -> AString { return ""; },
       [](const AString&) -> int { return 0; },
     }).value() } -> aui::convertible_to<AString>;
 
-    { intProperty.bidirectionalProjection(aui::lambda_overloaded {
+    { intProperty.biProjected(aui::lambda_overloaded {
         [](int) -> AString { return ""; },
         [](const AString&) -> int { return 0; },
     }) = "AString" };
 
 
-    { intProperty.bidirectionalProjection(aui::lambda_overloaded {
+    { intProperty.biProjected(aui::lambda_overloaded {
         [](int) -> AString { return ""; },
         [](const AString&) -> int { return 0; },
     }) };
 
-    { intProperty.bidirectionalProjection(aui::lambda_overloaded {
+    { intProperty.biProjected(aui::lambda_overloaded {
         [](int) -> AString { return ""; },
         [](const AString&) -> int { return 0; },
     }).assignment() } -> aui::invocable<AString>;

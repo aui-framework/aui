@@ -435,7 +435,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     // AUI_DOCS_CODE_END
     // @note
     // It's convenient to use lambda trailing return type syntax (i.e., `[](Gender g) -> int`, `[](int i) -> Gender`)
-    // to make it obvious what transformations you are doing and how one type is transformed to another.
+    // to make it obvious what do transformations do and how one type is transformed to another.
     //
     // The function-like object above detects the direction of transformation and performs as follows:
     // AUI_DOCS_CODE_BEGIN
@@ -458,7 +458,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
 
             // equivalent:
             // gendersStr = { "MALE", "FEMALE", "OTHER" }
-            // you can customize the displaying strings by playing with
+            // you can customize the displayed strings by playing with
             // ranges::view::transform argument.
 
             setContents(Centered {
@@ -470,7 +470,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
                   //
                   // Instead, define bidirectional projection:
                    AObject::connect(
-                       user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION),
+                       user->gender.biProjected(GENDER_INDEX_PROJECTION),
                        it->selectionId());
                   },
             });
@@ -648,7 +648,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
 }
 
 TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
-    // We can use same projections in the same way as `let`.
+    // We can use projections in the same way as with `let`.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
     struct User {
@@ -674,7 +674,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     //
     // Notice that label already displays the projected value stored in User.
     //
-    // Projection applies to changing values as well. Let's change the name:
+    // Projection applies to value chhanges as well. Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
 
@@ -690,7 +690,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
 
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
-    // We can use same projections in the same way as `let`.
+    // We can use projections in the same way as with `let`.
     //
     // Let's repeat the `"Bidirectional projection"` sample in declarative way:
     using namespace declarative;
@@ -708,22 +708,26 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            // generate a string list model for genders from GENDERS array defined earlier
             auto gendersStr = AListModel<AString>::fromVector(
                 GENDERS
                 | ranges::view::transform(AEnumerate<Gender>::toName)
                 | ranges::to_vector);
 
             setContents(Centered {
-              _new<ADropdownList>(gendersStr) && user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
+                // AUI_DOCS_CODE_BEGIN
+                _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
+                // AUI_DOCS_CODE_END
+                // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+                // @note
+                // We used the `&&` operator here instead of `&` because we want the connection work in both
+                // directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
+                //
             });
         }
     };
     _new<MyWindow>(user)->show();
-    // AUI_DOCS_CODE_END
     auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
     saveScreenshot("1");
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
 
     //
     // - If we try to change `user->gender` programmatically, ADropdownList will respond:
