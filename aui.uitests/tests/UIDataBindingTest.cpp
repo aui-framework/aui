@@ -189,14 +189,11 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
-                label = _new<ALabel>() let {
-                  // Data goes from left to right in the first place
-                  // (i.e., user->name current value overrides it->text())
-                  // if view's property gets changed (i.e., by user),
-                  // these changes DO NOT reflect on model as well
-                  // because the connection is one directional.
+                _new<ALabel>() let {
+                  // Data goes from left to right:
+                  // current value (pre fire) or changed event
+                  // goes to assignment operation of it->text()
                   AObject::connect(user->name, it->text());
                   //                ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the
@@ -205,30 +202,34 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
                   //
                   // if you want user->name to be aware or it->text()
                   // changes (i.e., if it were an editable view
-                  // like ATextField) use AObject::biConnect instead.
+                  // like ATextField) use AObject::biConnect instead
+                  // (see "Bidirectional connection" sample).
                 },
             });
-
-            // Notice that label already displays the value stored in User.
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "Roza");
         }
     };
     _new<MyWindow>(user)->show();
     // AUI_DOCS_CODE_END
+    //
+    // This gives the following result:
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // Note that label already displays the value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
+
+    EXPECT_EQ(user->name, "Roza");
+    EXPECT_EQ(label->text(), "Roza");
 
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
-
+    // AUI_DOCS_CODE_END
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // AUI_DOCS_CODE_END
-
-    // By simply performing assignment operation on \c name field of \c User struct we changed ALabel display text.
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    //
+    // By simply performing assignment on `user` we changed ALabel display text.
     // Magic, huh?
 
     user->name = "World";
@@ -284,16 +285,19 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
+    // AUI_DOCS_CODE_END
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
-    // AUI_DOCS_CODE_END
 }
 
 
 TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     // In previous examples, we've used `AObject::connect` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
+    //
+    // In some cases, you might want to use property-to-property as it's bidirectional. It's used for populating view
+    // from model and obtaining data from view back to the model.
     //
     // For this example, let's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
     // `AObject::biConnect` because we do want `user->name` to be aware of changes of the view.
@@ -334,10 +338,10 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
+    // AUI_DOCS_CODE_END
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
-    // AUI_DOCS_CODE_END
 }
 
 
@@ -353,9 +357,8 @@ AUI_ENUM_VALUES(Gender,
 
 TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     using namespace declarative;
-    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It's used for
-    // populating view from model and obtaining data from view back to the model. Hence. it requires the projection to
-    // work in both sides.
+    // Bidirectional connection updates values in both directions, hence it requires the projection to work in both
+    // sides as well.
     //
     // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
     // know anything about underlying values.
@@ -419,7 +422,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     };
     // AUI_DOCS_CODE_END
     // @note
-    // It's convenient to use lambda trailing return type syntax (i.e., `[](Gender g) -> int`, `[](int i) -> Gender`)
+    // It's convenient to use lambda trailing return type syntax (i.e., `... -> int`, `... -> Gender`)
     // to make it obvious what do transformations do and how one type is transformed to another.
     //
     // The function-like object above detects the direction of transformation and performs as follows:
@@ -428,7 +431,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     GENDER_INDEX_PROJECTION(Gender::MALE); // -> 0
     // AUI_DOCS_CODE_END
     //
-    // It is all what we need to perform bidirectional transformations. Inside AUI_ENTRY:
+    // It is all what we need to set up bidirectional transformations. Inside AUI_ENTRY:
     // AUI_DOCS_CODE_BEGIN
     auto user = aui::ptr::manage(User { .gender = Gender::MALE });
 
@@ -454,7 +457,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
                   // (selectionId() type) are incompatible.
                   //
                   // Instead, define bidirectional projection:
-                   AObject::connect(
+                   AObject::biConnect(
                        user->gender.biProjected(GENDER_INDEX_PROJECTION),
                        it->selectionId());
                   },
@@ -617,10 +620,10 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
+    // AUI_DOCS_CODE_END
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // AUI_DOCS_CODE_END
     saveScreenshot("2");
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 

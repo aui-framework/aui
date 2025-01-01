@@ -98,7 +98,7 @@ struct PropertyReadWriteProjection: PropertyReadProjection {
         return *this;
     }
 private:
-    friend class AObject;
+    friend class API_AUI_CORE ::AObject;
 
     /**
      * @brief Makes a callable that assigns value to this property.

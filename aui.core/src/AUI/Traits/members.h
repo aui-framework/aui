@@ -67,4 +67,10 @@ namespace aui {
          */
         using args = std::tuple<Args...>;
     };
+
+    template<typename T>
+    concept pointer_to_member = requires(T&&)
+    {
+        typename aui::member<T>::clazz;
+    };
 }

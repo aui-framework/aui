@@ -38,6 +38,12 @@ inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
 
 template<typename Projection>
 struct projection_info {
+    static_assert(aui::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection>,
+        "projection is required to be an pointer-to-member or not overloaded lambda");
+};
+
+template<aui::pointer_to_member Projection>
+struct projection_info<Projection> {
 private:
     template <typename... T>
     struct cat;
