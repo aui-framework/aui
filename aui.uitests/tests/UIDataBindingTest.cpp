@@ -299,8 +299,9 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
 TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
     // Property-to-property is a bidirectional connection, so it requires two projections.
     //
-    // By using `".assignment()"` syntax, it's fairly easy to define a projection because property-to-slot requires
-    // exactly one projection.
+    // By using `".assignment()"` syntax, we explicitly saying to `AObject::connect` we want the connection to be in one
+    // direction, despite being property-to-property connection which is normally bidirectional. Thus, it's fairly easy
+    // to define a projection because one-sided connection requires exactly one projection, obviously.
     using namespace declarative;
 
     struct User {
@@ -321,7 +322,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(user->name.readonlyProjection(&AString::uppercase), it->text().assignment());
+                  AObject::connect(user->name.readProjected(&AString::uppercase), it->text().assignment());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
                   // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
@@ -661,7 +662,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-                _new<ALabel>() & user->name.readonlyProjection(&AString::uppercase)
+                _new<ALabel>() & user->name.readProjected(&AString::uppercase)
             });
         }
     };

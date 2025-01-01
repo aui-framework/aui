@@ -109,9 +109,9 @@ struct PropertyReadWriteProjection: PropertyReadProjection {
 
 template<typename Property, aui::not_overloaded_lambda ProjectionRead, aui::not_overloaded_lambda ProjectionWrite>
 auto makeBidirectionalProjection(Property&& property, ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) {
-    auto readonlyProjection = makeReadonlyProjection(property, std::forward<ProjectionRead>(projectionRead));
-    using PropertyReadProjection = decltype(readonlyProjection);
-    PropertyReadWriteProjection result(std::move(readonlyProjection), std::forward<ProjectionWrite>(projectionWrite));
+    auto readProjected = makeReadonlyProjection(property, std::forward<ProjectionRead>(projectionRead));
+    using PropertyReadProjection = decltype(readProjected);
+    PropertyReadWriteProjection result(std::move(readProjected), std::forward<ProjectionWrite>(projectionWrite));
 //    static_assert(APropertyWritable<decltype(result)>, "PropertyReadWriteProjection must conform with APropertyWriteable");
     return result;
 }
@@ -204,7 +204,7 @@ struct AProperty: AObjectBase {
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
-    auto readonlyProjection(Projection&& projection) noexcept {
+    auto readProjected(Projection&& projection) noexcept {
         return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
     }
 
@@ -305,7 +305,7 @@ struct APropertyDef {
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
-    auto readonlyProjection(Projection&& projection) noexcept {
+    auto readProjected(Projection&& projection) noexcept {
         return aui::detail::property::makeReadonlyProjection(std::move(*this), std::forward<Projection>(projection));
     }
 
