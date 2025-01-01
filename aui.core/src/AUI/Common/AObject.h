@@ -131,7 +131,6 @@ public:
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
-     * @param projection projection
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
         ACompatibleSlotFor<Connectable> Function>
@@ -152,7 +151,6 @@ public:
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
      * @endcode
      * @param connectable signal or property
-     * @param projection projection which transforms value between signal and slot.
      * @param function slot. Can be lambda
      */
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
