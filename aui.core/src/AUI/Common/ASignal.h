@@ -19,159 +19,119 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 
-namespace aui::signal {
-template<typename Lambda>
-concept NoArgInvocation = requires(Lambda&& lambda) {
-    { lambda() };
+namespace aui::detail::signal {
+template<size_t I, typename TupleInitial, typename TupleAll>
+auto resizeTuple(TupleInitial initial, TupleAll all) {
+    if constexpr (I == 0) {
+        return initial;
+    } else {
+        return resizeTuple<I - 1>(std::tuple_cat(initial, std::make_tuple(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
+    }
+}
+
+template<aui::not_overloaded_lambda Lambda, typename... Args>
+inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
+    static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
+    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(args...));
+    std::apply(lambda, smallerTuple);
+}
+
+template<typename Projection>
+struct projection_info {
+private:
+    template <typename... T>
+    struct cat;
+
+    template <typename First, typename... T>
+    struct cat<First, std::tuple<T...>> {
+        using type = std::tuple<First, T...>;
+    };
+
+public:
+    using info = aui::member<Projection>;
+    using return_t = typename info::return_t;
+    using args = cat<typename info::clazz&, typename info::args>::type;
+};
+template<aui::not_overloaded_lambda Projection>
+struct projection_info<Projection> {
+    using info =  aui::lambda_info<Projection>;
+    using return_t = typename info::return_t;
+    using args = typename info::args;
 };
 
-template<typename Lambda, typename Projection, typename... Args>
-concept DirectInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { lambda(std::invoke(projection, std::forward<Args>(args)...)) };
+
+template<typename AnySignal, // can't use AAnySignal here, as concept would depend on itself
+         typename Projection>
+struct ProjectedSignal {
+    friend class ::AObject;
+
+    AnySignal& base;
+    std::decay_t<Projection> projection;
+
+    ProjectedSignal(AnySignal& base, Projection projection) : base(base), projection(std::move(projection)) {}
+
+    using projection_info_t = aui::detail::signal::projection_info<Projection>;
+
+    using projection_returns_t = typename projection_info_t::return_t;
+
+    static constexpr bool IS_PROJECTION_RETURNS_TUPLE = aui::is_tuple<projection_returns_t>;
+
+    using emits_args_t =  std::conditional_t<IS_PROJECTION_RETURNS_TUPLE,
+                                       projection_returns_t,
+                                       std::tuple<projection_returns_t>>;
+
+    template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
+    void connect(Object objectBase, Lambda&& lambda) {
+        base.connect(
+            objectBase,
+            tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... ProjectionArgs>() {
+                return [invocable = std::forward<Lambda>(lambda),
+                        projection = projection](const std::decay_t<ProjectionArgs>&... args) {
+                    auto result = std::invoke(projection, args...);
+                    if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
+                        std::apply(invocable, std::move(result));
+                    } else {
+                        std::invoke(invocable, std::move(result));
+                    }
+                };
+            }));
+    }
+
+    operator bool() const {
+        return bool(base);
+    }
+
+private:
+    template <not_overloaded_lambda Lambda>
+    auto makeRawInvocable(Lambda&& lambda) const {
+        return tuple_visitor<emits_args_t>::for_each_all([&]<typename... ProjectionResult>() {
+            return [lambda = std::forward<Lambda>(lambda)](const std::decay_t<ProjectionResult>&... args){
+                aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
+            };
+        });
+    }
 };
 
-template<typename Lambda, typename Projection, typename... Args>
-concept TupleToValueInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) };
-};
-
-template<typename Lambda, typename Projection, typename... Args>
-concept TupleToTupleInvocation = requires(Lambda&& lambda, Projection&& projection, Args&&... args) {
-    { std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...))) }; // *** READ THIS ***
-    // if your code breaks above, it's because your call to AObject::connect is ill-formed. Please check that your
-    // arguments are compatible. Define a projection if necessary.
-};
 }
 
 template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
     friend class AObject;
+    template<typename AnySignal,
+              typename Projection>
+    friend struct aui::detail::signal::ProjectedSignal;
 
     template <typename T>
     friend class AWatchable;
 public:
     using func_t = std::function<void(Args...)>;
-    using args_t = std::tuple<Args...>;
+    using emits_args_t = std::tuple<Args...>;
 
-private:
-    struct slot
-    {
-        AObjectBase* objectBase;
-        AObject* object;
-        func_t func;
-        bool isDisconnected = false;
-    };
-
-    mutable AVector<_<slot>> mSlots;
-
-    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
-
-    template <aui::convertible_to<AObjectBase*> Object, typename Invocable, typename Projection>
-    void connect(Object objectBase, Invocable&& invocable, Projection&& projection) {
-        AObject* object = nullptr;
-        if constexpr (requires { object = objectBase; }) {
-            object = objectBase;
-        }
-        mSlots.push_back(_new<slot>(slot {
-          objectBase, object,
-          makeCallable(objectBase, std::forward<Invocable>(invocable), std::forward<Projection>(projection)) }));
-        linkSlot(objectBase);
+    template<typename Projection>
+    auto projected(Projection&& projection) {
+        return aui::detail::signal::ProjectedSignal(*this, std::forward<Projection>(projection));
     }
-
-    template <typename Lambda, typename... A>
-    struct argument_ignore_helper {};
-
-    // empty arguments
-    template <typename Lambda>
-    struct argument_ignore_helper<void (Lambda::*)() const> {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
-
-        template <typename... Others>
-        void operator()(Others&... args) {
-            l();
-        }
-    };
-
-    template <typename Lambda, typename A1>
-    struct argument_ignore_helper<void (Lambda::*)(A1) const> {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
-
-        template <typename... Others>
-        void operator()(A1&& a1, Others&...) {
-            l(std::forward<A1>(a1));
-        }
-    };
-    template <typename Lambda, typename A1, typename A2>
-    struct argument_ignore_helper<void (Lambda::*)(A1, A2) const> {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
-
-        template <typename... Others>
-        void operator()(A1&& a1, A2&& a2, Others&...) {
-            l(std::forward<A1>(a1), std::forward<A2>(a2));
-        }
-    };
-
-    template <typename Lambda, typename A1, typename A2, typename A3>
-    struct argument_ignore_helper<void (Lambda::*)(A1, A2, A3) const> {
-        Lambda l;
-
-        explicit argument_ignore_helper(Lambda l) : l(std::move(l)) {}
-
-        template <typename... Others>
-        void operator()(A1&& a1, A2&& a2, A3&& a3, Others...) {
-            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
-        }
-    };
-
-    template <class Lambda, typename Projection>
-    static auto makeCallableImpl(Lambda&& lambda, Projection&& projection)
-        requires aui::signal::NoArgInvocation<Lambda> ||
-                 aui::signal::DirectInvocation<Lambda, Projection, Args...> ||         // hope this gives proper compile
-                 aui::signal::TupleToValueInvocation<Lambda, Projection, Args...> ||   // -time diagnostics
-                 aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>      //
-    {
-        return [lambda = std::forward<Lambda>(lambda),
-                projection = std::forward<Projection>(projection)](Args... args) mutable {
-            if constexpr (aui::signal::NoArgInvocation<Lambda>) {
-                AUI_MARK_AS_USED(projection);
-                lambda();
-            } else if constexpr (aui::signal::DirectInvocation<Lambda, Projection, Args...>) {
-                lambda(std::invoke(projection, std::forward<Args>(args)...));
-            } else if constexpr (aui::signal::TupleToTupleInvocation<Lambda, Projection, Args...>) {
-                std::apply(lambda, std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-            } else if constexpr (aui::signal::TupleToValueInvocation<Lambda, Projection, Args...>) {
-                lambda(std::invoke(projection, std::make_tuple(std::forward<Args>(args)...)));
-            }
-        };
-    }
-
-    // Lambda function
-    template<class Object, class Lambda, typename Projection>
-    static auto makeCallable(Object object, Lambda&& lambda, Projection&& projection)
-    {
-        static_assert(std::is_class_v<std::decay_t<Lambda>>, "the lambda should be a class");
-        return makeCallableImpl(argument_ignore_helper<decltype(&std::decay_t<Lambda>::operator())>(std::forward<Lambda>(lambda)), std::forward<Projection>(projection));
-    }
-
-    // Member function
-    template<class Derived, class Object, typename... FArgs, typename Projection>
-    static auto makeCallable(Derived derived, void(Object::* memberFunction)(FArgs...), Projection&& projection)
-    {
-        auto* object = static_cast<Object*>(derived);
-        return makeCallable(object, [object, memberFunction](FArgs... args)
-        {
-          (object->*memberFunction)(args...);
-        }, std::forward<Projection>(projection));
-    }
-
-public:
 
     struct call_wrapper {
         ASignal& signal;
@@ -221,6 +181,38 @@ public:
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
             return s->objectBase == object.ptr();
         });
+    }
+
+
+private:
+    struct slot
+    {
+        AObjectBase* objectBase;
+        AObject* object;
+        func_t func;
+        bool isDisconnected = false;
+    };
+
+    mutable AVector<_<slot>> mSlots;
+
+    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
+
+    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
+    void connect(Object objectBase, Lambda&& lambda) {
+        AObject* object = nullptr;
+        if constexpr (requires { object = objectBase; }) {
+            object = objectBase;
+        }
+        mSlots.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
+        linkSlot(objectBase);
+    }
+
+    template<aui::not_overloaded_lambda Lambda>
+    auto makeRawInvocable(Lambda&& lambda) const
+    {
+        return [lambda = std::forward<Lambda>(lambda)](const Args&... args){
+            aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
+        };
     }
 
 private:
@@ -337,3 +329,25 @@ template<typename... Args>
 using emits = ASignal<Args...>;
 
 #define signals public
+
+/*
+
+// UNCOMMENT THIS to test ProjectedSignal
+
+static_assert(requires (aui::detail::signal::ProjectedSignal<emits<int>, decltype([](int) { return double(0);})> t) {
+    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
+    { decltype(t)::base } -> aui::same_as<ASignal<int>&>;
+    { decltype(t)::projection } -> aui::not_overloaded_lambda;
+    { decltype(t)::projection_returns_t{} } -> aui::same_as<double>;
+    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<double>>;
+    { decltype(t)::projection_info_t::args{} } -> aui::same_as<std::tuple<int>>;
+    { decltype(t)::projection_info_t::return_t{} } -> aui::same_as<double>;
+});
+
+static_assert(requires (aui::detail::signal::ProjectedSignal<emits<AString>, decltype(&AString::length)> t) {
+    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
+    { decltype(t)::base } -> aui::same_as<ASignal<AString>&>;
+    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<size_t>>;
+    { decltype(t)::projection_returns_t{} } -> aui::same_as<size_t>;
+});
+*/

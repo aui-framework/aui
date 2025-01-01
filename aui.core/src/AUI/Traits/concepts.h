@@ -146,17 +146,28 @@ namespace aui {
 
     template<typename T>
     concept unsigned_integral = std::is_unsigned_v<T>;
+
+    template<typename T>
+    concept is_tuple = requires { std::tuple_size<T>::value; };
+    static_assert(is_tuple<std::tuple<>>);
+    static_assert(is_tuple<std::tuple<int>>);
+    static_assert(is_tuple<std::tuple<double>>);
+    static_assert(!is_tuple<int>);
+    static_assert(!is_tuple<double>);
 }
 
 // AObject-related concepts
 class AString;
 class AAbstractSignal;
 class AAbstractThread;
+class API_AUI_CORE AObjectBase;
 
 template <typename T>
 concept AAnySignal = requires(T&& t) {
-    std::is_base_of_v<AAbstractSignal, T>;
-    typename std::decay_t<T>::args_t;
+    typename std::decay_t<T>::emits_args_t;
+
+    // signal must be contextually convertible to bool (to check if there are any slots connected to it)
+    { t } -> aui::convertible_to<bool>;
 };
 
 template <typename C>
@@ -178,11 +189,17 @@ struct ASlotDef {
 };
 
 template <typename T>
-concept AAnyProperty = requires(T&& t) {
+concept APropertyReadable = requires(T&& t) {
     // Property must have Underlying type which it represents.
     typename std::decay_t<T>::Underlying;
 
-    // Property must be convertible to it's underlying type.
+    // Property must have value() which returns its underlying value.
+    { t.value() } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
+
+    // Property must have boundObject() which returns AObjectBase* associated with this property.
+    { t.boundObject() } -> aui::convertible_to<AObjectBase*>;
+
+    // Property must be convertible to its underlying type.
     { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
     // Property has operator* to explicitly pull the underlying value.
@@ -190,10 +207,21 @@ concept AAnyProperty = requires(T&& t) {
 
     // Property has the "changed" signal
     { t.changed } -> AAnySignal;
+};
+
+template <typename T>
+concept APropertyWritable = requires(T&& t) {
+    { t } -> APropertyReadable;
+
+    // Property has operator= overloaded so it can be used in assignment statement.
+    { t = std::declval<typename std::decay_t<T>::Underlying>() };
 
     // Property has assignment() method which returns a slot definition.
     { ASlotDef(t.assignment()) };
 };
+
+template <typename T>
+concept AAnyProperty = APropertyReadable<T> || APropertyWritable<T>;
 
 template <typename T>
 concept AAnySignalOrProperty = AAnySignal<T> || AAnyProperty<T>;
@@ -204,7 +232,7 @@ struct AAnySignalOrPropertyTraits;
 
 template<AAnySignal T>
 struct AAnySignalOrPropertyTraits<T> {
-    using args = typename T::args_t;
+    using args = typename T::emits_args_t;
 };
 template<AAnyProperty T>
 struct AAnySignalOrPropertyTraits <T>{

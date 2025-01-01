@@ -202,7 +202,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
                 },
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "Roza");
         }
@@ -230,7 +230,13 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
 
 
 TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
-    // We can use ".assignment()" syntax to make a property-to-setter connection instead of property-to-property.
+    // We can use `".assignment()"` syntax to make a property-to-setter connection instead of property-to-property.
+    // This way we are not making connection from the destination property to source property, hence, we are not
+    // required to do extra boilerplate in some cases (like in "Label via let assignment with projection").
+    //
+    // In general, prefer using `".assignment()"` connection if you are making connection to a display-only view
+    // (i.e., to label).
+
     using namespace declarative;
 
     struct User {
@@ -260,7 +266,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
                 // AUI_DOCS_CODE_END
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             // AUI_DOCS_CODE_BEGIN
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "Roza");
@@ -293,7 +299,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment) { // HEADER
 TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
     // Property-to-property is a bidirectional connection, so it requires two projections.
     //
-    // By using ".assignment()" syntax, it's fairly easy to define a projection because property-to-slot requires
+    // By using `".assignment()"` syntax, it's fairly easy to define a projection because property-to-slot requires
     // exactly one projection.
     using namespace declarative;
 
@@ -315,10 +321,10 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(user->name, &AString::uppercase, it->text().assignment());
+                  AObject::connect(user->name.readonlyProjection(&AString::uppercase), it->text().assignment());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
-                  // AObject::connect(user->name, &AString::uppercase, slot(it)::setText);
+                  // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
 
                   // if view's property gets changed (i.e., by user),
                   // these changes DO NOT reflect on model
@@ -327,7 +333,7 @@ TEST_F(UIDataBindingTest, Label_via_let_assignment_with_projection) { // HEADER
               // AUI_DOCS_CODE_END
             });
 
-            // Notice that label already displays a value stored in User.
+            // Notice that label already displays the value stored in User.
             // AUI_DOCS_CODE_BEGIN
             EXPECT_EQ(user->name, "Roza");
             EXPECT_EQ(label->text(), "ROZA"); // uppercased by projection!
@@ -361,13 +367,14 @@ AUI_ENUM_VALUES(Gender,
 
 TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     using namespace declarative;
-    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It requires the
-    // projection to work in both sides.
+    // In some cases, you might want to use property-to-property with projection as it's bidirectional. It's used for
+    // populating view from model and obtaining data from view back to the model. Hence. it requires the projection to
+    // work in both sides.
     //
     // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
     // know anything about underlying values.
     //
-    // Define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
+    // For example, define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
     //
     // @code{cpp}
     // enum class Gender {
@@ -387,33 +394,84 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     };
     // AUI_DOCS_CODE_END
 
-    // Inside AUI_ENTRY, define user, window, and show the window
+    //
+    // Now, let's get a mapping for our `Gender` enum:
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+    // AUI_DOCS_CODE_END
+    //
+    // The compile-time constant above is equivalent to:
+    // @code{cpp}
+    // /* pseudocode */
+    // GENDERS = std::array { Gender::MALE, Gender::FEMALE, GENDER::OTHER };
+    // @endcode
+    //
+    // We just using `aui::enumerate::ALL_VALUES` because it was provided conveniently by `AUI_ENUM_VALUES` for us.
+    //
+    // It's not hard to guess that we'll use indices of this array to uniquely identify `Gender` associated with this
+    // index:
+    // AUI_DOCS_CODE_BEGIN
+    /* pseudocode */
+    GENDERS[0]; // -> MALE
+    GENDERS[1]; // -> FEMALE
+    GENDERS[2]; // -> OTHER
+    // AUI_DOCS_CODE_END
+    //
+    // To perform opposite operation (i.e., `Gender` to int), we can use `aui::indexOf`:
+    // AUI_DOCS_CODE_BEGIN
+    /* pseudocode */
+    aui::indexOf(GENDERS, Gender::MALE);   // -> 0
+    aui::indexOf(GENDERS, Gender::FEMALE); // -> 1
+    aui::indexOf(GENDERS, Gender::OTHER);  // -> 2
+    // AUI_DOCS_CODE_END
+    //
+    // To bring these conversions together, let's use overloaded lambda:
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto GENDER_INDEX_PROJECTION = aui::lambda_overloaded {
+        [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
+        [](int i) -> Gender { return GENDERS[i]; },
+    };
+    // AUI_DOCS_CODE_END
+    // @note
+    // It's convenient to use lambda trailing return type syntax (i.e., `[](Gender g) -> int`, `[](int i) -> Gender`)
+    // to make it obvious what transformations you are doing and how one type is transformed to another.
+    //
+    // The function-like object above detects the direction of transformation and performs as follows:
+    // AUI_DOCS_CODE_BEGIN
+    GENDER_INDEX_PROJECTION(0); // -> MALE
+    GENDER_INDEX_PROJECTION(Gender::MALE); // -> 0
+    // AUI_DOCS_CODE_END
+    //
+    // It is all what we need to perform bidirectional transformations. Inside AUI_ENTRY:
     // AUI_DOCS_CODE_BEGIN
     auto user = aui::ptr::manage(User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
-            // generate a string list model for genders
+            // generate a string list model for genders from GENDERS array defined earlier
             auto gendersStr = AListModel<AString>::fromVector(
-                GENDERS | ranges::view::transform(AEnumerate<Gender>::toName) | ranges::to_vector);
+                GENDERS
+                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::to_vector);
+
+            // equivalent:
+            // gendersStr = { "MALE", "FEMALE", "OTHER" }
+            // you can customize the displaying strings by playing with
+            // ranges::view::transform argument.
 
             setContents(Centered {
               _new<ADropdownList>(gendersStr) let {
                   // AObject::connect(user->gender, it->selectionId());
                   //
-                  // This code would break, because Gender and int
+                  // The code above would break, because Gender and int
                   // (selectionId() type) are incompatible.
                   //
                   // Instead, define bidirectional projection:
-                  AObject::connect(user->gender,
-                                   [](Gender g) {
-                                       return aui::container::index_of(GENDERS, g).valueOr(0);
-                                   },
-                                   it->selectionId(),
-                                   [](int i) { return GENDERS[i]; });
-              },
+                   AObject::connect(
+                       user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION),
+                       it->selectionId());
+                  },
             });
         }
     };
@@ -482,17 +540,41 @@ TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
 }
 
 namespace declarative {
-    template<AAnySignalOrProperty Connectable>
-    struct binding {
-        const Connectable& connectable;
-    };
-
-    template<typename Object, AAnySignalOrProperty Connectable>
+    template<typename Object, APropertyWritable Connectable>
     inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
             using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
             AObject::connect(binding, Binding::property(object));
         });
+        return object;
+    }
+
+
+    template<typename Object, APropertyReadable Connectable>
+    inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
+        aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+          using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+          AObject::connect(binding, Binding::property(object).assignment());
+        });
+        return object;
+    }
+
+    template<AAnyProperty Lhs, typename Destination>
+    struct Binding {
+        Lhs sourceProperty;
+        Destination destinationPointerToMember;
+        explicit Binding(Lhs sourceProperty, Destination destinationPointerToMember)
+          : sourceProperty(sourceProperty), destinationPointerToMember(destinationPointerToMember) {}
+    };
+
+    template<AAnyProperty Property, typename Destination>
+    inline decltype(auto) operator->*(Property&& sourceProperty, Destination&& rhs) {
+        return Binding(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
+    }
+
+    template<typename Object, APropertyWritable Property, typename Destination>
+    inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+        AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
         return object;
     }
 }
@@ -504,8 +586,11 @@ namespace declarative {
 // Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
 // `AObject::connect` (for ease of replacement), besides that
 //
-// Declarative syntax uses `&&` to set up connections. This particular operator was chosen intentionally: `&&` resembles
-// chain, so we "chaining view and property up".
+// Declarative syntax uses `&` and `&&` to set up connections. This particular operator was chosen intentionally: `&&`
+// resembles chain, so we "chaining view and property up".
+//
+// - `&` sets up one-directional connection.
+// - `&&` sets up bidirectional connection.
 //
 // The example below is essentially the same as "Label via let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
@@ -522,14 +607,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
-                (label = _new<ALabel>()) && user->name
+              _new<ALabel>() & user->name
             });
-
-            // Both label and user should hold name Roza.
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "Roza");
         }
     };
     _new<MyWindow>(user)->show();
@@ -537,7 +617,16 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
-    // Notice that label already displays a value stored in User.
+
+    // AUI_DOCS_CODE_BEGIN
+    // Both label and user should hold name Roza.
+    EXPECT_EQ(user->name, "Roza");
+    EXPECT_EQ(label->text(), "Roza");
+    // AUI_DOCS_CODE_END
+    saveScreenshot("1");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+
+    // Notice that label already displays the value stored in User.
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -546,73 +635,110 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
     // AUI_DOCS_CODE_END
-
-    // By simply performing assignment operation on \c name field of \c User struct we changed ALabel display text.
-    // Magic, huh?
+    saveScreenshot("2");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
+
+    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in "Label via
+    // let" example) but using declarative syntax. The logic behind `&&` is almost the same as with `let` +
+    // `AObject::connect` so projection usecases can be adapted in a similar manner.
 }
 
-/*
-TEST_F(UIDataBindingTest, LabelViaLetAssignment) {
+TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
+    // We can use same projections in the same way as `let`.
+    // AUI_DOCS_CODE_BEGIN
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
 
-    struct Model {
-        AProperty<AString> username;
-    } model;
+    auto user = aui::ptr::manage(User { .name = "Roza" });
 
-    mWindow->setContents(Centered {
-      Label {} let {
-          AObject::connect(model.username, it->text().assignment());
-      },
-    });
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+                _new<ALabel>() & user->name.readonlyProjection(&AString::uppercase)
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    // AUI_DOCS_CODE_END
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+    saveScreenshot("1");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    //
+    // Notice that label already displays the projected value stored in User.
+    //
+    // Projection applies to changing values as well. Let's change the name:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
 
-    auto label = _cast<ALabel>(By::type<_<ALabel>>().one());
-    EXPECT_EQ(label->text(), "");
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "VASIL"); // projected
+    // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
 
-    model.username = "Hello";
-    EXPECT_EQ(label->text(), "Hello");
-
-    model.username = "World";
-    EXPECT_EQ(label->text(), "World");
-}
-
-TEST_F(UIDataBindingTest, LabelViaLetAssignmentProjection) {
-    // by using ".assignment()" syntax, we can now use "projection" feature to modify the contents of string displayed
-    // by label yet keeping original value in Model.
-
-    struct Model {
-        AProperty<AString> username;
-    } model;
-
-    mWindow->setContents(Centered {
-      Label {} let {
-          // [](const AString& s) { return s.uppercase(); } is same as &AString::uppercase
-          // we are using the latter here because it's shorter
-          AObject::connect(model.username, it->text().assignment(), &AString::uppercase);
-      },
-    });
-
-    auto label = _cast<ALabel>(By::type<_<ALabel>>().one());
-    EXPECT_EQ(label->text(), "");
-
-    model.username = "Hello";
-    EXPECT_EQ(label->text(), "HELLO");
-
-    model.username = "World";
+    user->name = "World";
     EXPECT_EQ(label->text(), "WORLD");
 }
 
-/*
 
+TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
+    // We can use same projections in the same way as `let`.
+    //
+    // Let's repeat the `"Bidirectional projection"` sample in declarative way:
+    using namespace declarative;
+    struct User {
+        AProperty<Gender> gender;
+    };
 
-TEST_F(UIDataBindingTest, CheckBox) {
-    struct Model {
-        AProperty<bool> checkbox;
-    } model;
+    static constexpr auto GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+    static constexpr auto GENDER_INDEX_PROJECTION = aui::lambda_overloaded {
+        [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
+        [](int i) -> Gender { return GENDERS[i]; },
+    };
+    auto user = aui::ptr::manage(User { .gender = Gender::MALE });
 
-    mWindow->setContents(Centered {
-      CheckBox { } && model.checkbox
-    });
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            // generate a string list model for genders from GENDERS array defined earlier
+            auto gendersStr = AListModel<AString>::fromVector(
+                GENDERS
+                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::to_vector);
+
+            setContents(Centered {
+              _new<ADropdownList>(gendersStr) && user->gender.bidirectionalProjection(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    // AUI_DOCS_CODE_END
+    auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
+    saveScreenshot("1");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+
+    //
+    // - If we try to change `user->gender` programmatically, ADropdownList will respond:
+    // AUI_DOCS_CODE_BEGIN
+    user->gender = Gender::FEMALE;
+    EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
+    // AUI_DOCS_CODE_END
+    saveScreenshot("2");
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_2.png)
+
+    //
+    // - If the user changes the value of ADropdownList, it reflects on the model as well:
+    dropdownList->setSelectionId(2);
+    saveScreenshot("3");
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(user->gender, Gender::OTHER);
+    // AUI_DOCS_CODE_END
+    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
 }
-*/
