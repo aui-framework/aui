@@ -75,6 +75,17 @@ TEST_F(UIDataBindingTest, TextField1) {
     window->setContents(Centered { tf });
     window->show();
     // AUI_DOCS_CODE_END
+    // Or simpler:
+    if constexpr (false) {
+        // AUI_DOCS_CODE_BEGIN
+        // ...
+        window->setContents(Centered {
+          tf && user->name,
+        });
+        // ...
+        // AUI_DOCS_CODE_END
+    }
+
     window->setScalingParams({ .scalingFactor = 2.f });
 
     // The code above generates a window with a text field:
@@ -160,6 +171,96 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // AUI_DOCS_CODE_BEGIN
         doSomethingWithName(*u.name);
         //                 ^^^ HERE
+        // AUI_DOCS_CODE_END
+    }
+}
+
+TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
+    // You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you are
+    // required to write extra boilerplate code: define property, data field, signal, getter and setter checking
+    // equality. Also, APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this
+    // way.
+    //
+    // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
+    // defined by const member function as follows:
+    // AUI_DOCS_CODE_BEGIN
+    class User: public AObject {
+    public:
+        auto name() const {
+            return APropertyDef {
+                this,
+                &User::getName, // this works too: &User::mName
+                &User::setName,
+                mNameChanged,
+            };
+        }
+
+    private:
+        AString mName;
+        emits<AString> mNameChanged;
+
+        void setName(AString name) {
+            // APropertyDef requires us to emit
+            // changed signal if value is actually
+            // changed
+            if (mName == name) {
+                return;
+            }
+            mName = std::move(name);
+            emit mNameChanged(mName);
+        }
+
+        const AString& getName() const {
+            return mName;
+        }
+    };
+    // AUI_DOCS_CODE_END
+
+    // APropertyDef behaves like a class/struct data member:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        User u;
+        u.name() = "Hello";
+        EXPECT_EQ(u.name(), "Hello");
+        // AUI_DOCS_CODE_END
+    }
+    // @note
+    // Properties defined with APropertyDef instead of AProperty impersonate themselves by trailing braces `()`. We
+    // can't get rid of them, as APropertyDef is defined thanks to member function. In comparison to `user->name`, think
+    // of `user->name()` as the same kind of property except defining custom behaviour via function, hence the braces
+    // `()`.
+    //
+    // For the rest, APropertyDef is identical to AProperty including seamless interaction:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        User u;
+        u.name() = "Hello";
+        u.name() += " world!";
+        EXPECT_EQ(u.name(), "Hello world!");
+        EXPECT_EQ(u.name()->length(), AString("Hello world!").length());
+        // AUI_DOCS_CODE_END
+        //
+        // @note
+        // For `operator+=` to honor getters/setters `APropertyDef` calls getter/setter instead of directly using `+=`
+        // on your property. Equivalent code will be:
+        // @code{cpp}
+        // u.setName(u.getName() + " world!")
+        // @endcode
+        //
+    }
+
+    {
+        // The implicit conversions work the same way as with AProperty:
+        // AUI_DOCS_CODE_BEGIN
+        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
+        User u;
+        u.name() = "Hello";
+        doSomethingWithName(u.name());
+        // AUI_DOCS_CODE_END
+
+
+        // AUI_DOCS_CODE_BEGIN
+        doSomethingWithName(*u.name());
         // AUI_DOCS_CODE_END
     }
 }

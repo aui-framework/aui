@@ -132,9 +132,22 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 }
 
 /**
- * @brief TODO
+ * @brief Basic easy-to-use property implementation.
  * @ingroup property_system
  * @details
+ * See @ref property_system "property system" for more info.
+ * @example
+ * @code{cpp}
+ * struct User {
+ *   AProperty<AString> name;
+ *   AProperty<AString> surname;
+ * };
+ *
+ * // AProperty behaves like a class/struct data member:
+ * User u;
+ * u.name = "Hello";
+ * EXPECT_EQ(u.name, "Hello");
+ * @endcode
  */
 template <typename T>
 struct AProperty: AObjectBase {
@@ -237,9 +250,45 @@ private:
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 
 /**
- * @brief TODO
+ * @brief Property implementation to use with custom getter/setter.
  * @ingroup property_system
  * @details
+ * See @ref property_system "property system" for more info.
+ *
+ * @example
+ * @code{cpp}
+ * class User: public AObject {
+ * public:
+ *     auto name() const {
+ *         return APropertyDef {
+ *             this,
+ *             &User::getName, // this works too: &User::mName
+ *             &User::setName,
+ *             mNameChanged,
+ *         };
+ *     }
+ *
+ * private:
+ *     AString mName;
+ *     emits<AString> mNameChanged;
+ *
+ *     void setName(AString name) {
+ *         // APropertyDef requires us to emit
+ *         // changed signal if value is actually
+ *         // changed
+ *         if (mName == name) {
+ *             return;
+ *         }
+ *         mName = std::move(name);
+ *         emit mNameChanged(mName);
+ *     }
+ *
+ *     const AString& getName() const {
+ *         return mName;
+ *     }
+ * };
+ * @endcode
+ *
  * # Performance considerations
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
@@ -248,12 +297,39 @@ template <
     typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
     typename SignalArg>
 struct APropertyDef {
+    /**
+     * @brief AObject which this property belongs to.
+     */
     const M* base;
     using Model = M;
+
+    /**
+     * @brief Getter. Can be pointer-to-member(function or field) or lambda.
+     */
     Getter get;
+
+    /**
+     * @brief Setter. Can be pointer-to-member(function or field) or lambda.
+     * @details
+     * The setter implementation typically emits `changed` signal. If it is, it must emit changes only if value is
+     * actually changed.
+     * @code{cpp}
+     * void setValue(int value) {
+     *   if (mValue == value) {
+     *     return;
+     *   }
+     *   mValue = value;
+     *   emit mValueChanged(valueChanged);
+     * }
+     * @endcode
+     */
     Setter set;
     using GetterReturnT = decltype(std::invoke(get, base));
     using Underlying = std::decay_t<GetterReturnT>;
+
+    /**
+     * @brief Reference to underlying signal emitting on value changes.
+     */
     const emits<SignalArg>& changed;
     static_assert(aui::same_as<Underlying , std::decay_t<SignalArg>>, "different getter result and signal arg?");
 
@@ -363,7 +439,13 @@ inline auto operator+(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs + rhs;
 
 template<AAnyProperty Lhs, typename Rhs>
 inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs) requires requires { *lhs += rhs; } {
-    return *lhs = *lhs + std::forward<Rhs>(rhs);
+    *lhs += std::forward<Rhs>(rhs);
+    return lhs;
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+inline decltype(auto) operator+=(Lhs&& lhs, Rhs&& rhs) requires requires { lhs = *lhs + std::forward<Rhs>(rhs); } {
+    return lhs = *lhs + std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
