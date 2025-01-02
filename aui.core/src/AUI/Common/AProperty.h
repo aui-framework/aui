@@ -111,7 +111,8 @@ private:
 
 template<typename Property, aui::not_overloaded_lambda ProjectionRead, aui::not_overloaded_lambda ProjectionWrite>
 auto makeBidirectionalProjection(Property&& property, ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) {
-    auto readProjected = makeReadonlyProjection(property, std::forward<ProjectionRead>(projectionRead));
+    auto readProjected =
+        makeReadonlyProjection(std::forward<Property>(property), std::forward<ProjectionRead>(projectionRead));
     using PropertyReadProjection = decltype(readProjected);
     PropertyReadWriteProjection result(std::move(readProjected), std::forward<ProjectionWrite>(projectionWrite));
 //    static_assert(APropertyWritable<decltype(result)>, "PropertyReadWriteProjection must conform with APropertyWriteable");
@@ -243,7 +244,9 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
  */
-template <typename M, typename Getter, typename Setter, typename SignalArg>
+template <
+    typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
+    typename SignalArg>
 struct APropertyDef {
     const M* base;
     using Model = M;
@@ -252,6 +255,7 @@ struct APropertyDef {
     using GetterReturnT = decltype(std::invoke(get, base));
     using Underlying = std::decay_t<GetterReturnT>;
     const emits<SignalArg>& changed;
+    static_assert(aui::same_as<Underlying , std::decay_t<SignalArg>>, "different getter result and signal arg?");
 
     // this ctor effectively prohibits designated initialization, i.e., this one is not possible:
     //
@@ -270,7 +274,7 @@ struct APropertyDef {
 
     template <aui::convertible_to<Underlying> U>
     APropertyDef& operator=(U&& u) {
-        std::invoke(set, const_cast<Model*>(base), std::forward<U>(u));
+        std::invoke(set, *const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
 
@@ -314,7 +318,8 @@ struct APropertyDef {
     [[nodiscard]]
     auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
         return aui::detail::property::makeBidirectionalProjection(
-            *this, std::forward<ProjectionRead>(projectionRead), std::forward<ProjectionWrite>(projectionWrite));
+            std::move(*this), std::forward<ProjectionRead>(projectionRead),
+            std::forward<ProjectionWrite>(projectionWrite));
     }
 
     /**
@@ -323,7 +328,7 @@ struct APropertyDef {
     template <aui::detail::property::ProjectionBidirectional<Underlying> Projection>
     [[nodiscard]]
     auto biProjected(Projection&& projectionBidirectional) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
+        return aui::detail::property::makeBidirectionalProjection(std::move(*this), projectionBidirectional);
     };
 
 private:

@@ -135,8 +135,8 @@ public:
     using emits_args_t = std::tuple<Args...>;
 
     template<typename Projection>
-    auto projected(Projection&& projection) {
-        return aui::detail::signal::ProjectedSignal(*this, std::forward<Projection>(projection));
+    auto projected(Projection&& projection) const {
+        return aui::detail::signal::ProjectedSignal(const_cast<ASignal&>(*this), std::forward<Projection>(projection));
     }
 
     struct call_wrapper {
@@ -301,13 +301,11 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
             receiverPtr = std::move(sharedPtr);
         }
 
-        if (!receiverPtr || receiverPtr->isSignalsEnabled()) {
-            (std::apply)(slot.func, args);
-            if (AAbstractSignal::isDisconnected()) {
-                unlinkSlot(slot.object);
-                i = slots.erase(i);
-                continue;
-            }
+        (std::apply)(slot.func, args);
+        if (AAbstractSignal::isDisconnected()) {
+            unlinkSlot(slot.object);
+            i = slots.erase(i);
+            continue;
         }
         ++i;
     }

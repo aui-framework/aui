@@ -105,7 +105,10 @@ public:
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
     template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
-    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {
+            // source and destination properties must have compatible underlying types
+            { *propertySource } -> aui::convertible_to<std::decay_t<decltype(*propertyDestination)>>;
+        } {
         AObject::connect(propertySource,
                          propertyDestination.assignment());
     }
@@ -131,7 +134,11 @@ public:
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
     template <APropertyWritable PropertySource, APropertyWritable PropertyDestination>
-    static void biConnect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) {
+    static void biConnect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {
+            // source and destination properties must have compatible underlying types
+            { *propertySource } -> aui::convertible_to<std::decay_t<decltype(*propertyDestination)>>;
+            { *propertyDestination } -> aui::convertible_to<std::decay_t<decltype(*propertySource)>>;
+        } {
         AObject::connect(propertySource,
                          propertyDestination.assignment());
         AObject::connect(propertyDestination.changed,
