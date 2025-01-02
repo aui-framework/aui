@@ -536,7 +536,7 @@ namespace declarative {
     };
 
     template<AAnyProperty Property, typename Destination>
-    inline decltype(auto) operator->*(Property&& sourceProperty, Destination&& rhs) {
+    inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
         return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
     }
 
@@ -556,18 +556,20 @@ namespace declarative {
 // # UI declarative data binding
 // As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
-// Here's where declarative syntax comes into play. Declarative syntax uses the same argument order as
-// `AObject::connect` (for ease of replacement), besides that
+// Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
+// `AObject::connect`/`AObject::biConnect` (for ease of replacement/understanding).
 //
-// Declarative syntax uses `&` and `&&` to set up connections. This particular operator was chosen intentionally: `&&`
-// resembles chain, so we "chaining view and property up".
+// Declarative syntax uses `&` and `&&` operators to set up connections. These were chosen intentionally: `&&` resembles
+// chain, so we "chaining view and property up".
 //
-// - `&` sets up one-directional connection.
-// - `&&` sets up bidirectional connection.
+// - `&` sets up one-directional connection (`AObject::connect`).
+// - `&&` sets up bidirectional connection (`AObject::biConnect`).
 //
-// The example below is essentially the same as "Label via let" but uses declarative connection set up syntax.
+// Also, `>` operator (resembles arrow) is used to specify the destination slot.
+//
+// The example below is essentially the same as `"Label via let"` but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
-    // Use \c && expression to connect the model's username property to the label's @ref ALabel::text "text()"
+    // Use `&` and `>` expression to connect the model's username property to the label's @ref ALabel::text "text"
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -581,7 +583,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     public:
         MyWindow(const _<User>& user) {
             setContents(Centered {
-              _new<ALabel>() & user->name->*&ALabel::text
+              _new<ALabel>() & user->name > &ALabel::text
             });
         }
     };
@@ -592,12 +594,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
-
-    // AUI_DOCS_CODE_BEGIN
-    // Both label and user should hold name Roza.
     EXPECT_EQ(user->name, "Roza");
     EXPECT_EQ(label->text(), "Roza");
-    // AUI_DOCS_CODE_END
+
     saveScreenshot("1");
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
@@ -616,9 +615,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 
-    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in "Label via
-    // let" example) but using declarative syntax. The logic behind `&&` is almost the same as with `let` +
-    // `AObject::connect` so projection usecases can be adapted in a similar manner.
+    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in `"Label via
+    // let"` example) but using declarative syntax. The logic behind `&` is almost the same as with `let` +
+    // `AObject::connect` so projection use cases can be adapted in a similar manner.
 }
 
 TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER
@@ -626,8 +625,8 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     //
     // One of notable features of declarative way (in comparison to procedural `let` way) is that we can omit the view's
     // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
-    // type. Some view's have already predefined such specialization for their underlying types. For example, ALabel
-    // has such specialization:
+    // type. Some view have already predefined such specialization for their underlying types. For example, ALabel has
+    // such specialization:
     //
     // @code{cpp}
     // template<>
@@ -660,14 +659,12 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
+    EXPECT_EQ(user->name, "Roza");
+    EXPECT_EQ(label->text(), "Roza");
+
     //
     // Behaviour of such connection is equal to `"Label via declarative"`:
     //
-    // AUI_DOCS_CODE_BEGIN
-    // Both label and user should hold name Roza.
-    EXPECT_EQ(user->name, "Roza");
-    EXPECT_EQ(label->text(), "Roza");
-    // AUI_DOCS_CODE_END
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
     // Note that the label already displays the **projected** value stored in User.
@@ -701,10 +698,10 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // AUI_DOCS_CODE_END
 
     //
-    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker. When binding process
-    // involves ADataBindingDefault, the property system calls `ADataBindingDefault::setup` to apply some extra traits
-    // of the bound value on the view. Here's an abstract on how `ANumberPicker` defines specialization of
-    // `ADataBingingDefault` with `aui::ranged_number`:
+    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker. When using declarative
+    // syntax, the property system calls `ADataBindingDefault::setup` to apply some extra traits of the bound value on
+    // the view. Here's an abstract on how `ANumberPicker` defines specialization of `ADataBingingDefault` with
+    // `aui::ranged_number`:
     // @code{cpp}
     // /* pseudocode */
     // template <aui::arithmetic UnderlyingType, auto min, auto max>
@@ -887,7 +884,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
 
             setContents(Centered {
                 // AUI_DOCS_CODE_BEGIN
-                _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
+                _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION) > &ADropdownList::selectionId
                 // AUI_DOCS_CODE_END
                 // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
                 // @note

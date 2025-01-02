@@ -32,7 +32,7 @@ auto resizeTuple(TupleInitial initial, TupleAll all) {
 template<aui::not_overloaded_lambda Lambda, typename... Args>
 inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
     static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
-    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(args...));
+    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(std::cref(args)...));
     std::apply(lambda, smallerTuple);
 }
 
