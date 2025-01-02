@@ -82,7 +82,7 @@ public:
     ATreeModelIndex makeIndex(_<Node> node) {
         auto parent = node->parent.lock();
         auto& children = parent ? parent->children : mChildren;
-        return ATreeModelIndex(children.indexOf(node), 0, std::move(node));
+        return ATreeModelIndex(children.indexOf(node).valueOr(0), 0, std::move(node));
     }
 
     ATreeModelIndexOrRoot parent(const ATreeModelIndex& vertex) override {

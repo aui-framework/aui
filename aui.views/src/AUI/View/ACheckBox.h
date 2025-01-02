@@ -113,6 +113,9 @@ private:
 template<>
 struct ADataBindingDefault<ACheckBox, bool> {
 public:
+    static auto property(const _<ACheckBox>& view) {
+        return view->checked();
+    }
     static void setup(const _<ACheckBox>& view) {}
 
     static auto getGetter() {
@@ -128,6 +131,9 @@ public:
 template<>
 struct ADataBindingDefault<ACheckBoxWrapper, bool> {
 public:
+    static auto property(const _<ACheckBoxWrapper>& view) {
+        return view->checked();
+    }
     static void setup(const _<ACheckBoxWrapper>& view) {}
 
     static auto getGetter() {

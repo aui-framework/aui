@@ -505,53 +505,6 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
-namespace declarative {
-    template<typename Object, APropertyWritable Connectable>
-    inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
-        aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
-            using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-            Binding::setup(object);
-            AObject::biConnect(binding, Binding::property(object));
-        });
-        return object;
-    }
-
-
-    template<typename Object, APropertyReadable Connectable>
-    inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
-        aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
-          using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-          Binding::setup(object);
-          AObject::connect(binding, Binding::property(object));
-        });
-        return object;
-    }
-
-    template<AAnyProperty Lhs, typename Destination>
-    struct Binding {
-        Lhs sourceProperty;
-        Destination destinationPointerToMember;
-        explicit Binding(Lhs sourceProperty, Destination destinationPointerToMember)
-          : sourceProperty(sourceProperty), destinationPointerToMember(destinationPointerToMember) {}
-    };
-
-    template<AAnyProperty Property, typename Destination>
-    inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
-        return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
-    }
-
-    template<typename Object, APropertyWritable Property, typename Destination>
-    inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding) {
-        AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
-        return object;
-    }
-    template<typename Object, APropertyWritable Property, typename Destination>
-    inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
-        AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
-        return object;
-    }
-}
-
 //
 // # UI declarative data binding
 // As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
@@ -618,6 +571,11 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in `"Label via
     // let"` example) but using declarative syntax. The logic behind `&` is almost the same as with `let` +
     // `AObject::connect` so projection use cases can be adapted in a similar manner.
+
+    {
+        auto l = Label {} & user->name > &ALabel::text;
+        EXPECT_EQ(l->text(), "World");
+    }
 }
 
 TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER
@@ -683,6 +641,11 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
     // as in `"Label via declarative"`.
+
+    {
+        auto l = Label {} & user->name;
+        EXPECT_EQ(l->text(), "World");
+    }
 }
 
 TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER

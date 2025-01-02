@@ -485,3 +485,48 @@ public:
         return &AView::setVisibility;
     }
 };
+
+template <typename Object, APropertyReadable Connectable>
+inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
+    aui::tuple_visitor<
+        typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+        using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+        Binding::setup(object);
+        AObject::connect(binding, Binding::property(object));
+    });
+    return object;
+}
+
+template<typename Object, APropertyWritable Connectable>
+inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
+    aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+      using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+      Binding::setup(object);
+      AObject::biConnect(binding, Binding::property(object));
+    });
+    return object;
+}
+
+template <AAnyProperty Lhs, typename Destination>
+struct Binding {
+    Lhs sourceProperty;
+    Destination destinationPointerToMember;
+    explicit Binding(Lhs sourceProperty, Destination destinationPointerToMember)
+      : sourceProperty(sourceProperty), destinationPointerToMember(destinationPointerToMember) {}
+};
+
+template <AAnyProperty Property, typename Destination>
+inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
+    return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
+}
+
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+    AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+    return object;
+}
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+    AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+    return object;
+}

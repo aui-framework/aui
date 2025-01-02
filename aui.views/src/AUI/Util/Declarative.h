@@ -53,6 +53,10 @@ namespace aui::ui_building {
             return asViewFactory()->operator()() ^ std::forward<T>(t);
         }
         template<typename T>
+        auto operator&(T&& t) const {
+            return asViewFactory()->operator()() & std::forward<T>(t);
+        }
+        template<typename T>
         auto operator&&(T&& t) const {
             return asViewFactory()->operator()() && std::forward<T>(t);
         }
@@ -106,7 +110,17 @@ namespace aui::ui_building {
         _<View> mView;
     };
 
-    static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper is not convertible to _<AView>");
+    static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper must be convertible to _<AView>");
+
+    template<typename Item>
+    concept LayoutItemView = aui::convertible_to<Item, View>;
+    template<typename Item>
+    concept LayoutItemViewGroup = aui::convertible_to<Item, ViewGroup>;
+    template<typename Item>
+    concept LayoutItemViewFactory = aui::factory<Item, View>;
+
+    template<typename Item>
+    concept ValidLayoutItem = LayoutItemView<Item> || LayoutItemViewFactory<Item> || LayoutItemViewFactory<Item>;
 
     template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory_impl {
@@ -117,13 +131,13 @@ namespace aui::ui_building {
         template<typename... Views>
         layouted_container_factory_impl(Views&&... views) {
             mViews.reserve(sizeof...(views));
-            aui::parameter_pack::for_each([this](auto&& item) {
-                using type = decltype(item);
-                constexpr bool isViewGroup = std::is_convertible_v<type, ViewGroup>;
-                constexpr bool isView = std::is_convertible_v<type, View>;
-                constexpr bool isInvokable = std::is_invocable_v<type>;
-
-                static_assert(isViewGroup || isView || isInvokable, "the item is neither convertible to View nor ViewGroup, nor invokable");
+            static_assert((ValidLayoutItem<Views> && ...),
+                          "One of the items passed to declarative container is not valid. "
+                          "Please check your compiler's diagnostics on constraint satisfaction.");
+            aui::parameter_pack::for_each([this]<ValidLayoutItem Item>(Item&& item) {
+                constexpr bool isView = LayoutItemView<Item>;
+                constexpr bool isViewGroup = LayoutItemViewGroup<Item>;
+                constexpr bool isInvokable = LayoutItemViewFactory<Item>;
 
                 if constexpr (isViewGroup) {
                     auto asViewGroup = ViewGroup(item);

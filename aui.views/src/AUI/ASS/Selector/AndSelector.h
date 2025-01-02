@@ -37,7 +37,7 @@ namespace ass {
         }
     };
 
-    template <typename L, typename R, std::enable_if_t<std::is_base_of_v<IAssSubSelector, L> && std::is_base_of_v<IAssSubSelector, R>, bool> = true>
+    template <aui::derived_from<IAssSubSelector> L, aui::derived_from<IAssSubSelector> R>
     AndSelector<L, R> operator&&(L l, R r) {
         return AndSelector<L, R>(std::move(l), std::move(r));
     }
