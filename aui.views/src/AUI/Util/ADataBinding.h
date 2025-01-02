@@ -532,7 +532,7 @@ template <typename Object, APropertyWritable Property, typename Destination>
 inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&>;
-        { std::invoke(binding.destinationPointerToMember(binding.destinationPointerToMember)) } -> AAnyProperty;
+        { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
     }
 {
     AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
@@ -543,9 +543,36 @@ template <typename Object, APropertyWritable Property, typename Destination>
 inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&>;
-        { std::invoke(binding.destinationPointerToMember(binding.destinationPointerToMember)) } -> AAnyProperty;
+        { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
     }
 {
     AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+    return object;
+}
+
+
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
+    }
+{
+    AObject::connect(
+        binding.sourceProperty, object.get(),
+        [object = object.get(), wrapped = std::move(binding.destinationPointerToMember)](
+            const std::decay_t<decltype(*binding.sourceProperty)>& i) { std::invoke(wrapped, *object, i); });
+    return object;
+}
+
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
+    }
+{
+    AObject::biConnect(
+        binding.sourceProperty, object.get(),
+        [object = object.get(), wrapped = std::move(binding.destinationPointerToMember)](
+            const std::decay_t<decltype(*binding.sourceProperty)>& i) { std::invoke(wrapped, *object, i); });
     return object;
 }

@@ -857,6 +857,39 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     EXPECT_EQ(label->text(), "WORLD");
 }
 
+TEST_F(UIDataBindingTest, Declarative_custom_slot) {
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+                _new<ALabel>() & user->name > [](ALabel& label, const AString& s) {
+                  label.setText("custom slot! {}"_format(s));
+                }
+            });
+        }
+    };
+    auto window = _new<MyWindow>(user);
+    window->show();
+    window->setScalingParams({ .scalingFactor = 2.f });
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+    saveScreenshot("1");
+    user->name = "Vasil";
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "custom slot! Vasil");
+    saveScreenshot("2");
+    user->name = "World";
+    EXPECT_EQ(label->text(), "custom slot! World");
+}
+
 TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
     // In previous examples, we've used `&` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
