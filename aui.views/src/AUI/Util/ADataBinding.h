@@ -20,18 +20,45 @@
 #include <AUI/View/AView.h>
 
 
+/**
+ * @brief Defines how View handles properties of FieldType type.
+ * @details
+ * Example specialization:
+ * @code{cpp}
+ * template<>
+ * struct ADataBindingDefault<ALabel, AString> {
+ * public:
+ *     static auto property(const _<ALabel>& view) { return view->text(); }
+ * };
+ * @endcode
+ */
 template<typename View, typename FieldType>
 struct ADataBindingDefault {
 public:
     /**
-     * Called then view linked with field.
-     * @param view
+     * @brief Called then view linked with field.
+     * @param view view to link with
      */
     static void setup(const _<View>& view) {}
 
+    /**
+     * @brief Returns property definition for FieldType
+     * @param view view to return property of
+     */
+    static auto property(const _<View>& view) {}
+
+    /**
+     * @brief Returns getter for ADataBinding (deprecated)
+     */
+    [[deprecated("ADataBinding is deprecated. Please use Property System to bind values")]]
     static ASignal<FieldType>(View::*getGetter()) {
         return nullptr;
     }
+
+    /**
+     * @brief Returns setter for ADataBinding (deprecated)
+     */
+    [[deprecated("ADataBinding is deprecated. Please use Property System to bind values")]]
     static void(View::*getSetter())(const FieldType& v) {
         return nullptr;
     }

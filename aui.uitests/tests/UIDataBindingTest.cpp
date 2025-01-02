@@ -574,9 +574,14 @@ namespace declarative {
 
     template<AAnyProperty Property, typename Destination>
     inline decltype(auto) operator->*(Property&& sourceProperty, Destination&& rhs) {
-        return Binding(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
+        return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
     }
 
+    template<typename Object, APropertyWritable Property, typename Destination>
+    inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+        AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+        return object;
+    }
     template<typename Object, APropertyWritable Property, typename Destination>
     inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
         AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
@@ -613,7 +618,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     public:
         MyWindow(const _<User>& user) {
             setContents(Centered {
-              _new<ALabel>() & user->name
+              _new<ALabel>() & user->name->*&ALabel::text
             });
         }
     };
@@ -651,6 +656,73 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in "Label via
     // let" example) but using declarative syntax. The logic behind `&&` is almost the same as with `let` +
     // `AObject::connect` so projection usecases can be adapted in a similar manner.
+}
+
+TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER
+    // In previous example we have explicitly specified ALabel's property to connect with.
+    //
+    // One of notable features of declarative way (in comparison to procedural `let` way) is that we can omit the view's
+    // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
+    // type. Some view's have already predefined such specialization for their underlying types. For example, ALabel
+    // has such specialization:
+    //
+    // @code{cpp}
+    // template<>
+    // struct ADataBindingDefault<ALabel, AString> {
+    // public:
+    //     static auto property(const _<ALabel>& view) { return view->text(); }
+    // };
+    // @endcode
+    //
+    // We can use this predefined specialization to omit the destination property:
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            setContents(Centered {
+                // AUI_DOCS_CODE_BEGIN
+                _new<ALabel>() & user->name
+                // AUI_DOCS_CODE_END
+            });
+        }
+    };
+    auto window = _new<MyWindow>(user);
+    window->show();
+
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+
+    //
+    // Behaviour of such connection is equal to `"Label via declarative"`:
+    //
+    // AUI_DOCS_CODE_BEGIN
+    // Both label and user should hold name Roza.
+    EXPECT_EQ(user->name, "Roza");
+    EXPECT_EQ(label->text(), "Roza");
+    // AUI_DOCS_CODE_END
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+
+    // Note that the label already displays the **projected** value stored in User.
+    //
+    // Let's change the name:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
+    // AUI_DOCS_CODE_END
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "Vasil");
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+
+    user->name = "World";
+    EXPECT_EQ(label->text(), "World");
+
+    // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
+    // as in `"Label via declarative"`.
 }
 
 TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
