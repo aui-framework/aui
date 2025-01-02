@@ -69,11 +69,11 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
 void CustomCaptionWindowImplWin32::updateMiddleButtonIcon() {
     if (isCustomCaptionMaximized()) {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/restore.svg" }
+            ass::BackgroundImage {":uni/caption/restore.svg", {}, {}, ass::Sizing::CENTER }
         });
     } else {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/maximize.svg" }
+            ass::BackgroundImage {":uni/caption/maximize.svg", {}, {}, ass::Sizing::CENTER }
         });
     }
 }

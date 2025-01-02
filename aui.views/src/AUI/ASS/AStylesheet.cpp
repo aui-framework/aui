@@ -259,18 +259,18 @@ AStylesheet::AStylesheet() {
             Margin { 1_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
-            BackgroundImage {0x333333_rgb },
+            BackgroundImage { {}, 0x333333_rgb },
         },
         {
             t<ACheckBox>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage {0x0078d7_rgb },
+            BackgroundImage { {}, 0x0078d7_rgb },
         },
         {
             t<ACheckBox>::active(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
-            BackgroundImage {0x005499_rgb },
+            BackgroundImage { {}, 0x005499_rgb },
         },
         {
             Selected(t<ACheckBox>()),
@@ -279,7 +279,7 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { 0xa0a0a0_rgb },
+            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
         },
 
@@ -322,18 +322,18 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
-            BackgroundImage {0x333333_rgb },
+            BackgroundImage { {}, 0x333333_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage {0x0078d7_rgb },
+            BackgroundImage { {}, 0x0078d7_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
-            BackgroundImage {0x005499_rgb },
+            BackgroundImage { {}, 0x005499_rgb },
         },
         {
                 Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
@@ -346,7 +346,7 @@ AStylesheet::AStylesheet() {
         {
             t<ARadioButton>::disabled() > t<ARadioButtonInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { 0xa0a0a0_rgb },
+            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
         },
 
