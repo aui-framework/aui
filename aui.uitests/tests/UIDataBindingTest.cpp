@@ -75,6 +75,7 @@ TEST_F(UIDataBindingTest, TextField1) {
     window->setContents(Centered { tf });
     window->show();
     // AUI_DOCS_CODE_END
+    window->setScalingParams({ .scalingFactor = 2.f });
 
     // The code above generates a window with a text field:
     saveScreenshot("1");
@@ -249,10 +250,9 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
               // AUI_DOCS_CODE_BEGIN
-              label = _new<ALabel>() let {
+              _new<ALabel>() let {
                   // Data goes from left to right:
                   // current value (pre fire) or changed event
                   // goes through projection (&AString::uppercase) first
@@ -269,15 +269,14 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
               },
               // AUI_DOCS_CODE_END
             });
-
-            // Notice that label already displays the value stored in User.
-            // AUI_DOCS_CODE_BEGIN
-            EXPECT_EQ(user->name, "Roza");
-            EXPECT_EQ(label->text(), "ROZA"); // uppercased by projection!
-            // AUI_DOCS_CODE_END
         }
     };
     _new<MyWindow>(user)->show();
+
+    //
+    // This gives the following result:
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    // Note that the label already displays the **projected** value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
@@ -287,10 +286,13 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
     user->name = "Vasil";
     // AUI_DOCS_CODE_END
 
+    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+    //
+    // This way, we've set up data binding with projection.
+
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
 }
-
 
 TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     // In previous examples, we've used `AObject::connect` to make one directional (one sided) connection. This is
@@ -331,19 +333,36 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
         }
     };
     _new<MyWindow>(user)->show();
+    //
+    // This gives the following result:
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
     //
-    // Let's change the name:
+    // Let's change the name programmatically:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
     // AUI_DOCS_CODE_END
+    //
+    // ATextField will respond:
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
-}
 
+    //
+    // If the user changes the value from UI, these changes will reflect on `user->model` as well:
+    tf->selectAll();
+    By::value(tf).perform(type("Changed from UI"));
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(user->name, "Changed from UI");
+    // AUI_DOCS_CODE_END
+    //
+    // This way we've set up bidirectional projection via `AObject::biConnect` which makes `user->name` aware of UI
+    // changes.
+}
 
 enum class Gender {
     MALE,
@@ -467,8 +486,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     _new<MyWindow>(user)->show();
     // AUI_DOCS_CODE_END
     auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
-    saveScreenshot("1");
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
 
     //
     // - If we try to change `user->gender` programmatically, ADropdownList will respond:
@@ -476,17 +494,15 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     user->gender = Gender::FEMALE;
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
-    saveScreenshot("2");
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_2.png)
+    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
     dropdownList->setSelectionId(2);
-    saveScreenshot("3");
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
+    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
 TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
@@ -533,7 +549,7 @@ namespace declarative {
     inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
             using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-            AObject::connect(binding, Binding::property(object));
+            AObject::biConnect(binding, Binding::property(object));
         });
         return object;
     }
@@ -563,7 +579,7 @@ namespace declarative {
 
     template<typename Object, APropertyWritable Property, typename Destination>
     inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
-        AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+        AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
         return object;
     }
 }
@@ -601,8 +617,10 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
             });
         }
     };
-    _new<MyWindow>(user)->show();
+    auto window = _new<MyWindow>(user);
+    window->show();
     // AUI_DOCS_CODE_END
+    window->setScalingParams({ .scalingFactor = 2.f });
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
 
@@ -615,7 +633,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     saveScreenshot("1");
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
-    // Notice that label already displays the value stored in User.
+    // Note that the label already displays the **projected** value stored in User.
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -654,13 +672,15 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
             });
         }
     };
-    _new<MyWindow>(user)->show();
+    auto window = _new<MyWindow>(user);
+    window->show();
     // AUI_DOCS_CODE_END
+    window->setScalingParams({ .scalingFactor = 2.f });
     auto label = _cast<ALabel>(By::type<ALabel>().one());
     saveScreenshot("1");
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     //
-    // Notice that label already displays the projected value stored in User.
+    // Note that the label already displays the **projected** value stored in User.
     //
     // Projection applies to value chhanges as well. Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -676,6 +696,70 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     EXPECT_EQ(label->text(), "WORLD");
 }
 
+TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
+    // In previous examples, we've used `&` to make one directional (one sided) connection. This is
+    // perfectly enough for ALabel because it cannot be changed by user.
+    //
+    // In some cases, you might want to use property-to-property as it's bidirectional. It's used for populating view
+    // from model and obtaining data from view back to the model.
+    //
+    // For this example, let's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
+    // `&&` because we do want `user->name` to be aware of changes of the view.
+
+    using namespace declarative;
+
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            setContents(Centered {
+              // AUI_DOCS_CODE_BEGIN
+              _new<ATextField>() && user->name
+              // AUI_DOCS_CODE_END
+            });
+        }
+    };
+    auto window = _new<MyWindow>(user);
+    window->setScalingParams({ .scalingFactor = 2.f });
+    window->show();
+    //
+    // This gives the following result:
+    saveScreenshot("1");
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+
+    auto tf = _cast<ATextField>(By::type<ATextField>().one());
+
+    //
+    // Let's change the name programmatically:
+    // AUI_DOCS_CODE_BEGIN
+    user->name = "Vasil";
+    // AUI_DOCS_CODE_END
+    //
+    // ATextField will respond:
+    saveScreenshot("2");
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(tf->text(), "Vasil");
+
+    //
+    // If the user changes the value from UI, these changes will reflect on `user->model` as well:
+    tf->selectAll();
+    By::value(tf).perform(type("Changed from UI"));
+    saveScreenshot("3");
+    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(user->name, "Changed from UI");
+    // AUI_DOCS_CODE_END
+    //
+    // This way we've set up bidirectional projection via `&&` which makes `user->name` aware of UI
+    // changes.
+}
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // We can use projections in the same way as with `let`.
@@ -705,7 +789,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
                 // AUI_DOCS_CODE_BEGIN
                 _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION)->*&ADropdownList::selectionId
                 // AUI_DOCS_CODE_END
-                // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_1.png)
+                // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
                 // @note
                 // We used the `&&` operator here instead of `&` because we want the connection work in both
                 // directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
@@ -713,7 +797,9 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
             });
         }
     };
-    _new<MyWindow>(user)->show();
+    auto window = _new<MyWindow>(user);
+    window->setScalingParams({ .scalingFactor = 2.f });
+    window->show();
     auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
     saveScreenshot("1");
 
@@ -724,7 +810,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_2.png)
+    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
@@ -733,5 +819,5 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Bidirectional_projection_3.png)
+    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }

@@ -37,6 +37,7 @@ ADropdownList::ADropdownList() {
 
 void ADropdownList::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
+    mSelectionId = -1;
     setSelectionId(0);
 
     connect(model->dataInserted, me::updateText);
