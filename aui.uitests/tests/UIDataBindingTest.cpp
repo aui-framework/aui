@@ -505,50 +505,12 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
-TEST_F(UIDataBindingTest, Propagating_strong_types) { // HEADER
-    using namespace declarative;
-    // In AUI, there's aui::ranged_number template which stores valid value range right inside the type:
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<aui::ranged_number<int, 1, 99>> age;
-    };
-    // AUI_DOCS_CODE_END
-
-    //
-    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker:
-
-    auto user = aui::ptr::manage(User { .age = 18 });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
-            setContents(Centered {
-                // AUI_DOCS_CODE_BEGIN
-                _new<ANumberPicker>() let {
-                  AObject::connect(user->age, it->value());
-                },
-                // AUI_DOCS_CODE_END
-            });
-        }
-    };
-    _new<MyWindow>(user)->show();
-    auto numberPicker = _cast<ANumberPicker>(By::type<ANumberPicker>().one());
-
-    //
-    // By creating this connection, we've done a little bit more. We've set ANumberPicker::setMin and
-    // ANumberPicker::setMax as well:
-    // AUI_DOCS_CODE_BEGIN
-    EXPECT_EQ(numberPicker->getMin(), 1);
-    EXPECT_EQ(numberPicker->getMax(), 99);
-    // AUI_DOCS_CODE_END
-}
-
 namespace declarative {
     template<typename Object, APropertyWritable Connectable>
     inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
             using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+            Binding::setup(object);
             AObject::biConnect(binding, Binding::property(object));
         });
         return object;
@@ -559,6 +521,7 @@ namespace declarative {
     inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
         aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
           using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+          Binding::setup(object);
           AObject::connect(binding, Binding::property(object));
         });
         return object;
@@ -723,6 +686,71 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
     // as in `"Label via declarative"`.
+}
+
+TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER
+    using namespace declarative;
+    // Think of `ADataBindingDefault` as we're not only connecting properties to properties, but also creating a
+    // "property to view" relationship. This philosophy covers the following scenario.
+    //
+    // In AUI, there's aui::ranged_number template which stores valid value range right inside the type:
+    // AUI_DOCS_CODE_BEGIN
+    struct User {
+        AProperty<aui::ranged_number<int, 1, 99>> age;
+    };
+    // AUI_DOCS_CODE_END
+
+    //
+    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker. When binding process
+    // involves ADataBindingDefault, the property system calls `ADataBindingDefault::setup` to apply some extra traits
+    // of the bound value on the view. Here's an abstract on how `ANumberPicker` defines specialization of
+    // `ADataBingingDefault` with `aui::ranged_number`:
+    // @code{cpp}
+    // /* pseudocode */
+    // template <aui::arithmetic UnderlyingType, auto min, auto max>
+    // struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>> {
+    // public:
+    //     static auto property(const _<ANumberPicker>& view) {
+    //         return view->value();
+    //     }
+    //     static void setup(const _<ANumberPicker>& view) {
+    //         view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
+    //         view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
+    //     }
+    //     // ...
+    // };
+    // @endcode
+    //
+    // As you can see, this specialization pulls the min and max values from `aui::ranged_number` type and sets them
+    // to `ANumberPicker`. This way `ANumberPicker` finds out the valid range of values by simply being bound to value
+    // that has constraints encoded inside its type.
+
+    auto user = aui::ptr::manage(User { .age = 18 });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
+            setContents(Centered {
+              // AUI_DOCS_CODE_BEGIN
+              _new<ANumberPicker>() && user->age,
+              // AUI_DOCS_CODE_END
+            });
+        }
+    };
+    _new<MyWindow>(user)->show();
+    auto numberPicker = _cast<ANumberPicker>(By::type<ANumberPicker>().one());
+
+    //
+    // By creating this connection, we've done a little bit more. We've set ANumberPicker::setMin and
+    // ANumberPicker::setMax as well:
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(numberPicker->getMin(), 1);
+    EXPECT_EQ(numberPicker->getMax(), 99);
+    // AUI_DOCS_CODE_END
+    //
+    // This example demonstrates how to use declarative binding to propagate strong types. `aui::ranged_number`
+    // propagates its constraints on `ANumberPicker` thanks to `ADataBindingDefault` specialization.
 }
 
 TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
