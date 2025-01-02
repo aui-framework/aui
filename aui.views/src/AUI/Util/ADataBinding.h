@@ -491,6 +491,10 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
     aui::tuple_visitor<
         typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
         using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+        static_assert(requires {
+            { Binding::property(object) } -> AAnyProperty;
+        }, "ADataBindingDefault::property is required to return any property; either define proper ADataBindingDefault "
+           "specialization or explicitly specify the destination property.");
         Binding::setup(object);
         AObject::connect(binding, Binding::property(object));
     });
@@ -501,6 +505,10 @@ template<typename Object, APropertyWritable Connectable>
 inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
     aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
       using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+      static_assert(requires {
+          { Binding::property(object) } -> AAnyProperty;
+      }, "ADataBindingDefault::property is required to return any property; either define proper ADataBindingDefault "
+         "specialization or explicitly specify the destination property.");
       Binding::setup(object);
       AObject::biConnect(binding, Binding::property(object));
     });
@@ -521,12 +529,23 @@ inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
 }
 
 template <typename Object, APropertyWritable Property, typename Destination>
-inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&>;
+        { std::invoke(binding.destinationPointerToMember(binding.destinationPointerToMember)) } -> AAnyProperty;
+    }
+{
     AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
     return object;
 }
+
 template <typename Object, APropertyWritable Property, typename Destination>
-inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding) {
+inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&>;
+        { std::invoke(binding.destinationPointerToMember(binding.destinationPointerToMember)) } -> AAnyProperty;
+    }
+{
     AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
     return object;
 }

@@ -36,10 +36,12 @@ inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
     std::apply(lambda, smallerTuple);
 }
 
-template<typename Projection>
+template <typename Projection>
 struct projection_info {
-    static_assert(aui::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection>,
-        "projection is required to be an pointer-to-member or not overloaded lambda");
+    static_assert(
+        aui::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection> ||
+            aui::function_pointer<Projection>,
+        "projection is required to be an pointer-to-member or not overloaded lambda or function pointer");
 };
 
 template<aui::pointer_to_member Projection>
@@ -58,9 +60,17 @@ public:
     using return_t = typename info::return_t;
     using args = cat<typename info::clazz&, typename info::args>::type;
 };
+
 template<aui::not_overloaded_lambda Projection>
 struct projection_info<Projection> {
     using info =  aui::lambda_info<Projection>;
+    using return_t = typename info::return_t;
+    using args = typename info::args;
+};
+
+template<aui::function_pointer Projection>
+struct projection_info<Projection> {
+    using info =  aui::function_info<Projection>;
     using return_t = typename info::return_t;
     using args = typename info::args;
 };

@@ -44,10 +44,27 @@ namespace aui {
     template<typename Return, typename... Args>
     struct function_info;
 
-    template<typename Return, typename... Args>
-    struct function_info<Return(Args...)> {
+    template<typename Return, typename... Args, bool IsNoexcept>
+    struct function_info<Return(Args...) noexcept(IsNoexcept)> {
         using return_t = Return;
         using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args, bool IsNoexcept>
+    struct function_info<Return(*)(Args...) noexcept(IsNoexcept)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args, bool IsNoexcept>
+    struct function_info<Return(&)(Args...) noexcept(IsNoexcept)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename T>
+    concept function_pointer = requires(T&& t) {
+        typename function_info<T>::args;
     };
 
     template<not_overloaded_lambda Lambda>
