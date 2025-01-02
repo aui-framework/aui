@@ -120,7 +120,7 @@ namespace aui::ui_building {
     concept LayoutItemViewFactory = aui::factory<Item, View>;
 
     template<typename Item>
-    concept ValidLayoutItem = LayoutItemView<Item> || LayoutItemViewFactory<Item> || LayoutItemViewFactory<Item>;
+    concept ValidLayoutItem = LayoutItemView<Item> || LayoutItemViewGroup<Item> || LayoutItemViewFactory<Item>;
 
     template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory_impl {
