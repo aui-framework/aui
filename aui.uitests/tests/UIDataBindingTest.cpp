@@ -401,6 +401,67 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
     }
 }
 
+template<typename T>
+struct APropertyPrecomputed: AObjectBase {
+    using Underlying = T;
+
+    template<aui::factory<T> Factory>
+    APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] {
+        clearSignals();
+        return expression();
+    }) {
+
+    }
+
+    AObjectBase* boundObject() {
+        return this;
+    }
+
+    [[nodiscard]]
+    const T& value() const {
+        return mCurrentValue;
+    }
+
+    [[nodiscard]]
+    operator const T&() const {
+        return value();
+    }
+
+    [[nodiscard]]
+    const T& operator*() const {
+        return value();
+    }
+
+signals:
+    emits<T> changed;
+
+private:
+    aui::lazy<T> mCurrentValue;
+};
+
+template<aui::invocable<> Factory>
+APropertyPrecomputed(Factory&& f) -> APropertyPrecomputed<std::decay_t<std::invoke_result_t<Factory>>>;
+
+static_assert(APropertyReadable<APropertyPrecomputed<int>>, "APropertyPrecomputed must be a APropertyReadable");
+
+TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
+    // AUI_DOCS_CODE_BEGIN
+    struct User {
+        AProperty<AString> name;
+        AProperty<AString> surname;
+        APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
+    };
+    User u = {
+        .name = "Emma",
+        .surname = "Watson",
+    };
+    EXPECT_EQ(u.fullName, "Emma Watson");
+
+    u.surname = "Stone";
+    EXPECT_EQ(u.fullName, "Emma Stone");
+    // AUI_DOCS_CODE_END
+}
+
 // # UI data binding with let
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
