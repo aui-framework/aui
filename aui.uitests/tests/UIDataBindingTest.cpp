@@ -787,7 +787,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     saveScreenshot("1");
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
-    // Note that the label already displays the **projected** value stored in User.
+    // Note that the label already displays the value stored in User.
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -817,10 +817,11 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     //
     // One of notable features of declarative way (in comparison to procedural `let` way) is that we can omit the view's
     // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
-    // type. Some view have already predefined such specialization for their underlying types. For example, ALabel has
+    // type. Some views have already predefined such specialization for their underlying types. For instance, ALabel has
     // such specialization:
     //
     // @code{cpp}
+    // /* PREDEFINED! You don't need to define it! This listing is an example */
     // template<>
     // struct ADataBindingDefault<ALabel, AString> {
     // public:
@@ -859,7 +860,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     //
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
-    // Note that the label already displays the **projected** value stored in User.
+    // Note that the label already displays the value stored in User.
     //
     // Let's change the name:
     // AUI_DOCS_CODE_BEGIN
@@ -900,7 +901,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // the view. Here's an abstract on how `ANumberPicker` defines specialization of `ADataBingingDefault` with
     // `aui::ranged_number`:
     // @code{cpp}
-    // /* pseudocode */
+    // /* PREDEFINED! You don't need to define it! This listing is an example */
     // template <aui::arithmetic UnderlyingType, auto min, auto max>
     // struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>> {
     // public:
@@ -976,7 +977,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     //
     // Note that the label already displays the **projected** value stored in User.
     //
-    // Projection applies to value chhanges as well. Let's change the name:
+    // Projection applies to value changes as well. Let's change the name:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
 
