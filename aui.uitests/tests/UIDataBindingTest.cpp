@@ -243,7 +243,7 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // AUI_DOCS_CODE_BEGIN
         u->name = "Marinette";
         // AUI_DOCS_CODE_END
-        // Code above makes an additional line to output:
+        // Assignment operation above makes an additional line to output:
         // @code
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
         // @endcode
@@ -386,7 +386,7 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
         // AUI_DOCS_CODE_BEGIN
         u->name() = "Marinette";
         // AUI_DOCS_CODE_END
-        // Code above makes an additional line to output:
+        // Assignment operation above makes an additional line to output:
         // @code
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
         // @endcode
