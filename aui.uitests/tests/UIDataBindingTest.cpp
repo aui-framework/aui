@@ -59,7 +59,8 @@ public:
 //
 // Main difference between basic value lying somewhere inside your class and a property is that the latter explicitly
 // ties getter, setter and a signal reporting value changes. Property acts almost transparently, as if there's no
-// property wrapper. This allows to read the intermediate value of a property and subscribe to its changes via a single
+// extra wrapper around your data. This allows to work with properties in the same way as with their underlying values.
+// You can read the intermediate value of a property and subscribe to its changes via a single
 // \c connect call. Also, when connecting property to property, it is possible to make them observe changes of each
 // other bia \c biConnect call:
 TEST_F(UIDataBindingTest, TextField1) {
@@ -236,8 +237,9 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // @code
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
         // @endcode
-        // As you can see, observer receives the value without making updates. The call of `LogObserver::log` is made
-        // by `AObject::connect` itself. In this document, we will call this behaviour as "pre-fire".
+        // As you can see, observer receives the value without making updates to the value. The call of
+        // `LogObserver::log` is made by `AObject::connect` itself. In this document, we will call this behaviour as
+        // "pre-fire".
         //
         // Subsequent changes to field would send updates as well:
         // AUI_DOCS_CODE_BEGIN
@@ -296,7 +298,7 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
     };
     // AUI_DOCS_CODE_END
 
-    // APropertyDef behaves like a class/struct data member:
+    // APropertyDef behaves like a class/struct function member:
     {
         // AUI_DOCS_CODE_BEGIN
         User u;
@@ -321,8 +323,8 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
         // AUI_DOCS_CODE_END
         //
         // @note
-        // For `operator+=` to honor getters/setters `APropertyDef` calls getter/setter instead of directly using `+=`
-        // on your property. Equivalent code will be:
+        // In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your property
+        // directly. Equivalent code will be:
         // @code{cpp}
         // u.setName(u.getName() + " world!")
         // @endcode
