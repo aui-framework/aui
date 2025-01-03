@@ -127,7 +127,7 @@ class LogObserver : public AObject {
 public:
     LogObserver() {
         ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
-            ALogger::info("LogObserver") << "Received value: " << msg;
+//            ALogger::info("LogObserver") << "Received value: " << msg;
         });
     }
     MOCK_METHOD(void, log, (const AString& msg), ());
