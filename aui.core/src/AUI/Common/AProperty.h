@@ -486,3 +486,15 @@ static_assert(requires (AProperty<int>& intProperty) {
     }).assignment() } -> aui::invocable<AString>;
 });
 */
+
+template <APropertyReadable T> struct fmt::formatter<T> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(T& c, format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", *c);
+    }
+};
