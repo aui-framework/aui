@@ -14,10 +14,6 @@
 
 static ASpinlockMutex gSync;
 
-AObjectBase::~AObjectBase() {
-    clearSignals();
-}
-
 void AObjectBase::clearSignals() noexcept {
     auto signals = [&] {
       std::unique_lock lock(gSync);

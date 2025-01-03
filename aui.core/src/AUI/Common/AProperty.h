@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Common/ASignal.h>
+#include <AUI/Common/APropertyPrecomputed.h>
 
 namespace aui::detail::property {
 
@@ -29,9 +30,9 @@ concept ProjectionBidirectional = requires (Projection&& projectionBidirectional
 
 template <typename Property>   // can't use AAnyProperty here, as concept would depend on itself
 auto makeAssignment(Property&& property) { // note the rvalue reference template argument here:
-                                                         // pass your property as std::move(*this) if your
-                                                         // property-compliant struct is temporary! otherwise you'll
-                                                         // spend your weekend on debugging segfaults :)
+                                           // pass your property as std::move(*this) if your
+                                           // property-compliant struct is temporary! otherwise you'll
+                                           // spend your weekend on debugging segfaults :)
     using Underlying = std::decay_t<decltype(*property)>;
     struct Invocable {
         Property property;
@@ -188,26 +189,33 @@ struct AProperty: AObjectBase {
         t.invokeSignal(nullptr);
     }
 
-    [[nodiscard]] operator const T&() const noexcept { return raw; }
+    [[nodiscard]]
+    const T& value() const noexcept {
+        aui::property_precomputed::addDependency(changed);
+        return raw;
+    }
+
+    [[nodiscard]]
+    T& value() noexcept {
+        aui::property_precomputed::addDependency(changed);
+        return raw;
+    }
+
+    [[nodiscard]] operator const T&() const noexcept { return value(); }
 
     [[nodiscard]]
     const T* operator->() const noexcept {
-        return &raw;
+        return &value();
     }
 
     [[nodiscard]]
     const T& operator*() const noexcept {
-        return raw;
-    }
-
-    [[nodiscard]]
-    const T& value() const noexcept {
-        return raw;
+        return value();
     }
 
     [[nodiscard]]
     T& operator*() noexcept {
-        return raw;
+        return value();
     }
 
     /**

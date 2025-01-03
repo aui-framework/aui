@@ -134,6 +134,7 @@ template<typename... Args>
 class ASignal final: public AAbstractSignal
 {
     friend class AObject;
+    friend class UIDataBindingTest_APropertyPrecomputed_Complex_Test;
     template<typename AnySignal,
               typename Projection>
     friend struct aui::detail::signal::ProjectedSignal;
@@ -193,12 +194,11 @@ public:
     }
 
     [[nodiscard]]
-    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) noexcept {
+    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept {
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
             return s->objectBase == object.ptr();
         });
     }
-
 
 private:
     struct slot
@@ -221,6 +221,12 @@ private:
         }
         mSlots.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
         linkSlot(objectBase);
+    }
+
+    void addGenericObserver(AObjectBase* object, std::function<void()> observer) override {
+        connect(object, [observer = std::move(observer)] {
+            observer();
+        });
     }
 
     template<aui::not_overloaded_lambda Lambda>

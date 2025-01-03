@@ -23,7 +23,14 @@
 class API_AUI_CORE AObjectBase: public aui::noncopyable {
     friend class AAbstractSignal;
 public:
-    ~AObjectBase();
+    AObjectBase() = default;
+
+    AObjectBase(AObjectBase&& rhs) noexcept {
+        AUI_ASSERTX(rhs.mSignals.empty(), "AObjectBase move is valid only if no signals connected to it");
+    }
+    ~AObjectBase() {
+        clearSignals();
+    }
 
     void clearSignals() noexcept;
 

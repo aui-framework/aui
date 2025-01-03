@@ -28,12 +28,12 @@ public:
 }
 
 TEST(PropertyTest, DesignatedInitializer) {
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
     EXPECT_EQ(u->name, "Hello");
 }
 
 TEST(PropertyTest, ValueCanBeChanged) {
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
     u->name = "World";
 
     // this should not compile
@@ -43,7 +43,7 @@ TEST(PropertyTest, ValueCanBeChanged) {
 }
 
 TEST(PropertyTest, ValueCanBePassed) {
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
     auto stringIdentity = [](const AString& value) {
         return value;
     };
@@ -51,12 +51,12 @@ TEST(PropertyTest, ValueCanBePassed) {
 }
 
 TEST(PropertyTest, ValueOperatorArrow) {
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
     EXPECT_EQ(u->name->length(), 5);
 }
 
 TEST(PropertyTest, ChangedSignal) {
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
     auto receiver = _new<Receiver>();
     AObject::connect(u->name.changed, slot(receiver)::receiveStr);
 
@@ -66,7 +66,7 @@ TEST(PropertyTest, ChangedSignal) {
 
 TEST(PropertyTest, PropertyConnection) {
     auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveStr(AString("Hello"))).Times(1);
     AObject::connect(u->name, slot(receiver)::receiveStr);
@@ -77,7 +77,7 @@ TEST(PropertyTest, PropertyConnection) {
 
 TEST(PropertyTest, PropertyConnectionWithProjection1) {
     auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
     AObject::connect(u->name.readProjected(&AString::length), slot(receiver)::receiveInt);
@@ -88,7 +88,7 @@ TEST(PropertyTest, PropertyConnectionWithProjection1) {
 
 TEST(PropertyTest, PropertyConnectionWithProjection2) {
     auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(User { .name = "Hello" });
+    auto u = aui::ptr::manage(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
     AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
@@ -154,7 +154,7 @@ TEST(PropertyTest, CustomSetterProperty) {
 }
 
 TEST(PropertyTest, Property2PropertyBoth) {
-    auto u = aui::ptr::manage(User { .name = "initial" });
+    auto u = aui::ptr::manage(new User { .name = "initial" });
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
@@ -175,7 +175,7 @@ TEST(PropertyTest, Property2PropertyBoth) {
 }
 
 TEST(PropertyTest, Property2PropertySetOnly) {
-    auto u = aui::ptr::manage(User { .name = "initial" });
+    auto u = aui::ptr::manage(new User { .name = "initial" });
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);

@@ -69,7 +69,7 @@ TEST_F(UIDataBindingTest, TextField1) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Robert" });
+    auto user = aui::ptr::manage(new User { .name = "Robert" });
     auto tf = _new<ATextField>();
     AObject::biConnect(user->name, tf->text());
     auto window = _new<AWindow>();
@@ -205,7 +205,7 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // Example usage:
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(User { .name = "Chloe" });
+        auto u = aui::ptr::manage(new User { .name = "Chloe" });
         AObject::connect(u->name.changed, slot(observer)::log);
         // AUI_DOCS_CODE_END
         EXPECT_CALL(*observer, log(AString("Marinette")));
@@ -230,7 +230,7 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         auto observer = _new<LogObserver>();
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
         EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1); // HIDE
-        auto u = aui::ptr::manage(User { .name = "Chloe" });
+        auto u = aui::ptr::manage(new User { .name = "Chloe" });
         AObject::connect(u->name, slot(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
@@ -401,49 +401,6 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
     }
 }
 
-template<typename T>
-struct APropertyPrecomputed: AObjectBase {
-    using Underlying = T;
-
-    template<aui::factory<T> Factory>
-    APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] {
-        clearSignals();
-        return expression();
-    }) {
-
-    }
-
-    AObjectBase* boundObject() {
-        return this;
-    }
-
-    [[nodiscard]]
-    const T& value() const {
-        return mCurrentValue;
-    }
-
-    [[nodiscard]]
-    operator const T&() const {
-        return value();
-    }
-
-    [[nodiscard]]
-    const T& operator*() const {
-        return value();
-    }
-
-signals:
-    emits<T> changed;
-
-private:
-    aui::lazy<T> mCurrentValue;
-};
-
-template<aui::invocable<> Factory>
-APropertyPrecomputed(Factory&& f) -> APropertyPrecomputed<std::decay_t<std::invoke_result_t<Factory>>>;
-
-static_assert(APropertyReadable<APropertyPrecomputed<int>>, "APropertyPrecomputed must be a APropertyReadable");
-
 TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
     // AUI_DOCS_CODE_BEGIN
     struct User {
@@ -451,16 +408,58 @@ TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
         AProperty<AString> surname;
         APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
     };
+
+    auto u = aui::ptr::manage(new User {
+        .name = "Emma",
+        .surname = "Watson",
+    });
+
+    auto observer = _new<LogObserver>();
+    testing::InSequence s;
+    EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1);
+    EXPECT_CALL(*observer, log(AString("Emma Stone"))).Times(1);
+    AObject::connect(u->fullName, slot(observer)::log);
+
+    u->surname = "Stone";
+    EXPECT_EQ(u->fullName, "Emma Stone");
+    // AUI_DOCS_CODE_END
+}
+
+TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
+    struct User {
+        AProperty<AString> name;
+        AProperty<AString> surname;
+        APropertyPrecomputed<AString> fullName = [&]() -> AString {
+            if (name->empty()) {
+                return "-";
+            }
+            if (surname->empty()) {
+                return "-";
+            }
+            return "{} {}"_format(name, surname);
+        };
+    };
     User u = {
         .name = "Emma",
         .surname = "Watson",
     };
     EXPECT_EQ(u.fullName, "Emma Watson");
 
-    u.surname = "Stone";
-    EXPECT_EQ(u.fullName, "Emma Stone");
-    // AUI_DOCS_CODE_END
+    EXPECT_EQ(u.name.changed.mSlots.size(), 1);
+    EXPECT_EQ(u.surname.changed.mSlots.size(), 1);
+
+    u.name = "";
+    EXPECT_EQ(u.fullName, "-");
+
+    /*
+     * Explanation: we have fast path return if name is empty. As we've set name to "", we didn't access surname. So,
+     * at the moment, we are interested in name changes only. Changes to surname can't affect the precomputed value of
+     * fullName anyhow.
+     */
+    EXPECT_EQ(u.name.changed.mSlots.size(), 1);
+    EXPECT_EQ(u.surname.changed.mSlots.size(), 0);
 }
+
 
 // # UI data binding with let
 // @note
@@ -482,7 +481,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -542,7 +541,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -607,7 +606,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -749,7 +748,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     //
     // It is all what we need to set up bidirectional transformations. Inside AUI_ENTRY:
     // AUI_DOCS_CODE_BEGIN
-    auto user = aui::ptr::manage(User { .gender = Gender::MALE });
+    auto user = aui::ptr::manage(new User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:
@@ -827,7 +826,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -898,7 +897,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -983,7 +982,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // to `ANumberPicker`. This way `ANumberPicker` finds out the valid range of values by simply being bound to value
     // that has constraints encoded inside its type.
 
-    auto user = aui::ptr::manage(User { .age = 18 });
+    auto user = aui::ptr::manage(new User { .age = 18 });
 
     class MyWindow: public AWindow {
     public:
@@ -1023,7 +1022,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -1064,7 +1063,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -1095,7 +1094,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -1124,7 +1123,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -1160,7 +1159,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(User { .name = "Roza" });
+    auto user = aui::ptr::manage(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -1223,7 +1222,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
         [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
         [](int i) -> Gender { return GENDERS[i]; },
     };
-    auto user = aui::ptr::manage(User { .gender = Gender::MALE });
+    auto user = aui::ptr::manage(new User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:

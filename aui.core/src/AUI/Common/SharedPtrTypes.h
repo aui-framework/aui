@@ -164,20 +164,6 @@ namespace aui {
          */
         template<typename T>
         static _<T> fake(T* raw);
-
-
-        /**
-         * @brief Moved T from stack to a shared_ptr
-         * @tparam T any type
-         * @tparam Deleter object implementing <code>operator()(T*)</code>
-         * @param raw raw pointer to manage memory of
-         * @param deleter
-         * @return shared pointer
-         */
-        template<typename T>
-        static _<T> manage(T&& raw) requires requires { !std::is_pointer_v<T>; } {
-            return std::make_shared<T>(std::forward<T>(raw));
-        }
     };
 }
 
