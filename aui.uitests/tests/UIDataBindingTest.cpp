@@ -930,6 +930,10 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               // AUI_DOCS_CODE_BEGIN
               _new<ANumberPicker>() && user->age,
               // AUI_DOCS_CODE_END
+              // @note
+              // We're using `operator&&` here to set up bidirectional connection. For more info, search for
+              // `"Declarative bidirectional connection"` on this page.
+              //
             });
         }
     };
@@ -1202,3 +1206,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // AUI_DOCS_CODE_END
     // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
+
+//
+// # Functions
+//
