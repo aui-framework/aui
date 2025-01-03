@@ -132,9 +132,12 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 }
 
 /**
- * @brief Basic easy-to-use property implementation.
+ * @brief Basic easy-to-use property implementation containing T.
  * @ingroup property_system
  * @details
+ * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
+ * value with `value()` method or implicit conversion `operator T()`.
+ *
  * See @ref property_system "property system" for more info.
  * @example
  * @code{cpp}

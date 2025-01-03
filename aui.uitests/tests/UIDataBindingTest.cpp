@@ -123,6 +123,15 @@ TEST_F(UIDataBindingTest, TextField1) {
     // This is basic example of setting up property-to-property connection.
 }
 
+class LogObserver : public AObject {
+public:
+    LogObserver() {
+        ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
+            ALogger::info("LogObserver") << "Received value: " << msg;
+        });
+    }
+    MOCK_METHOD(void, log, (const AString& msg), ());
+};
 
 //
 // # Declaring Properties
@@ -136,6 +145,8 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         AProperty<AString> surname;
     };
     // AUI_DOCS_CODE_END
+    // `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
+    // value with `value()` method or implicit conversion `operator T()`.
 
     // AProperty behaves like a class/struct data member:
     {
@@ -173,13 +184,82 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         //                 ^^^ HERE
         // AUI_DOCS_CODE_END
     }
+
+    //
+    // ### Observing changes
+    // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
+    // object for demonstration:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        class LogObserver : public AObject {
+        public:
+            void log(const AString& msg) {
+                ALogger::info("LogObserver") << "Received value: " << msg;
+            }
+        };
+        // AUI_DOCS_CODE_END
+    }
+    {
+        //
+        // Example usage:
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto u = aui::ptr::manage(User { .name = "Chloe" });
+        AObject::connect(u->name.changed, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        EXPECT_CALL(*observer, log(AString("Marinette")));
+        //
+        // At the moment, the program prints nothing. When we change the property:
+        // AUI_DOCS_CODE_BEGIN
+        u->name = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Code produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
+    {
+        testing::InSequence s;
+        //
+        // As you can see, observer received the update. But, for example, if we would like to display the value via
+        // label, the label wouldn't display the current value until the next update. We want the label to display
+        // *current* value without requiring an update. To do this, connect to the property directly, without explicitly
+        // asking for `changed`:
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1); // HIDE
+        auto u = aui::ptr::manage(User { .name = "Chloe" });
+        AObject::connect(u->name, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // Code above produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // @endcode
+        // As you can see, observer receives the value without making updates. The call of `LogObserver::log` is made
+        // by `AObject::connect` itself. In this document, we will call this behaviour as "pre-fire".
+        //
+        // Subsequent changes to field would send updates as well:
+        // AUI_DOCS_CODE_BEGIN
+        u->name = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Code above makes an additional line to output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+        //
+        // Whole program output when connecting to property directly:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
 }
 
 TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
-    // You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you are
-    // required to write extra boilerplate code: define property, data field, signal, getter and setter checking
-    // equality. Also, APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this
-    // way.
+    // You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
+    // write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
+    // APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
     //
     // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
     // defined by const member function as follows:
@@ -263,8 +343,61 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
         doSomethingWithName(*u.name());
         // AUI_DOCS_CODE_END
     }
-}
 
+    //
+    // ### Observing changes
+    // Close to `AProperty`:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto u = _new<User>();
+        u->name() = "Chloe";
+        // ...
+        AObject::connect(u->name().changed, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        EXPECT_CALL(*observer, log(AString("Marinette")));
+        // AUI_DOCS_CODE_BEGIN
+        u->name() = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Code produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
+    {
+        testing::InSequence s;
+        //
+        // Making connection to property directly instead of `.changed`:
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);       // HIDE
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);   // HIDE
+        auto u = _new<User>();
+        u->name() = "Chloe";
+        // ...
+        AObject::connect(u->name(), slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // Code above produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // @endcode
+        //
+        // Subsequent changes to field would send updates as well:
+        // AUI_DOCS_CODE_BEGIN
+        u->name() = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Code above makes an additional line to output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+        //
+        // Whole program output when connecting to property directly:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
+}
 
 // # UI data binding with let
 // @note
