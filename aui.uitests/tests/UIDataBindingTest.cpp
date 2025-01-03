@@ -857,7 +857,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     EXPECT_EQ(label->text(), "WORLD");
 }
 
-TEST_F(UIDataBindingTest, Declarative_custom_slot) {
+TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
     using namespace declarative;
     struct User {
         AProperty<AString> name;
@@ -880,14 +880,42 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot) {
     window->show();
     window->setScalingParams({ .scalingFactor = 2.f });
     auto label = _cast<ALabel>(By::type<ALabel>().one());
-    saveScreenshot("1");
     user->name = "Vasil";
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "custom slot! Vasil");
-    saveScreenshot("2");
     user->name = "World";
     EXPECT_EQ(label->text(), "custom slot! World");
+}
+
+
+TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+                _new<ALabel>() & user->name > &ALabel::setText
+            });
+        }
+    };
+    auto window = _new<MyWindow>(user);
+    window->show();
+    window->setScalingParams({ .scalingFactor = 2.f });
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+    user->name = "Vasil";
+
+    EXPECT_EQ(user->name, "Vasil");
+    EXPECT_EQ(label->text(), "Vasil");
+    user->name = "World";
+    EXPECT_EQ(label->text(), "World");
 }
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
