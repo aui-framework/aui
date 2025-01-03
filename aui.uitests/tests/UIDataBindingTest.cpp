@@ -403,8 +403,8 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
 // deeper understanding on how connections are made and what does declarative way do under the hood. This way may be
-// used in favour of declarative way if the latter not work for you. For declarative way, search for `"UI declarative
-// data binding"` on this page.
+// used in favour of declarative way if the latter not work for you. For declarative way, go to
+// @ref "UI_declarative_data_binding".
 //
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
 // a procedural way of setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill
@@ -740,7 +740,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
 }
 
 //
-// # UI declarative data binding
+// # UI declarative data binding {#UI_declarative_data_binding}
 // As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
@@ -754,7 +754,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
 //
 // Also, `>` operator (resembles arrow) is used to specify the destination slot.
 //
-// The example below is essentially the same as `"Label via let"` but uses declarative connection set up syntax.
+// The example below is essentially the same as @ref "Label_via_let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // Use `&` and `>` expression to connect the model's username property to the label's @ref ALabel::text "text"
     // property.
@@ -802,9 +802,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 
-    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in `"Label via
-    // let"` example) but using declarative syntax. The logic behind `&` is almost the same as with `let` +
-    // `AObject::connect` so projection use cases can be adapted in a similar manner.
+    // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
+    // @ref "Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
+    // + `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
         auto l = Label {} & user->name > &ALabel::text;
@@ -856,7 +856,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "Roza");
 
     //
-    // Behaviour of such connection is equal to `"Label via declarative"`:
+    // Behaviour of such connection is equal to @ref "Label_via_declarative":
     //
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
@@ -875,7 +875,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in `"Label via declarative"`.
+    // as in @ref "Label_via_declarative".
 
     {
         auto l = Label {} & user->name;
@@ -931,8 +931,8 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               _new<ANumberPicker>() && user->age,
               // AUI_DOCS_CODE_END
               // @note
-              // We're using `operator&&` here to set up bidirectional connection. For more info, search for
-              // `"Declarative bidirectional connection"` on this page.
+              // We're using `operator&&` here to set up bidirectional connection. For more info, go to
+              // @ref "Declarative_bidirectional_connection".
               //
             });
         }
@@ -1149,7 +1149,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // We can use projections in the same way as with `let`.
     //
-    // Let's repeat the `"Bidirectional projection"` sample in declarative way:
+    // Let's repeat the @ref "Bidirectional_projection" sample in declarative way:
     using namespace declarative;
     struct User {
         AProperty<Gender> gender;

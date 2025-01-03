@@ -122,6 +122,9 @@ def process_cpp_file(input: Path):
                     emit_line()
                     fos.write("## ")
                     fos.write(match.group(1).replace("_", " "))
+                    fos.write(" {#")
+                    fos.write(match.group(1))
+                    fos.write("}")
                     emit_line()
                     continue
 
@@ -157,7 +160,9 @@ if __name__ == '__main__':
     for path in suitable_cpp_files:
         process_cpp_file(path)
 
-    os.system("doxygen doxygen/Doxyfile")
+    if os.system("doxygen doxygen/Doxyfile") != 0:
+        print("Error: doxygen failed.")
+        exit(-1)
 
     output_dir = Path(CONFIG['output'])
     for file in CONFIG['copy_to_output']:
