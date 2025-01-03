@@ -696,13 +696,13 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
             // generate a string list model for genders from GENDERS array defined earlier
             auto gendersStr = AListModel<AString>::fromVector(
                 GENDERS
-                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::views::transform(AEnumerate<Gender>::toName)
                 | ranges::to_vector);
 
             // equivalent:
             // gendersStr = { "MALE", "FEMALE", "OTHER" }
             // you can customize the displayed strings by playing with
-            // ranges::view::transform argument.
+            // ranges::views::transform argument.
 
             setContents(Centered {
               _new<ADropdownList>(gendersStr) let {
