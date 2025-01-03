@@ -528,7 +528,7 @@ inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
     return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
 }
 
-template <typename Object, APropertyWritable Property, typename Destination>
+template <typename Object, APropertyReadable Property, typename Destination>
 inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&>;
@@ -551,7 +551,7 @@ inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, De
 }
 
 
-template <typename Object, APropertyWritable Property, typename Destination>
+template <typename Object, APropertyReadable Property, typename Destination>
 inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;

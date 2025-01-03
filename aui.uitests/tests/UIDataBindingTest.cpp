@@ -888,7 +888,6 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
     EXPECT_EQ(label->text(), "custom slot! World");
 }
 
-
 TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
     using namespace declarative;
     struct User {
@@ -916,6 +915,32 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
     EXPECT_EQ(label->text(), "Vasil");
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
+}
+
+TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
+    using namespace declarative;
+    struct User {
+        AProperty<AString> name;
+    };
+
+    auto user = aui::ptr::manage(User { .name = "Roza" });
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(const _<User>& user) {
+            _<ALabel> label;
+            setContents(Centered {
+              _new<ALabel>() & user->name.readProjected([](const AString& s) { return s != "hide"; }) > &AView::setVisible
+            });
+        }
+    };
+    auto window = _new<MyWindow>(user);
+    window->show();
+    auto label = _cast<ALabel>(By::type<ALabel>().one());
+    user->name = "Vasil";
+    EXPECT_EQ(label->visibility(), Visibility::VISIBLE);
+    user->name = "hide";
+    EXPECT_EQ(label->visibility(), Visibility::INVISIBLE);
 }
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
