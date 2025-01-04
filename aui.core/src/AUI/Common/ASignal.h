@@ -56,21 +56,21 @@ private:
     };
 
 public:
-    using info = aui::member<Projection>;
+    using info = typename aui::member<Projection>;
     using return_t = typename info::return_t;
-    using args = cat<typename info::clazz&, typename info::args>::type;
+    using args = typename cat<typename info::clazz&, typename info::args>::type;
 };
 
 template<aui::not_overloaded_lambda Projection>
 struct projection_info<Projection> {
-    using info =  aui::lambda_info<Projection>;
+    using info = typename  aui::lambda_info<Projection>;
     using return_t = typename info::return_t;
     using args = typename info::args;
 };
 
 template<aui::function_pointer Projection>
 struct projection_info<Projection> {
-    using info =  aui::function_info<Projection>;
+    using info = typename aui::function_info<Projection>;
     using return_t = typename info::return_t;
     using args = typename info::args;
 };

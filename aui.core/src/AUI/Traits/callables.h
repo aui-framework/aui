@@ -44,20 +44,38 @@ namespace aui {
     template<typename Return, typename... Args>
     struct function_info;
 
-    template<typename Return, typename... Args, bool IsNoexcept>
-    struct function_info<Return(Args...) noexcept(IsNoexcept)> {
+    template<typename Return, typename... Args>
+    struct function_info<Return(Args...)> {
         using return_t = Return;
         using args = std::tuple<Args...>;
     };
 
-    template<typename Return, typename... Args, bool IsNoexcept>
-    struct function_info<Return(*)(Args...) noexcept(IsNoexcept)> {
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...)> {
         using return_t = Return;
         using args = std::tuple<Args...>;
     };
 
-    template<typename Return, typename... Args, bool IsNoexcept>
-    struct function_info<Return(&)(Args...) noexcept(IsNoexcept)> {
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...) noexcept> {
         using return_t = Return;
         using args = std::tuple<Args...>;
     };
