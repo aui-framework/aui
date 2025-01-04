@@ -41,6 +41,7 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
 template<typename T>
 struct APropertyPrecomputed final : aui::property_precomputed::detail::DependencyObserver {
     using Underlying = T;
+    using Factory = std::function<T()>;
 
     template<aui::factory<T> Factory>
     APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] { // NOLINT(*-explicit-constructor)
