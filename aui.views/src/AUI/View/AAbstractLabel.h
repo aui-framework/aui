@@ -138,7 +138,7 @@ private:
     void processTextOverflow(AString& text);
 
     template<class Iterator>
-    size_t findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
+    Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
 
     template<class Iterator>
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
