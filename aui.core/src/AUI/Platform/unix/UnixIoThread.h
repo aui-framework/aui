@@ -50,7 +50,7 @@ public:
     void unregisterCallback(int fd) noexcept;
 
 private:
-    friend class MyEventLoop;
+    friend class UnixIoEventLoop;
     _<AThread> mThread;
     UnixEventFd mNotifyEvent;
 

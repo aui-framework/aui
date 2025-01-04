@@ -26,7 +26,7 @@ namespace {
     private:
         IFontView* mText;
         size_t mCount;
-        glm::ivec2 mPosition;
+        glm::ivec2 mPosition{};
 
     public:
         friend class ::ATextArea;
@@ -100,7 +100,7 @@ namespace {
         }
 
     private:
-        glm::ivec2 mPosition;
+        glm::ivec2 mPosition{};
     };
 
     class WordEntry final : public aui::detail::WordEntry {
