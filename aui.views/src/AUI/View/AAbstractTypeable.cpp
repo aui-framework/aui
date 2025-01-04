@@ -280,6 +280,7 @@ void AAbstractTypeable::setText(const AString& t)
 {
     updateSelectionOnTextSet(t);
     updateCursorBlinking();
+    onCursorIndexChanged();
 
     typeableInvalidateFont();
     emitTextChanged(t);

@@ -17,7 +17,10 @@
 
 template<typename Container>
 void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
-    if (mEntries.empty()) return;
+    if (mEntries.empty()) {
+        mHeight = 0;
+        return;
+    }
 
 
     struct StandardEntry {
