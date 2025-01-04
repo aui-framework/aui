@@ -12,12 +12,13 @@
 #pragma once
 
 #include "AUI/Traits/concepts.h"
+#include "ALayoutInflater.h"
 #include <functional>
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
-#include <AUI/View/AView.h>
+#include <AUI/View/AViewContainer.h>
 
 
 /**
@@ -61,6 +62,19 @@ public:
     [[deprecated("ADataBinding is deprecated. Please use Property System to bind values")]]
     static void(View::*getSetter())(const FieldType& v) {
         return nullptr;
+    }
+};
+
+template<aui::derived_from<AViewContainer> Container>
+struct ADataBindingDefault<Container, _<AView>> {
+    static void setup(const _<AViewContainer>& container) {}
+    static auto property(const _<AViewContainer>& container) {
+        return ASlotDef {
+            container.get(),
+            [&container = *container](const _<AView>& viewToInflate) {
+                ALayoutInflater::inflate(container, viewToInflate);
+            },
+        };
     }
 };
 
@@ -491,10 +505,15 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
     aui::tuple_visitor<
         typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
         using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-        static_assert(requires {
-            { Binding::property(object) } -> AAnyProperty;
-        }, "ADataBindingDefault::property is required to return any property; either define proper ADataBindingDefault "
-           "specialization or explicitly specify the destination property.");
+        static_assert(
+            requires { { Binding::property(object) } -> AAnyProperty; } ||
+                requires { { ASlotDef(Binding::property(object)) };},
+            "ADataBindingDefault is required to have property() function to return any property or slot def; either "
+            "define proper ADataBindingDefault specialization or explicitly specify the destination property.");
+        static_assert(
+            requires { { Binding::setup(object) }; },
+            "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+            "ADataBindingDefault specialization or explicitly specify the destination property.");
         Binding::setup(object);
         AObject::connect(binding, Binding::property(object));
     });
@@ -507,8 +526,12 @@ inline const _<Object>& operator&&(const _<Object>& object, Connectable&& bindin
       using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
       static_assert(requires {
           { Binding::property(object) } -> AAnyProperty;
-      }, "ADataBindingDefault::property is required to return any property; either define proper ADataBindingDefault "
-         "specialization or explicitly specify the destination property.");
+      }, "ADataBindingDefault is required to have property() function to return any property; either define proper "
+         "ADataBindingDefault specialization or explicitly specify the destination property.");
+      static_assert(
+          requires { { Binding::setup(object) }; },
+          "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+          "ADataBindingDefault specialization or explicitly specify the destination property.");
       Binding::setup(object);
       AObject::biConnect(binding, Binding::property(object));
     });
