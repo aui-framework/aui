@@ -50,7 +50,8 @@ public:
 // 7. again, for the latter case, there's an option to make property-to-slot connection, where the "slot" is property's
 //    assignment operation
 // 8. 2 syntax variants: procedural (straightforward) and declarative
-// 9. two property variants: simple field (AProperty) and custom getter/setter (APropertyDef)
+// 9. three property variants: simple field (AProperty), custom getter/setter (APropertyDef) and custom evaluation
+//    (APropertyPrecomputed)
 // 10. some properties can be readonly
 // 11. propagating strong types' traits on views
 //
@@ -136,7 +137,7 @@ public:
 
 //
 // # Declaring Properties
-// There are two ways to define a property in AUI:
+// There are three ways to define a property in AUI:
 //
 TEST_F(UIDataBindingTest, AProperty) { // HEADER
     // To declare a property inside your data model, use AProperty template:
@@ -402,6 +403,26 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
 }
 
 TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
+    testing::InSequence s;
+    // Despite properties offer @ref Label_via_declarative_projection "projection methods", you might want to track
+    // and process values of several properties.
+    //
+    // `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
+    // Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
+    //
+    // It's convenient to access values from another properties inside the expression. The properties accessed during
+    // invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
+    // automatically. If one of the tracked properties fires `changed` signal, `APropertyPrecomputed` invalidates its
+    // `T`. `APropertyPrecomputed` follows @ref aui::lazy "lazy semantics" so the expression is re-evaluated and the new
+    // result is applied to `APropertyPrecomputed` as soon as the latter is accessed for the next time.
+    //
+    // In other words, it allows to specify relationships between different object properties and reactively update
+    // `APropertyPrecomputed` value whenever its dependencies change. `APropertyPrecomputed<T>` is somewhat similar to
+    // [Qt Bindable Properties](https://doc.qt.io/qt-6/bindableproperties.html).
+    //
+    // `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
+    // value with `value()` method or implicit conversion `operator T()` as with other properties.
+    //
     // AUI_DOCS_CODE_BEGIN
     struct User {
         AProperty<AString> name;
@@ -415,17 +436,39 @@ TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
     });
 
     auto observer = _new<LogObserver>();
-    testing::InSequence s;
-    EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1);
-    EXPECT_CALL(*observer, log(AString("Emma Stone"))).Times(1);
+    EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1); // HIDE
+    EXPECT_CALL(*observer, log(AString("Emma Stone"))).Times(1); // HIDE
     AObject::connect(u->fullName, slot(observer)::log);
-
-    u->surname = "Stone";
-    EXPECT_EQ(u->fullName, "Emma Stone");
     // AUI_DOCS_CODE_END
+    EXPECT_EQ(u->fullName, "Emma Watson");
+    //
+    // The example above prints "Emma Watson". If we try to update one of dependencies of `APropertyPrecomputed` (i.e.,
+    // `name` or `surname`), `APropertyPrecomputed` responds immediately:
+
+    // AUI_DOCS_CODE_BEGIN
+    u->surname = "Stone";
+    // AUI_DOCS_CODE_END
+    //
+    // The example above prints "Emma Stone".
+    EXPECT_EQ(u->fullName, "Emma Stone");
+
+    //
+    // ### Observing changes
+    // Similar to `AProperty`.
 }
 
 TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
+    //
+    // ### Valid Expressions
+    // Any C++ callable evaluating to `T` can be used as an expression for `APropertyPrecomputed<T>`. However, to
+    // formulate correct expression, some rules must be satisfied.
+    //
+    // Dependency tracking only works on other properties. It is the developer's responsibility to ensure all values
+    // referenced in the expression are properties, or, at least, non-property values that wouldn't change or whose
+    // changes are not interesting. You definitely can use branching inside the expression, but you must be confident
+    // about what are you doing. Generally speaking, use as trivial expressions as possible.
+    //
+    // AUI_DOCS_CODE_BEGIN
     struct User {
         AProperty<AString> name;
         AProperty<AString> surname;
@@ -439,25 +482,36 @@ TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
             return "{} {}"_format(name, surname);
         };
     };
+    // AUI_DOCS_CODE_END
+    //
+    // In this expression, we have a fast path return if `name` is empty.
+    // AUI_DOCS_CODE_BEGIN
     User u = {
         .name = "Emma",
         .surname = "Watson",
     };
+    // trivial: we've accessed all referenced properties
     EXPECT_EQ(u.fullName, "Emma Watson");
+    // AUI_DOCS_CODE_END
 
     EXPECT_EQ(u.name.changed.mSlots.size(), 1);
     EXPECT_EQ(u.surname.changed.mSlots.size(), 1);
 
+    // As soon as we set `name` to `""`, we don't access `surname`. If we try to trigger the fast path return:
+    // AUI_DOCS_CODE_BEGIN
     u.name = "";
+    // AUI_DOCS_CODE_END
     EXPECT_EQ(u.fullName, "-");
-
-    /*
-     * Explanation: we have fast path return if name is empty. As we've set name to "", we didn't access surname. So,
-     * at the moment, we are interested in name changes only. Changes to surname can't affect the precomputed value of
-     * fullName anyhow.
-     */
     EXPECT_EQ(u.name.changed.mSlots.size(), 1);
     EXPECT_EQ(u.surname.changed.mSlots.size(), 0);
+    // `surname` can't trigger re-evaluation anyhow. Re-evaluation can be triggered by `name` only. So, at the moment,
+    // we are interested in `name` changes only.
+    //
+    // `APropertyPrecomputed` might evaluate its expression several times during its lifetime. The developer must make
+    // sure that all objects referenced in the expression live longer than `APropertyPrecomputed`.
+    //
+    // The expression should not read from the property it's a binding for. Otherwise, there's an infinite evaluation
+    // loop.
 }
 
 

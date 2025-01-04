@@ -38,6 +38,28 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
 
 }   // namespace aui::property_precomputed
 
+/**
+ * @brief Readonly property that holds a value computed by an expression.
+ * @ingroup property_system
+ * @details
+ * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
+ * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
+ *
+ * See @ref property_system "property system" for more info.
+ * @example
+ * @code{cpp}
+ * struct User {
+ *     AProperty<AString> name;
+ *     AProperty<AString> surname;
+ *     APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
+ * };
+ * auto u = aui::ptr::manage(new User {
+ *   .name = "Emma",
+ *   .surname = "Watson",
+ * });
+ * EXPECT_EQ(u->fullName, "Emma Watson");
+ * @endcode
+ */
 template<typename T>
 struct APropertyPrecomputed final : aui::property_precomputed::detail::DependencyObserver {
     using Underlying = T;
