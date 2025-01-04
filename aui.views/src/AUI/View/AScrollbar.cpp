@@ -86,9 +86,10 @@ void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
     }
 
     updateScrollHandleSize();
+    bool shouldScrollToEnd = mStickToEnd && mStickToEnd->locked;
     setScroll(mCurrentScroll); // validates mCurrentScroll since mViewportSize and mFullSize are updated
 
-    if (mStickToEnd && mStickToEnd->locked) {
+    if (shouldScrollToEnd) {
         scrollToEnd();
     }
     emit updatedMaxScroll(getMaxScroll());
