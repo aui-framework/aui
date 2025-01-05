@@ -119,6 +119,12 @@ void testing::UITest::TearDown() {
     Test::TearDown();
 }
 void testing::UITest::saveScreenshot(const AString& name) {
+    auto i = testing::UnitTest::GetInstance();
+    if (!i) return;
+    auto testCase = i->current_test_case();
+    if (!testCase) return;
+    auto testInfo = i->current_test_info();
+    if (!testInfo) return;
     uitest::frame();
-    MyListener::saveScreenshot("", "{}.{}_{}.png"_format(testing::UnitTest::GetInstance()->current_test_case()->name(), testing::UnitTest::GetInstance()->current_test_info()->name(), name));
+    MyListener::saveScreenshot("", "{}.{}_{}.png"_format(testCase->name(), testInfo->name(), name));
 }
