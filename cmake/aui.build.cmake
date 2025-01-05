@@ -705,7 +705,9 @@ function(aui_executable AUI_MODULE_NAME)
         )
     endif()
 
-    configure_file(${AUI_BUILD_AUI_ROOT}/platform/emscripten/index.html.in ${CMAKE_BINARY_DIR}/bin/${AUI_MODULE_NAME}.html)
+    if (AUI_PLATFORM_EMSCRIPTEN)
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/emscripten/index.html.in ${CMAKE_BINARY_DIR}/bin/${AUI_MODULE_NAME}.html)
+    endif()
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
