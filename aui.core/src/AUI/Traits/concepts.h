@@ -182,8 +182,10 @@ concept ACompatibleSlotFor = requires (Slot&& c) {
 
 class API_AUI_CORE AObjectBase;
 
+struct ASlotDefBase {};
+
 template<aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
-struct ASlotDef {
+struct ASlotDef: ASlotDefBase {
     ObjectPtr boundObject;
     Invocable invocable;
 };

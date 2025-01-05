@@ -507,7 +507,7 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
         using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
         static_assert(
             requires { { Binding::property(object) } -> AAnyProperty; } ||
-                requires { { ASlotDef(Binding::property(object)) };},
+                requires { { Binding::property(object) } -> aui::derived_from<ASlotDefBase>; },
             "ADataBindingDefault is required to have property() function to return any property or slot def; either "
             "define proper ADataBindingDefault specialization or explicitly specify the destination property.");
         static_assert(

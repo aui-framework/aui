@@ -219,7 +219,7 @@ AString AAbstractLabel::getTransformedText() {
 
 void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
-    ui_threadX [&] {
+    ui_threadX [this, self = shared_from_this()] {
         mPrerendered = nullptr;
         redraw();
     };
