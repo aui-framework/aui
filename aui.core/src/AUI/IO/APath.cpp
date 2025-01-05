@@ -23,6 +23,7 @@
 #include "AFileOutputStream.h"
 #include "AUI/Platform/ErrorToException.h"
 #include <AUI/Traits/platform.h>
+#include <AUI/Util/kAUI.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -341,8 +342,14 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
         case APPDATA:
             return APath::workingDir() / "__aui_appdata";
-        case TEMP:
-            return APath::workingDir() / "__aui_tmp";
+        case TEMP: {
+            auto dir = APath::workingDir() / "__aui_tmp";
+            do_once {
+                // we have to clean up it by ourselves.
+                dir.removeFileRecursive();
+            }
+            return dir;
+        }
 #else
         case APPDATA:
             return getDefaultPath(HOME) / ".local/share";

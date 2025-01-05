@@ -66,7 +66,7 @@ public:
     ~AOtherProcess() {}
 
     int waitForExitCode() override {
-        int loc;
+        int loc = 0;
         waitpid(mHandle, &loc, 0);
         return WEXITSTATUS(loc);
     }
@@ -170,7 +170,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         exit(-1);
     } else {
         mWatchdog = _new<AThread>([&] {
-            int loc;
+            int loc = 0;
             waitpid(mPid, &loc, 0);
             mExitCode.supplyValue(WEXITSTATUS(loc));
             emit finished;

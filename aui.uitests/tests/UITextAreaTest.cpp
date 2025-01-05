@@ -330,6 +330,7 @@ TEST_F(UITextArea, EraseFuzzy) {
 TEST_F(UITextArea, CursorPosDel) {
     const std::string_view SAMPLE = " aui  framework   ";
     mTextArea->setText(SAMPLE);
+    mTextArea->setSelection(0);
     for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
         uitest::frame();
         EXPECT_EQ(mTextArea->getCursorPosition(), glm::ivec2{0}) << "(del count: " << i << ")";

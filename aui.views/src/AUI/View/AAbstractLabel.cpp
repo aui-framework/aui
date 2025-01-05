@@ -59,33 +59,35 @@ void AAbstractLabel::setSize(glm::ivec2 size) {
 }
 
 template<class Iterator>
-size_t AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
-                                                const Iterator& end,
-                                                int overflowingWidth) {
+Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
+                                                  const Iterator& end,
+                                                  int overflowingWidth) {
     size_t gotWidth = 0;
     for (Iterator it = begin; it != end; ++it) {
         gotWidth += getFontStyle().getWidth(it, it + 1);
         if (gotWidth <= overflowingWidth)
             continue;
 
-        return it - begin;
+        return it;
     }
 
-    return end - begin;
+    return end;
 }
 
 template<class Iterator>
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    size_t firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
+    static constexpr auto ELLIPSIS = u'…';
+    auto firstOverflowedIt = findFirstOverflowedIndex(
+        begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({ELLIPSIS}) : 0));
+    if (firstOverflowedIt == end) {
+        return;
+    }
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        if (firstOverflowedIndex >= 3) {
-            std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
-        } else {
-            std::fill(begin, end, ' ');
-        }
+        *firstOverflowedIt = ELLIPSIS;
+        firstOverflowedIt++;
     }
 
-    std::fill(begin + firstOverflowedIndex, end, ' ');
+    std::fill(firstOverflowedIt, end, ' ');
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
