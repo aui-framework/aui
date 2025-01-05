@@ -23,7 +23,7 @@ permissions:
 
 jobs:
   doxygen:
-    name: "Create and upload Doxygen"
+    name: "Doxygen"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
