@@ -23,7 +23,6 @@ permissions:
 
 jobs:
   doxygen:
-    if: github.event_name != 'pull_request'
     name: "Create and upload Doxygen"
     runs-on: ubuntu-latest
     steps:
