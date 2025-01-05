@@ -432,36 +432,36 @@ private:
 // binary operations for properties.
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
-inline auto operator==(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs == rhs; } {
+inline auto operator==(const Lhs& lhs, Rhs&& rhs) {
     return *lhs == std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
-inline auto operator!=(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs != rhs; } {
+inline auto operator!=(const Lhs& lhs, Rhs&& rhs) {
     return *lhs != std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
-inline auto operator+(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs + rhs; } {
+inline auto operator+(const Lhs& lhs, Rhs&& rhs) {
     return *lhs + std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
-inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs) requires requires { *lhs += rhs; } {
+inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs) {
     *lhs += std::forward<Rhs>(rhs);
     return lhs;
 }
 
 template<AAnyProperty Lhs, typename Rhs>
-inline decltype(auto) operator+=(Lhs&& lhs, Rhs&& rhs) requires requires { lhs = *lhs + std::forward<Rhs>(rhs); } {
+inline decltype(auto) operator+=(Lhs&& lhs, Rhs&& rhs) {
     return lhs = *lhs + std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
-inline auto operator-(const Lhs& lhs, Rhs&& rhs) requires requires { *lhs - rhs; } {
+inline auto operator-(const Lhs& lhs, Rhs&& rhs) {
     return *lhs - std::forward<Rhs>(rhs);
 }
 
