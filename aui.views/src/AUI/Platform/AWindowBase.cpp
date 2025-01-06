@@ -457,8 +457,10 @@ void AWindowBase::render(ARenderContext context) {
 
     AViewContainer::render(context);
 
-    if (auto v = profiling().highlightView.lock()) {
-        AViewProfiler::displayBoundsOn(*v, context);
+    if (auto& p = profiling()) {
+        if (auto v = p->highlightView->lock()) {
+            AViewProfiler::displayBoundsOn(*v, context);
+        }
     }
 
 #if AUI_SHOW_TOUCHES
@@ -601,9 +603,11 @@ void AWindowBase::processTouchscreenKeyboardRequest() {
 
 
 void AWindowBase::markMinContentSizeInvalid() {
-    if (profiling().breakpointOnMarkMinContentSizeInvalid) {
-        profiling().breakpointOnMarkMinContentSizeInvalid = false;
-        AUI_BREAKPOINT();
+    if (auto& p = profiling()) {
+        if (p->breakpointOnMarkMinContentSizeInvalid) {
+            p->breakpointOnMarkMinContentSizeInvalid = false;
+            AUI_BREAKPOINT();
+        }
     }
     AViewContainer::markMinContentSizeInvalid();
     flagRedraw();

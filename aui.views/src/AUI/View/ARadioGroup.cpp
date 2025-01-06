@@ -19,7 +19,7 @@
 
 
 ARadioGroup::ARadioGroup() : mGroup(_new<ARadioButton::Group>()) {
-    connect(mGroup->selectionChanged, this, [&](const AListModelIndex& index) {
+    connect(mGroup->selectionChanged, this, [&](int index) {
         emit selectionChanged(index);
     });
 }

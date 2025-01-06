@@ -44,6 +44,18 @@ public:
     ADropdownList();
     ~ADropdownList() override;
 
+    /**
+     * @brief Selected id property.
+     */
+    auto selectionId() const {
+        return APropertyDef {
+            this,
+            &ADropdownList::getSelectionId,
+            &ADropdownList::setSelectionId,
+            selectionChanged,
+        };
+    }
+
     void setModel(const _<IListModel<AString>>& model);
     void render(ARenderContext context) override;
 

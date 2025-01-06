@@ -25,20 +25,21 @@
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
-private:
-    bool mChecked = false;
-protected:
-    bool selectableIsSelectedImpl() override;
-
 public:
     ACheckBox();
 
-    void toggle() {
-        setChecked(!isChecked());
+    [[nodiscard]]
+    auto checked() const {
+        return APropertyDef {
+            this,
+            &ACheckBox::mChecked,
+            &ACheckBox::setChecked,
+            mCheckedChanged,
+        };
     }
 
-    [[nodiscard]] bool isChecked() const {
-        return mChecked;
+    void toggle() {
+        setChecked(!checked());
     }
 
     void check() {
@@ -52,7 +53,7 @@ public:
     void setChecked(bool checked = true) {
         mChecked = checked;
         emit customCssPropertyChanged();
-        emit ACheckBox::checked(checked);
+        emit ACheckBox::mCheckedChanged(checked);
     }
 
     void setUnchecked(bool unchecked = true) {
@@ -61,9 +62,12 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
+protected:
+    bool selectableIsSelectedImpl() override;
 
-signals:
-    emits<bool> checked;
+private:
+    bool mChecked = false;
+    emits<bool> mCheckedChanged;
 };
 
 
@@ -75,12 +79,13 @@ class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
-    void toggle() {
-        setChecked(!isChecked());
+    [[nodiscard]]
+    auto checked() const {
+        return mCheckBox->checked();
     }
 
-    [[nodiscard]] bool isChecked() const {
-        return mCheckBox->isChecked();
+    void toggle() {
+        setChecked(!checked());
     }
 
     void check() {
@@ -102,14 +107,15 @@ public:
 private:
     _<ACheckBox> mCheckBox;
 
-signals:
-    emits<bool> checked;
 };
 
 
 template<>
 struct ADataBindingDefault<ACheckBox, bool> {
 public:
+    static auto property(const _<ACheckBox>& view) {
+        return view->checked();
+    }
     static void setup(const _<ACheckBox>& view) {}
 
     static auto getGetter() {
@@ -125,6 +131,9 @@ public:
 template<>
 struct ADataBindingDefault<ACheckBoxWrapper, bool> {
 public:
+    static auto property(const _<ACheckBoxWrapper>& view) {
+        return view->checked();
+    }
     static void setup(const _<ACheckBoxWrapper>& view) {}
 
     static auto getGetter() {

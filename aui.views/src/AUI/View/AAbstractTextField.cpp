@@ -98,7 +98,7 @@ void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 
-const AString& AAbstractTextField::text() const {
+const AString& AAbstractTextField::getText() const {
     return mContents;
 }
 
@@ -201,7 +201,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getPosByIndexAbsolute(text().length());
+    auto w = getPosByIndexAbsolute(getText().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -274,7 +274,7 @@ void AAbstractTextField::onCursorIndexChanged() {
         absoluteCursorPos -= 1;
     }
     mAbsoluteCursorPos = absoluteCursorPos;
-    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
+    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(getText().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
     if (horizontalScroll != mHorizontalScroll) {
         mAbsoluteCursorPos = mHorizontalScroll - horizontalScroll;
         mHorizontalScroll = horizontalScroll;

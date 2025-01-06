@@ -376,12 +376,17 @@ public:
         return mDestroyed;
     }
 
-    virtual void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept = 0;
-    virtual void clearAllConnections() noexcept = 0;
+    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
+    virtual void clearAllConnections() const noexcept = 0;
+
+    virtual void addGenericObserver(AObjectBase* object, std::function<void()> observer) = 0;
+
+    [[nodiscard]]
+    virtual bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
 
 protected:
-    void linkSlot(AObject* object) noexcept;
-    void unlinkSlot(AObject* object) noexcept;
+    void linkSlot(AObjectBase* object) noexcept;
+    void unlinkSlot(AObjectBase* object) noexcept;
 
     static bool& isDisconnected();
 

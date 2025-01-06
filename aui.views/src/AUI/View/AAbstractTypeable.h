@@ -35,7 +35,7 @@ public:
     }
 
     void trimText() {
-        setText(text().trim());
+        setText(getText().trim());
     }
 
     void setCopyable(bool isCopyable) {

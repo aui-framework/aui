@@ -173,7 +173,7 @@ namespace aui::enumerate {
      * @see AUI_ENUM_VALUES
      */
     template<typename enum_t> requires aui::is_complete<AEnumerateAllValues<enum_t>>
-    inline constexpr auto ALL_VALUES = []<enum_t... values>(typename AEnumerate<enum_t>::template Values<values...>) {
+    inline constexpr auto ALL_VALUES = []<auto... values>(typename AEnumerate<enum_t>::template Values<values...>) {
         constexpr enum_t ITEMS[] = {values...};
         return std::to_array(ITEMS);
     }(AEnumerateAllValues<enum_t>::get());
@@ -189,6 +189,21 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
 
 /**
  * @brief Defines all enum values for AEnumerate.
+ * @ingroup useful_macros
+ * @details
+ * Defines all enum values to by used by AEnumerate.
+ * @code{cpp}
+ * enum class ATextOverflow {
+ *     NONE,
+ *     ELLIPSIS,
+ *     CLIP
+ * };
+ * AUI_ENUM_VALUES(ATextOverflow,
+ *                 ATextOverflow::ELLIPSIS,
+ *                 ATextOverflow::CLIP)
+ *
+ * // AEnumerate<ATextOverflow>::toName(ATextOverflow::CLIP) -> "CLIP"
+ * @endcode
  */
 #define AUI_ENUM_VALUES(enum_t, ...) template<> \
 struct AEnumerateAllValues<enum_t>{         \

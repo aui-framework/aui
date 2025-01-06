@@ -187,7 +187,7 @@ AString ATextArea::toString() const {
     return text();
 }
 
-const AString& ATextArea::text() const {
+const AString& ATextArea::getText() const {
     if (!mCompiledText) {
         AString compiledText;
         compiledText.reserve(length());

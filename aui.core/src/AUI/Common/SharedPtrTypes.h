@@ -127,7 +127,7 @@ namespace aui {
         }
 
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
          * @tparam T any type
          * @param raw raw pointer to manage memory of
          * @return shared pointer
@@ -136,7 +136,7 @@ namespace aui {
         static _<T> manage(T* raw);
 
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
          * @tparam T any type
          * @tparam Deleter object implementing <code>operator()(T*)</code>
          * @param raw raw pointer to manage memory of
@@ -145,8 +145,9 @@ namespace aui {
          */
         template<typename T, typename Deleter>
         static _<T> manage(T* raw, Deleter deleter);
+
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
          * @tparam T any type
          * @param raw raw pointer to manage memory of
          * @return unique pointer
@@ -155,7 +156,7 @@ namespace aui {
         static _unique<T> unique(T* raw);
 
         /**
-         * Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
+         * @brief Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
          * when some function accept shared pointer but you have only raw one.
          * @tparam T any type
          * @param raw raw pointer to manage memory of

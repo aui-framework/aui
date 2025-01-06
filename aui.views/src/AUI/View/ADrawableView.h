@@ -48,6 +48,18 @@ public:
     explicit ADrawableView(const AUrl& url);
 
     /**
+     * @brief Drawable property.
+     */
+    auto drawable() const {
+        return APropertyDef {
+            this,
+            &ADrawableView::getDrawable,
+            &ADrawableView::setDrawable,
+            mDrawableChanged,
+        };
+    }
+
+    /**
      * @brief Create an instance from the given drawable.
      * @param drawable The IDrawable to be rendered.
      */
@@ -67,11 +79,16 @@ public:
 
 private:
     _<IDrawable> mDrawable;
+    emits<_<IDrawable>> mDrawableChanged;
 };
 
 template<>
 struct ADataBindingDefault<ADrawableView, _<IDrawable>> {
 public:
+    static auto property(const _<ADrawableView>& view) {
+        return view->drawable();
+    }
+
     static void setup(const _<ADrawableView>& view) {
     }
 

@@ -145,7 +145,7 @@ void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClick
 void AListView::insertItem(size_t at, const AString& value) { mContent->addView(at, _new<AListItem>(value)); }
 
 void AListView::updateItem(size_t at, const AString& value) {
-    _cast<AListItem>(mContent->getViews()[at])->setText(value);
+    _cast<AListItem>(mContent->getViews()[at])->text() = value;
 }
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }

@@ -23,6 +23,4 @@ class DevtoolsProfilingOptions: public AViewContainerBase {
 public:
     DevtoolsProfilingOptions(AWindowBase* targetWindow);
 
-private:
-    ADataBinding<AWindowBase::Profiling> mModel;
 };

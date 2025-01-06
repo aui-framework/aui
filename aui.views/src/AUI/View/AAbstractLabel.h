@@ -31,6 +31,18 @@ class API_AUI_VIEWS AAbstractLabel : public AView, public IStringable, public IF
 public:
     AAbstractLabel();
 
+    /**
+     * @brief Label's text property.
+     */
+    auto text() const {
+        return APropertyDef {
+            this,
+            &AAbstractLabel::mText,
+            &AAbstractLabel::setText,
+            mTextChanged,
+        };
+    }
+
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
     void render(ARenderContext context) override;
@@ -60,11 +72,6 @@ public:
     void onDpiChanged() override;
 
     void setText(AString newText);
-
-    [[nodiscard]]
-    const AString& text() const {
-        return mText;
-    }
 
     void invalidateFont() override;
 
@@ -113,6 +120,7 @@ protected:
 
 private:
     AString mText;
+    emits<AString> mTextChanged;
     _<IDrawable> mIcon;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
@@ -134,12 +142,17 @@ private:
 
     template<class Iterator>
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
+
 };
 
 
 template<>
 struct ADataBindingDefault<AAbstractLabel, AString> {
 public:
+    static auto property(const _<AAbstractLabel>& view) {
+        return view->text();
+    }
+
     static void setup(const _<AAbstractLabel>& view) {}
 
     static auto getGetter() {

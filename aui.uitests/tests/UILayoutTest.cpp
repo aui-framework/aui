@@ -193,7 +193,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     } });
     l1->getWindow()->applyGeometryToChildrenIfNecessary();
     auto prevPosX = l2->getPositionInWindow().x;
-    l1->setText("test2");
+    l1->text() = "test2";
     l1->getWindow()->applyGeometryToChildrenIfNecessary();
 
     EXPECT_GE(l2->getPositionInWindow().x, prevPosX);   // l2 is expected to shift to right.

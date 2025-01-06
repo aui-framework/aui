@@ -21,7 +21,9 @@ namespace aui {
 
     template<typename F>
     concept not_overloaded_lambda = requires(F&& f) {
-        { &F::operator() };
+        // we can't 100% guarantee that T is actual lambda, but C++ lambdas have following traits:
+        std::is_class_v<F>;
+        { &std::decay_t<F>::operator() };
     };
 
     static_assert(not_overloaded_lambda<decltype([]{})>, "aui::not_overloaded_lambda failed");
@@ -46,6 +48,41 @@ namespace aui {
     struct function_info<Return(Args...)> {
         using return_t = Return;
         using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename T>
+    concept function_pointer = requires(T&& t) {
+        typename function_info<T>::args;
     };
 
     template<not_overloaded_lambda Lambda>

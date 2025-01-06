@@ -12,28 +12,69 @@
 #pragma once
 
 #include "AUI/Traits/concepts.h"
+#include "ALayoutInflater.h"
 #include <functional>
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
-#include <AUI/View/AView.h>
+#include <AUI/View/AViewContainer.h>
 
 
+/**
+ * @brief Defines how View handles properties of FieldType type.
+ * @details
+ * Example specialization:
+ * @code{cpp}
+ * template<>
+ * struct ADataBindingDefault<ALabel, AString> {
+ * public:
+ *     static auto property(const _<ALabel>& view) { return view->text(); }
+ * };
+ * @endcode
+ */
 template<typename View, typename FieldType>
 struct ADataBindingDefault {
 public:
     /**
-     * Called then view linked with field.
-     * @param view
+     * @brief Called then view linked with field.
+     * @param view view to link with
      */
     static void setup(const _<View>& view) {}
 
+    /**
+     * @brief Returns property definition for FieldType
+     * @param view view to return property of
+     */
+    static auto property(const _<View>& view) {}
+
+    /**
+     * @brief Returns getter for ADataBinding (deprecated)
+     */
+    [[deprecated("ADataBinding is deprecated. Please use Property System to bind values")]]
     static ASignal<FieldType>(View::*getGetter()) {
         return nullptr;
     }
+
+    /**
+     * @brief Returns setter for ADataBinding (deprecated)
+     */
+    [[deprecated("ADataBinding is deprecated. Please use Property System to bind values")]]
     static void(View::*getSetter())(const FieldType& v) {
         return nullptr;
+    }
+};
+
+template<aui::derived_from<AViewContainer> Container>
+struct ADataBindingDefault<Container, _<AView>> {
+    static void setup(const _<AViewContainer>& container) {}
+    static auto property(const _<AViewContainer>& container) {
+        return ASlotDef {
+            container.get(),
+            [&container = *container](const _<AView>& viewToInflate) {
+                ALayoutInflater::inflate(container, viewToInflate);
+            },
+        };
     }
 };
 
@@ -155,7 +196,7 @@ public:
  *
  */
 template <typename Model>
-class ADataBinding: public AObject {
+class [[deprecated("consider using AProperty and signal/slot connections instead")]] ADataBinding: public AObject {
 private:
     using Observer = std::function<void(const Model& model, unsigned)>;
     ADeque<Observer> mLinkObservers;
@@ -424,7 +465,12 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data,
         getter g = nullptr;
         // getter is optional.
         if constexpr (requires { ADataBindingDefault<View, Data>::getGetter(); }) {
-            g = (getter) (ADataBindingDefault<View, Data>::getGetter());
+            if constexpr (requires { std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object).changed; }) {
+                // AProperty.
+                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object).changed;
+            } else {
+                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object);
+            }
         }
         auto s = static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter());
 
@@ -453,3 +499,103 @@ public:
         return &AView::setVisibility;
     }
 };
+
+template <typename Object, APropertyReadable Connectable>
+inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
+    aui::tuple_visitor<
+        typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+        using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+        static_assert(
+            requires { { Binding::property(object) } -> AAnyProperty; } ||
+                requires { { Binding::property(object) } -> aui::derived_from<ASlotDefBase>; },
+            "ADataBindingDefault is required to have property() function to return any property or slot def; either "
+            "define proper ADataBindingDefault specialization or explicitly specify the destination property.");
+        static_assert(
+            requires { { Binding::setup(object) }; },
+            "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+            "ADataBindingDefault specialization or explicitly specify the destination property.");
+        Binding::setup(object);
+        AObject::connect(binding, Binding::property(object));
+    });
+    return object;
+}
+
+template<typename Object, APropertyWritable Connectable>
+inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
+    aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
+      using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
+      static_assert(requires {
+          { Binding::property(object) } -> AAnyProperty;
+      }, "ADataBindingDefault is required to have property() function to return any property; either define proper "
+         "ADataBindingDefault specialization or explicitly specify the destination property.");
+      static_assert(
+          requires { { Binding::setup(object) }; },
+          "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+          "ADataBindingDefault specialization or explicitly specify the destination property.");
+      Binding::setup(object);
+      AObject::biConnect(binding, Binding::property(object));
+    });
+    return object;
+}
+
+template <AAnyProperty Lhs, typename Destination>
+struct Binding {
+    Lhs sourceProperty;
+    Destination destinationPointerToMember;
+    explicit Binding(Lhs sourceProperty, Destination destinationPointerToMember)
+      : sourceProperty(sourceProperty), destinationPointerToMember(destinationPointerToMember) {}
+};
+
+template <AAnyProperty Property, typename Destination>
+inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
+    return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
+}
+
+template <typename Object, APropertyReadable Property, typename Destination>
+inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&>;
+        { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
+    }
+{
+    AObject::connect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+    return object;
+}
+
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&>;
+        { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
+    }
+{
+    AObject::biConnect(binding.sourceProperty, std::invoke(binding.destinationPointerToMember, *object));
+    return object;
+}
+
+
+template <typename Object, APropertyReadable Property, typename Destination>
+inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
+    }
+{
+    AObject::connect(
+        binding.sourceProperty, object.get(),
+        [object = object.get(), wrapped = std::move(binding.destinationPointerToMember)](
+            const std::decay_t<decltype(*binding.sourceProperty)>& i) { std::invoke(wrapped, *object, i); });
+    return object;
+}
+
+template <typename Object, APropertyWritable Property, typename Destination>
+inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+    requires requires {
+        { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
+    }
+{
+    AObject::biConnect(
+        binding.sourceProperty, object.get(),
+        [object = object.get(), wrapped = std::move(binding.destinationPointerToMember)](
+            const std::decay_t<decltype(*binding.sourceProperty)>& i) { std::invoke(wrapped, *object, i); });
+    return object;
+}

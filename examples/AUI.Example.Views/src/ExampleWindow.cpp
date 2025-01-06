@@ -164,10 +164,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
                 // checkboxes
                 GroupBox {
-                  CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
+                  CheckBoxWrapper { Label { "Checkboxes" } } let { it->checked() = true; },
                   Vertical {
                     CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Selected checkbox" } } let { it->setChecked(true); },
+                    CheckBoxWrapper { Label { "Checked checkbox" } } let { it->checked() = true; },
                     CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
                   },
                 },
@@ -176,7 +176,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Radiobuttons" },
                   RadioGroup {
-                    RadioButton { "Radiobutton 1" } let { it->setChecked(true); },
+                    RadioButton { "Radiobutton 1" } let { it->checked() = true; },
                     RadioButton { "Radiobutton 2" },
                     RadioButton { "Radiobutton 3" },
                     RadioButton { "Disabled radiobutton" } let { it->disable(); },
@@ -629,18 +629,21 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
     addView(Horizontal {
       Centered {
-        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }) },
-      _new<ASpacerExpanding>(), _new<ASpinner>(),
+        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }),
+      },
+      _new<ASpacerExpanding>(),
+      _new<ASpinner>(),
       CheckBoxWrapper {
         Label { "Enabled" },
       } let {
-              it->setChecked();
-              connect(it->checked, slot(tabView)::setEnabled);
+              it->check();
+              connect(it->checked().changed, slot(tabView)::setEnabled);
           },
       _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
               it << "#copyright";
               it->setEnabled(false);
-          } });
+          },
+    });
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
@@ -672,8 +675,8 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
     ALayoutInflater::inflate(surface, popup);
     popup->pack();
 
-    surface->setOverlappingSurfaceSize(popup->getSize());
-    surface->setOverlappingSurfacePosition((getSize() - popup->getSize()) / 2);
+    surface->setOverlappingSurfaceSize(popup->size());
+    surface->setOverlappingSurfacePosition((size() - *popup->size()) / 2);
 }
 
 bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) { return true; }

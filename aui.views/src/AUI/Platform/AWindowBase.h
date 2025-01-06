@@ -49,24 +49,24 @@ public:
         /**
          * @brief View to highlight.
          */
-        _weak<AView> highlightView;
+        AProperty<_weak<AView>> highlightView;
 
         /**
          * @brief Highlight redraw requests.
          */
-        bool highlightRedrawRequests = false;
+        AProperty<bool> highlightRedrawRequests = false;
 
         /**
          * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
          * this frame. This effect may help to debug AView::redraw issues.
          */
-        bool renderToTextureDecay = false;
+        AProperty<bool> renderToTextureDecay = false;
 
         /**
          * @brief When set to true, the next time window's markMinContentSizeInvalid, debugger is invoked. Value is
          * reset to false.
          */
-        bool breakpointOnMarkMinContentSizeInvalid = false;
+        AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
     };
 
 
@@ -362,7 +362,7 @@ public:
     /**
      * @brief Get profiling settings (mutable).
      */
-    Profiling& profiling() {
+    aui::lazy<Profiling>& profiling() {
         return mProfiling;
     }
 
@@ -433,7 +433,7 @@ private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
-    Profiling mProfiling{};
+    aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
 

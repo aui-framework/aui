@@ -95,7 +95,7 @@ ANumberPicker::ANumberPicker() {
     });
 
     connect(mTextField->textChanging, this, [&]() {
-        emit valueChanging();
+        emit valueChanging(getValue());
     });
 
     addView(c);
@@ -107,7 +107,7 @@ void ANumberPicker::setValue(int64_t v) {
 }
 
 int64_t ANumberPicker::getValue() const {
-    return mTextField->text().toInt().valueOr(0);
+    return mTextField->getText().toInt().valueOr(0);
 }
 
 void ANumberPicker::setSuffix(const AString& suffix) {
@@ -138,5 +138,5 @@ void ANumberPicker::decrease() {
 
 void ANumberPicker::changeBy(int64_t v) {
     setValue(getValue() + v);
-    emit valueChanging();
+    emit valueChanging(getValue());
 }

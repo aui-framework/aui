@@ -26,13 +26,13 @@ namespace ass {
         }
 
         bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && !view->isEnabled();
+            return Base::isStateApplicable(view) && !*view->enabled();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->enabledState.clearAllConnectionsWith(helper.get());
-            AObject::connect(view->enabledState, slot(helper)::onInvalidateStateAss);
+            view->enabled().changed.clearAllConnectionsWith(helper.get());
+            AObject::connect(view->enabled().changed, slot(helper)::onInvalidateStateAss);
         }
     };
 }

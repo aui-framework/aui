@@ -51,11 +51,11 @@ protected:
                                 Horizontal {
                                         mTextField = _new<ATextField>() << "#username",
                                         _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                                            if (mTextField->text().empty()) {
+                                            if (mTextField->getText().empty()) {
                                                 mHelloLabel->setVisibility(Visibility::INVISIBLE);
                                                 return;
                                             }
-                                            mHelloLabel->setText("Hello, {}!"_format(mTextField->text()));
+                                            mHelloLabel->text() = "Hello, {}!"_format(mTextField->getText());
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
                                         }) let { it->setDefault(); },
                                 },

@@ -206,20 +206,20 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
 }
 
 AString AAbstractLabel::getTransformedText() {
-    if (text().empty())
+    if (text()->empty())
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return text().uppercase();
+            return text()->uppercase();
         case TextTransform::LOWERCASE:
-            return text().lowercase();
+            return text()->lowercase();
     }
     return text();
 }
 
 void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
-    ui_threadX [&] {
+    ui_threadX [this, self = shared_from_this()] {
         mPrerendered = nullptr;
         redraw();
     };
@@ -256,6 +256,8 @@ void AAbstractLabel::setText(AString newText) {
 
     markMinContentSizeInvalid();
     redraw();
+
+    emit mTextChanged(mText);
 }
 
 void AAbstractLabel::invalidateAllStyles() {

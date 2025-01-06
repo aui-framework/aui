@@ -40,6 +40,19 @@ public:
         });
     }
 
+
+    /**
+     * @brief Text property.
+     */
+    auto text() const {
+        return APropertyDef {
+            this,
+            &AAbstractTypeable::getText,
+            &AAbstractTypeable::setText,
+            textChanging,
+        };
+    }
+
     ~AAbstractTypeableView() override = default;
 
     void onKeyDown(AInput::Key key) override {

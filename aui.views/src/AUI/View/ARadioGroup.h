@@ -43,6 +43,18 @@ public:
     ARadioGroup();
     ~ARadioGroup() override;
 
+    /**
+     * @brief Selected id property.
+     */
+    auto selectionId() const {
+        return APropertyDef {
+            this,
+            &ARadioGroup::getSelectedId,
+            &ARadioGroup::setSelectedId,
+            selectionChanged,
+        };
+    }
+
     void setViews(AVector<_<AView>> views) {
         for (const _<AView>& v : views) {
             if (auto rb = _cast<ARadioButton>(v)) {
@@ -63,7 +75,7 @@ public:
     void setSelectedId(int id) const;
 
 signals:
-    emits<AListModelIndex> selectionChanged;
+    emits<int> selectionChanged;
 };
 
 

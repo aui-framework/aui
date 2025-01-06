@@ -46,6 +46,18 @@ private:
 public:
     ANumberPicker();
 
+    /**
+     * @brief Value property.
+     */
+    auto value() const {
+        return APropertyDef {
+            this,
+            &ANumberPicker::getValue,
+            &ANumberPicker::setValue,
+            valueChanging
+        };
+    }
+
     void setValue(int64_t v);
 
     int64_t getValue() const;
@@ -77,13 +89,16 @@ signals:
     /**
      * @brief Number is changing.
      */
-    emits<> valueChanging;
+    emits<int64_t> valueChanging;
 };
 
 namespace aui::impl {
     template<typename Num>
     struct ADataBindingDefaultNumberPicker {
     public:
+        static auto property(const _<ANumberPicker>& view) {
+            return view->value();
+        }
         static void setup(const _<ANumberPicker>& view) {}
 
         static auto getGetter() { return &ANumberPicker::valueChanged; }
@@ -91,10 +106,14 @@ namespace aui::impl {
         static auto getSetter() { return &ANumberPicker::setValue; }
     };
 
-    template<aui::arithmetic UnderlyingType, auto min, auto max> requires
-    aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+    template <aui::arithmetic UnderlyingType, auto min, auto max>
+        requires aui::convertible_to<decltype(min), UnderlyingType> &&
+                 aui::convertible_to<decltype(max), UnderlyingType>
     struct ADataBindingRangedNumberPicker {
     public:
+        static auto property(const _<ANumberPicker>& view) {
+            return view->value();
+        }
         static void setup(const _<ANumberPicker>& view) {
             view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
             view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
@@ -134,8 +153,7 @@ template<>
 struct ADataBindingDefault<ANumberPicker, int64_t> : aui::impl::ADataBindingDefaultNumberPicker<int64_t> {
 };
 
-template<aui::arithmetic UnderlyingType, auto min, auto max> requires
-aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+template <aui::arithmetic UnderlyingType, auto min, auto max>
+    requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
 struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>>
-        : aui::impl::ADataBindingRangedNumberPicker<UnderlyingType, min, max> {
-};
+  : aui::impl::ADataBindingRangedNumberPicker<UnderlyingType, min, max> {};

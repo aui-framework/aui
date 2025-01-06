@@ -53,7 +53,7 @@ public:
      *   text().</dd>
      * </dl>
      */
-    [[nodiscard]] virtual const AString& text() const = 0;
+    [[nodiscard]] virtual const AString& getText() const = 0;
 
     /**
      * @return Text field text length.
@@ -63,7 +63,7 @@ public:
     {
         if (!hasSelection())
             return {};
-        auto t = text();
+        auto t = getText();
     	return {t.begin() + selection().begin, t.begin() + selection().end };
     }
 
