@@ -69,6 +69,8 @@ namespace ass {
             }
         }
 
+        unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
+
         template<aui::convertible_to<T> U>
         unset_wrap<T>& operator=(const unset_wrap<U>& v) noexcept;
 
@@ -117,6 +119,12 @@ namespace ass {
     unset_wrap<T>::unset_wrap(const V& v)
     {
         detail::unset::init(*this, stored, set, v);
+    }
+
+    template<typename T>
+    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) noexcept {
+        detail::unset::init(*this, stored, set, v);
+        return *this;
     }
 
     template<typename T>
