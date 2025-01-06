@@ -173,7 +173,7 @@ namespace aui::enumerate {
      * @see AUI_ENUM_VALUES
      */
     template<typename enum_t> requires aui::is_complete<AEnumerateAllValues<enum_t>>
-    inline constexpr auto ALL_VALUES = []<enum_t... values>(typename AEnumerate<enum_t>::template Values<values...>) {
+    inline constexpr auto ALL_VALUES = []<auto... values>(typename AEnumerate<enum_t>::template Values<values...>) {
         constexpr enum_t ITEMS[] = {values...};
         return std::to_array(ITEMS);
     }(AEnumerateAllValues<enum_t>::get());
