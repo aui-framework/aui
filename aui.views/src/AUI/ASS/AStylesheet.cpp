@@ -336,7 +336,7 @@ AStylesheet::AStylesheet() {
             BackgroundImage { {}, 0x005499_rgb },
         },
         {
-                Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
+            Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
             BackgroundImage {":uni/svg/radio.svg" },
         },
         {
