@@ -10,7 +10,7 @@ If neither of these suggestions helped and you think you encountered an AUI's is
 2. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
 3. If you are `aui_link`'ing asset-containing modules (i.e. `aui::views`) against static library, consider link them
    also with the final executable (`PUBLIC` linking does not solve this issue on Linux).
-4. Try using [WHOLEARCHIVE](@ref md_docs_aui_app) flag.
+4. Try using @ref WHOLEARCHIVE flag.
 
 # Build cache invalidation
 
