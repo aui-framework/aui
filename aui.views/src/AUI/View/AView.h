@@ -127,9 +127,9 @@ public:
      * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
      * for more info.
      *
-     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
-     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
-     * such case.
+     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
+     * `Expanding` variant of declarative container notation (`Vertical::Expanding`, `Horizontal::Expanding`,
+     * `Stacked::Expanding`) for such case.
      */
     auto expanding() const {
         return APropertyDef {

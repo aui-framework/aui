@@ -212,6 +212,7 @@ def generate_docs_from_tests():
         process_cpp_file(path)
 
 def invoke_doxygen():
+    print("Doxygen version:", subprocess.run("doxygen -v", shell=True, capture_output=True).stdout.decode('utf-8'))
     result = subprocess.run("doxygen doxygen/Doxyfile", shell=True, capture_output=True)
     doxygen_errors = doxygen_parse_stderr(result.stderr)
 

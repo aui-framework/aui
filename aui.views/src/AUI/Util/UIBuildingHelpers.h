@@ -67,7 +67,7 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 
 
 /**
- * Places views in a column.
+ * @brief Places views in a column.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  *
@@ -80,7 +80,7 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 using Vertical = aui::ui_building::view_container_layout<AVerticalLayout>;
 
 /**
- * Places views in a row.
+ * @brief Places views in a row.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  *
@@ -93,7 +93,7 @@ using Vertical = aui::ui_building::view_container_layout<AVerticalLayout>;
 using Horizontal = aui::ui_building::view_container_layout<AHorizontalLayout>;
 
 /**
- * Places views in a stack, centering them.
+ * @brief Places views in a stack, centering them.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  *
@@ -106,7 +106,7 @@ using Horizontal = aui::ui_building::view_container_layout<AHorizontalLayout>;
 using Stacked = aui::ui_building::view_container_layout<AStackedLayout>;
 
 /**
- * Places views according to specified xy coordinates.
+ * @brief Places views according to specified xy coordinates.
  * <p>
  *  <dl>
  *    <dt><b>View:</b> AViewContainer</dt>
@@ -127,7 +127,6 @@ using Absolute = aui::ui_building::view_container_layout<AAbsoluteLayout>;
  * </p>
  */
 using CustomLayout = aui::ui_building::view_container_layout<std::nullopt_t>;
-
 
 /**
  * <p>
