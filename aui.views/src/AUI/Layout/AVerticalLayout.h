@@ -18,10 +18,11 @@
  * @brief Places views in a column.
  * @ingroup layout_managers
  * @details
- * <dl>
- *   <dt><b>UI Builder</b></dt>
- *   <dd><code>Vertical</code></dd>
- * </dl>
+ *
+ * |             |                               |
+ * |-------------|-------------------------------|
+ * | Declarative notation | `Vertical { }` |
+ *
  * Vertical layout manager places views in a column, fitting their width to the container's height.
  * Has a `Vertical` shortcut that allows easy usage in UI building:
  * @code{cpp}

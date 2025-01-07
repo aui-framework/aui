@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <AUI/Enum/VerticalAlign.h>
+#include <AUI/Enum/VerticalAlign.h> // defined here
 #include "IProperty.h"
 
 namespace ass::prop {

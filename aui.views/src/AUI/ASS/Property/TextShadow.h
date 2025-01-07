@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the text shadow of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TextShadow {
         AColor shadowColor;

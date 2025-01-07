@@ -18,7 +18,7 @@
 
 namespace ass {
     template<typename Base>
-    struct focused: Base {
+    struct focused: Base {// ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         focused(Args&&... args):
                 Base(std::forward<Args>(args)...)

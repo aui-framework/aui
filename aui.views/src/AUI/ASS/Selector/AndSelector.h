@@ -36,7 +36,19 @@ namespace ass {
             r.setupConnections(view, helper);
         }
     };
-
+    /**
+     * @brief Makes a selector that applies two selectors.
+     * @ingroup ass_selectors
+     * @details
+     *
+     * In this example, we want to select all views that match both ".btn" and ".accent".
+     * @code{cpp}
+     * {
+     *   class_of(".btn-title") && class_of(".accent"),
+     *   BackgroundSolid { 0xe81123_rgb }
+     * },
+     * @endcode
+     */
     template <aui::derived_from<IAssSubSelector> L, aui::derived_from<IAssSubSelector> R>
     AndSelector<L, R> operator&&(L l, R r) {
         return AndSelector<L, R>(std::move(l), std::move(r));

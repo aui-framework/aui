@@ -54,6 +54,20 @@ namespace ass {
         }
     };
 
+    /**
+     * @brief Makes direct parent subselector.
+     * @ingroup ass_selectors
+     * @details
+     *
+     * In this example, we want to select all views that have direct parent matching ".window-title" ASS class and
+     * then select the hovered ".close" subselector within them.
+     * @code{cpp}
+     * {
+     *   class_of(".window-title") > class_of::hover(".close"),
+     *   BackgroundSolid { 0xe81123_rgb }
+     * },
+     * @endcode
+     */
     template <typename L, typename R, std::enable_if_t<std::is_base_of_v<IAssSubSelector, L> && std::is_base_of_v<IAssSubSelector, R>, bool> = true>
     DirectParentSubSelector<L, R> operator>(L l, R r) {
         return DirectParentSubSelector<L, R>(std::move(l), std::move(r));

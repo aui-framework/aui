@@ -161,9 +161,13 @@ public:
     }
 
     /**
-     * Wraps your AView to window.
-     * @param title window title
+     * @brief Wraps your AView to window.
      * @param view view to wrap
+     * @param title window title
+     * @param width window width
+     * @param height window height
+     * @param parent parent window
+     * @param ws window style flags
      * @return created window, AWindow::show() is not called
      */
     static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
@@ -319,9 +323,8 @@ private:
 
 #if AUI_PLATFORM_WIN
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_APPLE
-#else
+#endif
+#if AUI_PLATFORM_LINUX
     unsigned long xGetWindowProperty(unsigned long property, unsigned long type, unsigned char** value) const;
     void xSendEventToWM(unsigned long atom, long a, long b, long c, long d, long e) const;
 #endif

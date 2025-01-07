@@ -13,44 +13,41 @@
 
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Enum/AOverflow.h>   // defined here
 #include "IProperty.h"
 
 namespace ass {
-    namespace prop {
-        template<>
-        struct API_AUI_VIEWS Property<AOverflow>: IPropertyBase {
-        private:
-            AOverflow mInfo;
+namespace prop {
+template <>
+struct API_AUI_VIEWS Property<AOverflow> : IPropertyBase {
+private:
+    AOverflow mInfo;
 
-        public:
-            Property(const AOverflow& info) : mInfo(info) {
+public:
+    Property(const AOverflow& info) : mInfo(info) {}
 
-            }
+    void applyFor(AView* view) override;
 
-            void applyFor(AView* view) override;
-
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
-
-        template<>
-        struct API_AUI_VIEWS Property<AOverflowMask>: IPropertyBase {
-        private:
-            AOverflowMask mInfo;
-
-        public:
-            Property(const AOverflowMask& info) : mInfo(info) {
-
-            }
-
-            void applyFor(AView* view) override;
-
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
+    [[nodiscard]]
+    const auto& value() const noexcept {
+        return mInfo;
     }
-}
+};
+
+template <>
+struct API_AUI_VIEWS Property<AOverflowMask> : IPropertyBase {
+private:
+    AOverflowMask mInfo;
+
+public:
+    Property(const AOverflowMask& info) : mInfo(info) {}
+
+    void applyFor(AView* view) override;
+
+    [[nodiscard]]
+    const auto& value() const noexcept {
+        return mInfo;
+    }
+};
+}   // namespace prop
+}   // namespace ass

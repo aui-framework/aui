@@ -123,5 +123,11 @@ namespace ass {
         }
     };
 
+    /**
+     * @brief Runtime-type selector.
+     * @ingroup ass_selectors
+     * @details
+     * This type type-erases the selectors and allows to encapsulate.
+     */
     using sel = AAssSelector;
 }

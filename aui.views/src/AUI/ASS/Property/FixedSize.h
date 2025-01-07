@@ -21,7 +21,7 @@
 namespace ass {
     /**
      * @brief Controls the fixed size of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct FixedSize {
         unset_wrap<AMetric> width;

@@ -80,10 +80,10 @@ signals:
 
 
 namespace declarative {
-    struct RadioGroup: aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup> {
-        using aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup>::layouted_container_factory;
-        struct Horizontal: aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup> {
-            using aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
+    struct RadioGroup: aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
+        using aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup>::layouted_container_factory;
+        struct Horizontal: aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup> {
+            using aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
         };
     };
 }

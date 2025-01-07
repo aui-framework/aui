@@ -18,7 +18,7 @@ namespace ass {
 
     /**
      * @brief Represents right border.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BorderRight {
         AMetric width;

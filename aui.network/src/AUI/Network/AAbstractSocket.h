@@ -13,8 +13,6 @@
 
 #include <AUI/Network.h>
 
-
-
 #include "AInet4Address.h"
 #include "AUI/Common/AString.h"
 
@@ -22,57 +20,44 @@
  * @brief Base class for all sockets.
  * @ingroup network
  */
-class API_AUI_NETWORK AAbstractSocket
-{	
+class API_AUI_NETWORK AAbstractSocket {
 private:
-	int mHandle = 0;
-	AInet4Address mSelfAddress;
+    int mHandle = 0;
+    AInet4Address mSelfAddress;
 
-	
 protected:
-	static AString getErrorString();
+    static AString getErrorString();
 
-	[[nodiscard]] inline int getHandle() const
-	{
-		return mHandle;
-	}
+    [[nodiscard]] inline int getHandle() const { return mHandle; }
 
-	static void handleError(const AString& message, int code);
+    static void handleError(const AString& message, int code);
 
+    AAbstractSocket(int handle, const AInet4Address& selfAddress) : mHandle(handle), mSelfAddress(selfAddress) {}
 
-	AAbstractSocket(int handle, const AInet4Address& selfAddress)
-		: mHandle(handle),
-		mSelfAddress(selfAddress)
-	{
-	}
-	
-	/**
-	 * @brief Initialise socket
-	 */
-	void init();
-	
-	/**
-	 * @brief Bind socket for port. Used for ATcpServerSocket and AUdpSocket
-	 * @param bindingPort port
-	 */
-	void bind(uint16_t bindingPort);
+    /**
+     * @brief Initialise socket
+     */
+    void init();
 
+    /**
+     * @brief Binds socket for port. Used for ATcpServerSocket and AUdpSocket
+     * @param bindingPort port
+     */
+    void bind(uint16_t bindingPort);
 
-	/**
-	 * @brief Create socket handle. Use ::socket()
-	 */
-	virtual int createSocket() = 0;
-	
+    /**
+     * @brief Creates socket handle.
+     */
+    virtual int createSocket() = 0;
+
 public:
-	AAbstractSocket();
-	AAbstractSocket(const AAbstractSocket&) = delete;
+    AAbstractSocket();
+    AAbstractSocket(const AAbstractSocket&) = delete;
 
-	virtual ~AAbstractSocket();
+    virtual ~AAbstractSocket();
 
-	void close();
-	void setTimeout(int secs);
+    void close();
+    void setTimeout(int secs);
 
-	const AInet4Address& getAddress() const {
-		return mSelfAddress;
-	}
+    const AInet4Address& getAddress() const { return mSelfAddress; }
 };

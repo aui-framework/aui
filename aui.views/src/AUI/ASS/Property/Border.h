@@ -22,7 +22,7 @@
 namespace ass {
     /**
      * @brief Represents border.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Border {
         enum BorderType {

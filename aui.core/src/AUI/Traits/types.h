@@ -17,14 +17,14 @@ namespace aui {
 
     /**
      * @brief Determines whether <code>T</code> is complete or not.
-     * @ingroup useful_traits
+     * @ingroup useful_templates
      */
     template<typename T, class = void>
     inline constexpr bool is_complete = false;
 
     /**
      * @brief Determines whether <code>T</code> is complete or not.
-     * @ingroup useful_traits
+     * @ingroup useful_templates
      */
     template<typename T>
     inline constexpr bool is_complete<T, decltype(void(sizeof(T)))> = true;
@@ -42,7 +42,7 @@ namespace aui {
     }
     /**
      * @brief Chooses specific overload of a method.
-     * @ingroup useful_traits
+     * @ingroup useful_templates
      * @details
      * Example:
      * @code{cpp}

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Util/AMetric.h>
+#include <AUI/Enum/AFloat.h> // defined here
 #include "IProperty.h"
 
 namespace ass {

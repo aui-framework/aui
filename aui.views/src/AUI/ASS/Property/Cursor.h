@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <AUI/Platform/ACursor.h>
+#include <AUI/Platform/ACursor.h> // defined here
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
 

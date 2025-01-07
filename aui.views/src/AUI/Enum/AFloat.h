@@ -12,6 +12,10 @@
 #pragma once
 
 
+/**
+ * @brief Specifies text floating in text wrapping views, i.e, ATextArea, AText.
+ * @ingroup ass_properties
+ */
 enum class AFloat {
     /**
      * Entry's default position behaviour.

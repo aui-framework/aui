@@ -31,10 +31,16 @@ jobs:
           submodules: true
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install doxygen python3
+        run: |
+          sudo apt-get update
+          sudo apt-get install python3 graphviz
+          wget https://www.doxygen.nl/files/doxygen-1.13.1.linux.bin.tar.gz
+          tar -xzvf doxygen-1.13.1.linux.bin.tar.gz
 
       - name: Generate docs
-        run: python3 doxygen/docs.py
+        run: |
+          export PATH=$PATH:doxygen-1.13.1/bin/
+          python3 doxygen/docs.py
 
       - name: Debug
         run: tree -aI .

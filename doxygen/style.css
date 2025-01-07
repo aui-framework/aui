@@ -8,9 +8,10 @@
 #nav-tree .arrow {
     opacity: 1;
 }
+/*
 #nav-tree-contents > ul > li > .children_ul > li:first-child {
     display: none;
-}
+}*/
 .contents img {
     max-height: 350px;
     display: block;
@@ -47,6 +48,19 @@
     margin: 0;
     color: #fff;
 }
+/*
 #main-menu > li:first-child {
     display: none;
+}
+*/
+
+#nav-tree-contents > ul > li {
+    border-top: 1px solid var(--separator-color);
+    padding: 8px 0;
+}
+
+#nav-tree-contents > ul > li > .item > .label > a {
+    font-weight: 500;
+    font-size: 16px;
+    color: white !important;
 }

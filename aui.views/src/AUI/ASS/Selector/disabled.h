@@ -17,7 +17,7 @@
 
 namespace ass {
     template<typename Base>
-    struct disabled: Base {
+    struct disabled: Base { // ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         disabled(Args&&... args):
             Base(std::forward<Args>(args)...)

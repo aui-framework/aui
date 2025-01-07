@@ -65,5 +65,21 @@ namespace ass {
         using disabled = ass::disabled<detail::ClassOf>;
     };
 
+    /**
+     * @brief Selects views that are of the specified classes.
+     * @ingroup ass_selectors
+     * @details
+     * This selector selects views that are of the specified classes. The selector can be accessed explicitly via
+     * `ass::class_of`.
+     *
+     * For example:
+     * @code{cpp}
+     * {
+     *   c(".btn"),
+     *   BackgroundSolid(...),
+     * }
+     * @endcode
+     * This will select all views that belong to ".btn" ASS class.
+     */
     using c = class_of;
 }

@@ -14,6 +14,9 @@
 
 #include "AUI/Reflect/AEnumerate.h"
 
+/**
+ * @brief Window style flags.
+ */
 AUI_ENUM_FLAG(WindowStyle)
 {
     DEFAULT = 0,

@@ -160,7 +160,7 @@ public:
 
     /**
      * @brief Launches an executable.
-     * @param args designated initializer. See ProcessCreationInfo
+     * @param args designated-initializer-style args. See ProcessCreationInfo
      * @return AChildProcess instance. Use AChildProcess::run to execute.
      */
     static _<AChildProcess> create(ProcessCreationInfo args);
@@ -182,9 +182,10 @@ public:
 
     /**
      * @brief Launches executable.
-     * @param applicationFile executable file
-     * @param args arguments
-     * @param workingDirectory working directory
+     * @param applicationFile executable file.
+     * @param args arguments.
+     * @param workingDirectory working directory.
+     * @param flags process execution flags. see ASubProcessExecutionFlags.
      * @return exit code
      */
     [[deprecated("use auto process = AProcess::make(); process->run(); process->waitForExitCode()")]]
@@ -193,6 +194,7 @@ public:
         ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
 #if AUI_PLATFORM_WIN
+
     /**
      * @brief Launches executable with administrator rights. (Windows only)
      * @param applicationFile executable file
@@ -202,6 +204,7 @@ public:
      */
     static void executeAsAdministrator(
         const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});
+
 #endif
 
     /**

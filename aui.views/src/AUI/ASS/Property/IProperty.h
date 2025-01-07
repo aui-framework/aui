@@ -16,7 +16,7 @@
 
 namespace ass::prop {
     template<typename PropertyStruct>
-    struct Property;
+    struct Property; // ignore ass_properties
 }
 
 #include <AUI/View/AView.h>

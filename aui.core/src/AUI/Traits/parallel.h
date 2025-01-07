@@ -24,7 +24,8 @@ namespace aui {
      * @param end en iterator
      * @param functor callback. <code>ReturnType(Iterator begin, Iterator end);</code>
      * @return AFutureSet<ReturnType>, where ReturnType is a return type of functor
-     * @example Typical usage:
+     * @details
+     * Typical usage:
      *
      * @code{cpp}
      * AVector<int> container = { ... };
@@ -67,7 +68,8 @@ namespace aui {
 
 /**
  * @brief Shortcut to aui::parallel.
- * @example Typical usage:
+ * @details
+ * Typical usage:
  * @code{cpp}
  * AVector<int> container = { ... };
  * auto tasks = AUI_PARALLEL_MP(container) {

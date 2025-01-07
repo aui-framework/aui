@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the padding of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Padding {
         unset_wrap<AMetric> left;

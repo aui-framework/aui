@@ -21,7 +21,7 @@ namespace ass {
 
     /**
      * @brief Controls the text color of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TextColor {
         AColor color;

@@ -24,9 +24,9 @@
 #include "AUI/IO/AFileOutputStream.h"
 
 _<AChildProcess>
-AProcess::create(AProcess::ProcessCreationInfo info) {
+AProcess::create(AProcess::ProcessCreationInfo args) {
     auto p = aui::ptr::manage(new AChildProcess);
-    p->mInfo = std::move(info);
+    p->mInfo = std::move(args);
     return p;
 }
 

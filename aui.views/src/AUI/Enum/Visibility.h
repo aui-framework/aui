@@ -19,8 +19,7 @@
 
 /**
  * @brief Controls the visibility of AView.
- * @ingroup ass
- * @ingroup views
+ * @ingroup ass_properties
  */
 AUI_ENUM_FLAG(Visibility) {
     /**

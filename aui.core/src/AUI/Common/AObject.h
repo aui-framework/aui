@@ -54,7 +54,6 @@ public:
      * @ingroup signal_slot
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObjectRawPtr)::handleButtonClicked);
      * @endcode
@@ -75,7 +74,6 @@ public:
      * property (pre-fire).
      *
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(textField->text(), slot(otherObjectRawPtr)::handleText);
      * @endcode
@@ -148,10 +146,8 @@ public:
     /**
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
-     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObjectRef)::handleButtonClicked);
      * @endcode
@@ -169,10 +165,8 @@ public:
     /**
      * @brief Connects signal or property to slot of \c "this" object.
      * @ingroup signal_slot
-     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
@@ -188,10 +182,8 @@ public:
     /**
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
-     * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), slot(otherObjectSharedPtr)::handleText);
@@ -208,12 +200,11 @@ public:
 
     /**
      * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
-     * @param connectable slot or signal
+     * @param connectable signal or property
      * @param slotDef instance of <code>AObject</code> + slot
      *
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * connect(view->clicked, ASlotDef { slot(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { slot(otherObject)::handleText });
@@ -236,14 +227,13 @@ public:
      * @ingroup property_system
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
-     * @example
      * @code{cpp}
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
      * @endcode
-     * @param connectable slot or signal
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
+     * @param property source property.
+     * @param object instance of `AObject`.
+     * @param function slot. Can be lambda.
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
     static void
@@ -300,7 +290,6 @@ private:
 /**
  * @brief emits the specified signal in context of \c this object.
  * @details
- * @ingroup useful_macros
  * @ingroup signal_slot
  * Unlike Qt's emit, AUI's emit is not just a syntax sugar; it's required to actually perform a signal call.
  *
@@ -326,7 +315,6 @@ private:
  * @param signal signal field name
  * @param ... arguments to the signal
  * @details
- * @ingroup useful_macros
  * @ingroup signal_slot
  * Unlike emit, this macro allows to emit signal of other object. It's recommended to use AUI_EMIT_FOREIGN only if
  * there's no way to use emit.

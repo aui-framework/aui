@@ -18,7 +18,7 @@
 
 namespace ass {
     template<typename Base>
-    struct hovered: Base {
+    struct hovered: Base { // ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         hovered(Args&&... args):
             Base(std::forward<Args>(args)...)

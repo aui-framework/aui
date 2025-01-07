@@ -285,10 +285,9 @@ public:
 
 
     /**
-     * Inserts all values of the specified container to the end.
+     * @brief Inserts all values of the specified container to the end.
      * @tparam OtherContainer other container type.
      * @param c other container
-     * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
     void insertAll(const OtherContainer& c) noexcept {
@@ -776,20 +775,36 @@ namespace aui::win32 {
      * convert AString to wchar_t* and back.
      */
 
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup windows_specific
+     */
     inline const wchar_t* toWchar(const AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return reinterpret_cast<const wchar_t *const>(string.data());
     }
 
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup windows_specific
+     */
     inline wchar_t* toWchar(AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return reinterpret_cast<wchar_t*>(string.data());
     }
 
+    /**
+     * @brief AString to wchar_t string view.
+     * @ingroup windows_specific
+     */
     inline std::wstring_view toWcharView(const AString& string) {
         return {toWchar(string), string.length() };
     }
 
+    /**
+     * @brief wchar_t string view to AString.
+     * @ingroup windows_specific
+     */
     inline AString fromWchar(std::wstring_view string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return {reinterpret_cast<const char16_t *>(string.data()), string.size()};

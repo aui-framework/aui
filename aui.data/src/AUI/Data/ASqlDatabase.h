@@ -60,7 +60,7 @@ public:
 
 	/**
 	 * @brief Connect to the database using the specified details and driver.
-     * @param drivername name of the database driver. If the driver is not loaded, an attempt will be made to load the
+     * @param driverName name of the database driver. If the driver is not loaded, an attempt will be made to load the
      *        driver based on the template aui.DRIVERNAME (aui.DRIVERNAME.dll for Windows, libaui.DRIVERNAME.so for
      *        Linux, etc...). If the driver failed to load SQLException will be thrown.
      *

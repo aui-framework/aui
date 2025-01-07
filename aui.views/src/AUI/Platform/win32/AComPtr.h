@@ -16,6 +16,7 @@
 
 /**
  * @brief Takes care of AddRef and Release() reference counting mechanism of COM objects.
+ * @ingroup windows_specific
  * @tparam T
  */
 template<typename T>

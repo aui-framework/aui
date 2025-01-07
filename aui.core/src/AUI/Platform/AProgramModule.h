@@ -24,51 +24,45 @@
 typedef void* HMODULE;
 #endif
 class AString;
-
-class API_AUI_CORE AProgramModuleLoadException: public AException
-{
-public:
-	explicit AProgramModuleLoadException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~AProgramModuleLoadException();
-};
-
-class API_AUI_CORE AProgramModule
-{
+class API_AUI_CORE AProgramModule {
 private:
-	HMODULE mHandle;
+    HMODULE mHandle;
 
-	AProgramModule(const AProgramModule&) = delete;
-	
+    AProgramModule(const AProgramModule&) = delete;
+
 public:
-    AProgramModule(HMODULE handle) noexcept
-            : mHandle(handle)
-    {
+    AProgramModule(HMODULE handle) noexcept : mHandle(handle) {}
+
+    using ProcRawPtr = void(*)();
+
+    class API_AUI_CORE LoadException : public AException {
+    public:
+        explicit LoadException(const AString& message) : AException(message) {}
+        virtual ~LoadException() = default;
+    };
+
+
+
+    [[nodiscard]]
+    ProcRawPtr getProcAddressRawPtr(const AString& name) const noexcept;
+
+    template <typename Function>
+    [[nodiscard]]
+    Function* getProcAddress(const AString& name) const noexcept {
+        return reinterpret_cast<Function*>(getProcAddressRawPtr(name));
     }
 
-	[[nodiscard]]
-	void(*getProcAddressRawPtr(const AString& name) const noexcept)();
+    /**
+     * @brief Loads a dynamic load library (shared object).
+     * @param path Path to a dynamic load library without extension (extension is added based on current platform)
+     */
+    static _<AProgramModule> load(const AString& path);
 
-	template <typename Function>
-	[[nodiscard]]
-	Function* getProcAddress(const AString& name) const noexcept
-	{
-		return reinterpret_cast<Function*>(getProcAddressRawPtr(name));
-	}
-	
-	/**
-	 * @brief Loads a dynamic load library (shared object).
-	 * @param path Path to a dynamic load library without extension (extension is added based on current platform)
-	 */
-	static _<AProgramModule> load(const AString& path);
-
-	/**
-	 * @brief Extension of a dynamic load library of current platform
-	 * @return dll for Windows, so for Linux, dylib for Apple
-	 */
-	static AString getDllExtension();
+    /**
+     * @brief Extension of a dynamic load library of current platform
+     * @return dll for Windows, so for Linux, dylib for Apple
+     */
+    static AString getDllExtension();
 
     static _<AProgramModule> self();
 };

@@ -122,6 +122,7 @@ namespace aui::container {
      *   <dt><b>Sneaky assertions</b></dt>
      *   <dd><code>index</code> points to the existing element.</dd>
      * </dl>
+     * @param c container to perform on.
      * @param index index of the element.
      */
     template<typename Container>
@@ -133,6 +134,7 @@ namespace aui::container {
     /**
      * @brief Finds the index of the first occurrence of the value.
      * @ingroup core
+     * @param c container to perform on.
      * @param value element to find.
      * @return index of the specified element. If element is not found, std::nullopt is returned.
      */
@@ -246,6 +248,7 @@ namespace aui {
 /**
  * @brief Finds the index of the first occurrence of the value.
  * @ingroup core
+ * @param c container to perform on.
  * @param value element to find.
  * @return index of the specified element. If element is not found, std::nullopt is returned.
  */

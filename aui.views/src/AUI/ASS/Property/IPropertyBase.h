@@ -45,8 +45,9 @@ namespace ass::prop {
 
     /**
      * @brief Base class for all properties.
+     * @ingroup ass
      */
-    struct API_AUI_VIEWS IPropertyBase {
+    struct API_AUI_VIEWS IPropertyBase { // ignore ass_properties
     public:
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view, const ARenderContext& ctx) {}

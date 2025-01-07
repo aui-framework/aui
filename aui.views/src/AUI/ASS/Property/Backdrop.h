@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Represents backdrop filter effect which applied to the pixels behind the view (i.e., blur, grayscale, etc.)
-     * @ingroup ass
+     * @ingroup ass_properties
      * @details
      * Matches CSS property `backdrop-filter`.
      *

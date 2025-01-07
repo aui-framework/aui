@@ -23,7 +23,7 @@ namespace ass {
 
     /**
      * @brief Controls the rendering scale transform of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TransformScale {
         glm::vec2 scale;

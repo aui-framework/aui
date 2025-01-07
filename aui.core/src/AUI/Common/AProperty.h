@@ -140,7 +140,6 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
  * value with `value()` method or implicit conversion `operator T()`.
  *
  * See @ref property_system "property system" for more info.
- * @example
  * @code{cpp}
  * struct User {
  *   AProperty<AString> name;
@@ -266,7 +265,6 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
  * @details
  * See @ref property_system "property system" for more info.
  *
- * @example
  * @code{cpp}
  * class User: public AObject {
  * public:

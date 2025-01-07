@@ -85,9 +85,11 @@ private:
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;
     static void makeCurrent(HDC hdc) noexcept;
-#elif AUI_PLATFORM_LINUX
+#endif
+#if AUI_PLATFORM_LINUX
     static GLXContext ourContext;
-#elif AUI_PLATFORM_MACOS
+#endif
+#if AUI_PLATFORM_MACOS
     static void* ourContext;
 #endif
 

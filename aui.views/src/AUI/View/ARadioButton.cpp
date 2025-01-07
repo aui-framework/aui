@@ -15,8 +15,6 @@
 
 ARadioButton::ARadioButton()
 {
-
-
     setLayout(std::make_unique<AHorizontalLayout>());
 
     mText = _new<ALabel>();
@@ -27,7 +25,7 @@ ARadioButton::ARadioButton()
     connect(mCheckedChanged, checkbox, &ARadioButtonInner::update);
 }
 
-ARadioButton::ARadioButton(const ::AString& text): ARadioButton()
+ARadioButton::ARadioButton(const AString& text): ARadioButton()
 {
     setText(text);
 }

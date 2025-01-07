@@ -37,7 +37,6 @@ public:
      * Inserts all values of the specified container to the end.
      * @tparam OtherContainer other container type.
      * @param c other container
-     * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
     void insertAll(const OtherContainer& c) noexcept {
@@ -87,7 +86,7 @@ public:
 
     /**
      * Shortcut to <code>insertAll</code>.
-     * @param rhs container to push
+     * @param c container to push
      * @return self
      */
     template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, KeyType>, bool> = true>

@@ -20,7 +20,7 @@ static float gaussian(float x, float mu, float sigma) {
     return glm::exp(-0.5f * a * a);
 }
 
-AArrayView<float> aui::detail::gaussianKernel(unsigned int radius) {
+AArrayView<float> aui::detail::gaussianKernel(unsigned radius) {
     using Kernel = AVector<float>;
     static AUnorderedMap<unsigned /* radius */, Kernel> kernels;
     return kernels.getOrInsert(radius, [radius]() {

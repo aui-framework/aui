@@ -21,7 +21,7 @@
 namespace ass {
     /**
      * @brief Controls line height multiplier of the font of the AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      * @details
      * Matches CSS property line-height.
      */

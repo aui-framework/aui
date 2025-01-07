@@ -258,7 +258,7 @@ public:
 
     /**
      * @brief Does the INSERT query to DB.
-     * @param args... column names
+     * @param args column names
      * @return helper object for adding rows
      */
     template<typename... Args>
@@ -280,7 +280,7 @@ public:
 
     /**
      * @brief Does the SELECT query to DB.
-     * @param args... column names
+     * @param args column names
      * @return helper object for retrieving rows
      */
     template<typename... Args>

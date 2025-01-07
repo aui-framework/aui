@@ -127,9 +127,9 @@ public:
      * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
      * for more info.
      *
-     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or ::Expanding
-     * variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding, Stacked::Expanding) for
-     * such case.
+     * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
+     * `Expanding` variant of declarative container notation (`Vertical::Expanding`, `Horizontal::Expanding`,
+     * `Stacked::Expanding`) for such case.
      */
     auto expanding() const {
         return APropertyDef {
@@ -732,6 +732,7 @@ public:
     /**
      * @brief Handles pointer hover events
      * @param pos event position
+     * @param event event description
      * @details
      * @note
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
@@ -762,11 +763,7 @@ public:
 
     /**
      * Handles mouse wheel events.
-     * @param pos mouse cursor position.
-     * @param delta the distance mouse wheel scrolled.
-     * @details
-     * By default, 120 is single mouse wheel click.
-     * 120 = mouse scroll down, -120 = mouse scroll up.
+     * @param event event info.
      */
     virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
@@ -1077,7 +1074,6 @@ protected:
     /**
      * @brief A view requests to redraw it and passes it's coords relative to this.
      * @param invalidArea area to invalidate. Must be in this view's coordinate space.
-     * @return A window that manages this invalidation event.
      */
     virtual void markPixelDataInvalid(ARect<int> invalidArea);
 

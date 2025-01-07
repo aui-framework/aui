@@ -18,7 +18,7 @@ namespace ass {
 
     /**
      * @brief Represents top border.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BorderTop {
         AMetric width;

@@ -23,8 +23,10 @@ namespace ass {
 
     /**
      * @brief Represents box shadow.
-     * @ingroup ass.
-     * @note Unlike CSS, box shadow is not affected by BorderRadius.
+     * @ingroup ass_properties
+     * @details
+     * @note
+     * Unlike CSS, box shadow is not affected by BorderRadius.
      */
     struct BoxShadowInner {
         AMetric offsetX;

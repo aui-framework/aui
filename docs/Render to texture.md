@@ -4,9 +4,9 @@ pixel data from the last frame. Sometimes this technique is referred as backbuff
 
 This may gradually improve performance especially if there are a lot of static views.
 
-Starting from 6.x.x  @ref Devtools "devtools" has several options to debug and visualise render-to-texture optimization.
+Starting from 6.x.x  @ref docs/Devtools.md has several options to debug and visualise render-to-texture optimization.
 
-![Devtools](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20241014_054912.png?raw=true)
+@image html Screenshot_20241014_054912.png
 
 ## Highlight redraw requests
 
@@ -14,7 +14,7 @@ When enabled, highlights the views that requested repaint with purple overlay.
 
 This setting shows which pixel areas should be repainted. Also, you can find views that trigger window repaint event.
 
-![Example window](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20241014_055322.png?raw=true)
+@image html Screenshot_20241014_055322.png
 
 In this example, text field and spinner box are highlighted. Text field has to display cursor blinking, spinner box
 spins infinitely so it always highlighted.

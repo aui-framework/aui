@@ -21,7 +21,7 @@
 namespace ass {
     /**
      * @brief Represents gradient background.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BackgroundGradient {
         AOptional<ALinearGradientBrush> gradient;

@@ -95,13 +95,15 @@ private:
 #if AUI_PLATFORM_WIN
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
-#elif AUI_PLATFORM_LINUX
+#endif
+#if AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
     _<XImage> mXImage;
     std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
 
     void reallocate();
-#else
+#endif
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE || AUI_PLATFORM_EMSCRIPTEN
     std::uint8_t* mBitmapBlob = nullptr;
 #endif
 };

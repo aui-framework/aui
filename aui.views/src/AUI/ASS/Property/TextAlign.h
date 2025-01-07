@@ -16,6 +16,7 @@
 #pragma once
 
 #include <AUI/Util/AMetric.h>
+#include <AUI/Enum/ATextAlign.h> // defined here
 #include "IProperty.h"
 
 namespace ass {

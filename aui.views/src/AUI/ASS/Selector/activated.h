@@ -18,7 +18,7 @@
 
 namespace ass {
     template<typename Base>
-    struct activated: Base {
+    struct activated: Base { // ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         activated(Args&&... args):
             Base(std::forward<Args>(args)...)

@@ -17,7 +17,7 @@ namespace ass {
 
     /**
      * @brief Represents custom-rendered background effect.
-     * @ingroup ass
+     * @ingroup ass_properties
      * @see background_effect
      */
     struct BackgroundEffect {

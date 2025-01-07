@@ -73,7 +73,7 @@ private:
 
 /**
  * @brief View container with a checkbox.
- * @ingroup userful_views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:

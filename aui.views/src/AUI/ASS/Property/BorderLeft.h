@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Represents left border.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BorderLeft {
         AMetric width;

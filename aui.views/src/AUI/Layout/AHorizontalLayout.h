@@ -19,10 +19,11 @@
  * @brief Places views in a row.
  * @ingroup layout_managers
  * @details
- * <dl>
- *   <dt><b>UI Builder</b></dt>
- *   <dd><code>Horizontal</code></dd>
- * </dl>
+ *
+ * |             |                               |
+ * |-------------|-------------------------------|
+ * | Declarative notation | ` Horizontal { }` |
+ *
  * Horizontal layout manager places views in a row, fitting their height to the container's height.
  * Has a `Horizontal` shortcut that allows easy usage in UI building:
  * @code{cpp}

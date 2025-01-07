@@ -129,7 +129,7 @@ public:
     /**
      * Waits until the notification.
      * @param lock lock.
-     * @param duration duration to waitForExitCode until.
+     * @param timepoint timepoint to waitForExitCode until.
      */
     template<typename Lock, typename Timepoint>
     void wait_until(Lock& lock, Timepoint timepoint) {

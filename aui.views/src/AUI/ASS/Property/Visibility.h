@@ -12,7 +12,7 @@
 #pragma once
 
 #include "IProperty.h"
-#include <AUI/Enum/Visibility.h>
+#include <AUI/Enum/Visibility.h> // defined here
 
 namespace ass::prop {
     template<>

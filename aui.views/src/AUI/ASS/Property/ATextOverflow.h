@@ -17,6 +17,7 @@
 
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Enum/AOverflow.h> // defined here
 #include "IProperty.h"
 
 namespace ass {

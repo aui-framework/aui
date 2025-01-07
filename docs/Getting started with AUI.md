@@ -157,7 +157,7 @@ Let's analyze this code line by line:
 - `setContents( ... )` updates the contents of the container (of the window in our case);
 - `Stacked { ... }` means the container of `AStackedLayout` layout manager, basically it centers all of its children
   specified in the curly braces;
-  ![](https://github.com/aui-framework/aui/blob/master/docs/imgs/stacked1.jpg?raw=true)
+  @image html stacked1.jpg?
 - `_new<ALabel>("Hello world!")` is the only child of the stacked container, `_new` is an alias for the
   `std::make_shared` function which returns `std::shared_ptr`, `ALabel` is a simple label (text on the screen),
   arguments in braces are used to construct `ALabel`;
@@ -168,7 +168,7 @@ Please note that if any window in shown, an event loop is created after returnin
 
 The example above produces the following window:
 
-![Label](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20210408_024201.jpg?raw=true)
+@image html Screenshot_20210408_024201.jpg?
 
 See @ref layout_managers "layout managers" for more info about layout managers.
 
