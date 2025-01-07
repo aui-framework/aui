@@ -7,6 +7,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import collections
+import enum
 import os
 import os
 import re
@@ -159,16 +160,22 @@ def doxygen_is_interesting_error(line):
 
 def doxygen_parse_stderr(stderr):
     it = iter(result.stderr.decode('utf-8').split('\n'))
-    for i in it:
-        if i.startswith("/"):  # indicates a next error.
-            if not doxygen_is_interesting_error(i):
-                for i in group_lines_by_error():
-                    pass
-                continue
 
-            out = "\n".join([i for i in group_lines_by_error()])
-            assert out
-            yield out
+    current_error_lines = []
+
+    for i in it:
+        if i.startswith("/"):  # indicates a start of error
+            if current_error_lines:
+                if doxygen_is_interesting_error(current_error_lines[0]):
+                    yield "\n".join(current_error_lines)
+                current_error_lines = []
+
+        current_error_lines.append(i)
+
+    if current_error_lines:
+        if doxygen_is_interesting_error(current_error_lines[0]):
+            yield "\n".join(current_error_lines)
+            current_error_lines = []
 
 
 if __name__ == '__main__':
