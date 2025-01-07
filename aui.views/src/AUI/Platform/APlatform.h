@@ -13,6 +13,13 @@
 
 #include "AUI/Views.h"
 
+/**
+ * @defgroup windows_specific Windows-specific
+ * @ingroup core
+ * @details
+ * Classes and functions specific to Windows platform.
+ */
+
 class AString;
 
 /**

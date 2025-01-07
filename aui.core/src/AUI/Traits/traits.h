@@ -13,7 +13,8 @@
 
 /**
  * @brief AUI template library
- * @defgroup useful_templates
+ * @defgroup useful_templates Useful templates
+ * @ingroup core
  */
 
 #include "algorithms.h"

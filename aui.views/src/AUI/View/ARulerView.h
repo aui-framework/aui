@@ -23,7 +23,7 @@
 
 /**
  * @brief A Photoshop-like ruler for measuring display units.
- * @ingroup userful_views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:

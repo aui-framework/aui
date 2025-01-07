@@ -195,7 +195,7 @@ namespace declarative {
 
     /**
      * @brief Extra styles wrapper.
-     * @ingroup declarative
+     * @ingroup views
      * @details
      * @code{cpp}
      * Button { "Default button" },

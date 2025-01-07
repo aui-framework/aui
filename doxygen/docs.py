@@ -12,6 +12,7 @@ import os
 import os
 import re
 import shutil
+import subprocess
 from pathlib import Path
 
 ########################################################################################################################
@@ -25,16 +26,6 @@ CONFIG = {
 
 ########################################################################################################################
 
-# This Python script scans aui.*/tests/**.cpp files for the following line:
-#
-# // AUI_DOCS_OUTPUT: <path>
-#
-# If this line exists, the script generates a file under that path and places contents of the cpp file to the file
-# with some preprocessing to make a suitable markdown file which can be used by Doxygen.
-#
-# This approach allows to generate decent docs with examples which would work based on the fact that they are generated
-# from real tests.
-
 REGEX_DIR = re.compile(r'.*(aui\..+)/tests')
 REGEX_AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
 REGEX_COMMENT = re.compile(r'\s*// ?(.*)\n?$')
@@ -46,7 +37,13 @@ assert REGEX_DIR.match("/home/aui.views/tests")
 assert not REGEX_DIR.match("/home/aui.views/src")
 assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
+
 def scan_cpp_files(path: Path):
+    """
+    # scans aui.*/tests/**.cpp files for the following line:
+    #
+    # // AUI_DOCS_OUTPUT: <path>
+    """
     for root, dirs, files in os.walk(path):
         for file in files:
             if file.endswith('.cpp') and REGEX_DIR.match(root):
@@ -155,10 +152,25 @@ if __name__ == '__main__':
         print("Error: README.md does not exist in the current working directory. Are you running from proper working dir?")
         exit(-1)
 
+
+    """
+    The script generates a file under that path and places contents of the cpp file to the file
+    with some preprocessing to make a suitable markdown file which can be used by Doxygen.
+    
+    This approach allows to generate decent docs with examples which would work based on the fact that they are generated
+    from real tests.
+    """
+
     suitable_cpp_files = [i for i in scan_cpp_files(Path.cwd())]
     print('Files to process:', suitable_cpp_files)
     for path in suitable_cpp_files:
         process_cpp_file(path)
+
+    result = subprocess.run(["/usr/bin/doxygen", "doxygen/Doxyfile"], capture_output=True)
+
+    it = iter(result.stderr.decode('utf-8').split('\n'))
+    for i in it:
+        print(i)
 
     if os.system("doxygen doxygen/Doxyfile") != 0:
         print("Error: doxygen failed.")

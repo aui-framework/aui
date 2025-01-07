@@ -341,7 +341,6 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
 /**
  * @brief A signal declaration.
  * @tparam Args signal arguments
- * @ingroup core
  * @ingroup signal_slot
  * See @ref signal_slot "signal-slot system" for more info.
  */

@@ -16,7 +16,6 @@
 /**
  * @brief Controls the expanding of AView.
  * @ingroup ass
- * @ingroup views
  */
 enum class FontRendering
 {

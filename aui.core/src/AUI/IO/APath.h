@@ -67,7 +67,8 @@ AUI_ENUM_FLAG(AFileListFlags) {
     /**
      * @brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
      * are set relative to the folder where the <code>listDir()</code> is called.
-     * \example
+    * @details
+     *
      * <ul>
      *     <li>/home</li>
      *     <li>/home/user</li>
@@ -167,14 +168,16 @@ public:
     ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
 
     /**
-     * \example <pre>/home/user -> /home</pre>
+     * @details
+     * `/home/user -> /home`
      * @return path to parent folder
      */
     [[nodiscard]] APath parent() const;
 
     /**
      * @brief Path of the child element. Relevant only for folders.
-     * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
+     * @details
+     * with fileName = work: `/home/user -> /home/user/work`
      * @param name of child file
      * @return path to child file relatively to this folder
      */
@@ -182,21 +185,24 @@ public:
 
     /**
      * @brief File name.
-     * \example <pre>/home/user/file.cpp -> file.cpp
+     * @details
+     * `/home/user/file.cpp -> file.cpp`
      * @return file name
      */
     [[nodiscard]] APath filename() const;
 
     /**
      * @brief File name without extension.
-     * \example <pre>/home/user/file.cpp -> file
+     * @details
+     * `/home/user/file.cpp -> file
      * @return file name without extension
      */
     [[nodiscard]] APath filenameWithoutExtension() const;
 
     /**
      * @brief Remove the uppermost folder from this path
-     * \example v1.0.0/client/azaza.zip -> client/azaza.zip
+     * @details
+     * v1.0.0/client/azaza.zip -> client/azaza.zip
      * @return The same path except uppermost folder
      */
     [[nodiscard]] APath withoutUppermostFolder() const;
@@ -253,7 +259,8 @@ public:
     /**
      * @brief Returns same path but without <code>folder</code>
      * @param dir some parent, grandparent, grandgrandparent... dir
-     * \example APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
+     * @details
+     * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
      * @return same path but without <code>dir</code>
      */
     AString relativelyTo(const APath& dir) const;

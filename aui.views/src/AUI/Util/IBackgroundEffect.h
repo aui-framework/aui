@@ -14,7 +14,8 @@
 #include <AUI/View/AView.h>
 
 /**
- * @defgroup background_effect
+ * @defgroup background_effect Background effects
+ * @ingroup views
  * @brief Custom-rendered background effect.
  */
 class API_AUI_VIEWS IBackgroundEffect

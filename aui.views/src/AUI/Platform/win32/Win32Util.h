@@ -15,7 +15,16 @@
 #include <Windows.h>
 
 namespace aui::win32 {
+    /**
+     * @brief HICON to AImage.
+     * @ingroup windows_specific
+     */
     API_AUI_VIEWS AImage iconToImage(HICON hIcon);
+
+    /**
+     * @brief HBITMAP to AImage.
+     * @ingroup windows_specific
+     */
     API_AUI_VIEWS AImage bitmapToImage(HBITMAP hbitmap);
 
 

@@ -21,7 +21,7 @@
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.
- * @ingroup view
+ * @ingroup views
  * @details
  * To use this class, you have to pass APointerPressedEvent APointerReleasedEvent to handlePointerPressed and handlePointerReleased
  * methods accordingly. To receive scroll value, use handlePointerMove method.
