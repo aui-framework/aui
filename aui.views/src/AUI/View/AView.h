@@ -763,11 +763,7 @@ public:
 
     /**
      * Handles mouse wheel events.
-     * @param pos mouse cursor position.
-     * @param delta the distance mouse wheel scrolled.
-     * @details
-     * By default, 120 is single mouse wheel click.
-     * 120 = mouse scroll down, -120 = mouse scroll up.
+     * @param event event info.
      */
     virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
@@ -1078,7 +1074,6 @@ protected:
     /**
      * @brief A view requests to redraw it and passes it's coords relative to this.
      * @param invalidArea area to invalidate. Must be in this view's coordinate space.
-     * @return A window that manages this invalidation event.
      */
     virtual void markPixelDataInvalid(ARect<int> invalidArea);
 

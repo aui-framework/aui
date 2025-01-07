@@ -173,7 +173,7 @@ def doxygen_parse_stderr(stderr):
     current_error_lines = []
 
     for i in it:
-        if i.startswith("/"):  # indicates a start of error
+        if i.startswith("/") or i.startswith("<unknown"):  # indicates a start of error
             if current_error_lines:
                 if doxygen_is_interesting_error(current_error_lines[0]):
                     yield "\n".join(current_error_lines)

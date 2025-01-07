@@ -31,6 +31,9 @@ struct AScrollEvent {
      * @brief The amount of scroll
      * @details
      * This field is mutable in order to be consumable.
+     *
+     * By default, 120 is single mouse wheel click.
+     * 120 = mouse scroll down, -120 = mouse scroll up.
      */
     mutable glm::vec2 delta;
 

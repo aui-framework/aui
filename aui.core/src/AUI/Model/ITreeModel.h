@@ -51,7 +51,7 @@ public:
      * @brief Creates valid ATreeModelIndex of the child.
      * @param row child row (index)
      * @param column child column (typically 0)
-     * @param parent vertex. std::nullopt indicates root vertex
+     * @param vertex vertex
      * @return The child of the parent index with specified row and column.
      */
     virtual ATreeModelIndex indexOfChild(size_t row, size_t column,

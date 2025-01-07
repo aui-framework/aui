@@ -177,8 +177,14 @@ public:
     /**
      * @brief Path of the child element. Relevant only for folders.
      * @details
-     * with fileName = work: `/home/user -> /home/user/work`
-     * @param name of child file
+     * with `fileName = work`: `/home/user -> /home/user/work`
+     * @note
+     * It's convient to use `/` syntax instead:
+     * @code{cpp}
+     * APath("/home/user") / "work"
+     * @endcode
+     *
+     * @param fileName name of child file
      * @return path to child file relatively to this folder
      */
     [[nodiscard]] APath file(const AString& fileName) const;
@@ -347,6 +353,7 @@ public:
      * Searches for file in specified dirs.
      * @param filename Name of the file searching for
      * @param locations paths to directories to search for the file in
+     * @param flags lookup flags (see APathFinder)
      * @return full path to the found file; if file not found, an empty string is returned.
      */
     static AVector<APath> find(const AString& filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);

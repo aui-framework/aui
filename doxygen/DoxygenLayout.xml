@@ -1,19 +1,12 @@
 <!--
-  ~ // AUI Framework - Declarative UI toolkit for modern C++20
-  ~ // Copyright (C) 2020-2024 Alex2772 and Contributors
-  ~ //
-  ~ // This library is free software; you can redistribute it and/or
-  ~ // modify it under the terms of the GNU Lesser General Public
-  ~ // License as published by the Free Software Foundation; either
-  ~ // version 2 of the License, or (at your option) any later version.
-  ~ //
-  ~ // This library is distributed in the hope that it will be useful,
-  ~ // but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~ // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-  ~ // Lesser General Public License for more details.
-  ~ //
-  ~ // You should have received a copy of the GNU Lesser General Public
-  ~ // License along with this library. If not, see <http://www.gnu.org/licenses/>.
+  ~ AUI Framework - Declarative UI toolkit for modern C++20
+  ~ Copyright (C) 2020-2024 Alex2772 and Contributors
+  ~
+  ~ SPDX-License-Identifier: MPL-2.0
+  ~
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, You can obtain one at http://mozilla.org/MPL/2.0/.
   -->
 
 <doxygenlayout version="1.0">
@@ -35,27 +28,27 @@
         </tab>
 
         <tab type="mainpage" visible="yes" title="Main page"/>
-        <tab type="usergroup" title="Getting started" visible="yes">
-            <tab type="user" url="@ref md_docs_Getting_started_with_AUI" title="Getting started with AUI" />
-            <tab type="user" url="@ref md_docs_AUI_Boot" title="AUI Boot" />
-            <tab type="user" url="@ref md_docs_Writing_tests" title="Writing tests" />
-            <tab type="user" url="@ref md_docs_Writing_platform_dependent_code" title="Writing platform dependent code" />
-            <tab type="user" url="@ref md_docs_Code_style_and_recommendations" title="Code style and recommendations" />
-            <tab type="user" url="@ref md_docs_Troubleshoot_list" title="Troubleshoot list" />
-            <tab type="user" url="@ref md_docs_Crosscompiling" title="Crosscompiling (Android and iOS)" />
-        </tab>
-        <tab type="usergroup" title="Tweaking" visible="yes">
-            <tab type="user" url="@ref md_docs_AUI_configure_flags" title="AUI configure flags" />
-            <tab type="user" url="@ref md_docs_AUI_command_line_arguments" title="AUI command line arguments" />
-        </tab>
         <tab type="usergroup" title="Reference" visible="yes">
             <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>
             <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes"/>
             <tab type="usergroup" title="All AUI CMake commands">
-                <tab type="user" title="aui_app" url="@ref md_docs_aui_app" />
-                <tab type="user" title="aui_executable" url="@ref md_docs_aui_executable" />
-                <tab type="user" title="aui_module" url="@ref md_docs_aui_module" />
+                <tab type="user" title="aui_app" url="@ref docs/aui_app.md" />
+                <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md" />
+                <tab type="user" title="aui_module" url="@ref docs/aui_module.md" />
             </tab>
+        </tab>
+        <tab type="usergroup" title="Getting started" visible="yes">
+            <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI" />
+            <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot" />
+            <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
+            <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />
+            <tab type="user" url="@ref docs/Code style and recommendations.md" title="Code style and recommendations" />
+            <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list" />
+            <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)" />
+        </tab>
+        <tab type="usergroup" title="Tweaking" visible="yes">
+            <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
+            <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
         </tab>
     </navindex>
 

@@ -37,7 +37,6 @@ public:
      * Inserts all values of the specified container to the end.
      * @tparam OtherContainer other container type.
      * @param c other container
-     * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
     void insertAll(const OtherContainer& c) noexcept {

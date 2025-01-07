@@ -45,8 +45,7 @@ public:
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
      * </dl>
-     * @param dst destination buffer
-     * @param size destination buffer's size. > 0
+     * @param destination destination buffer
      * @return number of read bytes (including 0)
      */
     size_t read(std::span<std::byte> destination) {
@@ -77,20 +76,20 @@ public:
 
     /**
      * Reads data using AUI serialization (see AUI/Traits/serializable.h)
-     * @param t value to write
+     * @return result value
      */
     template<typename T>
     T deserialize();
 
     /**
      * Reads data using AUI serialization (see AUI/Traits/serializable.h)
-     * @param t value to write
+     * @param dst value to write
      */
     template<typename T>
     IInputStream& operator>>(T& dst);
     /**
      * Reads data using AUI serialization (see AUI/Traits/serializable.h)
-     * @param t value to write
+     * @param dst value to write
      */
     template<typename T>
     IInputStream& operator>>(T&& dst);
