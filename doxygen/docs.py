@@ -168,7 +168,7 @@ def doxygen_is_interesting_error(line):
 
 
 def doxygen_parse_stderr(stderr):
-    it = iter(result.stderr.decode('utf-8').split('\n'))
+    it = iter(stderr.decode('utf-8').split('\n'))
 
     current_error_lines = []
 
@@ -195,6 +195,62 @@ def report_error(file: Path, error_string: str, line: int = None):
     if line is not None:
         line_string = f":{line}"
     print(f"{file.absolute()}{line_string}: {error_string}")
+
+
+def generate_docs_from_tests():
+    """
+    The script generates a file under that path and places contents of the cpp file to the file
+    with some preprocessing to make a suitable markdown file which can be used by Doxygen.
+
+    This approach allows to generate decent docs with examples which would work based on the fact that they are generated
+    from real tests.
+    """
+
+    suitable_cpp_files = [i for i in scan_cpp_files(Path.cwd())]
+    print('Tests to generate docs from:', suitable_cpp_files)
+    for path in suitable_cpp_files:
+        process_cpp_file(path)
+
+def invoke_doxygen():
+    result = subprocess.run("doxygen doxygen/Doxyfile", shell=True, capture_output=True)
+    doxygen_errors = doxygen_parse_stderr(result.stderr)
+
+    count = 0
+    for i in doxygen_errors:
+        count += 1
+        print(i)
+    if count > 0:
+        print(f"Error: doxygen failed: {count} error(s).")
+        global error_flag
+        error_flag = True
+
+
+class PatchMode(enum.Enum):
+    INSERT_AFTER = enum.auto()
+
+def patch(target: str = None, anchor: str = None, mode: PatchMode = None):
+    target_path = Path('doxygen/out/html') / target
+    patch_path = Path('doxygen/patches/') / target
+    with open(target_path, 'r') as fis:
+        contents = fis.readlines()
+
+    def process():
+        ok = False
+        for line in contents:
+            if anchor in line:
+                ok = True
+                if mode == PatchMode.INSERT_AFTER:
+                    yield line
+                    yield patch_path.read_bytes().decode("utf-8")
+            else:
+                yield line
+
+        if not ok:
+            raise RuntimeError(f"{target_path} does not contain anchor: {anchor}")
+
+    with open(target_path, 'w') as out:
+        for i in process():
+            out.write(i)
 
 ########################################################################################################################
 
@@ -232,17 +288,18 @@ def check_all_are_in_group(directory: Path, group: str):
             if file.endswith(".h"):
                 full_path = Path(root) / file
                 def read(path: Path):
-                    for line_number, line in enumerate(open(path, 'r').readlines()):
-                        if "// defined here" in line:
-                            m = REGEX_INCLUDE.match(line)
-                            if not m:
-                                report_error(path, "bad \"// defined here\" usage", line=line_number)
+                    with open(path, 'r') as fis:
+                        for line_number, line in enumerate(fis.readlines()):
+                            if "// defined here" in line:
+                                m = REGEX_INCLUDE.match(line)
+                                if not m:
+                                    report_error(path, "bad \"// defined here\" usage", line=line_number)
+                                    continue
+                                for s in read(find_source_root(path) / m.group(1)):
+                                    yield s
                                 continue
-                            for s in read(find_source_root(path) / m.group(1)):
-                                yield s
-                            continue
 
-                        yield (SourceLine(path, line_number), line)
+                            yield SourceLine(path, line_number), line
 
                 contents = [i for i in read(full_path)]
 
@@ -269,34 +326,14 @@ if __name__ == '__main__':
     check_all_are_in_group(Path("aui.views/src/AUI/ASS/Property"), "ass_properties")
     check_all_are_in_group(Path("aui.views/src/AUI/ASS/Selector"), "ass_selectors")
 
+    generate_docs_from_tests()
+    invoke_doxygen()
+
+    patch(target='classes.html', anchor='<div class="contents">', mode=PatchMode.INSERT_AFTER)
+
     if error_flag:
         exit(-1)
 
-    """
-    The script generates a file under that path and places contents of the cpp file to the file
-    with some preprocessing to make a suitable markdown file which can be used by Doxygen.
-    
-    This approach allows to generate decent docs with examples which would work based on the fact that they are generated
-    from real tests.
-    """
-
-    suitable_cpp_files = [i for i in scan_cpp_files(Path.cwd())]
-    print('Tests to generate docs from:', suitable_cpp_files)
-    for path in suitable_cpp_files:
-        process_cpp_file(path)
-
-    result = subprocess.run("doxygen doxygen/Doxyfile", shell=True, capture_output=True)
-    doxygen_errors = doxygen_parse_stderr(result.stderr)
-
-    count = 0
-    for i in doxygen_errors:
-        count += 1
-        print(i)
-    if count > 0:
-        print(f"Error: doxygen failed: {count} error(s).")
-        exit(-1)
-
-    # patch_append_after('<div class="contents">')
 
     output_dir = Path(CONFIG['output'])
     for file in CONFIG['copy_to_output']:

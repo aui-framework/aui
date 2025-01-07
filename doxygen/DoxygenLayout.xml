@@ -15,7 +15,6 @@
     <navindex>
         <!-- just for search, this group is invisible -->
         <tab type="usergroup" visible="yes" title="glossary">
-            <tab type="namespacelist" visible="yes" title="" intro=""/>
             <tab type="namespacemembers" visible="yes" title="" intro=""/>
             <tab type="classlist" visible="yes" title="" intro=""/>
             <tab type="hierarchy" visible="yes" title="" intro=""/>
@@ -29,8 +28,10 @@
 
         <tab type="mainpage" visible="yes" title="Main page"/>
         <tab type="usergroup" title="Reference" visible="yes">
+            <tab type="user" url="index.html" title="All AUI modules" />
 <!--            <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>-->
             <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes" />
+            <tab type="namespacelist" visible="yes" title="All namespaces" intro=""/>
             <tab type="usergroup" title="All AUI CMake commands">
                 <tab type="user" title="aui_app" url="@ref docs/aui_app.md" />
                 <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md" />
