@@ -17,7 +17,7 @@
 /**
  * @brief Window style flags.
  */
-@AUI_ENUM_FLAG(WindowStyle)
+AUI_ENUM_FLAG(WindowStyle)
 {
     DEFAULT = 0,
     /**

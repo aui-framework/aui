@@ -7,8 +7,9 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++20.
 
-The project aims to provide developers with the best possible experience (including, but not limited to: dependency
-management, packaging, ui building, styling, debugger visualizing).
+The project is inspired by Qt and aims to provide developers with the best possible experience (including, but not limited
+to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
+programming languages and external compilers.
 
 [Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 

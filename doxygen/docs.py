@@ -296,6 +296,8 @@ if __name__ == '__main__':
         print(f"Error: doxygen failed: {count} error(s).")
         exit(-1)
 
+    # patch_append_after('<div class="contents">')
+
     output_dir = Path(CONFIG['output'])
     for file in CONFIG['copy_to_output']:
         shutil.copytree(file, output_dir / Path(file).name, dirs_exist_ok=True)

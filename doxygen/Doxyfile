@@ -54,7 +54,7 @@ PROJECT_NUMBER         = $(GITHUB_REF_NAME)
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "Cross-platform module-based framework for developing  C++20 desktop applications"
+PROJECT_BRIEF          = "Cross-platform base for C++ UI apps"
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -1090,7 +1090,7 @@ EXCLUDE_PATTERNS       = */3rdparty/* */tests/* */benchmarks/*
 # wildcard * is used, a substring. Examples: ANamespace, AClass,
 # ANamespace::AClass, ANamespace::*Test
 
-EXCLUDE_SYMBOLS        = aui::detail*
+EXCLUDE_SYMBOLS        = *::detail*
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
@@ -1293,7 +1293,7 @@ ALPHABETICAL_INDEX     = YES
 # after removing the prefix.
 # This tag requires that the tag ALPHABETICAL_INDEX is set to YES.
 
-IGNORE_PREFIX          =
+IGNORE_PREFIX          = A
 
 #---------------------------------------------------------------------------
 # Configuration options related to the HTML output
