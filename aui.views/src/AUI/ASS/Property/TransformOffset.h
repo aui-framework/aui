@@ -23,7 +23,7 @@ namespace ass {
 
     /**
      * @brief Controls the rendering offset transform of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TransformOffset {
         AMetric offsetX;

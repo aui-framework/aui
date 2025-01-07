@@ -50,6 +50,23 @@ namespace ass {
         using disabled = ass::disabled<detail::Type<T>>;
     };
 
+    /**
+     * @brief Selects views that are of the specified C++ types.
+     * @ingroup ass_selectors
+     * @details
+     * This selector selects views that are of the specified classes. The selector can be accessed explicitly via
+     * `ass::type_of`.
+     *
+     * For example:
+     * @code{cpp}
+     * {
+     *   t<AButton>(),
+     *   BackgroundSolid(...),
+     * }
+     * @endcode
+     * This will select all `AButton`s.
+     *
+     */
     template<typename T>
     using t = type_of<T>;
 }

@@ -18,7 +18,7 @@
 
 /**
  * @brief Controls the text transform of AView.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class TextTransform {
     NONE,

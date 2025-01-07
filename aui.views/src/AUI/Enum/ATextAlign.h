@@ -15,17 +15,13 @@
 
 /**
  * @brief Controls the text alignment inside AView.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class ATextAlign {
-	LEFT,
-	CENTER,
-	RIGHT,
+    LEFT,
+    CENTER,
+    RIGHT,
     JUSTIFY,
 };
 
-AUI_ENUM_VALUES(ATextAlign, ATextAlign::LEFT,
-                ATextAlign::CENTER,
-                ATextAlign::RIGHT,
-                ATextAlign::JUSTIFY)
-
+AUI_ENUM_VALUES(ATextAlign, ATextAlign::LEFT, ATextAlign::CENTER, ATextAlign::RIGHT, ATextAlign::JUSTIFY)

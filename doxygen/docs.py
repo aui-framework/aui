@@ -24,22 +24,31 @@ CONFIG = {
     'doxygen_annoyances': [
         "Internal inconsistency: scope for class",
         "error: no uniquely matching class member found",
+
     ],
 }
 
 ########################################################################################################################
 
 REGEX_DIR = re.compile(r'.*(aui\..+)/tests')
+assert REGEX_DIR.match("/home/aui.views/tests")
+assert not REGEX_DIR.match("/home/aui.views/src")
+
 REGEX_AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
+
 REGEX_COMMENT = re.compile(r'\s*// ?(.*)\n?$')
+assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
 # TEST_F(UIDataBindingTest, AProperty) { // HEADER
 REGEX_TESTCASE_HEADER = re.compile(r'TEST_F\(.+, (.+)\) ?\{ ?// ?HEADER')
 
-assert REGEX_DIR.match("/home/aui.views/tests")
-assert not REGEX_DIR.match("/home/aui.views/src")
-assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
+REGEX_INGROUP = re.compile(r'.*([@\\]ingroup ?\w*).*')
+assert REGEX_INGROUP.match("   * @ingroup")
+assert REGEX_INGROUP.match("   * @ingroup sadkal")
 
+REGEX_INCLUDE = re.compile("#include [\"<](.+)[\">].*")
+assert REGEX_INCLUDE.match("#include <SOME.h> ikf").group(1) == "SOME.h"
+assert REGEX_INCLUDE.match("#include \"SOME.h\" ikf").group(1) == "SOME.h"
 
 def scan_cpp_files(path: Path):
     """
@@ -177,11 +186,90 @@ def doxygen_parse_stderr(stderr):
             yield "\n".join(current_error_lines)
             current_error_lines = []
 
+error_flag = False
 
-if __name__ == '__main__':
+def report_error(file: Path, error_string: str, line: int = None):
+    global error_flag
+    error_flag = True
+    line_string = ""
+    if line is not None:
+        line_string = f":{line}"
+    print(f"{file.absolute()}{line_string}: {error_string}")
+
+########################################################################################################################
+
+# AUI-specific checks here.
+
+def check_is_valid_workdir():
     if not Path('README.md').exists():
         print(
             "Error: README.md does not exist in the current working directory. Are you running from proper working dir?")
+        exit(-1)
+
+def find_source_root(file: Path) -> Path:
+    """
+    Searches source root.
+    :param path: some file in src/ directory, i.e., aui.views/src/AUI/Views.h
+    :return: source root, i.e., aui.views/src
+    """
+    if file.name == "src":
+        return file
+    return find_source_root(file.parent)
+
+class SourceLine:
+    file: Path
+    line_number: int
+
+    def __init__(self, file: Path, line_number: int):
+        self.file = file
+        self.line_number = line_number
+
+def check_all_are_in_group(directory: Path, group: str):
+    expected = f"@ingroup {group}"
+    ignore_tag = f"// ignore {group}"
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".h"):
+                full_path = Path(root) / file
+                def read(path: Path):
+                    for line_number, line in enumerate(open(path, 'r').readlines()):
+                        if "// defined here" in line:
+                            m = REGEX_INCLUDE.match(line)
+                            if not m:
+                                report_error(path, "bad \"// defined here\" usage", line=line_number)
+                                continue
+                            for s in read(find_source_root(path) / m.group(1)):
+                                yield s
+                            continue
+
+                        yield (SourceLine(path, line_number), line)
+
+                contents = [i for i in read(full_path)]
+
+                if any([ignore_tag in line[1] for line in contents]):
+                    continue
+
+                if not any(["@ingroup" in line[1] for line in contents]):
+                    report_error(full_path,
+                                 "no @ingroup statement in docs; either document with @ingroup or mark the include "
+                                 "where the property is defined with \"// defined here\"")
+
+                for src, line in contents:
+                    if m := REGEX_INGROUP.match(line):
+                        matching = m.group(1)
+                        if matching != expected:
+                            report_error(src.file, f"\"{matching}\" does not match \"{expected}\"", line=src.line_number)
+
+
+########################################################################################################################
+
+if __name__ == '__main__':
+    check_is_valid_workdir()
+
+    check_all_are_in_group(Path("aui.views/src/AUI/ASS/Property"), "ass_properties")
+    check_all_are_in_group(Path("aui.views/src/AUI/ASS/Selector"), "ass_selectors")
+
+    if error_flag:
         exit(-1)
 
     """
@@ -193,7 +281,7 @@ if __name__ == '__main__':
     """
 
     suitable_cpp_files = [i for i in scan_cpp_files(Path.cwd())]
-    print('Files to process:', suitable_cpp_files)
+    print('Tests to generate docs from:', suitable_cpp_files)
     for path in suitable_cpp_files:
         process_cpp_file(path)
 
@@ -203,7 +291,7 @@ if __name__ == '__main__':
     count = 0
     for i in doxygen_errors:
         count += 1
-        print(i, '\n')
+        print(i)
     if count > 0:
         print(f"Error: doxygen failed: {count} error(s).")
         exit(-1)

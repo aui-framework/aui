@@ -19,7 +19,7 @@
 
 /**
  * @brief Controls the text vertical alignment of AView.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class VerticalAlign {
     DEFAULT,

@@ -20,7 +20,7 @@
 
 /**
  * @brief Controls the image rendering type.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class ImageRendering {
     PIXELATED,

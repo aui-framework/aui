@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the opacity of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Opacity {
         aui::float_within_0_1 opacity;

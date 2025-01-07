@@ -24,7 +24,7 @@ namespace ass {
 
     /**
      * @brief Controls the max size of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct MaxSize {
         unset_wrap<AMetric> width;

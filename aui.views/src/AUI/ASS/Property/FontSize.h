@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the font size of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct FontSize {
         AMetric size;

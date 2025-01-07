@@ -42,7 +42,7 @@ namespace ass {
         };
     }
 
-    struct debug_selector: detail::debug_selector {
+    struct debug_selector: detail::debug_selector { // ignore ass_selectors
     public:
         debug_selector() = default;
 

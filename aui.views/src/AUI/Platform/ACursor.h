@@ -20,8 +20,7 @@ class AWindow;
 
 /**
  * @brief Represents cursor type.
- * @ingroup views
- * @ingroup ass
+ * @ingroup ass_properties
  */
 class API_AUI_VIEWS ACursor
 {

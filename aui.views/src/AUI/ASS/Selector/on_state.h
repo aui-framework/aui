@@ -24,6 +24,21 @@ namespace ass::on_state {
         };
     }
 
+    /**
+     * @brief Hovered LESS-style subselector.
+     * @ingroup ass_selectors
+     * @details
+     * It's convenient to use it with with_style:
+     * @code{cpp}
+     * _new<AView>() with_style {
+     *   MinSize { 16_dp },
+     *   BackgroundSolid { AColor::BLACK },
+     *   on_state::Hovered {
+     *     BackgroundSolid { AColor::RED },
+     *   },
+     * },
+     * @endcode
+     */
     struct Hovered: public PropertyListRecursive::ConditionalPropertyList {
     public:
         template<typename... Declarations>
@@ -32,6 +47,21 @@ namespace ass::on_state {
         {}
     };
 
+    /**
+     * @brief Activated LESS-style subselector.
+     * @ingroup ass_selectors
+     * @details
+     * It's convenient to use it with with_style:
+     * @code{cpp}
+     * _new<AView>() with_style {
+     *   MinSize { 16_dp },
+     *   BackgroundSolid { AColor::BLACK },
+     *   on_state::Activated {
+     *     BackgroundSolid { AColor::RED },
+     *   },
+     * },
+     * @endcode
+     */
     struct Activated: public PropertyListRecursive::ConditionalPropertyList {
     public:
         template<typename... Declarations>
@@ -40,6 +70,21 @@ namespace ass::on_state {
         {}
     };
 
+    /**
+     * @brief Focused LESS-style subselector.
+     * @ingroup ass_selectors
+     * @details
+     * It's convenient to use it with with_style:
+     * @code{cpp}
+     * _new<AView>() with_style {
+     *   MinSize { 16_dp },
+     *   BackgroundSolid { AColor::BLACK },
+     *   on_state::Focused {
+     *     BackgroundSolid { AColor::RED },
+     *   },
+     * },
+     * @endcode
+     */
     struct Focused: public PropertyListRecursive::ConditionalPropertyList {
     public:
         template<typename... Declarations>
@@ -48,6 +93,21 @@ namespace ass::on_state {
         {}
     };
 
+    /**
+     * @brief Disabled LESS-style subselector.
+     * @ingroup ass_selectors
+     * @details
+     * It's convenient to use it with with_style:
+     * @code{cpp}
+     * _new<AView>() with_style {
+     *   MinSize { 16_dp },
+     *   BackgroundSolid { AColor::BLACK },
+     *   on_state::Disabled {
+     *     BackgroundSolid { AColor::RED },
+     *   },
+     * },
+     * @endcode
+     */
     struct Disabled: public PropertyListRecursive::ConditionalPropertyList {
     public:
         template<typename... Declarations>

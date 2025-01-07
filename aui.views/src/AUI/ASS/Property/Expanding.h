@@ -21,7 +21,7 @@
 namespace ass {
     /**
      * @brief Controls the expanding of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Expanding {
         unset_wrap<unsigned> expandingX;

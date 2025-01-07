@@ -313,6 +313,20 @@
  *
  */
 
+/**
+ * @defgroup ass_selectors ASS selectors
+ * @ingroup ass
+ * @details
+ * AUI Style Sheets selector is a predicate whether view suit certain rules or not.
+ */
+
+/**
+* @defgroup ass_properties ASS properties
+* @ingroup ass
+* @details
+* AUI Style Sheets property customizes view's appearance and behavior.
+*/
+
 // Declarations
 #include "Property/Backdrop.h"
 #include "Property/BackgroundImage.h"

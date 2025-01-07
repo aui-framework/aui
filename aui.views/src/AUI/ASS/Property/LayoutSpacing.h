@@ -22,7 +22,7 @@ namespace ass {
      * @brief Controls the gap between elements of the container. Basically acts like a margin, but the gaps appear
      * between views only, not around them.
      *
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct LayoutSpacing {
         AMetric spacing;

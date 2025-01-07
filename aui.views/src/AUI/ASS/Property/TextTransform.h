@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include <AUI/Enum/TextTransform.h>
+#include <AUI/Enum/TextTransform.h> // defined here
 #include "IProperty.h"
 
 namespace ass::prop {

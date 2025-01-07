@@ -23,7 +23,7 @@ namespace ass {
 
     /**
      * @brief Controls border radius.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BorderRadius {
         AMetric radius;

@@ -17,7 +17,7 @@
 
 #include <AUI/Util/ALayoutDirection.h>
 #include "IProperty.h"
-#include <AUI/Enum/ImageRendering.h>
+#include <AUI/Enum/ImageRendering.h> // defined here
 
 namespace ass {
 

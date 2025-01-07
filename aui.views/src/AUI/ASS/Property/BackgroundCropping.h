@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls background texture cropping by exact UV coordinates. Useful for texture atlases.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BackgroundCropping {
         unset_wrap<glm::vec2> offset;

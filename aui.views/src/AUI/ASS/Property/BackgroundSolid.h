@@ -21,7 +21,7 @@ namespace ass {
 
     /**
      * @brief Represents solid (single color) background.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BackgroundSolid {
         AColor color;

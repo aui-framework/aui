@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the font family of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct FontFamily {
         AString family;

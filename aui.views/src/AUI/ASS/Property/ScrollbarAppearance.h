@@ -25,7 +25,7 @@ namespace ass {
 
     /**
      * @brief Controls how do scrollbars and content appear in AScrollArea. This rule is applicable to AScrollArea only.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct ScrollbarAppearance {
     public:

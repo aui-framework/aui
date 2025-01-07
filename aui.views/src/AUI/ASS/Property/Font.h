@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the font of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Font {
         AUrl url;

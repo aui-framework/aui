@@ -22,7 +22,7 @@
 namespace ass {
 /**
  * @brief Determines sizing rules of a background texture (BackgroundImage).
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class Sizing {
     /**
@@ -84,7 +84,7 @@ enum class Sizing {
 
 /**
  * @brief Represents textured (image) background.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 struct BackgroundImage {
     /**

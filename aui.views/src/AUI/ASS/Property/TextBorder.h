@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Controls the text border of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TextBorder {
         AColor borderColor;

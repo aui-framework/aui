@@ -22,7 +22,7 @@ namespace ass {
 
     /**
      * @brief Represents bottom border.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct BorderBottom {
         AMetric width;

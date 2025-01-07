@@ -23,7 +23,7 @@ namespace ass {
 
     /**
      * @brief Represents box shadow.
-     * @ingroup ass
+     * @ingroup ass_properties
      * @details
      * @note
      * Unlike CSS, box shadow is not affected by BorderRadius.

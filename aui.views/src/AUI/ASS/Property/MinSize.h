@@ -23,7 +23,7 @@ namespace ass {
 
     /**
      * @brief Controls the min size of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct MinSize {
         unset_wrap<AMetric> width;
