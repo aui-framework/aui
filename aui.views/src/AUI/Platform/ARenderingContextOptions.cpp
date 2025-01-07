@@ -18,6 +18,9 @@
 ARenderingContextOptions& ARenderingContextOptions::inst() {
     static ARenderingContextOptions o = {
         {
+#if AUI_PLATFORM_LINUX
+            Vulkan {},
+#endif
             OpenGL {},
             Software {},
         },

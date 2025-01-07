@@ -15,6 +15,7 @@
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/VulkanRenderingContext.h"
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
@@ -318,6 +319,11 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
                     },
                     [&](const ARenderingContextOptions::Software&) {
                         auto context = std::make_unique<SoftwareRenderingContext>();
+                        context->init(init);
+                        init.setRenderingContext(std::move(context));
+                    },
+                    [&](const ARenderingContextOptions::Vulkan& config) {
+                        auto context = std::make_unique<VulkanRenderingContext>(config);
                         context->init(init);
                         init.setRenderingContext(std::move(context));
                     },

@@ -13,10 +13,12 @@
 
 #include <cstddef>
 #include <functional>
+#include <initializer_list>
 
 #include "ADynamicVector.h"
 #include "AStaticVector.h"
 #include "AUI/Traits/concepts.h"
+#include "AUI/Reflect/AReflect.h"
 
 /**
  * @brief Vector-like container consisting of few elements on stack and switches to dynamic allocation vector if needed.
@@ -48,15 +50,49 @@ public:
     ASmallVector() noexcept {
         new (&mBase.inplace) StaticVector();
     }
+    ASmallVector(std::initializer_list<StoredType> initializer) {
+        new (&mBase.inplace) StaticVector();
+        insert(end(), initializer.begin(), initializer.end());
+    }
 
-    ASmallVector(ASmallVector&& rhs) noexcept {
+    ASmallVector(const ASmallVector& rhs) {
         if (rhs.isInplaceAllocated()) {
             new (&mBase.inplace) StaticVector(*rhs.inplace());
         } else {
             new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
         }
+    }
 
-        new (&rhs.mBase.inplace) StaticVector();
+    ASmallVector& operator=(const ASmallVector& rhs) {
+        if (*this == rhs) {
+            return *this;
+        }
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(*rhs.inplace());
+        } else {
+            new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
+        }
+        return *this;
+    }
+
+    ASmallVector(ASmallVector&& rhs) noexcept {
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(std::move(*rhs.inplace()));
+        } else {
+            new (&mBase.dynamic) DynamicVector(std::move(*rhs.dynamic()));
+        }
+    }
+
+    ASmallVector& operator=(ASmallVector&& rhs) noexcept {
+        if (*this == rhs) {
+            return *this;
+        }
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(std::move(*rhs.inplace()));
+        } else {
+            new (&mBase.dynamic) DynamicVector(std::move(*rhs.dynamic()));
+        }
+        return *this;
     }
 
     ~ASmallVector() noexcept {
@@ -65,10 +101,18 @@ public:
 
     [[nodiscard]]
     constexpr StoredType* data() noexcept {
+        if (empty()) {
+            // std::vector would return nullptr if empty, so we do the same here
+            return nullptr;
+        }
         return reinterpret_cast<StoredType*>(mBase.common.begin);
     }
     [[nodiscard]]
     constexpr const StoredType* data() const noexcept {
+        if (empty()) {
+            // std::vector would return nullptr if empty, so we do the same here
+            return nullptr;
+        }
         return reinterpret_cast<const StoredType*>(mBase.common.begin);
     }
 

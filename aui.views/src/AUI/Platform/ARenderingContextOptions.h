@@ -54,6 +54,9 @@ public:
         int majorVersion;
     };
 
+    struct Vulkan {
+    };
+
     struct OpenGL {
         int majorVersion = 2, minorVersion = 0;
 
@@ -66,6 +69,7 @@ public:
     struct Software {};
 
     using InitializationVariant =  std::variant<DirectX11,
+            Vulkan,
             OpenGL,
             Software>;
 
