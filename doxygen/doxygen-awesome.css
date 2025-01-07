@@ -94,6 +94,8 @@ html {
     --invariant-color-dark: #44b86f;
     --invariant-color-darker: #265532;
 
+    --index-even-item-bg-color: var(--page-background-color);
+
     /* blockquote colors */
     --blockquote-background: #f8f9fa;
     --blockquote-foreground: #636568;

@@ -15,10 +15,12 @@
     <navindex>
         <tab type="mainpage" visible="yes" title="Main page"/>
         <tab type="usergroup" title="Reference" visible="yes">
-            <tab type="user" url="index.html" title="All AUI modules" />
+            <tab type="user" url="index.html" title="All AUI Modules" />
 <!--            <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>-->
             <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes" />
-            <tab type="namespacelist" visible="yes" title="All namespaces" intro=""/>
+            <tab type="namespacelist" visible="yes" title="All Namespaces" intro=""/>
+            <tab type="user" url="@ref useful_views" title="All Views" />
+            <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
             <tab type="usergroup" title="All AUI CMake commands">
                 <tab type="user" title="aui_app" url="@ref docs/aui_app.md" />
                 <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md" />

@@ -64,3 +64,22 @@
     font-size: 16px;
     color: white !important;
 }
+
+.item > a, .item > a > span.arrow {
+    background: none !important;
+}
+
+.classindex .alphachar {
+    position: relative;
+}
+
+.classindex .alphachar a {
+    position: absolute;
+    background: none !important;
+    color: var(--page-foreground-color) !important;
+    padding-top: 4px;
+}
+
+div.SRPage {
+    background: none !important;
+}
