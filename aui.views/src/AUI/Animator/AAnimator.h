@@ -40,7 +40,9 @@ private:
 protected:
     /**
      * @brief Does the animation (sets matrix, colors, etc...)
-     * @param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation
+     * @param view target view to perform animation for.
+     * @param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation.
+     * @param render renderer.
      */
     virtual void doAnimation(AView* view, float theta, IRenderer& render) {};
 

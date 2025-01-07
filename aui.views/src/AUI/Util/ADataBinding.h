@@ -267,6 +267,8 @@ public:
     /**
      * @brief Create a connection to specified pointer-to-member-field signal and pointer-to-member-function setter.
      * @param field pointer-to-member-field of model.
+     * @param getter pointer-to-member-field of view's signal
+     * @param setter pointer-to-member-field of view's setter
      */
     template<typename View, typename ModelField, typename GetterRV, aui::invocable<View*, const ModelField&> Setter>
     auto operator()(ModelField(Model::*field),

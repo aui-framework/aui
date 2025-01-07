@@ -229,7 +229,7 @@ public:
 
         /**
          * @brief Called on client -> server data requested (upload).
-         * @param callback callback to call.
+         * @param inputStream input stream to get data to upload from.
          * @return this
          */
         Builder& withInputStream(_<IInputStream> inputStream) {
@@ -328,7 +328,6 @@ public:
          * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * @param begin start index of the part
-         * @param end end index of the part.
          * @return this
          */
         Builder& withRanges(size_t begin) {

@@ -52,12 +52,12 @@ void AByteBuffer::reserve(size_t size) {
     mBuffer = buffer;
 }
 
-void AByteBuffer::write(const char* buffer, size_t size) {
+void AByteBuffer::write(const char* src, size_t size) {
     if (size) {
         if (mSize + size > mCapacity) {
             reserve(mSize * 2 + size);
         }
-        memcpy(end(), buffer, size);
+        memcpy(end(), src, size);
         mSize += size;
     }
 }

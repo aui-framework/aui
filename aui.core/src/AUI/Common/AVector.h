@@ -194,7 +194,7 @@ public:
 
     /**
      * Shortcut to <code>insertAll</code>.
-     * @param rhs container to push
+     * @param c container to push
      * @return self
      */
     template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
@@ -206,7 +206,7 @@ public:
 
     /**
      * Shortcut to <code>insertAll</code>.
-     * @param rhs container to push
+     * @param c container to push
      * @return self
      */
     template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>

@@ -101,8 +101,8 @@ public:
 
     /**
      * @brief Multiply all color components except alpha channel (rgb * d, a)
-     * @param multiplier
-     * @return supplyValue color
+     * @param d multiplier
+     * @return multiplied color
      */
     inline constexpr AColor mul(float d) const {
         return glm::clamp(glm::vec4(r * d, g * d, b * d, a), glm::vec4(0.f), glm::vec4(1.f));

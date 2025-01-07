@@ -200,9 +200,9 @@ public:
 
     /**
      * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
-     * @param connectable slot or signal
+     * @param connectable signal or property
      * @param slotDef instance of <code>AObject</code> + slot
-     * @ingroup signal_slot
+     *
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
@@ -231,9 +231,9 @@ public:
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
      * @endcode
-     * @param connectable slot or signal
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
+     * @param property source property.
+     * @param object instance of `AObject`.
+     * @param function slot. Can be lambda.
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
     static void

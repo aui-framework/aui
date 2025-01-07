@@ -112,8 +112,8 @@ class AViewContainer;
  * used to change how much space views are given in proportion to one another.
  *
  * Expanding view does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
- * ::Expanding variant of declarative container notation (Vertical::Expanding, Horizontal::Expanding,
- * Stacked::Expanding) for such case.
+ * `Expanding` variant of declarative container notation (`Vertical::Expanding`, `Horizontal::Expanding`,
+ * `Stacked::Expanding`) for such case.
  *
  * Expanding views use free space of their container to grow.
  *
@@ -122,7 +122,7 @@ class AViewContainer;
  * order to make container larger than minimum possible size, you can specify FixedSize or MinSize or Expanding to the
  * container.
  *
- * You can use ass::Expanding @ref ass "ass" rule, or AView::setExpanding method to specify Expanding:
+ * You can use ass::Expanding @ref ass "ASS" property, or AView::setExpanding method to specify Expanding:
  * <table>
  *   <tr>
  *     <th>Code</th>

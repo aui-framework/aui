@@ -732,6 +732,7 @@ public:
     /**
      * @brief Handles pointer hover events
      * @param pos event position
+     * @param event event description
      * @details
      * @note
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer

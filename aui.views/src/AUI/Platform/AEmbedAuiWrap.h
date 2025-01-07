@@ -59,7 +59,7 @@ public:
     bool isUIConsumesMouseAt(int x, int y);
 
     /**
-     * Handle mouse pressed in UI.
+     * @brief Handle mouse pressed in UI.
      * @param x x position
      * @param y y position
      * @param pointerIndex mouse button or finger index
@@ -67,7 +67,7 @@ public:
     void onPointerPressed(int x, int y, APointerIndex pointerIndex);
 
     /**
-     * Handle mouse released in UI.
+     * @brief Handle mouse released in UI.
      * @param x x position
      * @param y y position
      * @param pointerIndex mouse button or finger index
@@ -75,19 +75,20 @@ public:
     void onPointerReleased(int x, int y, APointerIndex pointerIndex);
 
     /**
-     * Handle mouse move in UI.
+     * @brief Handle mouse move in UI.
      * @param x x position
      * @param y y position
      */
     void onPointerMove(int x, int y);
 
     /**
-     * Handle mouse move in UI.
-     * @param x x position
-     * @param y y position
+     * @brief Handle char entered in UI.
      */
     void onCharEntered(wchar_t c);
 
+    /**
+     * @brief Handle onScroll in UI.
+     */
     void onScroll(int mouseX, int mouseY, int scrollX, int scrollY);
 
 
