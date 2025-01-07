@@ -31,7 +31,7 @@ jobs:
           submodules: true
 
       - name: Install dependencies
-        run: sudo apt-get update && sudo apt-get install doxygen python3
+        run: sudo apt-get update && sudo apt-get install doxygen python3 graphviz
 
       - name: Generate docs
         run: python3 doxygen/docs.py

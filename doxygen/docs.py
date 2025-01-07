@@ -227,26 +227,41 @@ def invoke_doxygen():
 
 class PatchMode(enum.Enum):
     INSERT_AFTER = enum.auto()
+    DELETE_LINE = enum.auto()
 
-def patch(target: str = None, anchor: str = None, mode: PatchMode = None):
+
+def patch(target: str = None, matcher = None, mode: PatchMode = None, value: str = None):
     target_path = Path('doxygen/out/html') / target
     patch_path = Path('doxygen/patches/') / target
     with open(target_path, 'r') as fis:
         contents = fis.readlines()
 
+    if value is None and mode in [PatchMode.INSERT_AFTER]:
+        value = patch_path.read_bytes().decode("utf-8")
+
+    if type(matcher) is str:
+        matcher_str = matcher
+        matcher = lambda x: matcher_str in x
+
+
     def process():
         ok = False
         for line in contents:
-            if anchor in line:
+            matcher_result = matcher(line)
+            if matcher_result:
                 ok = True
-                if mode == PatchMode.INSERT_AFTER:
+                if type(matcher_result) is str:
+                    yield matcher_result
+                elif mode == PatchMode.INSERT_AFTER:
                     yield line
-                    yield patch_path.read_bytes().decode("utf-8")
+                    yield value
+                elif mode == PatchMode.DELETE_LINE:
+                    pass
             else:
                 yield line
 
         if not ok:
-            raise RuntimeError(f"{target_path} does not contain anchor: {anchor}")
+            raise RuntimeError(f"{target_path} does not contain anchor")
 
     with open(target_path, 'w') as out:
         for i in process():
@@ -329,7 +344,31 @@ if __name__ == '__main__':
     generate_docs_from_tests()
     invoke_doxygen()
 
-    patch(target='classes.html', anchor='<div class="contents">', mode=PatchMode.INSERT_AFTER)
+    patch(target='classes.html', matcher='<div class="contents">', mode=PatchMode.INSERT_AFTER)
+
+    # remove useless AUI Framework root element.
+    patch(target='navtreedata.js', matcher='[ "AUI Framework", "index.html", [', value='', mode=PatchMode.DELETE_LINE)
+    patch(target='navtreedata.js', matcher=lambda x: x == '  ] ]\n', value='', mode=PatchMode.DELETE_LINE)
+    patch(target='navtree.js', matcher='o.breadcrumbs.unshift', mode=PatchMode.DELETE_LINE)
+
+    # remove links from groups and instead make them toggle collapse/expand.
+    def remove_link_from_group(line):
+        # "usergroup0.html", [
+        words = line.split(', ')
+        if len(words) != 3:
+            return False
+        if words[2] != '[\n':
+            return False
+        if '"' not in words[1]:
+            return False
+        words[1] = "null"
+        return ", ".join(words)
+
+    patch(target='navtreedata.js', matcher=remove_link_from_group)
+
+    # patch(target='navtree.js', anchor='(16*level)', value='(16*(level-1))', mode=PatchMode.REPLACE)
+    # patch(target='navtree.js', anchor='(level+1)', value='level', mode=PatchMode.REPLACE)
+
 
     if error_flag:
         exit(-1)
