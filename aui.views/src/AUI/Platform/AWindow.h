@@ -319,9 +319,8 @@ private:
 
 #if AUI_PLATFORM_WIN
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_APPLE
-#else
+#endif
+#if AUI_PLATFORM_LINUX
     unsigned long xGetWindowProperty(unsigned long property, unsigned long type, unsigned char** value) const;
     void xSendEventToWM(unsigned long atom, long a, long b, long c, long d, long e) const;
 #endif

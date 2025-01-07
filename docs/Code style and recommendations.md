@@ -19,15 +19,15 @@ AUI's code should be kept with the following code style:
 - Use `#pragma once` instead of C-style include guards
 - Use Doxygen (`@`-style, not `\`)
 - Avoid global functions (at least put them to namespaces)
-- Every symbol (class, struct, namespace, file) prefixed with '`A`', '`aui`', '`AUI_`' is a part of AUI's stable public API ready for the external usage. Symbols without such prefixes are called _internal_ and can be also used (if possible) when needed. Be careful using internal symbols since
-  there's no guarantee about their API stability.
+- Every symbol (class, struct, namespace, file) prefixed with '`A`', '`aui`', '`AUI_`' is a part of AUI's stable public
+  API ready for the external usage. Symbols without such prefixes are called _internal_ and can be also used (if
+  possible) when needed. Be careful using internal symbols since there's no guarantee about their API stability.
+- Follow visibility in this order when possible: `public`, `protected`, `private`. Header's user is more interested in
+  public APIs rather than in private.
 
 Basic example:
 ```cpp
 class User {
-private:
-  AString mUsername;
-
 public:
   // User(const AString& username): mUsername(username) {} <--- outdated
   // use this instead:
@@ -41,6 +41,10 @@ public:
   void setUsername(AString username) noexcept { // a typical setter; also uses noexcept
     mUsername = std::move(username);
   }
+
+private:
+  AString mUsername;
+
 };
 ```
 

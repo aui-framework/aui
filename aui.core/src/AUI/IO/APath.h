@@ -291,23 +291,26 @@ public:
     enum DefaultPath {
         /**
          * @brief Folder for application data.
+         * @details
          * Windows: C:/Users/%user%/.appdata/Roaming/
          * Linux: %homedir%/.local/share/
-         * Android: <internal_storage_path>/__aui_appdata
+         * Android/iOS: \<internal_storage_path\>/__aui_appdata
          */
         APPDATA,
 
         /**
          * @brief Folder for temporary data.
+         * @details
          * Windows: User's temp folder (%temp%)
          * Linux: /tmp
-         * Android: <internal_storage_path>/__aui_tmp
+         * Android/iOS: \<internal_storage_path\>/__aui_tmp
          */
         TEMP,
 
         /**
          * @brief User home directory.
-         * Windows: User's home folder (C:\Users\USERNAME)
+         * @details
+         * Windows: User's home folder (C:\\Users\\USERNAME)
          * Linux: /home/$USER
          */
         HOME,

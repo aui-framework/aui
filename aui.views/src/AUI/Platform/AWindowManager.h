@@ -32,8 +32,7 @@ protected:
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
 
-#if AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_LINUX
+#if AUI_PLATFORM_LINUX
     Pipe mNotifyPipe;
     std::atomic_bool mFastPathNotify = false;
     std::string mXClipboardText;

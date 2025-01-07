@@ -3,7 +3,7 @@ information.
 
 # Becoming a contributor
 
-1. Follow [AUI's code style](@ref md_docs_Code_style_and_recommendations).
+1. Follow [AUI's code style](docs/Code style and recommendations.md).
 2. Anyone may become an AUI contributor: there are no restrictions.
 3. Tasks and todos are listed on the [GitHub Issues page](https://github.com/aui-framework/aui/issues). Issues marked
    as `good first issue` are relatively simple and can be done without deep dive into AUI.

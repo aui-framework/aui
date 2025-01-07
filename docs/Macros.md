@@ -1,3 +1,6 @@
+@note
+This page is about build-time macros (i.e., platform specifics). For macros defined in C++ code, see @ref useful_macros.
+
 # Writing platform dependent code
 
 AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in both CMake and C++.
@@ -276,7 +279,7 @@ one of the supported platforms (see the table above).
 
 ## AUI_MODULE_NAME
 
-Target name exposed by [aui_module](@ref md_docs_aui_module) and [aui_executable](@ref md_docs_aui_executable).
+Target name exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
 
 ## API_\<module name\>
 

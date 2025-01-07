@@ -4,9 +4,9 @@ pixel data from the last frame. Sometimes this technique is referred as backbuff
 
 This may gradually improve performance especially if there are a lot of static views.
 
-Starting from 6.x.x  @ref Devtools "devtools" has several options to debug and visualise render-to-texture optimization.
+Starting from 6.x.x  @ref docs/Devtools.md has several options to debug and visualise render-to-texture optimization.
 
-![Devtools](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20241014_054912.png?raw=true)
+@image html Screenshot_20241014_054912.png
 
 ## Highlight redraw requests
 

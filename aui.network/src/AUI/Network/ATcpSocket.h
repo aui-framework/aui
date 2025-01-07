@@ -13,7 +13,6 @@
 
 #include <AUI/Network.h>
 
-
 #include "AAbstractSocket.h"
 #include "AUI/IO/IInputStream.h"
 #include "AUI/IO/IOutputStream.h"
@@ -26,24 +25,19 @@ class AByteBuffer;
  * @brief A bidirectional TCP connection (either a client connection or returned by ATcpServerSocket).
  * @ingroup network
  */
-class API_AUI_NETWORK ATcpSocket: public AAbstractSocket, public IInputStream, public IOutputStream
-{
-friend class ATcpServerSocket;
+class API_AUI_NETWORK ATcpSocket : public AAbstractSocket, public IInputStream, public IOutputStream {
+    friend class ATcpServerSocket;
+
 public:
+    ATcpSocket(const AInet4Address& destinationAddress);
 
-	ATcpSocket(const AInet4Address& destinationAddress);
+    ~ATcpSocket() override;
 
-	~ATcpSocket() override;
-
-	size_t read(char* dst, size_t size) override;
-	void write(const char* buffer, size_t size) override;
-
+    size_t read(char* dst, size_t size) override;
+    void write(const char* buffer, size_t size) override;
 
 protected:
-	ATcpSocket(int handle, const AInet4Address& selfAddr)
-		: AAbstractSocket(handle, selfAddr)
-	{
-	}
-	
-	int createSocket() override;
+    ATcpSocket(int handle, const AInet4Address& selfAddr) : AAbstractSocket(handle, selfAddr) {}
+
+    int createSocket() override;
 };

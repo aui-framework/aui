@@ -186,7 +186,9 @@ struct ASqlModel {
 
     /**
      * @return name of the relation column for other tables.
-     * \example struct User -> table users -> column user_id is the result.
+     * @details
+     * Example:
+     * `struct User -> table users -> column user_id is the result.`
      */
     static AString getIdColumnNameInOtherTables() {
         AString tableName = AModelMeta<Model>::getSqlTable();

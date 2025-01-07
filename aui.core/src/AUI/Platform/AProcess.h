@@ -193,6 +193,7 @@ public:
         ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
 #if AUI_PLATFORM_WIN
+
     /**
      * @brief Launches executable with administrator rights. (Windows only)
      * @param applicationFile executable file
@@ -202,6 +203,7 @@ public:
      */
     static void executeAsAdministrator(
         const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});
+
 #endif
 
     /**
