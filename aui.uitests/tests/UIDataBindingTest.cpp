@@ -920,7 +920,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
     // @ref "Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
-    // + `AObject::connect` so projection use cases can be adapted in a similar manner.
+    // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
         auto l = Label {} & user->name > &ALabel::text;
