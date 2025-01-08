@@ -20,7 +20,6 @@
 #include "AVector.h"
 #include "AException.h"
 
-
 #define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
 
 /**
@@ -166,7 +165,7 @@ public:
             return aui::container::vector_impl::insert_no_growth(mEnd, at, begin, end);
         }
         ADynamicVector temp;
-        temp.reserve(aui::container::vector_impl::ceilPower2(distance + size()));
+        temp.reserve(aui::bit_ceil(distance + size()));
         aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
                                                       std::make_move_iterator(mBegin), std::make_move_iterator(at));
 

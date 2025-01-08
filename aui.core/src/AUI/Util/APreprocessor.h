@@ -13,7 +13,7 @@
 
 // Code from several projects used here, such as boost and gtest.
 
-//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-usage)
+//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-*)
 
 /**
  * @brief Expands and concatenates the arguments. Constructed macros reevaluate.
@@ -360,4 +360,4 @@
   AUI_PP_INTERNAL_FOR_EACH_IMPL_14(AUI_PP_INC(_i), _Macro, _Data,   \
                                      (AUI_PP_TAIL _Tuple))
 
-//NOLINTEND(modernize-*,cppcoreguidelines-macro-usage)
+//NOLINTEND(modernize-*,cppcoreguidelines-macro-*)

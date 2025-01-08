@@ -26,7 +26,7 @@ ATokenizer::ATokenizer(const AString& fromString):
 const std::string& ATokenizer::readString()
 {
     mTemporaryStringBuffer.clear();
-    char c;
+    char c = 0;
 
     try
     {
@@ -51,7 +51,7 @@ const std::string& ATokenizer::readString()
 const std::string& ATokenizer::readString(const ASet<char>& applicableChars)
 {
     mTemporaryStringBuffer.clear();
-    char c;
+    char c = 0;
 
     try
     {
@@ -85,7 +85,7 @@ float ATokenizer::readFloat()
     mTemporaryAStringBuffer.clear();
     try {
         bool dot = false;
-        char c;
+        char c = 0;
         for (;;)
         {
             c = readChar();
@@ -133,7 +133,7 @@ T ATokenizer::readIntImpl() {
         }
     };
     try {
-        char c;
+        char c = 0;
         for (;;)
         {
             c = readChar();
@@ -184,7 +184,7 @@ ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
     mTemporaryAStringBuffer.clear();
     bool isHex = false;
     try {
-        char c;
+        char c = 0;
         for (;;)
         {
             c = readChar();
@@ -225,18 +225,18 @@ ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
                     }
                 default:
                     reverseByte();
-                    return {mTemporaryAStringBuffer.toUInt().valueOr(0), isHex};
+                    return {.value=mTemporaryAStringBuffer.toUInt().valueOr(0), .isHex=isHex};
             }
         }
     }
     catch (...) {
         mEof = true;
     }
-    return {mTemporaryAStringBuffer.toUInt().valueOr(0), isHex};
+    return {.value=mTemporaryAStringBuffer.toUInt().valueOr(0), .isHex=isHex};
 }
 
 void ATokenizer::skipUntilUnescaped(char c) {
-    for (char current; (current = readChar()) != c;)
+    for (char current = 0; (current = readChar()) != c;)
     {
         if (current == '\\')
         {
@@ -260,7 +260,7 @@ const std::string& ATokenizer::readStringUntilUnescaped(const ASet<char>& charac
 void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 {
     try {
-        for (char current; (current = readChar()) != c;)
+        for (char current = 0; (current = readChar()) != c;)
         {
             if (current == '\\')
             {
@@ -283,7 +283,8 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
                             }
 
                             if (bit4 >= 'a' && bit4 <= 'f') {
-                                commit4bitValue(bit4 - 'a' + 10);
+                                static constexpr auto BASE = 10;
+                                commit4bitValue(bit4 - 'a' + BASE);
                                 continue;
                             }
 
@@ -314,7 +315,7 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 
 void ATokenizer::readStringUntilUnescaped(std::string& out, const ASet<char>& characters) {
     try {
-        for (char current; !characters.contains(current = readChar());)
+        for (char current = 0; !characters.contains(current = readChar());)
         {
             if (current == '\\')
             {

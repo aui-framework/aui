@@ -20,6 +20,7 @@
 #include "ASet.h"
 #include <AUI/Traits/containers.h>
 #include <AUI/Traits/iterators.h>
+#include "AUI/Traits/bit.h"
 #include "AContainerPrototypes.h"
 #include "AUI/Traits/concepts.h"
 #include <concepts>

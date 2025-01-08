@@ -25,7 +25,6 @@ namespace aui::animation_curves {
         float operator()(float t) {
             float oneMinusX = 1 - t;
             float oneMinusX2 = oneMinusX * oneMinusX;
-            float oneMinusX3 = oneMinusX2 * oneMinusX;
             float x2 = t * t;
             float x3 = x2 * t;
 

@@ -1,13 +1,18 @@
-Checks:          'bugprone-*,clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,modernize-*,-modernize-use-trailing-return-type'
-WarningsAsErrors: 'clang-analyzer-*,
-  # Move constructors must be noexcept
-  cppcoreguidelines-noexcept-move-operations,
+Checks: >
+  bugprone-*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
+  -cppcoreguidelines-special-member-functions,
+  -modernize-use-constraints,
 
-  # rvalue references should be handled properly
-  cppcoreguidelines-rvalue-reference-*'
+WarningsAsErrors: '*'
+
 
 HeaderFilterRegex: '^.*/src/AUI/.*$'
-AnalyzeTemporaryDtors: false
 FormatStyle:     google
 CheckOptions:
   - key:             cert-dcl16-c.NewSuffixes
