@@ -513,8 +513,10 @@ void AViewContainerBase::onDpiChanged() {
 }
 
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
+    // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
                 "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
+    // NOLINTEND(clang-diagnostic-potentially-evaluated-expression)
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v: mViews) {

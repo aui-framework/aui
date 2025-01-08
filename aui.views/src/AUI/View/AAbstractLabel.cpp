@@ -185,6 +185,8 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                     }
 
                     break;
+                case ATextAlign::JUSTIFY:
+                    break;
             }
         }
 
@@ -213,6 +215,8 @@ AString AAbstractLabel::getTransformedText() {
             return text()->uppercase();
         case TextTransform::LOWERCASE:
             return text()->lowercase();
+        case TextTransform::NONE:
+            break;
     }
     return text();
 }

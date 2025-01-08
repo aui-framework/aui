@@ -26,6 +26,8 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
             break;
         case ALayoutDirection::HORIZONTAL:
             setExpanding({2, 0});
+        case ALayoutDirection::NONE:
+            break;
     }
 }
 
@@ -97,6 +99,8 @@ int ARulerView::getLongestSide() const {
             return getHeight();
         case ALayoutDirection::HORIZONTAL:
             return getWidth();
+        case ALayoutDirection::NONE:
+            break;
     }
     return -1;
 }
@@ -106,6 +110,8 @@ int ARulerView::getShortestSide() const {
             return getWidth();
         case ALayoutDirection::HORIZONTAL:
             return getHeight();
+        case ALayoutDirection::NONE:
+            break;
     }
     return -1;
 }

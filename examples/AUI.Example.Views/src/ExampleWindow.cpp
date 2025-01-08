@@ -293,7 +293,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         .connect(&AView::clicked, this,
                                  [&] {
                                      try {
-                                         *((int*) 0) = 123;
+                                         *((volatile int*) nullptr) = 123;
                                      } catch (const AException& e) {
                                          ALogger::info("Example") << "Successfully caught access violation: " << e;
                                      }

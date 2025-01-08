@@ -103,7 +103,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
               _new<ARadioGroup>() let {
                   static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
-                      POSSIBLE_VALUES | ranges::view::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
+                      POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
                   AObject::biConnect(targetView->visibility().biProjected(aui::lambda_overloaded {
                                        [](Visibility v) -> int {
                                            return aui::indexOf(POSSIBLE_VALUES, v).valueOr(0);

@@ -1450,7 +1450,7 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
     return aui::ptr::make_unique_with_deleter(
         [&]() -> FramebufferWithTextureRT* {
           auto applicableSizeOnly =
-              mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
+              mFramebuffersForMultiPassEffectsPool | ranges::views::filter([&](const auto& fb) {
                 return glm::all(glm::greaterThanEqual(fb->framebuffer.size(), minRequiredSize));
               });
           auto smallestFb = [](ranges::range auto& rng) {

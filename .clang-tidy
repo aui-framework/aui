@@ -1,15 +1,226 @@
-Checks: >
-  bugprone-*,
-  clang-diagnostic-*,
-  clang-analyzer-*,
-  cppcoreguidelines-*,
-  modernize-*,
-  -modernize-use-trailing-return-type,
-  -clang-analyzer-optin.core.EnumCastOutOfRange,
-  -cppcoreguidelines-special-member-functions,
-  -modernize-use-constraints,
+Checks:
+  - 'bugprone-*'
+  - 'clang-diagnostic-*'
+  - 'clang-analyzer-*'
+  - 'cppcoreguidelines-*'
+  - 'modernize-*'
+  - '-modernize-use-trailing-return-type'
+   # we're using enum flags.
+  - '-clang-analyzer-optin.core.EnumCastOutOfRange'
+  - 'intentionally broken'
+   # amount to fix:  208
+  - '-bugprone-assignment-in-if-condition'
+          
+   # amount to fix:  165
+  - '-bugprone-branch-clone'
+          
+   # amount to fix:  6
+  - '-bugprone-casting-through-void'
+          
+   # amount to fix:  1530
+  - '-bugprone-easily-swappable-parameters'
+          
+   # amount to fix:  46
+  - '-bugprone-empty-catch'
+          
+   # amount to fix:  1589
+  - '-bugprone-exception-escape'
+          
+   # amount to fix:  6
+  - '-bugprone-forward-declaration-namespace'
+          
+   # amount to fix:  506
+  - '-bugprone-implicit-widening-of-multiplication-result'
+          
+   # amount to fix:  7
+  - '-bugprone-infinite-loop'
+          
+   # amount to fix:  3014
+  - '-bugprone-macro-parentheses'
+          
+   # amount to fix:  582
+  - '-bugprone-move-forwarding-reference'
+          
+   # amount to fix:  12
+  - '-bugprone-multi-level-implicit-pointer-conversion'
+          
+   # amount to fix:  10
+  - '-bugprone-parent-virtual-call'
+          
+   # amount to fix:  8168
+  - '-bugprone-reserved-identifier'
+          
+   # amount to fix:  5
+  - '-bugprone-sizeof-expression'
+          
+   # amount to fix:  3
+  - '-bugprone-string-literal-with-embedded-nul'
+          
+   # amount to fix:  1405
+  - '-bugprone-switch-missing-default-case'
+          
+   # amount to fix:  1
+  - '-bugprone-too-small-loop-variable'
+          
+   # amount to fix:  3
+  - '-bugprone-use-after-move'
+          
+   # amount to fix:  1
+  - '-clang-diagnostic-braced-scalar-init'
+          
+   # amount to fix:  11
+  - '-clang-diagnostic-deprecated-declarations'
+          
+   # amount to fix:  194
+  - '-clang-diagnostic-inconsistent-missing-override'
+          
+   # amount to fix:  1
+  - '-clang-diagnostic-null-dereference'
+          
+   # amount to fix:  1
+  - '-clang-diagnostic-potentially-evaluated-expression'
+          
+   # amount to fix:  18
+  - '-clang-diagnostic-switch'
+          
+   # amount to fix:  1
+  - '-clang-diagnostic-unused-value'
+          
+   # amount to fix:  2514
+  - '-cppcoreguidelines-avoid-c-arrays'
+          
+   # amount to fix:  3640
+  - '-cppcoreguidelines-avoid-const-or-ref-data-members'
+          
+   # amount to fix:  3
+  - '-cppcoreguidelines-avoid-do-while'
+          
+   # amount to fix:  206
+  - '-cppcoreguidelines-avoid-goto'
+          
+   # amount to fix:  23072
+  - '-cppcoreguidelines-avoid-magic-numbers'
+          
+   # amount to fix:  157
+  - '-cppcoreguidelines-avoid-non-const-global-variables'
 
-WarningsAsErrors: '*'
+   # amount to fix:  840
+  - '-cppcoreguidelines-c-copy-assignment-signature'
+          
+   # amount to fix:  201
+  - '-cppcoreguidelines-explicit-virtual-functions'
+          
+   # amount to fix:  1761
+  - '-cppcoreguidelines-init-variables'
+          
+   # amount to fix:  2740
+  - '-cppcoreguidelines-macro-usage'
+          
+   # amount to fix:  5
+  - '-cppcoreguidelines-misleading-capture-default-by-value'
+          
+   # amount to fix:  13624
+  - '-cppcoreguidelines-missing-std-forward'
+          
+   # amount to fix:  400
+  - '-cppcoreguidelines-no-malloc'
+          
+   # amount to fix:  2
+  - '-cppcoreguidelines-noexcept-move-operations'
+          
+   # amount to fix:  16814
+  - '-cppcoreguidelines-non-private-member-variables-in-classes'
+          
+   # amount to fix:  1859
+  - '-cppcoreguidelines-owning-memory'
+          
+   # amount to fix:  2640
+  - '-cppcoreguidelines-prefer-member-initializer'
+          
+   # amount to fix:  4580
+  - '-cppcoreguidelines-pro-bounds-array-to-pointer-decay'
+          
+   # amount to fix:  224
+  - '-cppcoreguidelines-pro-bounds-constant-array-index'
+          
+   # amount to fix:  6944
+  - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
+          
+   # amount to fix:  3584
+  - '-cppcoreguidelines-pro-type-const-cast'
+          
+   # amount to fix:  398
+  - '-cppcoreguidelines-pro-type-cstyle-cast'
+          
+   # amount to fix:  1778
+  - '-cppcoreguidelines-pro-type-member-init'
+          
+   # amount to fix:  10131
+  - '-cppcoreguidelines-pro-type-reinterpret-cast'
+          
+   # amount to fix:  13590
+  - '-cppcoreguidelines-pro-type-union-access'
+          
+   # amount to fix:  751
+  - '-cppcoreguidelines-pro-type-vararg'
+          
+   # amount to fix:  1050
+  - '-cppcoreguidelines-rvalue-reference-param-not-moved'
+          
+   # amount to fix:  ?
+  - '-cppcoreguidelines-special-member-functions'
+          
+   # amount to fix:  3650
+  - '-cppcoreguidelines-virtual-class-destructor'
+          
+   # amount to fix:  356
+  - '-modernize-concat-nested-namespaces'
+          
+   # amount to fix:  2
+  - '-modernize-deprecated-headers'
+          
+   # amount to fix:  101
+  - '-modernize-loop-convert'
+          
+   # amount to fix:  976
+  - '-modernize-pass-by-value'
+          
+   # amount to fix:  2524
+  - '-modernize-return-braced-init-list'
+          
+   # amount to fix:  421
+  - '-modernize-type-traits'
+          
+   # amount to fix:  3
+  - '-modernize-use-auto'
+          
+   # amount to fix:  ?
+  - '-modernize-use-constraints'
+          
+   # amount to fix:  1
+  - '-modernize-use-bool-literals'
+          
+   # amount to fix:  3219
+  - '-modernize-use-equals-default'
+          
+   # amount to fix:  14
+  - '-modernize-use-equals-delete'
+          
+   # amount to fix:  40975
+  - '-modernize-use-nodiscard'
+          
+   # amount to fix:  25
+  - '-modernize-use-nullptr'
+          
+   # amount to fix:  3242
+  - '-modernize-use-override'
+          
+   # amount to fix:  845
+  - '-modernize-use-using'
+
+
+# we have a pipeline that treats those as errors; during development, it may be too noisy
+#WarningsAsErrors: '*'
 
 
 HeaderFilterRegex: '^.*/src/AUI/.*$'

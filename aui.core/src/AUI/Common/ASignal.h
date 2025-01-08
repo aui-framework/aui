@@ -194,7 +194,7 @@ public:
     }
 
     [[nodiscard]]
-    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept {
+    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
         return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
             return s->objectBase == object.ptr();
         });

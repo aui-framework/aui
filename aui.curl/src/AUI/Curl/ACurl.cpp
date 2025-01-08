@@ -12,7 +12,6 @@
 #include "ACurl.h"
 #include "ACurlMulti.h"
 
-
 #include <cassert>
 #include <chrono>
 #include <curl/curl.h>
@@ -23,30 +22,20 @@
 #include "AUI/Logging/ALogger.h"
 #include "ACurlMulti.h"
 
-
 #undef min
 
-ACurl::Builder::Builder(AString url): mUrl(std::move(url))
-{
-	class Global
-	{
-	public:
-		Global()
-		{
-			curl_global_init(CURL_GLOBAL_ALL);
-		}
-		~Global()
-		{
-			curl_global_cleanup();
-		}
-	};
+ACurl::Builder::Builder(AString url) : mUrl(std::move(url)) {
+    class Global {
+    public:
+        Global() { curl_global_init(CURL_GLOBAL_ALL); }
+        ~Global() { curl_global_cleanup(); }
+    };
 
-	static Global g;
+    static Global g;
 
-
-	mCURL = curl_easy_init();
-	assert(mCURL);
-	CURLcode res;
+    mCURL = curl_easy_init();
+    assert(mCURL);
+    CURLcode res;
 
     // at least 1kb/sec during 10sec
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, 10L);
@@ -54,22 +43,22 @@ ACurl::Builder::Builder(AString url): mUrl(std::move(url))
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_LIMIT, 1'024);
     AUI_ASSERT(res == 0);
 
-	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, ACurl::writeCallback);
-	assert(res == 0);
-	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
-	assert(res == 0);
+    res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, ACurl::writeCallback);
+    assert(res == 0);
+    res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
+    assert(res == 0);
 }
 
 ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
-	if (begin || end) {
-		std::string s = std::to_string(begin) + "-";
-		if (end) {
-			s += std::to_string(end);
-		}
-		auto res = curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+    if (begin || end) {
+        std::string s = std::to_string(begin) + "-";
+        if (end) {
+            s += std::to_string(end);
+        }
+        auto res = curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
         AUI_ASSERT(res == CURLE_OK);
-	}
-	return *this;
+    }
+    return *this;
 }
 
 ACurl::Builder& ACurl::Builder::withHttpVersion(ACurl::Http version) {
@@ -101,12 +90,10 @@ ACurl::Builder& ACurl::Builder::withCustomRequest(const AString& v) {
     return *this;
 }
 
-ACurl::Builder::~Builder() {
-	assert(mCURL == nullptr);
-}
+ACurl::Builder::~Builder() { assert(mCURL == nullptr); }
 
 _unique<IInputStream> ACurl::Builder::toInputStream() {
-    class CurlInputStream: public IInputStream {
+    class CurlInputStream : public IInputStream {
     private:
         _<ACurl> mCurl;
         APipe mPipe;
@@ -117,31 +104,24 @@ _unique<IInputStream> ACurl::Builder::toInputStream() {
                 mPipe << buf;
                 return buf.size();
             };
-            AObject::connect(mCurl->success, mCurl.get(), [this]() {
-                mPipe.close();
-            });
-            AObject::connect(mCurl->fail, mCurl.get(), [this]() {
-                mPipe.close();
-            });
+            AObject::connect(mCurl->success, mCurl.get(), [this]() { mPipe.close(); });
+            AObject::connect(mCurl->fail, mCurl.get(), [this]() { mPipe.close(); });
             ACurlMulti::global() << mCurl;
         }
 
-        size_t read(char* dst, size_t size) override {
-            return mPipe.read(dst, size);
-        }
+        size_t read(char* dst, size_t size) override { return mPipe.read(dst, size); }
     };
 
     return std::make_unique<CurlInputStream>(_new<ACurl>(*this));
 }
 
-
 ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
     std::string paramsString;
-    paramsString.reserve(std::accumulate(params.begin(), params.end(), 1, [](std::size_t l, const std::pair<AString, AString>& p) {
-        return l + p.first.size() + p.second.size() + 2;
-    }));
+    paramsString.reserve(std::accumulate(
+        params.begin(), params.end(), 1,
+        [](std::size_t l, const std::pair<AString, AString>& p) { return l + p.first.size() + p.second.size() + 2; }));
 
-    for (const auto&[key, value] : params) {
+    for (const auto& [key, value] : params) {
         if (!paramsString.empty()) {
             paramsString += '&';
         }
@@ -150,10 +130,11 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
 
         for (std::uint8_t c : value.toStdString()) {
             if (std::isalnum(c)) {
-                paramsString += (char)c;
+                paramsString += (char) c;
             } else {
                 char buf[128];
-                paramsString += std::string_view(buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "%{:02x}", c)));
+                paramsString += std::string_view(
+                    buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "%{:02x}", c)));
             }
         }
     }
@@ -162,9 +143,7 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
     return *this;
 }
 
-static size_t readStub(char* ptr, size_t size, size_t nmemb, void* userdata) {
-    return 0;
-}
+static size_t readStub(char* ptr, size_t size, size_t nmemb, void* userdata) { return 0; }
 
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
@@ -172,17 +151,12 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mWriteCallback = std::move(builder.mWriteCallback);
     mReadCallback = std::move(builder.mReadCallback);
     if (builder.mErrorCallback) {
-        connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) {
-            callback(e);
-        });
+        connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) { callback(e); });
     } else if (builder.mThrowExceptionOnError) {
-        connect(fail, [](const ErrorDescription& e) {
-            e.throwException();
-        });
+        connect(fail, [](const ErrorDescription& e) { e.throwException(); });
     }
     AUI_ASSERTX(std::size(mErrorBuffer) == CURL_ERROR_SIZE, "buffer size mismatch");
     builder.mCURL = nullptr;
-
 
     switch (builder.mMethod) {
         case Method::HTTP_GET: {
@@ -237,10 +211,10 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         }
     }
 
-	auto res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+    auto res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
     AUI_ASSERT(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
-	assert(res == 0);
+    assert(res == 0);
 
     if (builder.mMethod == Method::HTTP_POST && !mReadCallback) {
         // if read func is not set, curl would block.
@@ -263,7 +237,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         AUI_ASSERT(res == 0);
     }
 
-    if (builder.mHeaderCallback){
+    if (builder.mHeaderCallback) {
         mHeaderCallback = std::move(builder.mHeaderCallback);
         res = curl_easy_setopt(mCURL, CURLOPT_HEADERDATA, this);
         AUI_ASSERT(res == CURLE_OK);
@@ -272,9 +246,7 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     }
 
     if (builder.mOnSuccess) {
-        connect(success, [this, success = std::move(builder.mOnSuccess)]() {
-            success(*this);
-        });
+        connect(success, [this, success = std::move(builder.mOnSuccess)]() { success(*this); });
     }
 
     res = curl_easy_setopt(mCURL, CURLOPT_ACCEPT_ENCODING, "");
@@ -295,10 +267,10 @@ ACurl& ACurl::operator=(ACurl&& o) noexcept {
     return *this;
 }
 
-ACurl::~ACurl()
-{
+ACurl::~ACurl() {
     curl_easy_cleanup(mCURL);
-    if (mCurlHeaders) curl_slist_free_all(mCurlHeaders);
+    if (mCurlHeaders)
+        curl_slist_free_all(mCurlHeaders);
 }
 
 size_t ACurl::readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept {
@@ -326,8 +298,7 @@ size_t ACurl::readCallback(char* ptr, size_t size, size_t nmemb, void* userdata)
     return CURL_READFUNC_PAUSE;
 }
 
-size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept
-{
+size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept {
     if (AThread::current()->isInterrupted()) {
         return 0;
     }
@@ -336,14 +307,15 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
         return 0;
     }
     try {
-        auto r = c->mWriteCallback({ptr, nmemb});
+        auto r = c->mWriteCallback({ ptr, nmemb });
         if (c->mCloseRequested) {
             return 0;
         }
         if (r > 0) {
-            assert(("You returned a non-zero value not matching the passed buffer size, which is treated by curl as "
-                    "an error, but it's more likely you accidentally have not read all the data. If you really wanted "
-                    "to raise an error, please throw an exception instead.", r == size * nmemb));
+            AUI_ASSERTX(r == size * nmemb,
+                "You returned a non-zero value not matching the passed buffer size, which is treated by curl as "
+                "an error, but it's more likely you accidentally have not read all the data. If you really wanted "
+                "to raise an error, please throw an exception instead.");
             return r;
         }
     } catch (const AEOFException&) {
@@ -366,10 +338,9 @@ size_t ACurl::headerCallback(char* buffer, size_t size, size_t nitems, void* use
     return 0;
 }
 
-
 void ACurl::run() {
     auto c = curl_easy_perform(mCURL);
-    if (mCloseRequested) { // the failure may be caused by close() method
+    if (mCloseRequested) {   // the failure may be caused by close() method
         return;
     }
     AThread::interruptionPoint();
@@ -382,11 +353,11 @@ void ACurl::run() {
 
 void ACurl::close() {
     mCloseRequested = true;
-    curl_easy_pause(mCURL, 0); // unpause transfers in order to force curl to call callbacks
+    curl_easy_pause(mCURL, 0);   // unpause transfers in order to force curl to call callbacks
     emit closeRequested;
 }
 
-template<typename Ret>
+template <typename Ret>
 Ret ACurl::getInfo(int curlInfo) const {
     Ret result;
     if (auto r = curl_easy_getinfo(mCURL, static_cast<CURLINFO>(curlInfo), &result); r != CURLE_OK) {
@@ -395,14 +366,9 @@ Ret ACurl::getInfo(int curlInfo) const {
     return result;
 }
 
+int64_t ACurl::getContentLength() const { return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T); }
 
-int64_t ACurl::getContentLength() const {
-    return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
-}
-
-int64_t ACurl::getNumberOfBytesDownloaded() const {
-    return getInfo<curl_off_t>(CURLINFO_SIZE_DOWNLOAD_T);
-}
+int64_t ACurl::getNumberOfBytesDownloaded() const { return getInfo<curl_off_t>(CURLINFO_SIZE_DOWNLOAD_T); }
 
 AString ACurl::getContentType() const {
     auto v = getInfo<const char*>(CURLINFO_CONTENT_TYPE);
@@ -413,15 +379,13 @@ ACurl::ResponseCode ACurl::getResponseCode() const {
     return static_cast<ACurl::ResponseCode>(getInfo<long>(CURLINFO_RESPONSE_CODE));
 }
 
-void ACurl::ErrorDescription::throwException() const {
-    throw ACurl::Exception(*this);
-}
+void ACurl::ErrorDescription::throwException() const { throw ACurl::Exception(*this); }
 
 static ACurl::Response makeResponse(ACurl& r, AByteBuffer body) {
     return {
-            .code = r.getResponseCode(),
-            .contentType = r.getContentType(),
-            .body = std::move(body),
+        .code = r.getResponseCode(),
+        .contentType = r.getContentType(),
+        .body = std::move(body),
     };
 }
 
@@ -436,9 +400,7 @@ ACurl::Response ACurl::Builder::runBlocking() {
     return makeResponse(r, std::move(out));
 }
 
-AFuture<ACurl::Response> ACurl::Builder::runAsync() {
-    return runAsync(ACurlMulti::global());
-}
+AFuture<ACurl::Response> ACurl::Builder::runAsync() { return runAsync(ACurlMulti::global()); }
 
 AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
     AFuture<ACurl::Response> result;
