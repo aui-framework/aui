@@ -7,7 +7,6 @@ Checks:
   - '-modernize-use-trailing-return-type'
    # we're using enum flags.
   - '-clang-analyzer-optin.core.EnumCastOutOfRange'
-  - 'intentionally broken'
    # amount to fix:  208
   - '-bugprone-assignment-in-if-condition'
           
