@@ -266,7 +266,7 @@ class AObject;
  * }
  * @endcode
  *
- * See also ADataBinding for making reactive UI's on trivial data.
+ * See also @ref property_system for making reactive UI's on trivial data.
  *
  * # Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:

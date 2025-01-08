@@ -40,7 +40,8 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        AUI_ASSERTX(mId == std::this_thread::get_id(), "AAbstractThread::processMessages() should not be called from other thread");
+        AUI_ASSERTX(mId == std::this_thread::get_id(),
+                    "AAbstractThread::processMessages() should not be called from other thread");
         std::unique_lock lock(mMessageQueue.sync(), std::defer_lock);
 
         using namespace std::chrono;
