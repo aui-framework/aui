@@ -46,6 +46,7 @@ Checks: >
   -cppcoreguidelines-macro-usage,
   -cppcoreguidelines-misleading-capture-default-by-value,
   -cppcoreguidelines-missing-std-forward,
+  -cppcoreguidelines-narrowing-conversions,
   -cppcoreguidelines-no-malloc,
   -cppcoreguidelines-noexcept-move-operations,
   -cppcoreguidelines-non-private-member-variables-in-classes,
