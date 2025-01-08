@@ -26,6 +26,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("https://aui-framework.github.io/JetBrainsMono-Regular.woff2") format("woff2");
+}
 
 html {
     /* primary theme color. This will affect the entire websites color scheme: links, arrows, labels, ... */
@@ -61,7 +65,7 @@ html {
      * font-family-monospace: used for preformatted text in memtitle, code, fragments
      */
     --font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
-    --font-family-monospace: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+    --font-family-monospace: "JetBrains Mono", ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
 
     /* font sizes */
     --page-font-size: 15.6px;
