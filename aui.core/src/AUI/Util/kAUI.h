@@ -249,7 +249,8 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       setContents(Vertical { // clean, less code and easy to understand
+ *       // clean, less code and easy to understand
+ *       setContents(Vertical {
  *           _new<ATextField>() let { it->setText("Hello!") },
  *           _new<ATextField>() let { it->setText("World!") },
  *       });
