@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
 option(AUI_COROUTINES "Use C++20 coroutines" OFF)
+option(AUI_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
@@ -153,6 +154,11 @@ if (NOT MSVC AND AUI_CATCH_UNHANDLED)
     if (AUI_COMPILER_GCC)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
     endif()
+endif()
+
+if (AUI_ENABLE_ASAN)
+    add_compile_options(-fsanitize=address)
+    add_link_options(-fsanitize=address)
 endif()
 
 # uncomment this to debug concepts

@@ -16,7 +16,10 @@ Whether catch unhandled exceptions in the root of event loops or not. Might be u
 debugging.
 
 ## AUI_COROUTINES
-Whether use C++ 20 coroutines support or not.
+Whether to use C++ 20 coroutines support.
+
+## AUI_ENABLE_ASAN
+Whether to use AddressSanitizer.
 
 ## AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
