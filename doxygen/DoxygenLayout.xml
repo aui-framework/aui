@@ -19,8 +19,6 @@
 <!--            <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>-->
             <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes" />
             <tab type="namespacelist" visible="yes" title="All Namespaces" intro=""/>
-            <tab type="user" url="@ref useful_views" title="All Views" />
-            <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
             <tab type="usergroup" title="All AUI CMake commands">
                 <tab type="user" title="aui_app" url="@ref docs/aui_app.md" />
                 <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md" />
@@ -35,6 +33,16 @@
             <tab type="user" url="@ref docs/Code style and recommendations.md" title="Code style and recommendations" />
             <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list" />
             <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)" />
+        </tab>
+
+        <tab type="usergroup" title="UI Building" visible="yes">
+            <tab type="user" url="@ref layout_managers" title="Layout Managers" />
+            <tab type="user" url="@ref ass" title="Styling" />
+            <tab type="user" url="@ref signal_slot" title="Signal-slot" />
+            <tab type="user" url="@ref property_system" title="Data Binding" />
+            <tab type="user" url="@ref docs/Devtools.md" title="Devtools" />
+            <tab type="user" url="@ref useful_views" title="All Views" />
+            <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
         </tab>
         <tab type="usergroup" title="Tweaking" visible="yes">
             <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />

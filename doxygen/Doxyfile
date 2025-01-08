@@ -1090,7 +1090,7 @@ EXCLUDE_PATTERNS       = */3rdparty/* */tests/* */benchmarks/*
 # wildcard * is used, a substring. Examples: ANamespace, AClass,
 # ANamespace::AClass, ANamespace::*Test
 
-EXCLUDE_SYMBOLS        = *::detail*
+EXCLUDE_SYMBOLS        = *::detail* By
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
