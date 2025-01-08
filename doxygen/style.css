@@ -83,3 +83,11 @@
 div.SRPage {
     background: none !important;
 }
+
+.odd {
+    background: none !important;
+}
+
+.even {
+    background: var(--odd-color) !important;
+}
