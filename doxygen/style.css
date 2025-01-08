@@ -91,3 +91,14 @@ div.SRPage {
 .even {
     background: var(--odd-color) !important;
 }
+
+table.doxtable th {
+    background: var(--tablehead-background) !important;
+    color: var(--tablehead-foreground) !important;
+    font-weight: 600 !important;
+    font-size: var(--page-font-size) !important;
+}
+
+table.doxtable td, table.doxtable th {
+    border-color: var(--separator-color) !important;
+}
