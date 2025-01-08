@@ -1,3 +1,5 @@
+Intentionally broken
+
 Checks:
   - 'bugprone-*'
   - 'clang-diagnostic-*'
