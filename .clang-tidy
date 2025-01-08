@@ -1,223 +1,81 @@
-Intentionally broken
-
-Checks:
-  - 'bugprone-*'
-  - 'clang-diagnostic-*'
-  - 'clang-analyzer-*'
-  - 'cppcoreguidelines-*'
-  - 'modernize-*'
-  - '-modernize-use-trailing-return-type'
-   # we're using enum flags.
-  - '-clang-analyzer-optin.core.EnumCastOutOfRange'
-   # amount to fix:  208
-  - '-bugprone-assignment-in-if-condition'
-          
-   # amount to fix:  165
-  - '-bugprone-branch-clone'
-          
-   # amount to fix:  6
-  - '-bugprone-casting-through-void'
-          
-   # amount to fix:  1530
-  - '-bugprone-easily-swappable-parameters'
-          
-   # amount to fix:  46
-  - '-bugprone-empty-catch'
-          
-   # amount to fix:  1589
-  - '-bugprone-exception-escape'
-          
-   # amount to fix:  6
-  - '-bugprone-forward-declaration-namespace'
-          
-   # amount to fix:  506
-  - '-bugprone-implicit-widening-of-multiplication-result'
-          
-   # amount to fix:  7
-  - '-bugprone-infinite-loop'
-          
-   # amount to fix:  3014
-  - '-bugprone-macro-parentheses'
-          
-   # amount to fix:  582
-  - '-bugprone-move-forwarding-reference'
-          
-   # amount to fix:  12
-  - '-bugprone-multi-level-implicit-pointer-conversion'
-          
-   # amount to fix:  10
-  - '-bugprone-parent-virtual-call'
-          
-   # amount to fix:  8168
-  - '-bugprone-reserved-identifier'
-          
-   # amount to fix:  5
-  - '-bugprone-sizeof-expression'
-          
-   # amount to fix:  3
-  - '-bugprone-string-literal-with-embedded-nul'
-          
-   # amount to fix:  1405
-  - '-bugprone-switch-missing-default-case'
-          
-   # amount to fix:  1
-  - '-bugprone-too-small-loop-variable'
-          
-   # amount to fix:  3
-  - '-bugprone-use-after-move'
-          
-   # amount to fix:  1
-  - '-clang-diagnostic-braced-scalar-init'
-          
-   # amount to fix:  11
-  - '-clang-diagnostic-deprecated-declarations'
-          
-   # amount to fix:  194
-  - '-clang-diagnostic-inconsistent-missing-override'
-          
-   # amount to fix:  1
-  - '-clang-diagnostic-null-dereference'
-          
-   # amount to fix:  1
-  - '-clang-diagnostic-potentially-evaluated-expression'
-          
-   # amount to fix:  18
-  - '-clang-diagnostic-switch'
-          
-   # amount to fix:  1
-  - '-clang-diagnostic-unused-value'
-          
-   # amount to fix:  2514
-  - '-cppcoreguidelines-avoid-c-arrays'
-          
-   # amount to fix:  3640
-  - '-cppcoreguidelines-avoid-const-or-ref-data-members'
-          
-   # amount to fix:  3
-  - '-cppcoreguidelines-avoid-do-while'
-          
-   # amount to fix:  206
-  - '-cppcoreguidelines-avoid-goto'
-          
-   # amount to fix:  23072
-  - '-cppcoreguidelines-avoid-magic-numbers'
-          
-   # amount to fix:  157
-  - '-cppcoreguidelines-avoid-non-const-global-variables'
-
-   # amount to fix:  840
-  - '-cppcoreguidelines-c-copy-assignment-signature'
-          
-   # amount to fix:  201
-  - '-cppcoreguidelines-explicit-virtual-functions'
-          
-   # amount to fix:  1761
-  - '-cppcoreguidelines-init-variables'
-          
-   # amount to fix:  2740
-  - '-cppcoreguidelines-macro-usage'
-          
-   # amount to fix:  5
-  - '-cppcoreguidelines-misleading-capture-default-by-value'
-          
-   # amount to fix:  13624
-  - '-cppcoreguidelines-missing-std-forward'
-          
-   # amount to fix:  400
-  - '-cppcoreguidelines-no-malloc'
-          
-   # amount to fix:  2
-  - '-cppcoreguidelines-noexcept-move-operations'
-          
-   # amount to fix:  16814
-  - '-cppcoreguidelines-non-private-member-variables-in-classes'
-          
-   # amount to fix:  1859
-  - '-cppcoreguidelines-owning-memory'
-          
-   # amount to fix:  2640
-  - '-cppcoreguidelines-prefer-member-initializer'
-          
-   # amount to fix:  4580
-  - '-cppcoreguidelines-pro-bounds-array-to-pointer-decay'
-          
-   # amount to fix:  224
-  - '-cppcoreguidelines-pro-bounds-constant-array-index'
-          
-   # amount to fix:  6944
-  - '-cppcoreguidelines-pro-bounds-pointer-arithmetic'
-          
-   # amount to fix:  3584
-  - '-cppcoreguidelines-pro-type-const-cast'
-          
-   # amount to fix:  398
-  - '-cppcoreguidelines-pro-type-cstyle-cast'
-          
-   # amount to fix:  1778
-  - '-cppcoreguidelines-pro-type-member-init'
-          
-   # amount to fix:  10131
-  - '-cppcoreguidelines-pro-type-reinterpret-cast'
-          
-   # amount to fix:  13590
-  - '-cppcoreguidelines-pro-type-union-access'
-          
-   # amount to fix:  751
-  - '-cppcoreguidelines-pro-type-vararg'
-          
-   # amount to fix:  1050
-  - '-cppcoreguidelines-rvalue-reference-param-not-moved'
-          
-   # amount to fix:  ?
-  - '-cppcoreguidelines-special-member-functions'
-          
-   # amount to fix:  3650
-  - '-cppcoreguidelines-virtual-class-destructor'
-          
-   # amount to fix:  356
-  - '-modernize-concat-nested-namespaces'
-          
-   # amount to fix:  2
-  - '-modernize-deprecated-headers'
-          
-   # amount to fix:  101
-  - '-modernize-loop-convert'
-          
-   # amount to fix:  976
-  - '-modernize-pass-by-value'
-          
-   # amount to fix:  2524
-  - '-modernize-return-braced-init-list'
-          
-   # amount to fix:  421
-  - '-modernize-type-traits'
-          
-   # amount to fix:  3
-  - '-modernize-use-auto'
-          
-   # amount to fix:  ?
-  - '-modernize-use-constraints'
-          
-   # amount to fix:  1
-  - '-modernize-use-bool-literals'
-          
-   # amount to fix:  3219
-  - '-modernize-use-equals-default'
-          
-   # amount to fix:  14
-  - '-modernize-use-equals-delete'
-          
-   # amount to fix:  40975
-  - '-modernize-use-nodiscard'
-          
-   # amount to fix:  25
-  - '-modernize-use-nullptr'
-          
-   # amount to fix:  3242
-  - '-modernize-use-override'
-          
-   # amount to fix:  845
-  - '-modernize-use-using'
+Checks: >
+  bugprone-*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  cppcoreguidelines-*,
+  modernize-*,
+  -modernize-use-trailing-return-type,
+  -clang-analyzer-optin.core.EnumCastOutOfRange,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-branch-clone,
+  -bugprone-casting-through-void,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-empty-catch,
+  -bugprone-exception-escape,
+  -bugprone-forward-declaration-namespace,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-infinite-loop,
+  -bugprone-macro-parentheses,
+  -bugprone-move-forwarding-reference,
+  -bugprone-multi-level-implicit-pointer-conversion,
+  -bugprone-parent-virtual-call,
+  -bugprone-reserved-identifier,
+  -bugprone-sizeof-expression,
+  -bugprone-string-literal-with-embedded-nul,
+  -bugprone-switch-missing-default-case,
+  -bugprone-too-small-loop-variable,
+  -bugprone-use-after-move,
+  -clang-diagnostic-braced-scalar-init,
+  -clang-diagnostic-deprecated-declarations,
+  -clang-diagnostic-inconsistent-missing-override,
+  -clang-diagnostic-null-dereference,
+  -clang-diagnostic-potentially-evaluated-expression,
+  -clang-diagnostic-switch,
+  -clang-diagnostic-unused-value,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-avoid-goto,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-c-copy-assignment-signature,
+  -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-init-variables,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-misleading-capture-default-by-value,
+  -cppcoreguidelines-missing-std-forward,
+  -cppcoreguidelines-no-malloc,
+  -cppcoreguidelines-noexcept-move-operations,
+  -cppcoreguidelines-non-private-member-variables-in-classes,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-prefer-member-initializer,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-const-cast,
+  -cppcoreguidelines-pro-type-cstyle-cast,
+  -cppcoreguidelines-pro-type-member-init,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-rvalue-reference-param-not-moved,
+  -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-virtual-class-destructor,
+  -modernize-concat-nested-namespaces,
+  -modernize-deprecated-headers,
+  -modernize-loop-convert,
+  -modernize-pass-by-value,
+  -modernize-return-braced-init-list,
+  -modernize-type-traits,
+  -modernize-use-auto,
+  -modernize-use-constraints,
+  -modernize-use-bool-literals,
+  -modernize-use-equals-default,
+  -modernize-use-equals-delete,
+  -modernize-use-nodiscard,
+  -modernize-use-nullptr,
+  -modernize-use-override,
+  -modernize-use-using,
 
 
 # we have a pipeline that treats those as errors; during development, it may be too noisy
