@@ -15,6 +15,7 @@
 // this header implements #include <bit> (notably, std::bit_ceil)
 
 #include <concepts>
+#include <bit>
 #include "concepts.h"
 
 namespace aui {
