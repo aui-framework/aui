@@ -120,9 +120,9 @@ public:
      * @param c container to push
      * @return self
      */
-    template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
+    template<typename OtherContainer>
     inline self& operator<<(const OtherContainer& c) noexcept
-    {
+    requires (!std::is_convertible_v<OtherContainer, StoredType>) {
         insertAll(c);
         return *this;
     }

@@ -33,16 +33,16 @@ namespace aui {
     template <typename T>
     struct reverse_iterator_wrap {
     private:
-        const T& mIterable;
+        const T* mIterable;
 
     public:
-        reverse_iterator_wrap(const T& mIterable) : mIterable(mIterable) {}
+        explicit reverse_iterator_wrap(const T& mIterable) : mIterable(&mIterable) {}
 
         auto begin() {
-            return mIterable.rbegin();
+            return mIterable->rbegin();
         }
         auto end() {
-            return mIterable.rend();
+            return mIterable->rend();
         }
     };
 
@@ -219,17 +219,13 @@ namespace aui {
      */
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->
-        std::enable_if_t<!impl::is_forward_iterator<Iterator>,
-                         decltype((iterator + 1).base())
-                         > {
+        decltype((iterator + 1).base()) requires (!impl::is_forward_iterator<Iterator>) {
         return (iterator + 1).base();
     }
 
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->
-        std::enable_if_t<impl::is_forward_iterator<Iterator>,
-                         decltype(std::make_reverse_iterator(std::declval<Iterator>()))
-                         > {
+        decltype(std::make_reverse_iterator(std::declval<Iterator>())) requires (impl::is_forward_iterator<Iterator>) {
 
         return std::make_reverse_iterator(iterator + 1);
     }

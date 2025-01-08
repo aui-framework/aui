@@ -178,7 +178,7 @@ public:
 
         // switch from static to dynamic
         DynamicVector temp;
-        temp.reserve(aui::container::vector_impl::ceilPower2(distance + size()));
+        temp.reserve(aui::bit_ceil(distance + size()));
 
         aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
                                                       std::make_move_iterator(this->begin()), std::make_move_iterator(at));

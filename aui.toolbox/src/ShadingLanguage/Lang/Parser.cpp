@@ -830,6 +830,7 @@ _<VariableDeclarationNode> Parser::parseVariableDeclaration() {
             switch (mIterator->index()) {
                 case got<KeywordToken>: {
                     switch (std::get<KeywordToken>(*mIterator).getType()) {
+                        default: break;
                         case KeywordToken::CONST:
                             isConst = true;
                             break;

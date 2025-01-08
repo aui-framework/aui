@@ -284,7 +284,7 @@ public:
     }
 
 private:
-    std::aligned_storage_t<sizeof(T), alignof(T)> mStorage;
+    std::aligned_storage_t<sizeof(T), alignof(T)> mStorage{};
     bool mInitialized = false;
 
     [[nodiscard]]

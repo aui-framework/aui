@@ -419,6 +419,8 @@ public:
                     }
                 }
                 break;
+            case FontRendering::NEAREST:
+                break;
         }
     }
 

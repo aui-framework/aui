@@ -119,10 +119,10 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         aui::lambda_overloaded {
           [](const ArgSingleString& singleString) {
               auto split = singleString.arg.split(' ');
-              return split | ranges::view::transform(&AString::toStdString) | ranges::to_vector;
+              return split | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
           },
           [](const ArgStringList& singleString) {
-              return singleString.list | ranges::view::transform(&AString::toStdString) | ranges::to_vector;
+              return singleString.list | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
           },
         },
         mInfo.args);
@@ -132,8 +132,8 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     auto argv = [&] {
         auto executableRange = std::to_array({ executable.data() });
         static constexpr auto nullRange = std::to_array({ (char*) nullptr });
-        return ranges::view::concat(executableRange,
-                                    argsStdString | ranges::view::transform([](auto& s) { return s.data(); }),
+        return ranges::views::concat(executableRange,
+                                    argsStdString | ranges::views::transform([](auto& s) { return s.data(); }),
                                     nullRange)
                | ranges::to_vector;
     }();

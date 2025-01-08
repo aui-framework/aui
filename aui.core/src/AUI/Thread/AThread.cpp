@@ -32,7 +32,6 @@
 #include <AUI/Platform/ErrorToException.h>
 #include <AUI/Platform/win32/WinHandle.h>
 
-
 void setThreadNameImpl(HANDLE handle, const AString& name) {
     static struct SetThreadDescription {
     private:
@@ -47,13 +46,9 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
             }
         }
 
-        operator bool() const {
-            return mPtr != nullptr;
-        }
+        operator bool() const { return mPtr != nullptr; }
 
-        HRESULT operator()(HANDLE thread, PCWSTR name) {
-            return mPtr(thread, name);
-        }
+        HRESULT operator()(HANDLE thread, PCWSTR name) { return mPtr(thread, name); }
     } s;
     if (s) {
         s(handle, aui::win32::toWchar(name));
@@ -67,145 +62,129 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 #include <pthread.h>
 #endif
 namespace aui::impl::AThread {
-		static AMutexWrapper<AMap<std::thread::id, std::function<void()>>>& payloads() {
-				static AMutexWrapper<AMap<std::thread::id, std::function<void()>>> d;
-				return d;
-		}
-		void executeForcedPayload() {
-				std::unique_lock lock(payloads());
-				if (auto it = payloads()->contains(std::this_thread::get_id())) {
-					  if (it->second) {
-							  it->second();
-								it->second = {};
-						}
-				}
-		}
+static AMutexWrapper<AMap<std::thread::id, std::function<void()>>>& payloads() {
+    static AMutexWrapper<AMap<std::thread::id, std::function<void()>>> d;
+    return d;
 }
-class CurrentThread: public AAbstractThread {
+void executeForcedPayload() {
+    std::unique_lock lock(payloads());
+    if (auto it = payloads()->contains(std::this_thread::get_id())) {
+        if (it->second) {
+            it->second();
+            it->second = {};
+        }
+    }
+}
+}   // namespace aui::impl::AThread
+class CurrentThread : public AAbstractThread {
 public:
     using AAbstractThread::AAbstractThread;
 };
 
-AAbstractThread::AAbstractThread(const id& id) noexcept: mId(id)
-{
-}
-
+AAbstractThread::AAbstractThread(const id& id) noexcept : mId(id) {}
 
 AStacktrace AAbstractThread::threadStacktrace() const {
-	  if (std::this_thread::get_id() == mId) {
-			  return AStacktrace::capture(1);
-		}
-		auto& payloads = aui::impl::AThread::payloads();
-		std::unique_lock lock(payloads);
-		AFuture<AStacktrace> future;
-		payloads.value()[mId] = [future] {
+    if (std::this_thread::get_id() == mId) {
+        return AStacktrace::capture(1);
+    }
+    auto& payloads = aui::impl::AThread::payloads();
+    std::unique_lock lock(payloads);
+    AFuture<AStacktrace> future;
+    payloads.value()[mId] = [future] {
 #if AUI_PLATFORM_WIN
-			  future.supplyValue(AStacktrace::capture(1));
+        future.supplyValue(AStacktrace::capture(1));
 #else
-			  future.supplyValue(AStacktrace::capture(6));
+        future.supplyValue(AStacktrace::capture(6));
 #endif
-		};
-		lock.unlock();
+    };
+    lock.unlock();
 #if AUI_PLATFORM_WIN
-		aui::win32::Handle h = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, false, reinterpret_cast<const DWORD&>(mId));
-		if (!h) {
+    aui::win32::Handle h = OpenThread(
+        THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, false, reinterpret_cast<const DWORD&>(mId));
+    if (!h) {
         aui::impl::lastErrorToException("OpenThread returned null handle");
-		}
-		if (SuspendThread(h) == -1) {
+    }
+    if (SuspendThread(h) == -1) {
         aui::impl::lastErrorToException("SuspendThread failed");
-		}
-		CONTEXT context;
-		aui::zero(context);
-		context.ContextFlags = CONTEXT_FULL;
-		if (GetThreadContext(h, &context) == 0) {
+    }
+    CONTEXT context;
+    aui::zero(context);
+    context.ContextFlags = CONTEXT_FULL;
+    if (GetThreadContext(h, &context) == 0) {
         aui::impl::lastErrorToException("GetThreadContext failed");
-		}
-		ARaiiHelper contextReturner = [&] {
-				SetThreadContext(h, &context);
-		};
+    }
+    ARaiiHelper contextReturner = [&] { SetThreadContext(h, &context); };
 #if AUI_ARCH_ARM_64
-	#define REG_SP Sp
-	#define REG_IP Pc
+#define REG_SP Sp
+#define REG_IP Pc
 #elif AUI_ARCH_X86_64
-	#define REG_SP Rsp
-	#define REG_IP Rip
+#define REG_SP Rsp
+#define REG_IP Rip
 #else
-  #define REG_SP Esp
-	#define REG_IP Eip
-#endif    
-		{
-			  auto contextCopy = context;
-				auto& stackPointer = (reinterpret_cast<std::uintptr_t*&>(contextCopy. REG_SP));
-				*(--stackPointer) = contextCopy. REG_IP;
-				contextCopy. REG_IP = reinterpret_cast<const decltype(contextCopy. REG_IP)>(&aui::impl::AThread::executeForcedPayload);
-				SetThreadContext(h, &contextCopy);
-				if (ResumeThread(h) == -1) {
-					aui::impl::lastErrorToException("ResumeThread failed");
-				}
-		}	
+#define REG_SP Esp
+#define REG_IP Eip
+#endif
+    {
+        auto contextCopy = context;
+        auto& stackPointer = (reinterpret_cast<std::uintptr_t*&>(contextCopy.REG_SP));
+        *(--stackPointer) = contextCopy.REG_IP;
+        contextCopy.REG_IP =
+            reinterpret_cast<const decltype(contextCopy.REG_IP)>(&aui::impl::AThread::executeForcedPayload);
+        SetThreadContext(h, &contextCopy);
+        if (ResumeThread(h) == -1) {
+            aui::impl::lastErrorToException("ResumeThread failed");
+        }
+    }
 //		SuspendThread()
 #else
-		if (pthread_kill(reinterpret_cast<const pthread_t&>(mId), SIGUSR1) != 0) {
-			  throw AException("unable to acquire other thread stacktrace: pthread_kill failed");
-		}
+    if (pthread_kill(reinterpret_cast<const pthread_t&>(mId), SIGUSR1) != 0) {
+        throw AException("unable to acquire other thread stacktrace: pthread_kill failed");
+    }
 #endif
-		return *future;
+    return *future;
 }
 
-_<AAbstractThread>& AAbstractThread::threadStorage()
-{
-	thread_local _<AAbstractThread> thread;
-	return thread;
+_<AAbstractThread>& AAbstractThread::threadStorage() {
+    thread_local _<AAbstractThread> thread;
+    return thread;
 }
 
-AAbstractThread::~AAbstractThread()
-= default;
+AAbstractThread::~AAbstractThread() = default;
 
-bool AAbstractThread::isInterrupted()
-{
-	// abstract thread could not be interrupted.
-	return false;
+bool AAbstractThread::isInterrupted() {
+    // abstract thread could not be interrupted.
+    return false;
 }
 
-void AAbstractThread::interrupt() {
+void AAbstractThread::interrupt() {}
 
-}
+void AAbstractThread::resetInterruptFlag() {}
 
-void AAbstractThread::resetInterruptFlag()
-{
-}
-
-void AThread::start()
-{
-	assert(mThread == nullptr);
-	auto t = _cast<AThread>(sharedPtr());
+void AThread::start() {
+    assert(mThread == nullptr);
+    auto t = _cast<AThread>(sharedPtr());
     updateThreadName();
-	mThread = new std::thread([&, t] ()
-	{
-		threadStorage() = t;
-		auto f = std::move(mFunctor);
-		mFunctor = nullptr;
-		mId = std::this_thread::get_id();
-		try {
-			f();
-		} catch (const AException& e) {
+    mThread = new std::thread([&, t]() {
+        threadStorage() = t;
+        auto f = std::move(mFunctor);
+        mFunctor = nullptr;
+        mId = std::this_thread::get_id();
+        try {
+            f();
+        } catch (const AException& e) {
             ALogger::err("uncaught exception: " + e.getMessage());
-        } catch (Interrupted)
-		{
-
-		}
-	});
+        } catch (Interrupted) {
+        }
+    });
 }
 
-void AThread::interrupt()
-{
-	mInterrupted = true;
-	std::unique_lock lock(mCurrentCV.mutex);
+void AThread::interrupt() {
+    mInterrupted = true;
+    std::unique_lock lock(mCurrentCV.mutex);
     AUI_NULLSAFE(mCurrentCV.cv)->notify_all();
 }
 
-void AThread::sleep(std::chrono::milliseconds duration)
-{
+void AThread::sleep(std::chrono::milliseconds duration) {
     AConditionVariable cv;
     AMutex mutex;
     std::unique_lock lock(mutex);
@@ -213,86 +192,69 @@ void AThread::sleep(std::chrono::milliseconds duration)
     cv.wait_for(lock, duration);
 }
 
-AAbstractThread::id AAbstractThread::getId() const
-{
-	return mId;
+AAbstractThread::id AAbstractThread::getId() const { return mId; }
+
+_<AAbstractThread> AThread::current() {
+    auto& t = threadStorage();
+    if (t == nullptr)   // abstract thread
+    {
+        t = aui::ptr::manage(new CurrentThread(std::this_thread::get_id()));
+    }
+
+    return t;
 }
 
-_<AAbstractThread> AThread::current()
-{
-	auto& t = threadStorage();
-	if (t == nullptr) // abstract thread
-	{
-		t = aui::ptr::manage(new CurrentThread(std::this_thread::get_id()));
-	}
-
-	return t;
-}
-
-void AThread::interruptionPoint()
-{
-	if (current()->isInterrupted())
-	{
+void AThread::interruptionPoint() {
+    if (current()->isInterrupted()) {
         current()->resetInterruptFlag();
-		throw Interrupted();
-	}
+        throw Interrupted();
+    }
 }
 
-bool AThread::isInterrupted()
-{
-	return mInterrupted;
+bool AThread::isInterrupted() { return mInterrupted; }
+
+void AThread::resetInterruptFlag() { mInterrupted = false; }
+
+void AThread::join() {
+    if (mThread->get_id() == std::this_thread::get_id()) {
+        throw AException("AThread::join to the self thread");
+    }
+    if (!mThread->joinable()) {
+        return;
+    }
+    mThread->join();
 }
 
-void AThread::resetInterruptFlag()
-{
-	mInterrupted = false;
-}
-
-void AThread::join()
-{
-	if (mThread->get_id() == std::this_thread::get_id()) {
-		throw AException("AThread::join to the self thread");
-	}
-	if (!mThread->joinable()) {
-		return;
-	}
-	mThread->join();
-}
-
-void AAbstractThread::enqueue(AMessageQueue<>::Message f)
-{
+void AAbstractThread::enqueue(AMessageQueue<>::Message f) {
     mMessageQueue.enqueue(std::move(f));
     if (mCurrentEventLoop) {
         std::unique_lock lock(mEventLoopLock);
-        if (mCurrentEventLoop)
-        {
+        if (mCurrentEventLoop) {
             mCurrentEventLoop->notifyProcessMessages();
         }
     }
 }
 
-void AAbstractThread::processMessagesImpl()
-{
-    AUI_ASSERTX(mId == std::this_thread::get_id(),
-                "AAbstractThread::processMessages() should not be called from other thread");
+void AAbstractThread::processMessagesImpl() {
+    AUI_ASSERTX(
+        mId == std::this_thread::get_id(), "AAbstractThread::processMessages() should not be called from other thread");
     mMessageQueue.processMessages();
 }
 
-AThread::~AThread()
-{
-	if (mThread) {
-		interrupt();
-		if (mThread->get_id() == std::this_thread::get_id()) {
-			mThread->detach();
-			delete mThread;
-		}
-		else {
-			if (mThread->joinable())
-				mThread->join();
-			delete mThread;
-		}
-		mThread = nullptr;
-	}
+AThread::~AThread() {
+    if (!mThread) {
+        return;
+    }
+    AThread::interrupt();
+    if (mThread->get_id() == std::this_thread::get_id()) {
+        mThread->detach();
+        delete mThread;
+    } else {
+        if (mThread->joinable())
+            mThread->join();
+        delete mThread;
+    }
+    mThread = nullptr;
 }
 
 void AThread::detach() {
@@ -300,8 +262,6 @@ void AThread::detach() {
     delete mThread;
     mThread = nullptr;
 }
-
-
 
 void AAbstractThread::updateThreadName() noexcept {
     if (!mThreadName.empty()) {
@@ -319,11 +279,6 @@ void AAbstractThread::updateThreadName() noexcept {
     }
 }
 
-AThread::AThread(std::function<void()> functor)
-        : mFunctor(std::move(functor))
-{
-}
+AThread::AThread(std::function<void()> functor) : mFunctor(std::move(functor)) {}
 
-bool AAbstractThread::messageQueueEmpty() noexcept {
-	return mMessageQueue.messages().empty();
-}
+bool AAbstractThread::messageQueueEmpty() noexcept { return mMessageQueue.messages().empty(); }

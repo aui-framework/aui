@@ -14,6 +14,7 @@ void AStrongByteBufferInputStream::seek(std::streamoff offset, std::ios::seekdir
         case std::ios::beg: mReadPos = offset; break;
         case std::ios::cur: mReadPos += offset; break;
         case std::ios::end: mReadPos = buffer().size() + offset; break;
+        default: break;
     }
 }
 

@@ -1283,7 +1283,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
         MyWindow(const _<User>& user) {
             auto gendersStr = AListModel<AString>::fromVector(
                 GENDERS
-                | ranges::view::transform(AEnumerate<Gender>::toName)
+                | ranges::views::transform(AEnumerate<Gender>::toName)
                 | ranges::to_vector);
 
             setContents(Centered {
