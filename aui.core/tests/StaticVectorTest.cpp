@@ -24,6 +24,7 @@ TEST_F(StaticVector, PushBack) {
     for (int i = 0; i < 4; ++i) {
         vector.push_back(std::make_unique<int>(i));
     }
+
     AUI_EXPECT_DEATH({ vector.push_back(std::make_unique<int>(0));}, "");
 
     EXPECT_EQ(*vector[0], 0);
