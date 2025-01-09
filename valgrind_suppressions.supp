@@ -10,11 +10,8 @@
 {
    Backtrace
    Memcheck:Param
-   openat(filename)
-   fun:open
+   ...
    fun:backtrace_open
-   fun:fileline_initialize
-   fun:backtrace_pcinfo
    ...
 }
 
