@@ -20,6 +20,7 @@
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "AUI/UITestState.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -165,6 +166,9 @@ void AWindow::onFocusAcquired() {
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AWindowBase::onPointerMove(pos, event);
+    if (UITestState::isTesting()) {
+        return;
+    }
     AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 
@@ -300,6 +304,9 @@ void AWindow::forceUpdateCursor() {
     AWindowBase::forceUpdateCursor();
     if (!mCursor) {
         mCursor = ACursor::DEFAULT;
+    }
+    if (UITestState::isTesting()) {
+        return;
     }
     mCursor->applyNativeCursor(this);
 }

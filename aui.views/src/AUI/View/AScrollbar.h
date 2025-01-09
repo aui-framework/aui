@@ -46,7 +46,7 @@ private:
     explicit AScrollbarHandle(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
 
     AScrollbar& mScrollbar;
-    int mOverridenSize;
+    int mOverridenSize = 0;
 };
 
 class AScrollbarOffsetSpacer: public ASpacerExpanding {

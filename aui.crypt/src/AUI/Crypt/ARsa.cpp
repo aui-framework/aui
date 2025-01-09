@@ -17,12 +17,17 @@
 
 unsigned char gKey[] = { 52, 12, 96, 112, 84, 4, 95, 125, 213, 234, 87, 195, 175, 13, 42, 0 };
 
-ARsa::ARsa(void* rsa) : mRsa(rsa) {
+ARsa::ARsa(void* rsa, void* bne) : mRsa(rsa), mBne(bne) {
     if (!rsa)
         throw AException("RSA cannot be nullptr");
 }
 
-ARsa::~ARsa() { RSA_free(static_cast<RSA*>(mRsa)); }
+ARsa::~ARsa() {
+    if (mBne) {
+        BN_free(static_cast<BIGNUM*>(mBne));
+    }
+    RSA_free(static_cast<RSA*>(mRsa));
+}
 
 AByteBuffer ARsa::encrypt(AByteBufferView in) {
     AByteBuffer buf;
@@ -102,7 +107,7 @@ _<ARsa> ARsa::generate(int bits) {
         RSA_free(rsa);
         throw AException("RSA_generate_key_ex failed: {}"_format(r));
     }
-    return aui::ptr::manage(new ARsa(rsa));
+    return aui::ptr::manage(new ARsa(rsa, bne));
 }
 
 _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
@@ -114,7 +119,7 @@ _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
     if (rsa == nullptr)
         throw AException("Could not create RSA private key");
 
-    return aui::ptr::manage(new ARsa(rsa));
+    return aui::ptr::manage(new ARsa(rsa, nullptr));
 }
 
 _<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
@@ -126,5 +131,5 @@ _<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
     if (rsa == nullptr)
         throw AException("Could not create RSA public key");
 
-    return aui::ptr::manage(new ARsa(rsa));
+    return aui::ptr::manage(new ARsa(rsa, nullptr));
 }

@@ -14,3 +14,9 @@
 
 #include "AUI/api.h"
 #include "AUI/Util/Assert.h"
+
+#if AUI_ENABLE_DEATH_TESTS
+#define AUI_EXPECT_DEATH(statement, matcher) EXPECT_DEATH(statement, matcher)
+#else
+#define AUI_EXPECT_DEATH(statement, matcher)
+#endif

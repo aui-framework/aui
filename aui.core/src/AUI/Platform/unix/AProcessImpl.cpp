@@ -169,6 +169,8 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         execve(executable.c_str(), argv.data(), environ);
         exit(-1);
     } else {
+        mPid = pid;
+
         mWatchdog = _new<AThread>([&] {
             int loc = 0;
             waitpid(mPid, &loc, 0);
@@ -177,7 +179,6 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         });
         mWatchdog->start();
 
-        mPid = pid;
         pipeStdin.closeOut();
         pipeStdout.closeIn();
         pipeStderr.closeIn();

@@ -63,7 +63,9 @@ AView::AView()
     setSlotsCallsOnlyOnMyThread(true);
 }
 
-AView::~AView() = default;
+AView::~AView() {
+    AUI_ASSERT_UI_THREAD_ONLY();
+}
 
 void AView::redraw()
 {

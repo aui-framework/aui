@@ -4,16 +4,59 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# This file is a suppression list for lvalgrind (dynamic analysis tool). Use this file as such:
+# This file is a suppression list for valgrind (dynamic analysis tool). Use this file as such:
 # valgrind --suppressions=valgrind_suppressions.supp  ./Tests
 
 {
    Backtrace
    Memcheck:Param
    openat(filename)
-   fun:open
+   ...
    fun:backtrace_open
-   fun:fileline_initialize
-   fun:backtrace_pcinfo
+   ...
+}
+
+{
+   ThreadStart
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN7AThread5startEv
+   ...
+}
+
+{
+   IDontknowWhatIsThis
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:RegisterStubCallbacks
+   ...
+}
+
+{
+   fontconfig
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:XML_ParseBuffer
+   ...
+}
+
+{
+   dlopen
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:do_dlopen
+   ...
+}
+
+{
+   ToFix
+   Memcheck:Addr8
+   ...
+   fun:_ZN7ASignalIJEED1Ev
    ...
 }
