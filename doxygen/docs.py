@@ -371,7 +371,10 @@ if __name__ == '__main__':
     # patch(target='navtree.js', anchor='(level+1)', value='level', mode=PatchMode.REPLACE)
 
     # remove overflow: hidden from body
-    patch(target='resize.js', matcher='$("body")', mode=PatchMode.DELETE_LINE)
+    try:
+        patch(target='resize.js', matcher='$("body")', mode=PatchMode.DELETE_LINE)
+    except:
+        pass
 
 
     if error_flag:

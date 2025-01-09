@@ -36,6 +36,7 @@
         </tab>
 
         <tab type="usergroup" title="UI Building" visible="yes">
+            <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview" />
             <tab type="user" url="@ref layout_managers" title="Layout Managers" />
             <tab type="user" url="@ref ass" title="Styling" />
             <tab type="user" url="@ref signal_slot" title="Signal-slot" />
