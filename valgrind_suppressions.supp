@@ -35,3 +35,13 @@
    fun:RegisterStubCallbacks
    ...
 }
+
+{
+   fontconfig
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:XML_ParseBuffer
+   ...
+}
