@@ -10,6 +10,7 @@
 {
    Backtrace
    Memcheck:Param
+   openat(filename)
    ...
    fun:backtrace_open
    ...
