@@ -158,7 +158,7 @@ endif()
 
 if (AUI_ENABLE_ASAN)
     message(STATUS "AUI_ENABLE_ASAN=${AUI_ENABLE_ASAN}")
-    target_compile_options(aui.core PUBLIC -fsanitize=address)
+    target_compile_options(aui.core PUBLIC -fsanitize=address -fsanitize-blacklist=${CMAKE_SOURCE_DIR}/asan_suppressions.supp)
     target_link_options(aui.core PUBLIC -fsanitize=address)
 endif()
 
