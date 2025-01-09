@@ -157,8 +157,9 @@ if (NOT MSVC AND AUI_CATCH_UNHANDLED)
 endif()
 
 if (AUI_ENABLE_ASAN)
-    add_compile_options(-fsanitize=address)
-    add_link_options(-fsanitize=address)
+    message(STATUS "AUI_ENABLE_ASAN=${AUI_ENABLE_ASAN}")
+    target_compile_options(aui.core PUBLIC -fsanitize=address)
+    target_link_options(aui.core PUBLIC -fsanitize=address)
 endif()
 
 # uncomment this to debug concepts
