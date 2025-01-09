@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/AInput.h>
+#include "AUI/UITestState.h"
 
 static bool gKeyStateForTesting[AInput::KEYCOUNT] = {0};
 
@@ -122,8 +123,8 @@ AString AInput::getName(Key k)
 }
 
 bool AInput::isKeyDown(Key k) {
-    if (gKeyStateForTesting[k]) {
-        return true;
+    if (UITestState::isTesting()) {
+        return gKeyStateForTesting[k];
     }
     return AInput::native::isKeyDown(k);
 }

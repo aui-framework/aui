@@ -21,8 +21,9 @@
 class API_AUI_CRYPT ARsa : public aui::noncopyable {
 private:
     void* mRsa = nullptr;
+    void* mBne = nullptr;
 
-    explicit ARsa(void* rsa);
+    explicit ARsa(void* rsa, void* bne);
 
 public:
     ~ARsa();
