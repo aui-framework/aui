@@ -102,3 +102,10 @@ table.doxtable th {
 table.doxtable td, table.doxtable th {
     border-color: var(--separator-color) !important;
 }
+
+.footer-inner {
+    opacity: 0.7;
+    font-size: var(--nav-font-size-level1);
+    line-height: normal !important;
+    margin: 48px 0 96px;
+}

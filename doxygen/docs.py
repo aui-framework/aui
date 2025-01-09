@@ -8,6 +8,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import collections
 import enum
+import glob
 import os
 import os
 import re
@@ -227,18 +228,38 @@ def invoke_doxygen():
 
 
 class PatchMode(enum.Enum):
+    INSERT_BEFORE = enum.auto()
     INSERT_AFTER = enum.auto()
     DELETE_LINE = enum.auto()
+    REPLACE = enum.auto()
 
+class AnchorError(RuntimeError):
+    pass
 
-def patch(target: str = None, matcher = None, mode: PatchMode = None, value: str = None):
-    target_path = Path('doxygen/out/html') / target
+def patch(target: str = None, matcher = None, mode: PatchMode = None, value = None, unique = False):
+    args = {**locals()}
+    PREFIX = 'doxygen/out/html'
+
     patch_path = Path('doxygen/patches/') / target
+    if issubclass(type(value), Path):
+        value = value.read_bytes().decode("utf-8")
+    elif value is None and mode in [PatchMode.INSERT_AFTER, PatchMode.INSERT_BEFORE]:
+        value = patch_path.read_bytes().decode("utf-8")
+
+    if "*" in target:
+        args.pop('target')
+        # wildcard
+        for file in glob.iglob(f"doxygen/out/html/{target}"):
+            try:
+                patch(file[len(PREFIX)+1:], **args)
+            except AnchorError:
+                pass
+
+        return
+
+    target_path = Path(PREFIX) / target
     with open(target_path, 'r') as fis:
         contents = fis.readlines()
-
-    if value is None and mode in [PatchMode.INSERT_AFTER]:
-        value = patch_path.read_bytes().decode("utf-8")
 
     if type(matcher) is str:
         matcher_str = matcher
@@ -246,23 +267,31 @@ def patch(target: str = None, matcher = None, mode: PatchMode = None, value: str
 
 
     def process():
-        ok = False
+        found = False
         for line in contents:
+            if found and unique:
+                yield line
+                continue
             matcher_result = matcher(line)
             if matcher_result:
-                ok = True
+                found = True
                 if type(matcher_result) is str:
                     yield matcher_result
+                elif mode == PatchMode.INSERT_BEFORE:
+                    yield value
+                    yield line
                 elif mode == PatchMode.INSERT_AFTER:
                     yield line
                     yield value
+                elif mode == PatchMode.REPLACE:
+                    yield line.replace(matcher_str, value)
                 elif mode == PatchMode.DELETE_LINE:
                     pass
             else:
                 yield line
 
-        if not ok:
-            raise RuntimeError(f"{target_path} does not contain anchor")
+        if not found:
+            raise AnchorError(f"{target_path} does not contain anchor")
 
     with open(target_path, 'w') as out:
         for i in process():
@@ -375,6 +404,8 @@ if __name__ == '__main__':
         patch(target='resize.js', matcher='$("body")', mode=PatchMode.DELETE_LINE)
     except:
         pass
+
+    patch(target='*.html', matcher='</div><!-- contents -->', mode=PatchMode.REPLACE, value=Path('doxygen/footer_inner.html'), unique=True)
 
 
     if error_flag:
