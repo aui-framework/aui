@@ -16,5 +16,4 @@
 TEST(Color, Hex) {
     EXPECT_EQ(AColor("#fff"), AColor::WHITE);
     EXPECT_EQ(AColor("#000"), AColor::BLACK);
-    printf("%p", new int);
 }
