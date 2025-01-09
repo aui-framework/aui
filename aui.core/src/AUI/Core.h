@@ -14,3 +14,9 @@
 
 #include "AUI/api.h"
 #include "AUI/Util/Assert.h"
+
+#if AUI_ENABLE_DEATH_TESTS
+#define AUI_EXPECT_DEATH(...) EXPECT_DEATH(__VA_ARGS__)
+#else
+#define AUI_EXPECT_DEATH(...)
+#endif

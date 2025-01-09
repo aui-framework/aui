@@ -17,3 +17,21 @@
    fun:backtrace_pcinfo
    ...
 }
+
+{
+   ThreadStart
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN7AThread5startEv
+   ...
+}
+
+{
+   IDontknowWhatIsThis
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:RegisterStubCallbacks
+   ...
+}
