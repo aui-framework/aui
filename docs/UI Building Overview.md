@@ -23,15 +23,35 @@ using robust styling and theming capabilities.
 
 @image html owrfuihw34iosdfjnfj.jpg
 
+# Event handling with signal-slot
+
+@ref signal_slot can be used to handle UI events and respond to them accordingly.
+
+```cpp
+mOkButton = _new<AButton>("OK");
+connect(mOkButton->clicked, [] { 
+    ALogger::info("Example") << "The button was clicked";
+});
+```
+
 # Data Binding
 
-@ref property_system "Data binding" allows to establish a connection between UI and application data objects.
+@ref property_system "Data binding", based on @ref signal_slot "signal-slot", allows to establish a connection between
+UI and application data objects.
 
 @image html Screenshot_20250109_065134.png
 
 # Devtools
 
-@ref docs/Devtools.md "AUI Devtools" provide a set of features that make it easier to design, test, and debug your UI components. With visual
-debugging tools, and more, you can streamline your development workflow and focus on building amazing user experiences.
+@ref docs/Devtools.md "AUI Devtools" provide a set of features that makes it easier to design, test, and debug your UI
+components. With visual debugging tools, and more, you can streamline your development workflow and focus on building
+amazing user experiences.
 
 @image html Screenshot_20241212_064400.png
+
+# API Reference
+
+- @ref useful_views "All Views"
+- @ref ass "ASS"
+    - @ref ass_selectors "Selectors"
+    - @ref ass_properties "Properties"
