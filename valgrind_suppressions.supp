@@ -43,3 +43,12 @@
    fun:XML_ParseBuffer
    ...
 }
+
+{
+   dlopen
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:do_dlopen
+   ...
+}
