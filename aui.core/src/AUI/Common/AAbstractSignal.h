@@ -356,7 +356,6 @@ class AObject;
  *
  */
 
-
 /**
  * @brief Base class for signal.
  * @details Since ASignal is a template class, AAbstractSignal provides unified access to template inseparable fields of
@@ -364,44 +363,71 @@ class AObject;
  * @ingroup core
  * @ingroup signal_slot
  */
-class API_AUI_CORE AAbstractSignal
-{
+class API_AUI_CORE AAbstractSignal {
     friend class AObject;
+
 public:
-    virtual ~AAbstractSignal() {
-        mDestroyed = true;
-    }
+    virtual ~AAbstractSignal() = default;
 
-    [[nodiscard]] bool isDestroyed() const noexcept {
-        return mDestroyed;
-    }
+    /**
+     * @brief Connection info.
+     */
+    struct Connection {
+        /**
+         * @brief Pointer to the receiver object.
+         * @details
+         *
+         */
+        AObjectBase* receiverBase = nullptr;
 
-    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
+        /**
+         * @brief Points to the same object as `receiverBase`.
+         * @details
+         * `receiverBase` object is likely a child of AObject. However, in some cases (i.e., receiver is a property) it
+         * is not. In such case, `receiver` is nullptr. Whether or not the receiver is a AObject is determined during
+         * connection creation, when actual type is known at compile time. Hence, we can avoid RTTI overhead.
+         *
+         * This receiver pointer is used to determine shared_ptr of the object. Thus, this enables queued (interthread)
+         * connections.
+         */
+        AObject* receiver = nullptr;
+
+        /**
+         * @brief Whether is receiver alive.
+         */
+        bool isReceiverAlive = true;
+    };
+
+    /**
+     * @brief Destroys all connections of this signal, if any.
+     */
     virtual void clearAllConnections() const noexcept = 0;
 
-    virtual void addGenericObserver(AObjectBase* object, std::function<void()> observer) = 0;
+    /**
+     * @brief Destroys all connections with passed receiver, if any.
+     * @param receiver object to clear connections with.
+     */
+    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept;
 
-    [[nodiscard]]
-    virtual bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
+    /**
+     * @param receiver receiver objects to check connections with.
+     * @return Whether this signal has connections with passed receiver object.
+     */
+    virtual bool hasConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept;
+
+    /**
+     * @brief Creates generic connection (without arguments).
+     * @param receiver receiver object.
+     * @param observer function to be called when signal is fired.
+     */
+    virtual _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
 
 protected:
-    void linkSlot(AObjectBase* object) noexcept;
-    void unlinkSlot(AObjectBase* object) noexcept;
-
-    static bool& isDisconnected();
-
     static _weak<AObject> weakPtrFromObject(AObject* object);
-
-private:
-    bool mDestroyed = false;
 };
 
 #include <AUI/Common/AObject.h>
 
-inline bool& AAbstractSignal::isDisconnected() {
-    return AObject::isDisconnected();
-}
-
-inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { // AAbstractSignal is a friend of AObject
+inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) {   // AAbstractSignal is a friend of AObject
     return object->weakPtr();
 }

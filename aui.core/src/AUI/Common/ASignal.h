@@ -169,7 +169,7 @@ public:
 
     virtual ~ASignal() noexcept
     {
-        for (const _<slot>& slot : mSlots)
+        for (const _<slot>& slot : mOutgoingConnections)
         {
             unlinkSlot(slot->objectBase);
         }
@@ -181,7 +181,7 @@ public:
      * @return true, if slot contains any connected slots, false otherwise.
      */
     operator bool() const {
-        return !mSlots.empty();
+        return !mOutgoingConnections.empty();
     }
 
     void clearAllConnections() const noexcept override
@@ -195,21 +195,18 @@ public:
 
     [[nodiscard]]
     bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
-        return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
+        return std::any_of(mOutgoingConnections.begin(), mOutgoingConnections.end(), [&](const _<slot>& s) {
             return s->objectBase == object.ptr();
         });
     }
 
 private:
-    struct slot
+    struct ConnectionImpl: Connection
     {
-        AObjectBase* objectBase;
-        AObject* object;
         func_t func;
-        bool isDisconnected = false;
     };
 
-    mutable AVector<_<slot>> mSlots;
+    mutable AVector<_<ConnectionImpl>> mOutgoingConnections;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
@@ -219,7 +216,7 @@ private:
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
-        mSlots.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
+        mOutgoingConnections.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
         linkSlot(objectBase);
     }
 
@@ -247,8 +244,8 @@ private:
          */
         AVector<func_t> slotsToRemove;
 
-        slotsToRemove.reserve(mSlots.size());
-        mSlots.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<slot>& p) {
+        slotsToRemove.reserve(mOutgoingConnections.size());
+        mOutgoingConnections.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<slot>& p) {
             if (predicate(p)) {
                 slotsToRemove << std::move(p->func);
                 return true;
@@ -264,7 +261,7 @@ private:
 template <typename ... Args>
 void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>& args)
 {
-    if (mSlots.empty())
+    if (mOutgoingConnections.empty())
         return;
 
     _<AObject> emitterPtr, receiverPtr;
@@ -275,7 +272,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
         }
     }
 
-    auto slots = std::move(mSlots); // needed to safely iterate through the slots
+    auto slots = std::move(mOutgoingConnections); // needed to safely iterate through the slots
     for (auto i = slots.begin(); i != slots.end();)
     {
         slot& slot = **i;
@@ -302,7 +299,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                                 if (AAbstractSignal::isDisconnected()) {
                                     unlinkSlot(receiverPtr.get());
                                     slot->isDisconnected = true;
-                                    mSlots.removeFirst(slot);
+                                    mOutgoingConnections.removeFirst(slot);
                                 }
                             }
                         });
@@ -328,11 +325,11 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     AUI_MARK_AS_USED(emitterPtr);
     AUI_MARK_AS_USED(receiverPtr);
 
-    if (mSlots.empty()) {
-        mSlots = std::move(slots);
+    if (mOutgoingConnections.empty()) {
+        mOutgoingConnections = std::move(slots);
     } else {
         // mSlots might be modified by a single threaded signal call. In this case merge two vectors
-        mSlots.insert(mSlots.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
+        mOutgoingConnections.insert(mOutgoingConnections.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
     }
 
     AAbstractSignal::isDisconnected() = false;
