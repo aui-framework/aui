@@ -21,8 +21,13 @@
 #include "SharedPtrTypes.h"
 #include <AUI/Common/AAbstractSignal.h>
 
-class API_AUI_CORE AObjectBase: public aui::noncopyable {
+class API_AUI_CORE AObjectBase : public aui::noncopyable {
+    /* ASignal <-> AObject implementation stuff */
     friend class AAbstractSignal;
+
+    /* tests */
+    friend class SignalSlotTest;
+
 public:
     AObjectBase() = default;
 
@@ -34,6 +39,26 @@ protected:
     void clearAllIngoingConnections() noexcept;
 
 private:
-    AVector<AAbstractSignal::AutoDestroyConnection> mIngoingConnections;
+    /**
+     * @brief Connection owner which destroys the connection in destructor.
+     */
+    struct ReceiverConnectionOwner {
+        _<AAbstractSignal::Connection> value = nullptr;
 
+        ReceiverConnectionOwner() = default;
+        explicit ReceiverConnectionOwner(_<AAbstractSignal::Connection> connection) noexcept
+          : value(std::move(connection)) {}
+        ReceiverConnectionOwner(const ReceiverConnectionOwner&) = default;
+        ReceiverConnectionOwner(ReceiverConnectionOwner&&) noexcept = default;
+        ReceiverConnectionOwner& operator=(const ReceiverConnectionOwner&) = default;
+        ReceiverConnectionOwner& operator=(ReceiverConnectionOwner&&) noexcept = default;
+
+        ~ReceiverConnectionOwner() {
+            if (value) {
+                value->unlinkInSenderSideOnly();
+            }
+        }
+    };
+
+    AVector<ReceiverConnectionOwner> mIngoingConnections;
 };

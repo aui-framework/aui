@@ -78,6 +78,10 @@ public:
     static auto& connections(ASignal<Args...>& signal) {
         return signal.mOutgoingConnections;
     }
+
+    static auto& connections(AObject& object) {
+        return object.mIngoingConnections;
+    }
 };
 
 TEST_F(SignalSlotTest, Basic) {
@@ -161,6 +165,27 @@ TEST_F(SignalSlotTest, ObjectRemoval1) {
     EXPECT_EQ(connections(master->message).size(), 0);
     master->broadcastMessage("test");
 }
+
+/**
+ * Checks that the program is not crashed when one of the object is destroyed.
+ * master is destroyed first.
+ */
+TEST_F(SignalSlotTest, ObjectRemoval2) {
+    slave = _new<Slave>();
+
+    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    EXPECT_EQ(connections(master->message).size(), 1);
+
+    testing::InSequence s;
+    EXPECT_CALL(*slave, acceptMessage(AString("test"))).Times(1);
+    master->broadcastMessage("test");
+
+    master = nullptr;
+    EXPECT_EQ(connections(*slave).size(), 0);
+
+    EXPECT_CALL(*slave, die()).Times(1);
+}
+
 
 /**
  * Checks for nested connection.

@@ -9,13 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/algorithm/find.hpp>
+
 #include "AAbstractSignal.h"
 #include "AObject.h"
 
-void AAbstractSignal::addIngoingConnection(aui::no_escape<AObjectBase> object, _<Connection> connection) {
+void AAbstractSignal::addIngoingConnectionIn(aui::no_escape<AObjectBase> object, _<Connection> connection) {
     object->mIngoingConnections.emplace_back(std::move(connection));
 }
-
-_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject *object) {
-    return object->weakPtr();
+void AAbstractSignal::removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection) {
+    auto it = ranges::find(object->mIngoingConnections, &connection, [](const auto& v) { return v.value.get(); });
+    if (it == object->mIngoingConnections.end()) {
+        return;
+    }
+    object->mIngoingConnections.erase(it);
 }
+
+_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { return object->weakPtr(); }

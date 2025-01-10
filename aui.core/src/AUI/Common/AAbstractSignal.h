@@ -373,10 +373,21 @@ public:
      * @brief Connection handle.
      */
     struct Connection {
+        friend class API_AUI_CORE AObjectBase;
         /**
          * @brief Breaks connection.
          */
         virtual void disconnect() = 0;
+
+    private:
+        /**
+         * @brief Breaks connection in the sender side.
+         * @details
+         * Called when `AObjectBase` has cleaned its connection instance.
+         *
+         * This cleanup function assumes that an appropriate clean action for the receiver side is taken.
+         */
+        virtual void unlinkInSenderSideOnly() = 0;
     };
 
     /**
@@ -386,7 +397,7 @@ public:
         _<Connection> value = nullptr;
 
         AutoDestroyConnection() = default;
-        explicit  AutoDestroyConnection(_<Connection> connection) noexcept: value(std::move(connection)) {}
+        explicit AutoDestroyConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
         AutoDestroyConnection(const AutoDestroyConnection&) = default;
         AutoDestroyConnection(AutoDestroyConnection&&) noexcept = default;
         AutoDestroyConnection& operator=(const AutoDestroyConnection&) = default;
@@ -431,5 +442,10 @@ protected:
     /**
      * @brief Adds a connection to the specified object.
      */
-    static void addIngoingConnection(aui::no_escape<AObjectBase> object, _<Connection> connection);
+    static void addIngoingConnectionIn(aui::no_escape<AObjectBase> object, _<Connection> connection);
+
+    /**
+     * @brief Removes a connection from the specified object.
+     */
+    static void removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection);
 };

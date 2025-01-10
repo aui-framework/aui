@@ -153,7 +153,6 @@ class ASignal final : public AAbstractSignal {
     friend class UIDataBindingTest_APropertyPrecomputed_Complex_Test;
     friend class SignalSlotTest;
 
-
     template <typename AnySignal, typename Projection>
     friend struct aui::detail::signal::ProjectedSignal;
 
@@ -185,28 +184,35 @@ public:
     virtual ~ASignal() noexcept = default;
 
     /**
-     * Check whether signal contains any connected slots or not. It's very useful then signal argument values
-     * calculation is expensive and you do not want to calculate them if no signals connected to the slot.
+     * @brief Check whether signal contains any connected slots or not.
+     * @details
+     * It's very useful then signal argument values calculation is expensive and you do not want to calculate them if no
+     * slots connected to the signal.
      * @return true, if slot contains any connected slots, false otherwise.
      */
     operator bool() const { return !mOutgoingConnections.empty(); }
 
-    void clearAllOutgoingConnections() const noexcept override {
-        clearAllOutgoingConnectionsIf([](const auto&) { return true; });
-    }
+    void clearAllOutgoingConnections() const noexcept override { mOutgoingConnections.clear(); }
     void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
-        clearAllOutgoingConnectionsIf([&](const _<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
+        clearOutgoingConnectionsIf([&](const _<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
     }
 
-    [[nodiscard]]
-    bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
-        return std::any_of(mOutgoingConnections.begin(), mOutgoingConnections.end(), [&](const _<ConnectionImpl>& s) {
-            return s->receiverBase == object.ptr();
-        });
+    [[nodiscard]] bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
+        return std::any_of(
+            mOutgoingConnections.begin(), mOutgoingConnections.end(),
+            [&](const SenderConnectionOwner& s) { return s.value->receiverBase == object.ptr(); });
     }
 
 private:
     struct ConnectionImpl final : Connection {
+        friend class ASignal;
+
+        void disconnect() override {
+            unlinkInSenderSideOnly();
+            unlinkInReceiverSideOnly();
+        }
+
+    private:
         /**
          * @brief Pointer to the sender signal.
          * Guaranteed to be valid until set to null.
@@ -238,15 +244,56 @@ private:
         func_t func;
 
         /**
-         * @brief Whether is connection valid.
+         * @brief Whether is connection to be removed.
+         * @details
+         * When disconnected, this variable is set to `false`. This means the connection should be removed fromm ingoing
+         * and outgoing connections arrays (of `AObject` and `ASignal`, respectively). Moreover, the connection marked
+         * to be removed must not invoke its handler.
          */
-        bool isValid = true;
+        bool toBeRemoved = false;
 
-        void disconnect() override {
-            isValid = false;
+        /**
+         * @brief Breaks connection in the receiver side.
+         * @details
+         * Called when `ASignal` has cleaned its connection instance.
+         *
+         * This cleanup function assumes that an appropriate clean action for the sender side is taken.
+         */
+        void unlinkInReceiverSideOnly() {
+            toBeRemoved = true;
+
+            // this function can be called by receiver's AObject destructor, so at the end of this function we assuming
+            // receiver (and thus receiverBase) are invalid.
+            auto receiverLocal = std::exchange(receiverBase, nullptr);
+            if (!receiverLocal) {
+                return;
+            }
+            receiver = nullptr;
+            removeIngoingConnectionIn(receiverLocal, *this);
         }
 
-    private:
+        void unlinkInSenderSideOnly() override {
+            toBeRemoved = true;
+            auto localSender = std::exchange(sender, nullptr);
+            if (!localSender) {
+                return;
+            }
+
+            // As we marked toBeRemoved, we are not required to do anything further. However, we can perform a cheap
+            // operation to clean the connection right know. If we fail at some point we can leave it as is.
+            // invoceSignal will clean the connection for us at some point.
+            auto it = std::find_if(
+                localSender->mOutgoingConnections.begin(), localSender->mOutgoingConnections.end(),
+                [&](const SenderConnectionOwner& o) { return o.value.get() == this; });
+            if (it == localSender->mOutgoingConnections.end()) {
+                // It can happen probably when another thread is performing invocation on this signal and stole the
+                // mOutgoingConnections array.
+                return;
+            }
+            // it->value may be unique owner of this, let's steal the ownership before erasure to keep things safe.
+            auto self = std::exchange(it->value, nullptr);
+            localSender->mOutgoingConnections.erase(it);
+        }
     };
 
     /**
@@ -256,7 +303,7 @@ private:
         _<ConnectionImpl> value = nullptr;
 
         SenderConnectionOwner() = default;
-        explicit  SenderConnectionOwner(_<ConnectionImpl> connection) noexcept: value(std::move(connection)) {}
+        explicit SenderConnectionOwner(_<ConnectionImpl> connection) noexcept : value(std::move(connection)) {}
         SenderConnectionOwner(const SenderConnectionOwner&) = default;
         SenderConnectionOwner(SenderConnectionOwner&&) noexcept = default;
         SenderConnectionOwner& operator=(const SenderConnectionOwner&) = default;
@@ -264,7 +311,9 @@ private:
 
         ~SenderConnectionOwner() {
             if (value) {
-                value->unlinkInReceiverSide();
+                // this destructor can be called in ASignal destructor, so it's worth to reset the sender as well.
+                value->sender = nullptr;
+                value->unlinkInReceiverSideOnly();
             }
         }
     };
@@ -279,14 +328,15 @@ private:
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
-        const auto& connection = *mOutgoingConnections.insert(mOutgoingConnections.end(), [&] {
+        const auto& connection = [&]() -> _<ConnectionImpl>& {
             auto conn = _new<ConnectionImpl>();
+            conn->sender = this;
             conn->receiverBase = objectBase;
             conn->receiver = object;
             conn->func = makeRawInvocable(std::forward<Lambda>(lambda));
-            return conn;
-        }());
-        addIngoingConnection(objectBase, connection);
+            return mOutgoingConnections.emplace_back(std::move(conn)).value;
+        }();
+        addIngoingConnectionIn(objectBase, connection);
         return connection;
     }
 
@@ -303,17 +353,18 @@ private:
 
 private:
     template <typename Predicate>
-    void clearAllOutgoingConnectionsIf(Predicate&& predicate) const noexcept {
+    void clearOutgoingConnectionsIf(Predicate&& predicate) const noexcept {
         /*
-         * Removal of connections before end of execution of clearAllOutgoingConnectionsIf may cause this ASignal destruction,
-         * causing undefined behaviour. Destructing these connections after mSlotsLock unlocking solves the problem.
+         * Removal of connections before end of execution of clearOutgoingConnectionsIf may cause this ASignal
+         * destruction, causing undefined behaviour. Destructing these connections after mSlotsLock unlocking solves the
+         * problem.
          */
-        AVector<func_t> slotsToRemove;
+        AVector<SenderConnectionOwner> slotsToRemove;
 
         slotsToRemove.reserve(mOutgoingConnections.size());
-        mOutgoingConnections.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<ConnectionImpl>& p) {
-            if (predicate(p)) {
-                slotsToRemove << std::move(p->func);
+        mOutgoingConnections.removeIf([&slotsToRemove, predicate = std::move(predicate)](SenderConnectionOwner& p) {
+            if (predicate(p.value)) {
+                slotsToRemove << std::move(p);
                 return true;
             }
             return false;
@@ -352,7 +403,11 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
         }
     };
     for (auto i = outgoingConnections.begin(); i != outgoingConnections.end();) {
-        auto& outgoingConnection = *i;
+        _<ConnectionImpl>& outgoingConnection = i->value;
+        if (outgoingConnection->toBeRemoved) {
+            i = outgoingConnections.erase(i);
+            continue;
+        }
         _weak<AObject> receiverWeakPtr;
         if (outgoingConnection->receiver != nullptr) {
             receiverWeakPtr = weakPtrFromObject(outgoingConnection->receiver);
