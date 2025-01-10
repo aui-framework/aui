@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
+#include <AUI/Traits/concepts.h>
 
 template<aui::invocable Callback>
 class ARaiiHelper {

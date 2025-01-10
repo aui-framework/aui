@@ -28,7 +28,7 @@ void ::aui::property_precomputed::addDependency(const AAbstractSignal& signal) {
     if (!gCurrentDependencyObserver) {
         return;
     }
-    if (signal.hasConnectionsWith(gCurrentDependencyObserver)) {
+    if (signal.hasOutgoingConnectionsWith(gCurrentDependencyObserver)) {
         return;
     }
     const_cast<AAbstractSignal&>(signal).addGenericObserver(

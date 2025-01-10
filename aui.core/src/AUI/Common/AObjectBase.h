@@ -15,10 +15,11 @@
 #include <AUI/Traits/concepts.h>
 #include <AUI/Traits/members.h>
 
-#include "AUI/Common/ASet.h"
+#include "AUI/Common/AVector.h"
 #include "AUI/Core.h"
 #include "AUI/Traits/values.h"
 #include "SharedPtrTypes.h"
+#include <AUI/Common/AAbstractSignal.h>
 
 class API_AUI_CORE AObjectBase: public aui::noncopyable {
     friend class AAbstractSignal;
@@ -26,14 +27,13 @@ public:
     AObjectBase() = default;
 
     AObjectBase(AObjectBase&& rhs) noexcept {
-        AUI_ASSERTX(rhs.mSignals.empty(), "AObjectBase move is valid only if no signals connected to it");
-    }
-    ~AObjectBase() {
-        clearSignals();
+        AUI_ASSERTX(rhs.mIngoingConnections.empty(), "AObjectBase move is valid only if no signals connected to it");
     }
 
-    void clearSignals() noexcept;
+protected:
+    void clearAllIngoingConnections() noexcept;
 
 private:
-    ASet<AAbstractSignal*> mSignals;
+    AVector<AAbstractSignal::AutoDestroyConnection> mIngoingConnections;
+
 };

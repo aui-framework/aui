@@ -38,6 +38,8 @@ namespace aui::detail {
  */
 class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject> {
     friend class AAbstractSignal;
+    template <typename ... Args>
+    friend class ASignal;
 
 public:
     AObject();
@@ -188,6 +190,10 @@ public:
      * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), slot(otherObjectSharedPtr)::handleText);
      * @endcode
+     * @note
+     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     * connection creation.
+     *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -231,6 +237,10 @@ public:
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
      * @endcode
+     * @note
+     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     * connection creation.
+     *
      * @param property source property.
      * @param object instance of `AObject`.
      * @param function slot. Can be lambda.
@@ -276,7 +286,7 @@ private:
     _<AAbstractThread> mAttachedThread;
     bool mSignalsEnabled = true;
 
-    /*
+    /**
      * @brief Allows cross-thread signal call through event loop.
      * @details
      * If the object is sensitive to calls from other threads (i.e. view), it may set this flag to true in order to

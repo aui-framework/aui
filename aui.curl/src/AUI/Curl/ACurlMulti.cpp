@@ -99,7 +99,7 @@ ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
 void ACurlMulti::removeCurl(const _<ACurl>& curl) {
     curl_multi_remove_handle(mMulti, curl->handle());
     mEasyCurls.erase(curl->handle());
-    curl->closeRequested.clearAllConnectionsWith(curl.get());
+    curl->closeRequested.clearAllOutgoingConnectionsWith(curl.get());
 }
 
 void ACurlMulti::clear() {

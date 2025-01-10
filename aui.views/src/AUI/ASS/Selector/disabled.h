@@ -31,7 +31,7 @@ namespace ass {
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->enabled().changed.clearAllConnectionsWith(helper.get());
+            view->enabled().changed.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->enabled().changed, slot(helper)::onInvalidateStateAss);
         }
     };

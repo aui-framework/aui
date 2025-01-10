@@ -101,7 +101,7 @@ namespace ass::button {
             mWrapped->setupConnections(view, helper);
 
             if (auto c = dynamic_cast<AButton*>(view)) {
-                c->defaultState.clearAllConnectionsWith(helper.get());
+                c->defaultState.clearAllOutgoingConnectionsWith(helper.get());
                 AObject::connect(c->defaultState, slot(helper)::onInvalidateStateAss);
             }
         }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2024 Alex2772 and Contributors
  *
@@ -9,15 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AObject.h"
 #include "AAbstractSignal.h"
+#include "AObject.h"
 
-static ASpinlockMutex gSync;
+void AAbstractSignal::addIngoingConnection(aui::no_escape<AObjectBase> object, _<Connection> connection) {
+    object->mIngoingConnections.emplace_back(std::move(connection));
+}
 
-void AObjectBase::clearAllIngoingConnections() noexcept {
-    auto incomingConnections = [&] {
-      std::unique_lock lock(gSync);
-      return std::exchange(mIngoingConnections, {});
-    }();
-    incomingConnections.clear();
+_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject *object) {
+    return object->weakPtr();
 }

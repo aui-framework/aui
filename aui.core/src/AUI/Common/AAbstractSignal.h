@@ -370,64 +370,66 @@ public:
     virtual ~AAbstractSignal() = default;
 
     /**
-     * @brief Connection info.
+     * @brief Connection handle.
      */
     struct Connection {
         /**
-         * @brief Pointer to the receiver object.
-         * @details
-         *
+         * @brief Breaks connection.
          */
-        AObjectBase* receiverBase = nullptr;
+        virtual void disconnect() = 0;
+    };
 
-        /**
-         * @brief Points to the same object as `receiverBase`.
-         * @details
-         * `receiverBase` object is likely a child of AObject. However, in some cases (i.e., receiver is a property) it
-         * is not. In such case, `receiver` is nullptr. Whether or not the receiver is a AObject is determined during
-         * connection creation, when actual type is known at compile time. Hence, we can avoid RTTI overhead.
-         *
-         * This receiver pointer is used to determine shared_ptr of the object. Thus, this enables queued (interthread)
-         * connections.
-         */
-        AObject* receiver = nullptr;
+    /**
+     * @brief Connection owner which destroys the connection in destructor.
+     */
+    struct AutoDestroyConnection {
+        _<Connection> value = nullptr;
 
-        /**
-         * @brief Whether is receiver alive.
-         */
-        bool isReceiverAlive = true;
+        AutoDestroyConnection() = default;
+        explicit  AutoDestroyConnection(_<Connection> connection) noexcept: value(std::move(connection)) {}
+        AutoDestroyConnection(const AutoDestroyConnection&) = default;
+        AutoDestroyConnection(AutoDestroyConnection&&) noexcept = default;
+        AutoDestroyConnection& operator=(const AutoDestroyConnection&) = default;
+        AutoDestroyConnection& operator=(AutoDestroyConnection&&) noexcept = default;
+
+        ~AutoDestroyConnection() {
+            if (value) {
+                value->disconnect();
+            }
+        }
     };
 
     /**
      * @brief Destroys all connections of this signal, if any.
      */
-    virtual void clearAllConnections() const noexcept = 0;
+    virtual void clearAllOutgoingConnections() const noexcept = 0;
 
     /**
      * @brief Destroys all connections with passed receiver, if any.
      * @param receiver object to clear connections with.
      */
-    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept;
+    virtual void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept = 0;
 
     /**
      * @param receiver receiver objects to check connections with.
      * @return Whether this signal has connections with passed receiver object.
      */
-    virtual bool hasConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept;
+    virtual bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept = 0;
 
     /**
      * @brief Creates generic connection (without arguments).
      * @param receiver receiver object.
      * @param observer function to be called when signal is fired.
      */
-    virtual _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
+    virtual void addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
 
 protected:
+    /* some handy functions accessed from public headers */
+
     static _weak<AObject> weakPtrFromObject(AObject* object);
+
+    /**
+     * @brief Adds a connection to the specified object.
+     */
+    static void addIngoingConnection(aui::no_escape<AObjectBase> object, _<Connection> connection);
 };
-
-#include <AUI/Common/AObject.h>
-
-inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) {   // AAbstractSignal is a friend of AObject
-    return object->weakPtr();
-}

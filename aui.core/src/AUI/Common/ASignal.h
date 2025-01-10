@@ -18,21 +18,33 @@
 #include "AUI/Thread/AMutex.h"
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
+#include "AUI/Util/ARaiiHelper.h"
 
 namespace aui::detail::signal {
-template<size_t I, typename TupleInitial, typename TupleAll>
+
+template <typename... Args>
+std::tuple<Args...> makeTupleOfCopies(std::tuple<const Args&...> args) {
+    return args;
+}
+
+static_assert(requires(const int& v) {
+    { makeTupleOfCopies(std::tie(v)) } -> aui::same_as<std::tuple<int>>;
+});
+
+template <size_t I, typename TupleInitial, typename TupleAll>
 auto resizeTuple(TupleInitial initial, TupleAll all) {
     if constexpr (I == 0) {
         return initial;
     } else {
-        return resizeTuple<I - 1>(std::tuple_cat(initial, std::make_tuple(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
+        return resizeTuple<I - 1>(
+            std::tuple_cat(initial, std::tie(std::get<std::tuple_size_v<TupleInitial>>(all))), all);
     }
 }
 
-template<aui::not_overloaded_lambda Lambda, typename... Args>
+template <aui::not_overloaded_lambda Lambda, typename... Args>
 inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
     static constexpr size_t EXPECTED_ARG_COUNT = std::tuple_size_v<typename lambda_info<std::decay_t<Lambda>>::args>;
-    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::make_tuple(std::cref(args)...));
+    auto smallerTuple = resizeTuple<EXPECTED_ARG_COUNT>(std::make_tuple(), std::tie(args...));
     std::apply(lambda, smallerTuple);
 }
 
@@ -44,7 +56,7 @@ struct projection_info {
         "projection is required to be an pointer-to-member or not overloaded lambda or function pointer");
 };
 
-template<aui::pointer_to_member Projection>
+template <aui::pointer_to_member Projection>
 struct projection_info<Projection> {
 private:
     template <typename... T>
@@ -61,23 +73,23 @@ public:
     using args = typename cat<typename info::clazz&, typename info::args>::type;
 };
 
-template<aui::not_overloaded_lambda Projection>
+template <aui::not_overloaded_lambda Projection>
 struct projection_info<Projection> {
-    using info = typename  aui::lambda_info<Projection>;
+    using info = typename aui::lambda_info<Projection>;
     using return_t = typename info::return_t;
     using args = typename info::args;
 };
 
-template<aui::function_pointer Projection>
+template <aui::function_pointer Projection>
 struct projection_info<Projection> {
     using info = typename aui::function_info<Projection>;
     using return_t = typename info::return_t;
     using args = typename info::args;
 };
 
-
-template<typename AnySignal, // can't use AAnySignal here, as concept would depend on itself
-         typename Projection>
+template <
+    typename AnySignal,   // can't use AAnySignal here, as concept would depend on itself
+    typename Projection>
 struct ProjectedSignal {
     friend class ::AObject;
 
@@ -92,9 +104,8 @@ struct ProjectedSignal {
 
     static constexpr bool IS_PROJECTION_RETURNS_TUPLE = aui::is_tuple<projection_returns_t>;
 
-    using emits_args_t =  std::conditional_t<IS_PROJECTION_RETURNS_TUPLE,
-                                       projection_returns_t,
-                                       std::tuple<projection_returns_t>>;
+    using emits_args_t =
+        std::conditional_t<IS_PROJECTION_RETURNS_TUPLE, projection_returns_t, std::tuple<projection_returns_t>>;
 
     template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
     void connect(Object objectBase, Lambda&& lambda) {
@@ -113,139 +124,194 @@ struct ProjectedSignal {
             }));
     }
 
-    operator bool() const {
-        return bool(base);
-    }
+    operator bool() const { return bool(base); }
 
 private:
     template <not_overloaded_lambda Lambda>
     auto makeRawInvocable(Lambda&& lambda) const {
         return tuple_visitor<emits_args_t>::for_each_all([&]<typename... ProjectionResult>() {
-            return [lambda = std::forward<Lambda>(lambda)](const std::decay_t<ProjectionResult>&... args){
+            return [lambda = std::forward<Lambda>(lambda)](const std::decay_t<ProjectionResult>&... args) {
                 aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
             };
         });
     }
 };
 
-}
+}   // namespace aui::detail::signal
 
-template<typename... Args>
-class ASignal final: public AAbstractSignal
-{
+template <typename... Args>
+class ASignal final : public AAbstractSignal {
+    static_assert(
+        (std::is_object_v<Args> && ...),
+        "There's no effect of specifying of non value arguments for the signal. Consider removing const and "
+        "reference modifiers.");
+
+    /* ASignal <-> AObject implementation stuff */
     friend class AObject;
+
+    /* tests */
     friend class UIDataBindingTest_APropertyPrecomputed_Complex_Test;
-    template<typename AnySignal,
-              typename Projection>
+    friend class SignalSlotTest;
+
+
+    template <typename AnySignal, typename Projection>
     friend struct aui::detail::signal::ProjectedSignal;
 
     template <typename T>
     friend class AWatchable;
+
 public:
     using func_t = std::function<void(Args...)>;
     using emits_args_t = std::tuple<Args...>;
 
-    template<typename Projection>
+    template <typename Projection>
     auto projected(Projection&& projection) const {
         return aui::detail::signal::ProjectedSignal(const_cast<ASignal&>(*this), std::forward<Projection>(projection));
     }
 
     struct call_wrapper {
         ASignal& signal;
-        std::tuple<Args...> args;
+        std::tuple<const Args&...> args;
 
-        void invokeSignal(AObject* emitter) {
-            signal.invokeSignal(emitter, std::move(args));
-        }
+        void invokeSignal(AObject* sender) { signal.invokeSignal(sender, args); }
     };
 
-    call_wrapper operator()(Args... args) {
-        return {*this, std::make_tuple(std::move(args)...)};
-    }
+    call_wrapper operator()(const Args&... args) { return { *this, std::make_tuple(std::cref(args)...) }; }
 
     ASignal() = default;
     ASignal(ASignal&&) noexcept = default;
     ASignal(const ASignal&) = delete;
 
-    virtual ~ASignal() noexcept
-    {
-        for (const _<slot>& slot : mOutgoingConnections)
-        {
-            unlinkSlot(slot->objectBase);
-        }
-    }
+    virtual ~ASignal() noexcept = default;
 
     /**
      * Check whether signal contains any connected slots or not. It's very useful then signal argument values
      * calculation is expensive and you do not want to calculate them if no signals connected to the slot.
      * @return true, if slot contains any connected slots, false otherwise.
      */
-    operator bool() const {
-        return !mOutgoingConnections.empty();
-    }
+    operator bool() const { return !mOutgoingConnections.empty(); }
 
-    void clearAllConnections() const noexcept override
-    {
-        clearAllConnectionsIf([](const auto&){ return true; });
+    void clearAllOutgoingConnections() const noexcept override {
+        clearAllOutgoingConnectionsIf([](const auto&) { return true; });
     }
-    void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override
-    {
-        clearAllConnectionsIf([&](const _<slot>& p){ return p->objectBase == object.ptr(); });
+    void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
+        clearAllOutgoingConnectionsIf([&](const _<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
     }
 
     [[nodiscard]]
-    bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
-        return std::any_of(mOutgoingConnections.begin(), mOutgoingConnections.end(), [&](const _<slot>& s) {
-            return s->objectBase == object.ptr();
+    bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
+        return std::any_of(mOutgoingConnections.begin(), mOutgoingConnections.end(), [&](const _<ConnectionImpl>& s) {
+            return s->receiverBase == object.ptr();
         });
     }
 
 private:
-    struct ConnectionImpl: Connection
-    {
+    struct ConnectionImpl final : Connection {
+        /**
+         * @brief Pointer to the sender signal.
+         * Guaranteed to be valid until set to null.
+         */
+        ASignal* sender = nullptr;
+
+        /**
+         * @brief Pointer to the receiver object.
+         * @details
+         * Guaranteed to be valid until set to null.
+         */
+        AObjectBase* receiverBase = nullptr;
+
+        /**
+         * @brief Points to the same object as `receiverBase`.
+         * @details
+         * `receiverBase` object is likely a child of AObject. However, in some cases (i.e., receiver is a property) it
+         * is not. In such case, `receiver` is nullptr. Whether or not the receiver is a AObject is determined during
+         * connection creation, when actual type is known at compile time. Hence, we can avoid RTTI overhead.
+         *
+         * This receiver pointer is used to determine shared_ptr of the object. Thus, this enables queued (interthread)
+         * connections.
+         */
+        AObject* receiver = nullptr;
+
+        /**
+         * @brief Receiver's signal handler.
+         */
         func_t func;
+
+        /**
+         * @brief Whether is connection valid.
+         */
+        bool isValid = true;
+
+        void disconnect() override {
+            isValid = false;
+        }
+
+    private:
     };
 
-    mutable AVector<_<ConnectionImpl>> mOutgoingConnections;
+    /**
+     * @brief Connection owner which destroys the connection from the sender side in destructor.
+     */
+    struct SenderConnectionOwner {
+        _<ConnectionImpl> value = nullptr;
 
-    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
+        SenderConnectionOwner() = default;
+        explicit  SenderConnectionOwner(_<ConnectionImpl> connection) noexcept: value(std::move(connection)) {}
+        SenderConnectionOwner(const SenderConnectionOwner&) = default;
+        SenderConnectionOwner(SenderConnectionOwner&&) noexcept = default;
+        SenderConnectionOwner& operator=(const SenderConnectionOwner&) = default;
+        SenderConnectionOwner& operator=(SenderConnectionOwner&&) noexcept = default;
+
+        ~SenderConnectionOwner() {
+            if (value) {
+                value->unlinkInReceiverSide();
+            }
+        }
+    };
+
+    mutable AVector<SenderConnectionOwner> mOutgoingConnections;
+
+    void invokeSignal(AObject* sender, std::tuple<const Args&...> args = {});
 
     template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
-    void connect(Object objectBase, Lambda&& lambda) {
+    const _<ConnectionImpl>& connect(Object objectBase, Lambda&& lambda) {
         AObject* object = nullptr;
         if constexpr (requires { object = objectBase; }) {
             object = objectBase;
         }
-        mOutgoingConnections.push_back(_new<slot>(slot { objectBase, object, makeRawInvocable(std::forward<Lambda>(lambda)) }));
-        linkSlot(objectBase);
+        const auto& connection = *mOutgoingConnections.insert(mOutgoingConnections.end(), [&] {
+            auto conn = _new<ConnectionImpl>();
+            conn->receiverBase = objectBase;
+            conn->receiver = object;
+            conn->func = makeRawInvocable(std::forward<Lambda>(lambda));
+            return conn;
+        }());
+        addIngoingConnection(objectBase, connection);
+        return connection;
     }
 
-    void addGenericObserver(AObjectBase* object, std::function<void()> observer) override {
-        connect(object, [observer = std::move(observer)] {
-            observer();
-        });
+    void addGenericObserver(AObjectBase* receiver, std::function<void()> observer) override {
+        connect(receiver, [observer = std::move(observer)] { observer(); });
     }
 
-    template<aui::not_overloaded_lambda Lambda>
-    auto makeRawInvocable(Lambda&& lambda) const
-    {
-        return [lambda = std::forward<Lambda>(lambda)](const Args&... args){
+    template <aui::not_overloaded_lambda Lambda>
+    auto makeRawInvocable(Lambda&& lambda) const {
+        return [lambda = std::forward<Lambda>(lambda)](const Args&... args) {
             aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
         };
     }
 
 private:
-
-    template<typename Predicate>
-    void clearAllConnectionsIf(Predicate&& predicate) const noexcept {
+    template <typename Predicate>
+    void clearAllOutgoingConnectionsIf(Predicate&& predicate) const noexcept {
         /*
-         * Removal of connections before end of execution of clearAllConnectionsIf may cause this ASignal destruction,
+         * Removal of connections before end of execution of clearAllOutgoingConnectionsIf may cause this ASignal destruction,
          * causing undefined behaviour. Destructing these connections after mSlotsLock unlocking solves the problem.
          */
         AVector<func_t> slotsToRemove;
 
         slotsToRemove.reserve(mOutgoingConnections.size());
-        mOutgoingConnections.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<slot>& p) {
+        mOutgoingConnections.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<ConnectionImpl>& p) {
             if (predicate(p)) {
                 slotsToRemove << std::move(p->func);
                 return true;
@@ -258,81 +324,95 @@ private:
 };
 #include <AUI/Thread/AThread.h>
 
-template <typename ... Args>
-void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>& args)
-{
+template <typename... Args>
+void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> args) {
     if (mOutgoingConnections.empty())
         return;
 
-    _<AObject> emitterPtr, receiverPtr;
+    _<AObject> senderPtr, receiverPtr;
 
-    if (emitter != nullptr) {
-        if (auto sharedPtr = weakPtrFromObject(emitter).lock()) { // avoid emitter removal during signal processing
-            emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
+    if (sender != nullptr) {
+        if (auto sharedPtr = weakPtrFromObject(sender).lock()) {   // avoid sender removal during signal processing
+            senderPtr = std::move(static_cast<_<AObject>>(sharedPtr));
         }
     }
 
-    auto slots = std::move(mOutgoingConnections); // needed to safely iterate through the slots
-    for (auto i = slots.begin(); i != slots.end();)
-    {
-        slot& slot = **i;
+    auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
+    ARaiiHelper returnBack = [&] {
+        AUI_MARK_AS_USED(senderPtr);
+        AUI_MARK_AS_USED(receiverPtr);
+
+        if (mOutgoingConnections.empty()) {
+            mOutgoingConnections = std::move(outgoingConnections);
+        } else {
+            // mSlots might have been modified by a single threaded signal call. In this case merge two vectors
+            mOutgoingConnections.insert(
+                mOutgoingConnections.begin(), std::make_move_iterator(outgoingConnections.begin()),
+                std::make_move_iterator(outgoingConnections.end()));
+        }
+    };
+    for (auto i = outgoingConnections.begin(); i != outgoingConnections.end();) {
+        auto& outgoingConnection = *i;
         _weak<AObject> receiverWeakPtr;
-        if (slot.object != nullptr) {
-            receiverWeakPtr = weakPtrFromObject(slot.object);
-            if (slot.object->isSlotsCallsOnlyOnMyThread() && slot.object->getThread() != AThread::current()) {
+        if (outgoingConnection->receiver != nullptr) {
+            receiverWeakPtr = weakPtrFromObject(outgoingConnection->receiver);
+            if (outgoingConnection->receiver->isSlotsCallsOnlyOnMyThread() &&
+                outgoingConnection->receiver->getThread() != AThread::current()) {
                 // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
 
                 /*
-                 * That's because shared_ptr counting mechanism is used when doing a crossthread call.
+                 * shared_ptr counting mechanism is used when doing a crossthread call.
                  * It could not track the object existence without shared_ptr block.
-                 * Also, receiverWeakPtr.lock() may be null here because object is in different thread and being destructed by shared_ptr but have not reached clearSignals() yet.
+                 * Also, receiverWeakPtr.lock() may be null here because object is in different thread and being
+                 * destructed by shared_ptr but have not reached clearAllIngoingConnections() yet.
                  */
                 if (receiverWeakPtr.lock() != nullptr) {
-                    slot.object->getThread()->enqueue(
-                        [this, receiverWeakPtr = std::move(receiverWeakPtr), slot = *i, args = args]() {
-                            if (slot->isDisconnected) {
+                    outgoingConnection->receiver->getThread()->enqueue(
+                        [this, receiverWeakPtr = std::move(receiverWeakPtr), connection = outgoingConnection,
+                         args = aui::detail::signal::makeTupleOfCopies(args)] {
+                            static_assert(
+                                std::is_same_v<std::tuple<std::decay_t<Args>...>, decltype(args)>,
+                                "when performing a cross thread call, args is expected to hold values "
+                                "instead of references");
+                            auto receiverPtr = receiverWeakPtr.lock();
+                            if (!receiverPtr) {
+                                // receiver was destroyed while we were transferring the call to another thread.
                                 return;
                             }
-                            if (auto receiverPtr = receiverWeakPtr.lock()) {
-                                AAbstractSignal::isDisconnected() = false;
-                                (std::apply)(slot->func, args);
-                                if (AAbstractSignal::isDisconnected()) {
-                                    unlinkSlot(receiverPtr.get());
-                                    slot->isDisconnected = true;
-                                    mOutgoingConnections.removeFirst(slot);
+
+                            AObject::isDisconnected() = false;
+                            ARaiiHelper h = [&] {
+                                if (AObject::isDisconnected()) {
+                                    connection->disconnect();
                                 }
-                            }
+                            };
+                            (std::apply)(connection->func, args);
                         });
                 }
                 ++i;
                 continue;
             }
         }
-        AAbstractSignal::isDisconnected() = false;
+        AObject::isDisconnected() = false;
 
-        if (auto sharedPtr = receiverWeakPtr.lock()) { // avoid receiver removal during signal processing
+        if (auto sharedPtr = receiverWeakPtr.lock()) {   // avoid receiver removal during signal processing
             receiverPtr = std::move(sharedPtr);
         }
 
-        (std::apply)(slot.func, args);
-        if (AAbstractSignal::isDisconnected()) {
-            unlinkSlot(slot.object);
-            i = slots.erase(i);
+        if constexpr (std::tuple_size_v<decltype(args)> > 0) {
+            using FirstType = decltype(std::get<0>(args));
+            static_assert(
+                std::is_reference_v<FirstType>,
+                "when performing a non-threading call, args is expected to hold const references"
+                "instead of values");
+        }
+        (std::apply)(outgoingConnection->func, args);
+        if (AObject::isDisconnected()) {
+            i = outgoingConnections.erase(i);
             continue;
         }
         ++i;
     }
-    AUI_MARK_AS_USED(emitterPtr);
-    AUI_MARK_AS_USED(receiverPtr);
-
-    if (mOutgoingConnections.empty()) {
-        mOutgoingConnections = std::move(slots);
-    } else {
-        // mSlots might be modified by a single threaded signal call. In this case merge two vectors
-        mOutgoingConnections.insert(mOutgoingConnections.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
-    }
-
-    AAbstractSignal::isDisconnected() = false;
 }
 
 /**
@@ -341,7 +421,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
  * @ingroup signal_slot
  * See @ref signal_slot "signal-slot system" for more info.
  */
-template<typename... Args>
+template <typename... Args>
 using emits = ASignal<Args...>;
 
 #define signals public

@@ -49,7 +49,7 @@ public:
 /**
  * Fixture.
  */
-class SignalSlot : public testing::Test {
+class SignalSlotTest : public testing::Test {
 public:
     _<Master> master;
     _<Slave> slave;
@@ -73,9 +73,14 @@ public:
         master = nullptr;
         slave = nullptr;
     }
+
+    template<typename... Args>
+    static auto& connections(ASignal<Args...>& signal) {
+        return signal.mOutgoingConnections;
+    }
 };
 
-TEST_F(SignalSlot, Basic) {
+TEST_F(SignalSlotTest, Basic) {
     slave = _new<Slave>();
     AObject::connect(master->message, slot(slave)::acceptMessage);
 
@@ -84,7 +89,7 @@ TEST_F(SignalSlot, Basic) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicProjection1) {
+TEST_F(SignalSlotTest, BasicProjection1) {
     slave = _new<Slave>();
     AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), slot(slave)::acceptMessageInt);
 
@@ -93,7 +98,7 @@ TEST_F(SignalSlot, BasicProjection1) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicProjection2) {
+TEST_F(SignalSlotTest, BasicProjection2) {
     slave = _new<Slave>();
     AObject::connect(master->message.projected(&AString::length), slot(slave)::acceptMessageInt);
 
@@ -102,7 +107,7 @@ TEST_F(SignalSlot, BasicProjection2) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicNoArgs) {
+TEST_F(SignalSlotTest, BasicNoArgs) {
     slave = _new<Slave>();
     AObject::connect(master->message, slot(slave)::acceptMessageNoArgs);
 
@@ -111,7 +116,7 @@ TEST_F(SignalSlot, BasicNoArgs) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, Multithread) {
+TEST_F(SignalSlotTest, Multithread) {
     slave = _new<Slave>();
 
     AObject::connect(master->message, slot(slave)::acceptMessage);
@@ -124,7 +129,7 @@ TEST_F(SignalSlot, Multithread) {
     t.wait();
 }
 
-TEST_F(SignalSlot, StackAllocatedObject) {
+TEST_F(SignalSlotTest, StackAllocatedObject) {
     testing::InSequence seq;
     Slave slave;
 
@@ -138,20 +143,29 @@ TEST_F(SignalSlot, StackAllocatedObject) {
 
 /**
  * Checks that the program is not crashed when one of the object is destroyed.
+ * slave is destroyed first.
  */
-TEST_F(SignalSlot, ObjectRemoval) {
+TEST_F(SignalSlotTest, ObjectRemoval1) {
     slave = _new<Slave>();
-    {
-        testing::InSequence s;
-        AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
-        EXPECT_CALL(*slave, die()).Times(1);
-    }
+
+    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    EXPECT_EQ(connections(master->message).size(), 1);
+
+    testing::InSequence s;
+    EXPECT_CALL(*slave, acceptMessage(AString("test"))).Times(1);
+    master->broadcastMessage("test");
+
+    EXPECT_CALL(*slave, die()).Times(1);
+    slave = nullptr;
+
+    EXPECT_EQ(connections(master->message).size(), 0);
+    master->broadcastMessage("test");
 }
 
 /**
  * Checks for nested connection.
  */
-TEST_F(SignalSlot, NestedConnection) {
+TEST_F(SignalSlotTest, NestedConnection) {
     slave = _new<Slave>();
     AObject::connect(master->message, slave, [this, slave = slave.get()] (const AString& msg) {
         slave->acceptMessage(msg);
@@ -169,7 +183,7 @@ TEST_F(SignalSlot, NestedConnection) {
 /**
  * Checks for disconnect functionality.
  */
-TEST_F(SignalSlot, ObjectDisconnect1) {
+TEST_F(SignalSlotTest, ObjectDisconnect1) {
     slave = _new<Slave>();
     AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
         slave->acceptMessage(msg);
@@ -185,7 +199,7 @@ TEST_F(SignalSlot, ObjectDisconnect1) {
 /**
  * Checks for disconnect functionality when one of the signals disconnected.
  */
-TEST_F(SignalSlot, ObjectDisconnect2) {
+TEST_F(SignalSlotTest, ObjectDisconnect2) {
     slave = _new<Slave>();
 
     bool called = false;
@@ -211,7 +225,7 @@ TEST_F(SignalSlot, ObjectDisconnect2) {
 /**
  * Checks for both disconnect and nested connect.
  */
-TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
+TEST_F(SignalSlotTest, ObjectNestedConnectWithDisconnect) {
     slave = _new<Slave>();
 
     bool called1 = false;
@@ -239,7 +253,7 @@ TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
 /**
  * Destroys master in a signal handler
  */
-TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
+TEST_F(SignalSlotTest, ObjectDestroyMasterInSignalHandler) {
     slave = _new<Slave>();
     EXPECT_CALL(*slave, die());
     {
@@ -255,7 +269,7 @@ TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
 /**
  * Destroys slave in it's signal handler
  */
-TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
+TEST_F(SignalSlotTest, ObjectDestroySlaveInSignalHandler) {
     slave = _new<Slave>();
     EXPECT_CALL(*slave, die());
     {
@@ -269,7 +283,7 @@ TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
 }
 
 
-TEST_F(SignalSlot, ObjectRemovalMultithread) {
+TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
 
     AUI_REPEAT(100) {
 
