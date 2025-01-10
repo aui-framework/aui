@@ -426,7 +426,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                         [this, receiverWeakPtr = std::move(receiverWeakPtr), connection = outgoingConnection,
                          args = aui::detail::signal::makeTupleOfCopies(args)] {
                             static_assert(
-                                std::is_same_v<std::tuple<std::decay_t<Args>...>, decltype(args)>,
+                                std::is_same_v<std::tuple<std::decay_t<Args>...>, std::remove_const_t<decltype(args)>>,
                                 "when performing a cross thread call, args is expected to hold values "
                                 "instead of references");
                             auto receiverPtr = receiverWeakPtr.lock();
