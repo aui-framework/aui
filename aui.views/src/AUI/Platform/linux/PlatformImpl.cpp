@@ -17,38 +17,11 @@
 #include "AUI/Logging/ALogger.h"
 #include <AUI/Util/kAUI.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
-#include <X11/Xresource.h>
 
 
 float APlatform::getDpiRatio()
 {
-    CommonRenderingContext::ensureXLibInitialized();
-    if (CommonRenderingContext::ourDisplay == nullptr) return 1.f;
-
-    static auto value = [] {
-        char* resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
-
-        if (!resourceString) {
-            return 1.f;
-        }
-        XrmInitialize();
-
-        XrmValue value;
-        char* type = nullptr;
-
-        auto db = aui::ptr::make_unique_with_deleter(XrmGetStringDatabase(resourceString), XrmDestroyDatabase);
-
-        if (XrmGetResource(db.get(), "Xft.dpi", "String", &type, &value)) {
-            if (value.addr) {
-                return float(atof(value.addr)) / 96.f;
-            }
-        }
-        return 1.f;
-    }();
-
-    return value;
+    return 1.f;
 }
 
 void APlatform::openUrl(const AUrl& url) {

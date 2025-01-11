@@ -98,8 +98,6 @@ private:
 #endif
 #if AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
-    _<XImage> mXImage;
-    std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
 
     void reallocate();
 #endif

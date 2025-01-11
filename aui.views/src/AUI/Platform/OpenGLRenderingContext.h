@@ -87,7 +87,6 @@ private:
     static void makeCurrent(HDC hdc) noexcept;
 #endif
 #if AUI_PLATFORM_LINUX
-    static GLXContext ourContext;
 #endif
 #if AUI_PLATFORM_MACOS
     static void* ourContext;

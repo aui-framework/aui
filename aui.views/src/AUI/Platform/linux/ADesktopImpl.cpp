@@ -12,9 +12,9 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/ARaiiHelper.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
+
+
+
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Platform/ADesktop.h>
@@ -26,21 +26,11 @@
 #undef signals
 
 glm::ivec2 ADesktop::getMousePosition() {
-    glm::ivec2 p;
-    Window w;
-    int unused1;
-    unsigned unused2;
-    XQueryPointer(
-        CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), &w, &w, &p.x, &p.y,
-        &unused1, &unused1, &unused2);
-    return p;
+    return {};
 }
 
 void ADesktop::setMousePos(const glm::ivec2 &pos) {
-    auto rootWindow = XRootWindow(CommonRenderingContext::ourDisplay, 0);
-    XSelectInput(CommonRenderingContext::ourDisplay, rootWindow, KeyReleaseMask);
-    XWarpPointer(CommonRenderingContext::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
-    XFlush(CommonRenderingContext::ourDisplay);
+
 }
 
 AFuture<APath>

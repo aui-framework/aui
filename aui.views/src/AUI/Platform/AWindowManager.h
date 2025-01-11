@@ -36,10 +36,6 @@ protected:
     Pipe mNotifyPipe;
     std::atomic_bool mFastPathNotify = false;
     std::string mXClipboardText;
-
-    void xProcessEvent(XEvent& ev);
-    void xClipboardCopyImpl(const AString& text);
-    AString xClipboardPasteImpl();
 #endif
 
 public:

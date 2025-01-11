@@ -21,9 +21,10 @@
 bool AClipboard::isEmpty() {
     return pasteFromClipboard().empty();
 }
+
 void AClipboard::copyToClipboard(const AString& text) {
-    AWindow::current()->getWindowManager().xClipboardCopyImpl(text);
 }
+
 AString AClipboard::pasteFromClipboard() {
-    return AWindow::current()->getWindowManager().xClipboardPasteImpl();
+    return {};
 }

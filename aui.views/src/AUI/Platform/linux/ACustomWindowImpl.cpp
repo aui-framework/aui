@@ -23,30 +23,6 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    if (event.position.y < mTitleHeight && event.asButton == AInput::LBUTTON) {
-        if (isCaptionAt(event.position)) {
-            XClientMessageEvent xclient;
-            memset(&xclient, 0, sizeof(XClientMessageEvent));
-            XUngrabPointer(CommonRenderingContext::ourDisplay, 0);
-            XFlush(CommonRenderingContext::ourDisplay);
-            xclient.type = ClientMessage;
-            xclient.window = mHandle;
-            xclient.message_type = XInternAtom(CommonRenderingContext::ourDisplay, "_NET_WM_MOVERESIZE", False);
-            xclient.format = 32;
-            auto newPos = ADesktop::getMousePosition();
-            xclient.data.l[0] = newPos.x;
-            xclient.data.l[1] = newPos.y;
-            xclient.data.l[2] = 8;
-            xclient.data.l[3] = 0;
-            xclient.data.l[4] = 0;
-            XSendEvent(CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
-                       (XEvent*) &xclient);
-
-            mDragging = true;
-            mDragPos = event.position;
-            emit dragBegin(event.position);
-        }
-    }
     AViewContainer::onPointerPressed(event);
 }
 
