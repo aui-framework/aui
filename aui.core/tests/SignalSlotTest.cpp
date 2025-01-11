@@ -20,6 +20,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Util/kAUI.h>
 #include <gmock/gmock.h>
+#include <random>
 
 using namespace std::chrono_literals;
 
@@ -309,22 +310,25 @@ TEST_F(SignalSlotTest, ObjectDestroySlaveInSignalHandler) {
 
 
 TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
+    static constexpr auto SEND_COUNT = 10000;
+    std::mt19937 re;
+    re.seed(0);
 
     AUI_REPEAT(100) {
 
         class Slave2 : public AObject {
         public:
-            Slave2(bool& called) : mCalled(called) {}
+            Slave2(uint32_t& called) : mCalled(called) {}
 
             void acceptMessage() {
-                mCalled = true;
+                mCalled += 1;
             }
 
         private:
-            bool& mCalled;
+            uint32_t& mCalled;
         };
 
-        bool called = false;
+        uint32_t called = 0;
 
         auto slave2 = _new<Slave2>(called);
 
@@ -344,10 +348,13 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
         }
 
         task = async {
-            AUI_REPEAT(10000) master->broadcastMessage("hello");
+            AUI_REPEAT(SEND_COUNT) master->broadcastMessage("hello");
         };
-        task.wait();
+
+        auto waitUntil = std::uniform_int_distribution<uint32_t>(0, SEND_COUNT)(re);
+        while (called < waitUntil) {}
         slave2 = nullptr; // delete slave; check for crash
+        task.wait();
         AThread::processMessages();
     }
 }

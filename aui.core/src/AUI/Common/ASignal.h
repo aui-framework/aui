@@ -208,7 +208,7 @@ private:
         friend class ASignal;
 
         void disconnect() override {
-            unlinkInSenderSideOnly();
+            onBeforeReceiverSideDestroyed();
             unlinkInReceiverSideOnly();
         }
 
@@ -262,8 +262,6 @@ private:
         void unlinkInReceiverSideOnly() {
             toBeRemoved = true;
 
-            // this function can be called by receiver's AObject destructor, so at the end of this function we assuming
-            // receiver (and thus receiverBase) are invalid.
             auto receiverLocal = std::exchange(receiverBase, nullptr);
             if (!receiverLocal) {
                 return;
@@ -272,7 +270,7 @@ private:
             removeIngoingConnectionIn(receiverLocal, *this);
         }
 
-        void unlinkInSenderSideOnly() override {
+        void unlinkInSenderSideOnly() {
             toBeRemoved = true;
             auto localSender = std::exchange(sender, nullptr);
             if (!localSender) {
@@ -293,6 +291,16 @@ private:
             // it->value may be unique owner of this, let's steal the ownership before erasure to keep things safe.
             auto self = std::exchange(it->value, nullptr);
             localSender->mOutgoingConnections.erase(it);
+
+        }
+
+        void onBeforeReceiverSideDestroyed() override {
+            unlinkInSenderSideOnly();
+
+            // this function can be called by receiver's AObject cleanup functions (presumably, destructor), so at the
+            // end we assume receiver (and thus receiverBase) are invalid.
+            receiver = nullptr;
+            receiverBase = nullptr;
         }
     };
 

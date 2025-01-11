@@ -55,7 +55,7 @@ private:
 
         ~ReceiverConnectionOwner() {
             if (value) {
-                value->unlinkInSenderSideOnly();
+                value->onBeforeReceiverSideDestroyed();
             }
         }
     };

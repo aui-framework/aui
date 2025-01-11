@@ -387,7 +387,7 @@ public:
          *
          * This cleanup function assumes that an appropriate clean action for the receiver side is taken.
          */
-        virtual void unlinkInSenderSideOnly() = 0;
+        virtual void onBeforeReceiverSideDestroyed() = 0;
     };
 
     /**
