@@ -271,9 +271,8 @@ private:
             removeIngoingConnectionIn(receiverLocal, *this, lock);
         }
 
-        void unlinkInSenderSideOnly() {
+        void unlinkInSenderSideOnly(std::unique_lock<ASpinlockMutex>& lock) {
             toBeRemoved = true;
-            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
             auto localSender = std::exchange(sender, nullptr);
             if (!localSender) {
                 return;
@@ -297,12 +296,12 @@ private:
         }
 
         void onBeforeReceiverSideDestroyed() override {
-            unlinkInSenderSideOnly();
-
-            // this function can be called by receiver's AObject cleanup functions (presumably, destructor), so at the
-            // end we assume receiver (and thus receiverBase) are invalid.
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+            // this function can be called by receiver's AObject cleanup functions (presumably, destructor), so we
+            // assume receiver (and thus receiverBase) are invalid.
             receiver = nullptr;
             receiverBase = nullptr;
+            unlinkInSenderSideOnly(lock);
         }
     };
 
