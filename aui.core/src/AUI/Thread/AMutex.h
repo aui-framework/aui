@@ -83,6 +83,11 @@ public:
         mState.store(UNLOCKED, std::memory_order_release);
     }
 
+    [[nodiscard]]
+    bool is_locked() const noexcept {
+        return mState == LOCKED;
+    }
+
 private:
     enum State { UNLOCKED, LOCKED };
     std::atomic<State> mState = UNLOCKED;

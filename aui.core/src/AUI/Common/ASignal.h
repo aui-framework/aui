@@ -262,16 +262,18 @@ private:
         void unlinkInReceiverSideOnly() {
             toBeRemoved = true;
 
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
             auto receiverLocal = std::exchange(receiverBase, nullptr);
             if (!receiverLocal) {
                 return;
             }
             receiver = nullptr;
-            removeIngoingConnectionIn(receiverLocal, *this);
+            removeIngoingConnectionIn(receiverLocal, *this, lock);
         }
 
         void unlinkInSenderSideOnly() {
             toBeRemoved = true;
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
             auto localSender = std::exchange(sender, nullptr);
             if (!localSender) {
                 return;
@@ -291,7 +293,7 @@ private:
             // it->value may be unique owner of this, let's steal the ownership before erasure to keep things safe.
             auto self = std::exchange(it->value, nullptr);
             localSender->mOutgoingConnections.erase(it);
-
+            lock.unlock();
         }
 
         void onBeforeReceiverSideDestroyed() override {
@@ -396,8 +398,11 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
         }
     }
 
+    std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
     auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
+    lock.unlock();
     ARaiiHelper returnBack = [&] {
+        lock.lock();
         AUI_MARK_AS_USED(senderPtr);
         AUI_MARK_AS_USED(receiverPtr);
 
@@ -412,7 +417,9 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
     };
     for (auto i = outgoingConnections.begin(); i != outgoingConnections.end();) {
         _<ConnectionImpl>& outgoingConnection = i->value;
+        lock.lock();
         if (outgoingConnection->toBeRemoved) {
+            lock.unlock();
             i = outgoingConnections.erase(i);
             continue;
         }
@@ -469,6 +476,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                 "when performing a non-threading call, args is expected to hold const references"
                 "instead of values");
         }
+        lock.unlock();
         (std::apply)(outgoingConnection->func, args);
         if (AObject::isDisconnected()) {
             i = outgoingConnections.erase(i);

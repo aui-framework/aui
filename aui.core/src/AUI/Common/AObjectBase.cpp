@@ -12,11 +12,11 @@
 #include "AObject.h"
 #include "AAbstractSignal.h"
 
-static ASpinlockMutex gSync;
+ASpinlockMutex AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC;
 
 void AObjectBase::clearAllIngoingConnections() noexcept {
     auto incomingConnections = [&] {
-      std::unique_lock lock(gSync);
+      std::unique_lock lock(SIGNAL_SLOT_GLOBAL_SYNC);
       return std::exchange(mIngoingConnections, {});
     }();
     incomingConnections.clear();

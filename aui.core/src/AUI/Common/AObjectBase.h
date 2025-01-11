@@ -31,6 +31,8 @@ class API_AUI_CORE AObjectBase : public aui::noncopyable {
 public:
     AObjectBase() = default;
 
+    static ASpinlockMutex SIGNAL_SLOT_GLOBAL_SYNC;
+
     AObjectBase(AObjectBase&& rhs) noexcept {
         AUI_ASSERTX(rhs.mIngoingConnections.empty(), "AObjectBase move is valid only if no signals connected to it");
     }

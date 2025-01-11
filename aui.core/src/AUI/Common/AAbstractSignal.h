@@ -447,5 +447,5 @@ protected:
     /**
      * @brief Removes a connection from the specified object.
      */
-    static void removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection);
+    static void removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection, std::unique_lock<ASpinlockMutex>& lock);
 };
