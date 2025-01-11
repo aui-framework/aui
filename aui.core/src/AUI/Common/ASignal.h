@@ -400,9 +400,8 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
 
     std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
     auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
-    lock.unlock();
     ARaiiHelper returnBack = [&] {
-        lock.lock();
+        if (!lock.owns_lock()) lock.lock();
         AUI_MARK_AS_USED(senderPtr);
         AUI_MARK_AS_USED(receiverPtr);
 
@@ -417,7 +416,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
     };
     for (auto i = outgoingConnections.begin(); i != outgoingConnections.end();) {
         _<ConnectionImpl>& outgoingConnection = i->value;
-        lock.lock();
+        if (!lock.owns_lock()) lock.lock();
         if (outgoingConnection->toBeRemoved) {
             lock.unlock();
             i = outgoingConnections.erase(i);
