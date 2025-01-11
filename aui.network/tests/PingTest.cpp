@@ -19,8 +19,10 @@
 using namespace std::chrono_literals;
 
 TEST(Ping, Localhost) {
-    AUI_REPEAT(1000) {
-        EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0);
+    try {
+        AUI_REPEAT(1000) { EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0); }
+    } catch (const AException& e) {
+        FAIL() << e;
     }
 }
 
