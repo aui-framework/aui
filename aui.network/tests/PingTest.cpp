@@ -18,6 +18,8 @@
 
 using namespace std::chrono_literals;
 
+// cant test them on linux on github
+#if !AUI_PLATFORM_LINUX
 TEST(Ping, Localhost) {
     try {
         AUI_REPEAT(1000) { EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0); }
@@ -47,3 +49,5 @@ TEST(Ping, External) {
     EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
 }
 */
+
+#endif
