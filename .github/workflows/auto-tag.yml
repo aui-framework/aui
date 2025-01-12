@@ -27,9 +27,6 @@ jobs:
           version=($(echo $version | tr "+" " "))
           index=${version[2]:-0}
           index=$((index+1))
-          version=$(echo "$version[1]+$index")
-          gh release create "$version" \
-            -p \
-            --title "(${{ github.ref_name }}) v${{ needs.build.outputs.version }}" \
-            --notes "Nightly **(UNSTABLE)** build from ${{ github.ref_name }} branch." \
-            --target ${{ github.ref_name }}
+          version=$(echo ${version[0]}+$index)
+          git tag $version
+          git push --tags
