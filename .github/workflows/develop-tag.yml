@@ -1,0 +1,35 @@
+name: "Develop auto tagging"
+
+on:
+  push:
+    branches:
+      - develop
+
+env:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+permissions:
+  contents: write
+
+jobs:
+  tagging:
+    name: "Develop auto tagging"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch
+        uses: actions/checkout@v4
+
+      - name: Publish Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
+          version=($(echo $version | tr "+" " "))
+          index=${version[2]:-0}
+          index=$((index+1))
+          version=$(echo "$version[1]+$index")
+          gh release create "$version" \
+            -p \
+            --title "(${{ github.ref_name }}) v${{ needs.build.outputs.version }}" \
+            --notes "Nightly **(UNSTABLE)** build from ${{ github.ref_name }} branch." \
+            --target ${{ github.ref_name }}
