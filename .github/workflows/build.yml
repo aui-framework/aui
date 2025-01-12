@@ -214,23 +214,6 @@ jobs:
     name: "Create release page"
 
     steps:
-      - name: Retrieve version
-        if: contains(github.ref, 'tags/v')
-        run: echo "hrlo"
-
-      - name: Retrieve version
-        if: !contains(github.ref, 'tags/v')
-        run: |
-          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
-          echo "Prev version: $version"
-          version=($(echo $version | tr "+" " "))
-          index=${version[1]:-0}
-          index=$((index+1))
-          version=$(echo ${version[0]}+$index)
-          echo "New version: $version"
-          echo "TAG_NAME=$version " >> $GITHUB_ENV
-          echo "RELEASE_NAME=(nightly ${{ github.ref }}) $version" >> $GITHUB_ENV
-
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
