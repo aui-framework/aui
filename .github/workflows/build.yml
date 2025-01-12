@@ -2,6 +2,9 @@ name: Build
 
 on:
   push:
+    branches:
+      - master
+      - develop
     tags:
       - v*
   pull_request:
@@ -212,6 +215,17 @@ jobs:
     name: "Create release page"
 
     steps:
+      - name: Publish Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
+          echo "Prev version: $version"
+          version=($(echo $version | tr "+" " "))
+          index=${version[1]:-0}
+          index=$((index+1))
+          version=$(echo ${version[0]}+$index)
+          echo "New version: $version"
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4

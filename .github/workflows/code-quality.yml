@@ -1,9 +1,6 @@
 name: Code Quality
 
 on:
-  push:
-    tags:
-      - v*
   pull_request:
     branches: [ master, develop ]
 
