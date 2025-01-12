@@ -216,9 +216,7 @@ jobs:
     steps:
       - name: Retrieve version
         if: contains(github.ref, 'tags/v')
-        run: |
-          echo "TAG_NAME=${{ github.ref }}" >> $GITHUB_ENV
-          echo "RELEASE_NAME=${{ github.ref }}" >> $GITHUB_ENV
+        run: echo "hrlo"
 
       - name: Retrieve version
         if: !contains(github.ref, 'tags/v')
