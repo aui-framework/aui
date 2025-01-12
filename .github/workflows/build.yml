@@ -214,6 +214,7 @@ jobs:
     name: "Create release page"
     steps:
       - name: Retrieve version
+        if: !contains(github.ref, 'tags/v')
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
