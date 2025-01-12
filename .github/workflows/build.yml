@@ -214,7 +214,19 @@ jobs:
     name: "Create release page"
     steps:
       - name: Retrieve version
-        if: !contains(github.ref, 'tags/v')
+        if: ${{ contains(github.ref, 'tags/v') }}
+        run: |
+          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
+          echo "Prev version: $version"
+          version=($(echo $version | tr "+" " "))
+          index=${version[1]:-0}
+          index=$((index+1))
+          version=$(echo ${version[0]}+$index)
+          echo "New version: $version"
+          echo "NEW_VERSION=$version" >> $GITHUB_ENV
+
+      - name: Retrieve version2
+        if: ${{ !contains(github.ref, 'tags/v') }}
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
