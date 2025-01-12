@@ -215,7 +215,6 @@ jobs:
     steps:
       - name: Retrieve version
         run: echo "SDAKLSDFJKSDK"
-
       - name: Retrieve version2
         if: !contains(github.ref, 'tags/v')
         run: |
