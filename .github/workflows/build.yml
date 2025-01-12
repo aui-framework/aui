@@ -216,17 +216,13 @@ jobs:
       - name: Retrieve version
         if: ${{ contains(github.ref, 'tags/v') }}
         run: |
-          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
-          echo "Prev version: $version"
-          version=($(echo $version | tr "+" " "))
-          index=${version[1]:-0}
-          index=$((index+1))
-          version=$(echo ${version[0]}+$index)
-          echo "New version: $version"
-          echo "NEW_VERSION=$version" >> $GITHUB_ENV
+          echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
+          echo "RELEASE_NAME=${{ github.ref }} " >> $GITHUB_ENV
 
-      - name: Retrieve version2
+      - name: Retrieve version
         if: ${{ !contains(github.ref, 'tags/v') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
