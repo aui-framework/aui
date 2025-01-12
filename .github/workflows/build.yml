@@ -217,20 +217,21 @@ jobs:
       - name: Retrieve version
         if: contains(github.ref, 'tags/v')
         run: |
-          echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
+           echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
+           echo "RELEASE_NAME=${{ github.ref }} " >> $GITHUB_ENV
 
       - name: Retrieve version
         if: !contains(github.ref, 'tags/v')
         run: |
-          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
-          echo "Prev version: $version"
-          version=($(echo $version | tr "+" " "))
-          index=${version[1]:-0}
-          index=$((index+1))
-          version=$(echo ${version[0]}+$index)
-          echo "New version: $version"
-          echo "TAG_NAME=$version " >> $GITHUB_ENV
-          echo "RELEASE_NAME=(nightly ${{ github.ref }}) $version" >> $GITHUB_ENV
+           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
+           echo "Prev version: $version"
+           version=($(echo $version | tr "+" " "))
+           index=${version[1]:-0}
+           index=$((index+1))
+           version=$(echo ${version[0]}+$index)
+           echo "New version: $version"
+           echo "TAG_NAME=$version " >> $GITHUB_ENV
+           echo "RELEASE_NAME=(nightly ${{ github.ref }}) $version" >> $GITHUB_ENV
 
       - name: Create Release
         id: create_release
