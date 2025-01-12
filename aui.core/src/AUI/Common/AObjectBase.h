@@ -52,13 +52,33 @@ private:
           : value(std::move(connection)) {}
         ReceiverConnectionOwner(const ReceiverConnectionOwner&) = default;
         ReceiverConnectionOwner(ReceiverConnectionOwner&&) noexcept = default;
-        ReceiverConnectionOwner& operator=(const ReceiverConnectionOwner&) = default;
-        ReceiverConnectionOwner& operator=(ReceiverConnectionOwner&&) noexcept = default;
+        ReceiverConnectionOwner& operator=(const ReceiverConnectionOwner& rhs) {
+            if (this == &rhs) {
+                return *this;
+            }
+            release();
+            value = rhs.value;
+            return *this;
+        }
+
+        ReceiverConnectionOwner& operator=(ReceiverConnectionOwner&& rhs) noexcept {
+            if (this == &rhs) {
+                return *this;
+            }
+            release();
+            value = std::move(rhs.value);
+            return *this;
+        }
 
         ~ReceiverConnectionOwner() {
-            if (value) {
-                value->onBeforeReceiverSideDestroyed();
+            release();
+        }
+    private:
+        void release() {
+            if (!value) {
+                return;
             }
+            value->onBeforeReceiverSideDestroyed();
         }
     };
 

@@ -391,26 +391,6 @@ public:
     };
 
     /**
-     * @brief Connection owner which destroys the connection in destructor.
-     */
-    struct AutoDestroyConnection {
-        _<Connection> value = nullptr;
-
-        AutoDestroyConnection() = default;
-        explicit AutoDestroyConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
-        AutoDestroyConnection(const AutoDestroyConnection&) = default;
-        AutoDestroyConnection(AutoDestroyConnection&&) noexcept = default;
-        AutoDestroyConnection& operator=(const AutoDestroyConnection&) = default;
-        AutoDestroyConnection& operator=(AutoDestroyConnection&&) noexcept = default;
-
-        ~AutoDestroyConnection() {
-            if (value) {
-                value->disconnect();
-            }
-        }
-    };
-
-    /**
      * @brief Destroys all connections of this signal, if any.
      */
     virtual void clearAllOutgoingConnections() const noexcept = 0;

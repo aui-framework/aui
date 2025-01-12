@@ -208,8 +208,13 @@ private:
         friend class ASignal;
 
         void disconnect() override {
-            onBeforeReceiverSideDestroyed();
-            unlinkInReceiverSideOnly();
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+            unlinkInSenderSideOnly(lock);
+            unlinkInReceiverSideOnly(lock);
+
+            receiverBase = nullptr;
+            receiver = nullptr;
+            sender = nullptr;
         }
 
     private:
@@ -259,10 +264,9 @@ private:
          *
          * This cleanup function assumes that an appropriate clean action for the sender side is taken.
          */
-        void unlinkInReceiverSideOnly() {
+        void unlinkInReceiverSideOnly(std::unique_lock<ASpinlockMutex>& lock) {
             toBeRemoved = true;
 
-            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
             auto receiverLocal = std::exchange(receiverBase, nullptr);
             if (!receiverLocal) {
                 return;
@@ -279,8 +283,8 @@ private:
             }
 
             // As we marked toBeRemoved, we are not required to do anything further. However, we can perform a cheap
-            // operation to clean the connection right know. If we fail at some point we can leave it as is.
-            // invoceSignal will clean the connection for us at some point.
+            // operation to clean the connection right now. If we fail at some point we can leave it as is.
+            // invokeSignal will clean the connection for us at some point.
             auto it = std::find_if(
                 localSender->mOutgoingConnections.begin(), localSender->mOutgoingConnections.end(),
                 [&](const SenderConnectionOwner& o) { return o.value.get() == this; });
@@ -315,15 +319,37 @@ private:
         explicit SenderConnectionOwner(_<ConnectionImpl> connection) noexcept : value(std::move(connection)) {}
         SenderConnectionOwner(const SenderConnectionOwner&) = default;
         SenderConnectionOwner(SenderConnectionOwner&&) noexcept = default;
-        SenderConnectionOwner& operator=(const SenderConnectionOwner&) = default;
-        SenderConnectionOwner& operator=(SenderConnectionOwner&&) noexcept = default;
+        SenderConnectionOwner& operator=(const SenderConnectionOwner& rhs) {
+            if (this == &rhs) {
+                return *this;
+            }
+            release();
+            value = rhs;
+            return *this;
+        }
+        SenderConnectionOwner& operator=(SenderConnectionOwner&& rhs) noexcept {
+            if (this == &rhs) {
+                return *this;
+            }
+            release();
+            value = std::move(rhs.value);
+            return *this;
+        }
 
         ~SenderConnectionOwner() {
-            if (value) {
-                // this destructor can be called in ASignal destructor, so it's worth to reset the sender as well.
-                value->sender = nullptr;
-                value->unlinkInReceiverSideOnly();
+            release();
+        }
+
+    private:
+        void release() noexcept {
+            if (!value) {
+                return;
             }
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+            // this destructor can be called in ASignal destructor, so it's worth to reset the sender as well.
+            value->sender = nullptr;
+            value->unlinkInReceiverSideOnly(lock);
+            value = nullptr;
         }
     };
 
@@ -343,6 +369,12 @@ private:
             conn->receiverBase = objectBase;
             conn->receiver = object;
             conn->func = makeRawInvocable(std::forward<Lambda>(lambda));
+            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+
+            std::erase_if(mOutgoingConnections, [](const SenderConnectionOwner& o) {
+                return o.value == nullptr;
+            });
+
             return mOutgoingConnections.emplace_back(std::move(conn)).value;
         }();
         addIngoingConnectionIn(objectBase, connection);
