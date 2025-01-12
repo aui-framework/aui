@@ -226,14 +226,15 @@ jobs:
           index=$((index+1))
           version=$(echo ${version[0]}+$index)
           echo "New version: $version"
+          echo "NEW_VERSION=$version" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ github.NEW_VERSION }}
+          release_name: ${{ github.NEW_VERSION }}
           draft: false
           prerelease: true
     outputs:
