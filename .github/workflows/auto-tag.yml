@@ -26,10 +26,8 @@ jobs:
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
           version=($(echo $version | tr "+" " "))
-          index=${version[2]:-0}
-          echo "Prev index: $index"
+          index=${version[1]:-0}
           index=$((index+1))
-          echo "New index: $index"
           version=$(echo ${version[0]}+$index)
           echo "New version: $version"
           git tag $version
