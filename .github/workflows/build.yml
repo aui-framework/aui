@@ -209,15 +209,18 @@ jobs:
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
   release:
-    if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
     permissions: write-all
     name: "Create release page"
 
     steps:
-      - name: Publish Release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Retrieve version
+        if: contains(github.ref, 'tags/v')
+        run: |
+          echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
+          echo "RELEASE_NAME=${{ github.ref }} " >> $GITHUB_ENV
+      - name: Retrieve version
+        if: !contains(github.ref, 'tags/v')
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
@@ -226,22 +229,23 @@ jobs:
           index=$((index+1))
           version=$(echo ${version[0]}+$index)
           echo "New version: $version"
-          echo "NEW_VERSION=$version" >> $GITHUB_ENV
+          echo "TAG_NAME=$version " >> $GITHUB_ENV
+          echo "RELEASE_NAME=(nightly ${{ github.ref }}) $version" >> $GITHUB_ENV
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.NEW_VERSION }}
-          release_name: ${{ github.NEW_VERSION }}
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: ${{ env.RELEASE_NAME }}
           draft: false
           prerelease: true
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
 
   publish:
-    if: contains(github.ref, 'tags/v')
     name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
     runs-on: ubuntu-latest
     needs: [build-desktop, release]
