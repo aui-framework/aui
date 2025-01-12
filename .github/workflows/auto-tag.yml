@@ -24,9 +24,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
+          echo "Prev version: $version"
           version=($(echo $version | tr "+" " "))
           index=${version[2]:-0}
           index=$((index+1))
           version=$(echo ${version[0]}+$index)
+          echo "New version: $version"
           git tag $version
           git push --tags
