@@ -296,7 +296,6 @@ jobs:
 
   deployment-tests:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
-    if: contains(github.ref, 'tags/v')
     runs-on: ${{ matrix.os }}
     needs: [publish]
     strategy:
