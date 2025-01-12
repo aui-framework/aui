@@ -35,5 +35,5 @@ ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
 
     connect(clicked, me::toggle);
 
-    mCheckBox->clicked.clearAllConnectionsWith(mCheckBox); // fixes double toggle
+    mCheckBox->clicked.clearAllOutgoingConnectionsWith(mCheckBox); // fixes double toggle
 }

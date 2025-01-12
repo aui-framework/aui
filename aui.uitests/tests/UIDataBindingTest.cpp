@@ -494,16 +494,16 @@ TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
     EXPECT_EQ(u.fullName, "Emma Watson");
     // AUI_DOCS_CODE_END
 
-    EXPECT_EQ(u.name.changed.mSlots.size(), 1);
-    EXPECT_EQ(u.surname.changed.mSlots.size(), 1);
+    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
+    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 1);
 
     // As soon as we set `name` to `""`, we don't access `surname`. If we try to trigger the fast path return:
     // AUI_DOCS_CODE_BEGIN
     u.name = "";
     // AUI_DOCS_CODE_END
     EXPECT_EQ(u.fullName, "-");
-    EXPECT_EQ(u.name.changed.mSlots.size(), 1);
-    EXPECT_EQ(u.surname.changed.mSlots.size(), 0);
+    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
+    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 0);
     // `surname` can't trigger re-evaluation anyhow. Re-evaluation can be triggered by `name` only. So, at the moment,
     // we are interested in `name` changes only.
     //

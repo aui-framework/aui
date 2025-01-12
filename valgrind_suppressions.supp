@@ -52,11 +52,3 @@
    fun:do_dlopen
    ...
 }
-
-{
-   ToFix
-   Memcheck:Addr8
-   ...
-   fun:_ZN7ASignalIJEED1Ev
-   ...
-}

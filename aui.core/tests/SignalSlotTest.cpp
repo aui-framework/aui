@@ -20,6 +20,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Util/kAUI.h>
 #include <gmock/gmock.h>
+#include <random>
 
 using namespace std::chrono_literals;
 
@@ -49,7 +50,7 @@ public:
 /**
  * Fixture.
  */
-class SignalSlot : public testing::Test {
+class SignalSlotTest : public testing::Test {
 public:
     _<Master> master;
     _<Slave> slave;
@@ -73,9 +74,18 @@ public:
         master = nullptr;
         slave = nullptr;
     }
+
+    template<typename... Args>
+    static auto& connections(ASignal<Args...>& signal) {
+        return signal.mOutgoingConnections;
+    }
+
+    static auto& connections(AObject& object) {
+        return object.mIngoingConnections;
+    }
 };
 
-TEST_F(SignalSlot, Basic) {
+TEST_F(SignalSlotTest, Basic) {
     slave = _new<Slave>();
     AObject::connect(master->message, slot(slave)::acceptMessage);
 
@@ -84,7 +94,7 @@ TEST_F(SignalSlot, Basic) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicProjection1) {
+TEST_F(SignalSlotTest, BasicProjection1) {
     slave = _new<Slave>();
     AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), slot(slave)::acceptMessageInt);
 
@@ -93,7 +103,7 @@ TEST_F(SignalSlot, BasicProjection1) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicProjection2) {
+TEST_F(SignalSlotTest, BasicProjection2) {
     slave = _new<Slave>();
     AObject::connect(master->message.projected(&AString::length), slot(slave)::acceptMessageInt);
 
@@ -102,7 +112,7 @@ TEST_F(SignalSlot, BasicProjection2) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, BasicNoArgs) {
+TEST_F(SignalSlotTest, BasicNoArgs) {
     slave = _new<Slave>();
     AObject::connect(master->message, slot(slave)::acceptMessageNoArgs);
 
@@ -111,7 +121,7 @@ TEST_F(SignalSlot, BasicNoArgs) {
     master->broadcastMessage("hello");
 }
 
-TEST_F(SignalSlot, Multithread) {
+TEST_F(SignalSlotTest, Multithread) {
     slave = _new<Slave>();
 
     AObject::connect(master->message, slot(slave)::acceptMessage);
@@ -124,7 +134,7 @@ TEST_F(SignalSlot, Multithread) {
     t.wait();
 }
 
-TEST_F(SignalSlot, StackAllocatedObject) {
+TEST_F(SignalSlotTest, StackAllocatedObject) {
     testing::InSequence seq;
     Slave slave;
 
@@ -138,20 +148,50 @@ TEST_F(SignalSlot, StackAllocatedObject) {
 
 /**
  * Checks that the program is not crashed when one of the object is destroyed.
+ * slave is destroyed first.
  */
-TEST_F(SignalSlot, ObjectRemoval) {
+TEST_F(SignalSlotTest, ObjectRemoval1) {
     slave = _new<Slave>();
-    {
-        testing::InSequence s;
-        AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
-        EXPECT_CALL(*slave, die()).Times(1);
-    }
+
+    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    EXPECT_EQ(connections(master->message).size(), 1);
+
+    testing::InSequence s;
+    EXPECT_CALL(*slave, acceptMessage(AString("test"))).Times(1);
+    master->broadcastMessage("test");
+
+    EXPECT_CALL(*slave, die()).Times(1);
+    slave = nullptr;
+
+    EXPECT_EQ(connections(master->message).size(), 0);
+    master->broadcastMessage("test");
 }
+
+/**
+ * Checks that the program is not crashed when one of the object is destroyed.
+ * master is destroyed first.
+ */
+TEST_F(SignalSlotTest, ObjectRemoval2) {
+    slave = _new<Slave>();
+
+    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    EXPECT_EQ(connections(master->message).size(), 1);
+
+    testing::InSequence s;
+    EXPECT_CALL(*slave, acceptMessage(AString("test"))).Times(1);
+    master->broadcastMessage("test");
+
+    master = nullptr;
+    EXPECT_EQ(connections(*slave).size(), 0);
+
+    EXPECT_CALL(*slave, die()).Times(1);
+}
+
 
 /**
  * Checks for nested connection.
  */
-TEST_F(SignalSlot, NestedConnection) {
+TEST_F(SignalSlotTest, NestedConnection) {
     slave = _new<Slave>();
     AObject::connect(master->message, slave, [this, slave = slave.get()] (const AString& msg) {
         slave->acceptMessage(msg);
@@ -169,7 +209,7 @@ TEST_F(SignalSlot, NestedConnection) {
 /**
  * Checks for disconnect functionality.
  */
-TEST_F(SignalSlot, ObjectDisconnect1) {
+TEST_F(SignalSlotTest, ObjectDisconnect1) {
     slave = _new<Slave>();
     AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
         slave->acceptMessage(msg);
@@ -185,7 +225,7 @@ TEST_F(SignalSlot, ObjectDisconnect1) {
 /**
  * Checks for disconnect functionality when one of the signals disconnected.
  */
-TEST_F(SignalSlot, ObjectDisconnect2) {
+TEST_F(SignalSlotTest, ObjectDisconnect2) {
     slave = _new<Slave>();
 
     bool called = false;
@@ -211,7 +251,7 @@ TEST_F(SignalSlot, ObjectDisconnect2) {
 /**
  * Checks for both disconnect and nested connect.
  */
-TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
+TEST_F(SignalSlotTest, ObjectNestedConnectWithDisconnect) {
     slave = _new<Slave>();
 
     bool called1 = false;
@@ -239,7 +279,7 @@ TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
 /**
  * Destroys master in a signal handler
  */
-TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
+TEST_F(SignalSlotTest, ObjectDestroyMasterInSignalHandler) {
     slave = _new<Slave>();
     EXPECT_CALL(*slave, die());
     {
@@ -255,7 +295,7 @@ TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
 /**
  * Destroys slave in it's signal handler
  */
-TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
+TEST_F(SignalSlotTest, ObjectDestroySlaveInSignalHandler) {
     slave = _new<Slave>();
     EXPECT_CALL(*slave, die());
     {
@@ -269,23 +309,26 @@ TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
 }
 
 
-TEST_F(SignalSlot, ObjectRemovalMultithread) {
+TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
+    static constexpr auto SEND_COUNT = 10000;
+    std::mt19937 re;
+    re.seed(0);
 
     AUI_REPEAT(100) {
 
         class Slave2 : public AObject {
         public:
-            Slave2(bool& called) : mCalled(called) {}
+            Slave2(uint32_t& called) : mCalled(called) {}
 
             void acceptMessage() {
-                mCalled = true;
+                mCalled += 1;
             }
 
         private:
-            bool& mCalled;
+            uint32_t& mCalled;
         };
 
-        bool called = false;
+        uint32_t called = 0;
 
         auto slave2 = _new<Slave2>(called);
 
@@ -305,10 +348,13 @@ TEST_F(SignalSlot, ObjectRemovalMultithread) {
         }
 
         task = async {
-            AUI_REPEAT(10000) master->broadcastMessage("hello");
+            AUI_REPEAT(SEND_COUNT) master->broadcastMessage("hello");
         };
-        task.wait();
+
+        auto waitUntil = std::uniform_int_distribution<uint32_t>(0, SEND_COUNT)(re);
+        while (called < waitUntil) {}
         slave2 = nullptr; // delete slave; check for crash
+        task.wait();
         AThread::processMessages();
     }
 }

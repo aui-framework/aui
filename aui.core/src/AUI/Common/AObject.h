@@ -38,6 +38,8 @@ namespace aui::detail {
  */
 class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject> {
     friend class AAbstractSignal;
+    template <typename ... Args>
+    friend class ASignal;
 
 public:
     AObject();
@@ -60,10 +62,11 @@ public:
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
+     * @return Connection instance
      */
     template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
-    static void connect(const Signal& signal, Object* object, Function&& function) {
-        const_cast<Signal&>(signal).connect(object, aui::detail::makeLambda(object, std::forward<Function>(function)));
+    static decltype(auto) connect(const Signal& signal, Object* object, Function&& function) {
+        return const_cast<Signal&>(signal).connect(object, aui::detail::makeLambda(object, std::forward<Function>(function)));
     }
 
     /**
@@ -154,12 +157,13 @@ public:
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
+     * @return Connection instance
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
         ACompatibleSlotFor<Connectable> Function>
-    static void
+    static decltype(auto)
     connect(const Connectable& connectable, Object& object, Function&& function) {
-        connect(connectable, &object, std::forward<Function>(function));
+        return connect(connectable, &object, std::forward<Function>(function));
     }
 
     /**
@@ -173,10 +177,11 @@ public:
      * @endcode
      * @param connectable signal or property
      * @param function slot. Can be lambda
+     * @return Connection instance
      */
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
-    void connect(const Connectable& connectable, Function&& function) {
-        connect(connectable, this, std::forward<Function>(function));
+    decltype(auto) connect(const Connectable& connectable, Function&& function) {
+        return connect(connectable, this, std::forward<Function>(function));
     }
 
     /**
@@ -188,20 +193,26 @@ public:
      * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), slot(otherObjectSharedPtr)::handleText);
      * @endcode
+     * @note
+     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     * connection creation.
+     *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
+     * @return Connection instance
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
-    static void
+    static decltype(auto)
     connect(const Connectable& connectable, _<Object> object, Function&& function) {
-        connect(connectable, object.get(), std::forward<Function>(function));
+        return connect(connectable, object.get(), std::forward<Function>(function));
     }
 
     /**
      * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
      * @param connectable signal or property
      * @param slotDef instance of <code>AObject</code> + slot
+     * @return Connection instance
      *
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
@@ -217,9 +228,9 @@ public:
      * @endcode
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
-    static void
+    static decltype(auto)
     connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef) {
-        connect(connectable, slotDef.boundObject, std::move(slotDef.invocable));
+        return connect(connectable, slotDef.boundObject, std::move(slotDef.invocable));
     }
 
     /**
@@ -231,6 +242,10 @@ public:
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
      * @endcode
+     * @note
+     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     * connection creation.
+     *
      * @param property source property.
      * @param object instance of `AObject`.
      * @param function slot. Can be lambda.
@@ -276,7 +291,7 @@ private:
     _<AAbstractThread> mAttachedThread;
     bool mSignalsEnabled = true;
 
-    /*
+    /**
      * @brief Allows cross-thread signal call through event loop.
      * @details
      * If the object is sensitive to calls from other threads (i.e. view), it may set this flag to true in order to

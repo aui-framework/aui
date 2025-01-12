@@ -210,7 +210,7 @@ ATreeView::ATreeView(const _<ITreeModel<AString>>& model):
 
 void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     if (mModel) {
-        clearSignals();
+        clearAllIngoingConnections();
     }
     mModel = model;
     setLayout(std::make_unique<AHorizontalLayout>());

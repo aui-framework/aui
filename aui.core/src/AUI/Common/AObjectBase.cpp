@@ -12,26 +12,12 @@
 #include "AObject.h"
 #include "AAbstractSignal.h"
 
-static ASpinlockMutex gSync;
+ASpinlockMutex AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC;
 
-void AObjectBase::clearSignals() noexcept {
-    auto signals = [&] {
-      std::unique_lock lock(gSync);
-      return std::exchange(mSignals, {});
+void AObjectBase::clearAllIngoingConnections() noexcept {
+    auto incomingConnections = [&] {
+      std::unique_lock lock(SIGNAL_SLOT_GLOBAL_SYNC);
+      return std::exchange(mIngoingConnections, {});
     }();
-    for (const auto& signal : signals) {
-        if (!signal->isDestroyed()) {
-            signal->clearAllConnectionsWith(this);
-        }
-    }
-}
-
-void AAbstractSignal::linkSlot(AObjectBase* object) noexcept {
-    std::unique_lock lock(gSync);
-    object->mSignals.insert(this);
-}
-
-void AAbstractSignal::unlinkSlot(AObjectBase* object) noexcept {
-    std::unique_lock lock(gSync);
-    object->mSignals.erase(this);
+    incomingConnections.clear();
 }

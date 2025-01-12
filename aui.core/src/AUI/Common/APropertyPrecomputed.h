@@ -67,7 +67,7 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
 
     template<aui::factory<T> Factory>
     APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] { // NOLINT(*-explicit-constructor)
-      clearSignals();
+      clearAllIngoingConnections();
       aui::property_precomputed::detail::DependencyObserverRegistrar r(*this);
       return expression();
     }) {

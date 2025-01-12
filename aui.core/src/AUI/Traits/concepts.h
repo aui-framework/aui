@@ -122,8 +122,8 @@ namespace aui {
 
 
     template<typename F, typename... Args>
-    concept predicate = requires(F&& f, Args&&... args) {
-        { f(std::forward<Args>(args)...) } -> same_as<bool>;
+    concept predicate = requires(F&& f, Args&... args) {
+        { f(args...) } -> same_as<bool>;
     };
 
     // aui concepts

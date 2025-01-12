@@ -44,7 +44,7 @@ public:
     }
 
     void setupConnectionsIfNotPresent(aui::no_escape<AViewContainerBase> container) {
-        if (container->childrenChanged.hasConnectionsWith(this)) {
+        if (container->childrenChanged.hasOutgoingConnectionsWith(this)) {
             return;
         }
 

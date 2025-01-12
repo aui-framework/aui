@@ -43,9 +43,9 @@ public:
 
     void setModel(const _<IListModel<T>>& model) {
         if (mModel) {
-            mModel->dataInserted.clearAllConnectionsWith(this);
-            mModel->dataChanged.clearAllConnectionsWith(this);
-            mModel->dataRemoved.clearAllConnectionsWith(this);
+            mModel->dataInserted.clearAllOutgoingConnectionsWith(this);
+            mModel->dataChanged.clearAllOutgoingConnectionsWith(this);
+            mModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
         }
         mModel = model;
 

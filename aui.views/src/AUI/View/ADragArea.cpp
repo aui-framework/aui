@@ -108,7 +108,7 @@ void ADragArea::ADraggableHandle::onPointerReleased(const APointerReleasedEvent&
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();
         if (!dragArea) return;
-        mouseMove.clearAllConnectionsWith(dragArea);
+        mouseMove.clearAllOutgoingConnectionsWith(dragArea);
         dragArea->endDragging();
     }
 }

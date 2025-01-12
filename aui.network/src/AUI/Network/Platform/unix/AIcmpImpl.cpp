@@ -59,7 +59,7 @@ public:
 
     IcmpImpl(const AInet4Address& mDestination) : mSocket(socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP)), mDestination(mDestination) {
         if (mSocket < 0) {
-            throw AIOException(aui::impl::formatSystemError().description);
+            throw AIOException("bad socket: "_format(aui::impl::formatSystemError().description));
         }
     }
 

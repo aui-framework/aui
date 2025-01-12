@@ -76,7 +76,7 @@ class AMenuContainer : public AViewContainerBase {
 
                     if (i.enabled) {
                         connect(view->mouseEnter, [this] {
-                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
                             mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {
@@ -103,7 +103,7 @@ class AMenuContainer : public AViewContainerBase {
                     auto items = i.subItems;
                     if (i.enabled) {
                         connect(view->mouseEnter, [this, view, items] {
-                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
                             mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {

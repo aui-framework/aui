@@ -356,7 +356,6 @@ class AObject;
  *
  */
 
-
 /**
  * @brief Base class for signal.
  * @details Since ASignal is a template class, AAbstractSignal provides unified access to template inseparable fields of
@@ -364,44 +363,110 @@ class AObject;
  * @ingroup core
  * @ingroup signal_slot
  */
-class API_AUI_CORE AAbstractSignal
-{
+class API_AUI_CORE AAbstractSignal {
     friend class AObject;
+
 public:
-    virtual ~AAbstractSignal() {
-        mDestroyed = true;
-    }
+    virtual ~AAbstractSignal() = default;
 
-    [[nodiscard]] bool isDestroyed() const noexcept {
-        return mDestroyed;
-    }
+    /**
+     * @brief Connection handle.
+     */
+    struct Connection {
+        friend class API_AUI_CORE AObjectBase;
+        /**
+         * @brief Breaks connection.
+         */
+        virtual void disconnect() = 0;
 
-    virtual void clearAllConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
-    virtual void clearAllConnections() const noexcept = 0;
+    private:
+        /**
+         * @brief Breaks connection in the sender side.
+         * @details
+         * Called when `AObjectBase` has cleaned its connection instance.
+         *
+         * This cleanup function assumes that an appropriate clean action for the receiver side is taken.
+         */
+        virtual void onBeforeReceiverSideDestroyed() = 0;
+    };
 
-    virtual void addGenericObserver(AObjectBase* object, std::function<void()> observer) = 0;
+    /**
+     * @brief Connection owner which destroys the connection in destructor.
+     */
+    struct AutoDestroyedConnection {
+        _<Connection> value = nullptr;
 
-    [[nodiscard]]
-    virtual bool hasConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept = 0;
+        AutoDestroyedConnection() = default;
+        explicit AutoDestroyedConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
+        AutoDestroyedConnection(const AutoDestroyedConnection&) = default;
+        AutoDestroyedConnection(AutoDestroyedConnection&&) noexcept = default;
+
+        AutoDestroyedConnection& operator=(_<Connection> rhs) noexcept {
+            if (value == rhs) {
+                return *this;
+            }
+            release();
+            value = std::move(rhs);
+            return *this;
+        }
+
+        AutoDestroyedConnection& operator=(const AutoDestroyedConnection& rhs) {
+            return operator=(rhs.value);
+        }
+
+        AutoDestroyedConnection& operator=(AutoDestroyedConnection&& rhs) noexcept {
+            return operator=(std::move(rhs.value));
+        }
+
+        ~AutoDestroyedConnection() {
+            release();
+        }
+
+    private:
+        void release() noexcept {
+            if (!value) {
+                return;
+            }
+            value->disconnect();
+        }
+    };
+
+    /**
+     * @brief Destroys all connections of this signal, if any.
+     */
+    virtual void clearAllOutgoingConnections() const noexcept = 0;
+
+    /**
+     * @brief Destroys all connections with passed receiver, if any.
+     * @param receiver object to clear connections with.
+     */
+    virtual void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept = 0;
+
+    /**
+     * @param receiver receiver objects to check connections with.
+     * @return Whether this signal has connections with passed receiver object.
+     */
+    virtual bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> receiver) const noexcept = 0;
+
+    /**
+     * @brief Creates generic connection (without arguments).
+     * @param receiver receiver object.
+     * @param observer function to be called when signal is fired.
+     */
+    virtual void addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
 
 protected:
-    void linkSlot(AObjectBase* object) noexcept;
-    void unlinkSlot(AObjectBase* object) noexcept;
-
-    static bool& isDisconnected();
+    /* some handy functions accessed from public headers */
 
     static _weak<AObject> weakPtrFromObject(AObject* object);
 
-private:
-    bool mDestroyed = false;
+    /**
+     * @brief Adds a connection to the specified object.
+     */
+    static void addIngoingConnectionIn(aui::no_escape<AObjectBase> object, _<Connection> connection);
+
+    /**
+     * @brief Removes a connection from the specified object.
+     */
+    static void removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection, std::unique_lock<ASpinlockMutex>& lock);
 };
-
-#include <AUI/Common/AObject.h>
-
-inline bool& AAbstractSignal::isDisconnected() {
-    return AObject::isDisconnected();
-}
-
-inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { // AAbstractSignal is a friend of AObject
-    return object->weakPtr();
-}

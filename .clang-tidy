@@ -29,6 +29,7 @@ Checks: >
   -bugprone-use-after-move,
   -clang-diagnostic-braced-scalar-init,
   -clang-diagnostic-deprecated-declarations,
+  -clang-diagnostic-deprecated-this-capture,
   -clang-diagnostic-inconsistent-missing-override,
   -clang-diagnostic-null-dereference,
   -clang-diagnostic-potentially-evaluated-expression,

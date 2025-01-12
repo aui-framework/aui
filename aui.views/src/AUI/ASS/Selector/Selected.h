@@ -64,7 +64,7 @@ namespace ass {
             IAssSubSelector::setupConnections(view, helper);
             mWrapped->setupConnections(view, helper);
 
-            view->customCssPropertyChanged.clearAllConnectionsWith(helper.get());
+            view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->customCssPropertyChanged, slot(helper)::onInvalidateStateAss);
         }
     };

@@ -25,24 +25,7 @@ inline _<T> _new(Args&& ... args)
 
 template<typename T, typename E>
 inline _<T> _new(std::initializer_list<E> il) {
-
-    if constexpr (std::is_base_of_v<AObject, T>) {
-        auto o = new T(il.begin(), il.end());
-        return _<T>(o, [](T* obj)
-        {
-            static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-            {
-                obj->clearSignals();
-                static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-                {
-                    delete obj;
-                });
-            });
-        });
-    }
-    else {
-        return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
-    }
+    return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
 }
 
 

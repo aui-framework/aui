@@ -248,6 +248,7 @@ macro(aui_enable_tests AUI_MODULE_NAME)
     return RUN_ALL_TESTS();
     }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
+#            _auib_apply_rpath(${TESTS_MODULE_NAME})
             include(GoogleTest)
             #gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 20)
@@ -339,6 +340,7 @@ macro(aui_enable_benchmarks AUI_MODULE_NAME)
     }
     ]])
             add_executable(${benchmarks_MODULE_NAME} ${benchmarks_SRCS} ${CMAKE_BINARY_DIR}/benchmarks_main_${benchmarks_MODULE_NAME}.cpp)
+            _auib_apply_rpath(${benchmarks_MODULE_NAME})
             set_property(TARGET ${benchmarks_MODULE_NAME} PROPERTY CXX_STANDARD 20)
             target_include_directories(${benchmarks_MODULE_NAME} PUBLIC benchmarks)
             target_link_libraries(${benchmarks_MODULE_NAME} PUBLIC benchmark::benchmark benchmark::benchmark_main)
@@ -388,6 +390,13 @@ macro(aui_enable_benchmarks AUI_MODULE_NAME)
     endif()
 endmacro()
 
+function(_auib_apply_rpath AUI_MODULE_NAME)
+    if (BUILD_SHARED_LIBS AND AUI_PLATFORM_LINUX)
+        set(_rpath "$ORIGIN;$ORIGIN/../lib")
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES BUILD_RPATH "${_rpath}"
+                INSTALL_RPATH "${_rpath}")
+    endif()
+endfunction()
 
 # common function fo aui_executable and aui_module
 function(aui_common AUI_MODULE_NAME)
@@ -396,6 +405,8 @@ function(aui_common AUI_MODULE_NAME)
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
     target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
+
+    _auib_apply_rpath(${AUI_MODULE_NAME})
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
