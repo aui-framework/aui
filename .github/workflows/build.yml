@@ -213,21 +213,9 @@ jobs:
     permissions: write-all
     name: "Create release page"
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
       - name: Retrieve version
         if: contains(github.ref, 'tags/v')
-        run: |
-          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
-          echo "Prev version: $version"
-          version=($(echo $version | tr "+" " "))
-          index=${version[1]:-0}
-          index=$((index+1))
-          version=$(echo ${version[0]}+$index)
-          echo "New version: $version"
-          echo "NEW_VERSION=$version" >> $GITHUB_ENV
-
+        run: echo "SDAKLSDFJKSDK"
       - name: Retrieve version2
         if: !contains(github.ref, 'tags/v')
         run: |
