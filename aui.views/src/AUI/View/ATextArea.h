@@ -83,6 +83,7 @@ protected:
 private:
     mutable AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
+    AAbstractSignal::AutoDestroyedConnection mUpdatedMaxScrollSignal;
 
     struct EntityQueryResult {
         Iterator iterator;

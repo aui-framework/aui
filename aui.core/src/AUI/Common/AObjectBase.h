@@ -73,8 +73,9 @@ private:
         ~ReceiverConnectionOwner() {
             release();
         }
+
     private:
-        void release() {
+        void release() noexcept {
             if (!value) {
                 return;
             }

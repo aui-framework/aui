@@ -210,6 +210,7 @@ private:
         void disconnect() override {
             std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
             unlinkInSenderSideOnly(lock);
+            if (!lock.owns_lock()) lock.lock();
             unlinkInReceiverSideOnly(lock);
 
             receiverBase = nullptr;
