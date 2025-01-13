@@ -228,19 +228,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
-          echo "Prev version: $version"
-          version=($(echo $version | tr "-rc." " "))
-          index=${version[1]:-0}
-          index=$((index+1))
-          version=$(echo ${version[0]}-rc.$index)
-          echo "New version: $version"
-          echo "TAG_NAME=$version " >> $GITHUB_ENV
-          echo "RELEASE_NAME=$version " >> $GITHUB_ENV
       - name: Output version
         id: version
         run: |
-          echo "ref=$TAG_NAME" >> $GITHUB_OUTPUT
+          python3 .github/create-release-page.py
 
       - name: Create Release
         id: create_release
