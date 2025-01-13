@@ -230,13 +230,17 @@ jobs:
         run: |
           version=$(gh release list -L 1 --json tagName --jq '.[] .tagName')
           echo "Prev version: $version"
-          version=($(echo $version | tr "+" " "))
+          version=($(echo $version | tr "-rc." " "))
           index=${version[1]:-0}
           index=$((index+1))
-          version=$(echo ${version[0]}+$index)
+          version=$(echo ${version[0]}-rc.$index)
           echo "New version: $version"
           echo "TAG_NAME=$version " >> $GITHUB_ENV
-          echo "RELEASE_NAME=(nightly ${{ github.ref_name }}) $version" >> $GITHUB_ENV
+          echo "RELEASE_NAME=$version " >> $GITHUB_ENV
+      - name: Output version
+        id: version
+        run: |
+          echo "ref=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
@@ -250,7 +254,7 @@ jobs:
           prerelease: true
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
-      ref: ${{ env.TAG_NAME }}
+      ref: ${{ steps.version.outputs.ref }}
 
   publish:
     name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
