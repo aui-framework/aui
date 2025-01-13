@@ -88,4 +88,7 @@ Disables "Waiting for repository" lock.
 
 Disables precompiled binaries.
 
+## AUIB_FORCE_PRECOMPILED
+
+Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 

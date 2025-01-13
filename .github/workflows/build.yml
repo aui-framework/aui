@@ -211,6 +211,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     permissions: write-all
+    if: github.event_name != 'pull_request'
     name: "Create release page"
     steps:
       - name: Retrieve version
@@ -305,7 +306,7 @@ jobs:
   deployment-tests:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
-    needs: [publish]
+    needs: [release, publish]
     strategy:
       fail-fast: false
       matrix:

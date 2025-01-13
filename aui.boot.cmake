@@ -21,13 +21,20 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
+option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
+
+if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
+    message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")
+endif()
+
 function(_auib_fix_multiconfiguration)
     get_property(_tmp GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
     if (NOT _tmp)
         return()
     endif()
     message(STATUS "\nMulti configuration generator detected (https://github.com/aui-framework/aui/issues/133)"
-    "\nPlease use ninja generator if possible")
+            "\nPlease use ninja generator if possible")
 
     if (CMAKE_BUILD_TYPE)
         message(STATUS "CMAKE_CONFIGURATION_TYPES overridden to CMAKE_BUILD_TYPE = ${CMAKE_BUILD_TYPE}")
@@ -346,13 +353,13 @@ function(_auib_try_download_precompiled_binary)
     _auib_precompiled_archive_name(_archive_name ${AUI_MODULE_NAME})
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         set(_binary_download_urls "${AUIB_IMPORT_PRECOMPILED_URL_PREFIX}/${_archive_name}.tar.gz")
-        message(STATUS "Checking for precompiled binary...")
+        message(STATUS "Checking for precompiled package...")
     else()
         if (TAG_OR_HASH STREQUAL "latest")
             set(TAG_OR_HASH master)
         endif()
         set(_binary_download_urls "${URL}/releases/download/${TAG_OR_HASH}/${_archive_name}.tar.gz" "${URL}/releases/download/refs%2Fheads%2F${TAG_OR_HASH}/${_archive_name}.tar.gz")
-        message(STATUS "GitHub detected, checking for precompiled binary...")
+        message(STATUS "GitHub detected, checking for precompiled package...")
     endif()
 
     foreach(_binary_download_url ${_binary_download_urls})
@@ -372,7 +379,7 @@ function(_auib_try_download_precompiled_binary)
             continue()
         endif()
 
-        message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
+        message(STATUS "Unpacking precompiled package for ${AUI_MODULE_NAME}...")
         file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
                 WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
@@ -618,7 +625,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                 BINARY_DIR ${DEP_BINARY_DIR})
     endif()
-    
+
     if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
         # validate the CMAKELISTS_CUSTOM param
         set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
@@ -700,6 +707,9 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
             if (NOT _skip_compilation)
+                if (AUIB_FORCE_PRECOMPILED)
+                    message(FATAL_ERROR "Can't find a precompiled package for ${AUI_MODULE_NAME}. (-DAUIB_FORCE_PRECOMPILED)")
+                endif()
                 include(FetchContent)
 
                 if (AUIB_IMPORT_ARCHIVE)
@@ -716,7 +726,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                             USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
                             ${SOURCE_BINARY_DIRS_ARG}
-                            )
+                    )
 
                     FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
@@ -724,7 +734,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
                             BINARY_DIR DEP_BINARY_DIR
                             SOURCE_DIR DEP_SOURCE_DIR
-                            )
+                    )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
                 endif()
             endif()
@@ -771,7 +781,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             CMAKE_ANDROID_ARCH_ABI
                             ANDROID_NDK
                             CMAKE_ANDROID_NDK
-                            )
+                    )
                 endif()
 
                 get_cmake_property(CACHE_VARS CACHE_VARIABLES)
@@ -797,6 +807,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 # forward all necessary variables to child cmake build
                 foreach(_varname
                         AUIB_NO_PRECOMPILED
+                        AUIB_FORCE_PRECOMPILED
                         AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
                         AUIB_CACHE_DIR
@@ -853,7 +864,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
-                        )
+                )
                 _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
@@ -864,7 +875,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                             RESULT_VARIABLE STATUS_CODE
                             OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
-                            )
+                    )
                     _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
@@ -886,7 +897,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
-                        )
+                )
                 _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
