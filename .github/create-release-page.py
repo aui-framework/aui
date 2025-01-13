@@ -36,8 +36,15 @@ def increment_rc_version(version: str) -> str:
 assert increment_rc_version("v6.2.1") == "v6.2.1-rc.1"
 assert increment_rc_version("v6.2.1-rc.24") == "v6.2.1-rc.25"
 
+def cmd(cmd: str):
+    out = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8')
+    out.rstrip('\n')
+    print(out)
+    return out
+
+
 if __name__ == '__main__':
-    latest = json.loads(subprocess.run("gh release list -L 1 --json name", capture_output=True, shell=True).stdout)[0]["name"]
+    latest = json.loads(cmd("gh release list -L 1 --json name"))[0]["name"]
     latest = increment_rc_version(latest)
 
     set_github_env('TAG_NAME', latest)
