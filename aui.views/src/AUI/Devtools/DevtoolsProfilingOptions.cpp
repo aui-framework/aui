@@ -46,6 +46,7 @@ namespace {
 DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
     setContents(Centered {
         Vertical::Expanding {
+            /// [fromItems]
             AText::fromItems({"These settings are applicable for render-to-texture optimizations.",
                               makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html")}),
             CheckBoxWrapper { Label { "Highlight redraw requests" } } && targetWindow->profiling()->highlightRedrawRequests,
@@ -63,6 +64,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
             AText::fromItems({"Stops the attached debugger at the point when window's update layout flag is set. This "
                               "can be used to walk through stacktrace and find which view and why triggered layout "
                               "update. When breakpoint is triggered, checkbox is unset. Note: when debugger is not attached, behaviour is undefined."}),
+            /// [fromItems]
         } with_style {
             MaxSize { 700_dp, {} },
         }

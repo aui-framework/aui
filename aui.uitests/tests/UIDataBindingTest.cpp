@@ -267,6 +267,7 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
     // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
     // defined by const member function as follows:
     // AUI_DOCS_CODE_BEGIN
+    /// [APropertyDef User]
     class User: public AObject {
     public:
         auto name() const {
@@ -297,6 +298,7 @@ TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
             return mName;
         }
     };
+    /// [APropertyDef User]
     // AUI_DOCS_CODE_END
 
     // APropertyDef behaves like a class/struct function member:

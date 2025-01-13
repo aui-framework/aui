@@ -265,39 +265,7 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
  * @details
  * See @ref property_system "property system" for more info.
  *
- * @code{cpp}
- * class User: public AObject {
- * public:
- *     auto name() const {
- *         return APropertyDef {
- *             this,
- *             &User::getName, // this works too: &User::mName
- *             &User::setName,
- *             mNameChanged,
- *         };
- *     }
- *
- * private:
- *     AString mName;
- *     emits<AString> mNameChanged;
- *
- *     void setName(AString name) {
- *         // APropertyDef requires us to emit
- *         // changed signal if value is actually
- *         // changed
- *         if (mName == name) {
- *             return;
- *         }
- *         mName = std::move(name);
- *         emit mNameChanged(mName);
- *     }
- *
- *     const AString& getName() const {
- *         return mName;
- *     }
- * };
- * @endcode
- *
+ * @snippet aui.uitests/tests/UIDataBindingTest.cpp APropertyDef User
  * # Performance considerations
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
