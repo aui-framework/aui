@@ -15,7 +15,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   GIT_SUBMODULE_STRATEGY: recursive
 
 permissions:
@@ -161,7 +160,7 @@ jobs:
             shared_or_static: static
             
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -210,27 +209,48 @@ jobs:
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
   release:
-    if: contains(github.ref, 'tags/v')
     runs-on: ubuntu-latest
     permissions: write-all
+    if: github.event_name != 'pull_request'
     name: "Create release page"
-
     steps:
+      - name: Retrieve version
+        if: ${{ contains(github.ref, 'tags/v') }}
+        run: |
+          echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
+          echo "RELEASE_NAME=${{ github.ref }} " >> $GITHUB_ENV
+
+      - name: Checkout
+        if: ${{ !contains(github.ref, 'tags/v') }}
+        uses: actions/checkout@v4
+
+      - name: Retrieve version
+        if: ${{ !contains(github.ref, 'tags/v') }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 .github/create-release-page.py $(gh release list -L 1 --json name --jq '.[] .name')
+
+      - name: Output version
+        id: version
+        run: |
+          echo "ref=$TAG_NAME" >> $GITHUB_OUTPUT
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: ${{ env.RELEASE_NAME }}
           draft: false
           prerelease: true
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+      ref: ${{ steps.version.outputs.ref }}
 
   publish:
-    if: contains(github.ref, 'tags/v')
     name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
     runs-on: ubuntu-latest
     needs: [build-desktop, release]
@@ -285,9 +305,8 @@ jobs:
 
   deployment-tests:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
-    if: contains(github.ref, 'tags/v')
     runs-on: ${{ matrix.os }}
-    needs: [publish]
+    needs: [release, publish]
     strategy:
       fail-fast: false
       matrix:
@@ -332,7 +351,7 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION="${{ github.ref_name }}"
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION="${{ needs.release.outputs.ref }}"
 
       - name: Run tests
         # Build your program with the given configuration
