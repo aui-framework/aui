@@ -15,6 +15,8 @@
 import json
 import os
 import subprocess
+import sys
+
 
 def set_github_env(name: str, value: str):
     env_file = os.getenv('GITHUB_ENV')
@@ -36,15 +38,8 @@ def increment_rc_version(version: str) -> str:
 assert increment_rc_version("v6.2.1") == "v6.2.1-rc.1"
 assert increment_rc_version("v6.2.1-rc.24") == "v6.2.1-rc.25"
 
-def cmd(cmd: str):
-    out = subprocess.run(cmd, capture_output=True, shell=True).stdout.decode('utf-8')
-    out.rstrip('\n')
-    print(out)
-    return out
-
-
 if __name__ == '__main__':
-    latest = json.loads(cmd("gh release list -L 1 --json name"))[0]["name"]
+    latest = sys.argv[1]
     latest = increment_rc_version(latest)
 
     set_github_env('TAG_NAME', latest)

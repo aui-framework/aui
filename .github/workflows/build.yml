@@ -228,10 +228,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          python3 .github/create-release-page.py $(gh release list -L 1 --json name --jq '.[] .name')
+
       - name: Output version
         id: version
         run: |
-          python3 .github/create-release-page.py
+          echo "ref=$TAG_NAME" >> $GITHUB_OUTPUT
 
       - name: Create Release
         id: create_release
