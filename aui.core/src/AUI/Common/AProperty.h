@@ -42,8 +42,8 @@ auto makeAssignment(Property&& property) { // note the rvalue reference template
     } i = { std::forward<Property>(property) };
 
     return ASlotDef<decltype(property.boundObject()), decltype(i)> {
-        .boundObject = property.boundObject(),
-        .invocable = std::move(i),
+        property.boundObject(),
+        std::move(i),
     };
 }
 

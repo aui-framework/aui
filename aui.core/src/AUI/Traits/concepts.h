@@ -188,6 +188,7 @@ template<aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
 struct ASlotDef: ASlotDefBase {
     ObjectPtr boundObject;
     Invocable invocable;
+    ASlotDef(ObjectPtr boundObject, Invocable invocable) : boundObject(std::move(boundObject)), invocable(std::move(invocable)) {}
 };
 
 template <typename T>
