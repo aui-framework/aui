@@ -60,6 +60,8 @@ For more libraries, please visit https://github.com/aui-framework/boot.
 -DAUIB_AUI_AS=ON
 ```
 
+This action disables usage of precompiled binary.
+
 # CMake commands
 
 ## auib_import
