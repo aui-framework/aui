@@ -69,6 +69,7 @@ define_aui_component(json)
 define_aui_component(audio)
 
 if (NOT ANDROID AND NOT IOS)
+    define_aui_component(updater)
     define_aui_component(uitests)
 endif()
 
@@ -103,6 +104,7 @@ set(AUI_ALL_COMPONENTS core
                        uitests
                        toolbox
                        audio
+                       updater
         )
 
 
