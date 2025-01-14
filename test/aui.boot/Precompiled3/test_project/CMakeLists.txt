@@ -1,11 +1,16 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.24)
 
 project(test_project)
 
+include(FetchContent)
 FetchContent_Declare(aui
-        https://github.com/aui-framework/aui/releases/download/v7.0.0-rc.2/aui_linux-gnu-x86_64-static-debug.tar.gz)
+    URL https://github.com/aui-framework/aui/releases/download/${AUI_TEST_DEPLOY_VERSION}/aui_linux-gnu-x86_64-static-debug.tar.gz)
 
 FetchContent_MakeAvailable(aui)
+FetchContent_GetProperties(aui
+        SOURCE_DIR aui_ROOT
+)
+find_package(aui REQUIRED)
 
 aui_executable(test_project)
 aui_link(test_project PUBLIC aui::core aui::views)
