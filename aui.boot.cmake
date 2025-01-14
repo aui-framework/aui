@@ -659,9 +659,9 @@ function(auib_import AUI_MODULE_NAME URL)
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
             if (NOT EXISTS ${DEP_INSTALLED_FLAG})
-                message(STATUS "${AUI_MODULE_NAME}: building because ${DEP_INSTALLED_FLAG} does not exist")
+                message(STATUS "${AUI_MODULE_NAME}: resolving because ${DEP_INSTALLED_FLAG} does not exist")
             else()
-                message(STATUS "${AUI_MODULE_NAME}: building because find_package could not find package in ${DEP_INSTALL_PREFIX}")
+                message(STATUS "${AUI_MODULE_NAME}: resolving because find_package could not find package in ${DEP_INSTALL_PREFIX}")
             endif()
         else()
             if (EXISTS ${DEP_SOURCE_DIR})
@@ -671,40 +671,43 @@ function(auib_import AUI_MODULE_NAME URL)
 
         set(${AUI_MODULE_NAME}_FOUND FALSE) # reset the FOUND flag; in some cases it may have been TRUE here
 
-        message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
+        unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
-        set(_skip_fetch FALSE)
-        if (EXISTS "${DEP_SOURCE_DIR}/.git")
-            # let's try to checkout a local repository
-            _auib_find_git()
-            if(GIT_EXECUTABLE)
-                execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
-                        WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                        RESULT_VARIABLE _errored
-                        OUTPUT_QUIET
-                        ERROR_QUIET)
-                if (NOT _errored)
-                    message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
-                    set(_skip_fetch TRUE)
+        message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
+        # check for GitHub Release
+        if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED AND NOT DEP_ADD_SUBDIRECTORY)
+            _auib_try_download_precompiled_binary()
+        endif()
+
+        if (NOT _skip_compilation)
+            set(_skip_fetch FALSE)
+            if (EXISTS "${DEP_SOURCE_DIR}/.git")
+                # let's try to checkout a local repository
+                _auib_find_git()
+                if(GIT_EXECUTABLE)
+                    execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
+                            WORKING_DIRECTORY ${DEP_SOURCE_DIR}
+                            RESULT_VARIABLE _errored
+                            OUTPUT_QUIET
+                            ERROR_QUIET)
+                    if (NOT _errored)
+                        message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
+                        set(_skip_fetch TRUE)
+                    endif()
                 endif()
             endif()
+            if (NOT _skip_fetch)
+                file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
+            endif()
+            file(REMOVE_RECURSE ${DEP_BINARY_DIR})
         endif()
-        if (NOT _skip_fetch)
-            file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
-        endif()
-        file(REMOVE_RECURSE ${DEP_BINARY_DIR})
 
         # check for local existence
         if (EXISTS ${URL})
             get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
             message(STATUS "Using local: ${DEP_SOURCE_DIR}")
         else()
-            unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
-            # check for GitHub Release
-            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED AND NOT DEP_ADD_SUBDIRECTORY)
-                _auib_try_download_precompiled_binary()
-            endif()
 
             if (NOT _skip_compilation)
                 if (AUIB_FORCE_PRECOMPILED)
