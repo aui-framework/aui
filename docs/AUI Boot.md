@@ -168,13 +168,40 @@ Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 
 Because `libcurl` is not a part of AUI, it uses standard CMake's function to find `OpenSSL` (`find_package`).
 
+# Producing packages with dependencies managed by AUI Boot {#aui_boot_producing_packages}
+
+AUI distributions [published on our GitHub releases page](https://github.com/aui-framework/aui/releases) are produced with help of AUI Boot.
+
+CMake-driven projects produce package configuration with [configure_file](https://cmake.org/cmake/help/latest/command/configure_file.html):
+
+@snippet CMakeLists.txt configure file example
+
+Inside of `aui-config.cmake.in`, there's a line:
+```cmake
+@AUIB_DEPS@
+```
+
+`AUIB_DEPS` contains cmake commands to resolve dependencies of your project. This variable is populated by `auib_import`
+calls inside of your project during configure time. Depending on @ref AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT ,
+`AUIB_DEPS` contains either `find_package` (SELF_SUFFICIENT=TRUE) or `auib_import` (SELF_SUFFICIENT=FALSE) calls. The
+latter requires the user of your library to use AUI Boot.
+
+As was mentioned, AUI Boot requires specially formatted (precompiled) package names to use them. For this to work, you
+can call `auib_precompiled_binary` inside of your root `CMakeLists.txt` which configures `cpack` to produce `tar.gz`
+with properly formatted name.
+
+@snippet CMakeLists.txt auib_precompiled_binary
+
+At last, use `cpack` to produce a package.
+
+@snippet .github/workflows/build.yml cpack
+
 # Importing AUI without AUI Boot
 
 In some cases, AUI Boot might not cover your particular needs, and you would like to build without it. It is still not
 a recommended way of using AUI, as it is not fully covered with tests, and you're basically trying to complicate your
 life by hardcoding paths in your CMake lists and thus making hardly reproducible projects. Consider
-[asking questions](https://github.com/aui-framework/aui/issues) about AUI Boot on our GitHub page, and we'd help to
-adapt AUI Boot to your use case.
+[asking questions](https://github.com/aui-framework/aui/issues) about AUI Boot on our GitHub page, and we'd help to adapt AUI Boot to your use case.
 
 ## Building AUI without AUI Boot
 

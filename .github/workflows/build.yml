@@ -198,6 +198,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV
 
+# [cpack]
       - name: Pack
         working-directory: ${{github.workspace}}/build
         run: cpack . -C ${{ matrix.debug_or_release }}
@@ -207,6 +208,7 @@ jobs:
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+# [cpack]
 
   release:
     runs-on: ubuntu-latest
