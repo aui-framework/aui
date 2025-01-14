@@ -172,16 +172,20 @@ set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
     endif()
 endforeach()
 
+
+# [auib_precompiled_binary]
 auib_precompiled_binary()
+# [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
 add_subdirectory(test/)
 
+# [configure file example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
-#install(EXPORT AUI DESTINATION cmake/)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
+# [configure file example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

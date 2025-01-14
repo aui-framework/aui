@@ -30,7 +30,7 @@ endif()
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
-set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
+set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
@@ -740,6 +740,7 @@ endmacro()
 
 macro(_aui_try_find_toolbox)
     _aui_find_root()
+    message(STATUS "AUI_BUILD_AUI_ROOT = ${AUI_BUILD_AUI_ROOT}")
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
