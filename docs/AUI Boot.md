@@ -182,9 +182,7 @@ Inside of `aui-config.cmake.in`, there's a line:
 ```
 
 `AUIB_DEPS` contains cmake commands to resolve dependencies of your project. This variable is populated by `auib_import`
-calls inside of your project during configure time. Depending on @ref AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT ,
-`AUIB_DEPS` contains either `find_package` (SELF_SUFFICIENT=TRUE) or `auib_import` (SELF_SUFFICIENT=FALSE) calls. The
-latter requires the user of your library to use AUI Boot.
+calls inside your project during configure time. `AUIB_DEPS` contains `auib_import` calls.
 
 As was mentioned, AUI Boot requires specially formatted (precompiled) package names to use them. For this to work, you
 can call `auib_precompiled_binary` inside of your root `CMakeLists.txt` which configures `cpack` to produce `tar.gz`
