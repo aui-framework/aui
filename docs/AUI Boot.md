@@ -3,18 +3,35 @@ AUI Boot is yet another package manager based on CMake. If a library uses CMake 
 # Importing AUI
 
 ```cmake
+set(AUI_VERSION v6.2.1)
+
 file(
     DOWNLOAD 
-    https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
+    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake 
     ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(
     AUI https://github.com/aui-framework/aui 
-    COMPONENTS core views)
+    COMPONENTS core views
+    VERSION ${AUI_VERSION})
 
 aui_link(YOUR_APP PUBLIC aui::core
                          aui::views)
 ```
+
+# Prebuilt packages
+
+AUI Boot is a source-first package manager, however, it can pull precompiled packages instead of building them locally.
+At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
+these rules, so AUI Boot can pull precompiled package of AUI.
+
+If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED :
+
+```shell
+cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
+```
+
+This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
 # Importing 3rdparty libraries
 
@@ -143,3 +160,24 @@ Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 ![image](https://user-images.githubusercontent.com/19491414/153878364-b214f167-8243-400c-93af-a227af2f961b.png)
 
 Because `libcurl` is not a part of AUI, it uses standard CMake's function to find `OpenSSL` (`find_package`).
+
+# Importing AUI without AUI Boot
+
+In some cases, AUI Boot might not cover your particular needs, and you would like to build without it. It is still not
+a recommended way of using AUI, as it is not fully covered with tests, and you're basically trying to complicate your
+life by hardcoding paths in your CMake lists and thus making hardly reproducible projects. Consider
+[asking questions](https://github.com/aui-framework/aui/issues) about AUI Boot on our GitHub page, and we'd help to
+adapt AUI Boot to your use case.
+
+## Building AUI without AUI Boot
+
+@ref AUIB_DISABLE CMake configure flag can be used to replace `auib_import` calls to `find_package`. In this scenario
+you will need to resolve AUI's dependencies in some other way (i.e, by using Conan).
+
+## Using AUI distributions with `find_package`
+
+AUI distributions [published on our GitHub releases page](https://github.com/aui-framework/aui/releases) are
+self-sufficient. That is, they have AUI's dependencies bundled, so they can be used by `find_package`, without even
+requiring AUI Boot.
+
+@include test/aui.boot/Precompiled3/test_project/CMakeLists.txt

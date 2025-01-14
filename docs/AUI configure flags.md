@@ -68,7 +68,7 @@ Disables code signing step on iOS.
 
 # aui.boot
 
-## AUIB_DISABLE
+## AUIB_DISABLE {#AUIB_DISABLE}
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
@@ -88,7 +88,7 @@ Disables "Waiting for repository" lock.
 
 Disables precompiled binaries.
 
-## AUIB_FORCE_PRECOMPILED
+## AUIB_FORCE_PRECOMPILED {#AUIB_FORCE_PRECOMPILED}
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
