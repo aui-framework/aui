@@ -25,6 +25,11 @@ AUI Boot is a source-first package manager, however, it can pull precompiled pac
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
 these rules, so AUI Boot can pull precompiled package of AUI.
 
+To use a precompiled binary, you must specify a tag of released version from
+[releases page](https://github.com/aui-framework/aui/releases) (for example, `v6.2.1` or `v7.0.0-rc.2`). These packages
+are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
+set up a development and build with AUI.
+
 If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED :
 
 ```shell
