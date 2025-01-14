@@ -301,7 +301,7 @@ function(_auib_validate_target_installation _target)
             endif()
             message(FATAL_ERROR
                     "While importing ${AUI_MODULE_NAME}:\n"
-                    "Imported target ${_target} has dependency on a system file\n${_property_item} IN ${_property}\n"
+                    "Imported target ${_target} depends on a out-of-tree (system) file\n${_property_item} IN ${_property}\n"
                     "This effectively means that the library (and thus your project) is not portable.\n"
                     "CMake targets should be used instead of hardcoded paths.\n"
                     "You can silence this error by setting -DAUIB_NO_PRECOMPILED=TRUE\n"
