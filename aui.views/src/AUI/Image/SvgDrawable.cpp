@@ -40,6 +40,9 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
 
 void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     auto& size = params.size;
+    if (size.x < 1 || size.y < 1) {
+        return;
+    }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
         render.rectangle(ATexturedBrush{
