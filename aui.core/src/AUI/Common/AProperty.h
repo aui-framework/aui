@@ -170,6 +170,28 @@ struct AProperty: AObjectBase {
         return this;
     }
 
+    AProperty(const AProperty& value): raw(value.raw) {
+    }
+
+    AProperty(AProperty&& value) noexcept: raw(std::move(value.raw)) {
+    }
+
+    AProperty& operator=(const AProperty& value) {
+        if (this == &value) {
+            return *this;
+        }
+        operator=(value.raw);
+        return *this;
+    }
+
+    AProperty& operator=(AProperty&& value) noexcept {
+        if (this == &value) {
+            return *this;
+        }
+        operator=(std::move(value.raw));
+        return *this;
+    }
+
     template <aui::convertible_to<T> U>
     AProperty& operator=(U&& value) noexcept {
         static constexpr auto IS_COMPARABLE = requires { this->raw == value; };
@@ -179,13 +201,20 @@ struct AProperty: AObjectBase {
             }
         }
         this->raw = std::forward<U>(value);
-        emit changed(this->raw);
+        notify();
         return *this;
     }
 
     template <ASignalInvokable SignalInvokable>
     void operator^(SignalInvokable&& t) {
         t.invokeSignal(nullptr);
+    }
+
+    /**
+     * @brief Notify observers that a change was occurred (no preconditions).
+     */
+    void notify() {
+        emit changed(this->raw);
     }
 
     [[nodiscard]]

@@ -235,9 +235,9 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // asking for `changed`:
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1); // HIDE
         auto u = aui::ptr::manage(new User { .name = "Chloe" });
+
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
         AObject::connect(u->name, slot(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
@@ -250,6 +250,7 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         //
         // Subsequent changes to field would send updates as well:
         // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
         u->name = "Marinette";
         // AUI_DOCS_CODE_END
         // Assignment operation above makes an additional line to output:
@@ -276,15 +277,20 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         {
             // AUI_DOCS_CODE_BEGIN
             auto observer = _new<LogObserver>();
-            EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
-            EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);     // HIDE
             auto original = aui::ptr::manage(new User { .name = "Chloe" });
+
+            EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
             AObject::connect(original->name, slot(observer)::log);
             // AUI_DOCS_CODE_END
             // This part is similar to previous examples, nothing new. Let's introduce a copy:
             // AUI_DOCS_CODE_BEGIN
             auto copy = _new<User>(*original);
             EXPECT_EQ(copy->name, "Chloe"); // copied name
+            // AUI_DOCS_CODE_END
+            // Now, let's change `origin->name` and check that observer received an update, but value in the `copy`
+            // remains:
+            // AUI_DOCS_CODE_BEGIN
+            EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
             original->name = "Marinette";
             EXPECT_EQ(copy->name, "Chloe"); // still
             // AUI_DOCS_CODE_END
@@ -317,7 +323,21 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
         // it notifies the observers.
         // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto original = aui::ptr::manage(new User { .name = "Chloe" });
+
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+        AObject::connect(original->name, slot(observer)::log);
         // AUI_DOCS_CODE_END
+        // This part is similar to previous examples, nothing new. Let's perform copy-assignment:
+        // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+        User copy { .name = "Marinette" };
+        *original = copy;
+        // AUI_DOCS_CODE_END
+        // See, not only the connection remains, but it also receives notification about the change.
+        EXPECT_EQ(connections(original->name.changed).size(), 1);
+        EXPECT_EQ(connections(*observer).size(), 1);
     }
 }
 
