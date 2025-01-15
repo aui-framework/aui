@@ -27,7 +27,7 @@ class API_AUI_CORE AObjectBase {
 
     /* tests */
     friend class SignalSlotTest;
-    friend class UIDataBindingTest;
+    friend class PropertyTest;
 
 public:
     AObjectBase() = default;

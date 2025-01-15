@@ -150,9 +150,9 @@ class ASignal final : public AAbstractSignal {
     friend class AObject;
 
     /* tests */
-    friend class UIDataBindingTest_APropertyPrecomputed_Complex_Test;
-    friend class UIDataBindingTest;
+    friend class PropertyPrecomputedTest_APropertyPrecomputed_Complex_Test;
     friend class SignalSlotTest;
+    friend class PropertyTest;
 
     template <typename AnySignal, typename Projection>
     friend struct aui::detail::signal::ProjectedSignal;

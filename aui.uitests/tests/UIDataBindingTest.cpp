@@ -26,15 +26,6 @@
 #include "AUI/View/ANumberPicker.h"
 
 class UIDataBindingTest : public testing::UITest {
-public:
-    template<typename... Args>
-    static auto& connections(ASignal<Args...>& signal) {
-        return signal.mOutgoingConnections;
-    }
-
-    static auto& connections(AObject& object) {
-        return object.mIngoingConnections;
-    }
 };
 
 
@@ -132,473 +123,15 @@ TEST_F(UIDataBindingTest, TextField1) {
     // This is basic example of setting up property-to-property connection.
 }
 
-class LogObserver : public AObject {
-public:
-    LogObserver() {
-        ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
-        });
-    }
-    MOCK_METHOD(void, log, (const AString& msg), ());
-};
-
 //
 // # Declaring Properties
-// There are three ways to define a property in AUI:
+// There are several ways to define a property in AUI:
+// - AProperty - basic wrapper property type for data models
+// - APropertyDef - property-compliant view type to tie custom getter, setter and signal together
+// - APropertyPrecomputed - readonly property whose value is determined by a callable that references other properties
 //
-TEST_F(UIDataBindingTest, AProperty) { // HEADER
-    // To declare a property inside your data model, use AProperty template:
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-    };
-    // AUI_DOCS_CODE_END
-    // `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
-    // value with `value()` method or implicit conversion `operator T()`.
-
-    // AProperty behaves like a class/struct data member:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name = "Hello";
-        EXPECT_EQ(u.name, "Hello");
-        // AUI_DOCS_CODE_END
-    }
-
-    // You can even perform binary operations on it seamlessly:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name = "Hello";
-        u.name += " world!";
-        EXPECT_EQ(u.name, "Hello world!");
-        EXPECT_EQ(u.name->length(), AString("Hello world!").length());
-        // AUI_DOCS_CODE_END
-    }
-
-    // In most cases, property is implicitly convertible to its underlying type:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
-        User u;
-        u.name = "Hello";
-        doSomethingWithName(u.name);
-        // AUI_DOCS_CODE_END
-
-
-        // If it doesn't, simply put an asterisk:
-        // AUI_DOCS_CODE_BEGIN
-        doSomethingWithName(*u.name);
-        //                 ^^^ HERE
-        // AUI_DOCS_CODE_END
-    }
-
-    //
-    // ### Observing changes
-    // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
-    // object for demonstration:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        class LogObserver : public AObject {
-        public:
-            void log(const AString& msg) {
-                ALogger::info("LogObserver") << "Received value: " << msg;
-            }
-        };
-        // AUI_DOCS_CODE_END
-    }
-    {
-        //
-        // Example usage:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
-        AObject::connect(u->name.changed, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        EXPECT_CALL(*observer, log(AString("Marinette")));
-        //
-        // At the moment, the program prints nothing. When we change the property:
-        // AUI_DOCS_CODE_BEGIN
-        u->name = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Code produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-    {
-        testing::InSequence s;
-        //
-        // As you can see, observer received the update. But, for example, if we would like to display the value via
-        // label, the label wouldn't display the current value until the next update. We want the label to display
-        // *current* value without requiring an update. To do this, connect to the property directly, without explicitly
-        // asking for `changed`:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
-
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(u->name, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // Code above produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
-        // As you can see, observer receives the value without making updates to the value. The call of
-        // `LogObserver::log` is made by `AObject::connect` itself. In this document, we will call this behaviour as
-        // "pre-fire".
-        //
-        // Subsequent changes to field would send updates as well:
-        // AUI_DOCS_CODE_BEGIN
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
-        u->name = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Assignment operation above makes an additional line to output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-        //
-        // Whole program output when connecting to property directly:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-    {
-        {
-            User user { .name = "Hello" };
-            auto copy = user;
-            EXPECT_EQ(copy.name, "Hello");
-            EXPECT_EQ(copy.surname, "");
-        }
-        // ### Copy constructing AProperty
-        // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
-        // that `AProperty` copies it's underlying data field only, the signal-slot relations are not borrowed.
-        {
-            // AUI_DOCS_CODE_BEGIN
-            auto observer = _new<LogObserver>();
-            auto original = aui::ptr::manage(new User { .name = "Chloe" });
-
-            EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-            AObject::connect(original->name, slot(observer)::log);
-            // AUI_DOCS_CODE_END
-            // This part is similar to previous examples, nothing new. Let's introduce a copy:
-            // AUI_DOCS_CODE_BEGIN
-            auto copy = _new<User>(*original);
-            EXPECT_EQ(copy->name, "Chloe"); // copied name
-            // AUI_DOCS_CODE_END
-            // Now, let's change `origin->name` and check that observer received an update, but value in the `copy`
-            // remains:
-            // AUI_DOCS_CODE_BEGIN
-            EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
-            original->name = "Marinette";
-            EXPECT_EQ(copy->name, "Chloe"); // still
-            // AUI_DOCS_CODE_END
-            // In this example, observer is aware of changes `"Chloe"` -> `"Marinette"`. The copy is not aware because
-            // it is a **copy**. If we try to change the `copy`'s name:
-            // AUI_DOCS_CODE_BEGIN
-            copy->name = "Adrien";
-            // AUI_DOCS_CODE_END
-            // The observer is not aware about changes in `copy`. In fact. `copy->name` has zero connections.
-            EXPECT_EQ(connections(original->name.changed).size(), 1);
-            EXPECT_EQ(connections(copy->name.changed).size(), 0);
-            EXPECT_EQ(connections(*observer).size(), 1);
-        }
-    }
-    {
-        {
-            User user1{ .name = "Hello" };
-            EXPECT_EQ(user1.name, "Hello");
-            User user2;
-            EXPECT_EQ(user2.name, "");
-            user2 = user1;
-            EXPECT_EQ(user2.name, "Hello");
-        }
-        // ### Copy assigning AProperty
-        // The situation with copy assigning `auto copy = _new<User>(); *copy = *original;` is similar to copy
-        // construction `auto copy = _new<User>(*original);`, except that we are copying to some pre-existing
-        // data structure that potentially have signal-slot relations already. So, not only connections should be kept
-        // as is but a notification for copy destination's observers is needed.
-        //
-        // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
-        // it notifies the observers.
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto original = aui::ptr::manage(new User { .name = "Chloe" });
-
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(original->name, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // This part is similar to previous examples, nothing new. Let's perform copy-assignment:
-        // AUI_DOCS_CODE_BEGIN
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
-        User copy { .name = "Marinette" };
-        *original = copy;
-        // AUI_DOCS_CODE_END
-        // See, not only the connection remains, but it also receives notification about the change.
-        EXPECT_EQ(connections(original->name.changed).size(), 1);
-        EXPECT_EQ(connections(*observer).size(), 1);
-    }
-}
-
-TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
-    // You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
-    // write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
-    // APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
-    //
-    // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
-    // defined by const member function as follows:
-    // AUI_DOCS_CODE_BEGIN
-    /// [APropertyDef User]
-    class User: public AObject {
-    public:
-        auto name() const {
-            return APropertyDef {
-                this,
-                &User::getName, // this works too: &User::mName
-                &User::setName,
-                mNameChanged,
-            };
-        }
-
-    private:
-        AString mName;
-        emits<AString> mNameChanged;
-
-        void setName(AString name) {
-            // APropertyDef requires us to emit
-            // changed signal if value is actually
-            // changed
-            if (mName == name) {
-                return;
-            }
-            mName = std::move(name);
-            emit mNameChanged(mName);
-        }
-
-        const AString& getName() const {
-            return mName;
-        }
-    };
-    /// [APropertyDef User]
-    // AUI_DOCS_CODE_END
-
-    // APropertyDef behaves like a class/struct function member:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name() = "Hello";
-        EXPECT_EQ(u.name(), "Hello");
-        // AUI_DOCS_CODE_END
-    }
-    // @note
-    // Properties defined with APropertyDef instead of AProperty impersonate themselves by trailing braces `()`. We
-    // can't get rid of them, as APropertyDef is defined thanks to member function. In comparison to `user->name`, think
-    // of `user->name()` as the same kind of property except defining custom behaviour via function, hence the braces
-    // `()`.
-    //
-    // For the rest, APropertyDef is identical to AProperty including seamless interaction:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name() = "Hello";
-        u.name() += " world!";
-        EXPECT_EQ(u.name(), "Hello world!");
-        EXPECT_EQ(u.name()->length(), AString("Hello world!").length());
-        // AUI_DOCS_CODE_END
-        //
-        // @note
-        // In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your property
-        // directly. Equivalent code will be:
-        // @code{cpp}
-        // u.setName(u.getName() + " world!")
-        // @endcode
-        //
-    }
-
-    {
-        // The implicit conversions work the same way as with AProperty:
-        // AUI_DOCS_CODE_BEGIN
-        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
-        User u;
-        u.name() = "Hello";
-        doSomethingWithName(u.name());
-        // AUI_DOCS_CODE_END
-
-
-        // AUI_DOCS_CODE_BEGIN
-        doSomethingWithName(*u.name());
-        // AUI_DOCS_CODE_END
-    }
-
-    //
-    // ### Observing changes
-    // Close to `AProperty`:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto u = _new<User>();
-        u->name() = "Chloe";
-        // ...
-        AObject::connect(u->name().changed, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        EXPECT_CALL(*observer, log(AString("Marinette")));
-        // AUI_DOCS_CODE_BEGIN
-        u->name() = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Code produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-    {
-        testing::InSequence s;
-        //
-        // Making connection to property directly instead of `.changed`:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);       // HIDE
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);   // HIDE
-        auto u = _new<User>();
-        u->name() = "Chloe";
-        // ...
-        AObject::connect(u->name(), slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // Code above produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
-        //
-        // Subsequent changes to field would send updates as well:
-        // AUI_DOCS_CODE_BEGIN
-        u->name() = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Assignment operation above makes an additional line to output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-        //
-        // Whole program output when connecting to property directly:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-}
-
-TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
-    testing::InSequence s;
-    // Despite properties offer @ref Label_via_declarative_projection "projection methods", you might want to track
-    // and process values of several properties.
-    //
-    // `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
-    // Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
-    //
-    // It's convenient to access values from another properties inside the expression. The properties accessed during
-    // invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
-    // automatically. If one of the tracked properties fires `changed` signal, `APropertyPrecomputed` invalidates its
-    // `T`. `APropertyPrecomputed` follows @ref aui::lazy "lazy semantics" so the expression is re-evaluated and the new
-    // result is applied to `APropertyPrecomputed` as soon as the latter is accessed for the next time.
-    //
-    // In other words, it allows to specify relationships between different object properties and reactively update
-    // `APropertyPrecomputed` value whenever its dependencies change. `APropertyPrecomputed<T>` is somewhat similar to
-    // [Qt Bindable Properties](https://doc.qt.io/qt-6/bindableproperties.html).
-    //
-    // `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
-    // value with `value()` method or implicit conversion `operator T()` as with other properties.
-    //
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-        APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
-    };
-
-    auto u = aui::ptr::manage(new User {
-        .name = "Emma",
-        .surname = "Watson",
-    });
-
-    auto observer = _new<LogObserver>();
-    EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1); // HIDE
-    EXPECT_CALL(*observer, log(AString("Emma Stone"))).Times(1); // HIDE
-    AObject::connect(u->fullName, slot(observer)::log);
-    // AUI_DOCS_CODE_END
-    EXPECT_EQ(u->fullName, "Emma Watson");
-    //
-    // The example above prints "Emma Watson". If we try to update one of dependencies of `APropertyPrecomputed` (i.e.,
-    // `name` or `surname`), `APropertyPrecomputed` responds immediately:
-
-    // AUI_DOCS_CODE_BEGIN
-    u->surname = "Stone";
-    // AUI_DOCS_CODE_END
-    //
-    // The example above prints "Emma Stone".
-    EXPECT_EQ(u->fullName, "Emma Stone");
-
-    //
-    // ### Observing changes
-    // Similar to `AProperty`.
-}
-
-TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
-    //
-    // ### Valid Expressions
-    // Any C++ callable evaluating to `T` can be used as an expression for `APropertyPrecomputed<T>`. However, to
-    // formulate correct expression, some rules must be satisfied.
-    //
-    // Dependency tracking only works on other properties. It is the developer's responsibility to ensure all values
-    // referenced in the expression are properties, or, at least, non-property values that wouldn't change or whose
-    // changes are not interesting. You definitely can use branching inside the expression, but you must be confident
-    // about what are you doing. Generally speaking, use as trivial expressions as possible.
-    //
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-        APropertyPrecomputed<AString> fullName = [&]() -> AString {
-            if (name->empty()) {
-                return "-";
-            }
-            if (surname->empty()) {
-                return "-";
-            }
-            return "{} {}"_format(name, surname);
-        };
-    };
-    // AUI_DOCS_CODE_END
-    //
-    // In this expression, we have a fast path return if `name` is empty.
-    // AUI_DOCS_CODE_BEGIN
-    User u = {
-        .name = "Emma",
-        .surname = "Watson",
-    };
-    // trivial: we've accessed all referenced properties
-    EXPECT_EQ(u.fullName, "Emma Watson");
-    // AUI_DOCS_CODE_END
-
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 1);
-
-    // As soon as we set `name` to `""`, we don't access `surname`. If we try to trigger the fast path return:
-    // AUI_DOCS_CODE_BEGIN
-    u.name = "";
-    // AUI_DOCS_CODE_END
-    EXPECT_EQ(u.fullName, "-");
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 0);
-    // `surname` can't trigger re-evaluation anyhow. Re-evaluation can be triggered by `name` only. So, at the moment,
-    // we are interested in `name` changes only.
-    //
-    // `APropertyPrecomputed` might evaluate its expression several times during its lifetime. The developer must make
-    // sure that all objects referenced in the expression live longer than `APropertyPrecomputed`.
-    //
-    // The expression should not read from the property it's a binding for. Otherwise, there's an infinite evaluation
-    // loop.
-}
-
-
+// Please check their respective documentation pages for an additional information.
+//
 // # UI data binding with let
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
@@ -954,7 +487,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
 //
 // Also, `>` operator (resembles arrow) is used to specify the destination slot.
 //
-// The example below is essentially the same as @ref "Label_via_let" but uses declarative connection set up syntax.
+// The example below is essentially the same as @ref "UIDataBindingTest_Label_via_let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     // Use `&` and `>` expression to connect the model's username property to the label's @ref ALabel::text "text"
     // property.
@@ -1003,7 +536,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // @ref "Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
+    // @ref "UIDataBindingTest_Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
     // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
@@ -1056,7 +589,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "Roza");
 
     //
-    // Behaviour of such connection is equal to @ref "Label_via_declarative":
+    // Behaviour of such connection is equal to @ref "UIDataBindingTest_Label_via_declarative":
     //
     // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
@@ -1075,7 +608,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in @ref "Label_via_declarative".
+    // as in @ref "UIDataBindingTest_Label_via_declarative".
 
     {
         auto l = Label {} & user->name;
@@ -1132,7 +665,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               // AUI_DOCS_CODE_END
               // @note
               // We're using `operator&&` here to set up bidirectional connection. For more info, go to
-              // @ref "Declarative_bidirectional_connection".
+              // @ref "UIDataBindingTest_Declarative_bidirectional_connection".
               //
             });
         }
@@ -1349,7 +882,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // We can use projections in the same way as with `let`.
     //
-    // Let's repeat the @ref "Bidirectional_projection" sample in declarative way:
+    // Let's repeat the @ref "UIDataBindingTest_Bidirectional_projection" sample in declarative way:
     using namespace declarative;
     struct User {
         AProperty<Gender> gender;

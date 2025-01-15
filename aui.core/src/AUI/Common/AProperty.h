@@ -139,18 +139,7 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
- * See @ref property_system "property system" for more info.
- * @code{cpp}
- * struct User {
- *   AProperty<AString> name;
- *   AProperty<AString> surname;
- * };
- *
- * // AProperty behaves like a class/struct data member:
- * User u;
- * u.name = "Hello";
- * EXPECT_EQ(u.name, "Hello");
- * @endcode
+ * See @ref property_system "property system" for usage examples.
  */
 template <typename T>
 struct AProperty: AObjectBase {
@@ -247,7 +236,7 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a readonly projection of this property.
+     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
@@ -256,7 +245,7 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a bidirectional projection of this property.
+     * @brief Makes a bidirectional @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
      */
     template<aui::invocable<const T&> ProjectionRead,
              aui::invocable<const std::invoke_result_t<ProjectionRead, T>&> ProjectionWrite>
@@ -292,9 +281,12 @@ static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProp
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property_system
  * @details
- * See @ref property_system "property system" for more info.
+ * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
+ * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
+ * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
  *
- * @snippet aui.uitests/tests/UIDataBindingTest.cpp APropertyDef User
+ * See @ref property_system "property system" for usage examples.
+ *
  * # Performance considerations
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
@@ -383,7 +375,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a readonly projection of this property.
+     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
@@ -392,7 +384,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a bidirectional projection of this property.
+     * @brief Makes a bidirectional @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
      */
     template <
         aui::invocable<const Underlying&> ProjectionRead,
