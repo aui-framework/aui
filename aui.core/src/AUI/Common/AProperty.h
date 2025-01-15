@@ -145,7 +145,7 @@ template <typename T>
 struct AProperty: AObjectBase {
     using Underlying = T;
 
-    T raw;
+    T raw{};
     emits<T> changed;
 
     AProperty()
