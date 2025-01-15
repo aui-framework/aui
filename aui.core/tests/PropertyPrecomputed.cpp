@@ -141,3 +141,44 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     // loop.
 }
 
+TEST_F(PropertyPrecomputedTest, Copy_constructing_APropertyPrecomputed) { // HEADER_H1
+    {
+        User user { .name = "Hello" };
+        auto copy = user;
+        EXPECT_EQ(copy.name, "Hello");
+        EXPECT_EQ(copy.surname, "");
+    }
+
+    // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
+    // that `AProperty` copies it's underlying data field only, the signal-slot relations are not borrowed.
+    {
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto original = aui::ptr::manage(new User { .name = "Chloe" });
+
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+        AObject::connect(original->name, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // This part is similar to previous examples, nothing new. Let's introduce a copy:
+        // AUI_DOCS_CODE_BEGIN
+        auto copy = _new<User>(*original);
+        EXPECT_EQ(copy->name, "Chloe"); // copied name
+        // AUI_DOCS_CODE_END
+        // Now, let's change `origin->name` and check that observer received an update, but value in the `copy`
+        // remains:
+        // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+        original->name = "Marinette";
+        EXPECT_EQ(copy->name, "Chloe"); // still
+        // AUI_DOCS_CODE_END
+        // In this example, observer is aware of changes `"Chloe"` -> `"Marinette"`. The copy is not aware because
+        // it is a **copy**. If we try to change the `copy`'s name:
+        // AUI_DOCS_CODE_BEGIN
+        copy->name = "Adrien";
+        // AUI_DOCS_CODE_END
+        // The observer is not aware about changes in `copy`. In fact. `copy->name` has zero connections.
+        EXPECT_EQ(connections(original->name.changed).size(), 1);
+        EXPECT_EQ(connections(copy->name.changed).size(), 0);
+        EXPECT_EQ(connections(*observer).size(), 1);
+    }
+}
