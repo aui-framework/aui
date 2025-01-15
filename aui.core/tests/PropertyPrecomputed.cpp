@@ -86,9 +86,7 @@ TEST_F(PropertyPrecomputedTest, APropertyPrecomputed) {
     EXPECT_EQ(u->fullName, "Emma Stone");
 }
 
-TEST_F(PropertyPrecomputedTest, APropertyPrecomputed_Complex) {
-    //
-    // ### Valid Expressions
+TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     // Any C++ callable evaluating to `T` can be used as an expression for `APropertyPrecomputed<T>`. However, to
     // formulate correct expression, some rules must be satisfied.
     //
