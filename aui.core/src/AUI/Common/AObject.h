@@ -36,7 +36,7 @@ namespace aui::detail {
  * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with sharedPtr() and weakPtr()
  * functions.
  */
-class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject> {
+class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject>, public aui::noncopyable {
     friend class AAbstractSignal;
     template <typename ... Args>
     friend class ASignal;

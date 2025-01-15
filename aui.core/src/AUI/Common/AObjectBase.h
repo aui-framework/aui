@@ -21,12 +21,13 @@
 #include "SharedPtrTypes.h"
 #include <AUI/Common/AAbstractSignal.h>
 
-class API_AUI_CORE AObjectBase : public aui::noncopyable {
+class API_AUI_CORE AObjectBase {
     /* ASignal <-> AObject implementation stuff */
     friend class AAbstractSignal;
 
     /* tests */
     friend class SignalSlotTest;
+    friend class UIDataBindingTest;
 
 public:
     AObjectBase() = default;
@@ -34,7 +35,24 @@ public:
     static ASpinlockMutex SIGNAL_SLOT_GLOBAL_SYNC;
 
     AObjectBase(AObjectBase&& rhs) noexcept {
+        operator=(std::move(rhs));
+    }
+
+    AObjectBase(const AObjectBase& rhs) noexcept {
+        // mIngoingConnections are not borrowed on copy operation.
+    }
+
+    AObjectBase& operator=(const AObjectBase& rhs) noexcept {
+        // mIngoingConnections are not borrowed on copy operation.
+        return *this;
+    }
+
+    AObjectBase& operator=(AObjectBase&& rhs) noexcept {
+        if (this == &rhs) {
+            return *this;
+        }
         AUI_ASSERTX(rhs.mIngoingConnections.empty(), "AObjectBase move is valid only if no signals connected to it");
+        return *this;
     }
 
 protected:

@@ -151,6 +151,7 @@ class ASignal final : public AAbstractSignal {
 
     /* tests */
     friend class UIDataBindingTest_APropertyPrecomputed_Complex_Test;
+    friend class UIDataBindingTest;
     friend class SignalSlotTest;
 
     template <typename AnySignal, typename Projection>
@@ -179,7 +180,15 @@ public:
 
     ASignal() = default;
     ASignal(ASignal&&) noexcept = default;
-    ASignal(const ASignal&) = delete;
+    ASignal(const ASignal&) noexcept {
+        // mOutgoingConnections are not borrowed on copy operation.
+    }
+
+    ASignal& operator=(ASignal&&) noexcept = default;
+    ASignal& operator=(const ASignal&) noexcept {
+        // mOutgoingConnections are not borrowed on copy operation.
+        return *this;
+    }
 
     virtual ~ASignal() noexcept = default;
 

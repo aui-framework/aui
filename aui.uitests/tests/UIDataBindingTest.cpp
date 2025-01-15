@@ -27,7 +27,14 @@
 
 class UIDataBindingTest : public testing::UITest {
 public:
+    template<typename... Args>
+    static auto& connections(ASignal<Args...>& signal) {
+        return signal.mOutgoingConnections;
+    }
 
+    static auto& connections(AObject& object) {
+        return object.mIngoingConnections;
+    }
 };
 
 
@@ -129,7 +136,6 @@ class LogObserver : public AObject {
 public:
     LogObserver() {
         ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
-//            ALogger::info("LogObserver") << "Received value: " << msg;
         });
     }
     MOCK_METHOD(void, log, (const AString& msg), ());
@@ -256,6 +262,62 @@ TEST_F(UIDataBindingTest, AProperty) { // HEADER
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
         // @endcode
+    }
+    {
+        {
+            User user { .name = "Hello" };
+            auto copy = user;
+            EXPECT_EQ(copy.name, "Hello");
+            EXPECT_EQ(copy.surname, "");
+        }
+        // ### Copy constructing AProperty
+        // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
+        // that `AProperty` copies it's underlying data field only, the signal-slot relations are not borrowed.
+        {
+            // AUI_DOCS_CODE_BEGIN
+            auto observer = _new<LogObserver>();
+            EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
+            EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);     // HIDE
+            auto original = aui::ptr::manage(new User { .name = "Chloe" });
+            AObject::connect(original->name, slot(observer)::log);
+            // AUI_DOCS_CODE_END
+            // This part is similar to previous examples, nothing new. Let's introduce a copy:
+            // AUI_DOCS_CODE_BEGIN
+            auto copy = _new<User>(*original);
+            EXPECT_EQ(copy->name, "Chloe"); // copied name
+            original->name = "Marinette";
+            EXPECT_EQ(copy->name, "Chloe"); // still
+            // AUI_DOCS_CODE_END
+            // In this example, observer is aware of changes `"Chloe"` -> `"Marinette"`. The copy is not aware because
+            // it is a **copy**. If we try to change the `copy`'s name:
+            // AUI_DOCS_CODE_BEGIN
+            copy->name = "Adrien";
+            // AUI_DOCS_CODE_END
+            // The observer is not aware about changes in `copy`. In fact. `copy->name` has zero connections.
+            EXPECT_EQ(connections(original->name.changed).size(), 1);
+            EXPECT_EQ(connections(copy->name.changed).size(), 0);
+            EXPECT_EQ(connections(*observer).size(), 1);
+        }
+    }
+    {
+        {
+            User user1{ .name = "Hello" };
+            EXPECT_EQ(user1.name, "Hello");
+            User user2;
+            EXPECT_EQ(user2.name, "");
+            user2 = user1;
+            EXPECT_EQ(user2.name, "Hello");
+        }
+        // ### Copy assigning AProperty
+        // The situation with copy assigning `auto copy = _new<User>(); *copy = *original;` is similar to copy
+        // construction `auto copy = _new<User>(*original);`, except that we are copying to some pre-existing
+        // data structure that potentially have signal-slot relations already. So, not only connections should be kept
+        // as is but a notification for copy destination's observers is needed.
+        //
+        // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
+        // it notifies the observers.
+        // AUI_DOCS_CODE_BEGIN
+        // AUI_DOCS_CODE_END
     }
 }
 
