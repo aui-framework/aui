@@ -379,3 +379,13 @@ struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
     }
 };
 
+
+template<APropertyWritable T>
+struct AJsonConv<T> {
+    static AJson toJson(const T& t) {
+        return t.value();
+    }
+    static void fromJson(const AJson& json, T& dst) {
+        dst = aui::from_json<typename T::Underlying>(json);
+    }
+};
