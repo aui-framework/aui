@@ -180,7 +180,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
     // AUI_DOCS_CODE_END
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
     // Note that label already displays the value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
@@ -195,10 +195,9 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
     // AUI_DOCS_CODE_END
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
     //
-    // By simply performing assignment on `user` we changed ALabel display text.
-    // Magic, huh?
+    // By simply performing assignment on `user` we changed ALabel display text. Magic, huh?
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -242,7 +241,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
 
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     // Note that the label already displays the **projected** value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
@@ -253,7 +252,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
     user->name = "Vasil";
     // AUI_DOCS_CODE_END
 
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
     //
     // This way, we've set up data binding with projection.
 
@@ -302,7 +301,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
     _new<MyWindow>(user)->show();
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -313,7 +312,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
     // AUI_DOCS_CODE_END
     //
     // ATextField will respond:
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
@@ -322,7 +321,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:
     tf->selectAll();
     By::value(tf).perform(type("Changed from UI"));
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->name, "Changed from UI");
     // AUI_DOCS_CODE_END
@@ -453,7 +452,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     _new<MyWindow>(user)->show();
     // AUI_DOCS_CODE_END
     auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
 
     //
     // - If we try to change `user->gender` programmatically, ADropdownList will respond:
@@ -461,7 +460,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     user->gender = Gender::FEMALE;
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
@@ -469,7 +468,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
 //
@@ -518,7 +517,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     EXPECT_EQ(label->text(), "Roza");
 
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
     // Note that the label already displays the value stored in User.
     //
@@ -530,7 +529,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -591,7 +590,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     //
     // Behaviour of such connection is equal to @ref "UIDataBindingTest_Label_via_declarative":
     //
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
     // Note that the label already displays the value stored in User.
     //
@@ -602,7 +601,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -710,7 +709,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
     window->setScalingParams({ .scalingFactor = 2.f });
     auto label = _cast<ALabel>(By::type<ALabel>().one());
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     //
     // Note that the label already displays the **projected** value stored in User.
     //
@@ -722,7 +721,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
     EXPECT_EQ(label->text(), "VASIL"); // projected
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "WORLD");
@@ -848,7 +847,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     //
     // This gives the following result:
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -860,7 +859,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     //
     // ATextField will respond:
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
@@ -870,7 +869,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     tf->selectAll();
     By::value(tf).perform(type("Changed from UI"));
     saveScreenshot("3");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->name, "Changed from UI");
     // AUI_DOCS_CODE_END
@@ -907,7 +906,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
                 // AUI_DOCS_CODE_BEGIN
                 _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION) > &ADropdownList::selectionId
                 // AUI_DOCS_CODE_END
-                // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
+                //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
                 // @note
                 // We used the `&&` operator here instead of `&` because we want the connection work in both
                 // directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
@@ -928,7 +927,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
@@ -937,7 +936,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
 //
