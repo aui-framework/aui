@@ -14,15 +14,14 @@
 
 class PropertyPrecomputedTest : public testing::Test {
 public:
-    /*
-        template<typename... Args>
-        static auto& connections(ASignal<Args...>& signal) {
-            return signal.mOutgoingConnections;
-        }
+     template<typename... Args>
+     static auto& connections(ASignal<Args...>& signal) {
+         return signal.mOutgoingConnections;
+     }
 
-        static auto& connections(AObject& object) {
-            return object.mIngoingConnections;
-        }*/
+     static auto& connections(AObject& object) {
+         return object.mIngoingConnections;
+     }
 };
 
 namespace {
@@ -31,11 +30,13 @@ namespace {
 // # Declaration
 // Declare a property with custom expression determining it's value as follows:
 // AUI_DOCS_CODE_BEGIN
+// [APropertyPrecomputed User]
 struct User {
     AProperty<AString> name;
     AProperty<AString> surname;
     APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
 };
+// [APropertyPrecomputed User]
 // AUI_DOCS_CODE_END
 
 class LogObserver : public AObject {
@@ -121,16 +122,16 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     EXPECT_EQ(u.fullName, "Emma Watson");
     // AUI_DOCS_CODE_END
 
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 1);
+    EXPECT_EQ(connections(u.name.changed).size(), 1);
+    EXPECT_EQ(connections(u.surname.changed).size(), 1);
 
     // As soon as we set `name` to `""`, we don't access `surname`. If we try to trigger the fast path return:
     // AUI_DOCS_CODE_BEGIN
     u.name = "";
     // AUI_DOCS_CODE_END
     EXPECT_EQ(u.fullName, "-");
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 0);
+    EXPECT_EQ(connections(u.name.changed).size(), 1);
+    EXPECT_EQ(connections(u.surname.changed).size(), 0);
     // `surname` can't trigger re-evaluation anyhow. Re-evaluation can be triggered by `name` only. So, at the moment,
     // we are interested in `name` changes only.
     //
@@ -141,12 +142,34 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     // loop.
 }
 
+// # Copy constructing APropertyPrecomputed
+// Despite the underlying value and factory callback are both copy constructible and movable, the copy constructor is
+// explicitly deleted to avoid potential object lifetime errors created by the lambda capture and prevent non-intuitive
+// behaviour.
+// @snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed User
+//
+// If copy construction of `APropertyPrecomputed` were possible, consider the following code:
+// @code{cpp}
+// User user { .name = "Hello" };
+// auto copy = user;
+// @endcode
+// `copy` has copied factory function of `user`, which refers to fields of `user`, not to `copy`'s fields. Copy
+// construction of a class or struct discards default values of all fields - this is the way `APropertyPrecomputed`'s
+// factory function is set to APropertyPrecomputed.
+
 TEST_F(PropertyPrecomputedTest, Copy_constructing_APropertyPrecomputed) { // HEADER_H1
     {
         User user { .name = "Hello" };
+        EXPECT_EQ(user.fullName, "Hello ");
+
         auto copy = user;
-        EXPECT_EQ(copy.name, "Hello");
-        EXPECT_EQ(copy.surname, "");
+        EXPECT_EQ(copy.fullName, "Hello ");
+
+        user.name = "Another";
+        EXPECT_EQ(copy.fullName, "Hello ");
+
+        copy.name = "Name";
+        EXPECT_EQ(copy.fullName, "Name ");
     }
 
     // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note

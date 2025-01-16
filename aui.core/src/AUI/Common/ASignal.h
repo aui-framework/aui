@@ -153,6 +153,7 @@ class ASignal final : public AAbstractSignal {
     friend class PropertyPrecomputedTest_APropertyPrecomputed_Complex_Test;
     friend class SignalSlotTest;
     friend class PropertyTest;
+    friend class PropertyPrecomputedTest;
 
     template <typename AnySignal, typename Projection>
     friend struct aui::detail::signal::ProjectedSignal;

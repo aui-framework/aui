@@ -28,8 +28,10 @@ class API_AUI_CORE AObjectBase {
     /* tests */
     friend class SignalSlotTest;
     friend class PropertyTest;
+    friend class PropertyPrecomputedTest;
 
 public:
+    virtual ~AObjectBase() = default;
     AObjectBase() = default;
 
     static ASpinlockMutex SIGNAL_SLOT_GLOBAL_SYNC;
