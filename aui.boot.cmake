@@ -1036,15 +1036,15 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # save arguments for later use by dependent modules
     if (NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG)
+        string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
+        set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
-            string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
-            set(_precompiled_url "")
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
                 set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER}")
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
-            set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
         endif()
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
 endfunction()
 
