@@ -30,13 +30,13 @@ namespace {
 // # Declaration
 // Declare a property with custom expression determining it's value as follows:
 // AUI_DOCS_CODE_BEGIN
-// [APropertyPrecomputed User]
+/// [APropertyPrecomputed User]
 struct User {
     AProperty<AString> name;
     AProperty<AString> surname;
     APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
 };
-// [APropertyPrecomputed User]
+/// [APropertyPrecomputed User]
 // AUI_DOCS_CODE_END
 
 class LogObserver : public AObject {
@@ -142,66 +142,25 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     // loop.
 }
 
-// # Copy constructing APropertyPrecomputed
-// Despite the underlying value and factory callback are both copy constructible and movable, the copy constructor is
-// explicitly deleted to avoid potential object lifetime errors created by the lambda capture and prevent non-intuitive
-// behaviour.
+// # Copying and moving APropertyPrecomputed
+// @warning
+// Despite the underlying value and factory callback are both copy constructible and movable, the **copy and move
+// constructor are explicitly deleted** to avoid potential object lifetime errors created by the lambda capture and
+// prevent non-intuitive behaviour.
+//
 // @snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed User
 //
 // If copy construction of `APropertyPrecomputed` were possible, consider the following code:
 // @code{cpp}
 // User user { .name = "Hello" };
-// auto copy = user;
+// auto copy = user;             // WON'T COMPILE
+// auto moved = std::move(user); // WON'T COMPILE
 // @endcode
 // `copy` has copied factory function of `user`, which refers to fields of `user`, not to `copy`'s fields. Copy
 // construction of a class or struct discards default values of all fields - this is the way `APropertyPrecomputed`'s
 // factory function is set to APropertyPrecomputed.
 
-TEST_F(PropertyPrecomputedTest, Copy_constructing_APropertyPrecomputed) { // HEADER_H1
-    {
-        User user { .name = "Hello" };
-        EXPECT_EQ(user.fullName, "Hello ");
-
-        auto copy = user;
-        EXPECT_EQ(copy.fullName, "Hello ");
-
-        user.name = "Another";
-        EXPECT_EQ(copy.fullName, "Hello ");
-
-        copy.name = "Name";
-        EXPECT_EQ(copy.fullName, "Name ");
-    }
-
-    // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
-    // that `AProperty` copies it's underlying data field only, the signal-slot relations are not borrowed.
-    {
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto original = aui::ptr::manage(new User { .name = "Chloe" });
-
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(original->name, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // This part is similar to previous examples, nothing new. Let's introduce a copy:
-        // AUI_DOCS_CODE_BEGIN
-        auto copy = _new<User>(*original);
-        EXPECT_EQ(copy->name, "Chloe"); // copied name
-        // AUI_DOCS_CODE_END
-        // Now, let's change `origin->name` and check that observer received an update, but value in the `copy`
-        // remains:
-        // AUI_DOCS_CODE_BEGIN
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
-        original->name = "Marinette";
-        EXPECT_EQ(copy->name, "Chloe"); // still
-        // AUI_DOCS_CODE_END
-        // In this example, observer is aware of changes `"Chloe"` -> `"Marinette"`. The copy is not aware because
-        // it is a **copy**. If we try to change the `copy`'s name:
-        // AUI_DOCS_CODE_BEGIN
-        copy->name = "Adrien";
-        // AUI_DOCS_CODE_END
-        // The observer is not aware about changes in `copy`. In fact. `copy->name` has zero connections.
-        EXPECT_EQ(connections(original->name.changed).size(), 1);
-        EXPECT_EQ(connections(copy->name.changed).size(), 0);
-        EXPECT_EQ(connections(*observer).size(), 1);
-    }
-}
+static_assert(!std::is_copy_constructible_v<APropertyPrecomputed<AString>>, "APropertyPrecomputed must not be copyable");
+static_assert(!std::is_copy_assignable_v<APropertyPrecomputed<AString>>, "APropertyPrecomputed must not be copyable");
+static_assert(!std::is_move_constructible_v<APropertyPrecomputed<AString>>, "APropertyPrecomputed must not be moveable");
+static_assert(!std::is_move_assignable_v<APropertyPrecomputed<AString>>, "APropertyPrecomputed must not be moveable");

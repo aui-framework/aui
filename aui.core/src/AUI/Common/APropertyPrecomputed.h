@@ -80,8 +80,8 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
 
     }
 
-    // APropertyPrecomputed(const APropertyPrecomputed&) = delete;
-    // APropertyPrecomputed(APropertyPrecomputed&&) noexcept = delete;
+    APropertyPrecomputed(const APropertyPrecomputed&) = delete;
+    APropertyPrecomputed(APropertyPrecomputed&&) noexcept = delete;
 
     template <ASignalInvokable SignalInvokable>
     void operator^(SignalInvokable&& t) {
