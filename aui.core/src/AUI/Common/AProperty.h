@@ -163,6 +163,7 @@ struct AProperty: AObjectBase {
     }
 
     AProperty(AProperty&& value) noexcept: raw(std::move(value.raw)) {
+        value.notify();
     }
 
     AProperty& operator=(const AProperty& value) {
@@ -178,6 +179,7 @@ struct AProperty: AObjectBase {
             return *this;
         }
         operator=(std::move(value.raw));
+        value.notify();
         return *this;
     }
 
