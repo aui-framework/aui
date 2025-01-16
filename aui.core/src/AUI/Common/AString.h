@@ -640,15 +640,15 @@ public:
         return *this;
     }
 
-    const AString& operator=(const AString& value) noexcept
+    AString& operator=(const AString& value) noexcept
     {
         super::operator=(value);
         return *this;
     }
 
-    const AString& operator=(AString&& value) noexcept
+    AString& operator=(AString&& value) noexcept
     {
-        super::operator=(value);
+        super::operator=(std::move(value));
         return *this;
     }
 

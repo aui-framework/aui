@@ -97,9 +97,9 @@
             <events title=""/>
         </memberdef>
         <allmemberslink visible="yes"/>
-        <usedfiles visible="$SHOW_USED_FILES"/>
-        <inheritancegraph visible="$CLASS_GRAPH"/>
-        <collaborationgraph visible="$COLLABORATION_GRAPH"/>
+<!--        <usedfiles visible="$SHOW_USED_FILES"/>-->
+<!--        <inheritancegraph visible="$CLASS_GRAPH"/>-->
+<!--        <collaborationgraph visible="$COLLABORATION_GRAPH"/>-->
         <authorsection visible="yes"/>
     </class>
 
@@ -213,7 +213,7 @@
             <properties title=""/>
             <friends title=""/>
         </memberdef>
-        <groupgraph visible="$GROUP_GRAPHS"/>
+<!--        <groupgraph visible="$GROUP_GRAPHS"/>-->
         <authorsection visible="yes"/>
     </group>
 

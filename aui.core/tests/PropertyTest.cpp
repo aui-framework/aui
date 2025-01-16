@@ -7,190 +7,308 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <AUI/Common/AObject.h>
-#include <AUI/Common/ASignal.h>
+#include <AUI/Common/AProperty.h>
+#include <AUI/Logging/ALogger.h>
 #include <AUI/Util/kAUI.h>
-#include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "AUI/Common/AProperty.h"
+
+class PropertyTest: public testing::Test {
+public:
+    template<typename... Args>
+    static auto& connections(ASignal<Args...>& signal) {
+        return signal.mOutgoingConnections;
+    }
+
+    static auto& connections(AObject& object) {
+        return object.mIngoingConnections;
+    }
+};
 
 namespace {
+// AUI_DOCS_OUTPUT: doxygen/intermediate/property.h
+// @class AProperty
+// # Declaration
+// To declare a property inside your data model, use AProperty template:
+// AUI_DOCS_CODE_BEGIN
 struct User {
     AProperty<AString> name;
+    AProperty<AString> surname;
 };
+// AUI_DOCS_CODE_END
 
-
-class Receiver: public AObject {
+class LogObserver : public AObject {
 public:
-    MOCK_METHOD(void, receiveStr, (const AString& msg));
-    MOCK_METHOD(void, receiveInt, (int msg));
-};
-}
-
-TEST(PropertyTest, DesignatedInitializer) {
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-    EXPECT_EQ(u->name, "Hello");
-}
-
-TEST(PropertyTest, ValueCanBeChanged) {
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-    u->name = "World";
-
-    // this should not compile
-    // u->name = {"World"};
-
-    EXPECT_EQ(u->name, "World");
-}
-
-TEST(PropertyTest, ValueCanBePassed) {
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-    auto stringIdentity = [](const AString& value) {
-        return value;
-    };
-    EXPECT_EQ(stringIdentity(u->name), "Hello");
-}
-
-TEST(PropertyTest, ValueOperatorArrow) {
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-    EXPECT_EQ(u->name->length(), 5);
-}
-
-TEST(PropertyTest, ChangedSignal) {
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-    auto receiver = _new<Receiver>();
-    AObject::connect(u->name.changed, slot(receiver)::receiveStr);
-
-    EXPECT_CALL(*receiver, receiveStr(AString("World")));
-    u->name = "World";
-}
-
-TEST(PropertyTest, PropertyConnection) {
-    auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-
-    EXPECT_CALL(*receiver, receiveStr(AString("Hello"))).Times(1);
-    AObject::connect(u->name, slot(receiver)::receiveStr);
-
-    EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
-    u->name = "World";
-}
-
-TEST(PropertyTest, PropertyConnectionWithProjection1) {
-    auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-
-    EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected(&AString::length), slot(receiver)::receiveInt);
-
-    EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
-    u->name = "World!";
-}
-
-TEST(PropertyTest, PropertyConnectionWithProjection2) {
-    auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage(new User { .name = "Hello" });
-
-    EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
-
-    EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
-    u->name = "World!";
-}
-
-namespace {
-class CustomSetter : public AObject {
-public:
-    CustomSetter() {
-        ON_CALL(*this, setName(testing::_)).WillByDefault([&](const AString& s) {
-            emit nameChanged(s);
+    LogObserver() {
+        ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
         });
     }
-
-    auto name() const {
-        return APropertyDef {
-            this,
-            &CustomSetter::getName,
-            &CustomSetter::setName,
-            nameChanged,
-        };
-    }
-
-    MOCK_METHOD(void, setName, (const AString& msg));
-
-private:
-    emits<AString> nameChanged;
-
-    AString getName() const { return "can't change"; }
+    MOCK_METHOD(void, log, (const AString& msg), ());
 };
 }
 
-TEST(PropertyTest, CustomSetter) {
-    CustomSetter u;
-    Receiver receiver;
+// `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
+// value with `value()` method or implicit conversion `operator T()`.
 
-    static_assert(AAnyProperty<decltype(u.name())>);
+TEST_F(PropertyTest, Declaration) {
+    //
+    // AProperty behaves like a class/struct data member:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        User u;
+        u.name = "Hello";
+        EXPECT_EQ(u.name, "Hello");
+        // AUI_DOCS_CODE_END
+    }
 
-    EXPECT_CALL(u, setName(AString("World")));
-    EXPECT_CALL(receiver, receiveStr(AString("World")));
+    // You can even perform binary operations on it seamlessly:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        User u;
+        u.name = "Hello";
+        u.name += " world!";
+        EXPECT_EQ(u.name, "Hello world!");
+        EXPECT_EQ(u.name->length(), AString("Hello world!").length());
+        // AUI_DOCS_CODE_END
+    }
 
-    AObject::connect(u.name().changed, slot(receiver)::receiveStr);
+    // In most cases, property is implicitly convertible to its underlying type:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
+        User u;
+        u.name = "Hello";
+        doSomethingWithName(u.name);
+        // AUI_DOCS_CODE_END
 
-    u.name() = "World";
-    EXPECT_EQ(AString(u.name()), "can't change");
+
+        // If it doesn't, simply put an asterisk:
+        // AUI_DOCS_CODE_BEGIN
+        doSomethingWithName(*u.name);
+        //                 ^^^ HERE
+        // AUI_DOCS_CODE_END
+    }
+}
+TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
+    // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
+    // object for demonstration:
+    {
+        // AUI_DOCS_CODE_BEGIN
+        class LogObserver : public AObject {
+        public:
+            void log(const AString& msg) {
+                ALogger::info("LogObserver") << "Received value: " << msg;
+            }
+        };
+        // AUI_DOCS_CODE_END
+    }
+    {
+        //
+        // Example usage:
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto u = aui::ptr::manage(new User { .name = "Chloe" });
+        AObject::connect(u->name.changed, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        EXPECT_CALL(*observer, log(AString("Marinette")));
+        //
+        // At the moment, the program prints nothing. When we change the property:
+        // AUI_DOCS_CODE_BEGIN
+        u->name = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Code produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
+    {
+        testing::InSequence s;
+        //
+        // As you can see, observer received the update. But, for example, if we would like to display the value via
+        // label, the label wouldn't display the current value until the next update. We want the label to display
+        // *current* value without requiring an update. To do this, connect to the property directly, without explicitly
+        // asking for `changed`:
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto u = aui::ptr::manage(new User { .name = "Chloe" });
+
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+        AObject::connect(u->name, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // Code above produces the following output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // @endcode
+        // As you can see, observer receives the value without making updates to the value. The call of
+        // `LogObserver::log` is made by `AObject::connect` itself. In this document, we will call this behaviour as
+        // "pre-fire".
+        //
+        // Subsequent changes to field would send updates as well:
+        // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+        u->name = "Marinette";
+        // AUI_DOCS_CODE_END
+        // Assignment operation above makes an additional line to output:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+        //
+        // Whole program output when connecting to property directly:
+        // @code
+        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
+        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
+        // @endcode
+    }
 }
 
-TEST(PropertyTest, CustomSetterProperty) {
-    CustomSetter u;
-    auto receiver = _new<Receiver>();
+TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
+    {
+        User user { .name = "Hello" };
+        auto copy = user;
+        EXPECT_EQ(copy.name, "Hello");
+        EXPECT_EQ(copy.surname, "");
+    }
 
-    EXPECT_CALL(u, setName(AString("World")));
-    EXPECT_CALL(*receiver, receiveStr(AString("can't change"))).Times(1);
-    EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
+    // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
+    // that `AProperty` copies it's underlying data field only, the **signal-slot relations are not borrowed**.
+    {
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto original = aui::ptr::manage(new User { .name = "Chloe" });
 
-    AObject::connect(u.name(), slot(receiver)::receiveStr);
-
-    u.name() = "World";
-    EXPECT_EQ(AString(u.name()), "can't change");
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+        AObject::connect(original->name, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // This part is similar to previous examples, nothing new. Let's introduce a copy:
+        // AUI_DOCS_CODE_BEGIN
+        auto copy = _new<User>(*original);
+        EXPECT_EQ(copy->name, "Chloe"); // copied name
+        // AUI_DOCS_CODE_END
+        // Now, let's change `origin->name` and check that observer received an update, but value in the `copy`
+        // remains:
+        // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+        original->name = "Marinette";
+        EXPECT_EQ(copy->name, "Chloe"); // still
+        // AUI_DOCS_CODE_END
+        // In this example, observer is aware of changes `"Chloe"` -> `"Marinette"`. The copy is not aware because
+        // it is a **copy**. If we try to change the `copy`'s name:
+        // AUI_DOCS_CODE_BEGIN
+        copy->name = "Adrien";
+        // AUI_DOCS_CODE_END
+        // The observer is not aware about changes in `copy`. In fact. `copy->name` has zero connections.
+        EXPECT_EQ(connections(original->name.changed).size(), 1);
+        EXPECT_EQ(connections(copy->name.changed).size(), 0);
+        EXPECT_EQ(connections(*observer).size(), 1);
+    }
 }
 
-TEST(PropertyTest, Property2PropertyBoth) {
-    auto u = aui::ptr::manage(new User { .name = "initial" });
-    auto r = _new<CustomSetter>();
+TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
+    {
+        User user1{ .name = "Hello" };
+        EXPECT_EQ(user1.name, "Hello");
+        User user2;
+        EXPECT_EQ(user2.name, "");
+        user2 = user1;
+        EXPECT_EQ(user2.name, "Hello");
+    }
+    // The situation with copy assigning `auto copy = _new<User>(); *copy = *original;` is similar to copy
+    // construction `auto copy = _new<User>(*original);`, except that we are copying to some pre-existing
+    // data structure that potentially have signal-slot relations already. So, not only **connections should be kept
+    // as is** but a notification for copy destination's observers is needed.
+    //
+    // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
+    // it notifies the observers.
+    // AUI_DOCS_CODE_BEGIN
+    auto observer = _new<LogObserver>();
+    auto original = aui::ptr::manage(new User { .name = "Chloe" });
 
-    EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    AObject::biConnect(u->name, r->name());
-
-    EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
-    u->name = "New Name1";
-
-    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(2); // expected to call 2 times: 1st time by calling setName
-    r->setName("New Name2");                                 // here; 2nd time as a loopback response from u
-
-    // the setName "New Name2" call above should reflect its change to u.
-    EXPECT_EQ(u->name, "New Name2");
-
-    // death of r should clear the link with u->name.
-    r = nullptr;
-    u->name = "Should not crash";
+    EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+    AObject::connect(original->name, slot(observer)::log);
+    // AUI_DOCS_CODE_END
+    // This part is similar to previous examples, nothing new. Let's perform copy-assignment:
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+    User copy { .name = "Marinette" };
+    *original = copy;
+    // AUI_DOCS_CODE_END
+    // See, not only the connection remains, but it also receives notification about the change.
+    EXPECT_EQ(connections(original->name.changed).size(), 1);
+    EXPECT_EQ(connections(*observer).size(), 1);
 }
 
-TEST(PropertyTest, Property2PropertySetOnly) {
-    auto u = aui::ptr::manage(new User { .name = "initial" });
-    auto r = _new<CustomSetter>();
+TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
+    {
+        User user { .name = "Hello" };
+        auto copy = std::move(user);
+        EXPECT_EQ(user.name, "");
+        EXPECT_EQ(user.surname, "");
+        EXPECT_EQ(copy.name, "Hello");
+        EXPECT_EQ(copy.surname, "");
+    }
+    {
+        User user1{ .name = "Hello" };
+        EXPECT_EQ(user1.name, "Hello");
+        User user2;
+        EXPECT_EQ(user2.name, "");
+        user2 = std::move(user1);
+        EXPECT_EQ(user1.name, "");
+        EXPECT_EQ(user2.name, "Hello");
+    }
+    // Similary to copy, AProperty is both move assignable and constructible except that underlying value is moved
+    // instead of copying. Also, the observers of the source object receive notification that the value was emptied. The
+    // **signal-slot relations are left unchanged.**
+    {
+        // AUI_DOCS_CODE_BEGIN
+        auto observer = _new<LogObserver>();
+        auto original = aui::ptr::manage(new User { .name = "Chloe" });
 
-    EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    AObject::connect(u->name, r->name());
+        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+        AObject::connect(original->name, slot(observer)::log);
+        // AUI_DOCS_CODE_END
+        // This part is similar to previous examples, nothing new. Let's introduce a move:
+        // AUI_DOCS_CODE_BEGIN
+        // by move operation, we've affected the source, hence the
+        // empty string notification
+        EXPECT_CALL(*observer, log(AString(""))).Times(1);
+        auto moved = _new<User>(std::move(*original));
 
-    EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
-    u->name = "New Name1";
+        EXPECT_EQ(original->name, ""); // empty
+        EXPECT_EQ(moved->name, "Chloe"); // moved name
+        // AUI_DOCS_CODE_END
+        // Now, let's change `origin->name` and check that observer received an update, but value in the `moved`
+        // remains:
+        // AUI_DOCS_CODE_BEGIN
+        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+        original->name = "Marinette";
+        EXPECT_EQ(moved->name, "Chloe"); // still
+        // AUI_DOCS_CODE_END
+        // In this example, observer is aware of changes `"Chloe"` -> `""` -> `"Marinette"`. The `moved` is not aware.
+        // If we try to change the `moved`'s name:
+        // AUI_DOCS_CODE_BEGIN
+        moved->name = "Adrien";
+        // AUI_DOCS_CODE_END
+        // The observer is not aware about changes in `moved`. In fact. `moved->name` has zero connections.
+        EXPECT_EQ(connections(original->name.changed).size(), 1);
+        EXPECT_EQ(connections(moved->name.changed).size(), 0);
+        EXPECT_EQ(connections(*observer).size(), 1);
+    }
 
-    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(1);
-    r->setName("New Name2");
+    // Move assignment work in a similar way to copy assignment:
+    // AUI_DOCS_CODE_BEGIN
+    auto observer = _new<LogObserver>();
+    auto original = aui::ptr::manage(new User { .name = "Chloe" });
 
-    // the setName "New Name2" call above should NOT reflect its change to u.
-    EXPECT_EQ(u->name, "New Name1");
-
-    // death of r should clear the link with u->name.
-    r = nullptr;
-    u->name = "Should not crash";
+    EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
+    AObject::connect(original->name, slot(observer)::log);
+    // AUI_DOCS_CODE_END
+    // This part is similar to previous examples, nothing new. Let's perform move-assignment:
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);
+    User copy { .name = "Marinette" };
+    *original = std::move(copy);
+    // AUI_DOCS_CODE_END
+    // See, not only the connection remains, but it also receives notification about the change.
+    EXPECT_EQ(copy.name, "");
+    EXPECT_EQ(connections(original->name.changed).size(), 1);
+    EXPECT_EQ(connections(*observer).size(), 1);
 }
