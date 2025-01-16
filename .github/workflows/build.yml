@@ -158,6 +158,12 @@ jobs:
             additional_cmake_flags: ''
             debug_or_release: RelWithDebInfo
             shared_or_static: static
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
             
     steps:
       - uses: actions/checkout@v4
@@ -284,6 +290,12 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -337,7 +349,14 @@ jobs:
             additional_cmake_flags: ''
             debug_or_release: RelWithDebInfo
             shared_or_static: static
-            
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+
+
     steps:
       - uses: actions/checkout@v2
         with:
