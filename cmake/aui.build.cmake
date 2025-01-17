@@ -1129,11 +1129,18 @@ function(auisl_shader TARGET NAME)
     target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 endfunction()
 
-macro(_auib_weak_set VAR_NAME VALUE)
+macro(_auib_weak_set VAR_NAME)
     if (NOT VAR_NAME)
-        set(VAR_NAME ${VALUE})
+        set(${ARGV})
     endif()
 endmacro()
+
+function(_auib_weak_set_target_property TARGET PROPERTY VALUE)
+    get_target_property(_tmp ${TARGET} ${PROPERTY})
+    if (NOT _tmp)
+        set_target_properties(${TARGET} PROPERTIES ${PROPERTY} "${VALUE}")
+    endif()
+endfunction()
 
 macro(aui_app)
     _aui_find_root()
@@ -1176,7 +1183,11 @@ macro(aui_app)
         set(APP_IOS_DEVICE BOTH)
     endif()
     if (NOT APP_VERSION)
-        set(APP_VERSION 1.0)
+        if (PROJECT_VERSION)
+            set(APP_VERSION ${PROJECT_VERSION})
+        else()
+            set(APP_VERSION 1.0)
+        endif()
     endif()
     if (NOT APP_COPYRIGHT)
         set(APP_COPYRIGHT "Copyright is not specified")
@@ -1244,9 +1255,12 @@ macro(aui_app)
         get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
     endif()
 
+    set(_executable \$<TARGET_FILE_NAME:${APP_TARGET}>)
+
     # common cpack
-    set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
-    _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
+    _auib_weak_set(CPACK_PACKAGE_NAME ${APP_NAME})
+    _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${APP_NAME})
+    _auib_weak_set(CPACK_PACKAGE_EXECUTABLES ${_executable} ${APP_NAME})
     _auib_weak_set(CPACK_BUNDLE_NAME ${APP_NAME})
     _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
@@ -1263,7 +1277,9 @@ macro(aui_app)
 
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
+            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico})
         endif()
+        _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
 
@@ -1271,8 +1287,7 @@ macro(aui_app)
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
-            set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
-            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
+            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
             if (APP_ICON)
                 set(_icon "${_current_app_build_files}/app.icon.svg")
                 configure_file(${APP_ICON} "${_icon}" COPYONLY)
@@ -1319,21 +1334,20 @@ macro(aui_app)
         if (AUI_PLATFORM_MACOS)
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
-        set_target_properties(${APP_TARGET} PROPERTIES
-                MACOSX_BUNDLE TRUE
-                BUNDLE TRUE
-                OUTPUT_NAME ${APP_NAME}
-                MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
-                MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
-                MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
-                MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
-                MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
-                MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
-                MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
-                MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
-                MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
-                MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
-                MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE TRUE)
+        _auib_weak_set_target_property(${APP_TARGET} BUNDLE TRUE)
+        _auib_weak_set_target_property(${APP_TARGET} OUTPUT_NAME "${APP_NAME}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_PLIST           "${CPACK_BUNDLE_PLIST}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_EXECUTABLE_NAME      "${MACOSX_BUNDLE_EXECUTABLE_NAME}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_STRING          "${MACOSX_BUNDLE_INFO_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_GUI_IDENTIFIER       "${MACOSX_BUNDLE_GUI_IDENTIFIER}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_NAME          "${MACOSX_BUNDLE_BUNDLE_NAME}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_ICON_FILE            "${MACOSX_BUNDLE_ICON_FILE}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_LONG_VERSION_STRING  "${MACOSX_BUNDLE_LONG_VERSION_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_SHORT_VERSION_STRING "${MACOSX_BUNDLE_SHORT_VERSION_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_VERSION       "${MACOSX_BUNDLE_BUNDLE_VERSION}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_COPYRIGHT            "${MACOSX_BUNDLE_COPYRIGHT}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_DEPLOYMENT_TARGET           "${MACOSX_DEPLOYMENT_TARGET}")
     endif()
 
     # MACOS ============================================================================================================
