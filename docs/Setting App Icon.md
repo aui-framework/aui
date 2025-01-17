@@ -2,7 +2,7 @@ The app icon is an important part of any software product, representing your bra
 your project. It's often one of the first things users see when they discover a new application, setting a tone for
 overall user experience. Approach to app icon briefly resembles the overall quality of the product.
 
-While making distinct visuals for every platform can be challenging. AUI is here to help you to produce
+While making distinct visuals for every platform can be challenging, AUI is here to help you to produce
 professional-grade app icons while preserving targeted platform's specifics.
 
 # Abstract
@@ -13,7 +13,7 @@ more traditional rounded rectangle. In Android the user is allowed to choose bet
 circle and squircle shapes. Moreover, it features a clear distinction between background and foreground layers so the
 icon can be animated.
 
-For that being said, a typical app icon consists of:
+For that being said, a typical shape-agnostic app icon consists of:
 
 - a **background** layer which is a neutral solid color, such as black or white, or featuring an accent color.
   Occasionally, it may incorporate gradients or abstract shapes to add visual interest. As the background layer often

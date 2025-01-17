@@ -62,13 +62,15 @@ Specify application display name.
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-|Platform|Required|Traits|
-|--------|--------|------|
-|Windows|||
-|Linux|+||
-|macOS|+|generates `*.icns` file from your `svg`|
-|Android|+||
-|iOS|+||
+See @ref "docs/Setting App Icon.md" for best practices.
+
+| Platform | Required | Traits                                  |
+|----------|----------|-----------------------------------------|
+| Windows  |          |                                         |
+| Linux    | +        |                                         |
+| macOS    | +        | generates `*.icns` file from your `svg` |
+| Android  | +        |                                         |
+| iOS      | +        |                                         |
 
 #### Why SVG?
 
