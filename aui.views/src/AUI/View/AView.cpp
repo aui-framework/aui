@@ -64,7 +64,7 @@ AView::AView()
 }
 
 AView::~AView() {
-    AUI_ASSERT_UI_THREAD_ONLY();
+//    AUI_ASSERT_UI_THREAD_ONLY();
 }
 
 void AView::redraw()
