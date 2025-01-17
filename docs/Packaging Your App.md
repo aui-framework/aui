@@ -10,7 +10,7 @@ application:
 - Package id (if required by target platform)
 - etc...
 
-In addition, this command populates some empty `CPACK_*` variables. This approach allows you not to bother about
+In addition, this command populates some `CPACK_*` variables (if undefined). This approach allows you not to bother about
 various installation methods but also override the variables if needed.
 
 This guide covers various packaging techniques for all supported platforms.
@@ -27,7 +27,7 @@ Although Windows offers its official store and numerous unofficial repositories 
 developers still opt for traditional methods. This guide will cover the latter.
 
 @note
-Guides for packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
+Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
 preinstalled.
 
 ## WIX
@@ -36,7 +36,7 @@ preinstalled.
 
 WIX is the installer framework that produces `msi` packages.
 
-```shell
+```python
 # install requirements
 choco install wixtoolset
 
@@ -45,8 +45,13 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
+
+# packaging
 cpack . -G WIX
 ```
 
 The script above produces a file `<APP_NAME>.msi`, where `<APP_NAME>` is the `NAME` arg of @ref docs/aui_app.md (unless
 not overridden by `CPACK_PACKAGE_FILE_NAME`).
+
+
+@pythongen{aui_app_wix}

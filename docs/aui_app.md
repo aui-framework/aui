@@ -84,6 +84,8 @@ Specify application display name that would appear in system's UIs (i.e., start 
 |Android|+||
 |iOS|+||
 
+@pythongen{aui_app_NAME}
+
 ### ICON
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
@@ -97,6 +99,8 @@ See @ref "docs/Setting App Icon.md" for best practices.
 | macOS    | +        | generates `*.icns` file from your `svg` |
 | Android  | +        |                                         |
 | iOS      | +        |                                         |
+
+@pythongen{aui_app_ICON}
 
 #### Why SVG?
 
@@ -132,6 +136,8 @@ Specify application author's name or company.
 |Android|||
 |iOS|||
 
+@pythongen{aui_app_VENDOR}
+
 ### COPYRIGHT
 
 Specify application copyright string (not file)
@@ -143,6 +149,8 @@ Specify application copyright string (not file)
 |macOS|+||
 |Android|||
 |iOS|+||
+
+@pythongen{aui_app_COPYRIGHT}
 
 
 ### VERSION
@@ -156,6 +164,8 @@ Specify application version. If not set, the value of `PROJECT_VERSION` used ins
 |macOS|+||
 |Android|+||
 |iOS|+||
+
+@pythongen{aui_app_VERSION}
 
 ### NO_INCLUDE_CPACK
 

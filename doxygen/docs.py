@@ -223,6 +223,17 @@ def generate_docs_from_tests():
     for path in suitable_cpp_files:
         process_cpp_file(path)
 
+def generate_docs_from_gen():
+    BASE_DIR = Path('doxygen/gen')
+    for script_filename in os.listdir(BASE_DIR):
+        if not script_filename.endswith('.py'):
+            continue
+        with open(f'doxygen/intermediate/{script_filename[:-3]}.md', 'wb') as fos:
+            process = subprocess.run(f'python3 {BASE_DIR / script_filename}', shell=True, capture_output=True)
+            if process.returncode != 0:
+                raise RuntimeError(f'Python subprocess failed: {process.stderr.decode("utf-8")}')
+            fos.write(process.stdout)
+
 def invoke_doxygen():
     print("Doxygen version:", subprocess.run("doxygen -v", shell=True, capture_output=True).stdout.decode('utf-8'))
     result = subprocess.run("doxygen doxygen/Doxyfile", shell=True, capture_output=True)
@@ -383,6 +394,7 @@ if __name__ == '__main__':
     check_all_are_in_group(Path("aui.views/src/AUI/ASS/Selector"), "ass_selectors")
 
     generate_docs_from_tests()
+    generate_docs_from_gen()
     invoke_doxygen()
 
     patch(target='classes.html', matcher='<div class="contents">', mode=PatchMode.INSERT_AFTER)
