@@ -32,6 +32,8 @@ preinstalled.
 
 ## WIX
 
+[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
+
 WIX is the installer framework that produces `msi` packages.
 
 ```shell
@@ -45,3 +47,6 @@ cmake ..
 cmake --build .
 cpack . -G WIX
 ```
+
+The script above produces a file `<APP_NAME>.msi`, where `<APP_NAME>` is the `NAME` arg of @ref docs/aui_app.md (unless
+not overridden by `CPACK_PACKAGE_FILE_NAME`).
