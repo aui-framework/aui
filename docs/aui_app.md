@@ -2,13 +2,39 @@
 
 Provide application info for deployment (i.e. name, author, license, icon, etc...).
 
+`aui_app` unifies the packaging process across all platforms. For (mostly) all desktop platforms, it acts in
+collaboration with [CPack](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Packaging%20With%20CPack.html).
+
+- `ZIP`, `TGZ`
+- `DEB`
+- `NSIS`
+- `WIX`
+- `External`
+
+For the targets that require [cross-compilation](@ref docs/Crosscompiling.md), it requires `@ref AUI_BUILD_FOR` to be
+set, and, in fact, does not involve CPack in such case.
+
+For all packaging methods, `aui_app` assumes it is called once per CMake project. It is relevant for packaging methods
+that expect one "entrypoint" per package.
+- `aui_app` -> Android APK
+- `aui_app` -> iOS app bundle
+- `aui_app` -> Linux Flatpak
+- `aui_app` -> Linux AppImage
+
+For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
+various installation methods but also override the variables if needed.
+
+For more info about packaging methods, see @ref "docs/Packaging Your App.md".
+
 ## Syntax
+
+@snippet examples/AUI.Example.Views/CMakeLists.txt aui_app
 
 ```cmake
 aui_app(
     # common
-    [TARGET <target-name>]
-    [NAME <application-name>]
+    <TARGET <target-name>>
+    <NAME <application-name>>
     [ICON <path-to-icon-svg>]
     [VENDOR <vendor-name>]
     [COPYRIGHT <copyright-string>]
@@ -48,7 +74,7 @@ Specify main executable of the application which will be executed when your appl
 
 ### NAME
 
-Specify application display name.
+Specify application display name that would appear in system's UIs (i.e., start menu, launchpad, desktop, control panel).
 
 |Platform|Required|Traits|
 |--------|--------|------|

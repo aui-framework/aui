@@ -19,6 +19,7 @@ aui_compile_assets(aui.example.views)
 
 aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl)
 
+# [aui_app]
 aui_app(TARGET aui.example.views
         NAME "AUI Examples"
         APPLE_BUNDLE_IDENTIFIER "aui.Examples"
@@ -27,3 +28,4 @@ aui_app(TARGET aui.example.views
         ANDROID_PACKAGE "com.github.aui.examples"
         ICON "assets/img/logo.svg"
         )
+# [aui_app]

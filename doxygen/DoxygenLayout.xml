@@ -51,6 +51,7 @@
         </tab>
         <tab type="usergroup" title="Best Practices" visible="yes">
             <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
+            <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
         </tab>
     </navindex>
 
