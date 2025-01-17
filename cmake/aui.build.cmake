@@ -1280,19 +1280,19 @@ macro(aui_app)
                     CONTENT ${_desktop})
             set(APP_LINUX_DESKTOP ${_current_app_build_files}/app.desktop)
         endif()
-        file(GENERATE
-                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
-                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
-
-        file(GENERATE
-                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
-                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
-        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
-
-        list(APPEND CPACK_GENERATOR External)
-
-        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
-        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
+#        file(GENERATE
+#                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
+#                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
+#
+#        file(GENERATE
+#                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
+#                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
+#        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
+#
+#        list(APPEND CPACK_GENERATOR External)
+#
+#        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
+#        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
     endif()
 
     # IOS AND MACOS ====================================================================================================
