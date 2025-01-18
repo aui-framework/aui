@@ -1259,7 +1259,6 @@ macro(aui_app)
 
     # common cpack
     _auib_weak_set(CPACK_PACKAGE_NAME ${APP_NAME})
-    _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${APP_NAME})
     _auib_weak_set(CPACK_PACKAGE_EXECUTABLES ${_executable} ${APP_NAME})
     _auib_weak_set(CPACK_BUNDLE_NAME ${APP_NAME})
     _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
@@ -1279,6 +1278,9 @@ macro(aui_app)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
             _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico})
         endif()
+        set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
+        set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
+        _auib_weak_set(CPACK_PACKAGE_INSTALL_DIRECTORY ${APP_NAME}) # remove -VERSION suffix
         _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
