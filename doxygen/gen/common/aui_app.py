@@ -8,9 +8,6 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
 
-from numpy.core.defchararray import startswith
-
-
 def list_all_vars_containing(varname):
     REGEX = re.compile(f'([A-Z_]*{varname}[A-Z_]*)( (.*)\))?( # (.*))?')
     with open('cmake/aui.build.cmake', 'r') as fis:
@@ -33,7 +30,7 @@ def list_all_vars_affected_by(varname, display_name=None):
     if not display_name:
         display_name = varname
     def print_vars():
-        REGEX_VAR = re.compile(f'set\(((CMAKE|CPACK|MACOS)[A-Za-z_0-9]+) (.*{varname}.*)\)')
+        REGEX_VAR = re.compile(f'set\\(((CMAKE|CPACK|MACOS)[A-Za-z_0-9]+) (.*{varname}.*)\\)')
         with open('cmake/aui.build.cmake', 'r') as fis:
             def find():
                 for l in fis.readlines():
@@ -52,7 +49,7 @@ def list_all_vars_affected_by(varname, display_name=None):
 
     with open('cmake/aui.build.cmake', 'r') as fis:
         def find():
-            REGEX = re.compile("\$\{" + varname + "\}")
+            REGEX = re.compile("\\$\\{" + varname + "\\}")
             for l in fis.readlines():
                 l = l.strip()
                 if l.startswith("#"):
