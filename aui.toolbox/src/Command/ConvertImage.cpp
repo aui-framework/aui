@@ -27,7 +27,7 @@ AString ConvertImage::getName() {
 }
 
 AString ConvertImage::getSignature() {
-    return "<input file> <output file> [-c=<canvas size>] [-p=<0x0 position on canvas>] [-r=<256x256 resize>]";
+    return "<input file> <output file> [-c=<canvas size>] [-p=<0x0 position on canvas>] [-r=<256x256 resize>] [-b=<#000 background color>]";
 }
 
 static glm::ivec2 contain(glm::ivec2 canvasSize, glm::ivec2 imageSize) {
@@ -72,6 +72,7 @@ void ConvertImage::run(Toolbox& t) {
     glm::ivec2 canvasSize{};
     AOptional<glm::ivec2> position{};
     AOptional<glm::ivec2> resize{};
+    AOptional<AColor> backgroundColor;
     for (auto& f : t.args) {
         if (f.length() >= 3) {
             if (f[2] == '=') {
@@ -87,6 +88,10 @@ void ConvertImage::run(Toolbox& t) {
                     }
                     case 'r': {
                         resize = parseSize(value);
+                        break;
+                    }
+                    case 'b': {
+                        backgroundColor = AColor(value);
                         break;
                     }
                 }
@@ -115,6 +120,14 @@ void ConvertImage::run(Toolbox& t) {
     // contain
     auto imageSize = resize.valueOr(contain(canvasSize, img.getSizeHint()));
     result.insert(position.valueOr((canvasSize - imageSize) / 2), img.provideImage(imageSize));
+
+    if (backgroundColor) {
+        // process transparency
+        for (auto& color : result) {
+            auto src = AColor(color);
+            color = AFormattedColorConverter(AColor(glm::vec4(glm::mix(glm::vec3(*backgroundColor), glm::vec3(src), src.a), 1.f)));
+        }
+    }
 
     AFileOutputStream fos(output);
     if (output.extension() == "png") {

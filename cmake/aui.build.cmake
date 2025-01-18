@@ -1257,17 +1257,25 @@ macro(aui_app)
         get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
     endif()
 
-    set(_executable \$<TARGET_FILE_NAME:${APP_TARGET}>)
 
     # common cpack
     _auib_weak_set(CPACK_PACKAGE_NAME ${APP_NAME})
-    _auib_weak_set(CPACK_PACKAGE_EXECUTABLES ${_executable} ${APP_NAME})
     _auib_weak_set(CPACK_BUNDLE_NAME ${APP_NAME})
     _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
+    _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
+    file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
+    _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # APP_COPYRIGHT
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
+        get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        _auib_weak_set(CPACK_PACKAGE_EXECUTABLES "${_executable};${APP_NAME}") # windows only
+        _auib_weak_set(CPACK_CREATE_DESKTOP_LINKS "${_executable}") # windows only
+        if ("INNOSETUP" IN_LIST CPACK_GENERATOR)
+            string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
+            _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}-setup) # append -setup suffix for INNOSETUP
+        endif()
         if (APP_ICON)
             set(_ico "${_current_app_build_files}/app.ico")
             add_custom_command(
@@ -1277,36 +1285,57 @@ macro(aui_app)
             )
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
+            _auib_weak_set(CPACK_INNOSETUP_ICON_FILE ${_ico}) # installer icon
             _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico}) # displays app icon in Control Panel/Settings
 
-            set(_ico "${_current_app_build_files}/wix_ui_banner.bmp")
-            add_custom_command(
-                    OUTPUT ${_ico}
-                    COMMAND ${AUI_TOOLBOX_EXE}
-                    ARGS convert-image ${_icon_absolute} ${_ico} -p=435x0 -c=493x58
-            )
-            target_sources(${APP_TARGET} PRIVATE ${_ico})
-            _auib_weak_set(CPACK_WIX_UI_BANNER ${_ico}) # image at top of all installer pages
+            if ("WIX" IN_LIST CPACK_GENERATOR)
+                set(_ico "${_current_app_build_files}/wix_ui_banner.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -p=435x0 -c=493x58
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_WIX_UI_BANNER ${_ico}) # image at top of all installer pages
 
-            set(_ico "${_current_app_build_files}/wix_ui_dialog.bmp")
-            add_custom_command(
-                    OUTPUT ${_ico}
-                    COMMAND ${AUI_TOOLBOX_EXE}
-                    ARGS convert-image ${_icon_absolute} ${_ico} -p=0x0 -c=493x312 -r=170
-            )
-            target_sources(${APP_TARGET} PRIVATE ${_ico})
-            _auib_weak_set(CPACK_WIX_UI_DIALOG ${_ico}) # background image used on the welcome and completion dialogs
+                set(_ico "${_current_app_build_files}/wix_ui_dialog.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -p=0x0 -c=493x312 -r=170
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_WIX_UI_DIALOG ${_ico}) # background image used on the welcome and completion dialogs
+            endif()
+            if ("INNOSETUP" IN_LIST CPACK_GENERATOR)
+                set(_ico "${_current_app_build_files}/innosetup.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -c=256 -b=\#ffffff
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_PACKAGE_ICON ${_ico}) # app icon inside INNOSETUP window
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_WizardSmallImageFile ${_ico}) # small icon inside INNOSETUP window
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}\\\\\\\\bin\\\\\\\\${_executable}.exe") # displays app icon in Control Panel/Settings
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest") # hence we're installing to user dir, we don't need UAC
+                _auib_weak_set(CPACK_INNOSETUP_IGNORE_LICENSE_PAGE ON) # skips license page
+                _auib_weak_set(CPACK_INNOSETUP_IGNORE_README_PAGE ON) # skips README page
+            endif()
         endif()
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
         _auib_weak_set(CPACK_PACKAGE_INSTALL_DIRECTORY ${APP_NAME}) # remove -VERSION suffix
         _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits menu folder
+        _auib_weak_set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER ".") # omits menu folder
+        _auib_weak_set(CPACK_INNOSETUP_INSTALL_ROOT "{userappdata}") # install To AppData
         _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
 
     # DESKTOP LINUX ====================================================================================================
     if (AUI_PLATFORM_LINUX)
+        get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
