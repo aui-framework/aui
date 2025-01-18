@@ -26,6 +26,8 @@ if (AUIB_TRACE_BUILD_SYSTEM)
     message(STATUS "AUIB_TRACE_BUILD_SYSTEM=TRUE (build system verbose logging is enabled)")
 endif()
 
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
+
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")

@@ -28,7 +28,28 @@ developers still opt for traditional methods. This guide will cover the latter.
 
 @note
 Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
-preinstalled.
+preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
+
+## Inno Setup
+
+[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
+
+Inno Setup is a free installer framework for Windows program by Jordan Russell and Martijn Laan.
+
+```python
+# install requirements
+choco install innosetup
+
+# standard CMake build process
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
+
+# packaging
+cpack . -G WIX --config Release
+```
+@pythongen{aui_app_innosetup}
 
 ## WIX
 
