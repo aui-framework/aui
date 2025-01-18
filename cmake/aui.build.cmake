@@ -1276,7 +1276,7 @@ macro(aui_app)
 
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
-            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico})
+            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico}) # displays app icon in Control Panel/Settings
         endif()
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")

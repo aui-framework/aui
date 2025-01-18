@@ -34,7 +34,13 @@ preinstalled.
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
 
+@image html wix.png
+
 WIX is the installer framework that produces `msi` packages.
+
+@note
+aui::updater requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
+used with WIX.
 
 ```python
 # install requirements
@@ -43,15 +49,15 @@ choco install wixtoolset
 # standard CMake build process
 mkdir build
 cd build
-cmake ..
-cmake --build .
+cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake --build . --config Release
 
 # packaging
-cpack . -G WIX
+cpack . -G WIX --config Release
 ```
 
-The script above produces a file `<APP_NAME>.msi`, where `<APP_NAME>` is the `NAME` arg of @ref docs/aui_app.md (unless
-not overridden by `CPACK_PACKAGE_FILE_NAME`).
+The script above produces a file `<APP_NAME>-VERSION-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg of
+@ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 
 @pythongen{aui_app_wix}
