@@ -1281,6 +1281,7 @@ macro(aui_app)
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
         _auib_weak_set(CPACK_PACKAGE_INSTALL_DIRECTORY ${APP_NAME}) # remove -VERSION suffix
+        _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits menu folder
         _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
@@ -1338,7 +1339,6 @@ macro(aui_app)
         endif()
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE TRUE)
         _auib_weak_set_target_property(${APP_TARGET} BUNDLE TRUE)
-        _auib_weak_set_target_property(${APP_TARGET} OUTPUT_NAME "${APP_NAME}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_PLIST           "${CPACK_BUNDLE_PLIST}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_EXECUTABLE_NAME      "${MACOSX_BUNDLE_EXECUTABLE_NAME}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_STRING          "${MACOSX_BUNDLE_INFO_STRING}")
