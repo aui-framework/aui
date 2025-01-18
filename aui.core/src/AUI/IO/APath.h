@@ -206,6 +206,14 @@ public:
     [[nodiscard]] APath filenameWithoutExtension() const;
 
     /**
+     * @brief File extension.
+     * @details
+     * `/home/user/file.cpp -> cpp
+     * @return file extension
+     */
+    [[nodiscard]] AString extension() const;
+
+    /**
      * @brief Remove the uppermost folder from this path
      * @details
      * v1.0.0/client/azaza.zip -> client/azaza.zip

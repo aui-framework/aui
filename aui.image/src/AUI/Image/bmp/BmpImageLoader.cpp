@@ -15,9 +15,15 @@
 
 #include "BmpImageLoader.h"
 #include <AUI/Common/AByteBuffer.h>
-
+#include <stb_image_write.h>
 
 bool BmpImageLoader::matches(AByteBufferView buffer) {
     const uint8_t bmp_header[] = {'B', 'M'};
     return memcmp(bmp_header, buffer.data(), sizeof(bmp_header)) == 0;
+}
+
+void BmpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image) {
+    stbi_write_bmp_to_func([](void *context, void *data, int size) {
+      reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);
+    }, reinterpret_cast<void*>(outputStream.ptr()), image.width(), image.height(), image.bytesPerPixel(), image.data());
 }

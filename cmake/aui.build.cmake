@@ -1273,10 +1273,27 @@ macro(aui_app)
                     COMMAND ${AUI_TOOLBOX_EXE}
                     ARGS svg2ico ${_icon_absolute} ${_ico}
             )
-
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
             _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico})
+
+            set(_ico "${_current_app_build_files}/wix_ui_banner.bmp")
+            add_custom_command(
+                    OUTPUT ${_ico}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS convert-image ${_icon_absolute} ${_ico} -p=435x0 -c=493x58
+            )
+            target_sources(${APP_TARGET} PRIVATE ${_ico})
+            _auib_weak_set(CPACK_WIX_UI_BANNER ${_ico}) # image at top of all installer pages
+
+            set(_ico "${_current_app_build_files}/wix_ui_dialog.bmp")
+            add_custom_command(
+                    OUTPUT ${_ico}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS convert-image ${_icon_absolute} ${_ico} -p=0x0 -c=493x312 -r=170
+            )
+            target_sources(${APP_TARGET} PRIVATE ${_ico})
+            _auib_weak_set(CPACK_WIX_UI_DIALOG ${_ico}) # background image used on the welcome and completion dialogs
         endif()
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
