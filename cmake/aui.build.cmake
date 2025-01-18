@@ -26,6 +26,8 @@ if (AUIB_TRACE_BUILD_SYSTEM)
     message(STATUS "AUIB_TRACE_BUILD_SYSTEM=TRUE (build system verbose logging is enabled)")
 endif()
 
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
+
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
@@ -1275,7 +1277,7 @@ macro(aui_app)
             )
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
-            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico})
+            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico}) # displays app icon in Control Panel/Settings
 
             set(_ico "${_current_app_build_files}/wix_ui_banner.bmp")
             add_custom_command(

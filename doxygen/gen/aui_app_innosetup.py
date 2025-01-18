@@ -9,4 +9,4 @@
 
 import common.aui_app
 
-common.aui_app.list_all_vars_affected_by('(APP_ICON|_ico)', display_name="APP_ICON")
+common.aui_app.list_all_vars_containing('INNOSETUP')
