@@ -1329,6 +1329,7 @@ macro(aui_app)
         _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits menu folder
         _auib_weak_set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER ".") # omits menu folder
         _auib_weak_set(CPACK_INNOSETUP_INSTALL_ROOT "{userappdata}") # install To AppData
+        _auib_weak_set(CPACK_INNOSETUP_RUN_EXECUTABLES ${_executable}) # run the program after installation
         _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
