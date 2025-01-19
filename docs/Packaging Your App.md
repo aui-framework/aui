@@ -43,11 +43,11 @@ choco install innosetup
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=INNOSETUP
 cmake --build . --config Release
 
 # packaging
-cpack . -G WIX --config Release
+cpack . -c Release
 ```
 @pythongen{aui_app_innosetup}
 
@@ -70,15 +70,18 @@ choco install wixtoolset
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=WIX
 cmake --build . --config Release
 
 # packaging
-cpack . -G WIX --config Release
+cpack . -c Release
 ```
 
 The script above produces a file `<APP_NAME>-VERSION-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg of
 @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
-
 @pythongen{aui_app_wix}
+
+@ref docs/aui_app.md generates some image assets for the installer from your icon.
+
+@image html wix_logo.png
