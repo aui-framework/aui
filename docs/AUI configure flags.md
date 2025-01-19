@@ -92,10 +92,10 @@ Disables precompiled binaries.
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
-## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=YES) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
+## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=NO) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
 
 The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
-archive.
+archive in the `deps/` dir.
 
 See @ref aui_boot_producing_packages
