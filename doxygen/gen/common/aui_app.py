@@ -40,7 +40,7 @@ def list_all_vars_affected_by(varname, display_name=None):
         if not vars_set:
             return vars_set
 
-        print(f"`{display_name}` affects the following CMake variables (if undefined):")
+        print(f"`{display_name}` populates the following CMake variables (if undefined):")
         for occurrence in vars_set:
             print(f"- `{occurrence[0]}` <i> = `{occurrence[1]}` </i>")
         return vars_set

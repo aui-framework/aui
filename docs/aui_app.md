@@ -92,13 +92,17 @@ Specify SVG icon location (defaults to `icon.svg` if exists).
 
 See @ref "docs/Setting App Icon.md" for best practices.
 
-| Platform | Required | Traits                                  |
-|----------|----------|-----------------------------------------|
-| Windows  |          |                                         |
-| Linux    | +        |                                         |
-| macOS    | +        | generates `*.icns` file from your `svg` |
-| Android  | +        |                                         |
-| iOS      | +        |                                         |
+| Platform | Required | Traits                                                |
+|----------|----------|-------------------------------------------------------|
+| Windows  |          | generates `*.ico` and `*.bmp` files from your `svg`   |
+| Linux    | +        | generates Freedesktop-compliant icons from your `svg` |
+| macOS    | +        | generates `*.icns` file from your `svg`               |
+| Android  | +        | generates icon assets from your `svg`                 |
+| iOS      | +        | generates `*.icns` file from your `svg`               |
+
+`aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
+chosen.
+
 
 @pythongen{aui_app_ICON}
 

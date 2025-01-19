@@ -53,7 +53,13 @@ cmake --build . --config Release
 # packaging
 cpack . -c Release
 ```
+
+The script above produces a file `<APP_NAME>-VERSION-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME` arg of
+@ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
+
 @pythongen{aui_app_innosetup}
+
+@ref docs/aui_app.md generates some image assets for the installer from your icon.
 
 You can override these values by simply calling `set` on them. By default, in addition to branding adjustments (such as
 app logo and name), AUI configures INNOSETUP so the installer won't prompt a UAC dialog (leverage to _admin
@@ -94,3 +100,26 @@ The script above produces a file `<APP_NAME>-VERSION-ARCH.msi`, where `<APP_NAME
 @ref docs/aui_app.md generates some image assets for the installer from your icon.
 
 @image html wix_logo.png Installer with AUI's patches applied
+
+# macOS
+
+@note
+Guides about packaging for macOS assume you are running macOS with Xcode preinstalled.
+
+The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
+
+## DragNDrop
+
+The DranDrop CPack generator creates a DMG image. When opened, it shows macOS app bundle with your application and a
+symlink to `/Applications`, effectively prompting the user to copy the application from the medium to his app library.
+
+```python
+# standard CMake build process
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=DragNDrop
+cmake --build . --config Release
+
+# packaging
+cpack . -c Release
+```
