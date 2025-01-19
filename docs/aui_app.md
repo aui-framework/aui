@@ -2,13 +2,39 @@
 
 Provide application info for deployment (i.e. name, author, license, icon, etc...).
 
+`aui_app` unifies the packaging process across all platforms. For (mostly) all desktop platforms, it acts in
+collaboration with [CPack](https://cmake.org/cmake/help/book/mastering-cmake/chapter/Packaging%20With%20CPack.html).
+
+- `ZIP`, `TGZ`
+- `DEB`
+- `NSIS`
+- `WIX`
+- `External`
+
+For the targets that require [cross-compilation](@ref docs/Crosscompiling.md), it requires `@ref AUI_BUILD_FOR` to be
+set, and, in fact, does not involve CPack in such case.
+
+For all packaging methods, `aui_app` assumes it is called once per CMake project. It is relevant for packaging methods
+that expect one "entrypoint" per package.
+- `aui_app` -> Android APK
+- `aui_app` -> iOS app bundle
+- `aui_app` -> Linux Flatpak
+- `aui_app` -> Linux AppImage
+
+For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
+various installation methods but also override the variables if needed.
+
+For more info about packaging methods, see @ref "docs/Packaging Your App.md".
+
 ## Syntax
+
+@snippet examples/AUI.Example.Views/CMakeLists.txt aui_app
 
 ```cmake
 aui_app(
     # common
-    [TARGET <target-name>]
-    [NAME <application-name>]
+    <TARGET <target-name>>
+    <NAME <application-name>>
     [ICON <path-to-icon-svg>]
     [VENDOR <vendor-name>]
     [COPYRIGHT <copyright-string>]
@@ -48,7 +74,7 @@ Specify main executable of the application which will be executed when your appl
 
 ### NAME
 
-Specify application display name.
+Specify application display name that would appear in system's UIs (i.e., start menu, launchpad, desktop, control panel).
 
 |Platform|Required|Traits|
 |--------|--------|------|
@@ -58,39 +84,26 @@ Specify application display name.
 |Android|+||
 |iOS|+||
 
-### ICON
+@pythongen{aui_app_NAME}
+
+### ICON {#aui_app_ICON}
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-|Platform|Required|Traits|
-|--------|--------|------|
-|Windows|||
-|Linux|+||
-|macOS|+|generates `*.icns` file from your `svg`|
-|Android|+||
-|iOS|+||
+See @ref "docs/Setting App Icon.md" for best practices.
 
-#### Why SVG?
+| Platform | Required | Traits                                                |
+|----------|----------|-------------------------------------------------------|
+| Windows  |          | generates `*.ico` and `*.bmp` files from your `svg`   |
+| Linux    | +        | generates Freedesktop-compliant icons from your `svg` |
+| macOS    | +        | generates `*.icns` file from your `svg`               |
+| Android  | +        | generates icon assets from your `svg`                 |
+| iOS      | +        | generates `*.icns` file from your `svg`               |
 
-AUI forces you to use SVG to ensure your icon renders correctly on all platforms.
-In addition, the usage of SVG avoids image pixelization on HiDPI (High Dots Per Inch) displays.
+Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
+chosen.
 
-If you only have images in raster formats (such as PNG, ICO, etc.) you need to vectorize by tracing the image.
-Modern vector image editors (such as Adobe Illustrator or Inkscape) have built-in tools to perform this procedure. If you wish, you can also use various online vectorizers.
-
-#### Vectorization using Inkscape
-
-For instance, let's see how to vectorize your image using Inkscape editor. Just follow the next instruction:
-* First, import a suitable bitmap image by using the menu File → Import.
-* Select the image with the Selector tool.
-* In the menu, go to Path → Trace Bitmap.
-* A dialog will open where you can set different options. Play with them a little to get a better result.
-* When the result of the preview looks right, click Ok. The vectorized image will be available right on the canvas.
-* Remove your old raster bitmap and export got image in SVG format.
-
-#### Known issues
-
-* AUI's SVG renderer does not show up SVG paths. The easiest solution is convert paths to polygons (shapes) in modern vector editor.
+@pythongen{aui_app_ICON}
 
 ### VENDOR
 
@@ -104,6 +117,8 @@ Specify application author's name or company.
 |Android|||
 |iOS|||
 
+@pythongen{aui_app_VENDOR}
+
 ### COPYRIGHT
 
 Specify application copyright string (not file)
@@ -115,6 +130,8 @@ Specify application copyright string (not file)
 |macOS|+||
 |Android|||
 |iOS|+||
+
+@pythongen{aui_app_COPYRIGHT}
 
 
 ### VERSION
@@ -128,6 +145,8 @@ Specify application version. If not set, the value of `PROJECT_VERSION` used ins
 |macOS|+||
 |Android|+||
 |iOS|+||
+
+@pythongen{aui_app_VERSION}
 
 ### NO_INCLUDE_CPACK
 

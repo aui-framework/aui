@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
-option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" ON)
+option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
     message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")

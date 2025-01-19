@@ -33,8 +33,8 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 ## AUI_BUILD_EXAMPLES
 Whether build examples or not.
 
-## AUI_BUILD_FOR
-Specifies target platform for cross-compilation (see [cross-compiling](docs/Crosscompiling.md)).
+## AUI_BUILD_FOR {#AUI_BUILD_FOR}
+Specifies target platform for cross-compilation (see [cross-compiling](@ref docs/Crosscompiling.md)).
 
 ## AUIB_CACHE_DIR
 Changes aui.boot's cache dir (which is `~/.aui` by default).
@@ -92,10 +92,10 @@ Disables precompiled binaries.
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
-## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=YES) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
+## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=NO) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
 
 The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
-archive.
+archive in the `deps/` dir.
 
 See @ref aui_boot_producing_packages

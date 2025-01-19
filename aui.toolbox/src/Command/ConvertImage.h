@@ -9,21 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 26.08.2020.
-//
-
 #pragma once
 
 
-#include <AUI/api.h>
-#include <AUI/Image/StbImageLoader.h>
+#include "ICommand.h"
 
-class BmpImageLoader: public StbImageLoader {
+class ConvertImage: public ICommand {
 public:
-    bool matches(AByteBufferView buffer) override;
+    AString getName() override;
 
-    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image);
+    AString getSignature() override;
+
+    AString getDescription() override;
+
+    void run(Toolbox& t) override;
 };
 
 
