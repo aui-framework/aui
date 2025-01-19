@@ -11,7 +11,9 @@ application:
 - etc...
 
 In addition, this command populates some `CPACK_*` variables (if undefined). This approach allows you not to bother about
-various installation methods but also override the variables if needed.
+various installation methods but also override the variables if needed. These adjustments are needed to configure the
+installer packages. AUI replaces installers' defaults with the information passed to `aui_app`, such as app name, id,
+icon, license information, authors, etc. to produce production-ready packages out of the box.
 
 This guide covers various packaging techniques for all supported platforms.
 
@@ -34,6 +36,8 @@ preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runn
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
+@image html innosetup.png Installer with AUI's patches applied
+
 Inno Setup is a free installer framework for Windows program by Jordan Russell and Martijn Laan.
 
 ```python
@@ -50,6 +54,11 @@ cmake --build . --config Release
 cpack . -c Release
 ```
 @pythongen{aui_app_innosetup}
+
+You can override these values by simply calling `set` on them. By default, in addition to branding adjustments (such as
+app logo and name), AUI configures INNOSETUP so the installer won't prompt a UAC dialog (leverage to _admin
+privileges_). This way the installation process is more secure from perspective of the end user. Moreover, installation
+to user's directory allows `aui::updater` to work without prompting leverage to admin privileges during update installation.
 
 ## WIX
 
@@ -84,4 +93,4 @@ The script above produces a file `<APP_NAME>-VERSION-ARCH.msi`, where `<APP_NAME
 
 @ref docs/aui_app.md generates some image assets for the installer from your icon.
 
-@image html wix_logo.png
+@image html wix_logo.png Installer with AUI's patches applied

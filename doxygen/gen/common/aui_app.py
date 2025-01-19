@@ -9,9 +9,9 @@
 import re
 
 def list_all_vars_containing(varname):
-    REGEX = re.compile(f'([A-Z_]*{varname}[A-Z_]*)( (.*)\))?( # (.*))?')
+    REGEX = re.compile(f'\(([A-Za-z_]+)( (.*)\))?( # (.*))?')
     with open('cmake/aui.build.cmake', 'r') as fis:
-        vars_set = [(i[0], i[2], i[4]) for i in REGEX.findall(fis.read())]
+        vars_set = [(i[0], i[2], i[4]) for i in REGEX.findall(fis.read()) if varname in f"{i}"]
     if not vars_set:
         return
     vars_set = set(vars_set)
