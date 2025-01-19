@@ -1265,10 +1265,10 @@ macro(aui_app)
     _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
     file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
-    _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # APP_COPYRIGHT
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
+        _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # windows only APP_COPYRIGHT
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         _auib_weak_set(CPACK_PACKAGE_EXECUTABLES "${_executable};${APP_NAME}") # windows only
         _auib_weak_set(CPACK_CREATE_DESKTOP_LINKS "${_executable}") # windows only
@@ -1367,6 +1367,8 @@ macro(aui_app)
 
     # IOS AND MACOS ====================================================================================================
     if (APPLE)
+        string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
+        _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}) # proper system processor on macOS
         if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
             set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
         endif()
@@ -1428,6 +1430,16 @@ macro(aui_app)
             set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
             target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
         endif()
+
+
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_background.png ${_current_app_build_files}/dmg_background.png COPYONLY)
+        _auib_weak_set(CPACK_DMG_BACKGROUND_IMAGE ${_current_app_build_files}/dmg_background.png) # sets the default DMG background
+
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_ds_store_setup.scpt ${_current_app_build_files}/dmg_ds_store_setup.scpt)
+        _auib_weak_set(CPACK_DMG_DS_STORE_SETUP_SCRIPT ${_current_app_build_files}/dmg_ds_store_setup.scpt) # rearranges icons in DMG
+
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name (DMG)
+        install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
     endif()
 
     # IOS ==============================================================================================================
