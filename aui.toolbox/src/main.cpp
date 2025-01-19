@@ -42,6 +42,7 @@
 #include <Command/Css2ass.h>
 #include <Command/PackManual.h>
 #include <Command/Svg2ico.h>
+#include <Command/ConvertImage.h>
 
 #include "Toolbox.h"
 #include "Command/Svg2png.h"
@@ -62,6 +63,7 @@ Toolbox::Toolbox() {
     registerCommand<Svg2png>();
     registerCommand<Svg2ico>();
     registerCommand<Auisl>();
+    registerCommand<ConvertImage>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {

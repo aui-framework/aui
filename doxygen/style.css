@@ -115,3 +115,7 @@ table.doxtable td, table.doxtable th {
     width: 100%;
     filter: invert(0.88);
 }
+
+.dark-mode-keep-imgs img {
+    filter: none !important;
+}

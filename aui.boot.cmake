@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 3.16)
 
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
-option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" ON)
+option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
     message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")
@@ -301,7 +301,7 @@ function(_auib_validate_target_installation _target)
             endif()
             message(FATAL_ERROR
                     "While importing ${AUI_MODULE_NAME}:\n"
-                    "Imported target ${_target} has dependency on a system file\n${_property_item} IN ${_property}\n"
+                    "Imported target ${_target} depends on a out-of-tree (system) file\n${_property_item} IN ${_property}\n"
                     "This effectively means that the library (and thus your project) is not portable.\n"
                     "CMake targets should be used instead of hardcoded paths.\n"
                     "You can silence this error by setting -DAUIB_NO_PRECOMPILED=TRUE\n"
@@ -1036,15 +1036,15 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # save arguments for later use by dependent modules
     if (NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG)
+        string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
+        set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
-            string(REPLACE ";" " " _forwarded_import_args "${ARGV}")
-            set(_precompiled_url "")
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
                 set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER}")
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
-            set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
         endif()
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
 endfunction()
 

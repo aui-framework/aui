@@ -26,6 +26,8 @@ if (AUIB_TRACE_BUILD_SYSTEM)
     message(STATUS "AUIB_TRACE_BUILD_SYSTEM=TRUE (build system verbose logging is enabled)")
 endif()
 
+message(STATUS "CMake Version: ${CMAKE_VERSION}")
+
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
@@ -748,9 +750,7 @@ macro(_aui_try_find_toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
-        else()
-            # compile aui.toolbox for the host system
-            message(STATUS "aui.toolbox for the host system is not found - compiling")
+            set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location" FORCE)
         endif()
     endif()
 endmacro()
@@ -799,28 +799,32 @@ auib_import(aui https://github.com/aui-framework/aui
         message(FATAL_ERROR "Unable to build aui.toolbox for the host system (check ${_build_log})")
     endif()
     _aui_try_find_toolbox()
-    set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
     if (NOT AUI_TOOLBOX_EXE)
         message(FATAL_ERROR "Could not provide aui.toolbox (AUI_TOOLBOX_EXE) - giving up")
     endif()
 endmacro()
 
-macro(_aui_check_toolbox)
-    if (NOT AUI_TOOLBOX_EXE)
-        if (CMAKE_CROSSCOMPILING)
-            # the worst case because we (possibly) have to compile aui.toolbox for the host system
-            _aui_try_find_toolbox()
-            if (NOT AUI_TOOLBOX_EXE)
-                _aui_provide_toolbox_for_host()
-            endif()
-        elseif (TARGET aui.toolbox)
-            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
-        else()
-            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
-        endif()
-        message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
+function(_aui_check_toolbox)
+    if (AUI_TOOLBOX_EXE)
+        return()
     endif()
-endmacro()
+    if (CMAKE_CROSSCOMPILING)
+        # the worst case because we (possibly) have to compile aui.toolbox for the host system
+        # compile aui.toolbox for the host system
+        message(STATUS "aui.toolbox for the host system is not found - compiling")
+        _aui_provide_toolbox_for_host()
+        return()
+    endif()
+    if (TARGET aui.toolbox)
+        set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox" FORCE)
+        return()
+    endif()
+    _aui_try_find_toolbox()
+    if (AUI_TOOLBOX_EXE)
+        return()
+    endif()
+    set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox" FORCE)
+endfunction()
 
 function(aui_compile_assets AUI_MODULE_NAME)
     set(oneValueArgs DIR)
@@ -840,6 +844,9 @@ function(aui_compile_assets AUI_MODULE_NAME)
     get_filename_component(ASSETS_DIR "${ASSETS_DIR}" ABSOLUTE)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     get_filename_component(SELF_DIR "${SELF_DIR}" ABSOLUTE)
+    if (NOT EXISTS ${ASSETS_DIR})
+        message(FATAL_ERROR "aui_compile_assets(${AUI_MODULE_NAME}): expects \"${ASSETS_DIR}\" to exist to compile assets")
+    endif()
     file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "${ASSETS_DIR}/*")
 
     if (ASSETS_EXCLUDE)
@@ -852,6 +859,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
     endif()
 
     _aui_check_toolbox()
+    message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to compile assets for ${AUI_MODULE_NAME}")
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -1123,6 +1131,19 @@ function(auisl_shader TARGET NAME)
     target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
 endfunction()
 
+macro(_auib_weak_set VAR_NAME)
+    if (NOT VAR_NAME)
+        set(${ARGV})
+    endif()
+endmacro()
+
+function(_auib_weak_set_target_property TARGET PROPERTY VALUE)
+    get_target_property(_tmp ${TARGET} ${PROPERTY})
+    if (NOT _tmp)
+        set_target_properties(${TARGET} PROPERTIES ${PROPERTY} "${VALUE}")
+    endif()
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 
@@ -1164,7 +1185,11 @@ macro(aui_app)
         set(APP_IOS_DEVICE BOTH)
     endif()
     if (NOT APP_VERSION)
-        set(APP_VERSION 1.0)
+        if (PROJECT_VERSION)
+            set(APP_VERSION ${PROJECT_VERSION})
+        else()
+            set(APP_VERSION 1.0)
+        endif()
     endif()
     if (NOT APP_COPYRIGHT)
         set(APP_COPYRIGHT "Copyright is not specified")
@@ -1232,17 +1257,25 @@ macro(aui_app)
         get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
     endif()
 
+
     # common cpack
-    set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
-    set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
-    set(CPACK_BUNDLE_NAME ${APP_NAME})
-    set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
-    set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
+    _auib_weak_set(CPACK_PACKAGE_NAME ${APP_NAME})
+    _auib_weak_set(CPACK_BUNDLE_NAME ${APP_NAME})
+    _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
+    _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
+    _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
+    file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
-        list(APPEND CPACK_GENERATOR WIX)
-
+        _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # windows only APP_COPYRIGHT
+        get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        _auib_weak_set(CPACK_PACKAGE_EXECUTABLES "${_executable};${APP_NAME}") # windows only
+        _auib_weak_set(CPACK_CREATE_DESKTOP_LINKS "${_executable}") # windows only
+        if ("INNOSETUP" IN_LIST CPACK_GENERATOR)
+            string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
+            _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}-setup) # append -setup suffix for INNOSETUP
+        endif()
         if (APP_ICON)
             set(_ico "${_current_app_build_files}/app.ico")
             add_custom_command(
@@ -1250,19 +1283,63 @@ macro(aui_app)
                     COMMAND ${AUI_TOOLBOX_EXE}
                     ARGS svg2ico ${_icon_absolute} ${_ico}
             )
-
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
+            _auib_weak_set(CPACK_INNOSETUP_ICON_FILE ${_ico}) # installer icon
+            _auib_weak_set(CPACK_WIX_PRODUCT_ICON ${_ico}) # displays app icon in Control Panel/Settings
+
+            if ("WIX" IN_LIST CPACK_GENERATOR)
+                set(_ico "${_current_app_build_files}/wix_ui_banner.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -p=435x0 -c=493x58
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_WIX_UI_BANNER ${_ico}) # image at top of all installer pages
+
+                set(_ico "${_current_app_build_files}/wix_ui_dialog.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -p=0x0 -c=493x312 -r=170
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_WIX_UI_DIALOG ${_ico}) # background image used on the welcome and completion dialogs
+            endif()
+            if ("INNOSETUP" IN_LIST CPACK_GENERATOR)
+                set(_ico "${_current_app_build_files}/innosetup.bmp")
+                add_custom_command(
+                        OUTPUT ${_ico}
+                        COMMAND ${AUI_TOOLBOX_EXE}
+                        ARGS convert-image ${_icon_absolute} ${_ico} -c=256 -b=\#ffffff
+                )
+                target_sources(${APP_TARGET} PRIVATE ${_ico})
+                _auib_weak_set(CPACK_PACKAGE_ICON ${_ico}) # app icon inside INNOSETUP window
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_WizardSmallImageFile ${_ico}) # small icon inside INNOSETUP window
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_UninstallDisplayIcon "{app}\\\\\\\\bin\\\\\\\\${_executable}.exe") # displays app icon in Control Panel/Settings
+                _auib_weak_set(CPACK_INNOSETUP_SETUP_PrivilegesRequired "lowest") # hence we're installing to user dir, we don't need UAC
+                _auib_weak_set(CPACK_INNOSETUP_IGNORE_LICENSE_PAGE ON) # skips license page
+                _auib_weak_set(CPACK_INNOSETUP_IGNORE_README_PAGE ON) # skips README page
+            endif()
         endif()
+        set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
+        set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
+        _auib_weak_set(CPACK_PACKAGE_INSTALL_DIRECTORY ${APP_NAME}) # remove -VERSION suffix
+        _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits menu folder
+        _auib_weak_set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER ".") # omits menu folder
+        _auib_weak_set(CPACK_INNOSETUP_INSTALL_ROOT "{userappdata}") # install To AppData
+        _auib_weak_set(CPACK_INNOSETUP_RUN_EXECUTABLES ${_executable}) # run the program after installation
+        _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()
 
 
     # DESKTOP LINUX ====================================================================================================
     if (AUI_PLATFORM_LINUX)
+        get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
-            set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
-            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
+            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
             if (APP_ICON)
                 set(_icon "${_current_app_build_files}/app.icon.svg")
                 configure_file(${APP_ICON} "${_icon}" COPYONLY)
@@ -1274,56 +1351,56 @@ macro(aui_app)
                     CONTENT ${_desktop})
             set(APP_LINUX_DESKTOP ${_current_app_build_files}/app.desktop)
         endif()
-        file(GENERATE
-                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
-                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
-
-        file(GENERATE
-                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
-                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
-        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
-
-        list(APPEND CPACK_GENERATOR External)
-
-        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
-        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
+#        file(GENERATE
+#                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
+#                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
+#
+#        file(GENERATE
+#                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
+#                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
+#        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
+#
+#        list(APPEND CPACK_GENERATOR External)
+#
+#        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
+#        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
     endif()
 
     # IOS AND MACOS ====================================================================================================
     if (APPLE)
+        string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
+        _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}) # proper system processor on macOS
         if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
             set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
         endif()
         set(PRODUCT_NAME ${APP_NAME})
         set(EXECUTABLE_NAME ${APP_NAME})
-        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
-        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
-        set(MACOSX_BUNDLE_ICON_FILE "app.icns")
-        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
-        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
-        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
+        _auib_weak_set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
+        _auib_weak_set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
+        _auib_weak_set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
+        _auib_weak_set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
+        _auib_weak_set(MACOSX_BUNDLE_ICON_FILE "app.icns")
+        _auib_weak_set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
+        _auib_weak_set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
+        _auib_weak_set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
+        _auib_weak_set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
+        _auib_weak_set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
-        set_target_properties(${APP_TARGET} PROPERTIES
-                MACOSX_BUNDLE TRUE
-                BUNDLE TRUE
-                OUTPUT_NAME ${APP_NAME}
-                MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
-                MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
-                MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
-                MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
-                MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
-                MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
-                MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
-                MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
-                MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
-                MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
-                MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE TRUE)
+        _auib_weak_set_target_property(${APP_TARGET} BUNDLE TRUE)
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_PLIST           "${CPACK_BUNDLE_PLIST}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_EXECUTABLE_NAME      "${MACOSX_BUNDLE_EXECUTABLE_NAME}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_STRING          "${MACOSX_BUNDLE_INFO_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_GUI_IDENTIFIER       "${MACOSX_BUNDLE_GUI_IDENTIFIER}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_NAME          "${MACOSX_BUNDLE_BUNDLE_NAME}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_ICON_FILE            "${MACOSX_BUNDLE_ICON_FILE}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_LONG_VERSION_STRING  "${MACOSX_BUNDLE_LONG_VERSION_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_SHORT_VERSION_STRING "${MACOSX_BUNDLE_SHORT_VERSION_STRING}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_VERSION       "${MACOSX_BUNDLE_BUNDLE_VERSION}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_COPYRIGHT            "${MACOSX_BUNDLE_COPYRIGHT}")
+        _auib_weak_set_target_property(${APP_TARGET} MACOSX_DEPLOYMENT_TARGET           "${MACOSX_DEPLOYMENT_TARGET}")
     endif()
 
     # MACOS ============================================================================================================
@@ -1354,6 +1431,16 @@ macro(aui_app)
             set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
             target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
         endif()
+
+
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_background.png ${_current_app_build_files}/dmg_background.png COPYONLY)
+        _auib_weak_set(CPACK_DMG_BACKGROUND_IMAGE ${_current_app_build_files}/dmg_background.png) # sets the default DMG background
+
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_ds_store_setup.scpt ${_current_app_build_files}/dmg_ds_store_setup.scpt)
+        _auib_weak_set(CPACK_DMG_DS_STORE_SETUP_SCRIPT ${_current_app_build_files}/dmg_ds_store_setup.scpt) # rearranges icons in DMG
+
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
+        install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
     endif()
 
     # IOS ==============================================================================================================

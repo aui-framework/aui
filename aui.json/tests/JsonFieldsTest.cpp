@@ -19,6 +19,7 @@
 #include <AUI/Json/AJson.h>
 #include <AUI/Traits/parameter_pack.h>
 #include <AUI/Traits/members.h>
+#include "AUI/Common/AProperty.h"
 
 // ORM data class
 struct Data2 {
@@ -83,4 +84,29 @@ TEST(Json, FieldsTestOptional)
 
     // here it should throw an exception since v1 is not optional
     EXPECT_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v2":228})")), AJsonException);
+}
+
+struct DataProperty {
+    AProperty<int> v1;
+    AProperty<AString> v2;
+};
+
+AJSON_FIELDS(DataProperty,
+             (v1, "v1")
+             (v2, "v2"))
+
+TEST(Json, DataProperty)
+{
+    DataProperty property {
+        .v1 = 111,
+        .v2 = "string",
+    };
+
+    auto str = AJson::toString(aui::to_json(property));
+    EXPECT_EQ(str, R"({"v1":111,"v2":"string"})");
+
+    // and back
+    auto parsed = aui::from_json<DataProperty>(AJson::fromString(str));
+    EXPECT_EQ(parsed.v1, property.v1);
+    EXPECT_EQ(parsed.v2, property.v2);
 }

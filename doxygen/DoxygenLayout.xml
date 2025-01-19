@@ -49,6 +49,10 @@
             <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
             <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
         </tab>
+        <tab type="usergroup" title="Preparing to Production" visible="yes">
+            <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
+            <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
+        </tab>
     </navindex>
 
     <!-- Layout definition for a class page -->
@@ -97,9 +101,9 @@
             <events title=""/>
         </memberdef>
         <allmemberslink visible="yes"/>
-        <usedfiles visible="$SHOW_USED_FILES"/>
-        <inheritancegraph visible="$CLASS_GRAPH"/>
-        <collaborationgraph visible="$COLLABORATION_GRAPH"/>
+<!--        <usedfiles visible="$SHOW_USED_FILES"/>-->
+<!--        <inheritancegraph visible="$CLASS_GRAPH"/>-->
+<!--        <collaborationgraph visible="$COLLABORATION_GRAPH"/>-->
         <authorsection visible="yes"/>
     </class>
 
@@ -213,7 +217,7 @@
             <properties title=""/>
             <friends title=""/>
         </memberdef>
-        <groupgraph visible="$GROUP_GRAPHS"/>
+<!--        <groupgraph visible="$GROUP_GRAPHS"/>-->
         <authorsection visible="yes"/>
     </group>
 

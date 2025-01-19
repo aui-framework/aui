@@ -40,8 +40,9 @@ REGEX_AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
 REGEX_COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
-# TEST_F(UIDataBindingTest, AProperty) { // HEADER
-REGEX_TESTCASE_HEADER = re.compile(r'TEST_F\(.+, (.+)\) ?\{ ?// ?HEADER')
+# TEST_F(UIDataBindingTest, AProperty) { // HEADER_H2
+REGEX_TESTCASE_HEADER_H1 = re.compile(r'TEST_F\((.+), (.+)\) ?\{ ?// ?HEADER_H1')
+REGEX_TESTCASE_HEADER_H2 = re.compile(r'TEST_F\((.+), (.+)\) ?\{ ?// ?HEADER_H2')
 
 REGEX_INGROUP = re.compile(r'.*([@\\]ingroup ?\w*).*')
 assert REGEX_INGROUP.match("   * @ingroup")
@@ -129,12 +130,22 @@ def process_cpp_file(input: Path):
                 CODE_END = "@endcode"
 
             for line in lines:
-                if match := REGEX_TESTCASE_HEADER.match(line):
+                if match := REGEX_TESTCASE_HEADER_H1.match(line):
+                    emit_line()
+                    fos.write("# ")
+                    fos.write(match.group(2).replace("_", " "))
+                    fos.write(" {#")
+                    fos.write(f'{match.group(1)}_{match.group(2)}')
+                    fos.write("}")
+                    emit_line()
+                    continue
+
+                if match := REGEX_TESTCASE_HEADER_H2.match(line):
                     emit_line()
                     fos.write("## ")
-                    fos.write(match.group(1).replace("_", " "))
+                    fos.write(match.group(2).replace("_", " "))
                     fos.write(" {#")
-                    fos.write(match.group(1))
+                    fos.write(f'{match.group(1)}_{match.group(2)}')
                     fos.write("}")
                     emit_line()
                     continue
@@ -211,6 +222,17 @@ def generate_docs_from_tests():
     print('Tests to generate docs from:', suitable_cpp_files)
     for path in suitable_cpp_files:
         process_cpp_file(path)
+
+def generate_docs_from_gen():
+    BASE_DIR = Path('doxygen/gen')
+    for script_filename in os.listdir(BASE_DIR):
+        if not script_filename.endswith('.py'):
+            continue
+        with open(f'doxygen/intermediate/{script_filename[:-3]}.md', 'wb') as fos:
+            process = subprocess.run(f'python3 {BASE_DIR / script_filename}', shell=True, capture_output=True)
+            if process.returncode != 0:
+                raise RuntimeError(f'Python subprocess failed: {process.stderr.decode("utf-8")}')
+            fos.write(process.stdout)
 
 def invoke_doxygen():
     print("Doxygen version:", subprocess.run("doxygen -v", shell=True, capture_output=True).stdout.decode('utf-8'))
@@ -372,6 +394,7 @@ if __name__ == '__main__':
     check_all_are_in_group(Path("aui.views/src/AUI/ASS/Selector"), "ass_selectors")
 
     generate_docs_from_tests()
+    generate_docs_from_gen()
     invoke_doxygen()
 
     patch(target='classes.html', matcher='<div class="contents">', mode=PatchMode.INSERT_AFTER)

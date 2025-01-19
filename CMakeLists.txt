@@ -14,16 +14,13 @@ set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location"
 if(AUIB_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUIB_COMPONENTS core)
+    list(APPEND AUIB_COMPONENTS crypt) # toolbox
+    list(APPEND AUIB_COMPONENTS image) # toolbox
     if (views IN_LIST AUIB_COMPONENTS)
-        list(APPEND AUIB_COMPONENTS xml image)
+        list(APPEND AUIB_COMPONENTS xml)
         if (NOT CMAKE_CROSSCOMPILING)
-            list(APPEND AUIB_COMPONENTS crypt toolbox)
+            list(APPEND AUIB_COMPONENTS toolbox)
         endif()
-    elseif (toolbox IN_LIST AUIB_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
-        list(APPEND AUIB_COMPONENTS crypt)
-    endif()
-    if (curl IN_LIST AUIB_COMPONENTS)
-        list(APPEND AUIB_COMPONENTS crypt)
     endif()
 endif()
 list(REMOVE_DUPLICATES AUIB_COMPONENTS)

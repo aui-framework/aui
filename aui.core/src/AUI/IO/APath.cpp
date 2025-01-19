@@ -60,6 +60,11 @@ APath APath::filenameWithoutExtension() const {
     return name.substr(0, it);
 }
 
+AString APath::extension() const {
+    auto it = rfind('.');
+    return AString::substr(it + 1);
+}
+
 APath APath::file(const AString& fileName) const {
     return ensureSlashEnding() + fileName;
 }

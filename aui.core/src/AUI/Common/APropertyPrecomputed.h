@@ -45,20 +45,26 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
  *
- * See @ref property_system "property system" for more info.
- * @example
- * @code{cpp}
- * struct User {
- *     AProperty<AString> name;
- *     AProperty<AString> surname;
- *     APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
- * };
- * auto u = aui::ptr::manage(new User {
- *   .name = "Emma",
- *   .surname = "Watson",
- * });
- * EXPECT_EQ(u->fullName, "Emma Watson");
- * @endcode
+ * See @ref property_system "property system" for usage info.
+ *
+ * Despite properties offer @ref UIDataBindingTest_Label_via_declarative_projection "projection methods", you might
+ * want to track and process values of several properties.
+ *
+ * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
+ * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
+ *
+ * It's convenient to access values from another properties inside the expression. The properties accessed during
+ * invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
+ * automatically. If one of the tracked properties fires `changed` signal, `APropertyPrecomputed` invalidates its
+ * `T`. `APropertyPrecomputed` follows @ref aui::lazy "lazy semantics" so the expression is re-evaluated and the new
+ * result is applied to `APropertyPrecomputed` as soon as the latter is accessed for the next time.
+ *
+ * In other words, it allows to specify relationships between different object properties and reactively update
+ * `APropertyPrecomputed` value whenever its dependencies change. `APropertyPrecomputed<T>` is somewhat similar to
+ * [Qt Bindable Properties](https://doc.qt.io/qt-6/bindableproperties.html).
+ *
+ * `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
+ * value with `value()` method or implicit conversion `operator T()` as with other properties.
  */
 template<typename T>
 struct APropertyPrecomputed final : aui::property_precomputed::detail::DependencyObserver {

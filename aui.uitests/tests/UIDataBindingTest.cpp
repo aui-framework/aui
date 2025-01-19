@@ -26,8 +26,6 @@
 #include "AUI/View/ANumberPicker.h"
 
 class UIDataBindingTest : public testing::UITest {
-public:
-
 };
 
 
@@ -125,398 +123,15 @@ TEST_F(UIDataBindingTest, TextField1) {
     // This is basic example of setting up property-to-property connection.
 }
 
-class LogObserver : public AObject {
-public:
-    LogObserver() {
-        ON_CALL(*this, log(testing::_)).WillByDefault([](const AString& msg) {
-//            ALogger::info("LogObserver") << "Received value: " << msg;
-        });
-    }
-    MOCK_METHOD(void, log, (const AString& msg), ());
-};
-
 //
 // # Declaring Properties
-// There are three ways to define a property in AUI:
+// There are several ways to define a property in AUI:
+// - AProperty - basic wrapper property type for data models
+// - APropertyDef - property-compliant view type to tie custom getter, setter and signal together
+// - APropertyPrecomputed - readonly property whose value is determined by a callable that references other properties
 //
-TEST_F(UIDataBindingTest, AProperty) { // HEADER
-    // To declare a property inside your data model, use AProperty template:
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-    };
-    // AUI_DOCS_CODE_END
-    // `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
-    // value with `value()` method or implicit conversion `operator T()`.
-
-    // AProperty behaves like a class/struct data member:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name = "Hello";
-        EXPECT_EQ(u.name, "Hello");
-        // AUI_DOCS_CODE_END
-    }
-
-    // You can even perform binary operations on it seamlessly:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name = "Hello";
-        u.name += " world!";
-        EXPECT_EQ(u.name, "Hello world!");
-        EXPECT_EQ(u.name->length(), AString("Hello world!").length());
-        // AUI_DOCS_CODE_END
-    }
-
-    // In most cases, property is implicitly convertible to its underlying type:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
-        User u;
-        u.name = "Hello";
-        doSomethingWithName(u.name);
-        // AUI_DOCS_CODE_END
-
-
-        // If it doesn't, simply put an asterisk:
-        // AUI_DOCS_CODE_BEGIN
-        doSomethingWithName(*u.name);
-        //                 ^^^ HERE
-        // AUI_DOCS_CODE_END
-    }
-
-    //
-    // ### Observing changes
-    // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
-    // object for demonstration:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        class LogObserver : public AObject {
-        public:
-            void log(const AString& msg) {
-                ALogger::info("LogObserver") << "Received value: " << msg;
-            }
-        };
-        // AUI_DOCS_CODE_END
-    }
-    {
-        //
-        // Example usage:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
-        AObject::connect(u->name.changed, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        EXPECT_CALL(*observer, log(AString("Marinette")));
-        //
-        // At the moment, the program prints nothing. When we change the property:
-        // AUI_DOCS_CODE_BEGIN
-        u->name = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Code produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-    {
-        testing::InSequence s;
-        //
-        // As you can see, observer received the update. But, for example, if we would like to display the value via
-        // label, the label wouldn't display the current value until the next update. We want the label to display
-        // *current* value without requiring an update. To do this, connect to the property directly, without explicitly
-        // asking for `changed`:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);     // HIDE
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1); // HIDE
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
-        AObject::connect(u->name, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // Code above produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
-        // As you can see, observer receives the value without making updates to the value. The call of
-        // `LogObserver::log` is made by `AObject::connect` itself. In this document, we will call this behaviour as
-        // "pre-fire".
-        //
-        // Subsequent changes to field would send updates as well:
-        // AUI_DOCS_CODE_BEGIN
-        u->name = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Assignment operation above makes an additional line to output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-        //
-        // Whole program output when connecting to property directly:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-}
-
-TEST_F(UIDataBindingTest, APropertyDef) { // HEADER
-    // You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
-    // write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
-    // APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
-    //
-    // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
-    // defined by const member function as follows:
-    // AUI_DOCS_CODE_BEGIN
-    /// [APropertyDef User]
-    class User: public AObject {
-    public:
-        auto name() const {
-            return APropertyDef {
-                this,
-                &User::getName, // this works too: &User::mName
-                &User::setName,
-                mNameChanged,
-            };
-        }
-
-    private:
-        AString mName;
-        emits<AString> mNameChanged;
-
-        void setName(AString name) {
-            // APropertyDef requires us to emit
-            // changed signal if value is actually
-            // changed
-            if (mName == name) {
-                return;
-            }
-            mName = std::move(name);
-            emit mNameChanged(mName);
-        }
-
-        const AString& getName() const {
-            return mName;
-        }
-    };
-    /// [APropertyDef User]
-    // AUI_DOCS_CODE_END
-
-    // APropertyDef behaves like a class/struct function member:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name() = "Hello";
-        EXPECT_EQ(u.name(), "Hello");
-        // AUI_DOCS_CODE_END
-    }
-    // @note
-    // Properties defined with APropertyDef instead of AProperty impersonate themselves by trailing braces `()`. We
-    // can't get rid of them, as APropertyDef is defined thanks to member function. In comparison to `user->name`, think
-    // of `user->name()` as the same kind of property except defining custom behaviour via function, hence the braces
-    // `()`.
-    //
-    // For the rest, APropertyDef is identical to AProperty including seamless interaction:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        User u;
-        u.name() = "Hello";
-        u.name() += " world!";
-        EXPECT_EQ(u.name(), "Hello world!");
-        EXPECT_EQ(u.name()->length(), AString("Hello world!").length());
-        // AUI_DOCS_CODE_END
-        //
-        // @note
-        // In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your property
-        // directly. Equivalent code will be:
-        // @code{cpp}
-        // u.setName(u.getName() + " world!")
-        // @endcode
-        //
-    }
-
-    {
-        // The implicit conversions work the same way as with AProperty:
-        // AUI_DOCS_CODE_BEGIN
-        auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
-        User u;
-        u.name() = "Hello";
-        doSomethingWithName(u.name());
-        // AUI_DOCS_CODE_END
-
-
-        // AUI_DOCS_CODE_BEGIN
-        doSomethingWithName(*u.name());
-        // AUI_DOCS_CODE_END
-    }
-
-    //
-    // ### Observing changes
-    // Close to `AProperty`:
-    {
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        auto u = _new<User>();
-        u->name() = "Chloe";
-        // ...
-        AObject::connect(u->name().changed, slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        EXPECT_CALL(*observer, log(AString("Marinette")));
-        // AUI_DOCS_CODE_BEGIN
-        u->name() = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Code produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-    {
-        testing::InSequence s;
-        //
-        // Making connection to property directly instead of `.changed`:
-        // AUI_DOCS_CODE_BEGIN
-        auto observer = _new<LogObserver>();
-        EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);       // HIDE
-        EXPECT_CALL(*observer, log(AString("Marinette"))).Times(1);   // HIDE
-        auto u = _new<User>();
-        u->name() = "Chloe";
-        // ...
-        AObject::connect(u->name(), slot(observer)::log);
-        // AUI_DOCS_CODE_END
-        // Code above produces the following output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
-        //
-        // Subsequent changes to field would send updates as well:
-        // AUI_DOCS_CODE_BEGIN
-        u->name() = "Marinette";
-        // AUI_DOCS_CODE_END
-        // Assignment operation above makes an additional line to output:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-        //
-        // Whole program output when connecting to property directly:
-        // @code
-        // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
-    }
-}
-
-TEST_F(UIDataBindingTest, APropertyPrecomputed) { // HEADER
-    testing::InSequence s;
-    // Despite properties offer @ref Label_via_declarative_projection "projection methods", you might want to track
-    // and process values of several properties.
-    //
-    // `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
-    // Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
-    //
-    // It's convenient to access values from another properties inside the expression. The properties accessed during
-    // invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
-    // automatically. If one of the tracked properties fires `changed` signal, `APropertyPrecomputed` invalidates its
-    // `T`. `APropertyPrecomputed` follows @ref aui::lazy "lazy semantics" so the expression is re-evaluated and the new
-    // result is applied to `APropertyPrecomputed` as soon as the latter is accessed for the next time.
-    //
-    // In other words, it allows to specify relationships between different object properties and reactively update
-    // `APropertyPrecomputed` value whenever its dependencies change. `APropertyPrecomputed<T>` is somewhat similar to
-    // [Qt Bindable Properties](https://doc.qt.io/qt-6/bindableproperties.html).
-    //
-    // `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
-    // value with `value()` method or implicit conversion `operator T()` as with other properties.
-    //
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-        APropertyPrecomputed<AString> fullName = [&] { return "{} {}"_format(name, surname); };
-    };
-
-    auto u = aui::ptr::manage(new User {
-        .name = "Emma",
-        .surname = "Watson",
-    });
-
-    auto observer = _new<LogObserver>();
-    EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1); // HIDE
-    EXPECT_CALL(*observer, log(AString("Emma Stone"))).Times(1); // HIDE
-    AObject::connect(u->fullName, slot(observer)::log);
-    // AUI_DOCS_CODE_END
-    EXPECT_EQ(u->fullName, "Emma Watson");
-    //
-    // The example above prints "Emma Watson". If we try to update one of dependencies of `APropertyPrecomputed` (i.e.,
-    // `name` or `surname`), `APropertyPrecomputed` responds immediately:
-
-    // AUI_DOCS_CODE_BEGIN
-    u->surname = "Stone";
-    // AUI_DOCS_CODE_END
-    //
-    // The example above prints "Emma Stone".
-    EXPECT_EQ(u->fullName, "Emma Stone");
-
-    //
-    // ### Observing changes
-    // Similar to `AProperty`.
-}
-
-TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
-    //
-    // ### Valid Expressions
-    // Any C++ callable evaluating to `T` can be used as an expression for `APropertyPrecomputed<T>`. However, to
-    // formulate correct expression, some rules must be satisfied.
-    //
-    // Dependency tracking only works on other properties. It is the developer's responsibility to ensure all values
-    // referenced in the expression are properties, or, at least, non-property values that wouldn't change or whose
-    // changes are not interesting. You definitely can use branching inside the expression, but you must be confident
-    // about what are you doing. Generally speaking, use as trivial expressions as possible.
-    //
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<AString> name;
-        AProperty<AString> surname;
-        APropertyPrecomputed<AString> fullName = [&]() -> AString {
-            if (name->empty()) {
-                return "-";
-            }
-            if (surname->empty()) {
-                return "-";
-            }
-            return "{} {}"_format(name, surname);
-        };
-    };
-    // AUI_DOCS_CODE_END
-    //
-    // In this expression, we have a fast path return if `name` is empty.
-    // AUI_DOCS_CODE_BEGIN
-    User u = {
-        .name = "Emma",
-        .surname = "Watson",
-    };
-    // trivial: we've accessed all referenced properties
-    EXPECT_EQ(u.fullName, "Emma Watson");
-    // AUI_DOCS_CODE_END
-
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 1);
-
-    // As soon as we set `name` to `""`, we don't access `surname`. If we try to trigger the fast path return:
-    // AUI_DOCS_CODE_BEGIN
-    u.name = "";
-    // AUI_DOCS_CODE_END
-    EXPECT_EQ(u.fullName, "-");
-    EXPECT_EQ(u.name.changed.mOutgoingConnections.size(), 1);
-    EXPECT_EQ(u.surname.changed.mOutgoingConnections.size(), 0);
-    // `surname` can't trigger re-evaluation anyhow. Re-evaluation can be triggered by `name` only. So, at the moment,
-    // we are interested in `name` changes only.
-    //
-    // `APropertyPrecomputed` might evaluate its expression several times during its lifetime. The developer must make
-    // sure that all objects referenced in the expression live longer than `APropertyPrecomputed`.
-    //
-    // The expression should not read from the property it's a binding for. Otherwise, there's an infinite evaluation
-    // loop.
-}
-
-
+// Please check their respective documentation pages for an additional information.
+//
 // # UI data binding with let
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
@@ -527,7 +142,7 @@ TEST_F(UIDataBindingTest, APropertyPrecomputed_Complex) {
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
 // a procedural way of setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill
 // for such a simple operation.
-TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
+TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
     // Use \c let expression to connect the model's username property to the label's @ref ALabel::text "text()"
     // property.
     // AUI_DOCS_CODE_BEGIN
@@ -565,7 +180,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
     // AUI_DOCS_CODE_END
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
     // Note that label already displays the value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
@@ -580,16 +195,15 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER
     // AUI_DOCS_CODE_END
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
     //
-    // By simply performing assignment on `user` we changed ALabel display text.
-    // Magic, huh?
+    // By simply performing assignment on `user` we changed ALabel display text. Magic, huh?
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 }
 
-TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
+TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
     // It's fairly easy to define a projection because one-sided connection requires exactly one projection, obviously.
     using namespace declarative;
 
@@ -627,7 +241,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
 
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     // Note that the label already displays the **projected** value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
@@ -638,7 +252,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
     user->name = "Vasil";
     // AUI_DOCS_CODE_END
 
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
     //
     // This way, we've set up data binding with projection.
 
@@ -646,7 +260,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER
     EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
 }
 
-TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
+TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
     // In previous examples, we've used `AObject::connect` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
     //
@@ -687,7 +301,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     _new<MyWindow>(user)->show();
     //
     // This gives the following result:
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -698,7 +312,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     // AUI_DOCS_CODE_END
     //
     // ATextField will respond:
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
@@ -707,7 +321,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:
     tf->selectAll();
     By::value(tf).perform(type("Changed from UI"));
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->name, "Changed from UI");
     // AUI_DOCS_CODE_END
@@ -726,7 +340,7 @@ AUI_ENUM_VALUES(Gender,
                 Gender::FEMALE,
                 Gender::OTHER)
 
-TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
+TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     using namespace declarative;
     // Bidirectional connection updates values in both directions, hence it requires the projection to work in both
     // sides as well.
@@ -838,7 +452,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     _new<MyWindow>(user)->show();
     // AUI_DOCS_CODE_END
     auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
 
     //
     // - If we try to change `user->gender` programmatically, ADropdownList will respond:
@@ -846,7 +460,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     user->gender = Gender::FEMALE;
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
@@ -854,7 +468,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
 //
@@ -872,8 +486,8 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER
 //
 // Also, `>` operator (resembles arrow) is used to specify the destination slot.
 //
-// The example below is essentially the same as @ref "Label_via_let" but uses declarative connection set up syntax.
-TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
+// The example below is essentially the same as @ref "UIDataBindingTest_Label_via_let" but uses declarative connection set up syntax.
+TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     // Use `&` and `>` expression to connect the model's username property to the label's @ref ALabel::text "text"
     // property.
     // AUI_DOCS_CODE_BEGIN
@@ -903,7 +517,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(label->text(), "Roza");
 
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
     // Note that the label already displays the value stored in User.
     //
@@ -915,13 +529,13 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // @ref "Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
+    // @ref "UIDataBindingTest_Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
     // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
@@ -930,7 +544,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER
     }
 }
 
-TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER
+TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H2
     // In previous example we have explicitly specified ALabel's property to connect with.
     //
     // One of notable features of declarative way (in comparison to procedural `let` way) is that we can omit the view's
@@ -974,9 +588,9 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "Roza");
 
     //
-    // Behaviour of such connection is equal to @ref "Label_via_declarative":
+    // Behaviour of such connection is equal to @ref "UIDataBindingTest_Label_via_declarative":
     //
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
     // Note that the label already displays the value stored in User.
     //
@@ -987,13 +601,13 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in @ref "Label_via_declarative".
+    // as in @ref "UIDataBindingTest_Label_via_declarative".
 
     {
         auto l = Label {} & user->name;
@@ -1001,7 +615,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     }
 }
 
-TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER
+TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER_H2
     using namespace declarative;
     // Think of `ADataBindingDefault` as we're not only connecting properties to properties, but also creating a
     // "property to view" relationship. This philosophy covers the following scenario.
@@ -1050,7 +664,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               // AUI_DOCS_CODE_END
               // @note
               // We're using `operator&&` here to set up bidirectional connection. For more info, go to
-              // @ref "Declarative_bidirectional_connection".
+              // @ref "UIDataBindingTest_Declarative_bidirectional_connection".
               //
             });
         }
@@ -1070,7 +684,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // propagates its constraints on `ANumberPicker` thanks to `ADataBindingDefault` specialization.
 }
 
-TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
+TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
     // We can use projections in the same way as with `let`.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -1095,7 +709,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     window->setScalingParams({ .scalingFactor = 2.f });
     auto label = _cast<ALabel>(By::type<ALabel>().one());
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
     //
     // Note that the label already displays the **projected** value stored in User.
     //
@@ -1107,7 +721,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER
     EXPECT_EQ(label->text(), "VASIL"); // projected
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
+    // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
 
     user->name = "World";
     EXPECT_EQ(label->text(), "WORLD");
@@ -1199,7 +813,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
     EXPECT_EQ(label->visibility(), Visibility::INVISIBLE);
 }
 
-TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
+TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     // In previous examples, we've used `&` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
     //
@@ -1233,7 +847,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
     //
     // This gives the following result:
     saveScreenshot("1");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -1245,7 +859,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
     //
     // ATextField will respond:
     saveScreenshot("2");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
@@ -1255,7 +869,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
     tf->selectAll();
     By::value(tf).perform(type("Changed from UI"));
     saveScreenshot("3");
-    // ![text](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->name, "Changed from UI");
     // AUI_DOCS_CODE_END
@@ -1264,10 +878,10 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER
     // changes.
 }
 
-TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
+TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
     // We can use projections in the same way as with `let`.
     //
-    // Let's repeat the @ref "Bidirectional_projection" sample in declarative way:
+    // Let's repeat the @ref "UIDataBindingTest_Bidirectional_projection" sample in declarative way:
     using namespace declarative;
     struct User {
         AProperty<Gender> gender;
@@ -1292,7 +906,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
                 // AUI_DOCS_CODE_BEGIN
                 _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION) > &ADropdownList::selectionId
                 // AUI_DOCS_CODE_END
-                // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
+                //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
                 // @note
                 // We used the `&&` operator here instead of `&` because we want the connection work in both
                 // directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
@@ -1313,7 +927,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
 
     //
     // - If the user changes the value of ADropdownList, it reflects on the model as well:
@@ -1322,7 +936,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->gender, Gender::OTHER);
     // AUI_DOCS_CODE_END
-    // ![dropdownlist](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
+    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
 
 //
