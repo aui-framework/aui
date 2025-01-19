@@ -86,7 +86,7 @@ Specify application display name that would appear in system's UIs (i.e., start 
 
 @pythongen{aui_app_NAME}
 
-### ICON
+### ICON {#aui_app_ICON}
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
@@ -100,33 +100,10 @@ See @ref "docs/Setting App Icon.md" for best practices.
 | Android  | +        | generates icon assets from your `svg`                 |
 | iOS      | +        | generates `*.icns` file from your `svg`               |
 
-`aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
+Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
 chosen.
 
-
 @pythongen{aui_app_ICON}
-
-#### Why SVG?
-
-AUI forces you to use SVG to ensure your icon renders correctly on all platforms.
-In addition, the usage of SVG avoids image pixelization on HiDPI (High Dots Per Inch) displays.
-
-If you only have images in raster formats (such as PNG, ICO, etc.) you need to vectorize by tracing the image.
-Modern vector image editors (such as Adobe Illustrator or Inkscape) have built-in tools to perform this procedure. If you wish, you can also use various online vectorizers.
-
-#### Vectorization using Inkscape
-
-For instance, let's see how to vectorize your image using Inkscape editor. Just follow the next instruction:
-* First, import a suitable bitmap image by using the menu File → Import.
-* Select the image with the Selector tool.
-* In the menu, go to Path → Trace Bitmap.
-* A dialog will open where you can set different options. Play with them a little to get a better result.
-* When the result of the preview looks right, click Ok. The vectorized image will be available right on the canvas.
-* Remove your old raster bitmap and export got image in SVG format.
-
-#### Known issues
-
-* AUI's SVG renderer does not show up SVG paths. The easiest solution is convert paths to polygons (shapes) in modern vector editor.
 
 ### VENDOR
 

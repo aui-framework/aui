@@ -1438,7 +1438,7 @@ macro(aui_app)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_ds_store_setup.scpt ${_current_app_build_files}/dmg_ds_store_setup.scpt)
         _auib_weak_set(CPACK_DMG_DS_STORE_SETUP_SCRIPT ${_current_app_build_files}/dmg_ds_store_setup.scpt) # rearranges icons in DMG
 
-        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name (DMG)
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
         install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
     endif()
 

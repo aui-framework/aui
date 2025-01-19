@@ -1,6 +1,10 @@
 Cross-platform app packaging is a large topic that involves various build systems, platform-specific tools and
 techniques. AUI unifies package building process while still relying on `CMake` as the central build system.
 
+AUI Framework focuses on minimizing efforts for AUI-based project to produce production-ready packages as easily as
+possible. AUI refrains from self-promotion in placeholders and "default values"; instead it carefully uses the
+information about your project passed to @ref docs/aui_app.md where needed.
+
 @ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
 - Display name
@@ -110,8 +114,14 @@ The simplest and the most user-friendly installation method is `DragNDrop` which
 
 ## DragNDrop
 
-The DranDrop CPack generator creates a DMG image. When opened, it shows macOS app bundle with your application and a
+The DranDrop CPack generator creates a DMG image. When opened, a Finder window appears with your application and a
 symlink to `/Applications`, effectively prompting the user to copy the application from the medium to his app library.
+
+Default DMG image produced by CPack is sparse: it's just a regular Finder window with sidebar and top bar showing
+your application bundle and a symlink. @ref docs/aui_app.md configures CPack to rearrange icons and place a background
+image so no extra configuration by a AUI-based project is needed:
+
+@image html dmg.png
 
 ```python
 # standard CMake build process
@@ -123,3 +133,9 @@ cmake --build . --config Release
 # packaging
 cpack . -c Release
 ```
+
+@pythongen{aui_app_dmg}
+
+# Android and iOS
+
+Please refer to [cross-compiling](docs/Crosscompiling.md).

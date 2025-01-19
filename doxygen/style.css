@@ -109,3 +109,7 @@ table.doxtable td, table.doxtable th {
     line-height: normal !important;
     margin: 48px 0 96px;
 }
+
+.dark-mode-keep-imgs img {
+    filter: none !important;
+}
