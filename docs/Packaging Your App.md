@@ -68,7 +68,7 @@ The script above produces a file `<APP_NAME>-VERSION-ARCH-setup.exe`, where `<AP
 You can override these values by simply calling `set` on them. By default, in addition to branding adjustments (such as
 app logo and name), AUI configures INNOSETUP so the installer won't prompt a UAC dialog (leverage to _admin
 privileges_). This way the installation process is more secure from perspective of the end user. Moreover, installation
-to user's directory allows `aui::updater` to work without prompting leverage to admin privileges during update installation.
+to user's directory allows @ref updater to work without prompting leverage to admin privileges during update installation.
 
 ## WIX
 
@@ -79,7 +79,7 @@ to user's directory allows `aui::updater` to work without prompting leverage to 
 WIX is the installer framework that produces `msi` packages.
 
 @note
-aui::updater requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
+@ref updater requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
 used with WIX.
 
 ```python
