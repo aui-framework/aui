@@ -24,8 +24,8 @@
 // your website).
 //
 // `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
-// priveleges). If that's not your case, you'll need to update your installer configuration to install to user's
-// directory (i.e., in `AppData`).
+// priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
+// to user's directory (i.e., in `AppData`).
 //
 // `aui.updater` lives inside of entrypoint of your application. It needs you to pass program arguments and exit if
 // it returns true.
