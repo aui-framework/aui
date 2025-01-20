@@ -132,6 +132,7 @@ TEST(UpdaterTest, Typical_Implementation) { // HEADER_H1
     //
     // In this example, let's implement auto update from GitHub release pages.
     // AUI_DOCS_CODE_BEGIN
+    /*
     class MyUpdater: public AUpdater {
     public:
 
@@ -141,6 +142,6 @@ TEST(UpdaterTest, Typical_Implementation) { // HEADER_H1
                 ACurl::Builder()
             };
         }
-    };
+    };*/
     // AUI_DOCS_CODE_END
 }

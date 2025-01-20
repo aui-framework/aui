@@ -40,12 +40,34 @@ public:
      */
     virtual void performUpdate();
 
+
+    /**
+     * @brief Idling.
+     */
+    struct StatusIdle {};
+
+    /**
+     * @brief Downloading state.
+     */
+    struct StatusDownloading {
+
+    };
+
+    /**
+     * @brief Waiting to performUpdate call state.
+     */
+    struct StatusWaitingToPerformUpdate {
+
+    };
+
+    using Status = std::variant<StatusIdle, StatusDownloading, StatusWaitingToPerformUpdate>;
+
 protected:
     /**
      * @brief Performs update delivery to the specified directory.
      * @details
      * Typically implemented as download to temporary dir and unpacking the archive to the specified
-     * @ref unpackedUpdateDir.
+     * unpackedUpdateDir.
      */
     virtual AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) = 0;
 };
