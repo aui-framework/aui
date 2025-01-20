@@ -3,11 +3,10 @@ cmake_minimum_required(VERSION 3.24)
 project(test_project)
 
 set(AUIB_FORCE_PRECOMPILED ON CACHE BOOL "Force used precompiled binaries")
-set(AUI_TEST_PACKAGE "" CACHE BOOL "AUI tar.gz")
 set(ARTIFACTS_DIR "" CACHE BOOL "artifacts directory")
 
-if (NOT AUI_TEST_PACKAGE)
-    message(FATAL_ERROR "AUI_TEST_PACKAGE is required")
+if (NOT ARTIFACTS_DIR)
+    message(FATAL_ERROR "ARTIFACTS_DIR is required")
 endif()
 
 include(FetchContent)
