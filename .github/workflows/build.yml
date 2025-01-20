@@ -342,12 +342,18 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: brew install ninja
       - name: Configure CMake
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION="${{ needs.release.outputs.ref }}"
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION="${{ needs.release.outputs.ref }}"
 
-      - name: Run tests
-        # Build your program with the given configuration
+      - name: Build test
         working-directory: ${{github.workspace}}/build
-        run: ctest . -C ${{matrix.debug_or_release}} -VV
+        run: cmake --build . --config ${{matrix.debug_or_release}}
+
+      - name: Install test
+        working-directory: ${{github.workspace}}/build
+        run: cmake --install . --prefix=install
+
+      - name: Run test
+        run: ${{github.workspace}}/build/install/bin/test_project
 
 
   deployment-tests-full:
