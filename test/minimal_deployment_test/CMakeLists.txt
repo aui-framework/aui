@@ -4,12 +4,16 @@ project(test_project)
 
 set(AUIB_FORCE_PRECOMPILED ON CACHE BOOL "Force used precompiled binaries")
 set(AUI_TEST_PACKAGE "" CACHE BOOL "AUI tar.gz")
+set(ARTIFACTS_DIR "" CACHE BOOL "artifacts directory")
 
 if (NOT AUI_TEST_PACKAGE)
     message(FATAL_ERROR "AUI_TEST_PACKAGE is required")
 endif()
 
 include(FetchContent)
+
+file(GLOB AUI_TEST_PACKAGE "${ARTIFACTS_DIR}/*.gz")
+
 FetchContent_Declare(aui
         URL file://${AUI_TEST_PACKAGE})
 
@@ -34,3 +38,7 @@ foreach (file ${children})
         message(FATAL_ERROR "unexpected file ${file} in bin/ directory")
     endif ()
 endforeach ()
+
+
+aui_app(TARGET test_project
+        NAME "Test Project")
