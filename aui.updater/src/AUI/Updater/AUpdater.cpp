@@ -16,3 +16,5 @@
 bool AUpdater::needsExit(const AStringVector& applicationArguments) {
     return false;
 }
+void AUpdater::checkForUpdates() {}
+void AUpdater::performUpdate() {}
