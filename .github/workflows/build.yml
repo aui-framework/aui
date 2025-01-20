@@ -370,7 +370,10 @@ jobs:
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - name: Configure CMake
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_PACKAGE=$(readlink -f artifacts/*)
+        shell: bash
+        run: |
+          PKG=$(readlink -f artifacts/*)
+          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_PACKAGE=$PKG
 
       - name: Build test
         working-directory: ${{github.workspace}}/build
