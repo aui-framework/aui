@@ -10,6 +10,8 @@
 #pragma once
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AStringVector.h>
+#include "AUI/IO/APath.h"
+#include "AUI/Thread/AFuture.h"
 
 /**
  * @brief Updater class.
@@ -18,10 +20,32 @@
 class API_AUI_UPDATER AUpdater : public AObject {
 public:
     ~AUpdater() override = default;
+
     /**
      * @brief Performs a pre-application AUpdater routine.
      * @param applicationArguments
      * @return
      */
-    bool needsExit(const AStringVector& applicationArguments);
+    virtual bool needsExit(const AStringVector& applicationArguments);
+
+    /**
+     * @brief Checks for an update.
+     */
+    void checkForUpdates();
+
+    /**
+     * @brief Deploy a downloaded update.
+     * @details
+     * Basically about replacing files (no network operations will be performed).
+     */
+    virtual void performUpdate();
+
+protected:
+    /**
+     * @brief Performs update delivery to the specified directory.
+     * @details
+     * Typically implemented as download to temporary dir and unpacking the archive to the specified
+     * @ref unpackedUpdateDir.
+     */
+    virtual AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) = 0;
 };

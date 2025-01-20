@@ -9,6 +9,8 @@
 
 #include <AUI/Updater/AUpdater.h>
 #include <gmock/gmock.h>
+#include "AUI/Util/kAUI.h"
+#include "AUI/Curl/ACurl.h"
 
 #ifdef AUI_ENTRY
 #undef AUI_ENTRY
@@ -27,7 +29,7 @@
 // priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
 // to user's directory (i.e., in `AppData`).
 //
-// `aui.updater` lives inside of entrypoint of your application. It needs you to pass program arguments and exit if
+// `aui.updater` lives inside entrypoint of your application. It needs you to pass program arguments and exit if
 // it returns true.
 namespace {
 class MainWindow {
@@ -35,11 +37,20 @@ public:
     MainWindow(const _<AUpdater>& updater) {}
     void show() {}
 };
+
 }
 
 // AUI_DOCS_CODE_BEGIN
+class MyUpdater: public AUpdater {
+protected:
+    AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) override {
+        // stub
+        return {};
+    }
+};
+
 AUI_ENTRY {
-    auto updater = _new<AUpdater>();
+    auto updater = _new<MyUpdater>();
     if (updater->needsExit(args)) {
         return 0;
     }
@@ -54,9 +65,11 @@ AUI_ENTRY {
 //
 // # Update process
 //
-// AUpdater once per some period of time checks for update by itself. Once update is found, it signals that an update
-// was found and starts to download and unpack. Once unpacked, AUpdater signals that the update is available for
-// installation which basically about replacing files (no network operations will be performed).
+// AUpdater expects `AUpdater::checkForUpdates` to be called once per some period of time. Once update is found, it
+// changes its `AUpdater::status` property to `AUpdater::StatusDownloading` and starts to download and unpack with
+// `AUpdater::deliverUpdateIfNeeded`. Once unpacked, AUpdater changes its `AUpdater::status` property to
+// `AUpdater::StatusWaitingToPerformUpdate`, signaling your application that the update is ready to deploy. Your
+// application might respond to that by showing the user a notification.
 //
 // @msc
 // a[label = "Your App"],
@@ -67,23 +80,23 @@ AUI_ENTRY {
 // --- [label="Normal App Lifecycle"];
 // ...;
 // a -> u [label = "checkForUpdates", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "false"];
-// ...;
+// a <- u;
 //
+// ...;
 // --- [label="Update published"];
-// a <- u [label = "emit updateAvailable signal", URL = "@ref AUpdater::updateAvailable"];
-// u box u [label = "download and unpack update"];
-// a <- u [label = "emit updateDownloaded signal", URL = "@ref AUpdater::updateDownloaded"];
-// --- [label="Optionally, you can checkForUpdates again"];
+// ...;
 // a -> u [label = "checkForUpdates", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "true"];
+// a <- u;
+// a <- u [label = "status = AUpdater::StatusDownloading", URL = "@ref AUpdater::StatusDownloading"];
+// u box u [label = "download and unpack update"];
+// a <- u [label = "status = AUpdater::StatusWaitingToPerformUpdate", URL = "@ref AUpdater::StatusWaitingToPerformUpdate"];
 // --- [label="Your App Prompts User to Update"];
 // ...;
 // @endmsc
 //
-// After AUpdater signaled about unpacked update, it waits AUpdater::performUpdate to be called. When
+// At this moment, AUpdater waits AUpdater::performUpdate to be called. When
 // AUpdater::performUpdate is called (i.e., when user accepted update installation), AUpdater executes a copy of your
-// app downloaded before with a special command line argument which is handled by AProcess::needsExit. The copy then
+// app downloaded before with a special command line argument which is handled by AUpdater::needsExit. The copy then
 // replaces old application (where it actually installed) with itself (that is, the downloaded, newer copy). After
 // operation is complete, it passes the control back to the application. At last, the newly updated application
 // performs a cleanup after update.
@@ -110,4 +123,24 @@ AUI_ENTRY {
 // ...;
 // @endmsc
 
-TEST(UpdaterTest, ExampleCase) {}
+TEST(UpdaterTest, ExampleCase) {
+    EXPECT_EQ(fake_entry({}), 0);
+}
+
+TEST(UpdaterTest, Typical_Implementation) { // HEADER_H1
+    // AUpdater is an abstract class; it needs some functions to be implemented by you.
+    //
+    // In this example, let's implement auto update from GitHub release pages.
+    // AUI_DOCS_CODE_BEGIN
+    class MyUpdater: public AUpdater {
+    public:
+
+    protected:
+        AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) override {
+            return async {
+                ACurl::Builder()
+            };
+        }
+    };
+    // AUI_DOCS_CODE_END
+}

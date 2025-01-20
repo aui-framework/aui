@@ -2,8 +2,8 @@ Cross-platform app packaging is a large topic that involves various build system
 techniques. AUI unifies package building process while still relying on `CMake` as the central build system.
 
 AUI Framework focuses on minimizing efforts for AUI-based project to produce production-ready packages as easily as
-possible. AUI refrains from self-promotion in placeholders and "default values"; instead it carefully uses the
-information about your project passed to @ref docs/aui_app.md where needed.
+possible. AUI refrains from self-promotion in placeholders and "default values"; instead it uses the information about
+your project carefully passed to @ref docs/aui_app.md where needed.
 
 @ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
@@ -113,6 +113,8 @@ Guides about packaging for macOS assume you are running macOS with Xcode preinst
 The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
 
 ## DragNDrop
+
+[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
 
 The DranDrop CPack generator creates a DMG image. When opened, a Finder window appears with your application and a
 symlink to `/Applications`, effectively prompting the user to copy the application from the medium to his app library.
