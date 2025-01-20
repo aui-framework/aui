@@ -328,6 +328,12 @@ jobs:
         os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+
+          - os: ubuntu-latest
+            generator: "Ninja"
 
     steps:
       - uses: actions/checkout@v2
@@ -341,8 +347,9 @@ jobs:
       - name: Install macos dependencies
         if: matrix.os == 'macos-latest'
         run: brew install ninja
+
       - name: Configure CMake
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE -DAUI_TEST_DEPLOY_VERSION="${{ needs.release.outputs.ref }}"
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE
 
       - name: Build test
         working-directory: ${{github.workspace}}/build
