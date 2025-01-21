@@ -1269,7 +1269,7 @@ macro(aui_app)
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
         install(TARGETS ${APP_TARGET}
-                DESTINATION ".")
+                DESTINATION "bin")
 
         _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # windows only APP_COPYRIGHT
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
