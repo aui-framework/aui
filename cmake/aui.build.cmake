@@ -594,7 +594,7 @@ function(aui_common AUI_MODULE_NAME)
             ]])
         endif()
 
-        if (WIN32)
+        if (WIN32 AND BUILD_SHARED_LIBS)
             # Install dependencies (dlls) that are located in bin/ directory.
             install(CODE [[
                 if (EXISTS ${AUI_MODULE_PATH})
