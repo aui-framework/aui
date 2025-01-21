@@ -13,6 +13,8 @@ include(FetchContent)
 
 file(GLOB AUI_TEST_PACKAGE "${ARTIFACTS_DIR}/*.gz")
 
+string(REPLACE "\\" "/" AUI_TEST_PACKAGE "${AUI_TEST_PACKAGE}")
+
 FetchContent_Declare(aui
         URL file://${AUI_TEST_PACKAGE})
 
