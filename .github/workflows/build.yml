@@ -231,7 +231,7 @@ jobs:
 
   # as a deployment test, let's build a small AUI-based app
   deployment-tests-build-minimal-app:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Build test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
     runs-on: ${{ matrix.os }}
     needs: [build-desktop]
     strategy:
@@ -243,10 +243,6 @@ jobs:
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
-
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -293,7 +289,7 @@ jobs:
 
   # run a small AUI-based test app on various platforms
   deployment-tests-run-minimal-app:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Run test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
     runs-on: ${{ matrix.os }}
     needs: [deployment-tests-build-minimal-app]
     strategy:
