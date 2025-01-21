@@ -354,7 +354,7 @@ jobs:
 
           - os: ubuntu-latest
             generator: "Ninja"
-            os_artifact: windows-latest
+            os_artifact: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
