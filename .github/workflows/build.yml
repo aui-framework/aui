@@ -231,7 +231,7 @@ jobs:
 
   # as a deployment test, let's build a small AUI-based app
   deployment-tests-build-minimal-app:
-    name: Deployment test ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
     runs-on: ${{ matrix.os }}
     needs: [build-desktop]
     strategy:
