@@ -348,7 +348,7 @@ jobs:
             os_artifact: windows-latest
 
           - os: windows-2019
-            generator: "Visual Studio 17 2022"
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
             os_artifact: windows-latest
 
