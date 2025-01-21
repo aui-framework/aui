@@ -5,3 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # this CMake file is intended to be included by aui_app.
+
+if (AUI_PLATFORM_LINUX)
+    aui_set_cpack_generator(TGZ)
+else()
+    aui_set_cpack_generator(TGZ)
+endif()
+
+set(_aui_package_file_name ${_aui_package_file_name}-portable) # append -portable suffix

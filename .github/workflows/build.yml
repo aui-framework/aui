@@ -122,7 +122,7 @@ jobs:
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+    name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -188,11 +188,11 @@ jobs:
             ${{ runner.os }}-
 
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
 
       - name: Install macos dependencies
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: brew install ninja 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -208,12 +208,12 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
       - name: Run AUI tests
-        if: matrix.os == 'windows-2019'
+        if: runner.os == 'Windows'
         working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
         run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
 
       - name: Run AUI tests
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         working-directory: ${{github.workspace}}/build/bin
         run: ${{github.workspace}}/build/bin/Tests
 
@@ -226,33 +226,31 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 # [cpack]
 
+  # as a deployment test, let's build a small AUI-based app
   deployment-tests-build-minimal-app:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Deployment test ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
     runs-on: ${{ matrix.os }}
     needs: [build-desktop]
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, windows-2019]
+        os: [windows-2019, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
-            os_artifact: windows-2019
 
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
-            os_artifact: windows-2019
 
           - os: ubuntu-latest
             generator: "Ninja"
-            os_artifact: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
@@ -260,11 +258,11 @@ jobs:
           submodules: true
 
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
 
       - name: Install macos dependencies
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: brew install ninja
 
       - name: Download artifact
@@ -272,7 +270,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: ${{ matrix.os_artifact }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - name: Configure test app
         run: |
@@ -282,18 +280,82 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: cmake --build . --config ${{matrix.debug_or_release}}
 
-      - name: Install test
+      # we wouldn't run it locally, let's run it on another machine
+      - name: Package test app
         working-directory: ${{github.workspace}}/build
         run: cpack -C ${{ matrix.debug_or_release }} .
 
-      - name: Run test
-        run: ${{github.workspace}}/build/install/bin/test_project
+      - name: Upload test app
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{github.workspace}}/build/*portable*
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+
+  # run a small AUI-based test app on various platforms
+  deployment-tests-run-minimal-app:
+    name: Deployment test ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    runs-on: ${{ matrix.os }}
+    needs: [deployment-tests-build-minimal-app]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, windows-2019]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{github.workspace}}/artifacts
+          merge-multiple: 'true'
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+
+      - name: Unpack test app (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: unzip ${{github.workspace}}/artifacts/*portable*
+
+      - name: Validate package contents (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          cd ${{github.workspace}}/artifacts/*portable*/
+          bash -c 'for file in *; do if [[ ! $file =~ ^(test_project\.exe|.+\.dll)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
+
+      - name: Execute test_project (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        run: |
+          cd ${{github.workspace}}/artifacts/*portable*/
+          ./test_project.exe
+
+      - name: Unpack test app (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: tar -xzvf ${{github.workspace}}/artifacts/*portable*
+
+      - name: Validate package contents (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          cd ${{github.workspace}}/artifacts/*portable*/
+          bash -c 'for file in *; do if [[ ! $file =~ ^(bin|lib)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
+          bash -c 'for file in bin/*; do if [[ ! $file == bin/test_project ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
+          bash -c 'for file in lib/*; do if [[ ! $file =~ \.so[\.0-9]*$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
+
+      - name: Execute test_project (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          cd ${{github.workspace}}/artifacts/*portable*/bin
+          ./test_project
 
 
   release:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: [deployment-tests-build-minimal-app]
+    needs: [deployment-tests-run-minimal-app]
     if: github.event_name != 'pull_request'
     name: "Create release page"
     steps:
@@ -334,7 +396,7 @@ jobs:
       ref: ${{ steps.version.outputs.ref }}
 
   publish:
-    name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    name: Publish ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
     runs-on: ubuntu-latest
     needs: [build-desktop, release]
     strategy:
@@ -376,7 +438,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./
-          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - id: getfilename
         run: echo "::set-output name=file::$(ls *.tar.gz)"
@@ -393,7 +455,7 @@ jobs:
           asset_content_type: application/x-gtar
 
   deployment-tests-full:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (full)
+    name: Deployment test ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (full)
     runs-on: ${{ matrix.os }}
     needs: [release, publish]
     strategy:
@@ -438,11 +500,11 @@ jobs:
           submodules: true
 
       - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
+        if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
 
       - name: Install macos dependencies
-        if: matrix.os == 'macos-latest'
+        if: runner.os == 'macOS'
         run: brew install ninja 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

@@ -1144,6 +1144,11 @@ function(_auib_weak_set_target_property TARGET PROPERTY VALUE)
     endif()
 endfunction()
 
+function(aui_set_cpack_generator GENERATOR)
+    set(CPACK_GENERATOR ${GENERATOR} CACHE STRING "CPack Generator (managed by AUI_APP_PACKAGING)" FORCE)
+    message(STATUS "CPACK_GENERATOR=${GENERATOR} (managed by AUI_APP_PACKAGING)")
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 
@@ -1265,6 +1270,11 @@ macro(aui_app)
     _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
     file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
+    set(_system_name "${CMAKE_SYSTEM_NAME}")
+    if (_system_name MATCHES "[Dd]arwin")
+        set(_system_name "macos") # darwin is not user friendly name, using macos instead
+    endif()
+    set(_aui_package_file_name "${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_system_name}-${CMAKE_SYSTEM_PROCESSOR}")
 
     if ("${AUI_APP_PACKAGING}" MATCHES "^AUI_.*")
         _aui_find_root()
@@ -1288,22 +1298,20 @@ macro(aui_app)
             message(FATAL_ERROR "Unknown packaging method ${AUI_APP_PACKAGING}! Tried paths:" ${_tried_paths})
         endif()
     elseif(AUI_APP_PACKAGING)
-        message(STATUS "Redirected AUI_APP_PACKAGING to CPACK_GENERATOR=${AUI_APP_PACKAGING}")
-        set(CPACK_GENERATOR ${AUI_APP_PACKAGING} CACHE STRING "CPack Generator (redirected from AUI_APP_PACKAGING)" FORCE)
+        aui_set_cpack_generator(${AUI_APP_PACKAGING})
     endif ()
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
         install(TARGETS ${APP_TARGET}
-                DESTINATION "bin")
+                DESTINATION ".")
 
         _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # windows only APP_COPYRIGHT
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         _auib_weak_set(CPACK_PACKAGE_EXECUTABLES "${_executable};${APP_NAME}") # windows only
         _auib_weak_set(CPACK_CREATE_DESKTOP_LINKS "${_executable}") # windows only
         if ("INNOSETUP" IN_LIST CPACK_GENERATOR)
-            string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
-            _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}-setup) # append -setup suffix for INNOSETUP
+            set(_aui_package_file_name ${_aui_package_file_name}-setup) # append -setup suffix for INNOSETUP
         endif()
         if (APP_ICON)
             set(_ico "${_current_app_build_files}/app.ico")
@@ -1659,6 +1667,9 @@ macro(aui_app)
         fi\"
         )
     endif()
+    string(TOLOWER "${_aui_package_file_name}" _aui_package_file_name)
+    string(REPLACE " " "_" _aui_package_file_name "${_aui_package_file_name}")
+    _auib_weak_set(CPACK_PACKAGE_FILE_NAME "${_aui_package_file_name}")
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
     endif()
