@@ -221,7 +221,6 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
-    gl::setupDebug();
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
     ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
