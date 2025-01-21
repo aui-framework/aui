@@ -5,6 +5,13 @@ AUI Framework focuses on minimizing efforts for AUI-based project to produce pro
 possible. AUI refrains from self-promotion in placeholders and "default values"; instead it uses the information about
 your project carefully passed to @ref docs/aui_app.md where needed.
 
+AUI provides a convenient configure time variable  for choosing target packaging method -
+@ref AUI_APP_PACKAGING "-DAUI_APP_PACKAGING=...". Furthermore, if you are using @ref AUI_BUILD_FOR "-DAUI_BUILD_FOR=..."
+(for cross-compiling), `AUI_APP_PACKAGING` is @ref PACKAGING_WITH_AUI_BUILD_FOR "not required" to specify. This page
+provides full usage examples.
+
+`AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by @ref docs/aui_app.md.
+
 @ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
 - Display name
@@ -51,7 +58,7 @@ choco install innosetup
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=INNOSETUP
+cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=INNOSETUP
 cmake --build . --config Release
 
 # packaging
@@ -69,6 +76,12 @@ You can override these values by simply calling `set` on them. By default, in ad
 app logo and name), AUI configures INNOSETUP so the installer won't prompt a UAC dialog (leverage to _admin
 privileges_). This way the installation process is more secure from perspective of the end user. Moreover, installation
 to user's directory allows @ref updater to work without prompting leverage to admin privileges during update installation.
+
+## AUI_PORTABLE
+
+@note
+This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
+
 
 ## WIX
 
@@ -89,7 +102,7 @@ choco install wixtoolset
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=WIX
+cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=WIX
 cmake --build . --config Release
 
 # packaging
@@ -129,7 +142,7 @@ image so no extra configuration by a AUI-based project is needed:
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DCPACK_GENERATOR=DragNDrop
+cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=DragNDrop
 cmake --build . --config Release
 
 # packaging
@@ -138,6 +151,8 @@ cpack . -c Release
 
 @pythongen{aui_app_dmg}
 
-# Android and iOS
+# Android and iOS {#PACKAGING_WITH_AUI_BUILD_FOR}
+
+`-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
 
 Please refer to [cross-compiling](docs/Crosscompiling.md).

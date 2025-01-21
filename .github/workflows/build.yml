@@ -229,10 +229,71 @@ jobs:
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 # [cpack]
 
+  deployment-tests-build-minimal-app:
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    runs-on: ${{ matrix.os }}
+    needs: [build-desktop]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, windows-2019]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+        include:
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
+            additional_cmake_flags: '-A x64'
+            os_artifact: windows-2019
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+            os_artifact: windows-2019
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            os_artifact: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Linux dependencies
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
+
+      - name: Install macos dependencies
+        if: matrix.os == 'macos-latest'
+        run: brew install ninja
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{github.workspace}}/artifacts
+          merge-multiple: 'true'
+          name: ${{ matrix.os_artifact }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+
+      - name: Configure test app
+        run: |
+          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DARTIFACTS_DIR=${{github.workspace}}/artifacts -DAUI_APP_PACKAGING=AUI_PORTABLE
+
+      - name: Build test app
+        working-directory: ${{github.workspace}}/build
+        run: cmake --build . --config ${{matrix.debug_or_release}}
+
+      - name: Install test
+        working-directory: ${{github.workspace}}/build
+        run: cpack -C ${{ matrix.debug_or_release }} .
+
+      - name: Run test
+        run: ${{github.workspace}}/build/install/bin/test_project
+
+
   release:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: [deployment-tests-minimal]
+    needs: [deployment-tests-build-minimal-app]
     if: github.event_name != 'pull_request'
     name: "Create release page"
     steps:
@@ -330,67 +391,6 @@ jobs:
           asset_path: ${{ steps.getfilename.outputs.file }}
           asset_name: ${{ steps.getfilename.outputs.file }}
           asset_content_type: application/x-gtar
-
-  deployment-tests-minimal:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
-    runs-on: ${{ matrix.os }}
-    needs: [build-desktop]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, ubuntu-latest, windows-2019]
-        debug_or_release: [Debug, Release]
-        shared_or_static: [shared, static]
-        include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
-            os_artifact: windows-2019
-
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
-            os_artifact: windows-2019
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            os_artifact: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: true
-
-      - name: Install Linux dependencies
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build libpulse-dev
-
-      - name: Install macos dependencies
-        if: matrix.os == 'macos-latest'
-        run: brew install ninja
-
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: ${{github.workspace}}/artifacts
-          merge-multiple: 'true'
-          name: ${{ matrix.os_artifact }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
-
-      - name: Configure CMake
-        run: |
-          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DARTIFACTS_DIR=${{github.workspace}}/artifacts
-
-      - name: Build test
-        working-directory: ${{github.workspace}}/build
-        run: cmake --build . --config ${{matrix.debug_or_release}}
-
-      - name: Install test
-        working-directory: ${{github.workspace}}/build
-        run: cmake --install . --prefix=install
-
-      - name: Run test
-        run: ${{github.workspace}}/build/install/bin/test_project
-
 
   deployment-tests-full:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (full)
