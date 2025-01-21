@@ -127,20 +127,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2019, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
         include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
             shared_or_static: shared
             is32bit: true
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -159,8 +159,8 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
@@ -208,7 +208,7 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
       - name: Run AUI tests
-        if: matrix.os == 'windows-latest'
+        if: matrix.os == 'windows-2019'
         working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
         run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
 
@@ -279,19 +279,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2019, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
             shared_or_static: shared
             is32bit: true
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -304,8 +304,8 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
@@ -342,15 +342,15 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
-            os_artifact: windows-latest
-
           - os: windows-2019
             generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
-            os_artifact: windows-latest
+            os_artifact: windows-2019
+
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+            os_artifact: windows-2019
 
           - os: ubuntu-latest
             generator: "Ninja"
@@ -399,20 +399,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2019, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         is32bit: [false]
         include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
             shared_or_static: shared
             is32bit: true
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -425,8 +425,8 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
+          - os: windows-2019
+            generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
