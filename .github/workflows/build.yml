@@ -310,32 +310,37 @@ jobs:
       - name: Unpack test app (Windows)
         if: runner.os == 'Windows'
         shell: bash
-        run: unzip ${{github.workspace}}/artifacts/*portable*
+        working-directory: ${{github.workspace}}/artifacts
+        run: unzip *portable*
 
       - name: Validate package contents (Windows)
         if: runner.os == 'Windows'
         shell: bash
+        working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd ${{github.workspace}}/artifacts/*portable*/
+          cd *portable*/
           bash -c 'for file in *; do if [[ ! $file =~ ^(test_project\.exe|.+\.dll)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
 
       - name: Execute test_project (Windows)
         if: runner.os == 'Windows'
         shell: bash
+        working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd ${{github.workspace}}/artifacts/*portable*/
+          cd *portable*/
           ./test_project.exe
 
       - name: Unpack test app (Linux)
         if: runner.os == 'Linux'
         shell: bash
-        run: tar -xzvf ${{github.workspace}}/artifacts/*portable*
+        working-directory: ${{github.workspace}}/artifacts
+        run: tar -xzvf *portable*
 
       - name: Validate package contents (Linux)
         if: runner.os == 'Linux'
         shell: bash
+        working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd ${{github.workspace}}/artifacts/*portable*/
+          cd *portable*/
           bash -c 'for file in *; do if [[ ! $file =~ ^(bin|lib)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
           bash -c 'for file in bin/*; do if [[ ! $file == bin/test_project ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
           bash -c 'for file in lib/*; do if [[ ! $file =~ \.so[\.0-9]*$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
@@ -343,8 +348,10 @@ jobs:
       - name: Execute test_project (Linux)
         if: runner.os == 'Linux'
         shell: bash
+        working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd ${{github.workspace}}/artifacts/*portable*/bin
+          cd *portable*/
+          cd bin
           ./test_project
 
 
