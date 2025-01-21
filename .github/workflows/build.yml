@@ -122,7 +122,7 @@ jobs:
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-desktop:
-    name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -226,7 +226,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 # [cpack]
 
   # as a deployment test, let's build a small AUI-based app
@@ -270,7 +270,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - name: Configure test app
         run: |
@@ -438,7 +438,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ./
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
 
       - id: getfilename
         run: echo "::set-output name=file::$(ls *.tar.gz)"
