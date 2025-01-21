@@ -9,7 +9,7 @@
 if (AUI_PLATFORM_LINUX)
     aui_set_cpack_generator(TGZ)
 else()
-    aui_set_cpack_generator(TGZ)
+    aui_set_cpack_generator(ZIP)
 endif()
 
 set(_aui_package_file_name ${_aui_package_file_name}-portable) # append -portable suffix
