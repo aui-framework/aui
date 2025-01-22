@@ -291,7 +291,7 @@ jobs:
       - name: Upload test app
         uses: actions/upload-artifact@v4
         with:
-          path: ${{github.workspace}}/build/artifacts/*
+          path: ${{github.workspace}}/build/artifacts/*.*
           name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
   # run a small AUI-based test app on various platforms

@@ -65,7 +65,7 @@ cmake --build . --config Release
 cpack . -c Release -B artifacts
 
 # publishing
-gh release upload ${{ github.ref }} artifacts/*
+gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME` arg of
@@ -112,7 +112,7 @@ cmake --build . --config Release
 cpack . -c Release -B artifacts
 
 # publishing
-gh release upload ${{ github.ref }} artifacts/*
+gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg of
@@ -155,7 +155,7 @@ cmake --build . --config Release
 cpack . -c Release -B artifacts
 
 # publishing
-gh release upload ${{ github.ref }} artifacts/*
+gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, where `<APP_NAME>` is the `NAME` arg of
