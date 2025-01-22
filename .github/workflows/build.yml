@@ -231,7 +231,7 @@ jobs:
 
   # as a deployment test, let's build a small AUI-based app
   deployment-tests-build-minimal-app:
-    name: Build test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Build test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
     needs: [build-desktop]
     strategy:
@@ -277,19 +277,26 @@ jobs:
         run: cmake --build . --config ${{matrix.debug_or_release}}
 
       # we wouldn't run it locally, let's run it on another machine
-      - name: Package test app
+      - name: Package test app (portables)
         working-directory: ${{github.workspace}}/build
-        run: cpack -C ${{ matrix.debug_or_release }} .
+        run: cpack -C ${{ matrix.debug_or_release }} . -B artifacts
+
+      - name: Package test app (innosetup)
+        if: runner.os == 'Windows'
+        working-directory: ${{github.workspace}}/build
+        run: |
+          cmake . -DAUI_APP_PACKAGING=INNOSETUP
+          cpack -C ${{ matrix.debug_or_release }} . -B artifacts
 
       - name: Upload test app
         uses: actions/upload-artifact@v4
         with:
-          path: ${{github.workspace}}/build/*portable*
+          path: ${{github.workspace}}/build/artifacts/*
           name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
   # run a small AUI-based test app on various platforms
   deployment-tests-run-minimal-app:
-    name: Run test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }} (minimal)
+    name: Run test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
     runs-on: ${{ matrix.os }}
     needs: [deployment-tests-build-minimal-app]
     strategy:
@@ -313,14 +320,6 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
 
-      - name: Validate package contents (Windows)
-        if: runner.os == 'Windows'
-        shell: bash
-        working-directory: ${{github.workspace}}/artifacts
-        run: |
-          cd *portable*/
-          bash -c 'for file in *; do if [[ ! $file =~ ^(test_project\.exe|.+\.dll)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
-
       - name: Execute test_project (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -335,16 +334,6 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: tar -xzvf *portable*
 
-      - name: Validate package contents (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        working-directory: ${{github.workspace}}/artifacts
-        run: |
-          cd *portable*/
-          bash -c 'for file in *; do if [[ ! $file =~ ^(bin|lib)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
-          bash -c 'for file in bin/*; do if [[ ! $file == bin/test_project ]]; then echo "Unexpected file: $file"; exit -1; fi; done'
-          bash -c 'for file in lib/*; do if [[ ! $file =~ (\.so[\.0-9]*|lib/\*)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done' 
-
       - name: Execute test_project (Linux)
         if: runner.os == 'Linux'
         shell: bash
@@ -355,10 +344,69 @@ jobs:
           ./test_project
 
 
+  # validate the contents of minimal app packages
+  deployment-tests-validate-minimal-app:
+    name: Validate test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    runs-on: ${{ matrix.os }}
+    needs: [deployment-tests-build-minimal-app]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: ${{github.workspace}}/artifacts
+          merge-multiple: 'true'
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+
+      - name: Unpack test app (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: unzip *portable*
+
+      - name: Validate package contents (Windows)
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: |
+          cd *portable*/
+          ./${{github.workspace}}/.github/validate_app_contents_windows.sh
+
+      - name: Verify INNOSETUP package
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: |
+          ./*.exe /VERYSILENT
+          ${{github.workspace}}/.github/validate_app_installation_windows.ps1
+
+
+      - name: Unpack test app (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: tar -xzvf *portable*
+
+      - name: Validate package contents (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: |
+          cd *portable*/
+          ./${{github.workspace}}/.github/validate_app_contents_linux.sh
+
+
   release:
     runs-on: ubuntu-latest
     permissions: write-all
-    needs: [deployment-tests-run-minimal-app]
+    needs: [deployment-tests-run-minimal-app, deployment-tests-validate-minimal-app]
     if: github.event_name != 'pull_request'
     name: "Create release page"
     steps:

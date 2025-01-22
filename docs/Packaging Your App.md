@@ -62,10 +62,13 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=INNOSETUP
 cmake --build . --config Release
 
 # packaging
-cpack . -c Release
+cpack . -c Release -B artifacts
+
+# publishing
+gh release upload ${{ github.ref }} artifacts/*
 ```
 
-The script above produces a file `<APP_NAME>-VERSION-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME` arg of
+The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME` arg of
 @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_innosetup}
@@ -106,10 +109,13 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=WIX
 cmake --build . --config Release
 
 # packaging
-cpack . -c Release
+cpack . -c Release -B artifacts
+
+# publishing
+gh release upload ${{ github.ref }} artifacts/*
 ```
 
-The script above produces a file `<APP_NAME>-VERSION-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg of
+The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg of
 @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_wix}
@@ -146,8 +152,14 @@ cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=DragNDrop
 cmake --build . --config Release
 
 # packaging
-cpack . -c Release
+cpack . -c Release -B artifacts
+
+# publishing
+gh release upload ${{ github.ref }} artifacts/*
 ```
+
+The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, where `<APP_NAME>` is the `NAME` arg of
+@ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_dmg}
 
