@@ -377,7 +377,7 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: |
           cd *portable*/
-          ./${{github.workspace}}/.github/validate_app_contents_windows.sh
+          ../../.github/validate_app_contents_windows.sh
 
       - name: Install INNOSETUP package
         if: runner.os == 'Windows'
