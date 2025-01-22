@@ -489,6 +489,7 @@ private:
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
     bool mCloseRequested = false;
+    bool mThrowExceptionOnError = false;
     std::string mPostFieldsStorage;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
@@ -503,8 +504,12 @@ private:
         emit success;
     }
 
+    void reportFail(const ErrorDescription& errorDescription) {
+        emit fail(errorDescription);
+    }
+
     void reportFail(int statusCode) {
-        emit fail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
+        reportFail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
     }
 
     template<typename Ret>
