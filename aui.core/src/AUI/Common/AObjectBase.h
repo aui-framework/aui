@@ -60,6 +60,11 @@ public:
 protected:
     void clearAllIngoingConnections() noexcept;
 
+    /**
+     * @brief Called then an exception has thrown during slot processing of the signal emitted by this object.
+     */
+    virtual void handleSlotException(std::exception_ptr exception);
+
 private:
     /**
      * @brief Connection owner which destroys the connection in destructor.
