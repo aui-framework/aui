@@ -2,8 +2,8 @@ Cross-platform app packaging is a large topic that involves various build system
 techniques. AUI unifies package building process while still relying on `CMake` as the central build system.
 
 AUI Framework focuses on minimizing efforts for AUI-based project to produce production-ready packages as easily as
-possible. AUI refrains from self-promotion in placeholders and "default values"; instead it uses the information about
-your project carefully passed to @ref docs/aui_app.md where needed.
+possible. AUI refrains from self-promotion in placeholders and "default values"; instead it carefully uses the
+information about your project passed to @ref docs/aui_app.md where needed.
 
 AUI provides a convenient configure time variable  for choosing target packaging method -
 @ref AUI_APP_PACKAGING "-DAUI_APP_PACKAGING=...". Furthermore, if you are using @ref AUI_BUILD_FOR "-DAUI_BUILD_FOR=..."
