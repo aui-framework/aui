@@ -346,7 +346,7 @@ jobs:
 
   # validate the contents of minimal app packages
   deployment-tests-validate-minimal-app:
-    name: Validate test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    name: Validate contents test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
     runs-on: ${{ matrix.os }}
     needs: [deployment-tests-build-minimal-app]
     strategy:
@@ -371,7 +371,7 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
 
-      - name: Validate package contents (Windows)
+      - name: Validate portable package contents (Windows)
         if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
@@ -379,12 +379,16 @@ jobs:
           cd *portable*/
           ./${{github.workspace}}/.github/validate_app_contents_windows.sh
 
-      - name: Verify INNOSETUP package
+      - name: Install INNOSETUP package
         if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: |
           ./*.exe /VERYSILENT
+
+      - name: Validate INNOSETUP package
+        if: runner.os == 'Windows'
+        run: |
           ${{github.workspace}}/.github/validate_app_installation_windows.ps1
 
 
@@ -394,13 +398,13 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: tar -xzvf *portable*
 
-      - name: Validate package contents (Linux)
+      - name: Validate portable package contents (Linux)
         if: runner.os == 'Linux'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: |
           cd *portable*/
-          ./${{github.workspace}}/.github/validate_app_contents_linux.sh
+          ${{github.workspace}}/.github/validate_app_contents_linux.sh
 
 
   release:
