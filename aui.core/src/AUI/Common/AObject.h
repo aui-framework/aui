@@ -265,7 +265,7 @@ public:
     [[nodiscard]] bool isSignalsEnabled() const noexcept { return mSignalsEnabled; }
 
     template <ASignalInvokable T>
-    void operator^(T&& t) {
+    void operator^(T&& t) noexcept {
         if (mSignalsEnabled) {
             t.invokeSignal(this);
         }

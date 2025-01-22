@@ -11,6 +11,8 @@
 
 #include "AObject.h"
 #include "AAbstractSignal.h"
+#include "AObjectBase.h"
+#include "AUI/Logging/ALogger.h"
 
 ASpinlockMutex AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC;
 
@@ -20,4 +22,16 @@ void AObjectBase::clearAllIngoingConnections() noexcept {
       return std::exchange(mIngoingConnections, {});
     }();
     incomingConnections.clear();
+}
+
+void AObjectBase::handleSlotException(std::exception_ptr exception) {
+    auto l = ALogger::info("AObject");
+    l << "An exception has occurred during signal processing emitted by this object: ";
+    try {
+        std::rethrow_exception(exception);
+    } catch (const AException& e) {
+        l << e;
+    } catch (const std::exception& e) {
+        l << e.what();
+    }
 }
