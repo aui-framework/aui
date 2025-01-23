@@ -105,15 +105,19 @@ endif()
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
-    set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    # [RPATH apple]
+set(CMAKE_INSTALL_NAME_DIR "@rpath")
+set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    # [RPATH apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
     else()
-        set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+        # [RPATH linux]
+set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+        # [RPATH linux]
     endif()
 endif()
 

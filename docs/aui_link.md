@@ -41,4 +41,4 @@ If building with `BUILD_SHARED_LIBS=OFF`, the following rules apply:
 # Windows DLL runtime dependency
 
 This command copies DLLs (in case of shared libraries) alongside your exe during configure time. See
-@see "docs/Runtime Dependency Resolution.md"
+@ref "docs/Runtime Dependency Resolution.md" for more info.
