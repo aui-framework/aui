@@ -276,9 +276,17 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: cmake --build . --config ${{matrix.debug_or_release}}
 
-      - name: Print test app runtime dependencies
+      - name: Print test app runtime dependencies (Windows)
         working-directory: ${{github.workspace}}/build/bin
         shell: bash
+        if: runner.os == 'Windows'
+        run: |
+          ldd $(find . -name "test_project.exe")
+
+      - name: Print test app runtime dependencies (Linux)
+        working-directory: ${{github.workspace}}/build/bin
+        shell: bash
+        if: runner.os != 'Windows'
         run: |
           ldd $(find . -name "test_project*")
 
@@ -332,6 +340,18 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
 
+      - name: Unpack test app (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
+        working-directory: ${{github.workspace}}/artifacts
+        run: tar -xzvf *portable*
+
+      - name: Print test app runtime dependencies
+        working-directory: ${{github.workspace}}/artifacts
+        shell: bash
+        run: |
+          ldd $(find . -name "test_project*")
+
       - name: Execute test_project (Windows)
         if: runner.os == 'Windows'
         shell: bash
@@ -339,12 +359,6 @@ jobs:
         run: |
           cd *portable*/
           ./test_project.exe
-
-      - name: Unpack test app (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        working-directory: ${{github.workspace}}/artifacts
-        run: tar -xzvf *portable*
 
       - name: Execute test_project (Linux)
         if: runner.os == 'Linux'
