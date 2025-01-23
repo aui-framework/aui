@@ -552,7 +552,7 @@ function(aui_common AUI_MODULE_NAME)
                         endforeach()
                         get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
                         if (WIN32)
-                            set(LIB_DIR "bin")
+                            set(LIB_DIR ".") # TODO
                         else()
                             set(LIB_DIR "lib")
                         endif()
@@ -590,15 +590,6 @@ function(aui_common AUI_MODULE_NAME)
                             message("UNRESOLVED ${V}")
                         endforeach()
                     endif()
-                endif()
-            ]])
-        endif()
-
-        if (WIN32 AND BUILD_SHARED_LIBS)
-            # Install dependencies (dlls) that are located in bin/ directory.
-            install(CODE [[
-                if (EXISTS ${AUI_MODULE_PATH})
-                    file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
                 endif()
             ]])
         endif()
@@ -912,13 +903,45 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     endif()
 endfunction(aui_compile_assets_add)
 
-function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME DEPENDENCIES)
-    get_target_property(_dst_dir ${AUI_MODULE_NAME} OUTPUT_DIR)
-    if (NOT ${_dst_dir})
+define_property(GLOBAL PROPERTY AUI_BOOT_RESOLVED_DLL
+        BRIEF_DOCS "Global list of resolved runtime dll dependencies"
+        FULL_DOCS "Global list of resolved runtime dll dependencies")
+
+function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME)
+    get_target_property(_dst_dir ${AUI_MODULE_NAME} RUNTIME_OUTPUT_DIRECTORY)
+    if (NOT _dst_dir)
         return()
     endif()
-    foreach(_dependency ${DEPENDENCIES})
+    string(TOUPPER ${CMAKE_BUILD_TYPE} _cmake_build_type_upper)
+    foreach(_dependency ${ARGN})
         if (NOT TARGET ${_dependency})
+            continue()
+        endif()
+
+        get_property(_resolved GLOBAL PROPERTY AUI_BOOT_RESOLVED_DLL)
+        if (${_dependency} IN_LIST _resolved)
+            continue()
+        endif()
+        set_property(GLOBAL APPEND PROPERTY AUI_BOOT_RESOLVED_DLL ${_dependency})
+
+        get_target_property(_is_imported ${_dependency} IMPORTED)
+        if (NOT ${_is_imported})
+            # just make sure that an non-imported dll target is placed right next to the exe.
+            get_target_property(_type ${_dependency} TYPE)
+            if (NOT _type STREQUAL SHARED_LIBRARY)
+                continue()
+            endif()
+
+            get_target_property(_bin ${_dependency} RUNTIME_OUTPUT_DIRECTORY)
+            if (_bin STREQUAL ${_dst_dir})
+                continue()
+            endif()
+
+            add_custom_command(TARGET ${AUI_MODULE_NAME}
+                               PRE_BUILD
+                               COMMAND cmake -E copy_directory $<TARGET_PROPERTY:${_dependency},RUNTIME_OUTPUT_DIRECTORY> $<TARGET_PROPERTY:${AUI_MODULE_NAME},RUNTIME_OUTPUT_DIRECTORY>
+            )
+
             continue()
         endif()
 
@@ -927,26 +950,43 @@ function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME DEPENDENCIES)
             _aui_dll_copy_runtime_dependencies(${AUI_MODULE_NAME} ${_dependency_deps})
         endif()
 
-        get_target_property(_type ${_dependency} TYPE)
-        if (NOT ${_type} STREQUAL SHARED_LIBRARY)
-            continue()
-        endif()
+        # some pivot path we can rely on
+        get_target_property(_include_dirs ${_dependency} INTERFACE_INCLUDE_DIRECTORIES)
+        foreach(_include_dir ${_include_dirs})
+            if (NOT EXISTS ${_include_dir})
+                continue()
+            endif()
 
-        get_target_property(_imported_location ${_dependency} IMPORTED_LOCATION)
-        if (NOT ${_imported_location})
-            continue()
-        endif()
-        get_filename_component(_name "${_imported_location}" NAME)
-        set(_dst_file "${_dst_dir}/${_name}")
-        execute_process( COMMAND ${CMAKE_COMMAND} -E compare_files ${_imported_location} ${_dst_file}
-                RESULT_VARIABLE compare_result
-        )
-        if(compare_result EQUAL 0)
-            # the files are identical
-            continue()
-        endif()
-        message(STATUS "[Copying Runtime Dependency] ${_imported_location} -> ${_dst_dir}")
-        file(COPY ${_imported_location} DESTINATION ${_dst_dir})
+            set(_levels 3)
+
+            # lookup for bin/ dir
+            set(_possible_root_dir ${_include_dir})
+            while (_possible_root_dir AND _levels)
+                math(EXPR _levels "${_levels} - 1")
+                get_filename_component(_possible_root_dir "${_possible_root_dir}" DIRECTORY)
+                if (EXISTS "${_possible_root_dir}/bin")
+                    break()
+                endif()
+            endwhile ()
+            if (NOT _possible_root_dir)
+                continue()
+            endif()
+
+            file(GLOB_RECURSE _runtimes LIST_DIRECTORIES false ${_possible_root_dir}/bin/*.dll)
+            foreach(_runtime ${_runtimes})
+                get_filename_component(_name ${_runtime} NAME)
+                set(_dst_file "${_dst_dir}/${_name}")
+                execute_process( COMMAND ${CMAKE_COMMAND} -E compare_files ${_runtime} ${_dst_file}
+                        RESULT_VARIABLE compare_result
+                )
+                if(compare_result EQUAL 0)
+                    # the files are identical
+                    continue()
+                endif()
+                message(STATUS "[Copying Runtime Dependency] ${_runtime} -> ${_dst_dir}")
+                file(COPY ${_runtime} DESTINATION ${_dst_dir})
+            endforeach()
+        endforeach()
     endforeach()
 endfunction()
 
@@ -958,8 +998,8 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
             "${multiValueArgs}" ${ARGN} )
 
     if (AUI_PLATFORM_WIN)
+        _aui_dll_copy_runtime_dependencies(${AUI_MODULE_NAME} "${AUIL_PRIVATE};${AUIL_INTERFACE};${AUIL_PUBLIC}")
     endif()
-    _aui_dll_copy_runtime_dependencies(${AUI_MODULE_NAME} "${AUIL_PRIVATE};${AUIL_INTERFACE};${AUIL_PUBLIC}")
 
     if (NOT BUILD_SHARED_LIBS)
         # static build is a kind of shit where all static libraries' dependencies should be linked to the final exe or
