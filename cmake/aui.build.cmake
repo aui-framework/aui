@@ -912,12 +912,54 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     endif()
 endfunction(aui_compile_assets_add)
 
+function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME DEPENDENCIES)
+    get_target_property(_dst_dir ${AUI_MODULE_NAME} OUTPUT_DIR)
+    if (NOT ${_dst_dir})
+        return()
+    endif()
+    foreach(_dependency ${DEPENDENCIES})
+        if (NOT TARGET ${_dependency})
+            continue()
+        endif()
+
+        get_target_property(_dependency_deps ${_dependency} LINK_LIBRARIES)
+        if (_dependency_deps)
+            _aui_dll_copy_runtime_dependencies(${AUI_MODULE_NAME} ${_dependency_deps})
+        endif()
+
+        get_target_property(_type ${_dependency} TYPE)
+        if (NOT ${_type} STREQUAL SHARED_LIBRARY)
+            continue()
+        endif()
+
+        get_target_property(_imported_location ${_dependency} IMPORTED_LOCATION)
+        if (NOT ${_imported_location})
+            continue()
+        endif()
+        get_filename_component(_name "${_imported_location}" NAME)
+        set(_dst_file "${_dst_dir}/${_name}")
+        execute_process( COMMAND ${CMAKE_COMMAND} -E compare_files ${_imported_location} ${_dst_file}
+                RESULT_VARIABLE compare_result
+        )
+        if(compare_result EQUAL 0)
+            # the files are identical
+            continue()
+        endif()
+        message(STATUS "[Copying Runtime Dependency] ${_imported_location} -> ${_dst_dir}")
+        file(COPY ${_imported_location} DESTINATION ${_dst_dir})
+    endforeach()
+endfunction()
+
 function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues/25
     set(options )
     set(oneValueArgs )
     set(multiValueArgs PRIVATE;PUBLIC;INTERFACE)
     cmake_parse_arguments(AUIL "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    if (AUI_PLATFORM_WIN)
+    endif()
+    _aui_dll_copy_runtime_dependencies(${AUI_MODULE_NAME} "${AUIL_PRIVATE};${AUIL_INTERFACE};${AUIL_PUBLIC}")
 
     if (NOT BUILD_SHARED_LIBS)
         # static build is a kind of shit where all static libraries' dependencies should be linked to the final exe or

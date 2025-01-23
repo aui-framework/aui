@@ -46,13 +46,14 @@
             <tab type="user" url="@ref useful_views" title="All Views" />
             <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
         </tab>
-        <tab type="usergroup" title="Tweaking" visible="yes">
-            <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
-            <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
-        </tab>
         <tab type="usergroup" title="Preparing to Production" visible="yes">
             <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
             <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
+        </tab>
+        <tab type="usergroup" title="Other" visible="yes">
+            <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
+            <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
+            <tab type="user" url="@ref docs/Runtime Dependency Resolution.md" title="Runtime Dependency Resolution" />
         </tab>
     </navindex>
 
