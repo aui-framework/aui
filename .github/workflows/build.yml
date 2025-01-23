@@ -276,7 +276,13 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: cmake --build . --config ${{matrix.debug_or_release}}
 
-      # we wouldn't run it locally, let's run it on another machine
+      - name: Run test app
+        working-directory: ${{github.workspace}}/build/bin
+        shell: bash
+        run: |
+          ./$(find . -name "test_project*")
+
+      # let's run it on another machine as well
       - name: Package test app (portables)
         working-directory: ${{github.workspace}}/build
         run: cpack -C ${{ matrix.debug_or_release }} . -B artifacts

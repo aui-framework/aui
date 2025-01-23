@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 
-project(test_project)
+project(test_project VERSION 2.2.8)
 
 set(AUIB_FORCE_PRECOMPILED ON CACHE BOOL "Force used precompiled binaries")
 set(ARTIFACTS_DIR "" CACHE BOOL "artifacts directory")
