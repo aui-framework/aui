@@ -276,6 +276,12 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: cmake --build . --config ${{matrix.debug_or_release}}
 
+      - name: Print test app runtime dependencies
+        working-directory: ${{github.workspace}}/build/bin
+        shell: bash
+        run: |
+          ldd $(find . -name "test_project*")
+
       - name: Run test app
         working-directory: ${{github.workspace}}/build/bin
         shell: bash
