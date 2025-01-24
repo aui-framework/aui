@@ -1230,7 +1230,7 @@ function(auisl_shader TARGET NAME)
 endfunction()
 
 macro(_auib_weak_set VAR_NAME)
-    if (VAR_NAME STREQUAL "")
+    if (NOT VAR_NAME)
         set(${ARGV})
     endif()
 endmacro()
