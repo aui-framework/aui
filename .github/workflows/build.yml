@@ -327,6 +327,10 @@ jobs:
         shared_or_static: [shared, static]
 
     steps:
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install libglew-dev
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
@@ -411,7 +415,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: ${{github.workspace}}/artifacts
         run: |
-          .\*-setup.exe 
+          .\*-setup.exe /VERYSILENT
 
       - name: Validate INNOSETUP package
         if: runner.os == 'Windows'
