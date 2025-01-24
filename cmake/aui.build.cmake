@@ -1229,7 +1229,7 @@ function(auisl_shader TARGET NAME)
 endfunction()
 
 macro(_auib_weak_set VAR_NAME)
-    if (NOT VAR_NAME)
+    if (VAR_NAME STREQUAL "")
         set(${ARGV})
     endif()
 endmacro()
@@ -1366,6 +1366,8 @@ macro(aui_app)
     _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
     _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
+    _auib_weak_set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF) # disables toplevel directory when producing archive packages
+
     file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
     set(_system_name "${CMAKE_SYSTEM_NAME}")
     if (_system_name MATCHES "[Dd]arwin")
