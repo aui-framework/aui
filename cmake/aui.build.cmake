@@ -16,6 +16,11 @@ define_property(GLOBAL PROPERTY TESTS_EXECUTABLES
         BRIEF_DOCS "Global list of test executables"
         FULL_DOCS "Global list of test executables")
 
+define_property(TARGET PROPERTY AUI_INSTALL_RUNTIME_DIR
+        BRIEF_DOCS "Directory for runtimes installation (exe, dll, linux executables), defaults to \"bin\""
+        FULL_DOCS "Directory for runtimes installation (exe, dll, linux executables), defaults to \"bin\""
+)
+
 define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         BRIEF_DOCS "Use wholearchive when linking this library to another"
         FULL_DOCS "Use wholearchive when linking this library to another")
@@ -427,6 +432,12 @@ function(aui_common AUI_MODULE_NAME)
         list(APPEND DEP_DIRS ${VAR_VALUE})
     endforeach()
 
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
+
+    install(TARGETS ${APP_TARGET}
+            DESTINATION ".")
+    install(CODE "set(AUI_INSTALL_RUNTIME_DIR \"\${CMAKE_INSTALL_PREFIX}/$<TARGET_PROPERTY:${AUI_MODULE_NAME},AUI_INSTALL_RUNTIME_DIR>\")")
+
     install(CODE "set(AUI_RUNTIME_DEP_DIRS \"${DEP_DIRS}\")")
     install(CODE "set(AUI_MODULE_NAME \"${AUI_MODULE_NAME}\")")
     install(CODE "set(AUI_MODULE_PATH \"$<TARGET_FILE:${AUI_MODULE_NAME}>\")")
@@ -551,10 +562,10 @@ function(aui_common AUI_MODULE_NAME)
                             endif()
                         endforeach()
                         get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
-                        if (WIN32)
-                            set(LIB_DIR ".") # TODO
-                        else()
-                            set(LIB_DIR "lib")
+
+                        set(_install_runtime_dir ${AUI_INSTALL_RUNTIME_DIR})
+                        if (NOT WIN32)
+                            set(_install_runtime_dir "${_install_runtime_dir}/../lib")
                         endif()
                         foreach (V ${RESOLVED})
                             list (FIND _tmp ${V} _index)
@@ -566,7 +577,7 @@ function(aui_common AUI_MODULE_NAME)
                                      FILES ${V}
                                      TYPE SHARED_LIBRARY
                                      FOLLOW_SYMLINK_CHAIN
-                                     DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}"
+                                     DESTINATION ${_install_runtime_dir}
                                 )
                                 install_dependencies_for(${V})
                                 get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
@@ -696,7 +707,7 @@ function(aui_executable AUI_MODULE_NAME)
                 EXPORT ${AUIE_EXPORT}
                 ARCHIVE       DESTINATION "lib"
                 LIBRARY       DESTINATION "lib"
-                RUNTIME       DESTINATION "bin"
+                RUNTIME       DESTINATION "$<TARGET_PROPERTY:${AUI_MODULE_NAME},AUI_INSTALL_RUNTIME_DIR>"
                 BUNDLE        DESTINATION "bin"
         )
 
@@ -983,7 +994,7 @@ function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME)
                     # the files are identical
                     continue()
                 endif()
-                message(STATUS "[Copying Runtime Dependency] ${_runtime} -> ${_dst_dir}")
+                message(STATUS "[aui_link/Copying Runtime Dependency] ${_runtime} -> ${_dst_dir}")
                 file(COPY ${_runtime} DESTINATION ${_dst_dir})
             endforeach()
         endforeach()
@@ -1385,8 +1396,9 @@ macro(aui_app)
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
+        set_target_properties(${APP_TARGET} PROPERTIES AUI_INSTALL_RUNTIME_DIR ".")
         install(TARGETS ${APP_TARGET}
-                DESTINATION ".")
+                DESTINATION "$<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>")
 
         _auib_weak_set(CPACK_RESOURCE_FILE_LICENSE ${_current_app_build_files}/copyright.txt) # windows only APP_COPYRIGHT
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
@@ -1456,7 +1468,7 @@ macro(aui_app)
     # DESKTOP LINUX ====================================================================================================
     if (AUI_PLATFORM_LINUX)
         install(TARGETS ${APP_TARGET}
-                DESTINATION "bin")
+                DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
