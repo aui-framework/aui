@@ -415,7 +415,7 @@ jobs:
         if: runner.os == 'Windows'
         working-directory: ${{github.workspace}}/artifacts
         run: |
-          .\*-setup.exe /VERYSILENT
+          Start-Process -FilePath .\*-setup.exe -ArgumentList "/VERYSILENT"
 
       - name: Validate INNOSETUP package
         if: runner.os == 'Windows'
