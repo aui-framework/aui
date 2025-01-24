@@ -153,12 +153,12 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)|(i.86)")
         set(AUI_ARCH_X86_64 1 CACHE INTERNAL "Arch")
         set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
         set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
-    set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
     else()
         set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
         set(AUI_ARCH_X86 1 CACHE INTERNAL "Arch")
         set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
-    set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
     endif()
 endif()
 
@@ -920,6 +920,10 @@ define_property(GLOBAL PROPERTY AUI_BOOT_RESOLVED_DLL
 
 function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME)
     get_target_property(_dst_dir ${AUI_MODULE_NAME} RUNTIME_OUTPUT_DIRECTORY)
+    get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+    if (_is_multi_config)
+        set(_dst_dir "${_dst_dir}/${CMAKE_BUILD_TYPE}")
+    endif()
     if (NOT _dst_dir)
         return()
     endif()
@@ -1703,19 +1707,19 @@ macro(aui_app)
                 if ${CMAKE_COMMAND} -E copy_directory
                 ${_current_app_build_files}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
                 ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if ${CMAKE_COMMAND} -E copy_directory
-        \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
-        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Failed to copy the framework into the app bundle \;
-        exit 1 \;
-        fi\"
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if ${CMAKE_COMMAND} -E copy_directory
+                \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
+                \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if [ \\$$COMMAND_DONE -eq 0 ] \; then
+                echo Failed to copy the framework into the app bundle \;
+                exit 1 \;
+                fi\"
         )
         # Codesign the framework in it's new spot
         if (AUI_IOS_CODE_SIGNING_REQUIRED)
@@ -1727,19 +1731,19 @@ macro(aui_app)
                     if codesign --force --verbose
                     ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
                     --sign ${APP_APPLE_SIGN_IDENTITY}
-            \&\>/dev/null \; then
-            COMMAND_DONE=1 \;
-            fi \;
-            if codesign --force --verbose
-            \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-            --sign ${APP_APPLE_SIGN_IDENTITY}
-            \&\>/dev/null \; then
-            COMMAND_DONE=1 \;
-            fi \;
-            if [ \\$$COMMAND_DONE -eq 0 ] \; then
-            echo Framework codesign failed \;
-            exit 1 \;
-            fi\"
+                    \&\>/dev/null \; then
+                    COMMAND_DONE=1 \;
+                    fi \;
+                    if codesign --force --verbose
+                    \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    --sign ${APP_APPLE_SIGN_IDENTITY}
+                    \&\>/dev/null \; then
+                    COMMAND_DONE=1 \;
+                    fi \;
+                    if [ \\$$COMMAND_DONE -eq 0 ] \; then
+                    echo Framework codesign failed \;
+                    exit 1 \;
+                    fi\"
             )
 
         endif()
@@ -1752,13 +1756,13 @@ macro(aui_app)
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
                 ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/PlugIns
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Failed to create PlugIns directory in EFFECTIVE_PLATFORM_NAME folder. \;
-        exit 1 \;
-        fi\"
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if [ \\$$COMMAND_DONE -eq 0 ] \; then
+                echo Failed to create PlugIns directory in EFFECTIVE_PLATFORM_NAME folder. \;
+                exit 1 \;
+                fi\"
         )
     endif()
     string(TOLOWER "${_aui_package_file_name}" _aui_package_file_name)
