@@ -999,7 +999,7 @@ function(_aui_dll_copy_runtime_dependencies AUI_MODULE_NAME)
                     # the files are identical
                     continue()
                 endif()
-                message(STATUS "[aui_link/Copying Runtime Dependency] ${_runtime} -> ${_dst_dir}")
+                message(STATUS "[aui_link/Copying Runtime Dependency] ${_runtime} -> ${_dst_dir_with_config}")
                 file(COPY ${_runtime} DESTINATION ${_dst_dir})
             endforeach()
         endforeach()
