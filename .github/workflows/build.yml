@@ -350,6 +350,7 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         shell: bash
         run: |
+          cd *-portable
           ldd $(find . -name "test_project*")
 
       - name: Execute test_project (Windows)
@@ -357,7 +358,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd *portable*/
+          cd *-portable
           ./test_project.exe
 
       - name: Execute test_project (Linux)
@@ -365,7 +366,7 @@ jobs:
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: |
-          cd *portable*/
+          cd *-portable
           cd bin
           ./test_project
 
@@ -407,10 +408,9 @@ jobs:
 
       - name: Install INNOSETUP package
         if: runner.os == 'Windows'
-        shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: |
-          ./*.exe /VERYSILENT
+          .\*-setup.exe 
 
       - name: Validate INNOSETUP package
         if: runner.os == 'Windows'

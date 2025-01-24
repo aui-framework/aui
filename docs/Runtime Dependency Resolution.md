@@ -36,7 +36,7 @@ dependencies so no extra file operations are needed (like in Windows).
 
 # Install-time shared library resolution
 
-`cmake --install . --prefix=some_prefix` produces a portable project installation in `some_prefix` directory.
+`cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
 way so the executables can actually find their dependencies.
 
@@ -70,7 +70,7 @@ This behaviour can be disabled by setting `-DAUI_INSTALL_RUNTIME_DEPENDENCIES=OF
 
 On Windows, dlls and exes are copied together to the same directory (`bin/`).
 ```sh
-tree some_prefix/
+tree install_prefix/
 bin/aui_app.exe
 bin/aui.core.dll
 bin/aui.views.dll
@@ -79,13 +79,18 @@ bin/aui.views.dll
 
 @note
 On Windows, if @ref docs/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
-to installation root directory (common practice). From perspective of a user extra directory hierarchy is redundant.
+to installation root directory (common practice). From perspective of a user, extra directory hierarchy is redundant.
 ```sh
-tree some_prefix/
+tree install_prefix/
 aui_app.exe
 aui.core.dll
 aui.views.dll
 ...
+```
+This behaviour is achieved by setting `AUI_INSTALL_RUNTIME_DIR` target property to `"."`. To mitigate this behaviour,
+simply set the property back to "bin" after `aui_app` call.
+```
+set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
 ```
 
 ## *nix platforms {#RPATH}
@@ -99,7 +104,7 @@ On *nix platforms, a special directory hierarchy should be maintained (for compa
 Typical Linux app installation consists of `bin/` directory where the executables are located and `lib/` directory
 for shared libraries (*.so). The `lib/` directory should contain all shared libraries required by the executable.
 ```sh
-tree some_prefix/
+tree install_prefix/
 bin/aui_app
 lib/libaui.core.so
 lib/libaui.views.so
