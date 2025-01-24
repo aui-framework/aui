@@ -404,6 +404,7 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: |
           cd *portable*/
+          tree
           ../../.github/validate_app_contents_windows.sh
 
       - name: Install INNOSETUP package
@@ -430,6 +431,7 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: |
           cd *portable*/
+          tree
           ${{github.workspace}}/.github/validate_app_contents_linux.sh
 
 
