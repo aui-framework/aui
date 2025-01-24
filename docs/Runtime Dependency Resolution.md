@@ -9,6 +9,19 @@ sounds and other resources consider using AUI assets to embed them right into yo
 
 This section describes how runtime dependencies are resolved during build time (and development).
 
+```
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/api-ms-win-crt-convert-l1-1-0.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/api-ms-win-crt-environment-l1-1-0.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/aui.core.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/aui.views.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/freetype.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/libcurl.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/libsharpyuv.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/libssl.dll -> D:/a/aui/aui/build/bin
+-- [aui_link/Copying Runtime Dependency] D:/aui/bin/zlib1.dll -> D:/a/aui/aui/build/bin
+...
+```
+
 ## DLL platforms (Windows only)
 
 Windows runtime linking process is simple. The dll lookup is performed as follows (ordered by priority):
@@ -38,10 +51,11 @@ dependencies so no extra file operations are needed (like in Windows).
 
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
-way so the executables can actually find their dependencies.
+way so the executables can actually find their dependencies. CPack and
+@ref "docs/Packaging Your App.md" "other deployment methods" use `cpack --install` so the behaviour is common.
 
 In addition to CMake's installation behaviour, targets defined with AUI's @ref docs/aui_executable.md and 
-@ref docs/aui_module.md implements an additional installation behaviour to copy all the required dependencies to
+@ref docs/aui_module.md implement an additional installation behaviour to copy all the required dependencies to
 installation prefix.
 
 ```
@@ -110,3 +124,6 @@ lib/libaui.core.so
 lib/libaui.views.so
 ...
 ```
+
+Additionally, `cmake --install .` removes hardcoded absolute library paths from executables that were required for
+development.
