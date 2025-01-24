@@ -1367,7 +1367,6 @@ macro(aui_app)
     _auib_weak_set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
     _auib_weak_set(CPACK_PACKAGE_VERSION ${APP_VERSION})
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
-    _auib_weak_set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF) # disables toplevel directory when producing archive packages
 
     file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
     set(_system_name "${CMAKE_SYSTEM_NAME}")

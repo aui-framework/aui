@@ -344,7 +344,8 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
-        run: tar -xzvf *portable*
+        run: |
+          tar -xzvf *portable*
 
       - name: Print test app runtime dependencies
         working-directory: ${{github.workspace}}/artifacts
