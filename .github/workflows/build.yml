@@ -176,7 +176,7 @@ jobs:
         id: cache-aui-boot
         uses: actions/cache@v3
         env:
-          cache-name: cache-aui-boot-${{ matrix.shared_or_static }}-${{ matrix.debug_or_release }}-${{ matrix.arch }}
+          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.debug_or_release }}-${{ matrix.arch }}
         with:
           path: |
             ~/.aui
@@ -185,8 +185,7 @@ jobs:
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
+
       # [cache example]
 
       - name: Install Linux dependencies
