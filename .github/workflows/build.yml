@@ -241,6 +241,7 @@ jobs:
         os: [windows-2019, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        arch: [x86_64]
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
