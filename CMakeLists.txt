@@ -51,7 +51,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
-auib_import(ZLIB https://github.com/aui-framework/zlib)
+auib_import(ZLIB https://github.com/aui-framework/zlib VERSION 506642b)
 
 # define all components
 define_aui_component(core)
