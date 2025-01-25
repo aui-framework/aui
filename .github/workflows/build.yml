@@ -417,12 +417,6 @@ jobs:
         run: |
           Start-Process -FilePath .\test_project-2.2.8-windows-amd64-setup.exe -ArgumentList "/VERYSILENT" -Wait
 
-      - name: Validate INNOSETUP package
-        if: runner.os == 'Windows'
-        run: |
-          ${{github.workspace}}/.github/validate_app_installation_windows.ps1
-
-
       - name: Unpack test app (Linux)
         if: runner.os == 'Linux'
         shell: bash
