@@ -412,6 +412,7 @@ function(aui_common AUI_MODULE_NAME)
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
     target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_MODULE_NAME=${AUI_MODULE_NAME})
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE AUI_CMAKE_PROJECT_VERSION=${CMAKE_PROJECT_VERSION})
 
     _auib_apply_rpath(${AUI_MODULE_NAME})
 
@@ -1463,9 +1464,9 @@ macro(aui_app)
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_START_MENU_SHORTCUTS "${APP_NAME}")
         set_property(INSTALL bin/$<TARGET_FILE_NAME:${APP_TARGET}> PROPERTY CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
         _auib_weak_set(CPACK_PACKAGE_INSTALL_DIRECTORY ${APP_NAME}) # removes -VERSION suffix
-        _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits menu folder
-        _auib_weak_set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER ".") # omits menu folder
-        _auib_weak_set(CPACK_INNOSETUP_INSTALL_ROOT "{localappdata}") # installs To AppData\Local
+        _auib_weak_set(CPACK_WIX_PROGRAM_MENU_FOLDER ".") # omits Start menu folder
+        _auib_weak_set(CPACK_INNOSETUP_PROGRAM_MENU_FOLDER ".") # omits Start menu folder
+        _auib_weak_set(CPACK_INNOSETUP_INSTALL_ROOT "{localappdata}") # installs To AppData\\Local
         _auib_weak_set(CPACK_INNOSETUP_RUN_EXECUTABLES ${_executable}) # runs the program after installation
         _auib_weak_set_target_property(${APP_TARGET} CPACK_DESKTOP_SHORTCUTS "${APP_NAME}")
     endif()

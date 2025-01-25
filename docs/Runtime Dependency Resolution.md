@@ -41,13 +41,17 @@ bin/aui.views.dll
 ...
 ```
 
-## Other platforms (*nix)
+## Other platforms (UNIX-like only)
 
-*nix platform object files feature `RUNPATH`/`RPATH` which is a special field indicating where to find shared
-libraries required by the module. When producing an object, its RPATH is populated with hardcoded absolute paths to the
-dependencies so no extra file operations are needed (like in Windows).
+UNIX-like platform object files feature `RUNPATH`/`RPATH` which is a special field indicating where to find shared
+libraries required by the module. When producing an object, its RPATH is populated by compiler with hardcoded absolute
+paths to the dependencies so no extra file operations are needed (like in Windows).
 
-# Install-time shared library resolution
+That being said, AUI does not take extra action on setting up shared libraries in `build/` directory of your
+application. However, the executables produced in your `build/` directory are (probably) not relocatable. To make them
+relocatable, use CMake's @ref CMAKE_INSTALL "install mechanism".
+
+# Install-time shared library resolution {#CMAKE_INSTALL}
 
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
@@ -107,9 +111,9 @@ simply set the property back to "bin" after `aui_app` call.
 set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
 ```
 
-## *nix platforms {#RPATH}
+## Other platforms (UNIX-like only) {#RPATH}
 
-On *nix platforms, a special directory hierarchy should be maintained (for compatibility reasons), hence
+On UNIX-like platforms, a special directory hierarchy should be maintained (for compatibility reasons), hence
 @ref "docs/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
 
 - **ld** (Linux/Android): @snippet aui.boot.cmake RPATH linux

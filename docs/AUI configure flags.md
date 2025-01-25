@@ -88,9 +88,9 @@ This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NA
 
 Disables "Waiting for repository" lock.
 
-## AUIB_NO_PRECOMPILED (=NO)
+## AUIB_NO_PRECOMPILED (=NO) {#AUIB_NO_PRECOMPILED}
 
-Disables precompiled binaries.
+Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
 
 ## AUIB_FORCE_PRECOMPILED (=NO) {#AUIB_FORCE_PRECOMPILED}
 

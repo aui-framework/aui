@@ -28,7 +28,7 @@ AUI Boot is a source-first package manager, however, it can pull precompiled pac
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
 these rules, so AUI Boot can pull precompiled package of AUI.
 
-To use a precompiled binary, you must specify a tag of released version from
+To use a precompiled binary, you must specify a tag of a released version from
 [releases page](https://github.com/aui-framework/aui/releases) (for example, `v6.2.1` or `v7.0.0-rc.2`). These packages
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
 set up a development and building with AUI.
@@ -40,6 +40,21 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 ```
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
+
+If usage of precompiled binaries break your built for whatever reason, you can set @ref AUIB_NO_PRECOMPILED :
+
+```shell
+cmake .. -DAUIB_NO_PRECOMPILED=TRUE
+```
+
+This way AUI Boot will never try to use precompiled binaries and will try to build then locally.
+
+# CI caching {#CI_CACHING}
+
+No matter using precompiled binaries or building them locally, it's convenient to cache AUI Boot cache (`~/.aui`) in
+your CIs:
+
+@snippet .github/workflows/build.yml cache example
 
 # Importing 3rdparty libraries
 

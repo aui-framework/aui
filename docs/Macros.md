@@ -1,5 +1,6 @@
 @note
-This page is about build-time macros (i.e., platform specifics). For macros defined in C++ code, see @ref useful_macros.
+This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
+@ref useful_macros.
 
 # Writing platform dependent code
 
@@ -280,6 +281,15 @@ one of the supported platforms (see the table above).
 ## AUI_MODULE_NAME
 
 Target name exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+
+## AUI_CMAKE_PROJECT_VERSION
+
+`${CMAKE_PROJECT_VERSION}` exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+
+`CMAKE_PROJECT_VERSION` is typically defined by [project](https://cmake.org/cmake/help/latest/command/project.html) 
+CMake command:
+
+@snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION
 
 ## API_\<module name\>
 
