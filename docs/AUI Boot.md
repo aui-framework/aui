@@ -57,19 +57,17 @@ your CIs:
 @snippet .github/workflows/build.yml cache example
 
 This snippet is based on [GitHub's cache action example](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#example-using-the-cache-action).
-Key points:
 
-- in addition to AUI Boot cache, we're caching `build/` dir to speed up builds.
-- GitHub used npm's `package-lock.json` in their example's primary key (`key`). We've adapted their example to AUI Boot
-  and use `CMakeLists.txt`, as dependencies' versions are "locked" there.
-  
-  Using a stricter primary key `key` with a bunch of additional keys `restore-keys` is essential. If a cache hit occurs
-  on the primary key, the cache will not be uploaded back to GitHub cache so your primary key must differ when you
-  update dependencies.
-  
-  Don't worry updating dependencies: GitHub `cache` action will restore the cache by using one of
-  fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
-  occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
+GitHub used npm's `package-lock.json` in their example's primary key (`key`). We've adapted their example to AUI Boot
+and use `CMakeLists.txt`, as dependencies' versions are "locked" there.
+
+Using a stricter primary key `key` with a bunch of additional keys `restore-keys` is essential. If a cache hit occurs
+on the primary key, the cache will not be uploaded back to GitHub cache so your primary key must differ when you
+update dependencies.
+
+Don't worry updating dependencies: GitHub `cache` action will restore the cache by using one of
+fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
+occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
 
 # Importing 3rdparty libraries
 

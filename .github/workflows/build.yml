@@ -180,12 +180,12 @@ jobs:
         with:
           path: |
             ~/.aui
-            ${{github.workspace}}/build
 
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
       # [cache example]
 
       - name: Install Linux dependencies
