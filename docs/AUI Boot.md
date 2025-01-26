@@ -132,6 +132,10 @@ auib_import(<PackageName> <URL>
             [VERSION version])
 ```
 
+@note
+This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
+configure time. See @ref "docs/Runtime Dependency Resolution.md" for more info.
+
 ### PackageName
 Specifies the package name which will be passed to `find_package`.
 

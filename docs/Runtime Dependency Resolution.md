@@ -10,15 +10,15 @@ sounds and other resources consider using AUI assets to embed them right into yo
 This section describes how runtime dependencies are resolved during build time (and development).
 
 ```
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/api-ms-win-crt-convert-l1-1-0.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/api-ms-win-crt-environment-l1-1-0.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/aui.core.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/aui.views.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/freetype.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/libcurl.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/libsharpyuv.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/libssl.dll -> D:/a/aui/aui/build/bin
--- [aui_link/Copying Runtime Dependency] D:/aui/bin/zlib1.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/api-ms-win-crt-convert-l1-1-0.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/api-ms-win-crt-environment-l1-1-0.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/aui.core.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/aui.views.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/freetype.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/libcurl.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/libsharpyuv.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/libssl.dll -> D:/a/aui/aui/build/bin
+-- [AUI.BOOT/Runtime Dependency] D:/aui/bin/zlib1.dll -> D:/a/aui/aui/build/bin
 ...
 ```
 
@@ -31,8 +31,8 @@ Windows runtime linking process is simple. The dll lookup is performed as follow
    was not found is actually a rare case, Windows often displays an error with confusing text such as
    "error code 0xc000007b").
 
-On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `bin/` directory
-alongside exe files by @ref docs/aui_link.md.
+On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BUILD_DIR}/bin`
+directory alongside exe files by @ref "docs/AUI Boot.md".
 ```sh
 tree build/
 bin/aui_app.exe
@@ -41,15 +41,22 @@ bin/aui.views.dll
 ...
 ```
 
-## Other platforms (UNIX-like only)
+## Other platforms (UNIX-like only) {#RPATH}
 
-UNIX-like platform object files feature `RUNPATH`/`RPATH` which is a special field indicating where to find shared
-libraries required by the module. When producing an object, its RPATH is populated by compiler with hardcoded absolute
-paths to the dependencies so no extra file operations are needed (like in Windows).
+On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
+installations (for compatibility reasons), hence @ref "docs/AUI Boot.md" copies imported shared objects to
+`${CMAKE_BUILD_DIR}/lib`.
 
-That being said, AUI does not take extra action on setting up shared libraries in `build/` directory of your
-application. However, the executables produced in your `build/` directory are (probably) not relocatable. To make them
-relocatable, use CMake's @ref CMAKE_INSTALL "install mechanism".
+These libraries are picked up by targets defined via [aui_module](@ref docs/aui_module.md) and
+[aui_executable](@ref docs/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
+indicating where to find required shared libraries.
+
+@snippet cmake/aui.build.cmake _auib_apply_rpath
+
+Additionally, RPATH is populated by compiler with hardcoded absolute paths to the dependencies hence shared object
+copying might seem redundant when the entire project with all its dependencies are built on the same machine. Since AUI
+Boot allows usage of precompiled binaries, instead of paying extra cost determining whether the dependencies are built
+locally or externally it just copies them to the build tree regardless of their origin.
 
 # Install-time shared library resolution {#CMAKE_INSTALL}
 
@@ -111,9 +118,8 @@ simply set the property back to "bin" after `aui_app` call.
 set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
 ```
 
-## Other platforms (UNIX-like only) {#RPATH}
+## Other platforms (UNIX-like only)
 
-On UNIX-like platforms, a special directory hierarchy should be maintained (for compatibility reasons), hence
 @ref "docs/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
 
 - **ld** (Linux/Android): @snippet aui.boot.cmake RPATH linux

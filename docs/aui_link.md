@@ -37,8 +37,3 @@ If building with `BUILD_SHARED_LIBS=OFF`, the following rules apply:
    ```
    target_link_libraries(C PRIVATE B A)  #Wrong!
    ```
-
-# Windows DLL runtime dependency
-
-This command copies DLLs (in case of shared libraries) alongside your exe during configure time. See
-@ref "docs/Runtime Dependency Resolution.md" for more info.

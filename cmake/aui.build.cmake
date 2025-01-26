@@ -397,6 +397,7 @@ macro(aui_enable_benchmarks AUI_MODULE_NAME)
     endif()
 endmacro()
 
+# [_auib_apply_rpath]
 function(_auib_apply_rpath AUI_MODULE_NAME)
     if (BUILD_SHARED_LIBS AND AUI_PLATFORM_LINUX)
         set(_rpath "$ORIGIN;$ORIGIN/../lib")
@@ -404,6 +405,7 @@ function(_auib_apply_rpath AUI_MODULE_NAME)
                 INSTALL_RPATH "${_rpath}")
     endif()
 endfunction()
+# [_auib_apply_rpath]
 
 # common function fo aui_executable and aui_module
 function(aui_common AUI_MODULE_NAME)
