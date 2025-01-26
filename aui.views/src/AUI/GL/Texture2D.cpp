@@ -113,7 +113,7 @@ void gl::Texture2D::tex2D(AImageView image) {
     bind();
     Result types = recognize(image);
 
-    if (mSize == image.size() && mSize != glm::u32vec2(0)) {
+    if (mSize == image.size() && mSize != glm::u32vec2(0) && image.data() != nullptr) {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), types.format, types.type,
                         image.buffer().data());
     } else {
