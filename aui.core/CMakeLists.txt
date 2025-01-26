@@ -111,6 +111,7 @@ if (ANDROID)
 endif()
 
 aui_link(aui.core PRIVATE ZLIB::ZLIB)
+add_subdirectory(3rdparty/minizip)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN
