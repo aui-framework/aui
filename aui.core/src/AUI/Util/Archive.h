@@ -18,32 +18,18 @@ namespace aui::archive {
  * @brief Zip file entry.
  */
 struct API_AUI_CORE FileEntry : aui::noncopyable {
-    friend void API_AUI_CORE
-    readZip(aui::no_escape<ISeekableInputStream> stream, const std::function<void(const FileEntry&)>& visitor);
     /**
      * @brief file path inside ZIP.
      */
     std::string_view name;
-
-    struct API_AUI_CORE Stream : IInputStream, aui::noncopyable {
-        friend struct API_AUI_CORE FileEntry;
-        size_t read(char* dst, size_t size) override;
-        ~Stream() override;
-
-    private:
-        explicit Stream(void* handle) : mHandle(handle) {}
-        void* mHandle = nullptr;
-    };
 
     /**
      * @brief Opens the zip entry for read.
      * @param password
      * @return
      */
-    Stream open(const std::string& password = {}) const;
+    virtual aui::no_escape<IInputStream> open(const std::string& password = {}) const = 0;
 
-private:
-    void* mHandle;
 };
 
 /**
@@ -63,7 +49,7 @@ namespace zip {
  * @param stream ZIP file stream.
  * @param visitor zip contents visitor.
  * @details
- * ZIP file names are passed to callback. Optionally, the callback might request file contents by ZipEntry::open().
+ * ZIP file names are passed to callback. Optionally, the callback might request file contents by FileEntry::open().
  * @sa aui::zlib::ExtractTo
  */
 void API_AUI_CORE read(aui::no_escape<ISeekableInputStream> stream, const std::function<void(const FileEntry&)>& visitor);

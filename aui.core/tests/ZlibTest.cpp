@@ -13,6 +13,7 @@
 #include <range/v3/all.hpp>
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Util/LZ.h"
+#include "AUI/Util/Archive.h"
 
 #include <AUI/IO/AByteBufferInputStream.h>
 
@@ -69,7 +70,7 @@ TEST(Zlib, DecompressZip) {
     // test.txt: 1234
 
     bool called = false;
-    aui::zlib::readZip(AByteBufferInputStream(AByteBufferView::fromRaw(blob)), [&](const aui::zlib::ZipEntry& e) {
+    aui::archive::zip::read(AByteBufferInputStream(AByteBufferView::fromRaw(blob)), [&](const aui::archive::FileEntry& e) {
         EXPECT_FALSE(called);
         called = true;
         EXPECT_EQ(e.name, "test.txt");
@@ -77,3 +78,4 @@ TEST(Zlib, DecompressZip) {
     });
     EXPECT_TRUE(called);
 }
+

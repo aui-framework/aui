@@ -19,24 +19,7 @@
 #include <AUI/IO/AFileOutputStream.h>
 #include <minizip/unzip.h>
 
-size_t aui::archive::FileEntry::Stream::read(char* dst, size_t size) {
-    return unzReadCurrentFile(mHandle, dst, size);
-}
-
-aui::archive::FileEntry::Stream::~Stream() {
-    if (mHandle) {
-        unzCloseCurrentFile(mHandle);
-    }
-}
-
-aui::archive::FileEntry::Stream aui::zlib::ZipEntry::open(const std::string& password) const {
-    if (auto err = unzOpenCurrentFile3(mHandle, nullptr, nullptr, false, password.empty() ? nullptr : password.c_str()); err != UNZ_OK) {
-        throw AZLibException("unzOpenCurrentFile3 failed: {}"_format(err));
-    }
-    return Stream(mHandle);
-}
-
-void aui::archive::readZip(aui::no_escape<ISeekableInputStream> stream, const std::function<void(const FileEntry&)>& visitor) {
+void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const std::function<void(const FileEntry&)>& visitor) {
     zlib_filefunc_def funcs = {
         .zopen_file = [](voidpf opaque, const char* filename, int mode) -> voidpf { return opaque; },
         .zread_file = [](voidpf opaque, voidpf stream, void* buf, uLong size) -> uLong {
@@ -85,9 +68,34 @@ void aui::archive::readZip(aui::no_escape<ISeekableInputStream> stream, const st
             throw AZLibException("unzGetCurrentFileInfo64 failed: {}"_format(err));
         }
 
-        FileEntry ze;
+        class ZipFileEntry: public FileEntry, public IInputStream {
+        public:
+            explicit ZipFileEntry(unzFile handle) : mHandle(handle) {}
+
+            ~ZipFileEntry() override {
+                if (mFileOpened) {
+                    unzCloseCurrentFile(mHandle);
+                }
+            }
+            size_t read(char* dst, size_t size) override {
+                AUI_ASSERT(mFileOpened);
+                return unzReadCurrentFile(mHandle, dst, size);
+            }
+
+            no_escape<IInputStream> open(const std::string& password) const override {
+                AUI_ASSERT(mFileOpened == false);
+                if (auto err = unzOpenCurrentFile3(mHandle, nullptr, nullptr, false, password.empty() ? nullptr : password.c_str()); err != UNZ_OK) {
+                    throw AZLibException("unzOpenCurrentFile3 failed: {}"_format(err));
+                }
+                mFileOpened = true;
+                return const_cast<ZipFileEntry*>(this);
+            }
+        private:
+            unzFile mHandle;
+            mutable bool mFileOpened = false;
+        } ze(unzipHandle);
         ze.name = filename;
-        ze.mHandle = unzipHandle;
+
         visitor(ze);
 
         if (i > 1) {
@@ -97,5 +105,5 @@ void aui::archive::readZip(aui::no_escape<ISeekableInputStream> stream, const st
 }
 
 void aui::archive::ExtractTo::operator()(const FileEntry& zipEntry) const {
-    AFileOutputStream(prefix / zipEntry.name) << zipEntry.open();
+    AFileOutputStream(prefix / zipEntry.name) << *zipEntry.open();
 }
