@@ -84,19 +84,22 @@ won't prompt a UAC dialog (leverage to _admin privileges_). This way the install
 perspective of the end user. Moreover, installation to user's directory allows @ref updater to work without prompting
 leverage to admin privileges during update installation.
 
-## AUI_PORTABLE
+## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
 
 @note
 This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
 
-This packaging method creates an archive (in case of Windows, `*.zip`) with your application "preinstalled". After
+This packaging method creates an `*.zip` or `*.tar.gz` archive with your application "preinstalled". After
 unpacking, no extra actions are needed. The user can launch executable of your application directly.
+
+@note
+@ref updater requires ZIP portable to be published. Other archive formats such tar `tar.gz` are not supported.
 
 ```python
 # standard CMake build process
 mkdir build
 cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=AUI_PORTABLE
+cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=AUI_PORTABLE_ZIP
 cmake --build . --config Release
 
 # packaging
@@ -106,7 +109,7 @@ cpack . -c Release -B artifacts
 gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
-`AUI_PORTABLE` appends `-portable` suffix to archive file name, if not overridden by `CPACK_PACKAGE_FILE_NAME`.
+`AUI_PORTABLE_ZIP` appends `-portable` suffix to archive file name, if not overridden by `CPACK_PACKAGE_FILE_NAME`.
 
 ## WIX
 

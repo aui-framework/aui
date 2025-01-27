@@ -7,14 +7,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-//
-// Created by Alexey Titov on 14.01.2025.
-//
-
+#include <AUI/Curl/ACurl.h>
+#include <AUI/IO/AByteBufferInputStream.h>
+#include <AUI/Util/Archive.h>
 #include "AUpdater.h"
 
 bool AUpdater::needsExit(const AStringVector& applicationArguments) {
     return false;
 }
-void AUpdater::checkForUpdates() {}
-void AUpdater::performUpdate() {}
+void AUpdater::applyUpdateAndRestart() {}
+
+void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdateDir) {
+    aui::archive::zip::read(AByteBufferInputStream(ACurl::Builder(downloadUrl).runAsync()->body), aui::archive::ExtractTo{ unpackedUpdateDir });
+}

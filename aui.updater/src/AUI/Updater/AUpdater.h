@@ -10,12 +10,17 @@
 #pragma once
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AStringVector.h>
+#include <AUI/Common/AProperty.h>
+#include <AUI/Thread/AAsyncHolder.h>
 #include "AUI/IO/APath.h"
 #include "AUI/Thread/AFuture.h"
 
 /**
  * @brief Updater class.
  * @ingroup updater
+ * @details
+ * AUpdater follows strategy pattern, i.e., you are excepted to call its functions but the behaviour and conditions
+ * are yours.
  */
 class API_AUI_UPDATER AUpdater : public AObject {
 public:
@@ -28,18 +33,13 @@ public:
      */
     virtual bool needsExit(const AStringVector& applicationArguments);
 
-    /**
-     * @brief Checks for an update.
-     */
-    void checkForUpdates();
 
     /**
      * @brief Deploy a downloaded update.
      * @details
      * Basically about replacing files (no network operations will be performed).
      */
-    virtual void performUpdate();
-
+    virtual void applyUpdateAndRestart();
 
     /**
      * @brief Idling.
@@ -47,27 +47,73 @@ public:
     struct StatusIdle {};
 
     /**
+     * @brief Checking for updates.
+     */
+    struct StatusCheckingForUpdates {};
+
+    /**
      * @brief Downloading state.
      */
     struct StatusDownloading {
-
+        AProperty<aui::float_within_0_1> progress;
     };
 
     /**
-     * @brief Waiting to performUpdate call state.
+     * @brief Waiting to applyUpdateAndRestart call state.
      */
-    struct StatusWaitingToPerformUpdate {
+    struct StatusWaitingForApplyAndRestart {};
 
-    };
+    using Status = std::variant<StatusIdle, StatusCheckingForUpdates, StatusDownloading, StatusWaitingForApplyAndRestart>;
 
-    using Status = std::variant<StatusIdle, StatusDownloading, StatusWaitingToPerformUpdate>;
+    AProperty<Status> status;
+
+    /**
+     * @brief Sets status to StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
+     */
+    void checkForUpdates() {
+        status = StatusCheckingForUpdates{};
+        mAsync << checkForUpdatesImpl().onFinally([this, self = shared_from_this()] {
+            getThread()->enqueue([this, self] {
+                status = StatusIdle{};
+            });
+        });
+    }
+
+    /**
+     * @brief Starts downloading update. An implementation might expect to checkForUpdates to be called first.
+     */
+    void downloadUpdate() {
+        status = StatusDownloading{};
+        mAsync << downloadUpdateImpl((APath::getDefaultPath(APath::TEMP) / "__aui_update").makeDirs()).onFinally([this, self = shared_from_this()] {
+            getThread()->enqueue([this, self] {
+                status = StatusIdle{};
+            });
+        });
+    }
 
 protected:
+    /**
+     * @brief Holder for async operations.
+     */
+    AAsyncHolder mAsync;
+
     /**
      * @brief Performs update delivery to the specified directory.
      * @details
      * Typically implemented as download to temporary dir and unpacking the archive to the specified
      * unpackedUpdateDir.
      */
-    virtual AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) = 0;
+    virtual AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) = 0;
+
+    /**
+     * @brief Check for updates user's implementation.
+     */
+    virtual AFuture<void> checkForUpdatesImpl() = 0;
+
+    /**
+     * @brief Typical download and unpack implementation.
+     * @details
+     * Called by downloadUpdateImpl. Updates AUpdate::status progress.
+     */
+    void downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdateDir);
 };

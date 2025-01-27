@@ -43,10 +43,9 @@ public:
 // AUI_DOCS_CODE_BEGIN
 class MyUpdater: public AUpdater {
 protected:
-    AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) override {
-        // stub
-        return {};
-    }
+    AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
+
+protected:
 };
 
 AUI_ENTRY {

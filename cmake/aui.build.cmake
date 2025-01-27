@@ -1154,6 +1154,15 @@ function(aui_set_cpack_generator GENERATOR)
     message(STATUS "CPACK_GENERATOR=${GENERATOR} (managed by AUI_APP_PACKAGING)")
 endfunction()
 
+function(aui_get_package_name_and_arch _out)
+    set(_system_name "${CMAKE_SYSTEM_NAME}")
+    if (_system_name MATCHES "[Dd]arwin")
+        set(_system_name "macos") # darwin is not user friendly name, using macos instead
+    endif()
+    string(TOLOWER "${_system_name}-${CMAKE_SYSTEM_PROCESSOR}" _tmp)
+    set(${_out} ${_tmp} PARENT_SCOPE)
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 
@@ -1276,11 +1285,8 @@ macro(aui_app)
     _auib_weak_set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
 
     file(WRITE ${_current_app_build_files}/copyright.txt ${APP_COPYRIGHT})
-    set(_system_name "${CMAKE_SYSTEM_NAME}")
-    if (_system_name MATCHES "[Dd]arwin")
-        set(_system_name "macos") # darwin is not user friendly name, using macos instead
-    endif()
-    set(_aui_package_file_name "${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_system_name}-${CMAKE_SYSTEM_PROCESSOR}")
+    aui_get_package_name_and_arch(_aui_package_file_name)
+    set(_aui_package_file_name "${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_aui_package_file_name}")
 
     if ("${AUI_APP_PACKAGING}" MATCHES "^AUI_.*")
         _aui_find_root()

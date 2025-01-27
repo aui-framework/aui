@@ -6,10 +6,6 @@
 
 # this CMake file is intended to be included by aui_app.
 
-if (AUI_PLATFORM_LINUX)
-    aui_set_cpack_generator(TGZ)
-else()
-    aui_set_cpack_generator(ZIP)
-endif()
+aui_set_cpack_generator(TGZ)
 
 set(_aui_package_file_name ${_aui_package_file_name}-portable) # append -portable suffix
