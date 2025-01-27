@@ -46,6 +46,8 @@ protected:
     AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
 
 protected:
+    // stub
+    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return {}; }
 };
 
 AUI_ENTRY {
