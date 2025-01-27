@@ -341,7 +341,6 @@ jobs:
           name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
       - name: Unpack test app
-        if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
@@ -392,8 +391,7 @@ jobs:
           merge-multiple: 'true'
           name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
-      - name: Unpack test app (Windows)
-        if: runner.os == 'Windows'
+      - name: Unpack test app
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
@@ -411,12 +409,6 @@ jobs:
         working-directory: ${{github.workspace}}/artifacts
         run: |
           Start-Process -FilePath .\test_project-2.2.8-windows-amd64-setup.exe -ArgumentList "/VERYSILENT" -Wait
-
-      - name: Unpack test app (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        working-directory: ${{github.workspace}}/artifacts
-        run: tar -xzvf *portable*
 
       - name: Validate portable package contents (Linux)
         if: runner.os == 'Linux'
