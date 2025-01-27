@@ -272,7 +272,7 @@ jobs:
 
       - name: Configure test app
         run: |
-          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DARTIFACTS_DIR=${{github.workspace}}/artifacts -DAUI_APP_PACKAGING=AUI_PORTABLE
+          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DAUI_IGNORE_OPENSSL=TRUE -DARTIFACTS_DIR=${{github.workspace}}/artifacts -DAUI_APP_PACKAGING=AUI_PORTABLE_ZIP
 
       - name: Build test app
         working-directory: ${{github.workspace}}/build
@@ -340,18 +340,11 @@ jobs:
           merge-multiple: 'true'
           name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
-      - name: Unpack test app (Windows)
+      - name: Unpack test app
         if: runner.os == 'Windows'
         shell: bash
         working-directory: ${{github.workspace}}/artifacts
         run: unzip *portable*
-
-      - name: Unpack test app (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        working-directory: ${{github.workspace}}/artifacts
-        run: |
-          tar -xzvf *portable*
 
       - name: Print test app runtime dependencies
         working-directory: ${{github.workspace}}/artifacts
