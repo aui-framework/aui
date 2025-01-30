@@ -22,6 +22,8 @@
 #include "AFileInputStream.h"
 #include "AFileOutputStream.h"
 #include "AUI/Platform/ErrorToException.h"
+#include "AUI/Platform/AProcess.h"
+#include "AUI/Util/ACleanup.h"
 #include <AUI/Traits/platform.h>
 #include <AUI/Util/kAUI.h>
 

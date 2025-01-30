@@ -57,6 +57,7 @@ TEST_F(ProcessTest, Self) {
 #endif
     EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
+    EXPECT_TRUE(mSelf.isEffectivelyAccessible(AFileAccess::X));
 }
 
 TEST_F(ProcessTest, ExitCode) {
@@ -116,3 +117,17 @@ TEST_F(ProcessTest, StdoutSignal) {
     }
 }
 
+TEST_F(ProcessTest, StartDetached) {
+    for (const auto& i : info()) {
+        auto p = AProcess::create(i);
+
+        AString accumulator;
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        p->run(ASubProcessExecutionFlags::DETACHED);
+        p->waitForExitCode();
+        AThread::sleep(500ms);
+        AThread::processMessages();
+        EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+    }
+    EXPECT_TRUE(AProcess::self()->getPathToExecutable().isEffectivelyAccessible(AFileAccess::X));
+}

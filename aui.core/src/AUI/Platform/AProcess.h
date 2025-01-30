@@ -57,6 +57,9 @@ AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
 
     /**
      * @brief If set, child process starts in "detached" way; i.e, when this process dies, child won't.
+     * @details
+     * On *nix systems, the process started with DETACHED flag is daemonized (i.e., reparented to process with pid 1)
+     * using double fork technique.
      */
     DETACHED = 0b1000,
 };

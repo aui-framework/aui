@@ -64,9 +64,8 @@ protected:
 
 AUI_ENTRY {
     auto updater = _new<MyUpdater>();
-    if (updater->handleStartup(args)) {
-        return 0;
-    }
+    updater->handleStartup(args);
+
     // your program routines (i.e., open a window)
     _new<MainWindow>(updater)->show();
     return 0;
