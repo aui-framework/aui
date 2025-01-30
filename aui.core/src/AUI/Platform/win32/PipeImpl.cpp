@@ -71,3 +71,22 @@ void Pipe::closeOut() noexcept {
         mOut = nullptr;
     }
 }
+
+size_t Pipe::read(char *dst, size_t size) {
+    AUI_ASSERT(out() != 0);
+
+    DWORD bytesRead;
+    if (!ReadFile(out(), dst, size, &bytesRead, nullptr)) {
+        throw AIOException("failed to read from pipe");
+    }
+    return bytesRead;
+}
+
+void Pipe::write(const char *src, size_t size) {
+    AUI_ASSERT(in() != 0);
+
+    DWORD bytesWritten;
+    if (!WriteFile(in(), src, size, &bytesWritten, nullptr)) {
+        throw AIOException("failed to write to pipe");
+    }
+}

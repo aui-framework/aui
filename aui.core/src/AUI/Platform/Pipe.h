@@ -27,7 +27,11 @@
 
 
 /**
- * @brief Unix pipe RAII wrapper.
+ * @brief Native pipe RAII wrapper.
+ * @details
+ * On Windows, implemented with CreateNamedPipe.
+ *
+ * On *nix, implemented with pipe(2).
  */
 class API_AUI_CORE Pipe final: public aui::noncopyable, public IInputStream, public IOutputStream {
 public:
