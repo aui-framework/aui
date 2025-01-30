@@ -1,8 +1,8 @@
 project(aui.example.views)
 cmake_minimum_required(VERSION 3.15)
 
-# In your projects you should use this code in order to pull aui:
-
+# Uncomment this code to pull AUI:
+#
 # file(
 #         DOWNLOAD
 #         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
@@ -11,8 +11,6 @@ cmake_minimum_required(VERSION 3.15)
 #
 # auib_import(aui https://github.com/aui-framework/aui
 #             COMPONENTS core views audio curl)
-#
-# using local repository instead in order to make checks easier in CI.
 
 aui_executable(aui.example.views)
 aui_compile_assets(aui.example.views)
