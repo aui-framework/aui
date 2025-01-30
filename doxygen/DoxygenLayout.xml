@@ -31,6 +31,7 @@
             <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
             <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />
             <tab type="user" url="@ref docs/Code style and recommendations.md" title="Code style and recommendations" />
+            <tab type="user" url="@ref docs/clang-format.md" title="clang-format" />
             <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list" />
             <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)" />
         </tab>

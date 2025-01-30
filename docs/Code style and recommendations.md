@@ -1,6 +1,10 @@
 # Code style
+
+See also: @ref docs/clang-format.md
+
 AUI's code should be kept with the following code style:
-- `No tabs`; only four spaces
+
+- `No tabs`; only four spaces (exception: for UI building, 2 spaces is acceptable)
 - Row length: up to `120` characters
 - Class names: `CamelCase`. Every framework public API class name starts with capital '`A`'. Use `GenericSpecific` pattern
   (`EventClose`, not `CloseEvent`, `PacketConnect`, not `ConnectPacket`). Using that convention files group nicely in
