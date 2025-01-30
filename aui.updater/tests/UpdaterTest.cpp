@@ -41,8 +41,8 @@
 //
 // # Getting started
 //
-// `aui.updater` lives inside entrypoint of your application. It needs you to pass program arguments and exit if
-// it returns true.
+// `aui.updater` lives inside entrypoint of your application. It needs you to pass program arguments. It might decide
+// to terminate process execution via std::exit.
 namespace {
 class MainWindow {
 public:
@@ -50,10 +50,10 @@ public:
     void show() {}
 };
 
-}
+}   // namespace
 
 // AUI_DOCS_CODE_BEGIN
-class MyUpdater: public AUpdater {
+class MyUpdater : public AUpdater {
 protected:
     AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
 
@@ -80,16 +80,15 @@ AUI_ENTRY {
 // AUpdater expects `AUpdater::checkForUpdates` to be called once per some period of time. Once update is found, it
 // changes its `AUpdater::status` property to `AUpdater::StatusDownloading` and starts to download and unpack with
 // `AUpdater::deliverUpdateIfNeeded`. Once unpacked, AUpdater changes its `AUpdater::status` property to
-// `AUpdater::StatusWaitingToPerformUpdate`, signaling your application that the update is ready to deploy. Your
+// `AUpdater::StatusWaitingForApplyAndRestart`, signaling your application that the update is ready to deploy. Your
 // application might respond to that by showing the user a notification.
 //
 // @msc
 // a[label = "Your App"],
 // u[label = "AUpdater", URL = "@ref AUpdater"];
-// a -> u [label = "needsExit", URL = "@ref AUpdater::needsExit"];
-// a <- u [label = "false"];
+// a -> u [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
 //
-// --- [label="Normal App Lifecycle"];
+// --- [label="App Normal Lifecycle"];
 // ...;
 // a -> u [label = "checkForUpdates", URL = "@ref AUpdater::checkForUpdates"];
 // a <- u;
@@ -101,15 +100,16 @@ AUI_ENTRY {
 // a <- u;
 // a <- u [label = "status = AUpdater::StatusDownloading", URL = "@ref AUpdater::StatusDownloading"];
 // u box u [label = "download and unpack update"];
-// a <- u [label = "status = AUpdater::StatusWaitingToPerformUpdate", URL = "@ref AUpdater::StatusWaitingToPerformUpdate"];
+// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "@ref
+// AUpdater::StatusWaitingForApplyAndRestart"];
 // --- [label="Your App Prompts User to Update"];
 // ...;
 // @endmsc
 //
-// At this moment, AUpdater waits AUpdater::performUpdate to be called. When
-// AUpdater::performUpdate is called (i.e., when user accepted update installation), AUpdater executes a copy of your
-// app downloaded before with a special command line argument which is handled by AUpdater::needsExit. The copy then
-// replaces old application (where it actually installed) with itself (that is, the downloaded, newer copy). After
+// At this moment, AUpdater waits AUpdater::applyUpdateAndRestart to be called. When
+// AUpdater::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes a copy of
+// your app downloaded before with a special command line argument which is handled by AUpdater::handleStartup. The copy
+// then replaces old application (where it actually installed) with itself (that is, the downloaded, newer copy). After
 // operation is complete, it passes the control back to the application. At last, the newly updated application
 // performs a cleanup after update.
 //
@@ -118,28 +118,26 @@ AUI_ENTRY {
 // u[label = "AUpdater", URL = "@ref AUpdater"],
 // da[label = "Newer Copy of Your App"],
 // du[label = "AUpdater in App Copy", URL = "@ref AUpdater"];
-// a :> u [label = "performUpdate", URL = "@ref AUpdater::performUpdate"];
+// a :> u [label = "applyUpdateAndRestart", URL = "@ref AUpdater::applyUpdateAndRestart"];
 // u :> da [label = "Execute with update arg"];
+// u box u [label = "exit(0)"];
 // a box u [label = "Process Finished"];
 // da box du [label = "Process Started"];
-// da -> du [label = "needsExit", URL = "@ref AUpdater::needsExit"];
+// da -> du [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
 // du box du [label = "Replace Old App with Itself"];
 // a <: du [label = "Execute"];
-// da <- du [label = "true"];
+// du box du [label = "exit(0)"];
 // da box du [label = "Process Finished"];
 // a box u [label = "Process Started"];
-// a -> u [label = "needsExit", URL = "@ref AUpdater::needsExit"];
+// a -> u [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
 // u box u [label = "cleanup download dir"];
-// a <- u [label = "false"];
-// a box u [label="Normal App Lifecycle"];
+// a box u [label="App Normal Lifecycle"];
 // ...;
 // @endmsc
 
-TEST(UpdaterTest, ExampleCase) {
-    EXPECT_EQ(fake_entry({}), 0);
-}
+TEST(UpdaterTest, ExampleCase) { EXPECT_EQ(fake_entry({}), 0); }
 
-TEST(UpdaterTest, Typical_Implementation) { // HEADER_H1
+TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
     // AUpdater is an abstract class; it needs some functions to be implemented by you.
     //
     // In this example, let's implement auto update from GitHub release pages.
@@ -156,4 +154,18 @@ TEST(UpdaterTest, Typical_Implementation) { // HEADER_H1
         }
     };*/
     // AUI_DOCS_CODE_END
+}
+
+TEST(UpdaterTest, WaitForProcess) {
+    class UpdaterMock : public AUpdater {
+    public:
+        AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return AFuture<void>(); }
+        AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
+
+        MOCK_METHOD(void, handleWaitForProcess, (uint32_t pid), (override));
+    };
+
+    UpdaterMock updater;
+    EXPECT_CALL(updater, handleWaitForProcess(123));
+    updater.handleStartup({"--aui-updater-wait-for-process=123"});
 }

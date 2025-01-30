@@ -356,7 +356,7 @@ public:
      * @code{cpp}
      * APath p("file.txt");
      * p.chmod(0755); // -rwxr-xr-x
-     * endcode
+     * @endcode
      */
     const APath& chmod(int newMode) const;
 
@@ -426,6 +426,7 @@ public:
 
     /**
      * @brief Path of the child element. Relevant only for folders.
+     * @param filename child to produce path to
      * @code{cpp}
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;

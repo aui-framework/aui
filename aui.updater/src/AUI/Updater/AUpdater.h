@@ -53,7 +53,7 @@ public:
      * @details
      * Default implementation deletes AUpdater::getDownloadDstDir() dir.
      */
-    virtual void postUpdateCleanup();
+    virtual void handlePostUpdateCleanup();
 
     /**
      * @brief Performs a pre-application AUpdater routine.
@@ -72,8 +72,10 @@ public:
      *
      * This function handles following arguments to your application:
      * - `--aui-updater-origin` -
-     * - `--aui-updater-cleanup` - maps to `AUpdater::postUpdateCleanup` and returns control flow to normal execution of
-     *   your application (last updating step)
+     * - `--aui-updater-wait-for-process` - maps to @ref AUpdater::handleWaitForProcess that instructs AUpdater to wait
+     *   the specified process to finish before processing next argument(s).
+     * - `--aui-updater-cleanup` - maps to @ref AUpdater::handlePostUpdateCleanup and returns control flow to normal
+     *   execution of your application (last updating step)
      *
      * Refer to @ref updater for update process overview.
      */
@@ -84,7 +86,7 @@ public:
      * @details
      * Basically about replacing files (no network operations will be performed).
      *
-     * Requires status = StatusWaitingForApplyAndRestart.
+     * Requires @ref status = StatusWaitingForApplyAndRestart.
      */
     virtual void applyUpdateAndRestart();
 
@@ -167,7 +169,7 @@ protected:
      * The function is called by AUpdater::handleStartup. If triggerUpdateOnStartup succeeds, it should terminate
      * execution of the current process.
      *
-     * Requires status = StatusWaitingForApplyAndRestart.
+     * Requires @ref status = StatusWaitingForApplyAndRestart.
      *
      * If you'd like to disable applying downloaded update on startup, stub this function.
      */
@@ -248,4 +250,10 @@ protected:
      * @sa loadInstallCmdline
      */
     virtual void saveCmdline(const InstallCmdline& cmdline) const;
+
+
+    /**
+     * @brief Handles --aui-updater-wait-for-process.
+     */
+    virtual void handleWaitForProcess(uint32_t pid);
 };

@@ -18,6 +18,10 @@
 
 static constexpr auto LOG_TAG = "AUpdater";
 
+static constexpr auto ARG_AUI_UPDATER = "--aui-updater";
+static constexpr auto ARG_AUI_UPDATER_CLEANUP = "--aui-updater-cleanup";
+static constexpr auto ARG_AUI_UPDATER_WAIT_FOR_PROCESS = "--aui-updater-wait-for-process=";
+
 AUpdater::AUpdater() {
     if (!isAvailable()) {
         status = StatusNotAvailable{};
@@ -29,12 +33,17 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
         return;
     }
     for (const auto& arg : applicationArguments) {
-        if (!arg.startsWith("--aui-updater")) {
+        if (!arg.startsWith(ARG_AUI_UPDATER)) {
             continue;
         }
 
-        if (arg.startsWith("--aui-updater-cleanup")) {
-            postUpdateCleanup();
+        if (arg.startsWith(ARG_AUI_UPDATER_CLEANUP)) {
+            handlePostUpdateCleanup();
+            continue;
+        }
+
+        if (arg.startsWith(ARG_AUI_UPDATER_WAIT_FOR_PROCESS)) {
+            handleWaitForProcess(arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongIntOrException());
             continue;
         }
     }
@@ -171,7 +180,7 @@ void AUpdater::triggerUpdateOnStartup() {
     }
 }
 
-void AUpdater::postUpdateCleanup() {
+void AUpdater::handlePostUpdateCleanup() {
     getDownloadDstDir().removeFileRecursive();
 }
 
@@ -182,4 +191,9 @@ bool AUpdater::isAvailable() {
 #else
     return false;
 #endif
+}
+
+void AUpdater::handleWaitForProcess(uint32_t pid) {
+    auto i = AProcess::fromPid(pid)->waitForExitCode();
+    ALogger::info(LOG_TAG) << "--aui-updater-wait-for-process: " << pid << " exited with " << i;
 }
