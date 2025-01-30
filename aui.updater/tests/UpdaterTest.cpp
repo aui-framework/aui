@@ -41,7 +41,7 @@
 //
 // # Getting started
 //
-// `aui.updater` lives inside entrypoint of your application. It needs you to pass program arguments. It might decide
+// `AUpdater` lives inside entrypoint of your application. It needs you to pass program arguments. It might decide
 // to terminate process execution via std::exit.
 namespace {
 class MainWindow {
@@ -72,8 +72,8 @@ AUI_ENTRY {
 }
 // AUI_DOCS_CODE_END
 //
-// You can pass updater instance to your window (as shown in the example) and display update information there and
-// perform the update as requested.
+// You can pass updater instance to your window (as shown in the example) and display update information from
+// `AUpdater::status` and perform the update when requested.
 //
 // # Update process
 //

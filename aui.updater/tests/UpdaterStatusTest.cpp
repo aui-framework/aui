@@ -67,7 +67,7 @@ TEST_F(UpdaterStatusTest, Test1) {
     auto mUpdater = _new<MyUpdater>();
 
     //
-    // Typical observer of status is a UI projection displaying current status. You can even display controls in it:
+    // Typical observer of status is a UI projection displaying its value. You can even display controls in it:
     mTestWindow->setContents(Vertical {
       // AUI_DOCS_CODE_BEGIN
       CustomLayout {} & mUpdater->status.readProjected([&updater = mUpdater](const AUpdater::Status& status) {
