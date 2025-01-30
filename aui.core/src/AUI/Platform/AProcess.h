@@ -44,14 +44,21 @@ AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
      * @brief Merges stdin and stdout streams in a child process
      */
     MERGE_STDOUT_STDERR = 0b001,
+
     /**
      * @brief If set, child and parent processes have the same stdout stream
      */
     TIE_STDOUT = 0b010,
+
     /**
      * @brief If set, child and parent processes have the same stderr stream
      */
-    TIE_STDERR = 0b100, DEFAULT = 0
+    TIE_STDERR = 0b100, DEFAULT = 0,
+
+    /**
+     * @brief If set, child process starts in "detached" way; i.e, when this process dies, child won't.
+     */
+    DETACHED = 0b1000,
 };
 
 class AProcessException : public AException {

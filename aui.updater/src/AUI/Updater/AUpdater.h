@@ -21,23 +21,70 @@
  * @details
  * AUpdater follows strategy pattern, i.e., you are excepted to call its functions but the behaviour and conditions
  * are yours.
+ *
+ * Refer to @ref updater for update process overview.
  */
 class API_AUI_UPDATER AUpdater : public AObject {
 public:
+    /**
+     * @brief Data required to launch installation child process.
+     * @sa f
+     */
+    struct InstallCmdline {
+        /**
+         * @brief Absolute path to installer executable.
+         * @details
+         * By default, installerExecutable is a copy of your application executable. The installation process is
+         * triggered via installerArguments.
+         */
+        APath installerExecutable;
+
+        /**
+         * @brief Arguments passed to installer.
+         */
+        AVector<AString> installerArguments;
+    };
+
+    AUpdater();
     ~AUpdater() override = default;
 
     /**
-     * @brief Performs a pre-application AUpdater routine.
-     * @param applicationArguments
-     * @return
+     * @brief Performs post update cleanup routines.
+     * @details
+     * Default implementation deletes AUpdater::getDownloadDstDir() dir.
      */
-    virtual bool needsExit(const AStringVector& applicationArguments);
+    virtual void postUpdateCleanup();
 
+    /**
+     * @brief Performs a pre-application AUpdater routine.
+     * @param applicationArguments arguments to your program.
+     * @details
+     * The arguments starting with `--aui-updater` are should be ignored by your application.
+     *
+     * Performs autoupdate-specific routines on startup of your application. In best scenario, this function should be
+     * called by your application as early as possible.
+     *
+     * This function might terminate current process with std::exit(0), in case of performing autoupdate routines.
+     *
+     * This function will attempt to restore InstallCmdline state (StatusWaitingForApplyAndRestart) via
+     * AUpdater::loadInstallCmdline. If the latter succeeds, AUpdate::triggerUpdateOnStartup is called to perform
+     * on-startup update.
+     *
+     * This function handles following arguments to your application:
+     * - `--aui-updater-origin` -
+     * - `--aui-updater-cleanup` - maps to `AUpdater::postUpdateCleanup` and returns control flow to normal execution of
+     *   your application (last updating step)
+     *
+     * Refer to @ref updater for update process overview.
+     */
+    virtual void handleStartup(const AStringVector& applicationArguments);
 
     /**
      * @brief Deploy a downloaded update.
      * @details
      * Basically about replacing files (no network operations will be performed).
+     *
+     * Requires status = StatusWaitingForApplyAndRestart.
      */
     virtual void applyUpdateAndRestart();
 
@@ -59,43 +106,72 @@ public:
     };
 
     /**
+     * @brief AUpdater::isAvailable() evaluated to false.
+     * @sa AUpdater::isAvailable
+     */
+    struct StatusNotAvailable {};
+
+    /**
      * @brief Waiting to applyUpdateAndRestart call state.
      */
-    struct StatusWaitingForApplyAndRestart {};
+    struct StatusWaitingForApplyAndRestart {
+        InstallCmdline installCmdline;
+    };
 
-    using Status = std::variant<StatusIdle, StatusCheckingForUpdates, StatusDownloading, StatusWaitingForApplyAndRestart>;
+    using Status = std::variant<
+        StatusIdle, StatusCheckingForUpdates, StatusDownloading, StatusWaitingForApplyAndRestart, StatusNotAvailable>;
 
+    /**
+     * @brief State of the updater.
+     * @details
+     * Status to observe from outside, i.e., by UI.
+     *
+     * State is updated in UI thread only.
+     */
     AProperty<Status> status;
 
     /**
      * @brief Sets status to StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
      */
-    void checkForUpdates() {
-        status = StatusCheckingForUpdates{};
-        mAsync << checkForUpdatesImpl().onFinally([this, self = shared_from_this()] {
-            getThread()->enqueue([this, self] {
-                status = StatusIdle{};
-            });
-        });
-    }
+    void checkForUpdates();
 
     /**
      * @brief Starts downloading update. An implementation might expect to checkForUpdates to be called first.
      */
-    void downloadUpdate() {
-        status = StatusDownloading{};
-        mAsync << downloadUpdateImpl((APath::getDefaultPath(APath::TEMP) / "__aui_update").makeDirs()).onFinally([this, self = shared_from_this()] {
-            getThread()->enqueue([this, self] {
-                status = StatusIdle{};
-            });
-        });
-    }
+    void downloadUpdate();
+
+    /**
+     * @brief Checks that updater functionality is available.
+     * @details
+     * For cases when AUpdater is available see @ref updater
+     */
+    static bool isAvailable();
 
 protected:
     /**
      * @brief Holder for async operations.
      */
     AAsyncHolder mAsync;
+
+    /**
+     * @brief Constructs InstallCmdline with default arguments.
+     * @details
+     * By default, installerExecutable is a copy of your application executable. The installation process is
+     * triggered via special arguments in installerArguments.
+     */
+    InstallCmdline makeDefaultInstallationCmdline() const;
+
+    /**
+     * @brief Triggers update routine.
+     * @details
+     * The function is called by AUpdater::handleStartup. If triggerUpdateOnStartup succeeds, it should terminate
+     * execution of the current process.
+     *
+     * Requires status = StatusWaitingForApplyAndRestart.
+     *
+     * If you'd like to disable applying downloaded update on startup, stub this function.
+     */
+    virtual void triggerUpdateOnStartup();
 
     /**
      * @brief Performs update delivery to the specified directory.
@@ -116,4 +192,60 @@ protected:
      * Called by downloadUpdateImpl. Updates AUpdate::status progress.
      */
     void downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdateDir);
+
+    /**
+     * @brief Being called by downloadUpdateImpl, reports download percentage to `status`.
+     */
+    void reportDownloadedPercentage(aui::float_within_0_1 progress);
+
+    /**
+     * @brief Returns a module name of your (your_app_name or your_app_name.exe, without a leading path).
+     * @details
+     * Default implementation determines module name using AProcess::self().
+     *
+     * The module name is used to construct temporary directory and locate an executable in a downloaded portable.
+     */
+    virtual AString getModuleName() const;
+
+    /**
+     * @brief Dumps InstallCmdline to temporary download directory, indicating that an update is ready to install.
+     * Updates status accordingly.
+     *
+     * @sa saveCmdline
+     * @sa applyUpdateAndRestart
+     */
+    void reportReadyToApplyAndRestart(InstallCmdline cmdline);
+
+    /**
+     * @brief Working directory for AUpdater. By default, points to some path in TEMP.
+     */
+    virtual APath getTempWorkDir() const;
+
+    /**
+     * @brief The path where the update is unpacked to.
+     * @details
+     * The dir persists between different launches.
+     */
+    APath getDownloadDstDir() const;
+
+    /**
+     * @brief Restores install command line state, if any.
+     * @details
+     * AUpdater::handleStartup will try to restore the state via loadInstallCmdline. If InstallCmdline is successfully
+     * restored, AUpdater immediately triggers update routine with triggerUpdateOnStartup which exits the application.
+     *
+     * The implementation must ensure that subsequent startups would not trigger on-startup update to avoid endless
+     * loops in case of failure, i.e, by deleting a file.
+     *
+     * @sa triggerUpdateOnStartup
+     * @sa saveCmdline
+     */
+    virtual AOptional<InstallCmdline> loadInstallCmdline() const;
+
+    /**
+     * @brief Saves install command line to restore state when application is restarted.
+     *
+     * @sa loadInstallCmdline
+     */
+    virtual void saveCmdline(const InstallCmdline& cmdline) const;
 };

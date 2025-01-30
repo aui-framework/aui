@@ -146,6 +146,31 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
     auto pid = fork();
     if (pid == 0) {
+        // we are in a new process
+        if (bool(flags & ASubProcessExecutionFlags::DETACHED)) {
+            // daemonisizing
+            //
+            // Parent (one who called AChildProcess)
+            // Child (we are currently here)
+            // Grandchild (we'll spawn him a little later)
+            //
+            // In child, we need to call setsid() to detach from terminal. setsid requires the process it called in
+            // to not be a group leader (Parent probably is) hence we spawned Child. After a terminal for Child is
+            // detached, we can now spawn Grandchild (which we will call execve for), and we will exit Child.
+            // Grandchill will lose parent, whose terminal is detached, hence it will be reparented to init.
+
+            auto grandchild = fork();
+            if (grandchild < 0) {
+                fprintf(stderr, "grandchild fork error\n");
+            }
+
+            if (grandchild != 0) {
+                // still in Child
+                // so exit
+                exit(0);
+            }
+        }
+
         while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {
         }
         if (!tieStdout) {
@@ -162,7 +187,6 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         // ipeStdout.closeOut();
         // ipeStderr.closeOut();
 
-        // we are in a new process
         if (!mInfo.workDir.empty()) {
             chdir(mInfo.workDir.toStdString().c_str());
         }

@@ -21,13 +21,25 @@
 // @defgroup updater aui::updater
 // @brief Deliver updates on non-centralized distribution methods
 // @details
-// This module is purposed for devivering updates to your end users on distribution methods that do not support that by
+// This module is purposed for delivering updates to your end users on distribution methods that do not support that by
 // themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
 // your website).
 //
 // `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
 // priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
 // to user's directory (i.e., in `AppData`).
+//
+// # Supported platforms
+// `aui::updater` supports the following platforms:
+// - **Windows** - @ref PORTABLE_WINDOWS "portables" only, installers to user's directory only (@ref INNOSETUP)
+// - **Linux** - portables only
+// - **macOS** - @ref DragNDrop only
+//
+// On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
+// executable is not writeable, or running on a non-supported platform, `AUpdater` stubs it's methods (i.e., they do
+// nothing). You can check that the `aui::updater` functionality is engaged by calling `AUpdater::isAvailable()`.
+//
+// # Getting started
 //
 // `aui.updater` lives inside entrypoint of your application. It needs you to pass program arguments and exit if
 // it returns true.
@@ -52,7 +64,7 @@ protected:
 
 AUI_ENTRY {
     auto updater = _new<MyUpdater>();
-    if (updater->needsExit(args)) {
+    if (updater->handleStartup(args)) {
         return 0;
     }
     // your program routines (i.e., open a window)

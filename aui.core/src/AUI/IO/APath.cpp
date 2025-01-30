@@ -333,6 +333,8 @@ APath APath::workingDir() {
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+#include <AUI/Platform/AProcess.h>
+#include <AUI/Util/ACleanup.h>
 
 APath APath::workingDir() {
     auto cwd = aui::ptr::make_unique_with_deleter(getcwd(nullptr, 0), free);
@@ -469,4 +471,46 @@ APath APath::extensionChanged(const AString& newExtension) const {
         return *this + "." + newExtension;
     }
     return substr(0, it) + "." + newExtension;
+}
+
+const APath& APath::processTemporaryDir() {
+    static APath result = [] {
+      APath result = APath::getDefaultPath(TEMP) / "aui-temp-{}"_format(AProcess::self()->getPid());
+      while (result.exists()) {
+          result += "-";
+      }
+      result.makeDirs();
+      ACleanup::afterEntry([result] {
+          try {
+              result.removeFileRecursive();
+          } catch (...) {
+          }
+      });
+
+      return result;
+    }();
+    return result;
+}
+
+APath APath::randomTemporary() {
+    auto base = processTemporaryDir();
+    static std::atomic_uint64_t i = 0;
+    for (;;) {
+        APath result = base / "randomtemporary{}"_format(i++);
+        if (!result.exists()) {
+            return result;
+        }
+    }
+}
+
+bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
+#if AUI_PLATFORM_WIN
+    return _access(toStdString().c_str(), int(flags)) == 0;
+#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
+    return euidaccess(toStdString().c_str(), int(flags)) == 0;
+#elif AUI_PLATFORM_APPLE
+    return eaccess (toStdString().c_str(), int(flags)) == 0;
+#elif
+#error "unimplemented"
+#endif
 }

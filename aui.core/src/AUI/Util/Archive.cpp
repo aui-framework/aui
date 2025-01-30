@@ -102,5 +102,12 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
 }
 
 void aui::archive::ExtractTo::operator()(const FileEntry& zipEntry) const {
-    AFileOutputStream(prefix / zipEntry.name) << *zipEntry.open();
+    if (zipEntry.name.ends_with('/')) {
+        // directory?
+        return;
+    }
+    APath dst = prefix / zipEntry.name;
+    dst.parent().makeDirs();
+    AFileOutputStream(dst) << *zipEntry.open();
+    dst.chmod(0755);
 }

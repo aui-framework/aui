@@ -84,7 +84,7 @@ won't prompt a UAC dialog (leverage to _admin privileges_). This way the install
 perspective of the end user. Moreover, installation to user's directory allows @ref updater to work without prompting
 leverage to admin privileges during update installation.
 
-## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
+## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ {#PORTABLE_WINDOWS}
 
 @note
 This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
@@ -156,7 +156,7 @@ Guides about packaging for macOS assume you are running macOS with Xcode preinst
 
 The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
 
-## DragNDrop
+## DragNDrop {#DragNDrop}
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
 

@@ -100,7 +100,7 @@ _unique<IInputStream> ACurl::Builder::toInputStream() {
 
     public:
         CurlInputStream(_<ACurl> curl) : mCurl(std::move(curl)) {
-            mCurl->mWriteCallback = [&](AByteBufferView buf) {
+            mCurl->mWriteCallback = [&](ACurl&, AByteBufferView buf) {
                 mPipe << buf;
                 return buf.size();
             };
@@ -249,6 +249,8 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         connect(success, [this, success = std::move(builder.mOnSuccess)]() { success(*this); });
     }
 
+    curl_easy_setopt(mCURL, CURLOPT_FOLLOWLOCATION, true);
+
     res = curl_easy_setopt(mCURL, CURLOPT_ACCEPT_ENCODING, "");
     AUI_ASSERT(res == CURLE_OK);
 
@@ -307,7 +309,7 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
         return 0;
     }
     try {
-        auto r = c->mWriteCallback({ ptr, nmemb });
+        auto r = c->mWriteCallback(*c, { ptr, nmemb });
         if (c->mCloseRequested) {
             return 0;
         }
@@ -391,7 +393,7 @@ static ACurl::Response makeResponse(ACurl& r, AByteBuffer body) {
 
 ACurl::Response ACurl::Builder::runBlocking() {
     AByteBuffer out;
-    mWriteCallback = [&](AByteBufferView buf) {
+    mWriteCallback = [&](ACurl&, AByteBufferView buf) {
         out << buf;
         return buf.size();
     };
@@ -405,7 +407,7 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync() { return runAsync(ACurlMulti
 AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
     AFuture<ACurl::Response> result;
     auto body = _new<AByteBuffer>();
-    withDestinationBuffer(*body);
+    if (!mWriteCallback) withDestinationBuffer(*body);
     withOnSuccess([result, body = std::move(body)](ACurl& c) {
         result.supplyValue(makeResponse(c, std::move(*body)));
     });

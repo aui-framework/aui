@@ -85,6 +85,27 @@ AUI_ENUM_FLAG(AFileListFlags) {
 };
 
 /**
+ * @brief Flag enum for APath::isEffectivelyAccessible
+ * @ingroup io
+ */
+AUI_ENUM_FLAG(AFileAccess) {
+    /**
+     * @brief File is Readable flag.
+     */
+    R = 0b100,
+
+    /**
+     * @brief File is Writeable flag.
+     */
+    W = 0b010,
+
+    /**
+     * @brief File is eXecutable flag.
+     */
+    X = 0b001,
+};
+
+/**
  * @brief An add-on to AString with functions for working with the path.
  * @ingroup io
  * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
@@ -141,6 +162,33 @@ public:
     APath(const char16_t * str, std::size_t length) noexcept: AString(str, str + length) {
         removeBackSlashes();
     }
+
+    /**
+     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
+     * @details
+     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
+     * process, it prevents, potential conflicts between concurrent processes.
+     *
+     * When the application closes, a directory cleanup attempt will be performed.
+     *
+     * @sa APath::randomTemporary
+     *
+     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
+     */
+    [[nodiscard]]
+    static const APath& processTemporaryDir();
+
+    /**
+     * @brief Creates a path to non-existent random file in system temp directory.
+     * @details
+     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
+     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
+     * any file either.
+     * @sa APathOwner
+     * @sa APath:processTemporaryDir:
+     */
+    [[nodiscard]]
+    static APath randomTemporary();
 
     /**
      * Creates a file.
@@ -300,6 +348,16 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
+    /**
+     * @brief Changes mode (permissions) on file
+     * @param newMode new mode.
+     * @details
+     * It's convenient to use octet literal on `newMode`:
+     * @code{cpp}
+     * APath p("file.txt");
+     * p.chmod(0755); // -rwxr-xr-x
+     * endcode
+     */
     const APath& chmod(int newMode) const;
 
     enum DefaultPath {
@@ -380,8 +438,57 @@ public:
         return file(filename);
     }
 
+    /**
+     * @brief Return true if the current process has specified access flags to path.
+     * @details
+     * Checks permissions and existence of the file identified by this APath using the real user and group
+     * identifiers of the process, like if the file were opened by open().
+     *
+     * @note
+     * Using this function to check a process's permissions on a file before performing some operation based on that
+     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
+     * safer just to attempt the desired operation and handle any permission error that occurs.
+     */
+    [[nodiscard]]
+    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
 };
 
+/**
+ * @brief RAII-style file owner for storing temporary data on disk.
+ * @ingroup io
+ * @details
+ * This class represents a type that transparently converts to underlying APath. When APathOwner is destructed, the
+ * pointed file is cleaned up, too, regardless of it's type.
+ *
+ * APathOwner is designed to simplify management of (temporary) files on disk, ensuring cleanup of the pointed file
+ * in RAII (Resource Acquisition Is Initialization) style.
+ *
+ * @snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner example
+ * @sa APath::randomTemporary()
+ */
+struct API_AUI_CORE APathOwner: public aui::noncopyable {
+public:
+    explicit APathOwner(APath mPath) noexcept: mPath(std::move(mPath)) {}
+
+    ~APathOwner() {
+        try {
+            mPath.removeFileRecursive();
+        } catch(...) {}
+    }
+
+    [[nodiscard]]
+    operator const APath&() const noexcept {
+        return mPath;
+    }
+
+    [[nodiscard]]
+    const APath& value() const noexcept {
+        return mPath;
+    }
+
+private:
+    APath mPath;
+};
 
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
