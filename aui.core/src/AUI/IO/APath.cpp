@@ -511,7 +511,7 @@ bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
 #elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_APPLE
-    return eaccess (toStdString().c_str(), int(flags)) == 0;
+    return access(toStdString().c_str(), int(flags)) == 0;
 #elif
 #error "unimplemented"
 #endif

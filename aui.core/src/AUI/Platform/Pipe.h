@@ -29,7 +29,7 @@
 /**
  * @brief Unix pipe RAII wrapper.
  */
-class Pipe final: public aui::noncopyable, public IInputStream, public IOutputStream {
+class API_AUI_CORE Pipe final: public aui::noncopyable, public IInputStream, public IOutputStream {
 public:
 #if AUI_PLATFORM_WIN
     using pipe_t = HANDLE;
