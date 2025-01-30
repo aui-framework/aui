@@ -335,8 +335,6 @@ APath APath::workingDir() {
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
-#include <AUI/Platform/AProcess.h>
-#include <AUI/Util/ACleanup.h>
 
 APath APath::workingDir() {
     auto cwd = aui::ptr::make_unique_with_deleter(getcwd(nullptr, 0), free);
@@ -508,8 +506,10 @@ APath APath::randomTemporary() {
 bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
 #if AUI_PLATFORM_WIN
     return _access(toStdString().c_str(), int(flags)) == 0;
-#elif AUI_PLATFORM_ANDROID || AUI_PLATFORM_LINUX
+#elif AUI_PLATFORM_LINUX
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
+#elif AUI_PLATFORM_ANDROID
+    return eaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_APPLE
     return access(toStdString().c_str(), int(flags)) == 0;
 #elif

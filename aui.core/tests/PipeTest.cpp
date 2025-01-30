@@ -25,7 +25,7 @@ TEST(Pipe, DynamicBasic) {
     EXPECT_ANY_THROW(pipe >> aui::serialize_sized(out));
 }
 
-#if AUI_PLATFORM_LINUX
+#if AUI_PLATFORM_UNIX
 #include "AUI/Platform/Pipe.h"
 TEST(Pipe, UnixPipe) {
     Pipe pipe;
