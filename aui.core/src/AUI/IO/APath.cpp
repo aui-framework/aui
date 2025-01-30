@@ -505,7 +505,17 @@ APath APath::randomTemporary() {
 
 bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
 #if AUI_PLATFORM_WIN
-    return _access(toStdString().c_str(), int(flags)) == 0;
+    int wflags = 0;
+    if (bool(flags & AFileAccess::R)) {
+        wflags |= 04;
+    }
+    if (bool(flags & AFileAccess::W)) {
+        wflags |= 02;
+    }
+    if (wflags == 0) {
+        return true;
+    }
+    return _waccess(aui::win32::toWchar(*this), wflags) == 0;
 #elif AUI_PLATFORM_LINUX
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_ANDROID
