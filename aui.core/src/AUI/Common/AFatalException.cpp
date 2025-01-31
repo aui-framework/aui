@@ -78,7 +78,7 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
     if (!signalName) signalName = "unknown signal";
     AFatalException e(signalName, c);
 
-    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ") in pid=" << getpid() << "\n" << AStacktrace::capture(3);
+    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
 
     switch (c) {
         default:
