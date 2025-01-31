@@ -271,7 +271,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
           //
           // at this moment, only child knows the pid of grandchild.
           // we can ask him for pid of grandchild.
-          DetachedSpecific::Started message;
+          auto message = DetachedSpecific::Started::OK;
           detachedSpecific->startedPipe >> aui::serialize_raw(message);
           detachedSpecific->startedPipe.closeOut();
           int loc = 0;
