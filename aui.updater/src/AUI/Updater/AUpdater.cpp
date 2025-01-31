@@ -243,7 +243,11 @@ bool AUpdater::isAvailable() {
 }
 
 void AUpdater::handleWaitForProcess(uint32_t pid) {
-    auto i = AProcess::fromPid(pid)->waitForExitCode();
+    auto process = AProcess::fromPid(pid);
+    if (!process) {
+        return;
+    }
+    auto i = process->waitForExitCode();
     ALogger::info(LOG_TAG) << "--aui-updater-wait-for-process: " << pid << " exited with " << i;
 }
 

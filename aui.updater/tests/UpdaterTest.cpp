@@ -49,9 +49,11 @@ TEST(UpdaterTest, ApplyUpdate) {
         // check that dependency.txt does not exist ("no update applied").
         EXPECT_FALSE(dependencyPath.isRegularFileExists());
 
+        AProcess::ArgStringList args;
+        args.list << "--test={}"_format(tempDir);
         auto process = AProcess::create({
           .executable = updaterPath,
-          .args = AProcess::ArgStringList { { "--test={}"_format(tempDir) } },
+          .args = std::move(args),
         });
         process->run(ASubProcessExecutionFlags::TIE_STDOUT | ASubProcessExecutionFlags::TIE_STDERR);
         EXPECT_EQ(process->waitForExitCode(), 0);
@@ -72,11 +74,13 @@ TEST(UpdaterTest, ApplyUpdate) {
         EXPECT_EQ(process->waitForExitCode(), 0);
     }
 }
+
 #endif
 
 #ifdef AUI_ENTRY
 #undef AUI_ENTRY
 #endif
+
 #define AUI_ENTRY static int fake_entry(const AStringVector& args)
 
 // AUI_DOCS_OUTPUT: doxygen/intermediate/updater.h

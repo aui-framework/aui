@@ -234,6 +234,11 @@ public:
     static _<AProcess> findAnotherSelfInstance(const AString& yourProjectName);
 
     /**
+     * @details
+     * This function might cause race condition if process is about to die. If process is not found, `nullptr` is
+     * returned so you must check for `nullptr` before proceeding. However, if non-`nullptr` is returned, the process
+     * handle is "acquired" and guaranteed to be valid during lifetime of `AProcess` instance.
+     *
      * @return process by id
      */
     static _<AProcess> fromPid(uint32_t pid);

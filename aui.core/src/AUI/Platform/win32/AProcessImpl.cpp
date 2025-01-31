@@ -28,6 +28,7 @@
 #include <AUI/Platform/PipeInputStream.h>
 #include <AUI/Platform/PipeOutputStream.h>
 #include <AUI/Platform/ErrorToException.h>
+#include <Shlwapi.h>
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
@@ -82,11 +83,7 @@ public:
     }
 
     APath getModuleName() override {
-        APath result;
-        result.resize(0x1000);
-        result.resize(GetProcessImageFileName(mHandle, aui::win32::toWchar(result), result.length()));
-        result.replaceAll('\\', '/');
-        return result;
+        return getPathToExecutable().filename();
     }
 
     uint32_t getPid() const noexcept override {
