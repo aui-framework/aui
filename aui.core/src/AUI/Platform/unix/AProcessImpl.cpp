@@ -187,7 +187,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                     chdir(mInfo.workDir.toStdString().c_str());
                 }
                 execve(executable.c_str(), argv.data(), environ);
-                exit(-1);
+                std::exit(-1);
             };
 
             if (detachedSpecific) {
@@ -199,7 +199,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 //
                 // In child, we need to call setsid() to detach from terminal. setsid requires the process it called in
                 // to not be a group leader (Parent probably is) hence we spawned Child. After a terminal for Child is
-                // detached, we can now spawn Grandchild (which we will call execve for), and we will exit Child.
+                // detached, we can now spawn Grandchild (which we will call execve for), and we will std::exit Child.
                 // Grandchill will lose parent, whose terminal is detached, hence it will be reparented to init.
 
                 // close redundant pipe sides
@@ -233,14 +233,15 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                     ::sigaction(SIGPIPE, &noaction, nullptr);
                     detachedSpecific->startedPipe << aui::serialize_raw(DetachedSpecific::Started::EXECV_FAILED);
                     detachedSpecific->startedPipe.closeIn();
-                    exit(1);
+                    std::exit(1);
                 } else {
                     // in Child; fork() succeeded
+                    detachedSpecific->startedPipe << aui::serialize_raw(DetachedSpecific::Started::OK);
                     detachedSpecific->startedPipe.closeIn();
 
                     // report pid of Grandchild to parent
                     detachedSpecific->pidPipe << aui::serialize_raw(grandchild);
-                    exit(1);
+                    std::exit(1);
                 }
             } else {
                 execute();

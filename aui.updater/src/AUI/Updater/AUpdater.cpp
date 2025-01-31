@@ -60,9 +60,10 @@ void AUpdater::applyUpdateAndRestart() {
     auto& info = std::get<StatusWaitingForApplyAndRestart>(*status);
     auto p = AProcess::create({
       .executable = info.installCmdline.installerExecutable,
-      .args = AProcess::ArgStringList { std::move(info.installCmdline.installerArguments) },
+      .args = AProcess::ArgStringList { info.installCmdline.installerArguments },
     });
     p->run(ASubProcessExecutionFlags::DEFAULT | ASubProcessExecutionFlags::DETACHED);
+    ALogger::info(LOG_TAG) << "applyUpdateAndRestart: started process pid=" << p->getPid() << ", exe=" << p->getPathToExecutable() << ", args=" << info.installCmdline.installerArguments;
     std::exit(0);
 }
 
@@ -160,6 +161,7 @@ void AUpdater::saveCmdline(const AUpdater::InstallCmdline& cmdline) const {
 }
 
 AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
+    return {};
     try {
         auto path = getDownloadDstDir().parent() / "install.json";
         if (path.isRegularFileExists()) {

@@ -87,6 +87,8 @@ public:
      * Basically about replacing files (no network operations will be performed).
      *
      * Requires @ref status = StatusWaitingForApplyAndRestart.
+     *
+     * Terminates current process with `std::exit(0)`
      */
     virtual void applyUpdateAndRestart();
 
