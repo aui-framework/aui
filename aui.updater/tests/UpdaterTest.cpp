@@ -11,6 +11,68 @@
 #include <gmock/gmock.h>
 #include "AUI/Util/kAUI.h"
 #include "AUI/Curl/ACurl.h"
+#include "AUI/Platform/AProcess.h"
+
+using namespace std::chrono_literals;
+
+#ifdef AUI_UPDATER_TEST
+TEST(UpdaterTest, ApplyUpdate) {
+    // test update installation scenario
+
+    auto updaterPath = [] {
+        auto selfDir = AProcess::self()->getPathToExecutable().parent();
+        if (auto paths = APath::find("aui.updater.test", { selfDir }); !paths.empty()) {
+            return paths.first();
+        }
+        if (auto paths = APath::find("aui.updater.test.exe", { selfDir }); !paths.empty()) {
+            return paths.first();
+        }
+        AUI_ASSERT_NO_CONDITION("can't find aui.updater.test");
+        return APath();
+    }();
+    APathOwner temporary(APath::nextRandomTemporary());
+    auto tempDir = APath(temporary) / "white space"; // white space to check everything is ok on Win
+    tempDir.makeDirs();
+    auto tempDirUpdater = tempDir / updaterPath.filename();
+
+    // set up "downloaded" update
+    APath::copy(updaterPath, tempDirUpdater);
+    tempDirUpdater.chmod(0755);
+    auto dependencyPath = updaterPath.parent() / "dependency.txt";
+    dependencyPath.removeFileRecursive();
+    AFileOutputStream(tempDir / "dependency.txt") << aui::serialize_sized(AString("1234"));
+
+    // first launch. --test= flag instructs aui.updater.test to apply update from the specified dir.
+    // this launch will launch a copy of aui.updater.test from tempDir and copy itself along with the dependency.txt
+    // back to updaterPath.
+    {
+        // check that dependency.txt does not exist ("no update applied").
+        EXPECT_FALSE(dependencyPath.isRegularFileExists());
+
+        auto process = AProcess::create({
+          .executable = updaterPath,
+          .args = AProcess::ArgStringList { { "--test={}"_format(tempDir) } },
+        });
+        process->run(ASubProcessExecutionFlags::TIE_STDOUT | ASubProcessExecutionFlags::TIE_STDERR);
+        EXPECT_EQ(process->waitForExitCode(), 0);
+    }
+
+    // wait a little bit to apply the update.
+    AThread::sleep(1s);
+    {
+        // check that dependency.txt appeared.
+        EXPECT_TRUE(dependencyPath.isRegularFileExists());
+
+        // perform "app normal lifecycle". In case of aui.updater.test, it will check for dependency.txt.
+        auto process = AProcess::create({
+          .executable = updaterPath,
+          .workDir = updaterPath.parent(),
+        });
+        process->run(ASubProcessExecutionFlags::TIE_STDOUT | ASubProcessExecutionFlags::TIE_STDERR);
+        EXPECT_EQ(process->waitForExitCode(), 0);
+    }
+}
+#endif
 
 #ifdef AUI_ENTRY
 #undef AUI_ENTRY
@@ -167,5 +229,5 @@ TEST(UpdaterTest, WaitForProcess) {
 
     UpdaterMock updater;
     EXPECT_CALL(updater, handleWaitForProcess(123));
-    updater.handleStartup({"--aui-updater-wait-for-process=123"});
+    updater.handleStartup({ "--aui-updater-wait-for-process=123" });
 }

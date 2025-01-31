@@ -21,10 +21,12 @@ static constexpr auto LOG_TAG = "AUpdater";
 static constexpr auto ARG_AUI_UPDATER = "--aui-updater";
 static constexpr auto ARG_AUI_UPDATER_CLEANUP = "--aui-updater-cleanup";
 static constexpr auto ARG_AUI_UPDATER_WAIT_FOR_PROCESS = "--aui-updater-wait-for-process=";
+static constexpr auto ARG_AUI_UPDATER_ORIGIN = "--aui-updater-origin=";
+static constexpr auto ARG_AUI_UPDATER_DIR = "--aui-updater-dir=";
 
 AUpdater::AUpdater() {
     if (!isAvailable()) {
-        status = StatusNotAvailable{};
+        status = StatusNotAvailable {};
     }
 }
 
@@ -32,6 +34,9 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
     if (!isAvailable()) {
         return;
     }
+
+    APath updaterOrigin, updaterDir;
+
     for (const auto& arg : applicationArguments) {
         if (!arg.startsWith(ARG_AUI_UPDATER)) {
             continue;
@@ -43,10 +48,44 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
         }
 
         if (arg.startsWith(ARG_AUI_UPDATER_WAIT_FOR_PROCESS)) {
-            handleWaitForProcess(arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongIntOrException());
+            handleWaitForProcess(
+                arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongIntOrException());
+            continue;
+        }
+
+        if (arg.startsWith(ARG_AUI_UPDATER_ORIGIN)) {
+            updaterOrigin = arg.substr(std::string_view(ARG_AUI_UPDATER_ORIGIN).length());
+            continue;
+        }
+
+        if (arg.startsWith(ARG_AUI_UPDATER_DIR)) {
+            updaterDir = arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length());
             continue;
         }
     }
+
+    if (!updaterDir.empty() || !updaterOrigin.empty()) {
+        try {
+            AUI_ASSERT(!updaterDir.empty() && !updaterOrigin.empty());
+
+            // By selfLocation and updaterDir we make an assumption about the installation structure.
+            // We lose the ability to re-locate exe installation path but hope it's would never be a case.
+            auto selfLocation = AProcess::self()->getPathToExecutable();
+            if (!selfLocation.startsWith(updaterDir)) {
+                throw AException("can't determine installation structure: selfLocation={}, updaterDir={}"_format(selfLocation, updaterDir));
+            }
+
+            APath destinationDir = updaterOrigin.substr(0, updaterOrigin.length() - (selfLocation.length() - updaterDir.length()));
+            ALogger::info(LOG_TAG) << "deploying update: " << updaterDir << " -> " << destinationDir;
+            deployUpdate(updaterDir, destinationDir);
+        } catch (const AException& e) {
+            ALogger::err(LOG_TAG) << "Can't deploy update, trying to launch original: " << e;
+        }
+        ALogger::info(LOG_TAG) << "Post-update launch: " << updaterOrigin;
+        AProcess::create({.executable = updaterOrigin})->run(ASubProcessExecutionFlags::DETACHED);
+        std::exit(0);
+    }
+
     if (auto cmdline = loadInstallCmdline()) {
         status = StatusWaitingForApplyAndRestart { std::move(*cmdline) };
         triggerUpdateOnStartup();
@@ -58,18 +97,21 @@ void AUpdater::applyUpdateAndRestart() {
         return;
     }
     auto& info = std::get<StatusWaitingForApplyAndRestart>(*status);
+    auto finalArgs = injectWaitForMyPid(std::move(info.installCmdline.installerArguments));
     auto p = AProcess::create({
       .executable = info.installCmdline.installerExecutable,
-      .args = AProcess::ArgStringList { info.installCmdline.installerArguments },
+      .args = AProcess::ArgStringList { finalArgs },
     });
     p->run(ASubProcessExecutionFlags::DEFAULT | ASubProcessExecutionFlags::DETACHED);
-    ALogger::info(LOG_TAG) << "applyUpdateAndRestart: started process pid=" << p->getPid() << ", exe=" << p->getPathToExecutable() << ", args=" << info.installCmdline.installerArguments;
+    ALogger::info(LOG_TAG)
+        << "applyUpdateAndRestart: started process pid=" << p->getPid() << ", exe=" << p->getPathToExecutable()
+        << ", args=" << finalArgs;
     std::exit(0);
 }
 
 void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdateDir) {
     // [APathOwner example]
-    APathOwner tempFilePath(APath::randomTemporary());
+    APathOwner tempFilePath(APath::nextRandomTemporary());
     {
         AFileOutputStream tempFileOs(tempFilePath);
         size_t downloadedBytes = 0;
@@ -117,7 +159,7 @@ void AUpdater::downloadUpdate() {
         return;
     }
     status = StatusDownloading {};
-    mAsync << downloadUpdateImpl(getDownloadDstDir()).onFinally([this, self = shared_from_this()] {
+    mAsync << downloadUpdateImpl(getUnpackedUpdateDir()).onFinally([this, self = shared_from_this()] {
         getThread()->enqueue([this, self] {
             if (!std::holds_alternative<StatusDownloading>(*status)) {
                 return;
@@ -127,7 +169,7 @@ void AUpdater::downloadUpdate() {
     });
 }
 
-APath AUpdater::getDownloadDstDir() const {
+APath AUpdater::getUnpackedUpdateDir() const {
     auto result = getTempWorkDir() / "download";
     result.makeDirs();
     return result;
@@ -140,10 +182,17 @@ APath AUpdater::getTempWorkDir() const {
 AString AUpdater::getModuleName() const { return AProcess::self()->getModuleName(); }
 
 AUpdater::InstallCmdline AUpdater::makeDefaultInstallationCmdline() const {
+    auto exe = APath::find(getModuleName(), { getUnpackedUpdateDir() }, APathFinder::SINGLE | APathFinder::RECURSIVE);
+    if (exe.empty()) {
+        return {};
+    }
     return {
         .installerExecutable =
-            APath::find(getModuleName(), { getDownloadDstDir() }, APathFinder::SINGLE | APathFinder::RECURSIVE).at(0),
-        .installerArguments = { "--aui-updater-origin={}"_format(AProcess::self()->getPathToExecutable()) }
+            exe.at(0),
+        .installerArguments = {
+          "{}{}"_format(ARG_AUI_UPDATER_ORIGIN, AProcess::self()->getPathToExecutable()),
+          "{}{}"_format(ARG_AUI_UPDATER_DIR, getUnpackedUpdateDir()),
+        },
     };
 }
 
@@ -157,13 +206,13 @@ void AUpdater::reportReadyToApplyAndRestart(AUpdater::InstallCmdline cmdline) {
 }
 
 void AUpdater::saveCmdline(const AUpdater::InstallCmdline& cmdline) const {
-    AFileOutputStream(getDownloadDstDir().parent() / "install.json") << aui::to_json(cmdline);
+    AFileOutputStream(getUnpackedUpdateDir().parent() / "install.json") << aui::to_json(cmdline);
 }
 
 AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
     return {};
     try {
-        auto path = getDownloadDstDir().parent() / "install.json";
+        auto path = getUnpackedUpdateDir().parent() / "install.json";
         if (path.isRegularFileExists()) {
             AUI_DEFER { path.removeFile(); };
             return aui::from_json<AUpdater::InstallCmdline>(AJson::fromStream(AFileInputStream(path)));
@@ -182,9 +231,7 @@ void AUpdater::triggerUpdateOnStartup() {
     }
 }
 
-void AUpdater::handlePostUpdateCleanup() {
-    getDownloadDstDir().removeFileRecursive();
-}
+void AUpdater::handlePostUpdateCleanup() { getUnpackedUpdateDir().removeFileRecursive(); }
 
 bool AUpdater::isAvailable() {
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX || AUI_PLATFORM_MACOS
@@ -198,4 +245,26 @@ bool AUpdater::isAvailable() {
 void AUpdater::handleWaitForProcess(uint32_t pid) {
     auto i = AProcess::fromPid(pid)->waitForExitCode();
     ALogger::info(LOG_TAG) << "--aui-updater-wait-for-process: " << pid << " exited with " << i;
+}
+
+AVector<AString> AUpdater::injectWaitForMyPid(AVector<AString> args) {
+    args.insert(args.begin(), "{}{}"_format(ARG_AUI_UPDATER_WAIT_FOR_PROCESS, AProcess::self()->getPid()));
+    return args;
+}
+
+void AUpdater::deployUpdate(const APath& source, const APath& destination) {
+    for (const auto& sourceFile : source.listDir(AFileListFlags::RECURSIVE | AFileListFlags::REGULAR_FILES)) {
+        auto destinationFile = destination / sourceFile.relativelyTo(source);
+        try {
+            try {
+                APath::move(sourceFile, destinationFile);
+                ALogger::info(LOG_TAG) << "Moved: " << sourceFile << " -> " << destinationFile;
+            } catch (...) {
+                APath::copy(sourceFile, destinationFile);
+                ALogger::info(LOG_TAG) << "Copied: " << sourceFile << " -> " << destinationFile;
+            }
+        } catch (...) {
+            throw AException("While copying {} -> {}"_format(sourceFile, destinationFile), std::current_exception());
+        }
+    }
 }

@@ -285,6 +285,9 @@ struct stat APath::stat() const {
 
 
 void APath::copy(const APath& source, const APath& destination) {
+    if (!source.isRegularFileExists()) {
+        throw AFileNotFoundException("APath::copy: regular file (source) does not exist: {}"_format(source));
+    }
     AFileOutputStream(destination) << AFileInputStream(source);
 }
 
@@ -492,7 +495,7 @@ const APath& APath::processTemporaryDir() {
     return result;
 }
 
-APath APath::randomTemporary() {
+APath APath::nextRandomTemporary() {
     auto base = processTemporaryDir();
     static std::atomic_uint64_t i = 0;
     for (;;) {

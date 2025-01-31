@@ -34,6 +34,7 @@
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/IO/AFileInputStream.h>
+#include <AUI/Platform/ErrorToException.h>
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
 
@@ -149,13 +150,20 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         // messages passed through startedPipe
         enum class Started: char {
             OK = '\0',
-            EXECV_FAILED,
-            FORK_FAILED,
+            FAILED,
         };
 
 
         // to catch the pid of the child
         Pipe pidPipe;
+
+        DetachedSpecific() {
+            // if exec* succeeds, close the pipe.
+            ::fcntl(startedPipe.in(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(startedPipe.out(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(pidPipe.in(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(pidPipe.out(), F_SETFD, FD_CLOEXEC);
+        }
     };
     AOptional<DetachedSpecific> detachedSpecific;
     if (bool(flags & ASubProcessExecutionFlags::DETACHED)) {
@@ -187,7 +195,6 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                     chdir(mInfo.workDir.toStdString().c_str());
                 }
                 execve(executable.c_str(), argv.data(), environ);
-                std::exit(-1);
             };
 
             if (detachedSpecific) {
@@ -220,10 +227,13 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                     memset(&noaction, 0, sizeof(noaction));
                     noaction.sa_handler = SIG_IGN;
                     ::sigaction(SIGPIPE, &noaction, nullptr);
-                    detachedSpecific->startedPipe << aui::serialize_raw(DetachedSpecific::Started::FORK_FAILED);
+                    detachedSpecific->startedPipe
+                        << aui::serialize_raw(DetachedSpecific::Started::FAILED)
+                        << aui::serialize_sized("fork failed: {}"_format(aui::impl::unix_based::formatSystemError().description));
                     detachedSpecific->startedPipe.closeIn();
                 } else if (grandchild == 0) {
                     // in Grandchild
+                    detachedSpecific->pidPipe.closeIn();
                     execute();
 
                     // if we reach here, it basically means execute() failed so report it.
@@ -231,20 +241,23 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                     memset(&noaction, 0, sizeof(noaction));
                     noaction.sa_handler = SIG_IGN;
                     ::sigaction(SIGPIPE, &noaction, nullptr);
-                    detachedSpecific->startedPipe << aui::serialize_raw(DetachedSpecific::Started::EXECV_FAILED);
+                    detachedSpecific->startedPipe
+                        << aui::serialize_raw(DetachedSpecific::Started::FAILED)
+                        << aui::serialize_sized("execve failed: {}"_format(aui::impl::unix_based::formatSystemError().description));
                     detachedSpecific->startedPipe.closeIn();
-                    std::exit(1);
+                    _exit(1);
                 } else {
                     // in Child; fork() succeeded
-                    detachedSpecific->startedPipe << aui::serialize_raw(DetachedSpecific::Started::OK);
                     detachedSpecific->startedPipe.closeIn();
 
                     // report pid of Grandchild to parent
                     detachedSpecific->pidPipe << aui::serialize_raw(grandchild);
-                    std::exit(1);
+                    detachedSpecific->pidPipe.closeIn();
+                    _exit(1);
                 }
             } else {
                 execute();
+                _exit(1);
             }
         } catch (const AException& e) {
             std::cerr << "(occurred in subprocess) failure: " << e << '\n';
@@ -273,14 +286,23 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
           // we can ask him for pid of grandchild.
           auto message = DetachedSpecific::Started::OK;
           detachedSpecific->startedPipe >> aui::serialize_raw(message);
-          detachedSpecific->startedPipe.closeOut();
           int loc = 0;
           waitpid(pid, &loc, 0);
 
-          if (message != DetachedSpecific::Started::OK) {
-              throw AProcessException("can't start subprocess: {}"_format(int(message)));
+          switch (message) {
+              case DetachedSpecific::Started::OK:
+                  break;
+              case DetachedSpecific::Started::FAILED: {
+                  AString s;
+                  detachedSpecific->startedPipe >> aui::serialize_sized(s);
+                  throw AProcessException("can't start subprocess: {}"_format(s));
+              }
           }
+
+          detachedSpecific->startedPipe.closeOut();
+          pid = 0;
           detachedSpecific->pidPipe >> aui::serialize_raw(pid);
+          AUI_ASSERT(pid != 0);
           detachedSpecific->pidPipe.closeOut();
       }
       return pid;

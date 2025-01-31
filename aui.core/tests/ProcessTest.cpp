@@ -21,6 +21,7 @@
 #include "AUI/Platform/AProcess.h"
 #include "AUI/Util/kAUI.h"
 #include "AUI/Logging/ALogger.h"
+#include "AUI/Util/Util.h"
 #include <gmock/gmock.h>
 
 using namespace std::chrono_literals;
@@ -131,3 +132,26 @@ TEST_F(ProcessTest, StartDetached) {
     }
     EXPECT_TRUE(AProcess::self()->getPathToExecutable().isEffectivelyAccessible(AFileAccess::X));
 }
+
+TEST_F(ProcessTest, StartDetachedBad) {
+    AFileOutputStream("text.txt") << "test";
+    auto p = AProcess::create({
+      .executable = "test.txt",
+    });
+    EXPECT_ANY_THROW(p->run(ASubProcessExecutionFlags::DETACHED));
+}
+
+
+#if AUI_PLATFORM_LINUX
+TEST_F(ProcessTest, StartDetachedSleep) {
+    // This test checks that no zombies are stuck during usage of double fork technique.
+    auto p = AProcess::create({
+                                  .executable = "/usr/bin/sleep",
+                                  .args = AProcess::ArgStringList{ { "5" } },
+                              });
+    auto runtime = util::measureExecutionTime<std::chrono::milliseconds>([&] {
+        p->run(ASubProcessExecutionFlags::DETACHED);
+    });
+    EXPECT_LE(runtime, std::chrono::seconds(1));
+}
+#endif

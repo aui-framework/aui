@@ -171,7 +171,7 @@ public:
      *
      * When the application closes, a directory cleanup attempt will be performed.
      *
-     * @sa APath::randomTemporary
+     * @sa APath::nextRandomTemporary
      *
      * @return Path to a process-agnostic empty pre-created directory in system temp directory.
      */
@@ -188,7 +188,7 @@ public:
      * @sa APath:processTemporaryDir:
      */
     [[nodiscard]]
-    static APath randomTemporary();
+    static APath nextRandomTemporary();
 
     /**
      * Creates a file.
@@ -211,6 +211,7 @@ public:
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
      * @note Use AFileListFlags enum flags to customize behaviour of this function.
+     * @sa relativelyTo
      * @return list of children of this folder.
      */
     ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
@@ -319,7 +320,7 @@ public:
     const APath& makeDirs() const;
 
     /**
-     * @brief Returns same path but without <code>folder</code>
+     * @brief Returns same path but without <code>dir</code>
      * @param dir some parent, grandparent, grandgrandparent... dir
      * @details
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
@@ -465,7 +466,7 @@ public:
  * in RAII (Resource Acquisition Is Initialization) style.
  *
  * @snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner example
- * @sa APath::randomTemporary()
+ * @sa APath::nextRandomTemporary()
  */
 struct API_AUI_CORE APathOwner: public aui::noncopyable {
 public:

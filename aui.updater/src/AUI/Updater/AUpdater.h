@@ -51,7 +51,7 @@ public:
     /**
      * @brief Performs post update cleanup routines.
      * @details
-     * Default implementation deletes AUpdater::getDownloadDstDir() dir.
+     * Default implementation deletes AUpdater::getUnpackedUpdateDir() dir.
      */
     virtual void handlePostUpdateCleanup();
 
@@ -230,7 +230,7 @@ protected:
      * @details
      * The dir persists between different launches.
      */
-    APath getDownloadDstDir() const;
+    virtual APath getUnpackedUpdateDir() const;
 
     /**
      * @brief Restores install command line state, if any.
@@ -253,9 +253,21 @@ protected:
      */
     virtual void saveCmdline(const InstallCmdline& cmdline) const;
 
-
     /**
      * @brief Handles --aui-updater-wait-for-process.
      */
     virtual void handleWaitForProcess(uint32_t pid);
+
+    /**
+     * @brief Injects --aui-updater-wait-for-process=THIS_PROCESS_PID as the first argument.
+     */
+    virtual AVector<AString> injectWaitForMyPid(AVector<AString> args);
+
+
+    /**
+     * @brief Deploys update by recursively copying (moving) files from source dir to destination dir.
+     * @details
+     * Called in newly downloaded executable.
+     */
+    virtual void deployUpdate(const APath& source, const APath& destination);
 };
