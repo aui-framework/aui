@@ -322,7 +322,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
             emit stdOut(b);
     });
 
-    mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
+    mStdInStream = _new<Pipe>(std::move(pipeStdin));
 }
 
 AChildProcess::~AChildProcess() {}

@@ -72,7 +72,7 @@ TEST_F(ProcessTest, Stdout) {
         AString accumulator;
         AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
         p->run();
-        p->waitForExitCode();
+        EXPECT_EQ(p->waitForExitCode(), 0);
         AThread::processMessages();
         EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
     }
@@ -155,3 +155,40 @@ TEST_F(ProcessTest, StartDetachedSleep) {
     EXPECT_LE(runtime, std::chrono::seconds(1));
 }
 #endif
+
+
+
+// AUI_DOCS_OUTPUT: doxygen/intermediate/aprocess.h
+// @class AProcess
+TEST_F(ProcessTest, Launching_executable) { // HEADER_H1
+    // To start a process, pass the name of application you want to run and optionally provide arguments and working dir
+    // for that application. In this code snippet, we are starting another instance of the current executable with
+    // specific arguments and capturing its standard output (stdOut).
+    // AUI_DOCS_CODE_BEGIN
+    auto self = AProcess::self()->getPathToExecutable();
+    auto p = AProcess::create({
+      .executable = self,
+      .args = AProcess::ArgStringList { { "--help", "-a" } },
+      .workDir = self.parent(),
+    });
+
+    AString accumulator;
+    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+
+    p->run();
+
+    EXPECT_EQ(p->waitForExitCode(), 0);
+    AThread::processMessages(); // HIDE
+    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test.")) << accumulator;
+    // AUI_DOCS_CODE_END
+    //
+    // We define an empty string accumulator to collect the output from the process. Then, we connect a lambda function
+    // to the `stdOut` signal of the process. This lambda function converts the received buffer (a byte array) to a
+    // UTF-8 string and appends it to `accumulator`.
+    //
+    // We start the new process by calling its `AProcess::run()` method, which will execute the specified application
+    // with the provided arguments in the given working directory.
+    //
+    // We wait for the process to finish by calling `waitForExitCode()`, which blocks until the process exits and
+    // returns its exit code. If the exit code is 0, it means the process completed successfully.
+}

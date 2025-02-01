@@ -248,7 +248,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     pipeStderr.closeIn();
     pipeStdin.closeOut();
 
-    mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
+    mStdInStream = _new<Pipe>(std::move(pipeStdin));
 }
 
 
