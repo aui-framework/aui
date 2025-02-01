@@ -56,13 +56,15 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 
 class AOtherProcess: public AProcess {
 private:
-    HANDLE mHandle;
+    HANDLE mHandle = 0;
 
 public:
     AOtherProcess(HANDLE handle) : mHandle(handle) {}
 
     ~AOtherProcess() {
-        CloseHandle(mHandle);
+        if (mHandle) {
+            CloseHandle(mHandle);
+        }
     }
 
     APath getPathToExecutable() override {
