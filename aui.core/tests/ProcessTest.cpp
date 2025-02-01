@@ -153,8 +153,6 @@ TEST_F(ProcessTest, StartDetachedSleep) {
     });
     EXPECT_LE(runtime, std::chrono::seconds(1));
 }
-#endif
-
 
 
 // AUI_DOCS_OUTPUT: doxygen/intermediate/aprocess.h
@@ -194,3 +192,4 @@ TEST_F(ProcessTest, Launching_executable) { // HEADER_H1
     // We wait for the process to finish by calling `waitForExitCode()`, which blocks until the process exits and
     // returns its exit code. If the exit code is 0, it means the process completed successfully.
 }
+#endif
