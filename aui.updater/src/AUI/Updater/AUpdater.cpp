@@ -120,8 +120,8 @@ void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdat
                  tempFileOs << toWrite;
                  downloadedBytes += toWrite.size();
                  static constexpr auto PRECISION = 100;
-                 reportDownloadedPercentage(
-                     float((PRECISION * downloadedBytes / c.getContentLength())) / float(PRECISION));
+                 // NOLINTNEXTLINE(*-integer-division)
+                 reportDownloadedPercentage(float(PRECISION * downloadedBytes / c.getContentLength()) / float(PRECISION));
                  return toWrite.size();
              })
              .runAsync();
