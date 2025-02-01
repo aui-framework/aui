@@ -13,28 +13,63 @@ from pathlib import Path
 from modules.config import CONFIG
 from bs4 import BeautifulSoup as soup
 
+def p(text):
+    global s
+    tag = s.new_tag('p')
+    tag.append(text)
+    return tag
 
 def run():
     for root, dirs, files in os.walk(CONFIG['output']):
         for file in files:
             if not file.endswith(".html"):
                 continue
+
             full_path = Path(root) / file
-            s = soup(full_path.read_bytes(), 'lxml')
-            headers = s.find_all(["h1", "h2", "h3"])
-            if not headers:
+            raw_contents = full_path.read_bytes().decode('utf-8')
+            if "contents-rails-left" in raw_contents:
                 continue
+            global s
+            s = soup(raw_contents, 'lxml')
+            headers = s.find_all(["h1", "h2", "h3"])
 
             contents = s.find(class_="contents")
-            contents.attrs.pop('class')
-            contents = contents.wrap(s.new_tag('div', attrs={'class': 'contents'}))
-            toc = s.new_tag('toc')
-            contents.insert(0, toc)
+            if not contents:
+                continue
+
+
+            print('Processing:', file)
+
+            contents.attrs['class'] = 'contents-rails-left'
+            contents = contents.wrap(s.new_tag('div'))
+            contents.attrs['class'] = 'contents'
+            rails_right = s.new_tag('div', attrs={'class': 'contents-rails-right'})
+            contents.append(rails_right)
+
+            toc = s.new_tag('div', attrs={'class': 'aui-toc'})
+
+            toc.append(p('Contents'))
 
             for header in headers:
-                toc_entry = s.new_tag(header.name)
-                toc_entry.append(header.text.strip('\n'))
+                text = header.text.strip('\n')
+                if "Detailed Description" in text:
+                    continue
+                if "Documentation" in text:
+                    continue
+                if "memtitle" in header.attrs.get('class', ''):
+                    continue
+
+                tag_name = header.name
+                is_doxygen_group_header = "groupheader" in header.attrs.get('class', '')
+                if is_doxygen_group_header:
+                    tag_name = "h1"
+
+                toc_entry = s.new_tag(tag_name)
+                toc_entry.append(text)
 
                 toc.append(toc_entry)
+
+            if not file == "index.html" and not len(headers) < 2:
+                rails_right.append(toc)
 
             full_path.write_text(str(s))
