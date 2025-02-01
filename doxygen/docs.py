@@ -10,7 +10,7 @@
 import shutil
 from pathlib import Path
 
-from modules import checks, patching, generators, doxygen_utils, common
+from modules import checks, patching, generators, doxygen_utils, common, toc
 from modules.config import CONFIG
 
 if __name__ == '__main__':
@@ -55,6 +55,8 @@ if __name__ == '__main__':
         pass
 
     patching.patch(target='*.html', matcher='</div><!-- contents -->', mode=patching.Mode.REPLACE, value=Path('doxygen/footer_inner.html'), unique=True)
+
+    toc.run()
 
     if common.error_flag:
         exit(-1)
