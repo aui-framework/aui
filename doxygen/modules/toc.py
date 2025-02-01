@@ -51,12 +51,26 @@ def run():
             toc.append(p('Contents'))
 
             for header in headers:
+
                 text = header.text.strip('\n')
-                if "Detailed Description" in text:
-                    continue
+
+                a = header.find_next("a")
+                if a:
+                    a.unwrap()
+                    a.append("#")
+                    a.attrs['class'] = "aui-toc-hash"
+                    a.attrs['style'] = "color: var(--fragment-comment) !important"
+
+                    if "autotoc" in a.attrs.get('id', 'autotoc'):
+                        a.attrs['id'] = text.lower().replace(' ', '-') # generate betterid
+
+                    a.attrs['href'] = f"#{a.attrs['id']}"
+
+                    header.append(a) # to the end
+
                 if "Documentation" in text:
                     continue
-                if "memtitle" in header.attrs.get('class', ''):
+                if "memtitle" in header.attrs.get('class', ''): # drops function descriptions
                     continue
 
                 tag_name = header.name
