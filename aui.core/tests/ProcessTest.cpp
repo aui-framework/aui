@@ -166,9 +166,12 @@ TEST_F(ProcessTest, Launching_executable) { // HEADER_H1
     // specific arguments and capturing its standard output (stdOut).
     // AUI_DOCS_CODE_BEGIN
     auto self = AProcess::self()->getPathToExecutable();
+    AProcess::ArgStringList args;
+    args.list << "--help";
+    args.list << "-a";
     auto p = AProcess::create({
       .executable = self,
-      .args = AProcess::ArgStringList { { "--help", "-a" } },
+      .args = std::move(args),
       .workDir = self.parent(),
     });
 
