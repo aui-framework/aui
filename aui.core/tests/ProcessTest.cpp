@@ -118,6 +118,7 @@ TEST_F(ProcessTest, StdoutSignal) {
     }
 }
 
+#if AUI_PLATFORM_LINUX
 TEST_F(ProcessTest, StartDetached) {
     for (const auto& i : info()) {
         auto p = AProcess::create(i);
@@ -141,7 +142,6 @@ TEST_F(ProcessTest, StartDetachedBad) {
     EXPECT_ANY_THROW(p->run(ASubProcessExecutionFlags::DETACHED));
 }
 
-#if AUI_PLATFORM_LINUX
 TEST_F(ProcessTest, StartDetachedSleep) {
     // This test checks that no zombies are stuck during usage of double fork technique.
     auto p = AProcess::create({
