@@ -308,11 +308,23 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
       return pid;
     }();
 
-    mWatchdog = _new<AThread>([&] { // what the f*ck?? we have UnixIoAsync
-        int loc = 0;
-        waitpid(mPid, &loc, 0);
-        mExitCode.supplyValue(WEXITSTATUS(loc));
-        emit finished;
+    mWatchdog = _new<AThread>([&, self = weak_from_this()] { // what the f*ck?? we have UnixIoAsync
+        for (;;) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            auto selfLock = self.lock();
+            if (!selfLock) {
+                break;
+            }
+
+            int loc = 0;
+            if (waitpid(mPid, &loc, WNOHANG) == 0) {
+                continue;
+            }
+
+            mExitCode.supplyValue(WEXITSTATUS(loc));
+            emit finished;
+            break;
+        }
     });
     mWatchdog->start();
 
