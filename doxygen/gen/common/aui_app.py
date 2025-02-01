@@ -30,11 +30,11 @@ def list_all_vars_affected_by(varname, display_name=None):
     if not display_name:
         display_name = varname
     def print_vars():
-        REGEX_VAR = re.compile(f'set\\(((CMAKE|CPACK|MACOS)[A-Za-z_0-9]+) (.*{varname}.*)\\)')
+        VAR = re.compile(f'set\\(((CMAKE|CPACK|MACOS)[A-Za-z_0-9]+) (.*{varname}.*)\\)')
         with open('cmake/aui.build.cmake', 'r') as fis:
             def find():
                 for l in fis.readlines():
-                    if m := REGEX_VAR.search(l):
+                    if m := VAR.search(l):
                         yield m.group(1), m.group(3)
             vars_set = sorted(set([i for i in find()]))
         if not vars_set:
