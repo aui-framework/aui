@@ -31,8 +31,8 @@ sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-dev
 
 ## AUI App Template
 
-Use our [app template](https://github.com/aui-framework/example_app) to create a GitHub-hosted app project with CI/CD
-building, testing, releasing, code quality checking and more.
+Use our [app template](https://github.com/aui-framework/example_app) to create a GitHub-hosted app project with CI/CD building, testing, releasing, auto
+updating, code quality checking and more.
 
 ## Your project CMake script
 
