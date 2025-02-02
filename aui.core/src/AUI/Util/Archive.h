@@ -45,7 +45,7 @@ struct API_AUI_CORE ExtractTo {
     /**
      * @brief Function to preprocess the destination path (excluding prefix).
      */
-    std::function<APath(APath)> pathProjection = std::identity{};
+    std::function<APath(APath)> pathProjection = aui::identity{};
 
     void operator()(const FileEntry& zipEntry) const;
 };

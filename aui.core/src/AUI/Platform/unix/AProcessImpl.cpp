@@ -108,6 +108,9 @@ _<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(p
 extern char** environ;
 
 void AChildProcess::run(ASubProcessExecutionFlags flags) {
+    if (weak_from_this().lock() == nullptr) {
+        throw AException("this object should be constructed as shared_ptr");
+    }
     if (!getApplicationFile().isRegularFileExists()) {
         throw AFileNotFoundException(getApplicationFile());
     }
