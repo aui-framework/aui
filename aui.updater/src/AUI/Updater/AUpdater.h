@@ -98,19 +98,62 @@ public:
      *   the specified process to finish before processing next argument(s).
      * - `--aui-updater-cleanup` - maps to @ref AUpdater::handlePostUpdateCleanup and returns control flow to normal
      *   execution of your application (last updating step)
+     * - `--aui-updater-failed` - reports last error occurred while update deployment. See AUpdater::getLastDeploymentError().
      *
      * Refer to @ref updater for update process overview.
      */
     virtual void handleStartup(const AStringVector& applicationArguments);
 
     /**
-     * @brief Deploy a downloaded update.
+     * @brief Deploy the downloaded update.
      * @details
      * Basically about replacing files (no network operations will be performed).
      *
      * Requires @ref status = StatusWaitingForApplyAndRestart.
      *
      * Terminates current process with `std::exit(0)`
+     *
+     * # Debugging update deployment
+     *
+     * You can locate update deployment logs by locating deployment process id (pid). The PID is printed by this
+     * function:
+     *
+     * ```
+     * [06:49:33][UI thread][AUpdater][INFO]: applyUpdateAndRestart: started process pid=3708325, exe=...
+     * ```
+     *
+     * Log files location are printed in the beginning of every AUI-based programs (if they use ALogger):
+     *
+     * ```
+     * [06:49:14][UI thread][Logger][INFO]: Log file: /tmp/aui.3707546.log
+     * ```
+     *
+     * You can now locate the log file by using subprocess' PID printed earlier:
+     *
+     * ```
+     * cat /tmp/aui.3708325.log
+     * [06:49:33][UI thread][Logger][INFO]: Log file: /tmp/aui.3708325.log
+     * [06:49:33][UI thread][AUpdater][INFO]: --aui-updater-wait-for-process: 3707546 exited with 0
+     * [06:49:33][UI thread][AUpdater][INFO]: deploying update: /tmp/__aui_update_example_app/download -> /home/...
+     * [06:49:33][UI thread][AUpdater][ERR]: Can't deploy update, trying to launch original: ...
+     *  - at 0x5555558f3aae aui_entry(AStringVector const&)(main.cpp:9)
+     *  - at 0x5555556b0028 aui_main(int, char**, int (*)(AStringVector const&))(OSDesktop.cpp:160)
+     *  - at 0x7ffff7261248(?:0)
+     *  - at 0x7ffff726130b(?:0)
+     *  - at 0x555555654195(?:0)
+     * Caused by: (AIOException) AFileOutputStream: could not open /home/...: Text file busy
+     *  - at 0x5555556c0443 aui::impl::lastErrorToException(AString)(ErrorToExceptionImpl.cpp:21)
+     *  - at 0x55555568ec97 AFileOutputStream::open(bool)(AFileOutputStream.cpp:67)
+     *  - at 0x55555568ed44 AFileOutputStream::AFileOutputStream(AString, bool)(AFileOutputStream.cpp:24)
+     *  - at 0x5555556964a2 APath::copy(APath const&, APath const&)(APath.cpp:291)
+     *  - at 0x555555641585 AUpdater::deployUpdate(APath const&, APath const&)(AUpdater.cpp:267)
+     *  - at 0x5555558fb2ff AUpdater::handleStartup(AStringVector const&)(AUpdater.cpp:76)
+     *  - at 0x5555558f3aae aui_entry(AStringVector const&)(main.cpp:9)
+     *  - at 0x5555556b0028 aui_main(int, char**, int (*)(AStringVector const&))(OSDesktop.cpp:160)
+     *  - at 0x7ffff7261248(?:0)
+     *  - at 0x7ffff726130b(?:0)
+     *  - at 0x555555654195(?:0)
+     * ```
      */
     virtual void applyUpdateAndRestart();
 
@@ -165,6 +208,9 @@ public:
      * @brief Starts downloading update. An implementation might expect to checkForUpdates to be called first.
      */
     void downloadUpdate();
+
+    [[nodiscard]]
+    const AOptional<AString>& getLastDeploymentError() const noexcept { return mLastDeploymentError; }
 
     /**
      * @brief Checks that updater functionality is available.
@@ -285,7 +331,6 @@ protected:
      */
     virtual AVector<AString> injectWaitForMyPid(AVector<AString> args);
 
-
     /**
      * @brief Deploys update by recursively copying (moving) files from source dir to destination dir.
      * @details
@@ -299,4 +344,16 @@ protected:
      * Default implementation guesses installation directory based on
      */
     virtual APath getInstallationDirectory(const GetInstallationDirectoryContext& context);
+
+    /**
+     * @brief called by AUpdater::downloadUpdate before downloading update to cleanup AUpdater::getUnpackedUpdateDir()
+     * dir.
+     */
+    virtual void cleanupUnpackedUpdateDirBeforeDownloading();
+
+private:
+    /**
+     * @brief Last error reported by update deployment process via --aui-updater-failed=.
+     */
+    AOptional<AString> mLastDeploymentError;
 };

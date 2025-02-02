@@ -23,6 +23,7 @@ static constexpr auto ARG_AUI_UPDATER_CLEANUP = "--aui-updater-cleanup";
 static constexpr auto ARG_AUI_UPDATER_WAIT_FOR_PROCESS = "--aui-updater-wait-for-process=";
 static constexpr auto ARG_AUI_UPDATER_ORIGIN = "--aui-updater-origin=";
 static constexpr auto ARG_AUI_UPDATER_DIR = "--aui-updater-dir=";
+static constexpr auto ARG_AUI_UPDATER_FAILED = "--aui-updater-failed=";
 
 AUpdater::AUpdater() {
     if (!isAvailable()) {
@@ -62,6 +63,12 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
             updaterDir = arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length());
             continue;
         }
+
+
+        if (arg.startsWith(ARG_AUI_UPDATER_FAILED)) {
+            mLastDeploymentError = arg.substr(std::string_view(ARG_AUI_UPDATER_FAILED).length());
+            continue;
+        }
     }
 
     if (!updaterDir.empty() || !updaterOrigin.empty()) {
@@ -73,11 +80,18 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
                                    });
             ALogger::info(LOG_TAG) << "deploying update: " << updaterDir << " -> " << destinationDir;
             deployUpdate(updaterDir, destinationDir);
+            ALogger::info(LOG_TAG) << "Post-update launch: " << updaterOrigin;
+            AProcess::create({.executable = updaterOrigin})->run(ASubProcessExecutionFlags::DETACHED);
         } catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "Can't deploy update, trying to launch original: " << e;
+            ALogger::err(LOG_TAG) << "Can't deploy update: " << e;
+            ALogger::info(LOG_TAG) << "Update deployment failed, trying to launch original: " << updaterOrigin;
+            AProcess::ArgStringList args;
+            args.list << "{}{}"_format(ARG_AUI_UPDATER_FAILED, e.getMessage().replacedAll("\"", ""));
+            AProcess::create({
+                               .executable = updaterOrigin,
+                               .args = std::move(args),
+                             })->run(ASubProcessExecutionFlags::DETACHED);
         }
-        ALogger::info(LOG_TAG) << "Post-update launch: " << updaterOrigin;
-        AProcess::create({.executable = updaterOrigin})->run(ASubProcessExecutionFlags::DETACHED);
         std::exit(0);
     }
 
@@ -124,7 +138,7 @@ void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdat
     aui::archive::zip::read(
         AFileInputStream(tempFilePath), aui::archive::ExtractTo {
           .prefix = unpackedUpdateDir,
-          .pathProjection = [](const APath& path) { return path.substr(path.AString::find('/') + 1); },
+          .pathProjection = &APath::withoutUppermostFolder,
         });
     // [APathOwner example]
 }
@@ -158,6 +172,7 @@ void AUpdater::downloadUpdate() {
         return;
     }
     status = StatusDownloading {};
+    cleanupUnpackedUpdateDirBeforeDownloading();
     mAsync << downloadUpdateImpl(getUnpackedUpdateDir()).onFinally([this, self = shared_from_this()] {
         getThread()->enqueue([this, self] {
             if (!std::holds_alternative<StatusDownloading>(*status)) {
@@ -247,6 +262,7 @@ void AUpdater::handleWaitForProcess(uint32_t pid) {
         return;
     }
     auto i = process->waitForExitCode();
+    AThread::sleep(std::chrono::seconds(1)); // some additional sleep to wait the OS to release files lock
     ALogger::info(LOG_TAG) << "--aui-updater-wait-for-process: " << pid << " exited with " << i;
 }
 
@@ -290,4 +306,8 @@ APath AUpdater::getInstallationDirectory(const AUpdater::GetInstallationDirector
 
     auto out = context.originExe.substr(0, context.originExe.length() - relativePath.length() - 1);
     return out;
+}
+
+void AUpdater::cleanupUnpackedUpdateDirBeforeDownloading() {
+    getUnpackedUpdateDir().removeDirContentsRecursive();
 }

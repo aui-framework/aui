@@ -129,13 +129,21 @@ const APath& APath::removeFile() const {
 }
 
 const APath& APath::removeFileRecursive() const {
-    if (isDirectoryExists()) {
-        for (auto& l : listDir()) {
-            l.removeFileRecursive();
-        }
-    }
+    removeDirContentsRecursive();
     if (exists())
         removeFile();
+    return *this;
+}
+
+const APath& APath::removeDirContentsRecursive() const {
+    if (!isDirectoryExists()) {
+        return *this;
+    }
+
+    for (auto& l : listDir()) {
+        l.removeFileRecursive();
+    }
+
     return *this;
 }
 
@@ -291,6 +299,13 @@ void APath::copy(const APath& source, const APath& destination) {
     AFileOutputStream(destination) << AFileInputStream(source);
 }
 
+APath APath::withoutUppermostFolder() const {
+    auto r = AString::find('/');
+    if (r == NPOS)
+        return *this;
+    return substr(r + 1);
+}
+
 #if AUI_PLATFORM_WIN
 #include <shlobj.h>
 
@@ -316,14 +331,6 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     result.resizeToNullTerminator();
     result.removeBackSlashes();
     return result;
-}
-
-
-APath APath::withoutUppermostFolder() const {
-    auto r = AString::find('/');
-    if (r == NPOS)
-        return *this;
-    return substr(r + 1);
 }
 
 APath APath::workingDir() {

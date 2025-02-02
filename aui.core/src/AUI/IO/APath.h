@@ -298,14 +298,40 @@ public:
     /**
      * @brief Delete file. Relevant for empty folders and regular files.
      * @return this
+     * @details
+     * Unlike remove*Recursive functions, this function has no checks before proceeding, thus, it might throw
+     * AIOException (including if the target does not exist).
+     *
+     * @sa APath::removeFileRecursive()
+     * @sa APath::removeDirContentsRecursive()
      */
     const APath& removeFile() const;
 
     /**
-     * @brief Delete files recursively. Relevant for folders.
+     * @brief Delete files recursively, including itself.
      * @return this
+     * @details
+     * If this APath points to a regular file, it deletes the file directly. If this APath points to a directory, it
+     * first removes all its contents (recursively) before potentially deleting the directory itself.
+     *
+     * If the target does not exist, this function has no effect.
+     *
+     * @sa APath::removeDirContentsRecursive()
      */
     const APath& removeFileRecursive() const;
+
+    /**
+     * @brief Delete directory contents (recursively).
+     * @return this
+     * @details
+     * If this APath points to a regular file, the function has no effect. If this APath points to a directory, it
+     * removes all contained files (recursively) within that directory but does not remove the directory itself.
+     *
+     * If the target does not exist, this function has no effect.
+     *
+     * @sa APath::removeFileRecursive()
+     */
+    const APath& removeDirContentsRecursive() const;
 
     /**
      * @brief Create folder.
