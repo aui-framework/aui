@@ -76,11 +76,11 @@ public:
     }
 
     int waitForExitCode() override {
-        WaitForSingleObject(mHandle, INFINITE);
+        int r = WaitForSingleObject(mHandle, INFINITE);
+        AUI_ASSERT(r != WAIT_FAILED);
         DWORD exitCode;
-        waitForExitCode();
-        int r = GetExitCodeProcess(mHandle, &exitCode);
-        AUI_ASSERT(r && r != STILL_ACTIVE);
+        r = GetExitCodeProcess(mHandle, &exitCode);
+        AUI_ASSERT(r && exitCode != STILL_ACTIVE);
         return exitCode;
     }
 
@@ -199,12 +199,17 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         },
     }, mInfo.args);
 
+    int creationFlags = 0;
+    if (bool(flags & ASubProcessExecutionFlags::DETACHED)) {
+        creationFlags |= DETACHED_PROCESS;
+    }
+
     if (!CreateProcess(aui::win32::toWchar(mInfo.executable.c_str()),
                        aui::win32::toWchar(args),
                        nullptr,
                        nullptr,
                        true,
-                       0,
+                       creationFlags,
                        nullptr,
                        mInfo.workDir.empty() ? nullptr : aui::win32::toWchar(mInfo.workDir),
                        &startupInfo,
@@ -261,7 +266,7 @@ int AChildProcess::waitForExitCode() {
 AChildProcess::~AChildProcess() = default;
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+    auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE, false, pid);
     if (handle) {
         DWORD exitCode;
         GetExitCodeProcess(handle, &exitCode);
