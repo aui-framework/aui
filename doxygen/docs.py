@@ -56,6 +56,7 @@ if __name__ == '__main__':
 
     patching.patch(target='*.html', matcher='</div><!-- contents -->', mode=patching.Mode.REPLACE, value=Path('doxygen/footer_inner.html'), unique=True)
     patching.patch(target='group*.html', matcher='<h2 class="groupheader">Detailed Description</h2>', mode=patching.Mode.DELETE_LINE)
+    patching.patch(target='doxygen.css', matcher='var(--page-visited-link-color)', mode=patching.Mode.DELETE_LINE)
 
     toc.run()
 

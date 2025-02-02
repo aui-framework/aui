@@ -119,12 +119,20 @@ table.doxtable td, table.doxtable th {
     justify-content: space-between;
 }
 
-.contents-rails-left {
-    width: calc(100% - 330px);
-}
-
 .contents-rails-right {
     width: 300px;
+    display: none;
+    padding: 0 20px;
+}
+
+@media screen and (min-width: 1350px) {
+    .contents-rails-left {
+        width: calc(100% - 300px);
+    }
+
+    .contents-rails-right {
+        display: block;
+    }
 }
 
 .aui-toc {
@@ -132,6 +140,23 @@ table.doxtable td, table.doxtable th {
     position: sticky;
     top: 0;
     color: var(--fragment-comment);
+    opacity: 0.7;
+}
+
+.aui-toc a {
+    color: var(--fragment-comment) !important;
+    padding-left: 4px;
+}
+
+.aui-toc-hash {
+    margin-left: 8px;
+    opacity: 0.4;
+    cursor: pointer;
+    font-style: italic;
+    transition: 0.3s;
+}
+
+.aui-toc-hash:hover {
     opacity: 0.7;
 }
 
@@ -153,14 +178,6 @@ table.doxtable td, table.doxtable th {
     margin-left: 24px;
 }
 
-.aui-toc-hash {
-    margin-left: 8px;
-    opacity: 0.4;
-    cursor: pointer;
-    font-style: italic;
-    transition: 0.3s;
-}
-
-.aui-toc-hash:hover {
-    opacity: 0.7;
+.aui-toc a[active] {
+    box-shadow: -3px 0;
 }

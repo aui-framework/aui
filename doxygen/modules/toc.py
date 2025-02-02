@@ -13,10 +13,10 @@ from pathlib import Path
 from modules.config import CONFIG
 from bs4 import BeautifulSoup as soup
 
-def p(text):
+def tag(name, content='text', **kwargs):
     global s
-    tag = s.new_tag('p')
-    tag.append(text)
+    tag = s.new_tag(name, **kwargs)
+    tag.append(content)
     return tag
 
 def run():
@@ -37,9 +37,6 @@ def run():
             if not contents:
                 continue
 
-
-            print('Processing:', file)
-
             contents.attrs['class'] = 'contents-rails-left'
             contents = contents.wrap(s.new_tag('div'))
             contents.attrs['class'] = 'contents'
@@ -48,13 +45,14 @@ def run():
 
             toc = s.new_tag('div', attrs={'class': 'aui-toc'})
 
-            toc.append(p('Contents'))
+            toc.append(tag('p', content='Contents'))
 
             for header in headers:
 
                 text = header.text.strip('\n')
 
                 a = header.find_next("a")
+                href = ""
                 if a:
                     a.unwrap()
                     a.append("#")
@@ -64,7 +62,7 @@ def run():
                     if "autotoc" in a.attrs.get('id', 'autotoc'):
                         a.attrs['id'] = text.lower().replace(' ', '-') # generate betterid
 
-                    a.attrs['href'] = f"#{a.attrs['id']}"
+                    href = a.attrs['href'] = f"#{a.attrs['id']}"
 
                     header.append(a) # to the end
 
@@ -78,10 +76,7 @@ def run():
                 if is_doxygen_group_header:
                     tag_name = "h1"
 
-                toc_entry = s.new_tag(tag_name)
-                toc_entry.append(text)
-
-                toc.append(toc_entry)
+                toc.append(tag(tag_name, content=tag('a', content=text, href=href)))
 
             if not file == "index.html" and not len(headers) < 2:
                 rails_right.append(toc)
