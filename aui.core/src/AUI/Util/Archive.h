@@ -37,7 +37,15 @@ struct API_AUI_CORE FileEntry : aui::noncopyable {
  * @ingroup io
  */
 struct API_AUI_CORE ExtractTo {
+    /**
+     * @brief Destination dir to unpack.
+     */
     APath prefix;
+
+    /**
+     * @brief Function to preprocess the destination path (excluding prefix).
+     */
+    std::function<APath(APath)> pathProjection = std::identity{};
 
     void operator()(const FileEntry& zipEntry) const;
 };

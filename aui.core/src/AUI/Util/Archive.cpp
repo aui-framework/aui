@@ -106,7 +106,7 @@ void aui::archive::ExtractTo::operator()(const FileEntry& zipEntry) const {
         // directory?
         return;
     }
-    APath dst = prefix / zipEntry.name;
+    APath dst = prefix / pathProjection(APath(zipEntry.name));
     dst.parent().makeDirs();
     AFileOutputStream(dst) << *zipEntry.open();
     dst.chmod(0755);

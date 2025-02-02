@@ -15,6 +15,43 @@
 
 using namespace std::chrono_literals;
 
+TEST(UpdaterTest, getInstallationDirectory) {
+    class MyUpdater : public AUpdater {
+    public:
+        using AUpdater::getInstallationDirectory;
+
+    protected:
+        AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return AFuture<void>(); }
+        AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
+    } myUpdater;
+
+    // clang-format off
+    EXPECT_EQ(
+        myUpdater.getInstallationDirectory(
+            { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
+              .updaterDir         = "/tmp/__aui_update_example_app/download",
+              .originExe          = "/home/alex2772/CLionProjects/example_app/cmake-build-debug/bin/example_app" }),
+                                    "/home/alex2772/CLionProjects/example_app/cmake-build-debug"
+        );
+
+    // malformed structure
+    EXPECT_ANY_THROW(
+        myUpdater.getInstallationDirectory(
+            { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
+                .updaterDir         = "/tmp/__aui_update_example_app/download",
+                .originExe          = "/home/alex2772/CLionProjects/example_app/cmake-build-debug/bin2/example_app" })
+    );
+
+    EXPECT_EQ(
+        myUpdater.getInstallationDirectory(
+            { .selfProcessExePath = "/tmp/__aui_update_example_app/download/example_app.exe",
+              .updaterDir         = "/tmp/__aui_update_example_app/download",
+              .originExe          = "/home/alex2772/CLionProjects/example_app/cmake-build-debug/example_app.exe" }),
+                                    "/home/alex2772/CLionProjects/example_app/cmake-build-debug");
+
+    // clang-format on
+}
+
 #ifdef AUI_UPDATER_TEST
 TEST(UpdaterTest, ApplyUpdate) {
     // test update installation scenario
@@ -31,7 +68,7 @@ TEST(UpdaterTest, ApplyUpdate) {
         return APath();
     }();
     APathOwner temporary(APath::nextRandomTemporary());
-    auto tempDir = APath(temporary) / "white space"; // white space to check everything is ok on Win
+    auto tempDir = APath(temporary) / "white space";   // white space to check everything is ok on Win
     tempDir.makeDirs();
     auto tempDirUpdater = tempDir / updaterPath.filename();
 

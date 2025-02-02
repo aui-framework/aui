@@ -67,15 +67,10 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
     if (!updaterDir.empty() || !updaterOrigin.empty()) {
         try {
             AUI_ASSERT(!updaterDir.empty() && !updaterOrigin.empty());
-
-            // By selfLocation and updaterDir we make an assumption about the installation structure.
-            // We lose the ability to re-locate exe installation path but hope it's would never be a case.
-            auto selfLocation = AProcess::self()->getPathToExecutable();
-            if (!selfLocation.startsWith(updaterDir)) {
-                throw AException("can't determine installation structure: selfLocation={}, updaterDir={}"_format(selfLocation, updaterDir));
-            }
-
-            APath destinationDir = updaterOrigin.substr(0, updaterOrigin.length() - (selfLocation.length() - updaterDir.length()));
+            APath destinationDir = getInstallationDirectory({
+                                     .updaterDir = updaterDir,
+                                     .originExe = updaterOrigin,
+                                   });
             ALogger::info(LOG_TAG) << "deploying update: " << updaterDir << " -> " << destinationDir;
             deployUpdate(updaterDir, destinationDir);
         } catch (const AException& e) {
@@ -126,7 +121,11 @@ void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdat
              })
              .runAsync();
     }
-    aui::archive::zip::read(AFileInputStream(tempFilePath), aui::archive::ExtractTo { unpackedUpdateDir });
+    aui::archive::zip::read(
+        AFileInputStream(tempFilePath), aui::archive::ExtractTo {
+          .prefix = unpackedUpdateDir,
+          .pathProjection = [](const APath& path) { return path.substr(path.AString::find('/') + 1); },
+        });
     // [APathOwner example]
 }
 
@@ -271,4 +270,24 @@ void AUpdater::deployUpdate(const APath& source, const APath& destination) {
             throw AException("While copying {} -> {}"_format(sourceFile, destinationFile), std::current_exception());
         }
     }
+}
+
+APath AUpdater::getInstallationDirectory(const AUpdater::GetInstallationDirectoryContext& context) {
+    // By selfLocation and updaterDir we make an assumption about the installation structure.
+    // We lose the ability to re-locate exe installation path but hope it's would never be a case.
+
+    if (!context.selfProcessExePath.startsWith(context.updaterDir)) {
+        throw AException("can't determine installation structure: selfLocation={}, updaterDir={}"_format(
+            context.selfProcessExePath, context.updaterDir));
+    }
+    APath relativePath = context.selfProcessExePath.relativelyTo(context.updaterDir);
+    AUI_ASSERT(relativePath.isRelative());
+    if (!context.originExe.endsWith(relativePath)) {
+        throw AException(
+            "malformed origin's exe installation structure. context.originExe={}, relativePath={}, context.selfProcessExePath={}, context.updaterDir={}"_format(
+                context.originExe, relativePath, context.selfProcessExePath, context.updaterDir));
+    }
+
+    auto out = context.originExe.substr(0, context.originExe.length() - relativePath.length() - 1);
+    return out;
 }

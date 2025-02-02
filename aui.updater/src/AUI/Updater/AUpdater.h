@@ -8,12 +8,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Common/AProperty.h>
 #include <AUI/Thread/AAsyncHolder.h>
 #include "AUI/IO/APath.h"
 #include "AUI/Thread/AFuture.h"
+#include <AUI/Platform/AProcess.h>
 
 /**
  * @brief Updater class.
@@ -43,6 +45,26 @@ public:
          * @brief Arguments passed to installer.
          */
         AVector<AString> installerArguments;
+    };
+    /**
+     * @brief Context for AUpdater::getInstallationDirectory
+     */
+    struct GetInstallationDirectoryContext {
+        /**
+         * @brief Self process exe. Typically `AProcess::self()->getPathToExecutable()`.
+         */
+        APath selfProcessExePath = AProcess::self()->getPathToExecutable();
+
+        /**
+         * @brief Updater dir. Typically parent of selfProcessExePath.
+         */
+        APath updaterDir;
+
+        /**
+         * @brief The path to executable who invoked the installation process. Typically full path to the original
+         * exe to replace.
+         */
+        APath originExe;
     };
 
     AUpdater();
@@ -270,4 +292,11 @@ protected:
      * Called in newly downloaded executable.
      */
     virtual void deployUpdate(const APath& source, const APath& destination);
+
+    /**
+     * @brief Retrieves installation directory based on given context.
+     * @details
+     * Default implementation guesses installation directory based on
+     */
+    virtual APath getInstallationDirectory(const GetInstallationDirectoryContext& context);
 };
