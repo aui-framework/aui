@@ -193,19 +193,21 @@ public:
     /**
      * @brief State of the updater.
      * @details
-     * Status to observe from outside, i.e., by UI.
+     * Status of the AUpdater to observe from outside, i.e., by UI.
      *
-     * State is updated in UI thread only.
+     * `status` is updated in UI thread only.
      */
     AProperty<Status> status;
 
     /**
-     * @brief Sets status to StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
+     * @brief Sets `status` to @ref StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
      */
     void checkForUpdates();
 
     /**
-     * @brief Starts downloading update. An implementation might expect to checkForUpdates to be called first.
+     * @brief Sets `status` to @ref StatusDownloading and calls downloadUpdateImpl, implemented by user.
+     * @details
+     * An implementation might expect to checkForUpdates to be called first.
      */
     void downloadUpdate();
 

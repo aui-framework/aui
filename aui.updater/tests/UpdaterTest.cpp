@@ -132,15 +132,24 @@ TEST(UpdaterTest, ApplyUpdate) {
 // priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
 // to user's directory (i.e., in `AppData`).
 //
+// @note
+// Check out our [app template](https://github.com/aui-framework/example_app) for a GitHub-hosted app template with auto
+// update implemented.
+// @image html afljskfllkaf.gif
+//
 // # Supported platforms
 // `aui::updater` supports the following platforms:
 // - **Windows** - @ref PORTABLE_WINDOWS "portables" only, installers to user's directory only (@ref INNOSETUP)
 // - **Linux** - portables only
-// - **macOS** - @ref DragNDrop only
 //
 // On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
 // executable is not writeable, or running on a non-supported platform, `AUpdater` stubs it's methods (i.e., they do
 // nothing). You can check that the `aui::updater` functionality is engaged by calling `AUpdater::isAvailable()`.
+//
+// Updating process requires the initial application running instance to be stopped to replace its files with newer
+// ones. Additionally, the updater process starts the newer version of the application after replacing the files
+// (applying/deploying an update). To minimize downtime for end-users, the replacement should be seamless and quick and
+// thus the deployment process just copies newer files (overwriting old ones), it does not involve network operations.
 //
 // # Getting started
 //
@@ -158,11 +167,8 @@ public:
 // AUI_DOCS_CODE_BEGIN
 class MyUpdater : public AUpdater {
 protected:
-    AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
-
-protected:
-    // stub
-    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return {}; }
+    AFuture<void> checkForUpdatesImpl() override { return async { /* stub */ }; }
+    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return async { /* stub */ }; }
 };
 
 AUI_ENTRY {
@@ -178,13 +184,18 @@ AUI_ENTRY {
 // You can pass updater instance to your window (as shown in the example) and display update information from
 // `AUpdater::status` and perform the update when requested.
 //
+// # Observing update progress
+//
+// @copydetails AUpdater::status
+//
 // # Update process
 //
-// AUpdater expects `AUpdater::checkForUpdates` to be called once per some period of time. Once update is found, it
-// changes its `AUpdater::status` property to `AUpdater::StatusDownloading` and starts to download and unpack with
-// `AUpdater::deliverUpdateIfNeeded`. Once unpacked, AUpdater changes its `AUpdater::status` property to
-// `AUpdater::StatusWaitingForApplyAndRestart`, signaling your application that the update is ready to deploy. Your
-// application might respond to that by showing the user a notification.
+// AUpdater expects @ref AUpdater::checkForUpdates to be called to check for updates. It can be called once per some
+// period of time. It calls user-defined @ref AUpdater::checkForUpdatesImpl to perform an update checking. When an
+// update is found, your app should call @ref AUpdater::downloadUpdate to download and unpack the update. It calls
+// user-defined @ref AUpdater::downloadUpdateImpl which might choose to call default
+// `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`. The update steps are reported by changing
+// `AUpdater::status` property.
 //
 // @msc
 // a[label = "Your App"],

@@ -282,6 +282,7 @@ void AUpdater::deployUpdate(const APath& source, const APath& destination) {
                 APath::copy(sourceFile, destinationFile);
                 ALogger::info(LOG_TAG) << "Copied: " << sourceFile << " -> " << destinationFile;
             }
+            destinationFile.chmod(0755);
         } catch (...) {
             throw AException("While copying {} -> {}"_format(sourceFile, destinationFile), std::current_exception());
         }
