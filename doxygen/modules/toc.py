@@ -39,7 +39,7 @@ def run():
 
             contents.attrs['class'] = 'contents-rails-left'
             contents = contents.wrap(s.new_tag('div'))
-            contents.attrs['class'] = 'contents'
+            contents.attrs['class'] = 'contents aui-toc-contents'
             rails_right = s.new_tag('div', attrs={'class': 'contents-rails-right'})
             contents.append(rails_right)
 

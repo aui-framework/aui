@@ -114,7 +114,7 @@ table.doxtable td, table.doxtable th {
     filter: none !important;
 }
 
-.contents {
+.aui-toc-contents {
     display: flex !important;
     justify-content: space-between;
 }
