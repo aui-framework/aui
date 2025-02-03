@@ -113,13 +113,14 @@ namespace aui {
     /**
      * @brief Does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and etc without overhead
      *
-     *        Promises that the contained object wouldn't be copied/moved outside of the function thus does not take
-     *        responsibility of deleting the object. This allows to accept lvalue and rvalue references, pointers,
-     *        unique_ptr and shared_ptr without ref counter modification.
+     * @details
+     * Promises that the contained object wouldn't be copied/moved/referenced outside of the function where the
+     * no_escape came to; thus does not take responsibility of deleting the object. This allows to accept any kind of
+     * lifetimes: lvalue and rvalue references, pointers, unique_ptr and shared_ptr without ref counter modification.
      *
-     *        Intended to use in function arguments.
+     * Intended to use in function arguments.
      *
-     *        Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
+     * Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
      *
      * @tparam T undecorated type
      */

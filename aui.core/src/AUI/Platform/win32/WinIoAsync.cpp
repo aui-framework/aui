@@ -15,6 +15,7 @@
 
 #include "WinIoAsync.h"
 #include "WinIoThread.h"
+#include "AUI/Platform/ErrorToException.h"
 #include <AUI/Thread/AFuture.h>
 
 class WinIoAsync::Impl: public std::enable_shared_from_this<WinIoAsync::Impl> {
@@ -24,11 +25,16 @@ public:
         auto self = shared_from_this();
         AFuture<> cs;
         WinIoThread::enqueue([&, self = std::move(self), fileHandle] {
-            self->mBuffer.resize(0x1000);
-            self->mOverlapped.Pointer = self.get();
-            self->mFileHandle = fileHandle;
-            nextRead();
-            cs.supplyValue();
+            try {
+                self->mBuffer.resize(0x1000);
+                self->mOverlapped.Pointer = self.get();
+                self->mFileHandle = fileHandle;
+                nextRead();
+                cs.supplyValue();
+            } catch (...) {
+                cs.supplyException();
+                throw;
+            }
         });
         cs.wait();
     }
@@ -79,10 +85,7 @@ private:
                         [](DWORD dwErrorCode, DWORD bytesTransferred, LPOVERLAPPED overlapped) {
                             reinterpret_cast<WinIoAsync::Impl*>(overlapped->Pointer)->handleCallback(dwErrorCode, bytesTransferred);
                         })) {
-            throw AException("ReadFileEx failed");
-        }
-        if (GetLastError() != ERROR_SUCCESS) {
-            throw AException("ReadFileEx failed");
+            throw AException("ReadFileEx failed: {}"_format(aui::impl::formatSystemError().description));
         }
     }
 };

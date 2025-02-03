@@ -30,7 +30,7 @@ Suppose whe want to create a module called `aui::my_module`:
 2. In `docs/Doxyfile`:
    1. Append `aui.my_module/src` to the `STRIP_FROM_INC_PATH` variable.
    2. Append `aui.my_module` to the `INPUT` variable.
-3. If `aui::my_module` has dependencies (excluding `aui::core`), handle them at `# add dependencies` in 
+3. If `aui::my_module` has external dependencies, handle them at `# add dependencies` in 
    `cmake/aui-config.cmake.in`.
 4. Put the reference to the module in `docs/index.html`.
 5. Create `aui.my_module` dir.

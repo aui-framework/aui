@@ -8,18 +8,35 @@
  */
 class ISeekableInputStream: public IInputStream {
 public:
-    virtual ~ISeekableInputStream() = default;
+    ~ISeekableInputStream() override = default;
+
+    enum class Seek {
+        /**
+         * Seek relatively to the begin of file
+         */
+        BEGIN,
+
+        /**
+         * Seek relatively to the current position
+         */
+        CURRENT,
+
+        /**
+         * Seek relative to the end of file
+         */
+        END
+    };
 
     /**
      * @brief change reading position, a way of changing depends on seekDir parameter
      */
-    virtual void seek(std::streamoff offset, std::ios::seekdir seekDir) = 0;
+    virtual void seek(std::streamoff offset, Seek seekDir) = 0;
 
     /**
      * @brief return current reading position
      * @return current reading pos
      */
-    virtual size_t tell() = 0;
+    [[nodiscard]] virtual std::streampos tell() noexcept = 0;
 
     /**
      * @brief returns true if end of stream has been reached
@@ -33,9 +50,9 @@ public:
      */
     size_t fileSize() {
         auto current = tell();
-        seek(0, std::ios::end);
+        seek(0, Seek::END);
         auto size = tell();
-        seek(current, std::ios::beg);
+        seek(current, Seek::BEGIN);
         return size;
     }
 };

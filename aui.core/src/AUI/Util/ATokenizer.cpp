@@ -165,9 +165,14 @@ T ATokenizer::readIntImpl() {
                 case 'E':
                 case 'f':
                 case 'F':
-                case '-':
                     mTemporaryAStringBuffer << c;
                     break;
+                case '-':
+                    if (mTemporaryAStringBuffer.empty()) {
+                        mTemporaryAStringBuffer << c;
+                        break;
+                    }
+                    [[fallthrough]];
                 default:
                     reverseByte();
                     return value();

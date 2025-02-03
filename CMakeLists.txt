@@ -43,6 +43,11 @@ function(define_aui_component AUI_COMPONENT_NAME)
         endif()
         message(STATUS "[+] ${AUI_COMPONENT_NAME}")
     endif()
+    string(TOUPPER ${AUI_COMPONENT_NAME} AUI_COMPONENT_NAME_UPPER)
+    option("AUI_BUILD_${AUI_COMPONENT_NAME_UPPER}" "Build aui::${AUI_COMPONENT_NAME}" ON)
+    if (NOT AUI_BUILD_${AUI_COMPONENT_NAME_UPPER})
+        return()
+    endif()
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
@@ -67,6 +72,7 @@ define_aui_component(audio)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
+    define_aui_component(updater)
 endif()
 
 if (AUI_BUILD_EXAMPLES) 
@@ -100,6 +106,7 @@ set(AUI_ALL_COMPONENTS core
                        uitests
                        toolbox
                        audio
+                       updater
         )
 
 

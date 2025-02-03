@@ -85,6 +85,27 @@ AUI_ENUM_FLAG(AFileListFlags) {
 };
 
 /**
+ * @brief Flag enum for APath::isEffectivelyAccessible
+ * @ingroup io
+ */
+AUI_ENUM_FLAG(AFileAccess) {
+    /**
+     * @brief File is Readable flag.
+     */
+    R = 0b100,
+
+    /**
+     * @brief File is Writeable flag.
+     */
+    W = 0b010,
+
+    /**
+     * @brief File is eXecutable flag.
+     */
+    X = 0b001,
+};
+
+/**
  * @brief An add-on to AString with functions for working with the path.
  * @ingroup io
  * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
@@ -143,6 +164,33 @@ public:
     }
 
     /**
+     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
+     * @details
+     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
+     * process, it prevents, potential conflicts between concurrent processes.
+     *
+     * When the application closes, a directory cleanup attempt will be performed.
+     *
+     * @sa APath::nextRandomTemporary
+     *
+     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
+     */
+    [[nodiscard]]
+    static const APath& processTemporaryDir();
+
+    /**
+     * @brief Creates a path to non-existent random file in system temp directory.
+     * @details
+     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
+     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
+     * any file either.
+     * @sa APathOwner
+     * @sa APath:processTemporaryDir:
+     */
+    [[nodiscard]]
+    static APath nextRandomTemporary();
+
+    /**
      * Creates a file.
      * @return this.
      */
@@ -163,6 +211,7 @@ public:
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
      * @note Use AFileListFlags enum flags to customize behaviour of this function.
+     * @sa relativelyTo
      * @return list of children of this folder.
      */
     ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
@@ -249,14 +298,40 @@ public:
     /**
      * @brief Delete file. Relevant for empty folders and regular files.
      * @return this
+     * @details
+     * Unlike remove*Recursive functions, this function has no checks before proceeding, thus, it might throw
+     * AIOException (including if the target does not exist).
+     *
+     * @sa APath::removeFileRecursive()
+     * @sa APath::removeDirContentsRecursive()
      */
     const APath& removeFile() const;
 
     /**
-     * @brief Delete files recursively. Relevant for folders.
+     * @brief Delete files recursively, including itself.
      * @return this
+     * @details
+     * If this APath points to a regular file, it deletes the file directly. If this APath points to a directory, it
+     * first removes all its contents (recursively) before potentially deleting the directory itself.
+     *
+     * If the target does not exist, this function has no effect.
+     *
+     * @sa APath::removeDirContentsRecursive()
      */
     const APath& removeFileRecursive() const;
+
+    /**
+     * @brief Delete directory contents (recursively).
+     * @return this
+     * @details
+     * If this APath points to a regular file, the function has no effect. If this APath points to a directory, it
+     * removes all contained files (recursively) within that directory but does not remove the directory itself.
+     *
+     * If the target does not exist, this function has no effect.
+     *
+     * @sa APath::removeFileRecursive()
+     */
+    const APath& removeDirContentsRecursive() const;
 
     /**
      * @brief Create folder.
@@ -271,7 +346,7 @@ public:
     const APath& makeDirs() const;
 
     /**
-     * @brief Returns same path but without <code>folder</code>
+     * @brief Returns same path but without <code>dir</code>
      * @param dir some parent, grandparent, grandgrandparent... dir
      * @details
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
@@ -300,6 +375,16 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
+    /**
+     * @brief Changes mode (permissions) on file
+     * @param newMode new mode.
+     * @details
+     * It's convenient to use octet literal on `newMode`:
+     * @code{cpp}
+     * APath p("file.txt");
+     * p.chmod(0755); // -rwxr-xr-x
+     * @endcode
+     */
     const APath& chmod(int newMode) const;
 
     enum DefaultPath {
@@ -368,6 +453,7 @@ public:
 
     /**
      * @brief Path of the child element. Relevant only for folders.
+     * @param filename child to produce path to
      * @code{cpp}
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
@@ -380,8 +466,57 @@ public:
         return file(filename);
     }
 
+    /**
+     * @brief Return true if the current process has specified access flags to path.
+     * @details
+     * Checks permissions and existence of the file identified by this APath using the real user and group
+     * identifiers of the process, like if the file were opened by open().
+     *
+     * @note
+     * Using this function to check a process's permissions on a file before performing some operation based on that
+     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
+     * safer just to attempt the desired operation and handle any permission error that occurs.
+     */
+    [[nodiscard]]
+    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
 };
 
+/**
+ * @brief RAII-style file owner for storing temporary data on disk.
+ * @ingroup io
+ * @details
+ * This class represents a type that transparently converts to underlying APath. When APathOwner is destructed, the
+ * pointed file is cleaned up, too, regardless of it's type.
+ *
+ * APathOwner is designed to simplify management of (temporary) files on disk, ensuring cleanup of the pointed file
+ * in RAII (Resource Acquisition Is Initialization) style.
+ *
+ * @snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner example
+ * @sa APath::nextRandomTemporary()
+ */
+struct API_AUI_CORE APathOwner: public aui::noncopyable {
+public:
+    explicit APathOwner(APath mPath) noexcept: mPath(std::move(mPath)) {}
+
+    ~APathOwner() {
+        try {
+            mPath.removeFileRecursive();
+        } catch(...) {}
+    }
+
+    [[nodiscard]]
+    operator const APath&() const noexcept {
+        return mPath;
+    }
+
+    [[nodiscard]]
+    const APath& value() const noexcept {
+        return mPath;
+    }
+
+private:
+    APath mPath;
+};
 
 inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);

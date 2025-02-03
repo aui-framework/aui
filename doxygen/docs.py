@@ -41,8 +41,8 @@ REGEX_COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 assert REGEX_COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
 # TEST_F(UIDataBindingTest, AProperty) { // HEADER_H2
-REGEX_TESTCASE_HEADER_H1 = re.compile(r'TEST_F\((.+), (.+)\) ?\{ ?// ?HEADER_H1')
-REGEX_TESTCASE_HEADER_H2 = re.compile(r'TEST_F\((.+), (.+)\) ?\{ ?// ?HEADER_H2')
+REGEX_TESTCASE_HEADER_H1 = re.compile(r'TEST(_F)?\((.+), (.+)\) ?\{ ?// ?HEADER_H1')
+REGEX_TESTCASE_HEADER_H2 = re.compile(r'TEST(_F)?\((.+), (.+)\) ?\{ ?// ?HEADER_H2')
 
 REGEX_INGROUP = re.compile(r'.*([@\\]ingroup ?\w*).*')
 assert REGEX_INGROUP.match("   * @ingroup")
@@ -133,9 +133,9 @@ def process_cpp_file(input: Path):
                 if match := REGEX_TESTCASE_HEADER_H1.match(line):
                     emit_line()
                     fos.write("# ")
-                    fos.write(match.group(2).replace("_", " "))
+                    fos.write(match.group(3).replace("_", " "))
                     fos.write(" {#")
-                    fos.write(f'{match.group(1)}_{match.group(2)}')
+                    fos.write(f'{match.group(2)}_{match.group(3)}')
                     fos.write("}")
                     emit_line()
                     continue
@@ -143,9 +143,9 @@ def process_cpp_file(input: Path):
                 if match := REGEX_TESTCASE_HEADER_H2.match(line):
                     emit_line()
                     fos.write("## ")
-                    fos.write(match.group(2).replace("_", " "))
+                    fos.write(match.group(3).replace("_", " "))
                     fos.write(" {#")
-                    fos.write(f'{match.group(1)}_{match.group(2)}')
+                    fos.write(f'{match.group(2)}_{match.group(3)}')
                     fos.write("}")
                     emit_line()
                     continue

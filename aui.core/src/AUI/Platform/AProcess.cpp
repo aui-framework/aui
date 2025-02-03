@@ -32,14 +32,14 @@ AProcess::create(AProcess::ProcessCreationInfo args) {
 
 int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory,
                                  ASubProcessExecutionFlags flags) {
-    AChildProcess p;
-    p.mInfo = {
+    auto p = aui::ptr::manage(new AChildProcess);
+    p->mInfo = {
         .executable = std::move(applicationFile),
         .args = ArgSingleString { std::move(args) },
     };
-    p.run(flags);
+    p->run(flags);
 
-    return p.waitForExitCode();
+    return p->waitForExitCode();
 }
 
 _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {

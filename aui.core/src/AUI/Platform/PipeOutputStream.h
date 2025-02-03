@@ -14,7 +14,7 @@
 #include <AUI/IO/IOutputStream.h>
 #include "Pipe.h"
 
-class PipeOutputStream: public IOutputStream {
+class [[deprecated("use Pipe directly")]] PipeOutputStream: public IOutputStream {
 public:
     explicit PipeOutputStream(Pipe pipe);
     ~PipeOutputStream();

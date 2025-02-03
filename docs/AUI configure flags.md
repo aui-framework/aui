@@ -9,7 +9,11 @@ cmake .. -DAUI_BUILD_EXAMPLES=TRUE # <-- here
 cmake --build .
 ```
 
-# AUI C++ code itself
+# Common variables
+
+## AUI_APP_PACKAGING {#AUI_APP_PACKAGING}
+Specifies the desired packaging method. This variable accepts CPack generator or one of the packaging methods provided
+by AUI. See @ref "docs/Packaging Your App.md" for more info.
 
 ## AUI_CATCH_UNHANDLED
 Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for
@@ -66,7 +70,7 @@ When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false`
 ## AUI_IOS_CODE_SIGNING_REQUIRED
 Disables code signing step on iOS.
 
-# aui.boot
+# aui.boot-specific
 
 ## AUIB_DISABLE (=NO) {#AUIB_DISABLE}
 
@@ -84,9 +88,9 @@ This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NA
 
 Disables "Waiting for repository" lock.
 
-## AUIB_NO_PRECOMPILED (=NO)
+## AUIB_NO_PRECOMPILED (=NO) {#AUIB_NO_PRECOMPILED}
 
-Disables precompiled binaries.
+Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
 
 ## AUIB_FORCE_PRECOMPILED (=NO) {#AUIB_FORCE_PRECOMPILED}
 

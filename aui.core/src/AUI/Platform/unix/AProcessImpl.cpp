@@ -34,6 +34,7 @@
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/IO/AFileInputStream.h>
+#include <AUI/Platform/ErrorToException.h>
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
 
@@ -107,6 +108,9 @@ _<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(p
 extern char** environ;
 
 void AChildProcess::run(ASubProcessExecutionFlags flags) {
+    if (weak_from_this().lock() == nullptr) {
+        throw AException("this object should be constructed as shared_ptr");
+    }
     if (!getApplicationFile().isRegularFileExists()) {
         throw AFileNotFoundException(getApplicationFile());
     }
@@ -142,54 +146,198 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     Pipe pipeStdout;
     Pipe pipeStderr;
 
+    struct DetachedSpecific {
+        // to catch the startup of the child
+        Pipe startedPipe;
+
+        // messages passed through startedPipe
+        enum class Started: char {
+            OK = '\0',
+            FAILED,
+        };
+
+
+        // to catch the pid of the child
+        Pipe pidPipe;
+
+        DetachedSpecific() {
+            // if exec* succeeds, close the pipe.
+            ::fcntl(startedPipe.in(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(startedPipe.out(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(pidPipe.in(), F_SETFD, FD_CLOEXEC);
+            ::fcntl(pidPipe.out(), F_SETFD, FD_CLOEXEC);
+        }
+    };
+    AOptional<DetachedSpecific> detachedSpecific;
+    if (bool(flags & ASubProcessExecutionFlags::DETACHED)) {
+        detachedSpecific.emplace();
+    }
+
     // fcntl(pipeStdout.out(), F_SETOWN, callback);
 
     auto pid = fork();
+    if (pid == -1) {
+        throw AProcessException("can't create fork");
+    }
     if (pid == 0) {
-        while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {
-        }
-        if (!tieStdout) {
-            while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {
+        try {
+            // we are in a new process
+            auto execute = [&] {
+                while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {
+                }
+                if (!tieStdout) {
+                    while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {
+                    }
+                }
+                if (!tieStderr) {
+                    while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) &&
+                           (errno == EINTR)) {
+                    }
+                }
+                if (!mInfo.workDir.empty()) {
+                    chdir(mInfo.workDir.toStdString().c_str());
+                }
+                execve(executable.c_str(), argv.data(), environ);
+            };
+
+            if (detachedSpecific) {
+                // daemonisizing
+                //
+                // Parent (one who called AChildProcess::run)
+                // Child (we are currently here)
+                // Grandchild (we'll spawn him a little later)
+                //
+                // In child, we need to call setsid() to detach from terminal. setsid requires the process it called in
+                // to not be a group leader (Parent probably is) hence we spawned Child. After a terminal for Child is
+                // detached, we can now spawn Grandchild (which we will call execve for), and we will std::exit Child.
+                // Grandchill will lose parent, whose terminal is detached, hence it will be reparented to init.
+
+                // close redundant pipe sides
+                detachedSpecific->startedPipe.closeOut();
+                detachedSpecific->pidPipe.closeOut();
+
+                struct sigaction noaction;
+                memset(&noaction, 0, sizeof(noaction));
+                noaction.sa_handler = SIG_IGN;
+                ::sigaction(SIGPIPE, &noaction, nullptr);
+
+                setsid();
+
+                auto grandchild = fork();
+                if (grandchild < 0) {
+                    // in Child; Grandchild fork() failed
+                    struct sigaction noaction;
+                    memset(&noaction, 0, sizeof(noaction));
+                    noaction.sa_handler = SIG_IGN;
+                    ::sigaction(SIGPIPE, &noaction, nullptr);
+                    detachedSpecific->startedPipe
+                        << aui::serialize_raw(DetachedSpecific::Started::FAILED)
+                        << aui::serialize_sized("fork failed: {}"_format(aui::impl::unix_based::formatSystemError().description));
+                    detachedSpecific->startedPipe.closeIn();
+                } else if (grandchild == 0) {
+                    // in Grandchild
+                    detachedSpecific->pidPipe.closeIn();
+                    execute();
+
+                    // if we reach here, it basically means execute() failed so report it.
+                    struct sigaction noaction;
+                    memset(&noaction, 0, sizeof(noaction));
+                    noaction.sa_handler = SIG_IGN;
+                    ::sigaction(SIGPIPE, &noaction, nullptr);
+                    detachedSpecific->startedPipe
+                        << aui::serialize_raw(DetachedSpecific::Started::FAILED)
+                        << aui::serialize_sized("execve failed: {}"_format(aui::impl::unix_based::formatSystemError().description));
+                    detachedSpecific->startedPipe.closeIn();
+                    _exit(1);
+                } else {
+                    // in Child; fork() succeeded
+                    detachedSpecific->startedPipe.closeIn();
+
+                    // report pid of Grandchild to parent
+                    detachedSpecific->pidPipe << aui::serialize_raw(grandchild);
+                    detachedSpecific->pidPipe.closeIn();
+                    _exit(1);
+                }
+            } else {
+                execute();
+                _exit(1);
             }
+        } catch (const AException& e) {
+            std::cerr << "(occurred in subprocess) failure: " << e << '\n';
         }
-        if (!tieStderr) {
-            while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) &&
-                   (errno == EINTR)) {
+
+        return;
+    }
+
+    // here, we are still in parent (caller).
+
+    // close pipes of parent's side.
+    if (detachedSpecific) {
+        detachedSpecific->startedPipe.closeIn(); // we'd read from startedPipe only, not write
+        detachedSpecific->pidPipe.closeIn();     // we'd read from pidPipe only, not write
+    }
+    pipeStdin.closeOut(); // we'd write to stdin only, not read
+    pipeStdout.closeIn(); // we'd read from stdout only, not write
+    pipeStderr.closeIn(); // we'd read from stderr only, not write
+
+    mPid = [&] {
+      if (detachedSpecific) {
+          // while detached, pid actually holds a child (intermediate process), not grandchild (AProcess user is
+          // interested in the latter)
+          //
+          // at this moment, only child knows the pid of grandchild.
+          // we can ask him for pid of grandchild.
+          auto message = DetachedSpecific::Started::OK;
+          detachedSpecific->startedPipe >> aui::serialize_raw(message);
+          int loc = 0;
+          waitpid(pid, &loc, 0);
+
+          switch (message) {
+              case DetachedSpecific::Started::OK:
+                  break;
+              case DetachedSpecific::Started::FAILED: {
+                  AString s;
+                  detachedSpecific->startedPipe >> aui::serialize_sized(s);
+                  throw AProcessException("can't start subprocess: {}"_format(s));
+              }
+          }
+
+          detachedSpecific->startedPipe.closeOut();
+          pid = 0;
+          detachedSpecific->pidPipe >> aui::serialize_raw(pid);
+          AUI_ASSERT(pid != 0);
+          detachedSpecific->pidPipe.closeOut();
+      }
+      return pid;
+    }();
+
+    mWatchdog = _new<AThread>([&, self = weak_from_this()] { // what the f*ck?? we have UnixIoAsync
+        for (;;) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            auto selfLock = self.lock();
+            if (!selfLock) {
+                break;
             }
-        }
 
-        // ipeStdin.closeIn();
-        // ipeStdout.closeOut();
-        // ipeStderr.closeOut();
-
-        // we are in a new process
-        if (!mInfo.workDir.empty()) {
-            chdir(mInfo.workDir.toStdString().c_str());
-        }
-        execve(executable.c_str(), argv.data(), environ);
-        exit(-1);
-    } else {
-        mPid = pid;
-
-        mWatchdog = _new<AThread>([&] {
             int loc = 0;
-            waitpid(mPid, &loc, 0);
+            if (waitpid(mPid, &loc, WNOHANG) == 0) {
+                continue;
+            }
+
             mExitCode.supplyValue(WEXITSTATUS(loc));
             emit finished;
-        });
-        mWatchdog->start();
+            break;
+        }
+    });
+    mWatchdog->start();
 
-        pipeStdin.closeOut();
-        pipeStdout.closeIn();
-        pipeStderr.closeIn();
 
-        mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& b) {
-            if (stdOut && b.size() > 0)
-                emit stdOut(b);
-        });
+    mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& b) {
+        if (stdOut && b.size() > 0)
+            emit stdOut(b);
+    });
 
-        mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
-    }
+    mStdInStream = _new<Pipe>(std::move(pipeStdin));
 }
 
 AChildProcess::~AChildProcess() {}

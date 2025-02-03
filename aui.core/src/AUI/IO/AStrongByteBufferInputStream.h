@@ -27,9 +27,9 @@ public:
 
     bool isEof() override;
 
-    void seek(std::streamoff offset, std::ios::seekdir seekDir) override;
+    void seek(std::streamoff offset, Seek seekDir) override;
 
-    size_t tell() override;
+    [[nodiscard]] std::streampos tell() noexcept override;
 
     size_t read(char* dst, size_t size) override;
 

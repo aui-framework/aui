@@ -12,6 +12,8 @@
 #pragma once
 
 #include <AUI/Traits/values.h>
+#include <AUI/IO/IInputStream.h>
+#include <AUI/IO/IOutputStream.h>
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
@@ -25,9 +27,13 @@
 
 
 /**
- * @brief Unix pipe RAII wrapper.
+ * @brief Native pipe RAII wrapper.
+ * @details
+ * On Windows, implemented with CreateNamedPipe.
+ *
+ * On *nix, implemented with pipe(2).
  */
-class Pipe: public aui::noncopyable {
+class API_AUI_CORE Pipe final: public aui::noncopyable, public IInputStream, public IOutputStream {
 public:
 #if AUI_PLATFORM_WIN
     using pipe_t = HANDLE;
@@ -65,7 +71,14 @@ public:
         return mIn;
     }
 
+    /**
+     * @brief Close out. Also known as close(pipe[0])
+     */
     void closeOut() noexcept;
+
+    /**
+     * @brief Close in. Also known as close(pipe[1])
+     */
     void closeIn() noexcept;
 
     /**
@@ -91,7 +104,8 @@ public:
         mIn = 0;
         return copy;
     }
-
+    size_t read(char* dst, size_t size) override;
+    void write(const char* src, size_t size) override;
 
 private:
     /**

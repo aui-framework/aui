@@ -1,4 +1,7 @@
-AUI Boot is yet another package manager based on CMake. If a library uses CMake and it can be pulled using `git clone`, AUI Boot in 99% cases can provide it for you into your project. It downloads the library, compiles it and places it in `~/.aui` folder for future reuse.
+AUI Boot is yet another package manager based on CMake. If a library uses CMake with
+[good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases 
+can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
+it in `~/.aui` folder for future reuse.
 
 # Importing AUI
 
@@ -25,10 +28,10 @@ AUI Boot is a source-first package manager, however, it can pull precompiled pac
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
 these rules, so AUI Boot can pull precompiled package of AUI.
 
-To use a precompiled binary, you must specify a tag of released version from
+To use a precompiled binary, you must specify a tag of a released version from
 [releases page](https://github.com/aui-framework/aui/releases) (for example, `v6.2.1` or `v7.0.0-rc.2`). These packages
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
-set up a development and build with AUI.
+set up a development and building with AUI.
 
 If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED :
 
@@ -38,6 +41,34 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
+If usage of precompiled binaries break your built for whatever reason, you can set @ref AUIB_NO_PRECOMPILED :
+
+```shell
+cmake .. -DAUIB_NO_PRECOMPILED=TRUE
+```
+
+This way AUI Boot will never try to use precompiled binaries and will try to build then locally.
+
+# CI caching {#CI_CACHING}
+
+No matter using precompiled binaries or building them locally, it's convenient to cache AUI Boot cache (`~/.aui`) in
+your CIs:
+
+@snippet .github/workflows/build.yml cache example
+
+This snippet is based on [GitHub's cache action example](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#example-using-the-cache-action).
+
+GitHub used npm's `package-lock.json` in their example's primary key (`key`). We've adapted their example to AUI Boot
+and use `CMakeLists.txt`, as dependencies' versions are "locked" there.
+
+Using a stricter primary key `key` with a bunch of additional keys `restore-keys` is essential. If a cache hit occurs
+on the primary key, the cache will not be uploaded back to GitHub cache so your primary key must differ when you
+update dependencies.
+
+Don't worry updating dependencies: GitHub `cache` action will restore the cache by using one of
+fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
+occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
+
 # Importing 3rdparty libraries
 
 You can import any library that can be imported to your project by compiling it using CMake and finding it's package with `find_package`, i.e. Sentry:
@@ -45,10 +76,28 @@ You can import any library that can be imported to your project by compiling it 
 # importing Sentry with AUI.Boot
 auib_import(sentry https://github.com/getsentry/sentry-native
             CMAKE_ARGS -DSENTRY_BACKEND=crashpad)
-target_link_libraries(YOUR_APP PUBLIC sentry::sentry)
+aui_link(YOUR_APP PUBLIC sentry::sentry)
 ```
 
 For more libraries, please visit https://github.com/aui-framework/boot.
+
+## Using AUI Boot without AUI
+
+AUI Boot does not have any hard dependencies on AUI, so it can be used to manage dependencies on non-AUI projects.
+
+```cmake
+set(AUI_VERSION v6.2.1)
+
+file(
+    DOWNLOAD 
+    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake 
+    ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+```
+@snippet aui.core/CMakeLists.txt auib_import examples
+```cmake
+target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
+```
 
 # Importing project as a subdirectory
 
@@ -82,6 +131,10 @@ auib_import(<PackageName> <URL>
             [REQUIRES dependencies...]
             [VERSION version])
 ```
+
+@note
+This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
+configure time. See @ref "docs/Runtime Dependency Resolution.md" for more info.
 
 ### PackageName
 Specifies the package name which will be passed to `find_package`.
@@ -213,3 +266,35 @@ self-sufficient. That is, they have AUI's dependencies bundled, so they can be u
 requiring AUI Boot.
 
 @include test/aui.boot/Precompiled3/test_project/CMakeLists.txt
+
+# Philosophy behind AUI Boot
+
+AUI Boot follows AUI Project philosophy, i.e, simplify developers' life and improve experience as far as possible. We
+were needed a CMake-only solution, so we skipped external generators (i.e., those that introduce additional building
+layer over CMake).
+
+Despite CMake itself is complex (spoiler: every build system is) but thanks to the complexity **CMake actually does the
+job good enough** and its scripting system thankfully allows to download files from internet (and not only that).
+
+Introducing additional building layer literally multiplies the building complexity by two. Moreover, Android targets
+already introduce such a layer (called Gradle). For example, if we were using [Conan](https://conan.io/), Android
+building process would have 4 layers: Gradle, CMake, Conan, CMake (yes, 2 CMake layers).
+
+AUI Boot (and [CPM](https://github.com/cpm-cmake/CPM.cmake)) require CMake only and don't involve extra runtime.
+
+That being said, let's overview alternatives:
+
+- [CPM](https://github.com/cpm-cmake/CPM.cmake) (CMake's missing package manager) - almost perfectly suits our needs but
+  lacks precompiled packages support which renders painful to some of our users.
+- [vcpkg](https://github.com/microsoft/vcpkg) - external and maintained by Microsoft.
+- [conan](https://conan.io/) - external, requires Python runtime and knowledge. Using Conan leads to 3 browser tabs
+  always opened: Python docs, Conan docs and CMake docs. Pushes Artifactory which is a paid self-hosted solution but
+  thanks to that offers free large repository of precompiled packages. Conan is slowly becoming a de facto standard for
+  C++ so we're looking forward for adding conan support (without dropping AUI Boot).
+- CMake's FindPackage/FetchContent/ExternalProject - limited, involve a lot of boilerplate, can't be tweaked from
+  configure-time variables, lack precompiled binaries.
+
+AUI is a C++ project, thus it should use CMake for AUI itself and AUI-based applications. Configure? `cmake ..`. Build?
+`cmake --build .`. Test? `ctest .`. Package? `cpack .`. CMake offers enough functionality for various use cases. Let's
+avoid creating an uncomfortable situation by involving snakes in the process of developing C++ applications, we have
+our own great tools already.

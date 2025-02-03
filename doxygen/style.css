@@ -110,6 +110,12 @@ table.doxtable td, table.doxtable th {
     margin: 48px 0 96px;
 }
 
+.mscgraph img {
+    max-height: none;
+    width: 100%;
+    filter: invert(0.88);
+}
+
 .dark-mode-keep-imgs img {
     filter: none !important;
 }
