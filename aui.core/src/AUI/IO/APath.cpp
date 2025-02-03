@@ -439,6 +439,7 @@ time_t APath::fileModifyTime() const {
 }
 
 void APath::move(const APath& source, const APath& destination) {
+    destination.removeFile();
 #if AUI_PLATFORM_WIN
     if (MoveFile(aui::win32::toWchar(source.c_str()), aui::win32::toWchar(destination.c_str())) == 0) {
 #else
