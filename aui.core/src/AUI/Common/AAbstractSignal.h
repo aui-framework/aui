@@ -65,7 +65,7 @@ class AObject;
  * You can connect as many signals as you want to a single slot, and a signal can be connected to as many slots as you
  * need.
  *
- * ## Signals
+ * # Signals
  * Signals are publicly accessible fields that notify an object's client when its internal state has changed in some way
  * that might be interesting or significant. These signals can be emitted from various locations, but it is generally
  * recommended to only emit them from within the class that defines the signal and its subclasses.

@@ -76,7 +76,7 @@ html {
     /* content text properties. These only affect the page content, not the navigation or any other ui elements */
     --content-line-height: 27px;
     /* The content is centered and constraint in it's width. To make the content fill the whole page, set the variable to auto.*/
-    --content-maxwidth: 1000px;
+    --content-maxwidth: 1300px;
 
     /* colors for various content boxes: @warning, @note, @deprecated @bug */
     --warning-color: #f8d1cc;
@@ -323,7 +323,7 @@ p, div, table, dl {
 }
 
 a:link, a:visited, a:hover, a:focus, a:active {
-    color: var(--primary-color) !important;
+    color: var(--primary-color);
     font-weight: 500;
 }
 
@@ -924,23 +924,6 @@ html.dark-mode div.contents table iframe {
 h2.groupheader {
     border-bottom: 0px;
     color: var(--page-foreground-color);
-    box-shadow: 
-        100px 0 var(--page-background-color), 
-        -100px 0 var(--page-background-color),
-        100px 0.75px var(--separator-color),
-        -100px 0.75px var(--separator-color),
-        500px 0 var(--page-background-color), 
-        -500px 0 var(--page-background-color),
-        500px 0.75px var(--separator-color),
-        -500px 0.75px var(--separator-color),
-        1500px 0 var(--page-background-color),
-        -1500px 0 var(--page-background-color), 
-        1500px 0.75px var(--separator-color),
-        -1500px 0.75px var(--separator-color),
-        2000px 0 var(--page-background-color),
-        -2000px 0 var(--page-background-color),
-        2000px 0.75px var(--separator-color),
-        -2000px 0.75px var(--separator-color);
 }
 
 blockquote {
