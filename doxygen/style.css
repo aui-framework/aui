@@ -181,3 +181,37 @@ table.doxtable td, table.doxtable th {
 .aui-toc a[active] {
     box-shadow: -3px 0;
 }
+
+/* TARGET HIGHLIGHT */
+
+h1, h2, h3, h4, h5, h6 {
+    position: relative;
+}
+
+:target {
+    animation: blink-animation 0.3s ease-in-out 2;
+    -webkit-animation: blink-animation 0.3s ease-in-out 2;
+    text-align: right;
+    position: absolute;
+    background: #ff0 !important;
+    top: 0;
+    left: -10px;
+    right: 0;
+    bottom: 0;
+    opacity: 0.2;
+    padding: 0 12px;
+}
+:target:hover {
+    opacity: 0.3 !important;
+}
+
+@keyframes blink-animation {
+    to {
+        opacity: 0.4;
+    }
+}
+@-webkit-keyframes blink-animation {
+    to {
+        opacity: 0.4;
+    }
+}
