@@ -12,32 +12,24 @@
 #include <AUI/Platform/ErrorToException.h>
 #include "AFileInputStream.h"
 
-
 #include "AUI/Common/AString.h"
 
-AFileInputStream::AFileInputStream(const AString& path)
-{
+AFileInputStream::AFileInputStream(const AString& path) {
 #if AUI_PLATFORM_WIN
-    // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
     _wfopen_s(&mFile, aui::win32::toWchar(path), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif
-    if (!mFile)
-    {
+    if (!mFile) {
         aui::impl::unix_based::lastErrorToException("unable to open {}"_format(path));
     }
 }
 
-AFileInputStream::~AFileInputStream()
-{
-	fclose(mFile);
-}
+AFileInputStream::~AFileInputStream() { fclose(mFile); }
 
-size_t AFileInputStream::read(char* dst, size_t size)
-{
-	size_t r = ::fread(dst, 1, size, mFile);
-	return r;
+size_t AFileInputStream::read(char* dst, size_t size) {
+    size_t r = ::fread(dst, 1, size, mFile);
+    return r;
 }
 
 void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) noexcept {
@@ -54,10 +46,8 @@ void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) n
     }());
 }
 
-void AFileInputStream::seek(std::streampos pos) noexcept {
-    fseek(mFile, pos, SEEK_SET);
-}
+std::streampos AFileInputStream::tell() noexcept { return ftell(mFile); }
 
-std::streampos AFileInputStream::tell() noexcept {
-    return ftell(mFile);
+bool AFileInputStream::isEof() {
+    return feof(mFile);
 }

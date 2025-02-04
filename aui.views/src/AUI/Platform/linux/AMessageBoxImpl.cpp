@@ -38,7 +38,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                     return GTK_MESSAGE_OTHER;
             }
         }(),
-        GTK_BUTTONS_NONE, "%s", message.toUtf8().data()), gtk_widget_destroy);
+        GTK_BUTTONS_NONE, "%s", message.toStdString().c_str()), gtk_widget_destroy);
 
     if (b == Button::YES_NO_CANCEL || b == Button::YES_NO) {
         gtk_dialog_add_button(GTK_DIALOG(dialog.get()), "Yes"_i18n.toStdString().c_str(), GTK_RESPONSE_YES);

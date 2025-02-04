@@ -17,7 +17,9 @@ cmake_minimum_required(VERSION 3.15)
 aui_executable(aui.example.views)
 aui_compile_assets(aui.example.views)
 
+# [aui_link]
 aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl)
+# [aui_link]
 
 # [aui_app]
 aui_app(TARGET aui.example.views

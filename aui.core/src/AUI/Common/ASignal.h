@@ -162,7 +162,7 @@ class ASignal final : public AAbstractSignal {
     friend class AWatchable;
 
 public:
-    using func_t = std::function<void(Args...)>;
+    using func_t = std::function<void(const Args&...)>;
     using emits_args_t = std::tuple<Args...>;
 
     template <typename Projection>

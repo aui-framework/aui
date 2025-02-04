@@ -200,7 +200,7 @@ concept APropertyReadable = requires(T&& t) {
     { t.value() } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
 
     // Property must have boundObject() which returns AObjectBase* associated with this property.
-    { t.boundObject() } -> aui::convertible_to<AObjectBase*>;
+    { t.boundObject() } -> aui::convertible_to<const AObjectBase*>;
 
     // Property must be convertible to its underlying type.
     { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;

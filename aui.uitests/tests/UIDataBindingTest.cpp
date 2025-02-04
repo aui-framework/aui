@@ -652,6 +652,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // to `ANumberPicker`. This way `ANumberPicker` finds out the valid range of values by simply being bound to value
     // that has constraints encoded inside its type.
 
+
     auto user = aui::ptr::manage(new User { .age = 18 });
 
     class MyWindow: public AWindow {
@@ -670,6 +671,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
         }
     };
     _new<MyWindow>(user)->show();
+    auto single = _new<ANumberPicker>() & user->age;
     auto numberPicker = _cast<ANumberPicker>(By::type<ANumberPicker>().one());
 
     //
@@ -679,6 +681,9 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     EXPECT_EQ(numberPicker->getMin(), 1);
     EXPECT_EQ(numberPicker->getMax(), 99);
     // AUI_DOCS_CODE_END
+
+    EXPECT_EQ(single->getMin(), 1);
+    EXPECT_EQ(single->getMax(), 99);
     //
     // This example demonstrates how to use declarative binding to propagate strong types. `aui::ranged_number`
     // propagates its constraints on `ANumberPicker` thanks to `ADataBindingDefault` specialization.

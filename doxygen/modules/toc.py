@@ -45,7 +45,6 @@ def find_definition(contents):
     raise RuntimeError(f"can't find location of {contents}")
 
 
-
 def run():
     for root, dirs, files in os.walk(CONFIG['output']):
         for file in files:

@@ -40,7 +40,7 @@ _unique<IInputStream> ISoundInputStream::Cache::get(const AUrl& key) {
     }
     try {
         auto stream = key.open();
-        if (auto file = dynamic_cast<AFileInputStream*>(stream.get()); file && file->size() < MAX_FILE_SIZE_TO_CACHE) {
+        if (auto file = dynamic_cast<AFileInputStream*>(stream.get()); file && file->fileSize() < MAX_FILE_SIZE_TO_CACHE) {
             return std::make_unique<AStrongByteBufferInputStream>(inst().mEntries[key] = _new<AByteBuffer>(AByteBuffer::fromStream(file)));
         }
         return stream;

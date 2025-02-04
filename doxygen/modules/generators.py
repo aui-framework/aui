@@ -112,9 +112,9 @@ def process_cpp_file(input: Path):
                 if match := regexes.TESTCASE_HEADER_H1.match(line):
                     emit_line()
                     fos.write("# ")
-                    fos.write(match.group(2).replace("_", " "))
+                    fos.write(match.group(3).replace("_", " "))
                     fos.write(" {#")
-                    fos.write(f'{match.group(1)}_{match.group(2)}')
+                    fos.write(f'{match.group(2)}_{match.group(3)}')
                     fos.write("}")
                     emit_line()
                     emit_source_location_mark(line_number)
@@ -123,9 +123,9 @@ def process_cpp_file(input: Path):
                 if match := regexes.TESTCASE_HEADER_H2.match(line):
                     emit_line()
                     fos.write("## ")
-                    fos.write(match.group(2).replace("_", " "))
+                    fos.write(match.group(3).replace("_", " "))
                     fos.write(" {#")
-                    fos.write(f'{match.group(1)}_{match.group(2)}')
+                    fos.write(f'{match.group(2)}_{match.group(3)}')
                     fos.write("}")
                     emit_line()
                     emit_source_location_mark(line_number)
