@@ -455,7 +455,7 @@ jobs:
         with:
           path: artifacts
           merge-multiple: 'true'
-          name: aui*
+          pattern: aui*
 
       - name: Create Release Draft
         env:
