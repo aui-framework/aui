@@ -228,7 +228,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
 # [cpack]
 
   # as a deployment test, let's build a small AUI-based app
@@ -269,7 +269,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
 
       - name: Configure test app
         run: |
@@ -450,84 +450,31 @@ jobs:
         run: |
           echo "ref=$TAG_NAME" >> $GITHUB_OUTPUT
 
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1.1.4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: 'true'
+          name: aui*
+
+      - name: Create Release Draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          release_name: ${{ env.RELEASE_NAME }}
-          draft: false
-          prerelease: true
+        run: |
+          gh release create "v${{ env.TAG_NAME }}" \
+            --draft \
+            --title "v${{ env.TAG_NAME }}" \
+            artifacts/*.*
+
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
       ref: ${{ steps.version.outputs.ref }}
 
-  publish:
-    name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
-    runs-on: ubuntu-latest
-    needs: [build-desktop, release]
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2019, ubuntu-latest]
-        debug_or_release: [Debug, Release]
-        shared_or_static: [shared, static]
-        arch: [x86_64]
-        include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A Win32'
-            debug_or_release: Debug
-            shared_or_static: shared
-            arch: x86
-
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: ''
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: ''
-            debug_or_release: RelWithDebInfo
-            shared_or_static: static
-
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
-            debug_or_release: RelWithDebInfo
-            shared_or_static: static
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          path: ./
-          name: ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
-
-      - id: getfilename
-        run: echo "::set-output name=file::$(ls *.tar.gz)"
-
-      - name: Upload to Release
-        id: upload_to_release
-        uses: actions/upload-release-asset@v1.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ${{ steps.getfilename.outputs.file }}
-          asset_name: ${{ steps.getfilename.outputs.file }}
-          asset_content_type: application/x-gtar
 
   deployment-tests-full:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (full)
     runs-on: ${{ matrix.os }}
-    needs: [release, publish]
+    needs: [release]
     strategy:
       fail-fast: false
       matrix:
