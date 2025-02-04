@@ -28,6 +28,8 @@ static constexpr auto ARG_AUI_UPDATER_FAILED = "--aui-updater-failed=";
 AUpdater::AUpdater() {
     if (!isAvailable()) {
         status = StatusNotAvailable {};
+    } else {
+        status = StatusIdle {};
     }
 }
 
