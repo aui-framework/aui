@@ -231,7 +231,6 @@ void AUpdater::saveCmdline(const AUpdater::InstallCmdline& cmdline) const {
 }
 
 AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
-    return {};
     try {
         auto path = getUnpackedUpdateDir().parent() / "install.json";
         if (path.isRegularFileExists()) {
