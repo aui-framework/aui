@@ -88,7 +88,7 @@ TEST_F(UIMultitouchTest, Single) {
         .pointerIndex = APointerIndex::finger(0),
     });
 
-    EXPECT_NEAR(mTestWindow->mSlider1->value(), 1.f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider1->value(), 1.f, 0.1f);
 }
 
 
@@ -131,6 +131,6 @@ TEST_F(UIMultitouchTest, Multi) {
         .pointerIndex = APointerIndex::finger(1),
     });
 
-    EXPECT_NEAR(mTestWindow->mSlider1->value(), 1.f, 0.1f);
-    EXPECT_NEAR(mTestWindow->mSlider2->value(), 0.5f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider1->value(), 1.f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider2->value(), 0.5f, 0.1f);
 }

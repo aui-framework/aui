@@ -90,7 +90,7 @@ elseif(_use_unwind)
     message(STATUS "Stacktrace backend: unwind")
     target_compile_definitions(aui.core PRIVATE AUI_USE_UNWIND=1)
 elseif(WIN32)
-    aui_link(aui.core PRIVATE dbghelp)
+    aui_link(aui.core PRIVATE dbghelp shlwapi.lib)
     message(STATUS "Stacktrace backend: dbghelp")
 else()
     message(STATUS "Stacktrace backend: none")
@@ -111,6 +111,7 @@ if (ANDROID)
 endif()
 
 aui_link(aui.core PRIVATE ZLIB::ZLIB)
+add_subdirectory(3rdparty/minizip)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN
@@ -145,6 +146,7 @@ if (AUI_SHARED_PTR_FIND_INSTANCES)
 endif()
 
 
+# [auib_import examples]
 auib_import(fmt https://github.com/fmtlib/fmt
             VERSION 9.1.0
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
@@ -152,6 +154,7 @@ auib_import(fmt https://github.com/fmtlib/fmt
 auib_import(range-v3 https://github.com/ericniebler/range-v3
         VERSION 0.12.0
         CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
+# [auib_import examples]
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 

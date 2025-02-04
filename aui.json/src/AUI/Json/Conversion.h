@@ -52,16 +52,24 @@ namespace aui {
     }
     template<typename T>
     inline T from_json(const AJson& v) {
-        static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
-        T dst;
-        AJsonConv<T>::fromJson(v, dst);
-        return dst;
+        try {
+            static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
+            T dst;
+            AJsonConv<T>::fromJson(v, dst);
+            return dst;
+        } catch (...) {
+            throw AJsonException("While converting from json to cpp\n" + AJson::toString(v), std::current_exception());
+        }
     }
 
     template<typename T>
     inline void from_json(const AJson& v, T& dst) {
-        static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
-        AJsonConv<T>::fromJson(v, dst);
+        try {
+            static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
+            AJsonConv<T>::fromJson(v, dst);
+        } catch (...) {
+            throw AJsonException("While converting from json to cpp\n" + AJson::toString(v), std::current_exception());
+        }
     }
 }
 
