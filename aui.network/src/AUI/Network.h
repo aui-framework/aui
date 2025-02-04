@@ -13,3 +13,8 @@
 #pragma warning(disable: 4251)
 
 #include "AUI/api.h"
+
+/**
+ *@defgroup network aui::network
+* @brief Provides raw network capabilities.
+*/

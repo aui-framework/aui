@@ -146,6 +146,7 @@ table.doxtable td, table.doxtable th {
 .aui-toc a {
     color: var(--fragment-comment) !important;
     padding-left: 4px;
+    display: block;
 }
 
 .aui-toc-hash {
@@ -214,4 +215,21 @@ h1, h2, h3, h4, h5, h6 {
     to {
         opacity: 0.4;
     }
+}
+
+.aui-toc-extras::before {
+    display: block;
+    height: 2px;
+    width: 30px;
+    background: var(--fragment-comment);
+    content: ' ';
+    margin: 24px 0 8px;
+}
+
+.aui-toc-extras {
+    font-size: var(--navigation-font-size);
+}
+
+a .fa {
+    margin-right: 8px;
 }

@@ -9,17 +9,25 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-addEventListener("DOMContentLoaded", (event) => {
-    var anchors = $('.aui-toc-hash');
-    var prevAnchor  = null;
-    var onScroll = (event) => {
-        var currentAnchor = null;
-        anchors.each((key, anchor) => {
+function findNearestVisibleElement(query) {
+    var currentAnchor = null;
+    query.each((key, anchor) => {
+        if (currentAnchor != null) {
             if (anchor.getBoundingClientRect().y > anchor.getBoundingClientRect().height * 5) {
                 return false;
             }
-            currentAnchor = anchor;
-        });
+        }
+        currentAnchor = anchor;
+    });
+    return currentAnchor
+}
+
+addEventListener("DOMContentLoaded", (event) => {
+    var anchors = $('.aui-toc-hash');
+    sourceLocationMarkers = $('b[aui-src]');
+    var prevAnchor  = null;
+    var onScroll = (event) => {
+        var currentAnchor = findNearestVisibleElement(anchors);
         if (currentAnchor == null) {
             return;
         }
@@ -33,3 +41,15 @@ addEventListener("DOMContentLoaded", (event) => {
     document.getElementById("doc-content").addEventListener('scroll', onScroll);
     addEventListener('scroll', onScroll);
 });
+
+
+function jumpToSource(action) {
+    var marker = findNearestVisibleElement(sourceLocationMarkers);
+    if (marker == null) {
+        return;
+    }
+    var src = marker.getAttribute("aui-src");
+
+    let PREFIX = action === 'view' ? "https://github.com/aui-framework/aui/blob/develop/" : "https://github.com/aui-framework/aui/edit/develop/"
+    window.open(PREFIX + src, '_blank').focus();
+}

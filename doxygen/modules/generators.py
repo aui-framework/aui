@@ -42,7 +42,7 @@ def scan_cpp_files(path: Path):
 
 
 def process_code_begin(iter):
-    for line in iter:
+    for _, line in iter:
         if "AUI_DOCS_CODE_END" in line:
             return
         yield line
@@ -76,8 +76,8 @@ def strip_indentation(code):
 
 def process_cpp_file(input: Path):
     with open(input, 'r') as fis:
-        lines = iter(fis.readlines())
-        for line in lines:
+        lines = iter(enumerate(fis.readlines()))
+        for line_number, line in lines:
             if m := regexes.AUI_DOCS_OUTPUT.match(line):
                 output = Path(m.group(1))
                 # Create a directory and file at the specified path if they don't exist
@@ -103,7 +103,12 @@ def process_cpp_file(input: Path):
                 CODE_BEGIN = "@code{cpp}"
                 CODE_END = "@endcode"
 
-            for line in lines:
+            def emit_source_location_mark(line_number):
+                fos.write(f'<b aui-src="{input.relative_to(os.getcwd())}#L{line_number+1}"></b>')
+                emit_line()
+            emit_source_location_mark(line_number)
+
+            for line_number, line in lines:
                 if match := regexes.TESTCASE_HEADER_H1.match(line):
                     emit_line()
                     fos.write("# ")
@@ -112,6 +117,7 @@ def process_cpp_file(input: Path):
                     fos.write(f'{match.group(1)}_{match.group(2)}')
                     fos.write("}")
                     emit_line()
+                    emit_source_location_mark(line_number)
                     continue
 
                 if match := regexes.TESTCASE_HEADER_H2.match(line):
@@ -122,6 +128,7 @@ def process_cpp_file(input: Path):
                     fos.write(f'{match.group(1)}_{match.group(2)}')
                     fos.write("}")
                     emit_line()
+                    emit_source_location_mark(line_number)
                     continue
 
                 if comment := regexes.COMMENT.match(line):
@@ -142,6 +149,10 @@ def process_cpp_file(input: Path):
                         continue
                     fos.write(comment_contents)
                     emit_line()
+
+                if "#" in line:
+                    emit_source_location_mark(line_number)
+
             if not IS_MD:
                 fos.write("\n */")
 

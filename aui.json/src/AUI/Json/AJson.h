@@ -26,6 +26,11 @@
 #include <AUI/Traits/callables.h>
 #include <variant>
 
+/**
+* @defgroup json aui::json
+* @brief aui::json is a json parser/writer.
+*/
+
 class AJson;
 namespace aui::impl {
     struct JsonObject: AVector<std::pair<AString, AJson>> {

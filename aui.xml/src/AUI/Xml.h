@@ -13,3 +13,8 @@
 #pragma warning(disable: 4251)
 
 #include "AUI/api.h"
+
+/**
+* @defgroup xml aui::xml
+* @brief XML parser library.
+*/

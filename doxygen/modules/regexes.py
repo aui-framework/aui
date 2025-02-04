@@ -29,3 +29,7 @@ assert INGROUP.match("   * @ingroup sadkal")
 INCLUDE = re.compile("#include [\"<](.+)[\">].*")
 assert INCLUDE.match("#include <SOME.h> ikf").group(1) == "SOME.h"
 assert INCLUDE.match("#include \"SOME.h\" ikf").group(1) == "SOME.h"
+
+#
+LOCATION_FILE = re.compile('.*<location file=\"(.+)\" line=\"([0-9]+)\" .*/>')
+assert LOCATION_FILE.match('    <location file="aui.core/src/AUI/Common/AProperty.h" line="145" column="1" bodyfile="aui.core/src/AUI/Common/AProperty.h" bodystart="145" bodyend="279"/>')

@@ -18,11 +18,6 @@
 #include <AUI/Curl/ACurl.h>
 
 
-/**
- * @defgroup curl aui::curl
- * @brief aui::curl is a http(s)/ftp driver based on cURL.
- */
-
 struct ACurlInit {
     ACurlInit() {
         AUrl::registerResolver("http", [](const AUrl& u) {
