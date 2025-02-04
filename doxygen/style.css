@@ -119,3 +119,123 @@ table.doxtable td, table.doxtable th {
 .dark-mode-keep-imgs img {
     filter: none !important;
 }
+
+.aui-toc-contents {
+    display: flex !important;
+    justify-content: space-between;
+}
+
+.contents-rails-right {
+    width: 300px;
+    display: none;
+    padding: 0 20px;
+}
+
+@media screen and (min-width: 1350px) {
+    .contents-rails-left {
+        width: calc(100% - 300px);
+    }
+
+    .contents-rails-right {
+        display: block;
+    }
+}
+
+.aui-toc {
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    color: var(--fragment-comment);
+    opacity: 0.7;
+}
+
+.aui-toc a {
+    color: var(--fragment-comment) !important;
+    padding-left: 4px;
+    display: block;
+}
+
+.aui-toc-hash {
+    margin-left: 8px;
+    opacity: 0.4;
+    cursor: pointer;
+    font-style: italic;
+    transition: 0.3s;
+}
+
+.aui-toc-hash:hover {
+    opacity: 0.7;
+}
+
+.aui-toc h1 {
+    font-size: 13pt;
+    margin: 0;
+    margin-top: 20px;
+}
+
+.aui-toc h2 {
+    font-size: 11pt;
+    margin: 12px;
+    margin-left: 12px;
+}
+
+.aui-toc h3 {
+    font-size: 9pt;
+    margin: 12px;
+    margin-left: 24px;
+}
+
+.aui-toc a[active] {
+    box-shadow: -3px 0;
+}
+
+/* TARGET HIGHLIGHT */
+
+h1, h2, h3, h4, h5, h6 {
+    position: relative;
+}
+
+:target {
+    animation: blink-animation 0.3s ease-in-out 2;
+    -webkit-animation: blink-animation 0.3s ease-in-out 2;
+    text-align: right;
+    position: absolute;
+    background: #ff0 !important;
+    top: 0;
+    left: -10px;
+    right: 0;
+    bottom: 0;
+    opacity: 0.2;
+    padding: 0 12px;
+}
+:target:hover {
+    opacity: 0.3 !important;
+}
+
+@keyframes blink-animation {
+    to {
+        opacity: 0.4;
+    }
+}
+@-webkit-keyframes blink-animation {
+    to {
+        opacity: 0.4;
+    }
+}
+
+.aui-toc-extras::before {
+    display: block;
+    height: 2px;
+    width: 30px;
+    background: var(--fragment-comment);
+    content: ' ';
+    margin: 24px 0 8px;
+}
+
+.aui-toc-extras {
+    font-size: var(--navigation-font-size);
+}
+
+a .fa {
+    margin-right: 8px;
+}

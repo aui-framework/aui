@@ -14,3 +14,7 @@
 
 #include "AUI/api.h"
 
+/**
+ * @defgroup curl aui::curl
+ * @brief aui::curl is a http(s)/ftp driver based on cURL.
+ */

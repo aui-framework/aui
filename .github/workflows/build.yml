@@ -39,6 +39,7 @@ jobs:
       - name: Generate docs
         run: |
           export PATH=$PATH:doxygen-1.13.1/bin/
+          python3 -m pip install -r doxygen/requirements.txt 
           python3 doxygen/docs.py
 
       - name: Debug

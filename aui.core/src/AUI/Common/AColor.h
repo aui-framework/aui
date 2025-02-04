@@ -149,7 +149,7 @@ inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
 
 /**
  * @brief Construct with hex integer
- * @param color integer representing color in 0xAARRGGBB
+ * @param v integer representing color in 0xAARRGGBB
  * @details
  * `AColor(0xff0000ff)` will represent opaque bright blue
  */
@@ -157,7 +157,7 @@ inline constexpr AColor operator""_argb(unsigned long long v) { return AColor::f
 
 /**
  * @brief Construct with hex integer
- * @param color integer representing color in 0xRRGGBB
+ * @param v integer representing color in 0xRRGGBB
  * @details
  * `AColor(0x00ff00)` will represent opaque bright green
  */
