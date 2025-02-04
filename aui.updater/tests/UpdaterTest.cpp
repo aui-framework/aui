@@ -7,11 +7,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <range/v3/all.hpp>
 #include <AUI/Updater/AUpdater.h>
 #include <gmock/gmock.h>
 #include "AUI/Util/kAUI.h"
 #include "AUI/Curl/ACurl.h"
 #include "AUI/Platform/AProcess.h"
+#include "AUI/Updater/GitHub.h"
+#include "AUI/Updater/Semver.h"
+#include "AUI/Updater/AppropriatePortablePackagePredicate.h"
+#include "AUI/Platform/AMessageBox.h"
 
 using namespace std::chrono_literals;
 
@@ -190,55 +195,88 @@ AUI_ENTRY {
 //
 // # Update process
 //
+// ## Checking for updates
+//
 // AUpdater expects @ref AUpdater::checkForUpdates to be called to check for updates. It can be called once per some
-// period of time. It calls user-defined @ref AUpdater::checkForUpdatesImpl to perform an update checking. When an
-// update is found, your app should call @ref AUpdater::downloadUpdate to download and unpack the update. It calls
-// user-defined @ref AUpdater::downloadUpdateImpl which might choose to call default
-// `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`. The update steps are reported by changing
-// `AUpdater::status` property.
+// period of time. It calls user-defined @ref AUpdater::checkForUpdatesImpl to perform an update checking.
+//
+// The update steps are reported by changing `AUpdater::status` property.
 //
 // @msc
 // a[label = "Your App"],
 // u[label = "AUpdater", URL = "@ref AUpdater"];
-// a -> u [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
+// a -> u [label = "handleStartup(...)", URL = "@ref AUpdater::handleStartup"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+// a <- u [label = "control flow"];
 //
 // --- [label="App Normal Lifecycle"];
 // ...;
-// a -> u [label = "checkForUpdates", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u;
+// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
+// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
+// a <- u [label = "control flow"];
+// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
 //
 // ...;
 // --- [label="Update published"];
 // ...;
-// a -> u [label = "checkForUpdates", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u;
+// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
+// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
+// a <- u [label = "control flow"];
+// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
+// u box u [label = "update was found"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+// ...;
+// @endmsc
+//
+// You might want to store update check results (i.e., download url) in your implementation of
+// @ref AUpdater::checkForUpdatesImpl so your @ref AUpdater::downloadUpdateImpl might reuse this information.
+//
+// ## Downloading the update
+//
+// When an update is found, your app should call @ref AUpdater::downloadUpdate to download and unpack the update. It is
+// up to you to decide when to download an update. If you wish, you can call @ref AUpdater::downloadUpdate in
+// @ref AUpdater::checkForUpdatesImpl to proceed to download process right after update was found (see
+// @ref UPDATER_WORKFLOWS for more information about update workflow decisions). It calls
+// user-defined @ref AUpdater::downloadUpdateImpl which might choose to call default
+// `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`.
+//
+// @msc
+// a[label = "Your App"],
+// u[label = "AUpdater", URL = "@ref AUpdater"];
+// ...;
+// a -> u [label = "downloadUpdate()", URL = "@ref AUpdater::downloadUpdate"];
 // a <- u [label = "status = AUpdater::StatusDownloading", URL = "@ref AUpdater::StatusDownloading"];
-// u box u [label = "download and unpack update"];
-// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "@ref
-// AUpdater::StatusWaitingForApplyAndRestart"];
+// u box u [label = "downloadUpdateImpl()", URL = "@ref AUpdater::downloadUpdateImpl"];
+// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "@ref AUpdater::StatusWaitingForApplyAndRestart"];
 // --- [label="Your App Prompts User to Update"];
 // ...;
 // @endmsc
 //
-// At this moment, AUpdater waits AUpdater::applyUpdateAndRestart to be called. When
-// AUpdater::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes a copy of
-// your app downloaded before with a special command line argument which is handled by AUpdater::handleStartup. The copy
-// then replaces old application (where it actually installed) with itself (that is, the downloaded, newer copy). After
-// operation is complete, it passes the control back to the application. At last, the newly updated application
-// performs a cleanup after update.
+// ## Applying (deploying) the update
+//
+// At this moment, AUpdater waits @ref AUpdater::applyUpdateAndRestart to be called. When
+// @ref AUpdater::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes the
+// newer copy of your app downloaded before with a special command line argument which is handled by
+// @ref AUpdater::handleStartup in that executable. The initial app process is finished, closing your app window as
+// well. From now, your app is in "downtime" state, so we need to apply the update and reopen app back again as quickly
+// as possible. This action is required to perform update installation. The copy then replaces old application (where it
+// actually installed) with itself (that is, the downloaded, newer copy). After operation is complete, it passes the
+// control back to the updated application executable. At last, the newly updated application performs a cleanup after
+// update.
 //
 // @msc
 // a[label = "Your App"],
 // u[label = "AUpdater", URL = "@ref AUpdater"],
 // da[label = "Newer Copy of Your App"],
 // du[label = "AUpdater in App Copy", URL = "@ref AUpdater"];
-// a :> u [label = "applyUpdateAndRestart", URL = "@ref AUpdater::applyUpdateAndRestart"];
+// a :> u [label = "applyUpdateAndRestart()", URL = "@ref AUpdater::applyUpdateAndRestart"];
 // u :> da [label = "Execute with update arg"];
 // u box u [label = "exit(0)"];
 // a box u [label = "Process Finished"];
 // da box du [label = "Process Started"];
 // da -> du [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
-// du box du [label = "Replace Old App with Itself"];
+// du box du [label = "AUpdater::deployUpdate(...)", URL = "@ref AUpdater::deployUpdate"];
 // a <: du [label = "Execute"];
 // du box du [label = "exit(0)"];
 // da box du [label = "Process Finished"];
@@ -248,6 +286,9 @@ AUI_ENTRY {
 // a box u [label="App Normal Lifecycle"];
 // ...;
 // @endmsc
+//
+// After these operations complete, your app is running in its normal lifecycle.
+//
 
 TEST(UpdaterTest, ExampleCase) { EXPECT_EQ(fake_entry({}), 0); }
 
@@ -255,18 +296,87 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
     // AUpdater is an abstract class; it needs some functions to be implemented by you.
     //
     // In this example, let's implement auto update from GitHub release pages.
+#ifdef AUI_CMAKE_PROJECT_VERSION
+#undef AUI_CMAKE_PROJECT_VERSION
+#endif
+#define AUI_CMAKE_PROJECT_VERSION 0.0.1
     // AUI_DOCS_CODE_BEGIN
-    /*
+    static constexpr auto LOG_TAG = "MyUpdater";
     class MyUpdater: public AUpdater {
     public:
+        ~MyUpdater() override = default;
 
     protected:
-        AFuture<APath> deliverUpdateIfNeeded(const APath& unpackedUpdateDir) override {
+        AFuture<void> checkForUpdatesImpl() override {
             return async {
-                ACurl::Builder()
+                try {
+                    auto githubLatestRelease = aui::updater::github::latestRelease("aui-framework", "example_app");
+                    ALogger::info(LOG_TAG) << "Found latest release: " << githubLatestRelease.tag_name;
+                    auto ourVersion = aui::updater::Semver::fromString(AUI_PP_STRINGIZE(AUI_CMAKE_PROJECT_VERSION));
+                    auto theirVersion = aui::updater::Semver::fromString(githubLatestRelease.tag_name);
+
+                    if (theirVersion <= ourVersion) {
+                        getThread()->enqueue([] {
+                          AMessageBox::show(
+                              nullptr, "No updates found", "You are running the latest version.", AMessageBox::Icon::INFO);
+                        });
+                        return;
+                    }
+                    aui::updater::AppropriatePortablePackagePredicate predicate {};
+                    auto it = ranges::find_if(
+                        githubLatestRelease.assets, predicate, &aui::updater::github::LatestReleaseResponse::Asset::name);
+                    if (it == ranges::end(githubLatestRelease.assets)) {
+                        ALogger::warn(LOG_TAG)
+                            << "Newer version was found but a package appropriate for your platform is not available. "
+                               "Expected: "
+                            << predicate.getQualifierDebug() << ", got: "
+                            << (githubLatestRelease.assets |
+                                ranges::view::transform(&aui::updater::github::LatestReleaseResponse::Asset::name));
+                        return;
+                    }
+                    ALogger::info(LOG_TAG) << "To download: " << (mDownloadUrl = it->browser_download_url);
+
+                    getThread()->enqueue([this, self = shared_from_this(), version = githubLatestRelease.tag_name] {
+                        if (AMessageBox::show(
+                                nullptr, "New version found!", "Found version: {}\n\nWould you like to update?"_format(version),
+                                AMessageBox::Icon::INFO, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
+                            return;
+                        }
+
+                        downloadUpdate();
+                    });
+
+                } catch (const AException& e) {
+                    ALogger::err(LOG_TAG) << "Can't check for updates: " << e;
+                    getThread()->enqueue([] {
+                        AMessageBox::show(
+                            nullptr, "Oops!", "There is an error occurred while checking for updates. Please try again later.",
+                            AMessageBox::Icon::CRITICAL);
+                    });
+                }
             };
         }
-    };*/
+
+        AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override {
+            return async {
+              try {
+                  AUI_ASSERTX(!mDownloadUrl.empty(), "make a successful call to checkForUpdates first");
+                  downloadAndUnpack(mDownloadUrl, unpackedUpdateDir);
+                  reportReadyToApplyAndRestart(makeDefaultInstallationCmdline());
+              } catch (const AException& e) {
+                  ALogger::err(LOG_TAG) << "Can't check for updates: " << e;
+                  getThread()->enqueue([] {
+                    AMessageBox::show(
+                        nullptr, "Oops!", "There is an error occurred while downloading update. Please try again later.",
+                        AMessageBox::Icon::CRITICAL);
+                  });
+              }
+            };
+        }
+
+    private:
+        AString mDownloadUrl;
+    };
     // AUI_DOCS_CODE_END
 }
 
@@ -283,3 +393,41 @@ TEST(UpdaterTest, WaitForProcess) {
     EXPECT_CALL(updater, handleWaitForProcess(123));
     updater.handleStartup({ "--aui-updater-wait-for-process=123" });
 }
+
+
+// # Updater workflows {#UPDATER_WORKFLOWS}
+// When using AUpdater for your application, you need to consider several factors including usability, user experience,
+// system resources, and particular needs of your project.
+//
+// Either way, you might want to implement a way to disable auto update feature in your application.
+//
+// ## Prompt user on every step
+//
+// This approach is implemented in AUI's [Example App Template](https://github.com/aui-framework/example_app).
+//
+// The updater checks for updater periodically or upon user request and informs the user that an update is available.
+// The user then decides whether to proceed with update or not. If they agree the application will download and install
+// the update.
+//
+// This way can be considered as better approach because the user may feel they control the situation and the
+// application never does things that user never asked to (trust concerns). On the other hand, such requirement of
+// additional user interaction to can distract them from doing their work, so these interactions should not be annoying.
+//
+// You should not use AMessageBox (unless user explicitly asked to check for update) as it literally interrupts the
+// user's workflow, opting them to make a decision before they can continue their work. A great example of a bad auto
+// update implementation is qBittorrent client on Windows: hence this application typically launches on OS startup,
+// it checks for updates in background and pops the message box if update was found, **even if user is focused on
+// another application or away from keyboard**.
+//
+// ## Silent download
+//
+// This approach is implemented in AUI's [Telegram client](https://github.com/aui-framework/telegram_client), as well
+// as in official Qt-based Telegram Desktop client.
+//
+// The updater silently downloads the update in the background while the user continues working within the application
+// or even other tasks. The update then is applied automatically upon restart.
+// Optionally, the application might show a button/message/notification bubble to restart and apply update.
+//
+// Despite user trust concerns, this approach allows seamless experience - users don't need to be interrupted during
+// their work. They even might not care about updates.
+//

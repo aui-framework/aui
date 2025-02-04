@@ -195,11 +195,11 @@ public:
      * `status` is updated in UI thread only.
      *
      * `status` is designed in such a way the user can use their own custom status types or any of predefined ones:
-     * - StatusIdle
-     * - StatusCheckingForUpdates
-     * - StatusDownloading
-     * - StatusWaitingForApplyAndRestart
-     * - StatusNotAvailable
+     * - @ref AUpdater::StatusIdle
+     * - @ref AUpdater::StatusCheckingForUpdates
+     * - @ref AUpdater::StatusDownloading
+     * - @ref AUpdater::StatusWaitingForApplyAndRestart
+     * - @ref AUpdater::StatusNotAvailable
      *
      * These statuses might be set by AUpdater itself.
      */
@@ -257,9 +257,13 @@ protected:
 
     /**
      * @brief Performs update delivery to the specified directory.
+     * @param unpackedUpdateDir location to unpack an update to.
      * @details
      * Typically implemented as download to temporary dir and unpacking the archive to the specified
      * unpackedUpdateDir.
+     *
+     * Unpack your application files to `unpackedUpdateDir`. AUpdater is responsible for cleaning this dir in the
+     * future.
      */
     virtual AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) = 0;
 
