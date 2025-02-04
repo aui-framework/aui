@@ -479,7 +479,9 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                  */
                 if (receiverWeakPtr.lock() != nullptr) {
                     outgoingConnection->receiver->getThread()->enqueue(
-                        [this, receiverWeakPtr = std::move(receiverWeakPtr), connection = outgoingConnection,
+                        [this, senderWeakPtr = senderPtr.weak(),
+                         receiverWeakPtr = std::move(receiverWeakPtr),
+                         connection = outgoingConnection,
                          args = aui::detail::signal::makeTupleOfCopies(args)] {
                             static_assert(
                                 std::is_same_v<std::tuple<std::decay_t<Args>...>, std::remove_const_t<decltype(args)>>,
@@ -497,7 +499,13 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                                     connection->disconnect();
                                 }
                             };
-                            (std::apply)(connection->func, args);
+                            try {
+                                (std::apply)(connection->func, args);
+                            } catch (...) {
+                                if (auto senderPtr = senderWeakPtr.lock()) {
+                                    senderPtr->handleSlotException(std::current_exception());
+                                }
+                            }
                         });
                 }
                 ++i;
@@ -518,7 +526,13 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                 "instead of values");
         }
         lock.unlock();
-        (std::apply)(outgoingConnection->func, args);
+        try {
+            (std::apply)(outgoingConnection->func, args);
+        } catch (...) {
+            if (senderPtr) {
+                senderPtr->handleSlotException(std::current_exception());
+            }
+        }
         if (AObject::isDisconnected()) {
             i = outgoingConnections.erase(i);
             continue;

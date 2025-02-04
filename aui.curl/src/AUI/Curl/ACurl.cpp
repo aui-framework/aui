@@ -150,10 +150,9 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
 
     mWriteCallback = std::move(builder.mWriteCallback);
     mReadCallback = std::move(builder.mReadCallback);
+    mThrowExceptionOnError = builder.mThrowExceptionOnError;
     if (builder.mErrorCallback) {
         connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) { callback(e); });
-    } else if (builder.mThrowExceptionOnError) {
-        connect(fail, [](const ErrorDescription& e) { e.throwException(); });
     }
     AUI_ASSERTX(std::size(mErrorBuffer) == CURL_ERROR_SIZE, "buffer size mismatch");
     builder.mCURL = nullptr;
@@ -347,7 +346,11 @@ void ACurl::run() {
     }
     AThread::interruptionPoint();
     if (c != CURLE_OK) {
-        reportFail(c);
+        ErrorDescription description{c, AString::fromLatin1(mErrorBuffer)};
+        reportFail(description);
+        if (mThrowExceptionOnError) {
+            description.throwException();
+        }
     } else {
         reportSuccess();
     }

@@ -359,6 +359,43 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
     }
 }
 
+/**
+ * Check exception does not break the workflow.
+ */
+TEST_F(SignalSlotTest, Exception1) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+      throw AException("bruh");
+    });
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    EXPECT_CALL(*slave, die());
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Check exception does not break the workflow.
+ */
+TEST_F(SignalSlotTest, Exception2) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        throw AException("bruh");
+    });
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    EXPECT_CALL(*slave, die());
+
+    auto task = async {
+        master->broadcastMessage("hello");
+    };
+    *task;
+}
 
 TEST_F(SignalSlotTest, CopyTest) {
     struct CopyTrap {
