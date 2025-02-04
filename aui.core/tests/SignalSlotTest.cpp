@@ -359,3 +359,40 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
     }
 }
 
+
+TEST_F(SignalSlotTest, CopyTest) {
+    struct CopyTrap {
+    public:
+        CopyTrap() {
+
+        }
+        CopyTrap(const CopyTrap& c) {
+            throw AException("CopyTrap triggered!");
+        }
+        CopyTrap& operator=(const CopyTrap& c) {
+            throw AException("CopyTrap triggered!");
+        }
+        mutable int value = 0;
+    };
+
+    class Sender: public AObject {
+    public:
+        emits<CopyTrap> copyTrapSignal;
+    };
+
+    class Receiver: public AObject {
+    public:
+        void receive(const CopyTrap& c) {
+            c.value = 1;
+        }
+    };
+    Sender s;
+    Receiver r;
+
+    AObject::connect(s.copyTrapSignal, slot(r)::receive);
+
+    CopyTrap copyTrap;
+    EXPECT_EQ(copyTrap.value, 0);
+    s ^ s.copyTrapSignal(copyTrap);
+    EXPECT_EQ(copyTrap.value, 1);
+}

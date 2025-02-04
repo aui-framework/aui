@@ -105,10 +105,13 @@ void AUpdater::applyUpdateAndRestart() {
     if (!isAvailable()) {
         return;
     }
-    auto& info = std::get<StatusWaitingForApplyAndRestart>(*status);
-    auto finalArgs = injectWaitForMyPid(std::move(info.installCmdline.installerArguments));
+    auto* info = std::any_cast<StatusWaitingForApplyAndRestart>(&(*status));
+    if (!info) {
+        return;
+    }
+    auto finalArgs = injectWaitForMyPid(std::move(info->installCmdline.installerArguments));
     auto p = AProcess::create({
-      .executable = info.installCmdline.installerExecutable,
+      .executable = info->installCmdline.installerExecutable,
       .args = AProcess::ArgStringList { finalArgs },
     });
     p->run(ASubProcessExecutionFlags::DEFAULT | ASubProcessExecutionFlags::DETACHED);
@@ -145,10 +148,9 @@ void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdat
 
 void AUpdater::reportDownloadedPercentage(aui::float_within_0_1 progress) {
     getThread()->enqueue([this, self = shared_from_this(), progress] {
-        if (!std::holds_alternative<StatusDownloading>(*status)) {
-            return;
+        if (auto statusProgress = std::any_cast<StatusDownloading>(&(*status))) {
+            statusProgress->progress = progress;
         }
-        status = StatusDownloading { .progress = progress };
     });
 }
 
@@ -156,10 +158,13 @@ void AUpdater::checkForUpdates() {
     if (!isAvailable()) {
         return;
     }
+    if (!std::any_cast<StatusIdle>(&(*status))) {
+        return;
+    }
     status = StatusCheckingForUpdates {};
     mAsync << checkForUpdatesImpl().onFinally([this, self = shared_from_this()] {
         getThread()->enqueue([this, self] {
-            if (!std::holds_alternative<StatusCheckingForUpdates>(*status)) {
+            if (!std::any_cast<StatusCheckingForUpdates>(&(*status))) {
                 return;
             }
             status = StatusIdle {};
@@ -175,7 +180,7 @@ void AUpdater::downloadUpdate() {
     cleanupUnpackedUpdateDirBeforeDownloading();
     mAsync << downloadUpdateImpl(getUnpackedUpdateDir()).onFinally([this, self = shared_from_this()] {
         getThread()->enqueue([this, self] {
-            if (!std::holds_alternative<StatusDownloading>(*status)) {
+            if (!std::any_cast<StatusDownloading>(&(*status))) {
                 return;
             }
             status = StatusIdle {};

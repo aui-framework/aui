@@ -109,7 +109,7 @@ public:
      * @details
      * Basically about replacing files (no network operations will be performed).
      *
-     * Requires @ref status = StatusWaitingForApplyAndRestart.
+     * Requires @ref status = StatusWaitingForApplyAndRestart, otherwise has no effect.
      *
      * Terminates current process with `std::exit(0)`
      *
@@ -187,20 +187,28 @@ public:
         InstallCmdline installCmdline;
     };
 
-    using Status = std::variant<
-        StatusIdle, StatusCheckingForUpdates, StatusDownloading, StatusWaitingForApplyAndRestart, StatusNotAvailable>;
-
     /**
      * @brief State of the updater.
      * @details
      * Status of the AUpdater to observe from outside, i.e., by UI.
      *
      * `status` is updated in UI thread only.
+     *
+     * `status` is designed in such a way the user can use their own custom status types or any of predefined ones:
+     * - StatusIdle
+     * - StatusCheckingForUpdates
+     * - StatusDownloading
+     * - StatusWaitingForApplyAndRestart
+     * - StatusNotAvailable
+     *
+     * These statuses might be set by AUpdater itself.
      */
-    AProperty<Status> status;
+    AProperty<std::any> status;
 
     /**
      * @brief Sets `status` to @ref StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
+     * @details
+     * Requires @ref status = StatusIdle, otherwise has no effect.
      */
     void checkForUpdates();
 
@@ -269,6 +277,8 @@ protected:
 
     /**
      * @brief Being called by downloadUpdateImpl, reports download percentage to `status`.
+     * @details
+     * Requires @ref status = StatusDownloading, otherwise has no effect. Updates the value in UI thread.
      */
     void reportDownloadedPercentage(aui::float_within_0_1 progress);
 
