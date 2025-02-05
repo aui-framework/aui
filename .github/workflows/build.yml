@@ -461,11 +461,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v${{ env.TAG_NAME }}" \
+          gh release create "${{ env.TAG_NAME }}" \
             --latest=false
-            --generate-notes
             --prerelease
-            --title "v${{ env.TAG_NAME }}" \
+            --title "${{ env.TAG_NAME }}" \
             artifacts/*.*
 
     outputs:
