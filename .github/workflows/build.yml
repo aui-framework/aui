@@ -457,16 +457,26 @@ jobs:
           merge-multiple: 'true'
           pattern: aui*
 
+      # Remove old release drafts
+      - name: Remove Old Release Drafts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/{owner}/{repo}/releases \
+            --jq '.[] | select(.draft == true) | .id' \
+            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{} 
+
       - name: Publish
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release create "${{ env.TAG_NAME }}" \
             --latest=false \
+            --draft \
             --prerelease \
             --generate-notes \
             --title "${{ env.TAG_NAME }}" \
-            --target "${{ env.GITHUB_SHA }}" \
+            --target $GITHUB_SHA \
             artifacts/*.*
 
     outputs:
