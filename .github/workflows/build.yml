@@ -464,7 +464,9 @@ jobs:
           gh release create "${{ env.TAG_NAME }}" \
             --latest=false \
             --prerelease \
+            --generate-notes \
             --title "${{ env.TAG_NAME }}" \
+            --target "${{ env.GITHUB_SHA }}" \
             artifacts/*.*
 
     outputs:
