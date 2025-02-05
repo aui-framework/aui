@@ -44,10 +44,11 @@
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
 #include "AUI/View/ATextArea.h"
-
+#include "AUI/View/ASpinnerV2.h"
 
 AStylesheet::AStylesheet() {
     using namespace ass;
+    using namespace std::chrono_literals;
 
     addRules({
         // COMMON VIEWS ======================================
@@ -79,6 +80,16 @@ AStylesheet::AStylesheet() {
             Margin { 4_dp },
             FixedSize { 16_dp }
         },
+
+        /// [ASpinnerV2]
+        {
+            t<ASpinnerV2>(),
+            BackgroundImage { ":uni/svg/spinner_v2.svg", 0x993c3c43_argb },
+            Margin { 4_dp },
+            FixedSize { 16_dp },
+            ASpinnerV2::Configuration { .period = 1000ms, .steps = 8 },
+        },
+        /// [ASpinnerV2]
 
         // AText
         {

@@ -36,7 +36,7 @@
 #include "AUI/View/ASpacerExpanding.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
-#include "AUI/View/ASpinner.h"
+#include "AUI/View/ASpinnerV2.h"
 #include "DemoGraphView.h"
 
 #include "AUI/Audio/IAudioPlayer.h"
@@ -48,6 +48,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 #include "AUI/Curl/ACurl.h"
+#include "AUI/View/ASpinnerV2.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -632,7 +633,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }),
       },
       _new<ASpacerExpanding>(),
-      _new<ASpinner>(),
+      _new<ASpinnerV2>(),
       CheckBoxWrapper {
         Label { "Enabled" },
       } let {
