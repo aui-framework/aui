@@ -4,8 +4,6 @@ on:
   push:
     tags:
       - v*
-  pull_request:
-    branches: [ master, develop ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
