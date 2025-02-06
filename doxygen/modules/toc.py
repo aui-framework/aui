@@ -139,8 +139,9 @@ def run():
 
                 if summary := s.find("div", **{"class": "summary"}):
                     summary.insert(0, ' | ')
-                    summary.insert(0, tag("a", content=["View Page Source"], href="javascript:jumpToSource('view')"))
                     summary.insert(0, tag("a", content=["Edit Page Source"], href="javascript:jumpToSource('edit')"))
+                    summary.insert(0, ' | ')
+                    summary.insert(0, tag("a", content=["View Page Source"], href="javascript:jumpToSource('view')"))
 
             if toc.contents:
                 toc.insert(0, tag('p', content='Contents'))
