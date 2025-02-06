@@ -28,7 +28,7 @@ private:
 public:
     AByteBufferInputStream(AByteBufferView buffer) : mBegin(buffer.data()), mEnd(buffer.data() + buffer.size()), mCurrent(mBegin) {}
     ~AByteBufferInputStream() override = default;
-    void seek(std::streamoff offset, Seek seekDir) override;
+    void seek(std::streamoff offset, ASeekDir seekDir) override;
     [[nodiscard]] std::streampos tell() noexcept override;
     bool isEof() override;
 

@@ -23,15 +23,15 @@ size_t AByteBufferInputStream::read(char* dst, size_t size) {
     return sizeToCopy;
 }
 
-void AByteBufferInputStream::seek(std::streamoff offset, Seek seekDir) {
+void AByteBufferInputStream::seek(std::streamoff offset, ASeekDir seekDir) {
     switch (seekDir) {
-        case Seek::BEGIN:
+        case ASeekDir::BEGIN:
             mCurrent = mBegin + offset;
             break;
-        case Seek::CURRENT:
+        case ASeekDir::CURRENT:
             mCurrent += offset;
             break;
-        case Seek::END:
+        case ASeekDir::END:
             mCurrent = mEnd + offset;
             break;
         default:

@@ -9,15 +9,15 @@ bool AStrongByteBufferInputStream::isEof() {
     return mReadPos == buffer().size();
 }
 
-void AStrongByteBufferInputStream::seek(std::streamoff offset, Seek seekDir) {
+void AStrongByteBufferInputStream::seek(std::streamoff offset, ASeekDir seekDir) {
     switch (seekDir) {
-        case Seek::BEGIN:
+        case ASeekDir::BEGIN:
             mReadPos = offset;
             break;
-        case Seek::CURRENT:
+        case ASeekDir::CURRENT:
             mReadPos += offset;
             break;
-        case Seek::END:
+        case ASeekDir::END:
             mReadPos = buffer().size() + offset;
             break;
         default:

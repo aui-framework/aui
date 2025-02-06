@@ -27,7 +27,7 @@ public:
 
     bool isEof() override;
 
-    void seek(std::streamoff offset, Seek seekDir) override;
+    void seek(std::streamoff offset, ASeekDir seekDir) override;
 
     [[nodiscard]] std::streampos tell() noexcept override;
 

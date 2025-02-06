@@ -31,11 +31,11 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
                 switch (origin) {
                     case ZLIB_FILEFUNC_SEEK_SET:
                     default:
-                        return ISeekableInputStream::Seek::BEGIN;
+                        return ASeekDir::BEGIN;
                     case ZLIB_FILEFUNC_SEEK_CUR:
-                        return ISeekableInputStream::Seek::CURRENT;
+                        return ASeekDir::CURRENT;
                     case ZLIB_FILEFUNC_SEEK_END:
-                        return ISeekableInputStream::Seek::END;
+                        return ASeekDir::END;
                 }
             }());
             return 0;

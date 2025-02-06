@@ -2,6 +2,24 @@
 
 #include "IInputStream.h"
 
+
+enum class ASeekDir {
+    /**
+     * ASeekDir relatively to the begin of file
+     */
+    BEGIN,
+
+    /**
+     * ASeekDir relatively to the current position
+     */
+    CURRENT,
+
+    /**
+     * ASeekDir relative to the end of file
+     */
+    END
+};
+
 /**
  * @brief Represents an input stream with updating reading position.
  * @ingroup io
@@ -9,28 +27,10 @@
 class ISeekableInputStream: public IInputStream {
 public:
     ~ISeekableInputStream() override = default;
-
-    enum class Seek {
-        /**
-         * Seek relatively to the begin of file
-         */
-        BEGIN,
-
-        /**
-         * Seek relatively to the current position
-         */
-        CURRENT,
-
-        /**
-         * Seek relative to the end of file
-         */
-        END
-    };
-
     /**
      * @brief change reading position, a way of changing depends on seekDir parameter
      */
-    virtual void seek(std::streamoff offset, Seek seekDir) = 0;
+    virtual void seek(std::streamoff offset, ASeekDir seekDir) = 0;
 
     /**
      * @brief return current reading position
@@ -50,9 +50,9 @@ public:
      */
     size_t fileSize() {
         auto current = tell();
-        seek(0, Seek::END);
+        seek(0, ASeekDir::END);
         auto size = tell();
-        seek(current, Seek::BEGIN);
+        seek(current, ASeekDir::BEGIN);
         return size;
     }
 };
