@@ -426,6 +426,10 @@ jobs:
     if: github.event_name != 'pull_request'
     name: "Create release draft"
     steps:
+      - name: Checkout
+        if: ${{ !contains(github.ref, 'tags/v') }}
+        uses: actions/checkout@v4
+
       # Remove old release drafts
       - name: Remove Old Release Drafts
         env:
@@ -441,11 +445,7 @@ jobs:
           echo "TAG_NAME=${{ github.ref }} " >> $GITHUB_ENV
           echo "RELEASE_NAME=${{ github.ref }} " >> $GITHUB_ENV
 
-      - name: Checkout
-        if: ${{ !contains(github.ref, 'tags/v') }}
-        uses: actions/checkout@v4
-
-      - name: Retrieve version
+      - name: Increment version
         if: ${{ !contains(github.ref, 'tags/v') }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
