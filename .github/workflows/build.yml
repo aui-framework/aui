@@ -424,8 +424,17 @@ jobs:
     permissions: write-all
     needs: [deployment-tests-run-minimal-app, deployment-tests-validate-minimal-app]
     if: github.event_name != 'pull_request'
-    name: "Create release page"
+    name: "Create release draft"
     steps:
+      # Remove old release drafts
+      - name: Remove Old Release Drafts
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh api repos/{owner}/{repo}/releases \
+            --jq '.[] | select(.draft == true) | .id' \
+            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{} 
+
       - name: Retrieve version
         if: ${{ contains(github.ref, 'tags/v') }}
         run: |
@@ -441,7 +450,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python3 .github/create-release-page.py $(gh release list -L 1 --json name --jq '.[] .name')
+          python3 .github/generate-next-version.py $(gh release list -L 1 --json name --jq '.[] .name')
 
       - name: Output version
         id: version
@@ -454,15 +463,6 @@ jobs:
           path: artifacts
           merge-multiple: 'true'
           pattern: aui*
-
-      # Remove old release drafts
-      - name: Remove Old Release Drafts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api repos/{owner}/{repo}/releases \
-            --jq '.[] | select(.draft == true) | .id' \
-            | xargs -I '{}' gh api -X DELETE repos/{owner}/{repo}/releases/{} 
 
       - name: Publish
         env:
