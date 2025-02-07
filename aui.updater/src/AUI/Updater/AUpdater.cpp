@@ -82,8 +82,12 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
                                    });
             ALogger::info(LOG_TAG) << "deploying update: " << updaterDir << " -> " << destinationDir;
             deployUpdate(updaterDir, destinationDir);
-            ALogger::info(LOG_TAG) << "Post-update launch: " << updaterOrigin;
-            AProcess::create({.executable = updaterOrigin})->run(ASubProcessExecutionFlags::DETACHED);
+            AProcess::ArgStringList args;
+            args.list = injectWaitForMyPid({});
+            args.list << ARG_AUI_UPDATER_CLEANUP;
+            auto p = AProcess::create({.executable = updaterOrigin, .args = std::move(args)});
+            p->run(ASubProcessExecutionFlags::DETACHED);
+            ALogger::info(LOG_TAG) << "Post-update launch: " << p->toString();
         } catch (const AException& e) {
             ALogger::err(LOG_TAG) << "Can't deploy update: " << e;
             ALogger::info(LOG_TAG) << "Update deployment failed, trying to launch original: " << updaterOrigin;
@@ -118,8 +122,7 @@ void AUpdater::applyUpdateAndRestart() {
     });
     p->run(ASubProcessExecutionFlags::DEFAULT | ASubProcessExecutionFlags::DETACHED);
     ALogger::info(LOG_TAG)
-        << "applyUpdateAndRestart: started process pid=" << p->getPid() << ", exe=" << p->getPathToExecutable()
-        << ", args=" << finalArgs;
+        << "applyUpdateAndRestart: started process " << p->toString();
     std::exit(0);
 }
 
@@ -235,7 +238,8 @@ AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
         auto path = getUnpackedUpdateDir().parent() / "install.json";
         if (path.isRegularFileExists()) {
             AUI_DEFER { path.removeFile(); };
-            return aui::from_json<AUpdater::InstallCmdline>(AJson::fromStream(AFileInputStream(path)));
+            auto result = aui::from_json<AUpdater::InstallCmdline>(AJson::fromStream(AFileInputStream(path)));
+            ALogger::info(LOG_TAG) << "Successfully loaded update installation cmd line from prev session: " << path;
         }
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Can't restore InstallCmdline: " << e;
@@ -251,7 +255,16 @@ void AUpdater::triggerUpdateOnStartup() {
     }
 }
 
-void AUpdater::handlePostUpdateCleanup() { getUnpackedUpdateDir().removeFileRecursive(); }
+void AUpdater::handlePostUpdateCleanup() {
+    try {
+        for (const auto& dir : { getUnpackedUpdateDir(), getTempWorkDir() }) {
+            ALogger::info(LOG_TAG) << "Post update cleanup: " << dir;
+            dir.removeFileRecursive();
+        }
+    } catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Can't perform post update cleanup: " << e;
+    }
+}
 
 bool AUpdater::isAvailable() {
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX || AUI_PLATFORM_MACOS

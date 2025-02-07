@@ -31,6 +31,7 @@
 #include "Pipe.h"
 #else
 #include "AUI/Platform/unix/UnixIoAsync.h"
+#include "AUI/Common/IStringable.h"
 #endif
 
 class AChildProcess;
@@ -261,7 +262,7 @@ public:
 /**
  * Creates child process of this application.
  */
-class API_AUI_CORE AChildProcess : public AProcess, public AObject {
+class API_AUI_CORE AChildProcess : public AProcess, public AObject, public IStringable {
     friend class AProcess;
 
 public:
@@ -320,6 +321,7 @@ public:
     const _<IOutputStream>& getStdInStream() const {
         return mStdInStream;
     }
+    AString toString() const override;
 
 signals:
     emits<> finished;
