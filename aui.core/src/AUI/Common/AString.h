@@ -762,7 +762,7 @@ inline std::ostream& operator<<(std::ostream& o, const AString& s)
 template<>
 struct std::hash<AString>
 {
-    size_t operator()(const AString& t) const
+    size_t operator()(const AString& t) const noexcept
     {
         return std::hash<std::u16string>()(t);
     }
