@@ -23,6 +23,7 @@
 #include <AUI/IO/IInputStream.h>
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Thread/AFuture.h>
+#include "AUI/Common/IStringable.h"
 
 #if AUI_PLATFORM_WIN
 #include <AUI/Platform/win32/AWin32EventWait.h>
@@ -31,7 +32,6 @@
 #include "Pipe.h"
 #else
 #include "AUI/Platform/unix/UnixIoAsync.h"
-#include "AUI/Common/IStringable.h"
 #endif
 
 class AChildProcess;
