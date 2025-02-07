@@ -348,16 +348,4 @@ uint32_t AChildProcess::getPid() const noexcept { return mPid; }
 
 size_t AChildProcess::processMemory() const { return ::processMemory(mPid); }
 
-AString AChildProcess::toString() const {
-    return "<AChildProcess pid={}, exe={}, args=[ {} ], workdir={}>"_format(
-        getPid(), getApplicationFile(),
-        std::visit(
-            aui::lambda_overloaded {
-              [](const AProcess::ArgStringList& args) { return args.list.join(','); },
-              [](const AProcess::ArgSingleString& arg) { return "\"" + arg.arg + "\""; },
-            },
-            getArgs()),
-        getWorkingDirectory());
-}
-
 void AProcess::kill() const noexcept { ::kill(getPid(), SIGKILL); }

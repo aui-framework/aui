@@ -98,6 +98,18 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
     return nullptr;
 }
 
+AString AChildProcess::toString() const {
+    return "<AChildProcess pid={}, exe={}, args=[ {} ], workdir={}>"_format(
+        getPid(), getApplicationFile(),
+        std::visit(
+            aui::lambda_overloaded {
+              [](const AProcess::ArgStringList& args) { return args.list.join(','); },
+              [](const AProcess::ArgSingleString& arg) { return "\"" + arg.arg + "\""; },
+            },
+            getArgs()),
+        getWorkingDirectory());
+}
+
 
 APath AChildProcess::getModuleName() {
     return APath(getApplicationFile()).filename();
