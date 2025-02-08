@@ -943,7 +943,3 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
     // AUI_DOCS_CODE_END
     //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
-
-//
-// # Functions
-//
