@@ -162,7 +162,7 @@ class ASignal final : public AAbstractSignal {
     friend class AWatchable;
 
 public:
-    using func_t = std::function<void(Args...)>;
+    using func_t = std::function<void(const Args&...)>;
     using emits_args_t = std::tuple<Args...>;
 
     template <typename Projection>
@@ -371,7 +371,7 @@ private:
     template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
     const _<ConnectionImpl>& connect(Object objectBase, Lambda&& lambda) {
         AObject* object = nullptr;
-        if constexpr (requires { object = objectBase; }) {
+        if constexpr (std::is_base_of_v<AObject, std::remove_pointer_t<Object>>) {
             object = objectBase;
         }
         const auto& connection = [&]() -> _<ConnectionImpl>& {

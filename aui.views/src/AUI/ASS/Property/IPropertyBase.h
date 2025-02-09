@@ -49,6 +49,7 @@ namespace ass::prop {
      */
     struct API_AUI_VIEWS IPropertyBase { // ignore ass_properties
     public:
+        virtual ~IPropertyBase() = default;
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view, const ARenderContext& ctx) {}
         virtual bool isNone() { return false; }
@@ -56,6 +57,7 @@ namespace ass::prop {
             return PropertySlot::NONE;
         }
         virtual void updateInvalidPixelRect(ARect<int>& invalidRect) const {}
+
     };
     template<typename PropertyStruct>
     struct Property;

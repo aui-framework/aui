@@ -149,8 +149,9 @@ namespace aui::container {
 
 
     /**
-     * Removes all occurrences of <code>item</code> with specified projection.
-     * @param item element to remove.
+     * @brief Removes all occurrences of <code>item</code> with specified projection.
+     * @param container container to perform on.
+     * @param value element to remove.
      * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
      *        operator() cappable object, including lambda and pointer-to-member.
      */

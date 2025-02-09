@@ -16,7 +16,6 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 
-
 TEST(Pipe, DynamicBasic) {
     ADynamicPipe pipe;
     AString in = "hello world!", out;
@@ -26,6 +25,14 @@ TEST(Pipe, DynamicBasic) {
     EXPECT_ANY_THROW(pipe >> aui::serialize_sized(out));
 }
 
+#include "AUI/Platform/Pipe.h"
+TEST(Pipe, NativePipe) {
+    Pipe pipe;
+    AString in = "hello world!", out;
+    pipe << aui::serialize_sized(in);
+    pipe >> aui::serialize_sized(out);
+    EXPECT_EQ(in, out);
+}
 
 TEST(Pipe, DynamicComplex) {
     ARandom r;

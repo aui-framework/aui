@@ -16,6 +16,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include <AUI/Traits/values.h>
+#include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
 namespace ass {
@@ -32,7 +33,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<Opacity>: IPropertyBase {
+        struct API_AUI_VIEWS Property<Opacity>: IPropertyBase, IStringable {
         private:
             Opacity mInfo;
 
@@ -46,6 +47,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "Opacity({})"_format(mInfo.opacity);
             }
         };
     }

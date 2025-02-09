@@ -11,30 +11,28 @@
 
 #pragma once
 #include "IInputStream.h"
+#include "ISeekableInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/SharedPtr.h"
-
 
 /**
  * @brief Converts a AByteBuffer to an IInputStream.
  * @ingroup io
  */
-class API_AUI_CORE AByteBufferInputStream final: public IInputStream
-{
+class API_AUI_CORE AByteBufferInputStream final : public ISeekableInputStream {
 private:
-    const char* mCurrent;
+    const char* mBegin;
     const char* mEnd;
-
+    const char* mCurrent;
 
 public:
-	AByteBufferInputStream(AByteBufferView buffer)
-		: mCurrent(buffer.data()), mEnd(buffer.data() + buffer.size())
-	{
-	}
+    AByteBufferInputStream(AByteBufferView buffer) : mBegin(buffer.data()), mEnd(buffer.data() + buffer.size()), mCurrent(mBegin) {}
+    ~AByteBufferInputStream() override = default;
+    void seek(std::streamoff offset, ASeekDir seekDir) override;
+    [[nodiscard]] std::streampos tell() noexcept override;
+    bool isEof() override;
 
-	size_t read(char* dst, size_t size) override;
+    size_t read(char* dst, size_t size) override;
 
-    size_t available() const {
-        return mEnd - mCurrent;
-    }
+    size_t available() const { return mEnd - mCurrent; }
 };

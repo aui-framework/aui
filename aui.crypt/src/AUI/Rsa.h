@@ -13,3 +13,8 @@
 #pragma warning(disable: 4251)
 
 #include <AUI/api.h>
+
+/**
+ * @defgroup crypt aui::crypt
+ * @brief aui::crypt is an decryption/encryption/hash library.
+ */

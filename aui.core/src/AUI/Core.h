@@ -20,3 +20,40 @@
 #else
 #define AUI_EXPECT_DEATH(statement, matcher)
 #endif
+
+
+/**
+ * @defgroup core aui::core
+ * @brief Main central library.
+ * @details AUI's core central library without graphical components used by other modules.
+ * Adds these features to C++:
+ * - @ref signal_slot "signal-slot system"
+ * - @ref property_system "property system"
+ * - @ref AAbstractThread::interrupt() "interruptable threads"
+ * - @ref io "input-output"
+ * - @ref AI18n "i18n"
+ * - @ref ALogger "logging"
+ * - data models
+ * - reflection
+ * - trait classes
+ * - @ref AUrl "urls"
+ * - @ref jni "C++/Java JNI bridge"
+ */
+
+
+
+/**
+ * @defgroup useful_macros Useful macros
+ * @ingroup core
+ * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
+ * @details
+ * @note
+ * For build-time macros, see @ref "docs/Macros.md".
+ */
+
+/**
+ * @defgroup io IO streams
+ * @ingroup core
+ * @brief Input-output streams
+ */
+

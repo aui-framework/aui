@@ -123,7 +123,7 @@ namespace aui {
      * <dl>
      *     <dt><b>O(n)</b></dt>
      *     <dd>
-     *         log<sub>2</crop>(end - begin)
+     *         log<sub>2</sub>(end - begin)
      *     </dd>
      * </dl>
      */

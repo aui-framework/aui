@@ -27,6 +27,10 @@ Pipe::Pipe() {
     securityAttributes.bInheritHandle = true;
     securityAttributes.lpSecurityDescriptor = nullptr;
 
+    // the code uses CreateNamedPipe with the FILE_FLAG_OVERLAPPED flag, which enables overlapped I/O operations. This
+    // is useful for non-blocking and asynchronous communication patterns, where a process can send data to or receive
+    // data from the pipe without blocking its own execution.
+
     constexpr auto BUFFER_SIZE = 4096;
     auto pipeName = R"(\\.\Pipe\AuiAnonPipe.{}.{})"_format(GetCurrentProcessId(), nextUniqueId());
     mOut = CreateNamedPipe(aui::win32::toWchar(pipeName),
@@ -69,5 +73,24 @@ void Pipe::closeOut() noexcept {
     if (mOut) {
         CloseHandle(mOut);
         mOut = nullptr;
+    }
+}
+
+size_t Pipe::read(char *dst, size_t size) {
+    AUI_ASSERT(out() != 0);
+
+    DWORD bytesRead;
+    if (!ReadFile(out(), dst, size, &bytesRead, nullptr)) {
+        throw AIOException("failed to read from pipe");
+    }
+    return bytesRead;
+}
+
+void Pipe::write(const char *src, size_t size) {
+    AUI_ASSERT(in() != 0);
+
+    DWORD bytesWritten;
+    if (!WriteFile(in(), src, size, &bytesWritten, nullptr)) {
+        throw AIOException("failed to write to pipe");
     }
 }

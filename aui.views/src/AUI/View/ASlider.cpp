@@ -27,7 +27,7 @@ ASlider::ASlider() {
         mHandle = _new<Handle>()
     });
 
-    connect(mProgress->valueChanged, [this](aui::float_within_0_1 v) {
+    connect(mProgress->value().changed, [this](aui::float_within_0_1 v) {
         emit valueChanging(v); // we would emit ed signal in pointer release method
         updateHandlePosition();
     });

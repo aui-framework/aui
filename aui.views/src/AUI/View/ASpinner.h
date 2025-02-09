@@ -14,6 +14,16 @@
 
 #include "AView.h"
 
+/**
+ * @brief Circular infinite progress indicator.
+ * @ingroup useful_views
+ * @details
+ * Rotates its contents as it renders.
+ *
+ * @note
+ * ASpinner constantly requests redraws to maintain its animation which might lead to high performance usage. See
+ * ASpinnerV2.
+ */
 class API_AUI_VIEWS ASpinner: public AView {
 public:
     void render(ARenderContext ctx) override;

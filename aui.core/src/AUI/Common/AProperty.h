@@ -159,6 +159,10 @@ struct AProperty: AObjectBase {
         return this;
     }
 
+    const AObjectBase* boundObject() const {
+        return this;
+    }
+
     AProperty(const AProperty& value): raw(value.raw) {
     }
 
@@ -278,6 +282,7 @@ private:
     }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
+static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not conform AAnyProperty concept");
 
 /**
  * @brief Property implementation to use with custom getter/setter.

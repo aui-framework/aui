@@ -1,4 +1,4 @@
-# aui_executable
+# aui_module
 
 Wraps standard `add_library` with AUI's features support.
 

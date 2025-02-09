@@ -23,6 +23,7 @@
 #include <AUI/IO/IInputStream.h>
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Thread/AFuture.h>
+#include "AUI/Common/IStringable.h"
 
 #if AUI_PLATFORM_WIN
 #include <AUI/Platform/win32/AWin32EventWait.h>
@@ -44,14 +45,24 @@ AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
      * @brief Merges stdin and stdout streams in a child process
      */
     MERGE_STDOUT_STDERR = 0b001,
+
     /**
      * @brief If set, child and parent processes have the same stdout stream
      */
     TIE_STDOUT = 0b010,
+
     /**
      * @brief If set, child and parent processes have the same stderr stream
      */
-    TIE_STDERR = 0b100, DEFAULT = 0
+    TIE_STDERR = 0b100, DEFAULT = 0,
+
+    /**
+     * @brief If set, child process starts in "detached" way; i.e, when this process dies, child won't.
+     * @details
+     * On *nix systems, the process started with DETACHED flag is daemonized (i.e., reparented to process with pid 1)
+     * using double fork technique.
+     */
+    DETACHED = 0b1000,
 };
 
 class AProcessException : public AException {
@@ -60,7 +71,19 @@ public:
 };
 
 /**
- * Retrieves data about processes.
+ * @brief Retrieves information about processes.
+ * @ingroup core
+ * @details
+ * Process model that facilitates process creation, management, and interaction with other processes.
+ *
+ * @note
+ * In a sandboxed environment (especially in iOS and Android) this functionality is mostly irrelevant (except
+ * `AProcess::self()`).
+ *
+ * The AProcess class is typically used for creating, controlling, and monitoring subprocesses (including
+ * @ref AProcess::self "self") in a platform-independent manner. It provides a way to run external applications from
+ * within the application itself, which can be useful for tasks like running scripts, launching other programs, or
+ * automating system operations through commands.
  */
 class API_AUI_CORE AProcess : public aui::noncopyable {
 public:
@@ -224,6 +247,11 @@ public:
     static _<AProcess> findAnotherSelfInstance(const AString& yourProjectName);
 
     /**
+     * @details
+     * This function might cause race condition if process is about to die. If process is not found, `nullptr` is
+     * returned so you must check for `nullptr` before proceeding. However, if non-`nullptr` is returned, the process
+     * handle is "acquired" and guaranteed to be valid during lifetime of `AProcess` instance.
+     *
      * @return process by id
      */
     static _<AProcess> fromPid(uint32_t pid);
@@ -234,7 +262,7 @@ public:
 /**
  * Creates child process of this application.
  */
-class API_AUI_CORE AChildProcess : public AProcess, public AObject {
+class API_AUI_CORE AChildProcess : public AProcess, public AObject, public IStringable {
     friend class AProcess;
 
 public:
@@ -293,6 +321,7 @@ public:
     const _<IOutputStream>& getStdInStream() const {
         return mStdInStream;
     }
+    AString toString() const override;
 
 signals:
     emits<> finished;

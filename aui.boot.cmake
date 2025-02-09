@@ -105,15 +105,19 @@ endif()
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
-    set(CMAKE_INSTALL_NAME_DIR "@rpath")
-    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    # [RPATH apple]
+set(CMAKE_INSTALL_NAME_DIR "@rpath")
+set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    # [RPATH apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
     else()
-        set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+        # [RPATH linux]
+set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+        # [RPATH linux]
     endif()
 endif()
 
@@ -197,7 +201,7 @@ if (NOT EXISTS ${AUIB_CACHE_DIR}/repo)
 endif()
 
 
-macro(_auib_copy_runtime_dependencies)
+function(_auib_copy_runtime_dependencies DEP_INSTALL_PREFIX)
     # create links to runtime dependencies
     if (WIN32)
         set(LIB_EXT dll)
@@ -212,6 +216,7 @@ macro(_auib_copy_runtime_dependencies)
         # sometimes it's empty
         if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
             set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}" PARENT_SCOPE)
         endif()
 
         set(DESTINATION_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
@@ -219,6 +224,7 @@ macro(_auib_copy_runtime_dependencies)
         # sometimes it's empty
         if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
             set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}" PARENT_SCOPE)
         endif()
 
         set(DESTINATION_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
@@ -234,18 +240,18 @@ macro(_auib_copy_runtime_dependencies)
                 set(_copy ${DESTINATION_DIR}/${_config}/${FILENAME})
                 if (NOT EXISTS ${_copy})
                     message(STATUS "[AUI.BOOT/Runtime Dependency] ${_item} -> ${DESTINATION_DIR}/${_config}/${FILENAME}")
-                    file(MAKE_DIRECTORY ${DESTINATION_DIR}/${_config})
-                    file(COPY ${_item} DESTINATION ${DESTINATION_DIR}/${_config})
                 endif()
+                file(MAKE_DIRECTORY ${DESTINATION_DIR}/${_config})
+                file(COPY ${_item} DESTINATION ${DESTINATION_DIR}/${_config})
             endforeach()
         else()
             if (NOT EXISTS ${DESTINATION_DIR}/${FILENAME})
                 message(STATUS "[AUI.BOOT/Runtime Dependency] ${_item} -> ${DESTINATION_DIR}/${FILENAME}")
-                file(COPY ${_item} DESTINATION ${DESTINATION_DIR})
             endif()
+            file(COPY ${_item} DESTINATION ${DESTINATION_DIR})
         endif()
     endforeach()
-endmacro()
+endfunction()
 
 macro(_auib_update_imported_targets_list) # used for displaying imported target names
     get_property(_imported_targets_before GLOBAL PROPERTY AUIB_IMPORTED_TARGETS)
@@ -1014,7 +1020,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
     endif()
 
-    _auib_copy_runtime_dependencies()
+    _auib_copy_runtime_dependencies(${DEP_INSTALL_PREFIX})
 
     if (NOT DEP_ADD_SUBDIRECTORY)
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
@@ -1082,7 +1088,13 @@ macro(auib_precompiled_binary)
             set(_location "${_location}/aui.boot.cmake")
             if (EXISTS ${_location})
                 install(FILES ${_location} DESTINATION ".")
-                set(AUIB_DEPS "include(\${CMAKE_CURRENT_LIST_DIR}/aui.boot.cmake)\n${AUIB_DEPS}")
+                set(_AUIB_DEPS [[
+include(${CMAKE_CURRENT_LIST_DIR}/aui.boot.cmake)
+get_filename_component(_aui_boot_current_list_file "${CMAKE_CURRENT_LIST_FILE}" PATH)
+_auib_copy_runtime_dependencies(${_aui_boot_current_list_file})
+
+]])
+                set(AUIB_DEPS "${_AUIB_DEPS}${AUIB_DEPS}")
                 break()
             endif()
         endforeach()

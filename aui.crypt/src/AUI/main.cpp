@@ -10,11 +10,6 @@
  */
 
 
-/**
- * @defgroup crypt aui::crypt
- * @brief aui::crypt is an decryption/encryption/hash library.
- */
-
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 

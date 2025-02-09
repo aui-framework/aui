@@ -13,6 +13,7 @@
 #include <cstdio>
 #include "AUI/Core.h"
 #include "IInputStream.h"
+#include "ISeekableInputStream.h"
 
 class AString;
 
@@ -20,7 +21,7 @@ class AString;
  * @brief Opens a file for a binary read.
  * @ingroup io
  */
-class API_AUI_CORE AFileInputStream: public IInputStream
+class API_AUI_CORE AFileInputStream: public ISeekableInputStream
 {
 private:
     FILE* mFile = nullptr;
@@ -38,38 +39,10 @@ public:
         return *this;
     }
 
-    FILE* nativeHandle() const {
-        return mFile;
-    }
+    FILE* nativeHandle() const { return mFile; }
 
-    enum class Seek {
-        /**
-         * Seek relatively to the begin of file
-         */
-        BEGIN,
-
-        /**
-         * Seek relatively to the current position
-         */
-        CURRENT,
-
-        /**
-         * Seek relative to the end of file
-         */
-        END
-    };
-
-    void seek(std::streamoff offset, Seek dir) noexcept;
-    void seek(std::streampos pos) noexcept;
-    std::streampos tell() noexcept;
-
-    std::size_t size() noexcept {
-        auto current = tell();
-        seek(0, Seek::END);
-        auto size = tell();
-        seek(current, Seek::BEGIN);
-        return size;
-    }
-
+    void seek(std::streamoff offset, ASeekDir seekDir) noexcept override;
+    [[nodiscard]] std::streampos tell() noexcept override;
+    bool isEof() override;
     std::size_t read(char* dst, size_t size) override;
 };

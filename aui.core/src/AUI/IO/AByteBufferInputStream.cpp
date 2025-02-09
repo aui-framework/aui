@@ -12,8 +12,7 @@
 #include "AByteBufferInputStream.h"
 #include <glm/glm.hpp>
 
-size_t AByteBufferInputStream::read(char* dst, size_t size)
-{
+size_t AByteBufferInputStream::read(char* dst, size_t size) {
     auto last = mCurrent + size;
     if (last > mEnd) {
         last = mEnd;
@@ -21,5 +20,28 @@ size_t AByteBufferInputStream::read(char* dst, size_t size)
     auto sizeToCopy = last - mCurrent;
     std::memcpy(dst, mCurrent, sizeToCopy);
     mCurrent = last;
-	return sizeToCopy;
+    return sizeToCopy;
+}
+
+void AByteBufferInputStream::seek(std::streamoff offset, ASeekDir seekDir) {
+    switch (seekDir) {
+        case ASeekDir::BEGIN:
+            mCurrent = mBegin + offset;
+            break;
+        case ASeekDir::CURRENT:
+            mCurrent += offset;
+            break;
+        case ASeekDir::END:
+            mCurrent = mEnd + offset;
+            break;
+        default:
+            break;
+    }
+    mCurrent = std::clamp(mCurrent, mBegin, mEnd);
+}
+
+std::streampos AByteBufferInputStream::tell() noexcept { return std::distance(mBegin, mCurrent); }
+
+bool AByteBufferInputStream::isEof() {
+    return mCurrent == mEnd;
 }
