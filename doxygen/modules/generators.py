@@ -13,8 +13,9 @@ from pathlib import Path
 from modules import regexes
 
 CATEGORIES = [
-    ('app', "Application Examples"),
-    ('desktop', "Desktop"),
+    ('app', "Application Examples", "These examples are larger than examples from other categories to demonstrate how to combine various techniques together to build (almost) production-ready applications."),
+    ('ui', "UI", "Various UI building samples."),
+    ('desktop', "Desktop", "Desktop-specific examples."),
 ]
 
 
@@ -213,7 +214,7 @@ def docs_examples():
                     else:
                         fos.write(f"# {title}")
                         fos.write(" {#")
-                        id = title.lower().replace(" ", "_")
+                        id = "example_" + title.lower().replace(" ", "_")
                         fos.write(id)
                         fos.write("}")
                     fos.write("\n\n")

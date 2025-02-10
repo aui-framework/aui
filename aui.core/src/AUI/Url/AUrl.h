@@ -25,7 +25,7 @@
  * Handles standard web url (schema://host:port/path).
  *
  * Empty schema is mapped to the assets file. In example, ":icon.svg" references to `icon.svg` file in your assets.
- * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/AUI.Example.Views)
+ * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/ui/views)
  * of asset usage.
  */
 class API_AUI_CORE AUrl {
