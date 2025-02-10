@@ -268,6 +268,7 @@ def docs_examples():
         fos.write("This document lists a collection of code samples and tutorials designed to help newcomers get started with AUI Framework-based app development.\n\n")
         for category in CATEGORIES:
             fos.write(f"# {category[1]} {{#examples_{category[0]}}}\n\n")
+            fos.write(f"{category[2]}\n\n")
             fos.write("|  |  |\n")
             fos.write("|--|--|\n")
 
