@@ -28,6 +28,7 @@
         </tab>
         <tab type="usergroup" title="Getting started" visible="yes">
             <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI" />
+            <tab type="user" url="@ref EXAMPLES" title="Examples" />
             <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot" />
             <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
             <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />
@@ -140,42 +141,6 @@
         <authorsection visible="yes"/>
     </namespace>
 
-    <!-- Layout definition for a file page -->
-    <file>
-        <includes visible="$SHOW_INCLUDE_FILES"/>
-        <includegraph visible="$INCLUDE_GRAPH"/>
-        <includedbygraph visible="$INCLUDED_BY_GRAPH"/>
-        <sourcelink visible="yes"/>
-        <memberdecl>
-            <interfaces visible="yes" title=""/>
-            <classes visible="yes" title=""/>
-            <structs visible="yes" title=""/>
-            <exceptions visible="yes" title=""/>
-            <namespaces visible="yes" title=""/>
-            <constantgroups visible="yes" title=""/>
-            <defines title=""/>
-            <typedefs title=""/>
-            <sequences title=""/>
-            <dictionaries title=""/>
-            <enums title=""/>
-            <functions title=""/>
-            <variables title=""/>
-            <membergroups visible="yes"/>
-        </memberdecl>
-        <detaileddescription title=""/>
-        <memberdef>
-            <inlineclasses title=""/>
-            <defines title=""/>
-            <typedefs title=""/>
-            <sequences title=""/>
-            <dictionaries title=""/>
-            <enums title=""/>
-            <functions title=""/>
-            <variables title=""/>
-        </memberdef>
-        <authorsection/>
-    </file>
-
     <!-- Layout definition for a group page -->
     <group>
         <detaileddescription title="" />
@@ -224,14 +189,4 @@
         <authorsection visible="yes"/>
     </group>
 
-    <!-- Layout definition for a directory page -->
-    <directory>
-        <briefdescription visible="yes"/>
-        <detaileddescription title=""/>
-        <memberdecl>
-            <dirs visible="yes"/>
-            <files visible="yes"/>
-        </memberdecl>
-        <directorygraph visible="yes"/>
-    </directory>
 </doxygenlayout>

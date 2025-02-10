@@ -8,7 +8,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import urllib
+import urllib.parse
 from pathlib import Path
 
 from modules import regexes

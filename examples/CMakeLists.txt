@@ -1,2 +1,2 @@
 add_subdirectory(AUI.Example.Minesweeper)
-add_subdirectory(ui)
+add_subdirectory(app)

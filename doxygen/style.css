@@ -195,7 +195,7 @@ h1, h2, h3, h4, h5, h6 {
     position: relative;
 }
 
-:target {
+h1 a:target, h2 a:target, h3 a:target, h4 a:target, h5 a:target, h6 a:target {
     animation: blink-animation 0.3s ease-in-out 2;
     -webkit-animation: blink-animation 0.3s ease-in-out 2;
     text-align: right;
@@ -238,4 +238,8 @@ h1, h2, h3, h4, h5, h6 {
 
 a .fa {
     margin-right: 8px;
+}
+
+tr.markdownTableRowEven {
+    background-color: var(--blockquote-background);
 }

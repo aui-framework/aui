@@ -21,6 +21,7 @@ if __name__ == '__main__':
 
     generators.docs_from_tests()
     generators.docs_from_gen()
+    generators.docs_examples()
     doxygen_utils.invoke()
 
     patching.patch(target='classes.html', matcher='<div class="contents">', mode=patching.Mode.INSERT_AFTER)

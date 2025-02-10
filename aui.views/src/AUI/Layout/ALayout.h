@@ -29,7 +29,7 @@ class AViewContainer;
  * beyond the border of the @ref AViewContainer "container". A @ref AViewContainer "container" can be a child of an
  * another @ref AViewContainer "container" i.e., nesting is allowed.
  *
- * # Examples
+ * # Layout Examples
  *
  * @ref AHorizontalLayout "Horizontal" layout:
  * <table>

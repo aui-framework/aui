@@ -138,8 +138,7 @@ TEST(UpdaterTest, ApplyUpdate) {
 // to user's directory (i.e., in `AppData`).
 //
 // @note
-// Check out our [app template](https://github.com/aui-framework/example_app) for a GitHub-hosted app template with auto
-// update implemented.
+// Check out our @ref example_app_template for a GitHub-hosted app template with auto update implemented.
 // @image html afljskfllkaf.gif
 //
 // # Supported platforms
@@ -403,7 +402,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ## Prompt user on every step
 //
-// This approach is implemented in AUI's [Example App Template](https://github.com/aui-framework/example_app).
+// This approach is implemented in AUI's @ref example_app_template.
 //
 // The updater checks for updater periodically or upon user request and informs the user that an update is available.
 // The user then decides whether to proceed with update or not. If they agree the application will download and install
@@ -421,8 +420,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ## Silent download
 //
-// This approach is implemented in AUI's [Telegram client](https://github.com/aui-framework/telegram_client), as well
-// as in official Qt-based Telegram Desktop client.
+// This approach is implemented in @ref example_app_auigram, as well as in official Qt-based Telegram Desktop client.
 //
 // The updater silently downloads the update in the background while the user continues working within the application
 // or even other tasks. The update then is applied automatically upon restart.
