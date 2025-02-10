@@ -28,7 +28,7 @@
         </tab>
         <tab type="usergroup" title="Getting started" visible="yes">
             <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI" />
-            <tab type="user" url="@ref EXAMPLES" title="Examples" />
+            <tab type="user" url="@ref examples" title="Examples" />
             <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot" />
             <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
             <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />

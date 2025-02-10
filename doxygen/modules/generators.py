@@ -13,7 +13,7 @@ from pathlib import Path
 from modules import regexes
 
 CATEGORIES = [
-    ('app', "Application Examples", "These examples are larger than examples from other categories to demonstrate how to combine various techniques together to build (almost) production-ready applications."),
+    ('app', "Application Examples", "These examples typically go beyond single-file projects and delve into more substantial applications that showcase how multiple techniques can be integrated to create nearly production-ready applications. Each example not only demonstrates specific features of the AUI Framework but also covers practical aspects such as dependency management, data binding and user interface customization."),
     ('ui', "UI", "Various UI building samples."),
     ('desktop', "Desktop", "Desktop-specific examples."),
 ]
@@ -264,8 +264,8 @@ def docs_examples():
         raise RuntimeError("no examples provided")
 
     with open("doxygen/intermediate/examples.md", "w") as fos:
-        fos.write("# Examples {#EXAMPLES}\n\n")
-        fos.write("This document lists a collection of code samples and tutorials designed to help newcomers get started with AUI Framework-based app development.\n\n")
+        fos.write("# Examples {#examples}\n\n")
+        fos.write("This document lists a collection of code samples and tutorials designed to help both newcomers and experienced developers with AUI Framework app development. These projects are designed to cover diversity of topics, from fundamental views usage through to assembling complete applications.\n\n")
         for category in CATEGORIES:
             fos.write(f"# {category[1]} {{#examples_{category[0]}}}\n\n")
             fos.write(f"{category[2]}\n\n")

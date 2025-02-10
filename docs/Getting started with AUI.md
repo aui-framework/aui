@@ -174,4 +174,4 @@ See @ref layout_managers "layout managers" for more info about layout managers.
 
 See @ref ass "ASS" for more info about styling.
 
-See @ref EXAMPLES for examples.
+See @ref examples for examples.
