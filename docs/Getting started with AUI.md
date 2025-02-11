@@ -173,3 +173,5 @@ The example above produces the following window:
 See @ref layout_managers "layout managers" for more info about layout managers.
 
 See @ref ass "ASS" for more info about styling.
+
+See @ref examples for examples.

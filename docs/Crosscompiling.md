@@ -20,7 +20,7 @@ In iOS, there's no "official" toolchain so there are community-provided toolchai
 
 AUI.Boot forwards `CMAKE_TOOLCHAIN_FILE` across all the dependencies.
 
-### Example
+### Usage Example
 Assuming working directory is the build directory:
 
 To configure the project use

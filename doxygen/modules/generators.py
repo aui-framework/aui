@@ -12,6 +12,12 @@ from pathlib import Path
 
 from modules import regexes
 
+CATEGORIES = [
+    ('app', "Application Examples", "These examples typically go beyond single-file projects and delve into more substantial applications that showcase how multiple techniques can be integrated to create nearly production-ready applications. Each example not only demonstrates specific features of the AUI Framework but also covers practical aspects such as dependency management, data binding and user interface customization."),
+    ('ui', "UI", "Various UI building samples."),
+    ('desktop', "Desktop", "Desktop-specific examples."),
+]
+
 
 def docs_from_gen():
     BASE_DIR = Path('doxygen/gen')
@@ -170,3 +176,106 @@ def docs_from_tests():
     print('Tests to generate docs from:', suitable_cpp_files)
     for path in suitable_cpp_files:
         process_cpp_file(path)
+
+
+def docs_examples():
+    EXAMPLES_DIR = Path.cwd() / "examples"
+
+    examples = {}
+
+    for root, dirs, files in os.walk(EXAMPLES_DIR):
+        for file in files:
+            if not file == "README.md":
+                continue
+            example_path = str(Path(root).relative_to(EXAMPLES_DIR))
+            if not "/" in example_path:
+                continue
+            example_path = example_path.replace("/", "_")
+
+            def collect_srcs(top):
+                for root, dirs, files in os.walk(top):
+                    for f in files:
+                        if f.endswith(".h") or f.endswith(".cpp"):
+                            yield Path(root) / f
+            srcs = [i for i in collect_srcs(root)]
+
+            input_file = Path(root) / file
+            with open(input_file, 'r') as fis:
+                page_path = f'doxygen/intermediate/{example_path}.md'
+                with open(page_path, 'w') as fos:
+                    title = fis.readline()
+                    assert title.startswith("# ")
+                    title = title.lstrip("# ").rstrip("\n")
+                    if "{" in title:
+                        fos.write("# ")
+                        fos.write(title)
+                        id = title[title.find("{#")+2:title.find("}")]
+                        title= title[:title.find("{#")]
+                    else:
+                        fos.write(f"# {title}")
+                        fos.write(" {#")
+                        id = "example_" + title.lower().replace(" ", "_")
+                        fos.write(id)
+                        fos.write("}")
+                    fos.write("\n\n")
+                    category = None
+                    description = ""
+                    fos.write(f'<b aui-src="{input_file.relative_to(Path.cwd())}"></b>')
+                    it = iter(fis.readlines())
+                    for line in it:
+                        fos.write(line)
+                        if m := regexes.AUI_EXAMPLE.match(line):
+                            category = m.group(1)
+                            for description_line in it:
+                                fos.write(description_line)
+                                description_line = description_line.strip("\n")
+                                if not description_line:
+                                    break
+                                description = description + " " + description_line
+                    description = description.strip(" ")
+                    if not id:
+                        raise RuntimeError(f"no id provided in {input_file}")
+                    if not category:
+                        raise RuntimeError(f"no category provided in {input_file}")
+                    if not description:
+                        raise RuntimeError(f"no description provided in {input_file}")
+
+                    current_category_list = examples.get(category, [])
+                    current_category_list.append((id, description))
+                    examples[category] = current_category_list
+                    fos.write("\n\n")
+
+                    assert category is not None
+
+                    if not srcs:
+                        continue
+                    fos.write("\n\n# Source Files\n\n")
+                    fos.write(f" - [Repository](https://github.com/aui-framework/aui/tree/master/{Path(root).relative_to(Path.cwd())})\n")
+                    for src in srcs:
+                        fos.write(f' - @ref {src.relative_to(Path.cwd())} "{src.relative_to(root)}"\n')
+
+                    for src in srcs:
+                        fos.write(f"@example {src.relative_to(Path.cwd())}\n")
+                        fos.write("@note\n")
+                        fos.write(f"This Source File belongs to @ref {page_path} \"{title}\" Example. Please follow the link for example explanation.\n")
+                        fos.write("\n\n")
+
+    if not examples:
+        raise RuntimeError("no examples provided")
+
+    with open("doxygen/intermediate/examples.md", "w") as fos:
+        fos.write("# Examples {#examples}\n\n")
+        fos.write("This document lists a collection of code samples and tutorials designed to help both newcomers and experienced developers with AUI Framework app development. These projects are designed to cover diversity of topics, from fundamental views usage through to assembling complete applications.\n\n")
+        for category in CATEGORIES:
+            fos.write(f"# {category[1]} {{#examples_{category[0]}}}\n\n")
+            fos.write(f"{category[2]}\n\n")
+            fos.write("|  |  |\n")
+            fos.write("|--|--|\n")
+
+            category_list = examples[category[0]]
+            for id, description in sorted(category_list, key=lambda x: x[0]):
+                fos.write(f"| @ref {id} | {description} |\n")
+            fos.write("\n\n")
+
+
+

@@ -220,8 +220,10 @@ template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_co
     }
 };
 
-
-
+/**
+ * @brief Make a bitfield-style enum class.
+ * @ingroup core
+ */
 #define AUI_ENUM_FLAG(name) enum class name: int; \
                             constexpr inline name operator|(name a, name b) {return static_cast<name>(static_cast<int>(a) | static_cast<int>(b));} \
                             constexpr inline name operator&(name a, name b) {return static_cast<name>(static_cast<int>(a) & static_cast<int>(b));} \

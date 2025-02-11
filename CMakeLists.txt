@@ -76,9 +76,7 @@ if (NOT ANDROID AND NOT IOS)
 endif()
 
 if (AUI_BUILD_EXAMPLES) 
-    add_subdirectory(examples/AUI.Example.Views)
-    #add_subdirectory(examples/AUI.Example.Fractal)
-    #add_subdirectory(examples/AUI.Example.Minesweeper)
+    add_subdirectory(examples)
 endif()
 
 if (NOT AUI_NO_TESTS)

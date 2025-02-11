@@ -109,4 +109,14 @@ private:
     AScrollArea* findScrollArea();
 };
 
+template<>
+struct ADataBindingDefault<ATextArea, AString> {
+public:
+    static auto property(const _<ATextArea>& view) {
+        return view->text();
+    }
+
+    static void setup(const _<ATextArea>& view) {}
+};
+
 
