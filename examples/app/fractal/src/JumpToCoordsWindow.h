@@ -11,11 +11,10 @@
 
 #pragma once
 
-
 #include <AUI/Platform/AWindow.h>
+#include "FractalView.h"
 
-class FractalWindow: public AWindow {
+class JumpToCoordsWindow : public AWindow {
 public:
-    FractalWindow();
+    explicit JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent);
 };
-

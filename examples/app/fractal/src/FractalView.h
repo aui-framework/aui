@@ -11,12 +11,11 @@
 
 #pragma once
 
-
 #include <AUI/View/AView.h>
 #include <AUI/GL/Program.h>
 #include <AUI/GL/Texture2D.h>
 
-class FractalView: public AView {
+class FractalView : public AView {
 private:
     gl::Program mShader;
     _<gl::Texture2D> mTexture;
@@ -38,17 +37,13 @@ public:
 
     void onKeyRepeat(AInput::Key key) override;
 
-    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     void setSize(glm::ivec2 size) override;
 
-    gl::Shader& getShader() {
-        return mShader;
-    }
+    gl::Program& getShader() { return mShader; }
 
-    const _<gl::Texture2D>& getTexture() const {
-        return mTexture;
-    }
+    const _<gl::Texture2D>& getTexture() const { return mTexture; }
 
     glm::dvec2 getPlotPosition() const;
     double getPlotScale() const;
@@ -59,4 +54,3 @@ signals:
 
     emits<glm::dvec2, double> centerPosChanged;
 };
-
