@@ -126,6 +126,10 @@ struct ProjectedSignal {
 
     operator bool() const { return bool(base); }
 
+    bool isAtSignalEmissionState() const noexcept {
+        return base.isAtSignalEmissionState();
+    }
+
 private:
     template <not_overloaded_lambda Lambda>
     auto makeRawInvocable(Lambda&& lambda) const {
@@ -211,6 +215,11 @@ public:
         return std::any_of(
             mOutgoingConnections.begin(), mOutgoingConnections.end(),
             [&](const SenderConnectionOwner& s) { return s.value->receiverBase == object.ptr(); });
+    }
+
+    [[nodiscard]]
+    bool isAtSignalEmissionState() const noexcept {
+        return mLoopGuard.is_locked();
     }
 
 private:
@@ -365,6 +374,7 @@ private:
     };
 
     mutable AVector<SenderConnectionOwner> mOutgoingConnections;
+    ASpinlockMutex mLoopGuard;
 
     void invokeSignal(AObject* sender, std::tuple<const Args&...> args = {});
 
@@ -441,6 +451,8 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
     }
 
     std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+    std::unique_lock lock2(mLoopGuard, std::try_to_lock);
+    AUI_ASSERTX(lock2.owns_lock(), "signal should not be emitted inside its handler");
     auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
     ARaiiHelper returnBack = [&] {
         if (!lock.owns_lock()) lock.lock();
