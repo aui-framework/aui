@@ -242,11 +242,13 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
 bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
     mCompiledText.reset();
     auto [target, relativeIndex] = getLeftEntity(at);
-    if ((*target)->getCharacterCount() == relativeIndex) {
-        target++;
-        relativeIndex = 0;
+    if (target != entities().end()) {
+        if ((*target)->getCharacterCount() == relativeIndex) {
+            target++;
+            relativeIndex = 0;
+        }
+        target = splitIfNecessary({ target, relativeIndex });
     }
-    target = splitIfNecessary({target, relativeIndex});
     for (auto i: toInsert | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
     }

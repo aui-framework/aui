@@ -190,7 +190,7 @@ void AWindowBase::focusNextView() {
     }
 
     if (target != this) {
-        setFocusedView(target->sharedPtr());
+        target->focus();
     }
 }
 

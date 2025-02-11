@@ -679,6 +679,19 @@ public:
     void removeAssName(const AString& assName);
 
     /**
+     * @brief Depending on value, either adds or removes ass name.
+     * @param assName ASS name to add or remove
+     * @param value boolean that determines actual operation
+     */
+    void setAssName(const AString& assName, bool value) {
+        if (value) {
+            addAssName(assName);
+        } else {
+            removeAssName(assName);
+        }
+    }
+
+    /**
      * @brief Wraps the addAssName function to make it easier to add ASS class names.
      * \example
      * <code>
