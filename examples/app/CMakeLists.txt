@@ -1,1 +1,2 @@
 add_subdirectory(notes)
+add_subdirectory(minesweeper)

@@ -15,19 +15,19 @@
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ALabel.h"
 
-class NewGameWindow: public AWindow
-{
-private:
-	MinesweeperWindow* mMinesweeper;
-	_<ANumberPicker> mWidth;
-	_<ANumberPicker> mHeight;
-	_<ANumberPicker> mMines;
-	_<ALabel> mDifficultyLabel;
-
-	void updateMinesMax();
-	void updateDifficultyLabel();
-	void begin();
-
+class NewGameWindow : public AWindow {
 public:
-	NewGameWindow(MinesweeperWindow* minesweeper);
+    NewGameWindow(MinesweeperWindow* minesweeper);
+
+private:
+    MinesweeperWindow* mMinesweeper;
+    _<ANumberPicker> mWidth;
+    _<ANumberPicker> mHeight;
+    _<ANumberPicker> mMines;
+    _<ALabel> mDifficultyLabel;
+
+    void updateMinesMax();
+    void updateDifficultyLabel();
+    void begin();
+
 };

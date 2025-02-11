@@ -378,6 +378,7 @@
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
 #include "Selector/AndSelector.h"
+#include "Selector/NotSelector.h"
 #include "Selector/type_of.h"
 #include "Selector/activated.h"
 #include "Selector/disabled.h"
