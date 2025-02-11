@@ -207,6 +207,7 @@ STRIP_FROM_INC_PATH    = aui.core/src \
                          aui.network/src \
                          aui.views/src \
                          aui.xml/src \
+                         aui.audio/src \
                          aui.updater/src \
                          aui.uitests/src
 
@@ -966,6 +967,7 @@ INPUT                  = aui.core \
                          aui.json \
                          aui.network \
                          aui.views \
+                         aui.audio \
                          aui.updater/src \
                          aui.xml \
                          aui.uitests \

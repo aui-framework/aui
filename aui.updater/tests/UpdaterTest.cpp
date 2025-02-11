@@ -139,7 +139,6 @@ TEST(UpdaterTest, ApplyUpdate) {
 //
 // @note
 // Check out our @ref example_app_template for a GitHub-hosted app template with auto update implemented.
-// @image html afljskfllkaf.gif
 //
 // # Supported platforms
 // `aui::updater` supports the following platforms:
