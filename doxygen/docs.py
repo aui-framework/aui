@@ -6,12 +6,36 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
+import os
 import shutil
 from pathlib import Path
 
 from modules import checks, patching, generators, doxygen_utils, common, toc
 from modules.config import CONFIG
+
+def fix_code_whitespaces():
+    for root, dirs, files in os.walk("doxygen/out/html"):
+        for file in files:
+            if not file.endswith(".html"):
+                continue
+            path = Path(root) / file
+            with open(path, 'r') as fis:
+                lines = fis.readlines()
+
+            def is_code_line(line):
+                return '<div class="line">' in line
+
+            if all([not is_code_line(line) for line in lines]):
+                continue
+
+            with open(path, 'w') as fos:
+                for line in lines:
+                    if is_code_line(line):
+                        line = line.replace("  ", "&nbsp;&nbsp;")
+
+                    fos.write(line)
+
+
 
 if __name__ == '__main__':
     checks.is_valid_workdir()
@@ -23,6 +47,8 @@ if __name__ == '__main__':
     generators.docs_from_gen()
     generators.docs_examples()
     doxygen_utils.invoke()
+
+    fix_code_whitespaces()
 
     patching.patch(target='classes.html', matcher='<div class="contents">', mode=patching.Mode.INSERT_AFTER)
 
