@@ -137,6 +137,7 @@ public:
  * @brief Data binding implementation.
  * @tparam Model Your model type.
  * @details
+ * @experimental
  * <p>
  * If const reference of your model passed, ADataBinding will create and manage its own copy of your model.
  * </p>

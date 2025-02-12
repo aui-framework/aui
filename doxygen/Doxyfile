@@ -300,7 +300,8 @@ TAB_SIZE               = 4
 # @} or use a double escape (\\{ and \\})
 
 ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
-                         auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par"
+                         auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par" \
+                         experimental="@warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For

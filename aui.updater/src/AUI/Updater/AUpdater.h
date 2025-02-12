@@ -21,6 +21,7 @@
  * @brief Updater class.
  * @ingroup updater
  * @details
+// @experimental
  * AUpdater follows strategy pattern, i.e., you are excepted to call its functions but the behaviour and conditions
  * are yours.
  *

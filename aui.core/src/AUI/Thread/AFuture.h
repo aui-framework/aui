@@ -546,6 +546,7 @@ namespace aui::impl::future {
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
+ * @experimental
  * AFuture is used as a result for asynchronous functions.
  *
  * AFuture is returned by @ref async keyword:

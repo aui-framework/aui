@@ -34,6 +34,7 @@ class UIDataBindingTest : public testing::UITest {
 // @ingroup core
 // @brief Property System is a data binding mechanism based on @ref signal_slot "signal-slot system".
 // @details
+// @experimental
 // AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
 // @ref signal_slot "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
 // involve external tools (like `moc`). They are written in pure C++.
