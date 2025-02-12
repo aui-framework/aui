@@ -23,6 +23,12 @@
 
 
 /**
+ * @mainpage AUI Framework
+ * @htmlinclude ./docs/index.html
+ */
+
+
+/**
  * @defgroup core aui::core
  * @brief Main central library.
  * @details AUI's core central library without graphical components used by other modules.
