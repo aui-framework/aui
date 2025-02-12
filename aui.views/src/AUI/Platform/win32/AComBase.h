@@ -19,7 +19,9 @@
 
 /**
  * @brief Helper class implementing COM AddRef Release, and QueryInterface.
- * @ingroup windows_specific
+ * @ingroup core
+ * @details
+ * @exclusivefor{windows}
  */
 template<typename Child, typename Base>
 class AComBase: public Base {

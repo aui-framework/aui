@@ -52,6 +52,14 @@
             <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
             <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
         </tab>
+        <tab type="usergroup" title="Platform Specifics" visible="yes">
+            <tab type="user" url="@ref windows" title="Windows" />
+            <tab type="user" url="@ref linux" title="Linux" />
+            <tab type="user" url="@ref macos" title="macOS" />
+            <tab type="user" url="@ref android" title="Android" />
+            <tab type="user" url="@ref ios" title="iOS" />
+            <tab type="user" url="@ref emscripten" title="WebAssembly" />
+        </tab>
         <tab type="usergroup" title="Other" visible="yes">
             <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
             <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
