@@ -16,8 +16,10 @@
 
 /**
  * @brief Takes care of AddRef and Release() reference counting mechanism of COM objects.
- * @ingroup windows_specific
+ * @ingroup core
  * @tparam T
+ * @details
+ * @exclusivefor{windows}
  */
 template<typename T>
 class AComPtr {

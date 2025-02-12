@@ -41,7 +41,8 @@ using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
  * - ".close" for close button
  * - ".middle" for maximize button
  *
- * # Windows
+ *
+ * @specificto{windows}
  * Since Windows does not provide APIs to the customize caption, AUI implements and renders caption by itself, including
  * window icon, title and buttons.
  */

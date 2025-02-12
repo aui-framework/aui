@@ -197,7 +197,12 @@ public:
     const APath& touch() const;
 
     /**
-     * @return On Linux/macOS, returns self copy. On Windows, returns self copy with backslashes (\) instead of slashes (/).
+     * @brief Transforms this path to string with platform's native slashes.
+     * @details
+     * @specificto{windows}
+     * Returns path with backward slashes `\\`.
+     *
+     * On any other platform, returns path with forward slashes `/`.
      */
     AString systemSlashDirection() const;
 
@@ -391,26 +396,48 @@ public:
         /**
          * @brief Folder for application data.
          * @details
-         * Windows: C:/Users/%user%/.appdata/Roaming/
-         * Linux: %homedir%/.local/share/
-         * Android/iOS: \<internal_storage_path\>/__aui_appdata
+         * @specificto{windows}
+         * Maps to `C:/Users/ %user% /.appdata/Roaming/`.
+         *
+         * @specificto{linux}
+         * Maps to `$HOME/.local/share/`.
+         *
+         * @specificto{android}
+         * Maps to `\<internal_storage_path\>/__aui_appdata`.
+         *
+         * @specificto{ios}
+         * Maps to `\<internal_storage_path\>/__aui_appdata`.
          */
         APPDATA,
 
         /**
          * @brief Folder for temporary data.
          * @details
-         * Windows: User's temp folder (%temp%)
-         * Linux: /tmp
-         * Android/iOS: \<internal_storage_path\>/__aui_tmp
+         * @specificto{windows}
+         * Maps to user's temp folder `%temp%`.
+         *
+         * @specificto{linux}
+         * Maps to system temp directory `/tmp`.
+         *
+         * @specificto{macos}
+         * Maps to system temp directory `/tmp`.
+         *
+         * @specificto{android}
+         * Maps to AUI-managed temporary directory: `\<internal_storage_path\>/__aui_tmp`.
+         *
+         * @specificto{ios}
+         * Maps to AUI-managed temporary directory: `\<internal_storage_path\>/__aui_tmp`.
          */
         TEMP,
 
         /**
          * @brief User home directory.
          * @details
-         * Windows: User's home folder (C:\\Users\\USERNAME)
-         * Linux: /home/$USER
+         * @specificto{windows}
+         * Maps to user's home folder `C:\\Users\\ %user%`.
+         *
+         * @specificto{linux}
+         * Maps to user's home folder `/home/$USER`.
          */
         HOME,
     };

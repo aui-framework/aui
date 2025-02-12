@@ -777,7 +777,9 @@ namespace aui::win32 {
 
     /**
      * @brief AString to const wchar_t*.
-     * @ingroup windows_specific
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
      */
     inline const wchar_t* toWchar(const AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
@@ -786,7 +788,9 @@ namespace aui::win32 {
 
     /**
      * @brief AString to const wchar_t*.
-     * @ingroup windows_specific
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
      */
     inline wchar_t* toWchar(AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
@@ -795,7 +799,9 @@ namespace aui::win32 {
 
     /**
      * @brief AString to wchar_t string view.
-     * @ingroup windows_specific
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
      */
     inline std::wstring_view toWcharView(const AString& string) {
         return {toWchar(string), string.length() };
@@ -803,7 +809,9 @@ namespace aui::win32 {
 
     /**
      * @brief wchar_t string view to AString.
-     * @ingroup windows_specific
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
      */
     inline AString fromWchar(std::wstring_view string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
