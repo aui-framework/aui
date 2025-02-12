@@ -84,11 +84,11 @@ public:
         insert(end(), std::forward<StoredType>(data));
     }
 
-    const_iterator insert(const_iterator at, StoredType data) {
-        at = mVector.insert(at, std::move(data));
-        emit this->dataInserted(this->range(AListModelIndex(at - begin()),
-                                            AListModelIndex(at - begin() + 1)));
-        return at;
+    auto insert(const_iterator at, StoredType data) {
+        auto out = mVector.insert(at, std::move(data));
+        emit this->dataInserted(this->range(AListModelIndex(out - begin()),
+                                            AListModelIndex(out - begin() + 1)));
+        return out;
     }
 
     void pop_back() noexcept {

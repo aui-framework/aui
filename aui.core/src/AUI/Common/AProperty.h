@@ -245,7 +245,7 @@ struct AProperty: AObjectBase {
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
+    auto readProjected(Projection&& projection) const noexcept {
         return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
     }
 

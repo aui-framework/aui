@@ -65,6 +65,7 @@ public:
      */
     explicit ADrawableView(_<IDrawable> drawable);
     ADrawableView();
+    ~ADrawableView() override = default;
     void render(ARenderContext context) override;
 
     void setDrawable(const _<IDrawable>& drawable) {
@@ -82,8 +83,8 @@ private:
     emits<_<IDrawable>> mDrawableChanged;
 };
 
-template<>
-struct ADataBindingDefault<ADrawableView, _<IDrawable>> {
+template<aui::derived_from<ADrawableView> T>
+struct ADataBindingDefault<T, _<IDrawable>> {
 public:
     static auto property(const _<ADrawableView>& view) {
         return view->drawable();
@@ -95,6 +96,12 @@ public:
     static auto getSetter() { return &ADrawableView::setDrawable; }
 };
 
+class ADrawableIconView: public ADrawableView {
+public:
+    using ADrawableView::ADrawableView;
+    ~ADrawableIconView() override = default;
+};
+
 namespace declarative {
-    using Icon = aui::ui_building::view<ADrawableView>;
+    using Icon = aui::ui_building::view<ADrawableIconView>;
 }
