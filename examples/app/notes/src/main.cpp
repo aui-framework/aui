@@ -39,14 +39,49 @@ public:
     }
 };
 
-struct StringOneLinePreview {
-    AString operator()(const AString& s) const {
-        if (s.empty()) {
-            return "Empty";
+_<AView> notePreview(const _<Note>& note) {
+    struct StringOneLinePreview {
+        AString operator()(const AString& s) const {
+            if (s.empty()) {
+                return "Empty";
+            }
+            return s.restrictLength(100, "").replacedAll('\n', ' ');
         }
-        return s.restrictLength(100, "").replacedAll('\n', ' ');
+    };
+
+    return Vertical {
+        Label {} with_style { FontSize { 10_pt }, ATextOverflow::ELLIPSIS } &
+            note->title.readProjected(StringOneLinePreview {}),
+        Label {} with_style {
+                  ATextOverflow::ELLIPSIS,
+                  Opacity { 0.7f },
+                } &
+            note->content.readProjected(StringOneLinePreview {}),
+    } with_style {
+        Padding { 4_dp, 8_dp },
+        BorderRadius { 8_dp },
+        Margin { 4_dp, 8_dp },
+    };
+}
+
+_<AView> noteEditor(const _<Note>& note) {
+    if (note == nullptr) {
+        return Centered { Label { "No note selected" } };
     }
-};
+    return AScrollArea::Builder().withContents(
+        Vertical {
+          _new<TitleTextArea>("Untitled") let {
+                  it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
+                  AObject::biConnect(note->title, it->text());
+                  if (note->content->empty()) {
+                      it->focus();
+                  }
+              },
+          _new<ATextArea>("Text") with_style { Expanding() } && note->content,
+        } with_style {
+          Padding { 8_dp, 16_dp },
+        });
+}
 
 class MainWindow : public AWindow {
 public:
@@ -72,26 +107,13 @@ public:
                       AScrollArea::Builder()
                           .withContents(
                           AUI_DECLARATIVE_FOR(note, mNotes, AVerticalLayout) {
-                              _<AView> view =
-                                  Vertical {
-                                      Label {} with_style { FontSize { 10_pt }, ATextOverflow::ELLIPSIS } &
-                                          note->title.readProjected(StringOneLinePreview {}),
-                                      Label {} with_style {
-                                                ATextOverflow::ELLIPSIS,
-                                                Opacity { 0.7f },
-                                              } &
-                                          note->content.readProjected(StringOneLinePreview {}),
-                                  } with_style {
-                                      Padding { 4_dp, 8_dp },
-                                      BorderRadius { 8_dp },
-                                      Margin { 4_dp, 8_dp },
-                                  };
-                              AObject::connect(view->clicked, [this, note] { mCurrentNote = note; });
-                              AObject::connect(mCurrentNote, view, [note, &view = *view](const _<Note>& currentNote) {
+                              return notePreview(note) let {
+                                connect(it->clicked, [this, note] { mCurrentNote = note; });
+                                it & mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
                                   ALogger::info("main") << "currentNote == note " << currentNote << " == " << note;
                                   view.setAssName(".plain_bg", currentNote == note);
-                              });
-                              return view;
+                                };
+                              };
                           })
                           .build(),
                     } with_style { MinSize { 200_dp } },
@@ -101,23 +123,7 @@ public:
                         Button { Icon { ":img/trash.svg" }, Label { "Delete" } }.connect(
                             &AView::clicked, me::deleteCurrentNote),
                       },
-                      CustomLayout::Expanding {} &
-                          mCurrentNote.readProjected([&](const _<Note>& currentNote) -> _<AView> {
-                              if (currentNote == nullptr) {
-                                  return Centered { Label { "No note selected" } };
-                              }
-                              return AScrollArea::Builder().withContents(
-                                  Vertical {
-                                    mTitleTextArea =
-                                        _new<TitleTextArea>("Untitled") let {
-                                            it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
-                                            biConnect(currentNote->title, it->text());
-                                        },
-                                    _new<ATextArea>("Text") with_style { Expanding() } && currentNote->content,
-                                  } with_style {
-                                    Padding { 8_dp, 16_dp },
-                                  });
-                          }),
+                      CustomLayout::Expanding {} & mCurrentNote.readProjected(noteEditor),
                     } with_style { MinSize { 200_dp } }
                         << ".plain_bg",
                   })
@@ -133,7 +139,6 @@ public:
         auto note = aui::ptr::manage(new Note { .title = "Untitled" });
         mNotes << note;
         mCurrentNote = std::move(note);
-        mTitleTextArea->focus();
     }
 
     void deleteCurrentNote() {}
@@ -141,7 +146,6 @@ public:
 private:
     _<AListModel<_<Note>>> mNotes = _new<AListModel<_<Note>>>();
     AProperty<_<Note>> mCurrentNote;
-    _<ATextArea> mTitleTextArea;
 };
 
 AUI_ENTRY {
