@@ -304,6 +304,7 @@ ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
                          experimental="@warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
                          specificto{1}="@xrefitem \1 \"\1-specific\" \"\" "\
                          exclusivefor{1}="@specificto{\1} This API is available on @ref \1 only."\
+                         auisourcemarker="<b aui-src='@fileinfo#L@lineinfo'></b>"\
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
