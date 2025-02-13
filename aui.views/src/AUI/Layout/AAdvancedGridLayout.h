@@ -17,20 +17,15 @@
  * @brief Grid layout. Unlike AGridLayout, cells may have different sizes.
  * @ingroup layout_managers
  */
-class API_AUI_VIEWS AAdvancedGridLayout: public ALayout {
+class API_AUI_VIEWS AAdvancedGridLayout : public ALayout {
 public:
-
     AAdvancedGridLayout(int cellsX, int cellsY);
 
     virtual ~AAdvancedGridLayout() = default;
 
-    _<AView> getViewAt(size_t index) {
-        return mCells.at(index).view;
-    }
+    _<AView> getViewAt(size_t index) { return mCells.at(index).view; }
 
-    void setViewAt(size_t index, _<AView> view) {
-        mCells.at(index).view = view;
-    }
+    void setViewAt(size_t index, _<AView> view) { mCells.at(index).view = view; }
 
     void onResize(int x, int y, int width, int height) override;
     void addView(const _<AView>& view, int x, int y);
@@ -47,6 +42,8 @@ public:
 
     AVector<_<AView>> getAllViews() override;
 
+    void setSpacing(int spacing) override;
+
 protected:
     struct CompositionCache {
         unsigned expandingSum = 0;
@@ -60,9 +57,7 @@ protected:
         _<AView> view;
         int x, y;
 
-        operator _<AView>() const {
-            return view;
-        }
+        operator _<AView>() const { return view; }
     };
 
     int mCurrentIndex = 0;
@@ -79,6 +74,4 @@ protected:
     AVector<_<AView>> getColumn(int column);
 
     virtual void prepareCache(AVector<CompositionCache>& columns, AVector<CompositionCache>& rows);
-
 };
-
