@@ -29,6 +29,7 @@
 /**
  * @brief Native pipe RAII wrapper.
  * @details
+ * @specificto{windows}
  * On Windows, implemented with CreateNamedPipe.
  *
  * On *nix, implemented with pipe(2).

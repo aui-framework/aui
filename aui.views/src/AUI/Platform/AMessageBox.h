@@ -12,33 +12,41 @@
 #pragma once
 #include "AUI/Views.h"
 
-
 class AString;
 class AWindow;
 
-namespace AMessageBox
-{
-    enum class Icon
-	{
-		NONE,
-		INFO,
-		WARNING,
-		CRITICAL
-	};
-	enum class Button
-	{
-		OK,
-		OK_CANCEL,
-		YES_NO,
-		YES_NO_CANCEL,
-	};
-	enum class ResultButton
-	{
-		INVALID,
-		OK,
-		CANCEL,
-		YES,
-		NO
-	};
-	API_AUI_VIEWS ResultButton show(AWindow* parent, const AString& title, const AString& message, Icon icon = Icon::NONE, Button b = Button::OK);
+/**
+ * @brief Displaying native modal message dialogs.
+ * @ingroup views
+ * @details
+ * AMessageBox provides a set of APIs to display native modal message boxes, giving the user some important information
+ * or asking questions.
+ *
+ * Title is a short sentence describing the situation in 2-4 words, typically rendered as emphasized text or in the
+ * titlebar. Message contains more information about the state of things. Optionally, buttons or icon can be specified.
+ *
+ * The rest of the application is freezed/blocked until the user dismisses the message box. This means message boxes
+ * should be used only in emergency situations, when your application literally can't operate until it recevies a
+ * response from the user. Use non-blocking, contextual and structured feedback where possible.
+ *
+ * @specificto{windows}
+ * Implemented with [MessageBox](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox).
+ *
+ * @specificto{linux}
+ * Implemented with [GtkDialog](https://docs.gtk.org/gtk4/class.Dialog.html).
+ *
+ * @specificto{macos}
+ * Implemented with [NSAlert](https://developer.apple.com/documentation/appkit/nsalert?language=objc).
+ */
+namespace AMessageBox {
+enum class Icon { NONE, INFO, WARNING, CRITICAL };
+enum class Button {
+    OK,
+    OK_CANCEL,
+    YES_NO,
+    YES_NO_CANCEL,
 };
+enum class ResultButton { INVALID, OK, CANCEL, YES, NO };
+API_AUI_VIEWS ResultButton
+show(AWindow* parent, const AString& title, const AString& message, Icon icon = Icon::NONE, Button b = Button::OK);
+};   // namespace AMessageBox

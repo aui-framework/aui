@@ -126,11 +126,11 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
+    onMouseButtonDown(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
+    onMouseButtonUp(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)scrollWheel:(NSEvent *)event {

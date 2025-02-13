@@ -35,6 +35,11 @@ def fix_code_whitespaces():
 
                     fos.write(line)
 
+def fix_platform_names():
+    for k,v in [('windows', 'Windows'), ('macos', 'macOS'), ('linux', 'Linux'), ('ios', 'iOS'), ('android', 'Android')]:
+        patching.patch(target='*.html', matcher=f'{k}-specific', mode=patching.Mode.REPLACE, value=f'{v}-specific')
+
+
 
 
 if __name__ == '__main__':
@@ -49,6 +54,7 @@ if __name__ == '__main__':
     doxygen_utils.invoke()
 
     fix_code_whitespaces()
+    fix_platform_names()
 
     patching.patch(target='classes.html', matcher='<div class="contents">', mode=patching.Mode.INSERT_AFTER)
 

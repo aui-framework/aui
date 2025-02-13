@@ -300,7 +300,10 @@ TAB_SIZE               = 4
 # @} or use a double escape (\\{ and \\})
 
 ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
-                         auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par"
+                         auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par" \
+                         experimental="@warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
+                         specificto{1}="@xrefitem \1 \"\1-specific\" \"\" "\
+                         exclusivefor{1}="@specificto{\1} This API is available on @ref \1 only."\
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For
@@ -1012,21 +1015,7 @@ INPUT_FILE_ENCODING    =
 # be provided as doxygen C comment), *.py, *.pyw, *.f90, *.f95, *.f03, *.f08,
 # *.f18, *.f, *.for, *.vhd, *.vhdl, *.ucf, *.qsf and *.ice.
 
-FILE_PATTERNS          = *.c \
-                         *.cc \
-                         *.cxx \
-                         *.cpp \
-                         *.c++ \
-                         *.java \
-                         *.ii \
-                         *.ixx \
-                         *.ipp \
-                         *.i++ \
-                         *.inl \
-                         *.idl \
-                         *.ddl \
-                         *.odl \
-                         *.h \
+FILE_PATTERNS          = *.h \
                          *.hh \
                          *.hxx \
                          *.hpp \
@@ -1041,7 +1030,6 @@ FILE_PATTERNS          = *.c \
                          *.m \
                          *.markdown \
                          *.md \
-                         *.mm \
                          *.dox \
                          *.py \
                          *.pyw \

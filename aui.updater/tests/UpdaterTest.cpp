@@ -129,6 +129,7 @@ TEST(UpdaterTest, ApplyUpdate) {
 // @defgroup updater aui::updater
 // @brief Deliver updates on non-centralized distribution methods
 // @details
+// @experimental
 // This module is purposed for delivering updates to your end users on distribution methods that do not support that by
 // themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
 // your website).

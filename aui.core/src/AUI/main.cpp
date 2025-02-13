@@ -9,11 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/**
- * @mainpage AUI Framework
- * @htmlinclude ./docs/index.html
- */
-
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 

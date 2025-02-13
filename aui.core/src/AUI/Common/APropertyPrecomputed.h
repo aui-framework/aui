@@ -42,6 +42,7 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
  * @brief Readonly property that holds a value computed by an expression.
  * @ingroup property_system
  * @details
+ * @experimental
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
  *

@@ -137,6 +137,7 @@ public:
 
         /**
          * @details
+         * @specificto{windows}
          * Takes action only on Windows platform.
          *
          * If true, during conversion to a single command line string on Windows platforms elements of list containing
@@ -169,6 +170,7 @@ public:
          * Unix native APIs use arguments as array of strings. If ArgSingleString variant is chosen, AUI splits it with
          * whitespaces.
          *
+         * @specificto{windows}
          * Windows native APIs use arguments as a single string. If ArgStringList variant is chosen, AUI converts array
          * of strings to a single command line string value. See ArgStringList for details of this conversion.
          */
@@ -224,6 +226,7 @@ public:
      * @param args arguments
      * @param workingDirectory pro
      * @note This function could not determine exit code because of MS Windows restrictions
+     * @exclusivefor{windows}
      */
     static void executeAsAdministrator(
         const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});

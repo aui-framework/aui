@@ -141,6 +141,7 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
  * @brief Basic easy-to-use property implementation containing T.
  * @ingroup property_system
  * @details
+ * @experimental
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
@@ -287,6 +288,7 @@ static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property_system
  * @details
+ * @experimental
  * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
  * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
