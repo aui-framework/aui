@@ -672,6 +672,16 @@ public:
     }
 
     [[nodiscard]]
+    bool operator==(std::nullptr_t) const noexcept {
+        return super::mInner == nullptr;
+    }
+
+    [[nodiscard]]
+    bool operator!=(std::nullptr_t) const noexcept {
+        return super::mInner != nullptr;
+    }
+
+    [[nodiscard]]
     bool operator==(const AFuture& r) const noexcept {
         return super::mInner == r.mInner;
     }
@@ -803,6 +813,16 @@ public:
     AFuture& operator=(std::nullptr_t) noexcept {
         super::mInner = nullptr;
         return *this;
+    }
+
+    [[nodiscard]]
+    bool operator==(std::nullptr_t) const noexcept {
+        return super::mInner == nullptr;
+    }
+
+    [[nodiscard]]
+    bool operator!=(std::nullptr_t) const noexcept {
+        return super::mInner != nullptr;
     }
 
     [[nodiscard]]

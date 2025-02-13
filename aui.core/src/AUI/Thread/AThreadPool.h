@@ -23,7 +23,7 @@
 #include <utility>
 #include "AUI/Traits/concepts.h"
 
-template<typename T>
+template <typename T>
 class AFuture;
 
 /**
@@ -31,9 +31,9 @@ class AFuture;
  * @see AThreadPool::global()
  */
 class API_AUI_CORE AThreadPool {
-   public:
+public:
     class API_AUI_CORE Worker : public AThread {
-       private:
+    private:
         bool mEnabled = true;
         bool processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue);
         AThreadPool& mTP;
@@ -41,12 +41,12 @@ class API_AUI_CORE AThreadPool {
         void iteration(std::unique_lock<std::mutex>& tpLock);
         void wait(std::unique_lock<std::mutex>& tpLock);
 
-       public:
+    public:
         Worker(AThreadPool& tp, size_t index);
         ~Worker();
         void aboutToDelete();
 
-        template<aui::predicate ShouldContinue>
+        template <aui::predicate ShouldContinue>
         void loop(ShouldContinue&& shouldContinue) {
             std::unique_lock lock(mTP.mQueueLock);
             while (shouldContinue()) {
@@ -67,7 +67,7 @@ class API_AUI_CORE AThreadPool {
         PRIORITY_LOWEST,
     };
 
-   protected:
+protected:
     typedef std::function<void()> task;
     AVector<_<Worker>> mWorkers;
     AQueue<task> mQueueHighest;
@@ -78,7 +78,7 @@ class API_AUI_CORE AThreadPool {
     std::condition_variable mCV;
     size_t mIdleWorkers = 0;
 
-   public:
+public:
     /**
      * @brief Initializes the thread pool with size of threads.
      * @param size thread count to initialize.
@@ -86,11 +86,15 @@ class API_AUI_CORE AThreadPool {
     AThreadPool(size_t size);
 
     /**
-     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads or --aui-threadpool-size=SIZE passed to your application.
+     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads
+     * or --aui-threadpool-size=SIZE passed to your application.
      */
     AThreadPool();
     ~AThreadPool();
     size_t getPendingTaskCount();
+    size_t getTotalTaskCount() {
+        return getPendingTaskCount() + getTotalWorkerCount() - getIdleWorkerCount();
+    }
     void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
     void clear();
     void runLaterTasks();
@@ -107,6 +111,11 @@ class API_AUI_CORE AThreadPool {
      * @brief Global thread pool created with the default constructor.
      */
     static AThreadPool& global();
+
+    [[nodiscard]]
+    const AVector<_<Worker>>& workers() const {
+        return mWorkers;
+    }
 
     size_t getTotalWorkerCount() const { return mWorkers.size(); }
     size_t getIdleWorkerCount() const { return mIdleWorkers; }
@@ -149,8 +158,8 @@ class API_AUI_CORE AThreadPool {
 
                     lock = nullptr;   // destroy strong ref
 
-                    innerUnsafePointer->tryExecute(
-                        innerWeak);   // there's a check inside tryExecute to check its validity
+                    innerUnsafePointer->tryExecute(innerWeak);   // there's a check inside tryExecute to check its
+                                                                 // validity
                 }
             },
             AThreadPool::PRIORITY_LOWEST);
@@ -174,10 +183,10 @@ class API_AUI_CORE AThreadPool {
  */
 template <typename T = void>
 class AFutureSet : public AVector<AFuture<T>> {
-   private:
+private:
     using super = AVector<AFuture<T>>;
 
-   public:
+public:
     using AVector<AFuture<T>>::AVector;
 
     /**
@@ -253,7 +262,7 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
     AFutureSet<ResultType> futureSet;
 
     size_t itemCount = end - begin;
-    size_t affinity = (glm::min)(AThreadPool::global().getTotalWorkerCount(), itemCount);
+    size_t affinity = (glm::min) (AThreadPool::global().getTotalWorkerCount(), itemCount);
     if (affinity == 0)
         return futureSet;
     size_t itemsPerThread = itemCount / affinity;
@@ -262,9 +271,10 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
         auto forThreadBegin = begin;
         begin += itemsPerThread;
         auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
-        futureSet.push_back(*this *
-                                [functor = std::forward<Functor>(functor), forThreadBegin,
-                                 forThreadEnd]() -> decltype(auto) { return functor(forThreadBegin, forThreadEnd); });
+        futureSet.push_back(
+            *this * [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
+                return functor(forThreadBegin, forThreadEnd);
+            });
     }
 
     return futureSet;
