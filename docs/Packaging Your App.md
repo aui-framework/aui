@@ -35,7 +35,7 @@ This guide covers various packaging techniques for all supported platforms.
 @note
 This guide assumes you have already called @ref docs/aui_app.md inside your `CMakeLists.txt`.
 
-# Windows
+# Windows {#PACKAGING_FOR_WINDOWS}
 
 Historically, Windows has been associated with installers in the form of executable files (`exe`s) and Windows Installer
 files (`msi`s), often downloaded from the internet. This method can be considered unsecure.

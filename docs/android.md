@@ -1,5 +1,6 @@
 @page android Android (operating system)
 @details
+@auisourcemarker
 Android is a mobile operating system primarily developed by Google. It's the most widely used operating system in the
 world with over three billion monthly active users.
 
