@@ -33,9 +33,11 @@ class AWindow;
  *
  * @specificto{windows}
  * Implemented with @ref MessageBox.
+ * @image html ajkdhadkjfh.png
  *
  * @specificto{linux}
  * Implemented with @ref GtkDialog.
+ * @image html wjkfnjkws.png
  *
  * @specificto{macos}
  * Implemented with @ref NSAlert.
