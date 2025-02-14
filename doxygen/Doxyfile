@@ -301,7 +301,7 @@ TAB_SIZE               = 4
 
 ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
                          auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par" \
-                         experimental="@warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
+                         experimental="@xrefitem experimental_api \"\" \"\" @warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
                          specificto{1}="@xrefitem \1 \"\1-specific\" \"\" "\
                          exclusivefor{1}="@specificto{\1} This API is available on @ref \1 only."\
                          auisourcemarker="<b aui-src='@fileinfo#L@lineinfo'></b>"\
