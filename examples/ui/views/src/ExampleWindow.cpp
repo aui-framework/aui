@@ -159,7 +159,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       Icon { ":img/logo.svg" },
                       Label { "Button with icon" },
                     }
-                        .clicked(this, [&] { AMessageBox::show(this, "Title", "Message"); }),
+                        .clicked(this, [&] {
+                            /// [AMessageBox]
+                            AMessageBox::show(this, "Title", "Message");
+                            /// [AMessageBox]
+                        }),
                   },
                 },
 

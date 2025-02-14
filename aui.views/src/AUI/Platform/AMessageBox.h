@@ -29,14 +29,17 @@ class AWindow;
  * should be used only in emergency situations, when your application literally can't operate until it recevies a
  * response from the user. Use non-blocking, contextual and structured feedback where possible.
  *
+ * @snippet examples/ui/views/src/ExampleWindow.cpp AMessageBox
+ *
  * @specificto{windows}
- * Implemented with [MessageBox](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox).
+ * Implemented with @ref MessageBox.
  *
  * @specificto{linux}
- * Implemented with [GtkDialog](https://docs.gtk.org/gtk4/class.Dialog.html).
+ * Implemented with @ref GtkDialog.
  *
  * @specificto{macos}
- * Implemented with [NSAlert](https://developer.apple.com/documentation/appkit/nsalert?language=objc).
+ * Implemented with @ref NSAlert.
+ * @image html revierio.png
  */
 namespace AMessageBox {
 enum class Icon { NONE, INFO, WARNING, CRITICAL };

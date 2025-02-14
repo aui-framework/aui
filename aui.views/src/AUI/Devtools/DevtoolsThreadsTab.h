@@ -11,13 +11,8 @@
 
 #pragma once
 
-#include "AUI/Util/ADataBinding.h"
-#include "AUI/View/ATextField.h"
-#include "AUI/View/ATreeView.h"
 #include "AUI/Platform/AWindowBase.h"
 #include "AUI/View/AViewContainer.h"
-#include "ViewPropertiesView.h"
-#include <variant>
 
 class DevtoolsThreadsTab : public AViewContainerBase {
 public:

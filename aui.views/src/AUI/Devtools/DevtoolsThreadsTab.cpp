@@ -12,6 +12,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Util/ARandom.h>
 #include "DevtoolsThreadsTab.h"
+#include <AUI/View/AScrollArea.h>
 
 using namespace declarative;
 using namespace ass;
