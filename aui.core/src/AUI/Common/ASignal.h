@@ -200,11 +200,15 @@ public:
      * slots connected to the signal.
      * @return true, if slot contains any connected slots, false otherwise.
      */
-    operator bool() const { return !mOutgoingConnections.empty(); }
+    operator bool() const { return hasOutgoingConnections(); }
 
     void clearAllOutgoingConnections() const noexcept override { mOutgoingConnections.clear(); }
     void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
         clearOutgoingConnectionsIf([&](const _<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
+    }
+
+    [[nodiscard]] bool hasOutgoingConnections() const noexcept {
+        return !mOutgoingConnections.empty();
     }
 
     [[nodiscard]] bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
