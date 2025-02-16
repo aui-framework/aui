@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <range/v3/range/concepts.hpp>
 #include <AUI/Json/AJson.h>
 #include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
@@ -369,11 +370,11 @@ struct AJsonConv<AJson::Object> {
     }
 };
 
-template<std::ranges::range T>
+template<ranges::v3::range T>
 struct AJsonConv<T> {
     static AJson toJson(const T& v) {
         AJson::Array array;
-        if constexpr (std::ranges::sized_range<T>) {
+        if constexpr (ranges::v3::sized_range<T>) {
             array.reserve(v.size());
         }
         for (const auto& elem : v) {
