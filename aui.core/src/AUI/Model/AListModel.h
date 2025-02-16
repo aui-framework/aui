@@ -87,20 +87,20 @@ public:
         insert(end(), std::forward<StoredType>(data));
     }
 
-    const_iterator insert(const_iterator at, StoredType data) {
-        at = mVector.insert(at, std::move(data));
+    auto insert(const_iterator at, StoredType data) -> decltype(mVector.insert(at, std::move(data))) {
+        auto result = mVector.insert(at, std::move(data));
         if (!this->dataInserted.hasOutgoingConnections()) {
-            return at;
+            return result;
         }
-        emit this->dataInserted(this->range(AListModelIndex(at - begin()),
-                                            AListModelIndex(at - begin() + 1)));
-        return at;
+        emit this->dataInserted(this->range(AListModelIndex(result - begin()),
+                                            AListModelIndex(result - begin() + 1)));
+        return result;
     }
 
     void pop_back() noexcept {
         mVector.pop_back();
         if (!this->dataRemoved.hasOutgoingConnections()) {
-            return at;
+            return;
         }
         emit this->dataRemoved(this->range(AListModelIndex(mVector.size()    ),
                                            AListModelIndex(mVector.size() + 1)));
