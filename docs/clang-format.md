@@ -2,9 +2,10 @@ clang-format is a de facto standard tool to auto format (C++) code with style de
 typically located inside your project's root directory. AUI @ref CLANG_FORMAT "has such file".
 
 Since AUI abuses C++'s syntax, it's important to set up appropriate auto formatting, or you will often find yourself
-struggling with AUI's DSL especially in large portions of layout. For your project, we recommend to start with AUI's
-formatting configuration listed above. AUI's [App Template](https://github.com/aui-framework/example_app) has
-`.clang-format` already. Your IDE should pick up it without further configuration.
+struggling with AUI's DSL especially in large portions of layout, despite the fact we recommend to decompose large
+AUI DSLs into smaller pieces (i.e., functions). For your project, we recommend to start with AUI's formatting
+configuration listed below. AUI's [App Template](https://github.com/aui-framework/example_app) has `.clang-format`
+already. Your IDE should pick up it without further configuration.
 
 # Always Use Trailing Comma in Initializer Lists
 
@@ -75,5 +76,7 @@ In some scenarios clang-format may fight against you, especially with complicate
 @snippet aui.json/tests/JsonFieldsTest.cpp clang format toggle
 
 # AUI's .clang-format {#CLANG_FORMAT}
+
+Place this `.clang-format` file in root of your project.
 
 @include .clang-format
