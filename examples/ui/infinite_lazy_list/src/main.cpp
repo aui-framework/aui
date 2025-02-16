@@ -34,24 +34,26 @@ _<AView> myLazyList(_<AListModel<Item>> list) {
 
     // note that we observe for transition to true here, not the current state of property
     // see PropertyTest_Observing_changes for more info
-    AObject::connect(state->needMore.changed, AObject::GENERIC_OBSERVER, [state, list](bool needMore){
-        if (needMore) {
-            auto loadFrom = list->size();
-            state->asyncTasks << async {
-                // perform "loading" task on a worker thread.
-
-                AThread::sleep(500ms); // imitate hard work here
-                auto loadedItems = AVector<Item>::generate(20, [&](size_t i) {
-                    return Item { .value = "Item {}"_format(loadFrom + i) };
-                });
-
-                ui_thread {
-                    // back to main thread.
-                    list->insert(list->end(), std::begin(loadedItems), std::end(loadedItems));
-                    state->needMore = false;
-                };
-            };
+    AObject::connect(state->needMore.changed, AObject::GENERIC_OBSERVER, [state, list](bool newState){
+        if (!newState) { // we're interested in transitions to true state only.
+            return;
         }
+        auto loadFrom = list->size(); // base index to load from.
+        state->asyncTasks << async {
+            // perform "loading" task on a worker thread.
+
+            AThread::sleep(500ms); // imitate hard work here
+
+            // aka "loaded" from backend storage of some kind
+            auto loadedItems = AVector<Item>::generate(20, [&](size_t i) {
+                return Item { .value = "Item {}"_format(loadFrom + i) };
+            });
+
+            ui_thread { // back to main thread.
+                list->insert(list->end(), std::begin(loadedItems), std::end(loadedItems));
+                state->needMore = false;
+            };
+        };
     });
 
     return Vertical {
