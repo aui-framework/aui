@@ -125,6 +125,8 @@ void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
         mAnimator->postRender(this, ctx.render);
     popStencilIfNeeded(ctx);
+
+    emit redrawn;
 }
 
 void AView::popStencilIfNeeded(ARenderContext ctx) {

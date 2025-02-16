@@ -97,6 +97,17 @@ public:
         return result;
     }
 
+    template<typename Iterator>
+    auto insert(const_iterator at, Iterator begin, Iterator end) -> decltype(mVector.insert(at, begin, end)) {
+        auto result = mVector.insert(at, begin, end);
+        if (!this->dataInserted.hasOutgoingConnections()) {
+            return result;
+        }
+        emit this->dataInserted(this->range(AListModelIndex(result - this->begin()),
+                                            AListModelIndex(result - this->begin() + std::distance(begin, end))));
+        return result;
+    }
+
     void pop_back() noexcept {
         mVector.pop_back();
         if (!this->dataRemoved.hasOutgoingConnections()) {

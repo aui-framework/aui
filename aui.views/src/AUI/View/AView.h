@@ -881,6 +881,15 @@ signals:
      */
     emits<> viewGraphSubtreeChanged;
 
+    /**
+     * @brief View is painted onto the some surface.
+     * @details
+     * This signal is emitted when view's AView::postRender() is called. This signal can be used to keep track if view
+     * is visible; however, AUI performs some optimizations when painting views. For example, a view located somewhere
+     * in AScrollArea is not painted until it is outside of AScrollArea's frame or at least barely reaches it.
+     */
+    emits<> redrawn;
+
     emits<bool> hoveredState;
     emits<> mouseEnter;
     emits<> mouseLeave;

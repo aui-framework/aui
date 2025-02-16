@@ -42,6 +42,24 @@ class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_t
     friend class ASignal;
 
 public:
+    /**
+     * @brief Indicates that a connection should not be explicitly linked to receiver's lifetime.
+     * @details
+     * @experimental
+     * Normally, a connection is broken when either sender or receiver die. You can indicate that you actually don't
+     * need the connection to be broken if receiver dies, or you don't have a receiver AObject either. In such case, the
+     * connection is breaks only when the sender (signal) dies.
+     *
+     * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
+     * observe @ref property_system "property" or @ref signal_slot "signal", i.e., you just want to make a
+     * _generic observer_.
+     *
+     * Use this in combination with lambda.
+     *
+     * @snippet aui.core/tests/SignalSlotTest.cpp GENERIC_OBSERVER
+     */
+    static constexpr AObjectBase* GENERIC_OBSERVER = nullptr;
+
     AObject();
     virtual ~AObject() = default;
 

@@ -282,3 +282,8 @@ void AAbstractThread::updateThreadName() noexcept {
 AThread::AThread(std::function<void()> functor) : mFunctor(std::move(functor)) {}
 
 bool AAbstractThread::messageQueueEmpty() noexcept { return mMessageQueue.messages().empty(); }
+
+const _<AAbstractThread>& AThread::main() noexcept {
+    static auto main = current(); // initialized by AUI_ENTRY.
+    return main;
+}

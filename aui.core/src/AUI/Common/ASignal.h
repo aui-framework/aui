@@ -392,7 +392,9 @@ private:
 
             return mOutgoingConnections.emplace_back(std::move(conn)).value;
         }();
-        addIngoingConnectionIn(objectBase, connection);
+        if (objectBase != AObject::GENERIC_OBSERVER) {
+            addIngoingConnectionIn(objectBase, connection);
+        }
         return connection;
     }
 

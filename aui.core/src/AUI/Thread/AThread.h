@@ -207,6 +207,12 @@ public:
     void detach();
 
     /**
+     * @brief Returns main thread of the application.
+     */
+    [[nodiscard]]
+    static const _<AAbstractThread>& main() noexcept;
+
+    /**
      * @brief Start thread execution.
      */
     void start();
