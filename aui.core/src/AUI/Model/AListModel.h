@@ -247,7 +247,7 @@ public:
      * @tparam V type that converts to T
      * @return a new AListModel
      */
-    template<typename V>
+    template<typename V = StoredType>
     static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
         auto list = _new<AListModel<StoredType>>();
         list->reserve(t.size());
@@ -264,7 +264,7 @@ public:
      * @tparam V type that converts to T
      * @return a new AListModel
      */
-    template<typename V>
+    template<typename V = StoredType>
     static _<AListModel<StoredType>> fromVector(AVector<V> t) {
         auto list = _new<AListModel<StoredType>>();
         list->mVector = std::move(t);

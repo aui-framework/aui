@@ -37,7 +37,6 @@ public:
     }
 
     void setModel(const List& list) {
-        mObserver->setModel(list);
     }
 
     void insertItem(size_t at, const T& value) override {
@@ -68,6 +67,11 @@ public:
     void operator-(const Factory& f) {
         mFactory = f;
         setModel(mObserver->getModel());
+    }
+
+protected:
+    void applyGeometryToChildren() override {
+        AViewContainerBase::applyGeometryToChildren();
     }
 };
 
