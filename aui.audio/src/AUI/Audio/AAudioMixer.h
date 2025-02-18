@@ -10,6 +10,8 @@ class API_AUI_AUDIO IAudioPlayer;
 /**
  * @brief Manages audio players and mixes them into one sound stream.
  * @ingroup audio
+ * @details
+ * @experimental
  */
 class API_AUI_AUDIO AAudioMixer {
 public:
