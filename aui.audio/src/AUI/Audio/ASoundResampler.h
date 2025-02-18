@@ -28,6 +28,8 @@ namespace aui::audio::impl {
 /**
  * @brief Implements audio mixing and resampling.
  * @ingroup audio
+ * @details
+ * @experimental
  */
 class API_AUI_AUDIO ASoundResampler final : public ISoundInputStream {
 public:

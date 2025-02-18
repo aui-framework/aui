@@ -9,6 +9,8 @@
 /**
  * @brief Interface for audio playback.
  * @ingroup audio
+ * @details
+ * @experimental
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
