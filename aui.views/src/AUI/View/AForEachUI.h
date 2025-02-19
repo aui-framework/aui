@@ -37,6 +37,7 @@ public:
     }
 
     void setModel(const List& list) {
+//        mObserver->setModel(list);
     }
 
     void insertItem(size_t at, const T& value) override {
@@ -72,6 +73,15 @@ public:
 protected:
     void applyGeometryToChildren() override {
         AViewContainerBase::applyGeometryToChildren();
+    }
+
+public:
+    int getContentMinimumWidth() override {
+        return AViewContainerBase::getContentMinimumWidth();
+    }
+
+    int getContentMinimumHeight() override {
+        return AViewContainerBase::getContentMinimumHeight();
     }
 };
 
