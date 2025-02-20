@@ -370,11 +370,11 @@ struct AJsonConv<AJson::Object> {
     }
 };
 
-template<ranges::v3::range T>
+template<ranges::range T>
 struct AJsonConv<T> {
     static AJson toJson(const T& v) {
         AJson::Array array;
-        if constexpr (ranges::v3::sized_range<T>) {
+        if constexpr (ranges::sized_range<T>) {
             array.reserve(v.size());
         }
         for (const auto& elem : v) {
