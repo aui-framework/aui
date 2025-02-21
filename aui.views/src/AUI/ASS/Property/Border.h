@@ -23,6 +23,8 @@ namespace ass {
     /**
      * @brief Represents border.
      * @ingroup ass_properties
+     * @details
+     * See @ref "docs/ASS Box Model.md".
      */
     struct Border {
         enum BorderType {
