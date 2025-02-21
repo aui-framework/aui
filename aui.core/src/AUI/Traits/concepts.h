@@ -216,6 +216,8 @@ template <typename T>
 concept APropertyWritable = requires(T&& t) {
     { t } -> APropertyReadable;
 
+    t.notify();
+
     // Property has operator= overloaded so it can be used in assignment statement.
     { t = std::declval<typename std::decay_t<T>::Underlying>() };
 };

@@ -62,13 +62,21 @@ TEST_F(PropertyTest, Declaration) {
 
     // You can even perform binary operations on it seamlessly:
     {
+        LogObserver mock;
+        EXPECT_CALL(mock, log(testing::_)).Times(2);
         // AUI_DOCS_CODE_BEGIN
         User u;
+        AObject::connect(u.name.changed, slot(mock)::log); // HIDE
         u.name = "Hello";
         u.name += " world!";
         EXPECT_EQ(u.name, "Hello world!");
         EXPECT_EQ(u.name->length(), AString("Hello world!").length());
         // AUI_DOCS_CODE_END
+
+        /* does this trigger notify()? */
+        [[maybe_unused]] auto t = u.name->size();
+
+        EXPECT_EQ(t, 12);
     }
 
     // In most cases, property is implicitly convertible to its underlying type:
