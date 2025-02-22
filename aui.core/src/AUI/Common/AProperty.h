@@ -242,7 +242,7 @@ struct AProperty: AObjectBase {
     /**
      * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
      */
-    aui::PropertyModifier<AProperty> modify() noexcept {
+    aui::PropertyModifier<AProperty> writeScope() noexcept {
         return { *this };
     }
 
@@ -421,7 +421,7 @@ struct APropertyDef {
     /**
      * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
      */
-    aui::PropertyModifier<APropertyDef> modify() noexcept {
+    aui::PropertyModifier<APropertyDef> writeScope() noexcept {
         return { *this };
     }
 
@@ -446,6 +446,7 @@ private:
 };
 
 // binary operations for properties.
+// note: sync this PropertyModifier.h
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
 inline auto operator==(const Lhs& lhs, Rhs&& rhs) {
@@ -476,7 +477,7 @@ inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs)  {
         // const operator?
         return *lhs += std::forward<Rhs>(rhs);
     } else {
-        return *lhs.modify() += std::forward<Rhs>(rhs);
+        return *lhs.writeScope() += std::forward<Rhs>(rhs);
     }
 }
 

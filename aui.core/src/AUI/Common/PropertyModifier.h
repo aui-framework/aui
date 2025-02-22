@@ -15,8 +15,8 @@ namespace aui {
  * changes when destructed.
  * @ingroup property_system
  * @details
- * PropertyModifier is a result of `modify()` method of writeable properties. It gains tranparent writeable handle to
- * property's value, and calls `notify()` methos on property upon PropertyModifier destructor.
+ * PropertyModifier is a result of `writeScope()` method of writeable properties. It gains tranparent writeable handle
+ * to property's value, and calls `notify()` methos on property upon PropertyModifier destructor.
  *
  * This ensures that a write access to the property is committed and can be observed.
  */
@@ -42,13 +42,23 @@ public:
         return const_cast<Underlying&>(mOwner->value());
     }
 
+    [[nodiscard]]
+    const Underlying* operator->() const noexcept {
+        return &value();
+    }
+
+    [[nodiscard]]
+    Underlying* operator->() noexcept {
+        return &value();
+    }
+
 private:
     Property* mOwner;
 };
 }
 
 template<typename T>
-inline decltype(auto) operator*(aui::PropertyModifier<T>& t) {
+inline decltype(auto) operator*(aui::PropertyModifier<T>&& t) {
     return t.value();
 }
 
@@ -57,3 +67,38 @@ inline decltype(auto) operator*(const aui::PropertyModifier<T>& t) {
     return t.value();
 }
 
+template<typename T, typename Rhs>
+[[nodiscard]]
+inline auto operator==(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs == std::forward<Rhs>(rhs);
+}
+
+template<typename T, typename Rhs>
+[[nodiscard]]
+inline auto operator!=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs != std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty T, typename Rhs>
+[[nodiscard]]
+inline auto operator+(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs + std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty T, typename Rhs>
+[[nodiscard]]
+inline auto operator-(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs - std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty T, typename Rhs>
+[[nodiscard]]
+inline auto operator+=(aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs += std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty T, typename Rhs>
+[[nodiscard]]
+inline auto operator-=(aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs -= std::forward<Rhs>(rhs);
+}

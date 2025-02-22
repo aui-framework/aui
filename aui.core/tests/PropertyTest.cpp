@@ -43,6 +43,8 @@ public:
         });
     }
     MOCK_METHOD(void, log, (const AString& msg), ());
+    MOCK_METHOD(void, observeString, (const AString&), ());
+    MOCK_METHOD(void, observeInt, (int), ());
 };
 }
 
@@ -60,26 +62,22 @@ TEST_F(PropertyTest, Declaration) {
         // AUI_DOCS_CODE_END
     }
 
-    // You can even perform binary operations on it seamlessly:
+    // Non-const operators have @ref PropertyTest_Write_operators "side effects"; const operators don't, so you can
+    // perform seamlessly:
     {
         LogObserver mock;
-        EXPECT_CALL(mock, log(testing::_)).Times(2);
+        EXPECT_CALL(mock, log(testing::_)).Times(1);
         // AUI_DOCS_CODE_BEGIN
         User u;
         AObject::connect(u.name.changed, slot(mock)::log); // HIDE
         u.name = "Hello";
-        u.name += " world!";
-        EXPECT_EQ(u.name, "Hello world!");
-        EXPECT_EQ(u.name->length(), AString("Hello world!").length());
+        AString helloWorld = u.name + " world";
+        EXPECT_EQ(helloWorld, "Hello world");
+        EXPECT_EQ(u.name->length(), AString("Hello").length()); // HIDE
         // AUI_DOCS_CODE_END
-
-        /* does this trigger notify()? */
-        [[maybe_unused]] auto t = u.name->size();
-
-        EXPECT_EQ(t, 12);
     }
 
-    // In most cases, property is implicitly convertible to its underlying type:
+    // In most cases, property is implicitly convertible to its underlying type (const only):
     {
         // AUI_DOCS_CODE_BEGIN
         auto doSomethingWithName = [](const AString& name) { EXPECT_EQ(name, "Hello"); };
@@ -96,6 +94,7 @@ TEST_F(PropertyTest, Declaration) {
         // AUI_DOCS_CODE_END
     }
 }
+
 TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
     // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
     // object for demonstration:
@@ -319,4 +318,42 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     EXPECT_EQ(copy.name, "");
     EXPECT_EQ(connections(original->name.changed).size(), 1);
     EXPECT_EQ(connections(*observer).size(), 1);
+}
+
+// # Non-const operators {#PropertyTest_Write_operators}
+// Non-const operators such as non-const versions of `operator->`, `operator=`, `operator+=`, `operator-=` have a
+// side effect of emitting `changed` signal upon operation completion. This ensures that modifying access to the
+// property can be observed.
+TEST_F(PropertyTest, Write_operators_observable1) {
+    LogObserver observer;
+    EXPECT_CALL(observer, observeInt(1)).Times(1);
+    // AUI_DOCS_CODE_BEGIN
+    AProperty<int> counter = 0;
+    AObject::connect(counter.changed, slot(observer)::observeInt);
+    counter += 1; // observable by observeInt
+    // AUI_DOCS_CODE_END
+}
+
+TEST_F(PropertyTest, Write_operators_observable2) {
+    LogObserver observer;
+    AProperty<AString> name = "Hello";
+    AObject::connect(name.changed, slot(observer)::observeString);
+    EXPECT_CALL(observer, observeString("Hello world"_as)).Times(1);
+    name += " world";
+}
+
+TEST_F(PropertyTest, Write_operators_prefer_const_access) {
+    LogObserver observer;
+    EXPECT_CALL(observer, observeString(testing::_)).Times(0);
+    AProperty<AString> name = "Hello";
+    AObject::connect(name.changed, slot(observer)::observeString);
+    [[maybe_unused]] auto data = name->data();
+}
+
+TEST_F(PropertyTest, Write_operators_write_operator_arrow) {
+    LogObserver observer;
+    AProperty<AString> name = "Hello";
+    AObject::connect(name.changed, slot(observer)::observeString);
+    EXPECT_CALL(observer, observeString(""_as)).Times(1);
+    name.writeScope()->clear();
 }
