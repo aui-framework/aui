@@ -15,46 +15,13 @@ namespace aui {
  * changes when destructed.
  * @ingroup property_system
  * @details
- * PropertyModifier is a result of `writeScope()` method of writeable properties. It gains tranparent writeable handle
- * to property's value, and calls `notify()` methos on property upon PropertyModifier destructor.
+ * PropertyModifier is a result of `writeScope()` method of writeable properties. Also, it is used inside non-const
+ * operator implementations (see below). It gains transparent writeable handle to property's value, and calls `notify()`
+ * method on associated property upon PropertyModifier destruction.
  *
- * This ensures that a write access to the property is committed and can be observed.
  */
 template<typename Property>
-class PropertyModifier {
-public:
-    using Underlying = typename Property::Underlying;
-    PropertyModifier(Property& owner): mOwner(&owner) {}
-    ~PropertyModifier() {
-        if (mOwner == nullptr) {
-            return;
-        }
-        mOwner->notify();
-    }
-
-    [[nodiscard]]
-    const Underlying& value() const noexcept {
-        return mOwner->value();
-    }
-
-    [[nodiscard]]
-    Underlying& value() noexcept {
-        return const_cast<Underlying&>(mOwner->value());
-    }
-
-    [[nodiscard]]
-    const Underlying* operator->() const noexcept {
-        return &value();
-    }
-
-    [[nodiscard]]
-    Underlying* operator->() noexcept {
-        return &value();
-    }
-
-private:
-    Property* mOwner;
-};
+class PropertyModifier;
 }
 
 template<typename T>

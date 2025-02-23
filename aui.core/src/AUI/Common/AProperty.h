@@ -289,6 +289,43 @@ private:
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not conform AAnyProperty concept");
 
+template<typename T>
+class aui::PropertyModifier<AProperty<T>> {
+public:
+    using Underlying = T;
+    PropertyModifier(AProperty<T>& owner): mOwner(&owner) {}
+    ~PropertyModifier() {
+        if (mOwner == nullptr) {
+            return;
+        }
+        mOwner->notify();
+    }
+
+    [[nodiscard]]
+    const Underlying& value() const noexcept {
+        return mOwner->value();
+    }
+
+    [[nodiscard]]
+    Underlying& value() noexcept {
+        return const_cast<Underlying&>(mOwner->value());
+    }
+
+    [[nodiscard]]
+    const Underlying* operator->() const noexcept {
+        return &value();
+    }
+
+    [[nodiscard]]
+    Underlying* operator->() noexcept {
+        return &value();
+    }
+
+private:
+    AProperty<T>* mOwner;
+};
+
+
 /**
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property_system
@@ -417,13 +454,6 @@ struct APropertyDef {
     auto biProjected(Projection&& projectionBidirectional) noexcept {
         return aui::detail::property::makeBidirectionalProjection(std::move(*this), projectionBidirectional);
     };
-
-    /**
-     * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
-     */
-    aui::PropertyModifier<APropertyDef> writeScope() noexcept {
-        return { *this };
-    }
 
     /**
      * @brief Notify observers that a change was occurred (no preconditions).

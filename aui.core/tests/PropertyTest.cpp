@@ -321,39 +321,4 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
 }
 
 // # Non-const operators {#PropertyTest_Write_operators}
-// Non-const operators such as non-const versions of `operator->`, `operator=`, `operator+=`, `operator-=` have a
-// side effect of emitting `changed` signal upon operation completion. This ensures that modifying access to the
-// property can be observed.
-TEST_F(PropertyTest, Write_operators_observable1) {
-    LogObserver observer;
-    EXPECT_CALL(observer, observeInt(1)).Times(1);
-    // AUI_DOCS_CODE_BEGIN
-    AProperty<int> counter = 0;
-    AObject::connect(counter.changed, slot(observer)::observeInt);
-    counter += 1; // observable by observeInt
-    // AUI_DOCS_CODE_END
-}
-
-TEST_F(PropertyTest, Write_operators_observable2) {
-    LogObserver observer;
-    AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
-    EXPECT_CALL(observer, observeString("Hello world"_as)).Times(1);
-    name += " world";
-}
-
-TEST_F(PropertyTest, Write_operators_prefer_const_access) {
-    LogObserver observer;
-    EXPECT_CALL(observer, observeString(testing::_)).Times(0);
-    AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
-    [[maybe_unused]] auto data = name->data();
-}
-
-TEST_F(PropertyTest, Write_operators_write_operator_arrow) {
-    LogObserver observer;
-    AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
-    EXPECT_CALL(observer, observeString(""_as)).Times(1);
-    name.writeScope()->clear();
-}
+// Refer to @ref aui::PropertyModifier.
