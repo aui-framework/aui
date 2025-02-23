@@ -13,6 +13,7 @@
 
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/APropertyPrecomputed.h>
+#include <AUI/Common/PropertyModifier.h>
 
 namespace aui::detail::property {
 
@@ -97,6 +98,13 @@ struct PropertyReadWriteProjection: PropertyReadProjection {
     PropertyReadWriteProjection& operator=(U&& value) noexcept {
         this->wrappedProperty = std::invoke(projectionWrite, std::forward<U>(value));
         return *this;
+    }
+
+    /**
+     * @brief Notify observers that a change was occurred (no preconditions).
+     */
+    void notify() {
+        this->wrappedProperty.notify();
     }
 private:
     friend class API_AUI_CORE ::AObject;
@@ -219,12 +227,6 @@ struct AProperty: AObjectBase {
         return raw;
     }
 
-    [[nodiscard]]
-    T& value() noexcept {
-        aui::property_precomputed::addDependency(changed);
-        return raw;
-    }
-
     [[nodiscard]] operator const T&() const noexcept { return value(); }
 
     [[nodiscard]]
@@ -237,9 +239,11 @@ struct AProperty: AObjectBase {
         return value();
     }
 
-    [[nodiscard]]
-    T& operator*() noexcept {
-        return value();
+    /**
+     * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
+     */
+    aui::PropertyModifier<AProperty> writeScope() noexcept {
+        return { *this };
     }
 
     /**
@@ -284,6 +288,43 @@ private:
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not conform AAnyProperty concept");
+
+template<typename T>
+class aui::PropertyModifier<AProperty<T>> {
+public:
+    using Underlying = T;
+    PropertyModifier(AProperty<T>& owner): mOwner(&owner) {}
+    ~PropertyModifier() {
+        if (mOwner == nullptr) {
+            return;
+        }
+        mOwner->notify();
+    }
+
+    [[nodiscard]]
+    const Underlying& value() const noexcept {
+        return mOwner->value();
+    }
+
+    [[nodiscard]]
+    Underlying& value() noexcept {
+        return const_cast<Underlying&>(mOwner->value());
+    }
+
+    [[nodiscard]]
+    const Underlying* operator->() const noexcept {
+        return &value();
+    }
+
+    [[nodiscard]]
+    Underlying* operator->() noexcept {
+        return &value();
+    }
+
+private:
+    AProperty<T>* mOwner;
+};
+
 
 /**
  * @brief Property implementation to use with custom getter/setter.
@@ -414,6 +455,15 @@ struct APropertyDef {
         return aui::detail::property::makeBidirectionalProjection(std::move(*this), projectionBidirectional);
     };
 
+    /**
+     * @brief Notify observers that a change was occurred (no preconditions).
+     */
+    void notify() {
+        if (changed.hasOutgoingConnections()) {
+            emit changed(this->value());
+        }
+    }
+
 private:
     friend class AObject;
     /**
@@ -426,6 +476,7 @@ private:
 };
 
 // binary operations for properties.
+// note: sync this PropertyModifier.h
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
 inline auto operator==(const Lhs& lhs, Rhs&& rhs) {
@@ -445,20 +496,24 @@ inline auto operator+(const Lhs& lhs, Rhs&& rhs) {
 }
 
 template<AAnyProperty Lhs, typename Rhs>
-inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs) {
-    *lhs += std::forward<Rhs>(rhs);
-    return lhs;
+[[nodiscard]]
+inline auto operator-(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs - std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+inline decltype(auto) operator+=(Lhs& lhs, Rhs&& rhs)  {
+    if constexpr (requires { *lhs += std::forward<Rhs>(rhs); }) {
+        // const operator?
+        return *lhs += std::forward<Rhs>(rhs);
+    } else {
+        return *lhs.writeScope() += std::forward<Rhs>(rhs);
+    }
 }
 
 template<AAnyProperty Lhs, typename Rhs>
 inline decltype(auto) operator+=(Lhs&& lhs, Rhs&& rhs) {
     return lhs = *lhs + std::forward<Rhs>(rhs);
-}
-
-template<AAnyProperty Lhs, typename Rhs>
-[[nodiscard]]
-inline auto operator-(const Lhs& lhs, Rhs&& rhs) {
-    return *lhs - std::forward<Rhs>(rhs);
 }
 
 // simple check above operators work.

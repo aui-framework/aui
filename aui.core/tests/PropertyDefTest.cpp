@@ -89,8 +89,11 @@ TEST_F(PropertyDefTest, Declaration) {
     //
     // For the rest, APropertyDef is identical to AProperty including seamless interaction:
     {
+        LogObserver mock;
+        EXPECT_CALL(mock, log(testing::_)).Times(2);
         // AUI_DOCS_CODE_BEGIN
         User u;
+        AObject::connect(u.name().changed, slot(mock)::log); // HIDE
         u.name() = "Hello";
         u.name() += " world!";
         EXPECT_EQ(u.name(), "Hello world!");
