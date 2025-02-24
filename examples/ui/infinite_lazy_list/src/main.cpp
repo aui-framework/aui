@@ -58,7 +58,7 @@ _<AView> myLazyList(_<AListModel<Item>> list) {
 
     return Vertical {
         AUI_DECLARATIVE_FOR(i, list, AVerticalLayout) { return Label { i.value }; },
-        Centered {
+        Centered::Expanding {
           _new<ASpinnerV2>() let {
                   AObject::connect(it->redrawn, AObject::GENERIC_OBSERVER, [state] {
                       // when a spinner appears, we indicate that we need more items.

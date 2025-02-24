@@ -37,7 +37,7 @@ public:
     }
 
     void setModel(const List& list) {
-//        mObserver->setModel(list);
+        mObserver->setModel(list);
     }
 
     void insertItem(size_t at, const T& value) override {
