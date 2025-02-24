@@ -470,9 +470,9 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data,
         if constexpr (requires { ADataBindingDefault<View, Data>::getGetter(); }) {
             if constexpr (requires { std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object).changed; }) {
                 // AProperty.
-                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object).changed;
+                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object).changed; // BROKEN -- https://github.com/aui-framework/aui/discussions/442
             } else {
-                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object);
+                g = (getter) &std::invoke(ADataBindingDefault<View, Data>::getGetter(), *object); // BROKEN -- https://github.com/aui-framework/aui/discussions/442
             }
         }
         auto s = static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter());

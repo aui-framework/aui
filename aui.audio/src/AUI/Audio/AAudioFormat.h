@@ -7,6 +7,8 @@
 /**
  * @brief Audio format descriptor.
  * @ingroup audio
+ * @details
+ * @experimental
  */
 struct API_AUI_AUDIO AAudioFormat {
     /**
