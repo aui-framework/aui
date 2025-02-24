@@ -327,6 +327,8 @@ public:
     /**
      * @brief Returns the @ref AView::mMargin "margin".
      * @return margin
+     * @details
+     * @copydetails AView::mMargin
      */
     [[nodiscard]]
     const ABoxFields& getMargin()
@@ -338,6 +340,8 @@ public:
     /**
      * @brief Sets the @ref AView::mMargin "margin".
      * @param margin margin
+     * @details
+     * @copydetails AView::mMargin
      */
     void setMargin(const ABoxFields& margin) {
         mMargin = margin;
@@ -366,6 +370,8 @@ public:
     /**
      * @brief Sets the @ref AView::mPadding "padding".
      * @param padding padding
+     * @details
+     * @copydetails AView::mPadding
      */
     void setPadding(const ABoxFields& padding) {
         mPadding = padding;
@@ -467,6 +473,11 @@ public:
     {
         return mMaxSize;
     }
+
+    /**
+     * @return content size
+     */
+    glm::ivec2 getContentSize() const { return { getContentWidth(), getContentHeight() }; }
 
     int getContentWidth() const
     {
@@ -1026,11 +1037,15 @@ protected:
 
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     * @details
+     * See @ref "docs/ASS Box Model.md".
      */
     ABoxFields mMargin;
 
     /**
      * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
+     * @details
+     * See @ref "docs/ASS Box Model.md".
      */
     ABoxFields mPadding;
 

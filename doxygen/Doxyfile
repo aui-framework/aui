@@ -301,7 +301,7 @@ TAB_SIZE               = 4
 
 ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
                          auiexample{1}="@note This page describes an example listed in @ref examples_\1. @par" \
-                         experimental="@warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
+                         experimental="@xrefitem experimental_api \"\" \"\" @warning This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future. @par"\
                          specificto{1}="@xrefitem \1 \"\1-specific\" \"\" "\
                          exclusivefor{1}="@specificto{\1} This API is available on @ref \1 only."\
                          auisourcemarker="<b aui-src='@fileinfo#L@lineinfo'></b>"\
@@ -1612,7 +1612,7 @@ TOC_EXPAND             = NO
 # protocol see https://www.sitemaps.org
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-SITEMAP_URL            =
+SITEMAP_URL            = https://aui-framework.github.io/develop/
 
 # If the GENERATE_QHP tag is set to YES and both QHP_NAMESPACE and
 # QHP_VIRTUAL_FOLDER are set, an additional index file will be generated that
@@ -2484,7 +2484,9 @@ SKIP_FUNCTION_MACROS   = YES
 # the path). If a tag file is not located in the directory in which doxygen is
 # run, you must also specify the path to the tagfile here.
 
-TAGFILES               =
+TAGFILES               = docs/external/apple.tag=https://developer.apple.com/documentation/ \
+                         docs/external/gtk.tag=https://docs.gtk.org/ \
+                         docs/external/msdn.tag=https://learn.microsoft.com/en-us \
 
 # When a file name is specified after GENERATE_TAGFILE, doxygen will create a
 # tag file that is based on the input files it reads. See section "Linking to

@@ -23,18 +23,20 @@ compatibility layers such as WINE to launch your application under Linux.
   - Fedora
   - Arch
   - Linux Mint
+  - Steam OS
 - Different display servers:
-  - X11 (legacy) - the only supported option by AUI
-  - Wayland (newer) - despite being unsupported by AUI natively, AUI applications still can run on Wayland though
+  - X11 (legacy) - supported natively by AUI
+  - Wayland (newer) - despite being unsupported by AUI natively, AUI applications still can run on Wayland through
     compatibility layer, XWayland
 - Different distribution methods:
-  - DEB (Debian and flavors)
-  - RPM (Fedora, RHEL and flavors, SUSE and flavors)
+  - DEB (Debian+Ubuntu and flavors)
+  - RPM (Fedora+RHEL+SUSE and flavors)
   - Snap (Ubuntu)
   - Flatpak (all distros)
   - AppImage (all distros)
-- Recent feature but growing in popularity - immutable distros, which does not support app distribution method that
-  require root access such as DEB and RPM
+- Recent innovation but growing in popularity - immutable distros, featuring atomic updates and stable secured core
+  components by making them readonly. Hence, traditional distribution methods that require root access to user's
+  machine (such as DEB and RPM) are not applicable (with some exceptions).
 - Extensive customizability options
 - Different desktop environment, most notable are:
   - GNOME (GTK-based)
@@ -42,5 +44,6 @@ compatibility layers such as WINE to launch your application under Linux.
 - Some configurations might use @ref macos style global menu:
   - KDE with global menu widget
   - Ubuntu Unity
+- There are distros designed for smartphones but they're considered unusable at the moment
 
 # AUI implementation specifics

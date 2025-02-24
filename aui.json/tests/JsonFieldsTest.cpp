@@ -21,6 +21,8 @@
 #include <AUI/Traits/members.h>
 #include "AUI/Common/AProperty.h"
 
+#include <AUI/Model/AListModel.h>
+
 // ORM data class
 struct Data2 {
     AVector<int> values;
@@ -113,4 +115,15 @@ TEST(Json, DataProperty)
     auto parsed = aui::from_json<DataProperty>(AJson::fromString(str));
     EXPECT_EQ(parsed.v1, property.v1);
     EXPECT_EQ(parsed.v2, property.v2);
+}
+
+TEST(Json, ListModel) {
+    auto list = AListModel<AString>::fromVector(AVector<AString>{"1", "2", "3"});
+    auto str = AJson::toString(aui::to_json(list));
+    EXPECT_EQ(str, R"(["1","2","3"])");
+
+    // and back
+    auto parsed = aui::from_json<_<AListModel<AString>>>(AJson::fromString(str));
+    EXPECT_EQ(parsed->size(), list->size());
+    EXPECT_EQ(*parsed, *list);
 }

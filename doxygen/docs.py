@@ -57,6 +57,7 @@ if __name__ == '__main__':
     fix_platform_names()
 
     patching.patch(target='classes.html', matcher='<div class="contents">', mode=patching.Mode.INSERT_AFTER)
+    patching.patch(target='experimental_api.html', matcher='<dl class="reflist">', mode=patching.Mode.REPLACE, value='<dl>')
 
     # remove useless AUI Framework root element.
     patching.patch(target='navtreedata.js', matcher='[ "AUI Framework", "index.html", [', value='', mode=patching.Mode.DELETE_LINE)

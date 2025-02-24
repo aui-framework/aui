@@ -67,11 +67,14 @@ public:
         return this->erase(begin, begin + 1);
     }
     iterator erase(iterator begin, iterator end) noexcept {
+        if (!this->dataRemoved.hasOutgoingConnections()) {
+            return mVector.erase(begin, end);
+        }
+
         auto range = this->range(AListModelIndex{size_t(begin - mVector.begin())},
                                  AListModelIndex{size_t(end   - mVector.begin())});
         auto it = mVector.erase(begin, end);
         emit this->dataRemoved(range);
-
         return it;
     }
 
@@ -84,15 +87,21 @@ public:
         insert(end(), std::forward<StoredType>(data));
     }
 
-    auto insert(const_iterator at, StoredType data) {
-        auto out = mVector.insert(at, std::move(data));
-        emit this->dataInserted(this->range(AListModelIndex(out - begin()),
-                                            AListModelIndex(out - begin() + 1)));
-        return out;
+    auto insert(const_iterator at, StoredType data) -> decltype(mVector.insert(at, std::move(data))) {
+        auto result = mVector.insert(at, std::move(data));
+        if (!this->dataInserted.hasOutgoingConnections()) {
+            return result;
+        }
+        emit this->dataInserted(this->range(AListModelIndex(result - begin()),
+                                            AListModelIndex(result - begin() + 1)));
+        return result;
     }
 
     void pop_back() noexcept {
         mVector.pop_back();
+        if (!this->dataRemoved.hasOutgoingConnections()) {
+            return;
+        }
         emit this->dataRemoved(this->range(AListModelIndex(mVector.size()    ),
                                            AListModelIndex(mVector.size() + 1)));
     }
@@ -113,7 +122,11 @@ public:
     StoredType listItemAt(const AListModelIndex& index) override {
         return mVector.at(index.getRow());
     }
+
     void invalidate(size_t index) {
+        if (!this->dataChanged.hasOutgoingConnections()) {
+            return;
+        }
         emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
     }
 
@@ -269,5 +282,15 @@ public:
     [[nodiscard]]
     const AVector<StoredType>& toVector() noexcept {
         return mVector;
+    }
+
+    [[nodiscard]]
+    bool operator==(const AListModel& rhs) const noexcept {
+        return mVector == rhs.mVector;
+    }
+
+    [[nodiscard]]
+    bool operator!=(const AListModel& rhs) const noexcept {
+        return mVector != rhs.mVector;
     }
 };

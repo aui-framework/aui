@@ -17,166 +17,145 @@
 #include "AUI/Platform/Entry.h"
 
 AThreadPool::Worker::Worker(AThreadPool& tp, size_t index)
-    : AThread([&, index]() {
-          AThread::setName("AThreadPool #" + AString::number(index + 1));
+  : AThread([&, index]() {
+      AThread::setName("AThreadPool #" + AString::number(index + 1));
 
-          std::unique_lock tpLock(mTP.mQueueLock);
-          while (mEnabled) {
-              iteration(tpLock);
-              wait(tpLock);
-          }
-      }),
-      mTP(tp) {
-}
+      std::unique_lock tpLock(mTP.mQueueLock);
+      while (mEnabled) {
+          iteration(tpLock);
+          wait(tpLock);
+      }
+  })
+  , mTP(tp) {}
 
 void AThreadPool::Worker::iteration(std::unique_lock<std::mutex>& tpLock) {
-	while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
-		if (processQueue(tpLock, mTP.mQueueHighest))
-			continue;
-		if (processQueue(tpLock, mTP.mQueueMedium))
-			continue;
-		processQueue(tpLock, mTP.mQueueLowest);
-	}
+    while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
+        if (processQueue(tpLock, mTP.mQueueHighest))
+            continue;
+        if (processQueue(tpLock, mTP.mQueueMedium))
+            continue;
+        processQueue(tpLock, mTP.mQueueLowest);
+    }
 }
 
 void AThreadPool::Worker::wait(std::unique_lock<std::mutex>& tpLock) {
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "ConstantConditionsOC"
-	if (!mEnabled)
-		return;
+    if (!mEnabled)
+        return;
 #pragma clang diagnostic pop
-	mTP.mIdleWorkers += 1;
-	assert(tpLock.owns_lock());
+    mTP.mIdleWorkers += 1;
+    assert(tpLock.owns_lock());
 
-	mTP.mCV.wait(tpLock);
-	mTP.mIdleWorkers -= 1;
+    mTP.mCV.wait(tpLock);
+    mTP.mIdleWorkers -= 1;
 }
 
-bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue)
-{
-	if (!queue.empty()) {
-		auto func = std::move(queue.front());
-		queue.pop();
-		mutex.unlock();
-		try {
-			func();
-		}
-		catch (const AException& e) {
+bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue) {
+    if (!queue.empty()) {
+        auto func = std::move(queue.front());
+        queue.pop();
+        mutex.unlock();
+        try {
+            func();
+        } catch (const AException& e) {
             ALogger::err("uncaught exception in thread pool: " + e.getMessage());
+        } catch (const AThread::Interrupted&) {
+            // AThread::current()->resetInterruptFlag();
+        } catch (const TryLaterException&) {
+            mutex.lock();
+            mTP.mQueueTryLater.push(func);
+            return true;
         }
-		catch (const AThread::Interrupted&)
-		{
-			//AThread::current()->resetInterruptFlag();
-		}
-		catch (const TryLaterException&)
-		{
-			mutex.lock();
-			mTP.mQueueTryLater.push(func);
-			return true;
-		}
-		mutex.lock();
-		return true;
-	}
-	return false;
+        mutex.lock();
+        return true;
+    }
+    return false;
 }
 
 AThreadPool::Worker::~Worker() {
     try {
         join();
-    } catch (...) {}
+    } catch (...) {
+    }
 }
 
-void AThreadPool::Worker::aboutToDelete() {
-	mEnabled = false;
-}
-
+void AThreadPool::Worker::aboutToDelete() { mEnabled = false; }
 
 void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
-	std::unique_lock lck(mQueueLock);
+    std::unique_lock lck(mQueueLock);
 
-	switch (priority)
-	{
-	case PRIORITY_MEDIUM:
-		mQueueMedium.push(fun);
-		break;
-	case PRIORITY_HIGHEST:
-		mQueueHighest.push(fun);
-		break;
-	case PRIORITY_LOWEST:
-		mQueueLowest.push(fun);
-		break;
-	}
-	if (mIdleWorkers > 0) {
+    switch (priority) {
+        case PRIORITY_MEDIUM:
+            mQueueMedium.push(fun);
+            break;
+        case PRIORITY_HIGHEST:
+            mQueueHighest.push(fun);
+            break;
+        case PRIORITY_LOWEST:
+            mQueueLowest.push(fun);
+            break;
+    }
+    if (mIdleWorkers > 0) {
         mCV.notify_one();
     }
 }
 
-void AThreadPool::clear()
-{
-	std::unique_lock lck(mQueueLock);
+void AThreadPool::clear() {
+    std::unique_lock lck(mQueueLock);
 
-	while (!mQueueLowest.empty())
-		mQueueLowest.pop();
-	while (!mQueueMedium.empty())
-		mQueueMedium.pop();
-	while (!mQueueHighest.empty())
-		mQueueHighest.pop();
-	while (!mQueueTryLater.empty())
-		mQueueTryLater.pop();
-
+    while (!mQueueLowest.empty()) mQueueLowest.pop();
+    while (!mQueueMedium.empty()) mQueueMedium.pop();
+    while (!mQueueHighest.empty()) mQueueHighest.pop();
+    while (!mQueueTryLater.empty()) mQueueTryLater.pop();
 }
 
-void AThreadPool::runLaterTasks()
-{
-	std::unique_lock lck(mQueueLock);
-	while (!mQueueTryLater.empty())
-	{
-		mQueueLowest.emplace(std::move(mQueueTryLater.front()));
-		mQueueTryLater.pop();
-	}
-	mCV.notify_one();
+void AThreadPool::runLaterTasks() {
+    std::unique_lock lck(mQueueLock);
+    while (!mQueueTryLater.empty()) {
+        mQueueLowest.emplace(std::move(mQueueTryLater.front()));
+        mQueueTryLater.pop();
+    }
+    mCV.notify_one();
 }
 
-void AThreadPool::enqueue(const std::function<void()>& fun, Priority priority)
-{
-	global().run(fun, priority);
-}
+void AThreadPool::enqueue(const std::function<void()>& fun, Priority priority) { global().run(fun, priority); }
 
-AThreadPool& AThreadPool::global()
-{
+AThreadPool& AThreadPool::global() {
     // deadlock fix for mingw
-	static AThreadPool* t = new AThreadPool;
-	return *t;
+    static AThreadPool* t = new AThreadPool;
+    return *t;
 }
 
 AThreadPool::AThreadPool(size_t size) {
     mWorkers.reserve(size);
-	for (size_t i = 0; i < size; ++i) {
-		auto worker = _new<Worker>(*this, i);
-		worker->start();
-		mWorkers.push_back(std::move(worker));
-	}
+    for (size_t i = 0; i < size; ++i) {
+        auto worker = _new<Worker>(*this, i);
+        worker->start();
+        mWorkers.push_back(std::move(worker));
+    }
 }
 
 AThreadPool::AThreadPool()
-    : AThreadPool(aui::args()
-                      .value("aui-threadpool-size")
-                      .map(&AString::toLongIntOrException)
-                      .valueOr(glm::max(std::thread::hardware_concurrency() - 1, 2u))) {}
+  : AThreadPool(
+        aui::args()
+            .value("aui-threadpool-size")
+            .map(&AString::toLongIntOrException)
+            .valueOr(glm::max(std::thread::hardware_concurrency() - 1, 2u))) {}
 
 AThreadPool::~AThreadPool() {
-	std::unique_lock lck(mQueueLock);
-	auto workers = std::move(mWorkers);
-	for (auto& f : workers) {
+    std::unique_lock lck(mQueueLock);
+    auto workers = std::move(mWorkers);
+    for (auto& f : workers) {
         f->aboutToDelete();
-	}
+    }
 
-	mCV.notify_all();
-	lck.unlock();
+    mCV.notify_all();
+    lck.unlock();
 
-	for (auto& f : workers) {
-		f->join();
-	}
+    for (auto& f : workers) {
+        f->join();
+    }
 }
 
 void AThreadPool::setWorkersCount(std::size_t workersCount) {
@@ -199,7 +178,4 @@ void AThreadPool::setWorkersCount(std::size_t workersCount) {
     }
 }
 
-size_t AThreadPool::getPendingTaskCount()
-{
-	return mQueueHighest.size() + mQueueLowest.size() + mQueueMedium.size();
-}
+size_t AThreadPool::getPendingTaskCount() { return mQueueHighest.size() + mQueueLowest.size() + mQueueMedium.size(); }

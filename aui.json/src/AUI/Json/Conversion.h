@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <range/v3/range/concepts.hpp>
 #include <AUI/Json/AJson.h>
 #include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
@@ -242,6 +243,19 @@ struct AJsonConv<int> {
     }
 };
 
+template<typename T>
+struct AJsonConv<std::shared_ptr<T>> {
+    static AJson toJson(const std::shared_ptr<T>& v) {
+        return aui::to_json(*v);
+    }
+    static void fromJson(const AJson& json, std::shared_ptr<T>& dst) {
+        dst = std::make_shared<T>(aui::from_json<T>(json));
+    }
+};
+
+template<typename T>
+struct AJsonConv<_<T>>: AJsonConv<std::shared_ptr<T>> {};
+
 template<>
 struct AJsonConv<int64_t> {
     static AJson toJson(int64_t v) {
@@ -356,22 +370,27 @@ struct AJsonConv<AJson::Object> {
     }
 };
 
-template<typename T>
-struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T>>> {
-    static AJson toJson(const AVector<T>& v) {
+template<ranges::range T>
+struct AJsonConv<T> {
+    static AJson toJson(const T& v) {
         AJson::Array array;
-        array.reserve(v.size());
+        if constexpr (ranges::sized_range<T>) {
+            array.reserve(v.size());
+        }
         for (const auto& elem : v) {
             array << aui::to_json(elem);
         }
         return std::move(array);
     }
-    static void fromJson(const AJson& json, AVector<T>& dst) {
+    static void fromJson(const AJson& json, T& dst) {
         auto& array = json.asArray();
         dst.clear();
-        dst.reserve(array.size());
+
+        if constexpr (requires(T&& t) { t.reserve(static_cast<size_t>(0)); }) {
+            dst.reserve(array.size());
+        }
         for (const auto& elem : array) {
-            dst << aui::from_json<T>(elem);
+            dst << aui::from_json<std::decay_t<decltype(*dst.begin())>>(elem);
         }
     }
 };

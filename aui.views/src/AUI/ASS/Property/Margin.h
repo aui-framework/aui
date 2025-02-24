@@ -23,6 +23,8 @@ namespace ass {
     /**
      * @brief Controls view's @ref AView::setMargin "margins".
      * @ingroup ass_properties
+     * @details
+     * See @ref "docs/ASS Box Model.md".
      */
     struct Margin {
         unset_wrap<AMetric> left;

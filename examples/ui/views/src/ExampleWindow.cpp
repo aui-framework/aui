@@ -159,7 +159,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       Icon { ":img/logo.svg" },
                       Label { "Button with icon" },
                     }
-                        .clicked(this, [&] { AMessageBox::show(this, "Title", "Message"); }),
+                        .clicked(this, [&] {
+                            AMessageBox::show(this, "Title", "Message");
+                        }),
                   },
                 },
 
@@ -281,7 +283,15 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                  }),
                     _new<AButton>("Message box")
                         .connect(&AView::clicked, this,
-                                 [&] { AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO); }),
+                                 [&] {
+                                     /// [AMessageBox]
+                                     AMessageBox::show(this,
+                                                       "Title",
+                                                       "Message",
+                                                       AMessageBox::Icon::NONE,
+                                                       AMessageBox::Button::OK);
+                                     /// [AMessageBox]
+                                 }),
                     _new<AButton>("Cause assertion fail")
                         .connect(&AView::clicked, this, [&] { AUI_ASSERT_NO_CONDITION("assertion fail"); }),
                     _new<AButton>("Cause hang")

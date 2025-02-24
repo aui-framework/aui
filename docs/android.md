@@ -16,4 +16,14 @@ electronics like TVs and wearables.
 
 Android shares its kernel with @ref linux, but is not treated by AUI exactly as Linux.
 
+# Key considerations
+
+- Like @ref linux, Android is customizable - core services and components tend to vary depending on device manufacturer.
+  It's mostly AUI's responsibility and AUI-based applications are mostly immune to such specifics unless they use native
+  Java/Kotlin APIs
+- Android apps can't be customized by the end user, with an exception to fonts, launcher icons and virtual keyboard
+- Android app workflows use "back button" to close or navigate to previous page. Newer devices tend to lack such button
+  in hardware, so they use software button/gesture instead
+
+
 # AUI implementation specifics

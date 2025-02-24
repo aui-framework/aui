@@ -29,24 +29,114 @@ class AWindow;
  * should be used only in emergency situations, when your application literally can't operate until it recevies a
  * response from the user. Use non-blocking, contextual and structured feedback where possible.
  *
+ * @snippet examples/ui/views/src/ExampleWindow.cpp AMessageBox
+ *
  * @specificto{windows}
- * Implemented with [MessageBox](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox).
+ * Implemented with @ref MessageBox.
+ * @image html ajkdhadkjfh.png
  *
  * @specificto{linux}
- * Implemented with [GtkDialog](https://docs.gtk.org/gtk4/class.Dialog.html).
+ * Implemented with @ref GtkDialog.
+ * @image html wjkfnjkws.png
  *
  * @specificto{macos}
- * Implemented with [NSAlert](https://developer.apple.com/documentation/appkit/nsalert?language=objc).
+ * Implemented with @ref NSAlert.
+ * @image html revierio.png
  */
 namespace AMessageBox {
-enum class Icon { NONE, INFO, WARNING, CRITICAL };
+
+/**
+ * @brief Specifies icon to be displayed.
+ */
+enum class Icon {
+    /**
+     * @brief No icon is specified.
+     * @details
+     * @specificto{macos}
+     * Displays app's bundle icon.
+     */
+    NONE,
+
+    /**
+     * @brief Information icon.
+     */
+    INFO,
+
+    /**
+     * @brief Warning icon.
+     */
+    WARNING,
+
+    /**
+     * @brief Critical icon.
+     */
+    CRITICAL
+};
+
+/**
+ * @brief Specifies button(s) to be displayed.
+ */
 enum class Button {
+    /**
+     * @brief Display OK button only.
+     */
     OK,
+
+    /**
+     * @brief Display OK and Cancel buttons.
+     */
     OK_CANCEL,
+
+    /**
+     * @brief Display Yes and No buttons.
+     */
     YES_NO,
+
+    /**
+     * @brief Display Yes, No and Cancel buttons.
+     */
     YES_NO_CANCEL,
 };
-enum class ResultButton { INVALID, OK, CANCEL, YES, NO };
+
+/**
+ * @brief Button that the user has clicked.
+ */
+enum class ResultButton {
+    /**
+     * @brief Indicates an invalid or undefined result.
+     */
+    INVALID,
+
+    /**
+     * @brief Indicates the user clicked the OK button.
+     */
+    OK,
+
+    /**
+     * @brief Indicates the user clicked the Cancel button.
+     */
+    CANCEL,
+
+    /**
+     * @brief Indicates the user clicked the Yes button.
+     */
+    YES,
+
+    /**
+     * @brief Indicates the user clicked the No button.
+     */
+    NO,
+};
+
+/**
+ * @brief Displays a message box, blocking the caller thread until the user dismisses the message.
+ * @param parent the window the message box relates to. The OS might fade out the parent window and/or place the message
+ * box within its geometry. Can be `nullptr`.
+ * @param title title of the message box.
+ * @param message content of the message box.
+ * @param icon icon style for the message box. Defaults to NONE.
+ * @param b buttons to be displayed in the message box.
+ */
 API_AUI_VIEWS ResultButton
 show(AWindow* parent, const AString& title, const AString& message, Icon icon = Icon::NONE, Button b = Button::OK);
 };   // namespace AMessageBox

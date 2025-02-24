@@ -172,11 +172,15 @@ void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVect
 }
 
 void AAdvancedGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
-    if (mCurrentIndex < mIndices.size())
+    if (mCurrentIndex >= mIndices.size())
     {
-        addView(view, mCurrentIndex % cellsX, mCurrentIndex / cellsX);
-        mCurrentIndex += 1;
+        // dynamically populated rows?
+        cellsY += 1;
+        const int items[] = { -1, -1 };
+        mIndices.insertAll(mIndices.end(), items);
     }
+    addView(view, mCurrentIndex % cellsX, mCurrentIndex / cellsX);
+    mCurrentIndex += 1;
 }
 
 void AAdvancedGridLayout::addView(const _<AView>& view, int x, int y)
@@ -238,3 +242,5 @@ int AAdvancedGridLayout::getMinimumHeight()
 AVector<_<AView>> AAdvancedGridLayout::getAllViews() {
     return { mCells.begin(), mCells.end() };
 }
+
+void AAdvancedGridLayout::setSpacing(int spacing) { mSpacing = spacing; }

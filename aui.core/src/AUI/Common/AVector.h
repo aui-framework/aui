@@ -84,7 +84,7 @@ public:
      */
     template<typename OtherContainer>
     iterator insertAll(iterator at, const OtherContainer& c) noexcept {
-        return super::insert(at, c.begin(), c.end());
+        return super::insert(at, std::begin(c), std::end(c));
     }
 
 
