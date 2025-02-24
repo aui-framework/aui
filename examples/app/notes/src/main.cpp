@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
+
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/Entry.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -18,6 +20,10 @@
 #include <AUI/Model/AListModel.h>
 #include "AUI/View/AButton.h"
 #include "AUI/View/ADrawableView.h"
+#include "AUI/Json/Conversion.h"
+#include "AUI/IO/AFileInputStream.h"
+
+static constexpr auto LOG_TAG = "Notes";
 
 using namespace declarative;
 using namespace ass;
@@ -26,6 +32,11 @@ struct Note {
     AProperty<AString> title;
     AProperty<AString> content;
 };
+
+AJSON_FIELDS(Note,
+             AJSON_FIELDS_ENTRY(title)
+             AJSON_FIELDS_ENTRY(content)
+             )
 
 class TitleTextArea : public ATextArea {
 public:
@@ -96,23 +107,27 @@ public:
             Padding { 0 },
           },
         });
+        load();
 
         setContents(Vertical {
           ASplitter::Horizontal()
                   .withItems({
                     Vertical {
                       Centered {
-                        Button { Icon { ":img/new.svg" }, Label { "New Note" } }.connect(&AView::clicked, me::newNote),
+                        Horizontal {
+                          Button { Icon { ":img/save.svg" }, Label { "Save" } }.connect(&AView::clicked, me::save),
+                          Button { Icon { ":img/new.svg" }, Label { "New Note" } }.connect(&AView::clicked, me::newNote),
+                        },
                       },
                       AScrollArea::Builder()
                           .withContents(
                           AUI_DECLARATIVE_FOR(note, mNotes, AVerticalLayout) {
                               return notePreview(note) let {
-                                connect(it->clicked, [this, note] { mCurrentNote = note; });
-                                it & mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
-                                  ALogger::info("main") << "currentNote == note " << currentNote << " == " << note;
-                                  view.setAssName(".plain_bg", currentNote == note);
-                                };
+                                  connect(it->clicked, [this, note] { mCurrentNote = note; });
+                                  it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
+                                      ALOG_DEBUG(LOG_TAG) << "currentNote == note " << currentNote << " == " << note;
+                                      view.setAssName(".plain_bg", currentNote == note);
+                                  };
                               };
                           })
                           .build(),
@@ -121,7 +136,10 @@ public:
                     Vertical::Expanding {
                       Centered {
                         Button { Icon { ":img/trash.svg" }, Label { "Delete" } }.connect(
-                            &AView::clicked, me::deleteCurrentNote),
+                            &AView::clicked, me::deleteCurrentNote) &
+                            mCurrentNote.readProjected([](const _<Note>& n) {
+                                return n != nullptr;
+                            }) > &AView::setEnabled,
                       },
                       CustomLayout::Expanding {} & mCurrentNote.readProjected(noteEditor),
                     } with_style { MinSize { 200_dp } }
@@ -135,13 +153,32 @@ public:
         }
     }
 
+    void load() {
+        try {
+            if (!"notes.json"_path.isRegularFileExists()) {
+                return;
+            }
+            aui::from_json(AJson::fromStream(AFileInputStream("notes.json")), mNotes);
+        } catch (const AException& e) {
+            ALogger::info(LOG_TAG) << "Can't load notes: " << e;
+        }
+    }
+
+    void save() {
+        AFileOutputStream("notes.json") << aui::to_json(mNotes);
+    }
+
     void newNote() {
         auto note = aui::ptr::manage(new Note { .title = "Untitled" });
         mNotes << note;
         mCurrentNote = std::move(note);
     }
 
-    void deleteCurrentNote() {}
+    void deleteCurrentNote() {
+        auto it = ranges::find(*mNotes, *mCurrentNote);
+        it = mNotes->erase(it);
+        mCurrentNote = it != mNotes->end() ? *it : nullptr;
+    }
 
 private:
     _<AListModel<_<Note>>> mNotes = _new<AListModel<_<Note>>>();
