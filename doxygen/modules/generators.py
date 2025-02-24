@@ -265,7 +265,23 @@ def docs_examples():
 
     with open("doxygen/intermediate/examples.md", "w") as fos:
         fos.write("# Examples {#examples}\n\n")
-        fos.write("This document lists a collection of code samples and tutorials designed to help both newcomers and experienced developers with AUI Framework app development. These projects are designed to cover diversity of topics, from fundamental views usage through to assembling complete applications.\n\n")
+        fos.write("This document lists a collection of code samples and tutorials designed to help both newcomers and "
+                  "experienced developers with AUI Framework app development. These projects cover diversity of "
+                  "topics, from fundamental views usage through to complete application assembly.\n\n"
+                  "# Building the Examples\n\n"
+                  "To build these examples, simply clone [AUI repository](https://github.com/aui-framework/aui) and "
+                  "configure CMake with `-DAUI_BUILD_EXAMPLES=TRUE`:\n"
+                  "```\n"
+                  "git clone https://github.com/aui-framework/aui\n"
+                  "cd aui\n"
+                  "mkdir build\n"
+                  "cd build\n"
+                  "cmake .. -DAUI_BUILD_EXAMPLES=TRUE\n"
+                  "cmake --build . --parallel\n"
+                  "```\n"
+                  "Some of these examples are located outside of AUI's build tree; such examples should be compiled as "
+                  "regular CMake projects."
+                  "\n\n")
         for category in CATEGORIES:
             fos.write(f"# {category[1]} {{#examples_{category[0]}}}\n\n")
             fos.write(f"{category[2]}\n\n")
