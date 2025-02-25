@@ -184,7 +184,11 @@ consteval std::string_view name_of_field_impl_method() noexcept {
  * @details
  * In comparison to @ref aui::reflect::member, aui::reflect::member_v inspects pointer-to-member value, instead of type.
  * Since value points to exact member instead of generalizing by type, this allows to introspect additional data such as
- * member name.
+ * member name:
+ *
+ * @snippet aui.core/src/AUI/Reflect/members.h getName
+ *
+ * # Example
  *
  * @snippet aui.core/tests/ReflectTest.cpp member_v
  * @snippet aui.core/tests/ReflectTest.cpp member_v2
@@ -234,7 +238,17 @@ private:
     }
 
 public:
+    /// [getName]
+    /*
+     * @brief Field name.
+     * @details
+     * Compile-time `std::string_view` that holds name of the field.
+     *
+     * It's implemented via forbidden compiler-specific magic and requires your `class`/`struct` to be defined with
+     * external linkage, i.e., please do not use function local types.
+     */
     static constexpr std::string_view name = getName();
+    /// [getName]
 #endif
 };
 
