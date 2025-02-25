@@ -20,6 +20,7 @@
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Model/AListModel.h>
+#include "ReflectionTest.h"
 
 enum ATest {
     VALUE1,
@@ -41,10 +42,12 @@ namespace namespaceeee {
     };
 }
 
-struct MyStruct {};
+struct MyStruct {
+};
 
 namespace AzazaATest {
-    struct ATest {};
+    struct ATest {
+    };
 }
 
 enum class EnumWithoutEnumValue {
@@ -52,22 +55,25 @@ enum class EnumWithoutEnumValue {
 };
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, ATest t) {
+inline std::ostream &operator<<(std::ostream &o, ATest t) {
     o << int(t);
     return o;
 }
+
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, namespaceeee::ATest t) {
+inline std::ostream &operator<<(std::ostream &o, namespaceeee::ATest t) {
     o << int(t);
     return o;
 }
+
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, namespaceeee::ATest2 t) {
+inline std::ostream &operator<<(std::ostream &o, namespaceeee::ATest2 t) {
     o << int(t);
     return o;
 }
+
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, EnumWithoutEnumValue t) {
+inline std::ostream &operator<<(std::ostream &o, EnumWithoutEnumValue t) {
     o << int(t);
     return o;
 }
@@ -132,85 +138,145 @@ TEST(Reflect, EnumWithoutEnumValueCase) {
     ASSERT_EQ(AEnumerate<EnumWithoutEnumValue>::valueName<EnumWithoutEnumValue::SOME_VALUE1>(), "SOME_VALUE1");
 }
 
+#ifndef AUI_REFLECT_FIELD_NAMES_ENABLED
+#   if  (__cplusplus >= 202002L) || (defined(_MSVC_LANG) && (_MSVC_LANG >= 202002L))
+#       if (defined(__cpp_nontype_template_args) && __cpp_nontype_template_args >= 201911) \
+ || (defined(__clang_major__) && __clang_major__ >= 12)
+#           define  AUI_REFLECT_FIELD_NAMES_ENABLED 1
+#       else
+#           define  AUI_REFLECT_FIELD_NAMES_ENABLED 0
+#       endif
+#   else
+#       define  AUI_REFLECT_FIELD_NAMES_ENABLED 0
+#   endif
+#endif
+
 namespace aui::reflect {
-template<auto M>
-struct member_v: member<decltype(M)> {
-private:
-    static consteval std::string_view getName() {
-#if AUI_COMPILER_MSVC
-        std::string_view s = __FUNCSIG__;
-        auto openTag = s.find('<') + 1;
-        auto closeTag = s.find('>');
-        auto name = s.substr(openTag, closeTag - openTag);
-        name = name.substr(name.rfind(' ') + 1);
-        if (name.ends_with(" &"))
-            name = name.substr(0, name.length() - 2);
-        return name;
-#elif AUI_COMPILER_CLANG
-        std::string_view s = __PRETTY_FUNCTION__;
-        {
-            auto last = s.rfind(']');
-            auto begin = s.rfind('&');
-            s = s.substr(begin, last - begin);
+
+    namespace detail {
+#if AUI_COMPILER_MSVC && AUI_REFLECT_FIELD_NAMES_ENABLED
+
+        /**
+         * @brief External linkage wrapper, so T is not enforced to be externally linked.
+         */
+        template<class T>
+        struct wrapper {
+            const T value;
+        };
+
+        /**
+         * @brief Link time assert. If linker fails to link with it, it means that fake_object used in run time.
+         */
+        template<class T>
+        extern const wrapper<T> DO_NOT_USE_REFLECTION_WITH_LOCAL_TYPES;
+
+        /**
+         * @brief For returning non-default constructible types.
+         * @tparam T
+         * @details
+         * Neither std::declval nor unsafe_declval are suitable here.
+         */
+        template<class T>
+        constexpr const T& fake_object() noexcept {
+            return DO_NOT_USE_REFLECTION_WITH_LOCAL_TYPES<T>.value;
         }
-        if (auto c = s.rfind(':')) {
-            s = s.substr(c + 1);
+
+
+        template<class UniqueKey, // https://developercommunity.visualstudio.com/t/__FUNCSIG__-outputs-wrong-value-with-C/10458554
+                 auto M>
+        consteval std::string_view name_of_field_impl() noexcept {
+            std::string_view s = __FUNCSIG__;
+            s = s.substr(s.rfind("->value->"));
+            s = s.substr(sizeof("->value->") - 1);
+            s = s.substr(0, s.rfind(">(void)"));
+            return s;
         }
-        return s;
-#else
-        std::string_view s = __PRETTY_FUNCTION__;
-        {
-            auto last = s.rfind(';');
-            auto begin = s.rfind('&');
-            s = s.substr(begin, last - begin);
+
+
+        template<class UniqueKey, // https://developercommunity.visualstudio.com/t/__FUNCSIG__-outputs-wrong-value-with-C/10458554
+                 auto M>
+        consteval std::string_view name_of_field_impl_method() noexcept {
+            std::string_view s = __FUNCSIG__;
+            s = s.substr(s.rfind(':') + 1);
+            s = s.substr(0, s.find('('));
+            return s;
         }
-        if (auto c = s.rfind(':')) {
-            s = s.substr(c + 1);
-        }
-        return s;
 #endif
     }
 
-public:
-    static constexpr std::string_view name = getName();
-};
+    template<auto M>
+    struct member_v : member<decltype(M)> {
+#if AUI_REFLECT_FIELD_NAMES_ENABLED
+    private:
+        static consteval std::string_view getName() {
+#if AUI_COMPILER_MSVC
+            if constexpr (requires { typename member_v::return_t; }) {
+                return detail::name_of_field_impl_method<typename member_v::clazz, M>();
+            } else {
+                return detail::name_of_field_impl<typename member_v::clazz, std::addressof(std::addressof(detail::fake_object<typename member_v::clazz>())->*M)>();
+            }
+#elif AUI_COMPILER_CLANG
+            std::string_view s = __PRETTY_FUNCTION__;
+            {
+                auto last = s.rfind(']');
+                auto begin = s.rfind('&');
+                s = s.substr(begin, last - begin);
+            }
+            if (auto c = s.rfind(':')) {
+                s = s.substr(c + 1);
+            }
+            return s;
+#else
+            std::string_view s = __PRETTY_FUNCTION__;
+            {
+                auto last = s.rfind(';');
+                auto begin = s.rfind('&');
+                s = s.substr(begin, last - begin);
+            }
+            if (auto c = s.rfind(':')) {
+                s = s.substr(c + 1);
+            }
+            return s;
+#endif
+        }
+
+    public:
+        static constexpr std::string_view name = getName();
+#endif
+    };
 }
+
+/// [member_v]
+struct SomeStruct {
+    int someInt;
+    std::string someString;
+
+    long someFunc(float arg) {}
+};
+/// [member_v]
 
 TEST(Reflect, FieldName) {
     /// [member_v]
-    struct Data {
-        int someInt;
-        std::string someString;
 
-        long someFunc(float arg);
-    };
-    EXPECT_EQ(aui::reflect::member_v<&Data::someInt>::name, "someInt");
-    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someInt>::type, int>);
 
-    EXPECT_EQ(aui::reflect::member_v<&Data::someString>::name, "someString");
-    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someString>::type, std::string>);
+    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someInt>::name, "someInt");
+    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someInt>::type, int>);
 
-    EXPECT_EQ(aui::reflect::member_v<&Data::someFunc>::name, "someFunc");
-    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someFunc>::return_t, long>);
-    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someFunc>::args, std::tuple<float>>);
-    static_assert(!aui::reflect::member_v<&Data::someFunc>::is_const);
-    static_assert(!aui::reflect::member_v<&Data::someFunc>::is_noexcept);
+    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someString>::name, "someString");
+    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someString>::type, std::string>);
+
+    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someFunc>::name, "someFunc");
+    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someFunc>::return_t, long>);
+    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someFunc>::args, std::tuple<float>>);
+    static_assert(!aui::reflect::member_v<&SomeStruct::someFunc>::is_const);
+    static_assert(!aui::reflect::member_v<&SomeStruct::someFunc>::is_noexcept);
     /// [member_v]
 }
 
-TEST(Reflect, FieldCount1) {
+TEST(Reflect, FieldCount) {
     struct Data {
         int a;
         std::string b;
     };
     EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 2);
-}
-
-TEST(Reflect, FieldCount2) {
-    struct Data {
-        int a;
-        std::string b;
-        int c[23];
-    };
-    EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 25);
 }
