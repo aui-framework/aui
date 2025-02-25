@@ -13,64 +13,12 @@
 
 #include <algorithm>
 #include <tuple>
+#include <AUI/Reflect/members.h>
 
 namespace aui {
+    /**
+     * @experimental
+     */
     template<typename Type>
-    struct member;
-
-    template<typename Type, typename Clazz>
-    struct member<Type(Clazz::*)> {
-        using type = Type;
-        using clazz = Clazz;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) const> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...)> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) noexcept> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) const noexcept> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename T>
-    concept pointer_to_member = requires(T&&)
-    {
-        typename aui::member<T>::clazz;
-    };
+    using member [[deprecated("aui::member moved to aui::reflect::member")]] = aui::reflect::member<Type>;
 }

@@ -72,7 +72,7 @@ namespace aui::enumerate {
 
 /**
  * @brief Enum trait to transform enum to name, name to enum, list all enums and vise versa.
- * @ingroup core
+ * @ingroup reflection
  * @see AUI_ENUM_VALUES
  */
 template<typename enum_t>

@@ -14,6 +14,10 @@
 #include "AUI/Common/AString.h"
 
 
+/**
+ * @brief Compile-time class introspection.
+ * @ingroup reflection
+ */
 template<class T>
 class AClass {
 public:

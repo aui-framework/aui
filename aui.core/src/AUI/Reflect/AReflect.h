@@ -21,6 +21,11 @@
 #endif
 
 namespace AReflect {
+
+    /**
+     * @brief Runtime reflection based on typeid.
+     * @ingroup reflection
+     */
     template<typename T>
     AString name(T* v) {
         if (!v) return "nullptr";

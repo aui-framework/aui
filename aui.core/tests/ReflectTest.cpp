@@ -132,6 +132,72 @@ TEST(Reflect, EnumWithoutEnumValueCase) {
     ASSERT_EQ(AEnumerate<EnumWithoutEnumValue>::valueName<EnumWithoutEnumValue::SOME_VALUE1>(), "SOME_VALUE1");
 }
 
+namespace aui::reflect {
+template<auto M>
+struct member_v: member<decltype(M)> {
+private:
+    static consteval std::string_view getName() {
+#if AUI_COMPILER_MSVC
+        std::string_view s = __FUNCSIG__;
+        auto openTag = s.find('<') + 1;
+        auto closeTag = s.find('>');
+        auto name = s.substr(openTag, closeTag - openTag);
+        name = name.substr(name.rfind(' ') + 1);
+        if (name.ends_with(" &"))
+            name = name.substr(0, name.length() - 2);
+        return name;
+#elif AUI_COMPILER_CLANG
+        std::string_view s = __PRETTY_FUNCTION__;
+        {
+            auto last = s.rfind(']');
+            auto begin = s.rfind('&');
+            s = s.substr(begin, last - begin);
+        }
+        if (auto c = s.rfind(':')) {
+            s = s.substr(c + 1);
+        }
+        return s;
+#else
+        std::string_view s = __PRETTY_FUNCTION__;
+        {
+            auto last = s.rfind(';');
+            auto begin = s.rfind('&');
+            s = s.substr(begin, last - begin);
+        }
+        if (auto c = s.rfind(':')) {
+            s = s.substr(c + 1);
+        }
+        return s;
+#endif
+    }
+
+public:
+    static constexpr std::string_view name = getName();
+};
+}
+
+TEST(Reflect, FieldName) {
+    /// [member_v]
+    struct Data {
+        int someInt;
+        std::string someString;
+
+        long someFunc(float arg);
+    };
+    EXPECT_EQ(aui::reflect::member_v<&Data::someInt>::name, "someInt");
+    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someInt>::type, int>);
+
+    EXPECT_EQ(aui::reflect::member_v<&Data::someString>::name, "someString");
+    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someString>::type, std::string>);
+
+    EXPECT_EQ(aui::reflect::member_v<&Data::someFunc>::name, "someFunc");
+    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someFunc>::return_t, long>);
+    static_assert(std::is_same_v<aui::reflect::member_v<&Data::someFunc>::args, std::tuple<float>>);
+    static_assert(!aui::reflect::member_v<&Data::someFunc>::is_const);
+    static_assert(!aui::reflect::member_v<&Data::someFunc>::is_noexcept);
+    /// [member_v]
+}
+
 TEST(Reflect, FieldCount1) {
     struct Data {
         int a;

@@ -31,19 +31,14 @@
 /**
  * @defgroup core aui::core
  * @brief Main central library.
- * @details AUI's core central library without graphical components used by other modules.
- * Adds these features to C++:
- * - @ref signal_slot "signal-slot system"
- * - @ref property_system "property system"
+ * @details
+ * Some additional features:
  * - @ref AAbstractThread::interrupt() "interruptable threads"
- * - @ref io "input-output"
  * - @ref AI18n "i18n"
  * - @ref ALogger "logging"
  * - data models
- * - reflection
  * - trait classes
  * - @ref AUrl "urls"
- * - @ref jni "C++/Java JNI bridge"
  */
 
 
@@ -63,3 +58,11 @@
  * @brief Input-output streams
  */
 
+/**
+ * @defgroup reflection Reflection
+ * @ingroup core
+ * @brief Basic reflection capabilities.
+ * @details
+ * This component provides functionality for reflection and introspection of classes and their members in compile-time.
+ * Some runtime methods are also available.
+ */
