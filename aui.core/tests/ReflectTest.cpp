@@ -131,3 +131,20 @@ TEST(Reflect, NamespaceEnumerateEnumClassNames) {
 TEST(Reflect, EnumWithoutEnumValueCase) {
     ASSERT_EQ(AEnumerate<EnumWithoutEnumValue>::valueName<EnumWithoutEnumValue::SOME_VALUE1>(), "SOME_VALUE1");
 }
+
+TEST(Reflect, FieldCount1) {
+    struct Data {
+        int a;
+        std::string b;
+    };
+    EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 2);
+}
+
+TEST(Reflect, FieldCount2) {
+    struct Data {
+        int a;
+        std::string b;
+        int c[23];
+    };
+    EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 25);
+}

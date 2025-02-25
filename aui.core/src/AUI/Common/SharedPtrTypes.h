@@ -284,16 +284,16 @@ public:
     }
 
     // forward ranged-for loops
-    auto begin() const requires requires { super::operator->()->begin(); } {
+    auto begin() const requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() const requires requires { super::operator->()->begin(); } {
+    auto end() const requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
-    auto begin() requires requires { super::operator->()->begin(); } {
+    auto begin() requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() requires requires { super::operator->()->begin(); } {
+    auto end() requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
 

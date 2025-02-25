@@ -17,6 +17,8 @@
 template<class T>
 class AClass {
 public:
+    static_assert(!std::is_reference<T>::value, "AClass: attempt to use AClass on a reference.");
+
     static AString name() {
 #if AUI_COMPILER_MSVC
         AString s = __FUNCSIG__;

@@ -149,6 +149,8 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
  */
 template <typename T>
 struct AProperty: AObjectBase {
+    static_assert(!std::is_reference_v<T>, "====================> AProperty: attempt to wrap a reference.");
+
     using Underlying = T;
 
     T raw{};
@@ -282,6 +284,7 @@ private:
     }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
+static_assert(AAnyProperty<AProperty<int>&>, "AProperty does not conform AAnyProperty concept");
 static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not conform AAnyProperty concept");
 
 /**

@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Common/AString.h>
+#include <AUI/Reflect/detail/fields_count.h>
 
 #ifdef __GNUG__
 #include <cstdlib>

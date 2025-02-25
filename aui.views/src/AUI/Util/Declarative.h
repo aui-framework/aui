@@ -180,7 +180,8 @@ private:
     _<View> mView;
 };
 
-static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper must be convertible to _<AView>");
+static_assert(std::is_convertible_v<view<AView>, View>,
+             "====================> AUI: declarative view wrapper (declarative::view) must be convertible to _<AView>");
 
 
 /**
