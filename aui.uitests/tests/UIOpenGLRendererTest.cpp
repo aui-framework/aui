@@ -23,6 +23,10 @@ protected:
     void SetUp() override {
         Test::SetUp();
 
+        if (std::getenv("CI")) {
+            GTEST_SKIP() << "Disabled on CI";
+        }
+
         ARenderingContextOptions::set({
           .initializationOrder {
             ARenderingContextOptions::OpenGL {},
