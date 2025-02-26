@@ -191,5 +191,13 @@ void OpenGLRenderingContext::endResize(AWindowBase& window) {
 }
 
 AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        fb->bindForRead();
+        AImage result(mViewportSize, APixelFormat::RGBA_BYTE);
+        glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
+        result.mirrorVertically();
+        gl::Framebuffer::unbind();
+        return result;
+    }
+    return {};
 }

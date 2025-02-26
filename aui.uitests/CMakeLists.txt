@@ -13,3 +13,4 @@ if (TARGET GTest::gmock)
 endif()
 
 aui_enable_tests(aui.uitests)
+aui_enable_benchmarks(aui.uitests)
