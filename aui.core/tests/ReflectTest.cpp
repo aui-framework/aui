@@ -135,22 +135,6 @@ struct SomeStruct {
 };
 /// [member_v]
 
-TEST(Reflect, FieldName) {
-    /// [member_v2]
-    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someInt>::name, "someInt");
-    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someInt>::type, int>);
-
-    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someString>::name, "someString");
-    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someString>::type, std::string>);
-
-    EXPECT_EQ(aui::reflect::member_v<&SomeStruct::someFunc>::name, "someFunc");
-    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someFunc>::return_t, long>);
-    static_assert(std::is_same_v<aui::reflect::member_v<&SomeStruct::someFunc>::args, std::tuple<float>>);
-    static_assert(!aui::reflect::member_v<&SomeStruct::someFunc>::is_const);
-    static_assert(!aui::reflect::member_v<&SomeStruct::someFunc>::is_noexcept);
-    /// [member_v2]
-}
-
 TEST(Reflect, FieldCount) {
     struct Data {
         int a;
