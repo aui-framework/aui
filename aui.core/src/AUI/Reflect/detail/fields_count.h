@@ -236,16 +236,16 @@ constexpr void* assert_first_is_not_base(std::index_sequence<>) noexcept {
 
 /**
  * @brief Counts the number of non-static data member in a given type.
- * @tparam T The type to count fields in.
+ * @tparam Clazz The type to count fields in.
  * @details
- * `T` must meet the following requirements:
+ * `Clazz` must meet the following requirements:
  * - It must not be a reference type.
  * - It must have no virtual functions (i.e., it's not polymorphic).
- * - It must be an aggregate type (i.e., must have no used defined constructors).
+ * - It must be an aggregate type (i.e., must have no user defined constructors).
  */
-template <class T>
+template <class Clazz>
 constexpr std::size_t fields_count() noexcept {
-    using type = std::remove_cv_t<T>;
+    using type = std::remove_cv_t<Clazz>;
 
     static_assert(
         !std::is_reference<type>::value, "====================> aui::reflect: attempt to get fields count on a reference.");

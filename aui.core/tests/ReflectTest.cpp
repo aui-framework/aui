@@ -20,6 +20,7 @@
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Model/AListModel.h>
+#include "AUI/Reflect/for_each_field.h"
 
 enum ATest {
     VALUE1,
@@ -130,7 +131,7 @@ struct SomeStruct {
     int someInt;
     std::string someString;
 
-    long someFunc(float arg) {}
+    long someFunc(float arg) { return 0; }
 };
 /// [member_v]
 
@@ -156,4 +157,18 @@ TEST(Reflect, FieldCount) {
         std::string b;
     };
     EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 2);
+}
+
+TEST(Reflect, ForEachField1) {
+    /// [for_each_field_value]
+    struct Data {
+        int a;
+        std::string b;
+    };
+    AString result;
+    aui::reflect::for_each_field_value(Data{ .a = 123, .b = "abc" }, [&](const auto& v) {
+        result += "{};"_format(v);
+    });
+    EXPECT_EQ(result, "123;abc;");
+    /// [for_each_field_value]
 }
