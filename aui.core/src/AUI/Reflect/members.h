@@ -127,8 +127,9 @@ struct member<Type (Clazz::*)(Args...) const noexcept> {
 template <typename T>
 concept pointer_to_member = requires(T &&) { typename aui::reflect::member<T>::clazz; };
 
+#if AUI_REFLECT_FIELD_NAMES_ENABLED
 namespace detail {
-#if AUI_COMPILER_MSVC && AUI_REFLECT_FIELD_NAMES_ENABLED
+#if AUI_COMPILER_MSVC
 
 /**
  * @brief External linkage wrapper, so T is not enforced to be externally linked.
@@ -176,7 +177,45 @@ consteval std::string_view name_of_field_impl_method() noexcept {
     return s;
 }
 #endif
+
+template<typename Clazz, auto M>
+consteval std::string_view field_name() {
+#if AUI_COMPILER_MSVC
+    if constexpr (requires { typename member_v::return_t; }) {
+            return detail::name_of_field_impl_method<typename member_v::clazz, M>();
+        } else {
+            return detail::name_of_field_impl<
+                typename member_v::clazz,
+                std::addressof(std::addressof(detail::fake_object<typename member_v::clazz>())->*M)>();
+        }
+#elif AUI_COMPILER_CLANG
+    std::string_view s = __PRETTY_FUNCTION__;
+    {
+        auto last = s.rfind(']');
+        auto begin = s.rfind('&');
+        s = s.substr(begin, last - begin);
+    }
+    if (auto c = s.rfind(':')) {
+        s = s.substr(c + 1);
+    }
+    return s;
+#else
+    std::string_view s = __PRETTY_FUNCTION__;
+        {
+            auto last = s.rfind(';');
+            auto begin = s.rfind('&');
+            s = s.substr(begin, last - begin);
+        }
+        if (auto c = s.rfind(':')) {
+            s = s.substr(c + 1);
+        }
+        return s;
+#endif
+}
+
 }   // namespace detail
+#endif
+
 
 /**
  * @brief Pointer to member value (not type) introspection.
@@ -201,43 +240,6 @@ consteval std::string_view name_of_field_impl_method() noexcept {
 template <auto M>
 struct member_v : member<decltype(M)> {
 #if AUI_REFLECT_FIELD_NAMES_ENABLED
-
-private:
-    static consteval std::string_view getName() {
-#if AUI_COMPILER_MSVC
-        if constexpr (requires { typename member_v::return_t; }) {
-            return detail::name_of_field_impl_method<typename member_v::clazz, M>();
-        } else {
-            return detail::name_of_field_impl<
-                typename member_v::clazz,
-                std::addressof(std::addressof(detail::fake_object<typename member_v::clazz>())->*M)>();
-        }
-#elif AUI_COMPILER_CLANG
-        std::string_view s = __PRETTY_FUNCTION__;
-        {
-            auto last = s.rfind(']');
-            auto begin = s.rfind('&');
-            s = s.substr(begin, last - begin);
-        }
-        if (auto c = s.rfind(':')) {
-            s = s.substr(c + 1);
-        }
-        return s;
-#else
-        std::string_view s = __PRETTY_FUNCTION__;
-        {
-            auto last = s.rfind(';');
-            auto begin = s.rfind('&');
-            s = s.substr(begin, last - begin);
-        }
-        if (auto c = s.rfind(':')) {
-            s = s.substr(c + 1);
-        }
-        return s;
-#endif
-    }
-
-public:
     /// [getName]
     /*
      * @brief Field name.
@@ -247,9 +249,11 @@ public:
      * It's implemented via forbidden compiler-specific magic and requires your `class`/`struct` to be defined with
      * external linkage, i.e., please do not use function local types.
      */
-    static constexpr std::string_view name = getName();
+    static constexpr std::string_view name = detail::field_name<typename member_v::clazz, M>();
     /// [getName]
 #endif
 };
+
+//static_assert(member_v<&std::string_view::data>::name == "data");
 
 }   // namespace aui::reflect
