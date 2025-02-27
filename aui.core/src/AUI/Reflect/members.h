@@ -181,13 +181,14 @@ consteval std::string_view name_of_field_impl_method() noexcept {
 template<typename Clazz, auto M>
 consteval std::string_view field_name() {
 #if AUI_COMPILER_MSVC
-    if constexpr (requires { typename member_v::return_t; }) {
-            return detail::name_of_field_impl_method<typename member_v::clazz, M>();
-        } else {
-            return detail::name_of_field_impl<
-                typename member_v::clazz,
-                std::addressof(std::addressof(detail::fake_object<typename member_v::clazz>())->*M)>();
-        }
+    constexpr bool isMemberField = requires (Clazz&& z) { std::addressof(z.*M); };
+    if constexpr (isMemberField) {
+        return detail::name_of_field_impl<
+                Clazz,
+                std::addressof(std::addressof(detail::fake_object<Clazz>())->*M)>();
+    } else {
+        return detail::name_of_field_impl_method<Clazz, M>();
+    }
 #elif AUI_COMPILER_CLANG
     std::string_view s = __PRETTY_FUNCTION__;
     {
