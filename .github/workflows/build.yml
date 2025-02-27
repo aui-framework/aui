@@ -95,20 +95,6 @@ jobs:
 
      - name: Build app 
        run: cmake --build ${{github.workspace}}/build -t apps
- 
-     - name: Build rest
-       working-directory: ${{github.workspace}}/build/app_project
-       run: cmake --build . -- CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
-     
-     - name: Pack framework
-       working-directory: ${{github.workspace}}/build/app_project
-       run: cpack -G TGZ -C Debug . 
-
-     - name: Upload framework
-       uses: actions/upload-artifact@v4
-       with:
-         path: ${{github.workspace}}/build/app_project/*.tar.gz
-         name: ios static Debug.tar.gz
 
      - name: Pack app
        working-directory: ${{github.workspace}}/build/app_project/bin/Debug
