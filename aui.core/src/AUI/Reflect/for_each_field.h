@@ -35,7 +35,7 @@ namespace aui::reflect {
  * @snippet aui.core/tests/ReflectTest.cpp for_each_field_value
  */
 template<class Clazz, typename F>
-void for_each_field_value(Clazz&& clazz, F&& callback) {
+constexpr void for_each_field_value(Clazz&& clazz, F&& callback) {
     constexpr std::size_t fieldsCount = detail::fields_count<std::remove_reference_t<Clazz>>();
     detail::for_each_field_dispatcher(clazz, [callback = std::forward<F>(callback)](auto&& tuple) {
         std::apply([&]<typename... Fields>(Fields&&... fields) {

@@ -32,7 +32,7 @@ constexpr auto tie_as_tuple(Clazz& clazz) noexcept {
 }
 
 template <class Clazz, class F, std::size_t... I>
-void for_each_field_dispatcher(Clazz& clazz, F&& callback, std::index_sequence<I...>) {
+constexpr void for_each_field_dispatcher(Clazz& clazz, F&& callback, std::index_sequence<I...>) {
     static_assert(
         !std::is_union<Clazz>::value,
         "====================> aui::reflect: attempt to reflect on a union."
