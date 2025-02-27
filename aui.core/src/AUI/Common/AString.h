@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <iostream>
 #include "AUI/Core.h"
@@ -703,7 +704,7 @@ public:
     AString processEscapes() const;
 
     AString& removeAll(char16_t c) noexcept {
-        erase(std::remove(begin(), end(), c));
+        erase(std::remove(begin(), end(), c), end());
         return *this;
     }
 

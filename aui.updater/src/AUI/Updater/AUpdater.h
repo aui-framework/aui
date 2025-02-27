@@ -172,7 +172,7 @@ public:
      * @brief Downloading state.
      */
     struct StatusDownloading {
-        AProperty<aui::float_within_0_1> progress;
+        mutable AProperty<aui::float_within_0_1> progress;
     };
 
     /**

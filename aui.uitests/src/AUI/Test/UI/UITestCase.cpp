@@ -117,6 +117,7 @@ void testing::UITest::TearDown() {
     AWindow::destroyWindowManager();
 
     Test::TearDown();
+    UITestState::endUITest();
 }
 void testing::UITest::saveScreenshot(const AString& name) {
     auto i = testing::UnitTest::GetInstance();

@@ -26,3 +26,6 @@ bool UITestState::isTesting() {
 void UITestState::beginUITest() {
     ourIsUITest = true;
 }
+void UITestState::endUITest() {
+    ourIsUITest = false;
+}
