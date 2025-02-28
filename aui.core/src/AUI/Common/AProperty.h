@@ -38,6 +38,11 @@ auto makeAssignment(Property&& property) { // note the rvalue reference template
     struct Invocable {
         Property property;
         void operator()(const Underlying& value) const {
+            // avoid property assignment loop (bidirectional connection)
+            // PropertyCommonTest.Property2PropertyBoth
+            if (property.changed.isAtSignalEmissionState()) {
+                return;
+            }
             const_cast<Property&>(property) = std::move(value);
         };
     } i = { std::forward<Property>(property) };
@@ -152,6 +157,8 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
  */
 template <typename T>
 struct AProperty: AObjectBase {
+    static_assert(!std::is_reference_v<T>, "====================> AProperty: attempt to wrap a reference.");
+
     using Underlying = T;
 
     T raw{};
@@ -198,12 +205,6 @@ struct AProperty: AObjectBase {
 
     template <aui::convertible_to<T> U>
     AProperty& operator=(U&& value) noexcept {
-        static constexpr auto IS_COMPARABLE = requires { this->raw == value; };
-        if constexpr (IS_COMPARABLE) {
-            if (this->raw == value) [[unlikely]] {
-                return *this;
-            }
-        }
         this->raw = std::forward<U>(value);
         notify();
         return *this;
@@ -251,7 +252,7 @@ struct AProperty: AObjectBase {
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
+    auto readProjected(Projection&& projection) const noexcept {
         return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
     }
 
@@ -287,6 +288,7 @@ private:
     }
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
+static_assert(AAnyProperty<AProperty<int>&>, "AProperty does not conform AAnyProperty concept");
 static_assert(APropertyReadable<const AProperty<int>>, "const AProperty does not conform AAnyProperty concept");
 
 template<typename T>

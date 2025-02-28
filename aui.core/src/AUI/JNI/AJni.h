@@ -23,6 +23,7 @@
 
 /**
  * @defgroup jni aui::jni
+ * @ingroup core
  * @brief C++/Java bridge.
  * @details Used to make AUI work on Android.
  */

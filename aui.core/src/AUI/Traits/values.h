@@ -126,8 +126,10 @@ namespace aui {
      */
     template<typename T>
     struct no_escape {
-    static_assert(!std::is_reference<T>::value, "use undecorated type (without reference)");
-    static_assert(!std::is_pointer_v<T>, "use undecorated type (without pointer)");
+    static_assert(!std::is_reference<T>::value,
+                  "====================> AUI: attempt to use aui::no_escape with reference type. Please use undecorated type (without reference)");
+    static_assert(!std::is_pointer_v<T>,
+                  "====================> AUI: attempt to use aui::no_escape with pointer type. Please use undecorated type (without pointer)");
     private:
         T* value;
 

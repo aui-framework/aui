@@ -51,12 +51,12 @@ inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
 template <typename Projection>
 struct projection_info {
     static_assert(
-        aui::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection> ||
+        aui::reflect::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection> ||
             aui::function_pointer<Projection>,
-        "projection is required to be an pointer-to-member or not overloaded lambda or function pointer");
+        "====================> ASignal: projection is required to be an pointer-to-member or not overloaded lambda or function pointer");
 };
 
-template <aui::pointer_to_member Projection>
+template <aui::reflect::pointer_to_member Projection>
 struct projection_info<Projection> {
 private:
     template <typename... T>
@@ -68,7 +68,7 @@ private:
     };
 
 public:
-    using info = typename aui::member<Projection>;
+    using info = typename aui::reflect::member<Projection>;
     using return_t = typename info::return_t;
     using args = typename cat<typename info::clazz&, typename info::args>::type;
 };
@@ -125,6 +125,10 @@ struct ProjectedSignal {
     }
 
     operator bool() const { return bool(base); }
+
+    bool isAtSignalEmissionState() const noexcept {
+        return base.isAtSignalEmissionState();
+    }
 
 private:
     template <not_overloaded_lambda Lambda>
@@ -215,6 +219,11 @@ public:
         return std::any_of(
             mOutgoingConnections.begin(), mOutgoingConnections.end(),
             [&](const SenderConnectionOwner& s) { return s.value->receiverBase == object.ptr(); });
+    }
+
+    [[nodiscard]]
+    bool isAtSignalEmissionState() const noexcept {
+        return mLoopGuard.is_locked();
     }
 
 private:
@@ -369,6 +378,7 @@ private:
     };
 
     mutable AVector<SenderConnectionOwner> mOutgoingConnections;
+    ASpinlockMutex mLoopGuard;
 
     void invokeSignal(AObject* sender, std::tuple<const Args&...> args = {});
 
@@ -445,6 +455,8 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
     }
 
     std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+    std::unique_lock lock2(mLoopGuard, std::try_to_lock);
+    AUI_ASSERTX(lock2.owns_lock(), "signal should not be emitted inside its handler");
     auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
     ARaiiHelper returnBack = [&] {
         if (!lock.owns_lock()) lock.lock();
