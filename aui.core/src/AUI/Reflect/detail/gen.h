@@ -27,7 +27,7 @@ namespace aui::reflect::detail {
 
 template <class... Args>
 constexpr auto make_tuple_of_references(Args&&... args) noexcept {
-    return std::make_tuple<Args&...>(args...);
+    return std::tuple<Args&...>(args...);
 }
 
 template<typename T, typename Arg>

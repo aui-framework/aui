@@ -36,10 +36,6 @@ namespace aui::reflect {
  * `aui::reflect::member` provides metaprogramming capabilities to inspect the properties of class members.
  * Depending on the actual kind of the member, different kinds of data available.
  *
- * @note
- * Generally, prefer to use @ref aui::reflect::member_v which is easier to use and gives more data.
- * Use @ref aui::reflect::member only if you have type only.
- *
  * ## Fields (member variables)
  * @snippet aui.core/src/AUI/Reflect/members.h fields
  *

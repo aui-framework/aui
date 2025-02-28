@@ -143,7 +143,7 @@ TEST(Reflect, FieldCount) {
     EXPECT_EQ(aui::reflect::detail::fields_count<Data>(), 2);
 }
 
-TEST(Reflect, ForEachField1) {
+TEST(Reflect, ForEachField) {
     /// [for_each_field_value]
     struct Data {
         int a;
@@ -155,4 +155,17 @@ TEST(Reflect, ForEachField1) {
     });
     EXPECT_EQ(result, "123;abc;");
     /// [for_each_field_value]
+}
+
+TEST(Reflect, ForEachFieldRefs) {
+    struct Data {
+        int a;
+        std::string b;
+    };
+    Data data { .a = 123, .b = "abc" };
+    aui::reflect::for_each_field_value(data, [&]<typename T>(T& v) {
+        v = T{};
+    });
+    EXPECT_EQ(data.a, 0);
+    EXPECT_EQ(data.b, "");
 }

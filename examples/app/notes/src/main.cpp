@@ -22,6 +22,8 @@
 #include "AUI/View/ADrawableView.h"
 #include "AUI/Json/Conversion.h"
 #include "AUI/IO/AFileInputStream.h"
+#include "AUI/Reflect/for_each_field.h"
+#include "AUI/Platform/AMessageBox.h"
 
 static constexpr auto LOG_TAG = "Notes";
 
@@ -33,10 +35,7 @@ struct Note {
     AProperty<AString> content;
 };
 
-AJSON_FIELDS(Note,
-             AJSON_FIELDS_ENTRY(title)
-             AJSON_FIELDS_ENTRY(content)
-             )
+AJSON_FIELDS(Note, AJSON_FIELDS_ENTRY(title) AJSON_FIELDS_ENTRY(content))
 
 class TitleTextArea : public ATextArea {
 public:
@@ -50,6 +49,7 @@ public:
     }
 };
 
+/// [notePreview]
 _<AView> notePreview(const _<Note>& note) {
     struct StringOneLinePreview {
         AString operator()(const AString& s) const {
@@ -74,7 +74,9 @@ _<AView> notePreview(const _<Note>& note) {
         Margin { 4_dp, 8_dp },
     };
 }
+/// [notePreview]
 
+/// [noteEditor]
 _<AView> noteEditor(const _<Note>& note) {
     if (note == nullptr) {
         return Centered { Label { "No note selected" } };
@@ -93,6 +95,7 @@ _<AView> noteEditor(const _<Note>& note) {
           Padding { 8_dp, 16_dp },
         });
 }
+/// [noteEditor]
 
 class MainWindow : public AWindow {
 public:
@@ -109,19 +112,34 @@ public:
         });
         load();
 
+        connect(mNotes->dataChanged, me::markDirty);
+        connect(mNotes->dataRemoved, me::markDirty);
+
         setContents(Vertical {
           ASplitter::Horizontal()
                   .withItems({
                     Vertical {
                       Centered {
                         Horizontal {
-                          Button { Icon { ":img/save.svg" }, Label { "Save" } }.connect(&AView::clicked, me::save),
-                          Button { Icon { ":img/new.svg" }, Label { "New Note" } }.connect(&AView::clicked, me::newNote),
+                          Button { Icon { ":img/save.svg" }, Label { "Save" } }.connect(&AView::clicked, me::save) &
+                              mDirty > &AView::setEnabled,
+                          Button { Icon { ":img/new.svg" }, Label { "New Note" } }.connect(
+                              &AView::clicked, me::newNote),
                         },
                       },
+                      /// [scrollarea]
                       AScrollArea::Builder()
                           .withContents(
                           AUI_DECLARATIVE_FOR(note, mNotes, AVerticalLayout) {
+                              aui::reflect::for_each_field_value(
+                                  *note,
+                                  aui::lambda_overloaded {
+                                    [&](auto& field) {},
+                                    [&](APropertyReadable auto& field) {
+                                        ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
+                                        AObject::connect(field.changed, me::markDirty);
+                                    },
+                                  });
                               return notePreview(note) let {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });
                                   it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
@@ -131,6 +149,7 @@ public:
                               };
                           })
                           .build(),
+                        /// [scrollarea]
                     } with_style { MinSize { 200_dp } },
 
                     Vertical::Expanding {
@@ -153,6 +172,13 @@ public:
         }
     }
 
+    ~MainWindow() {
+        if (mDirty) {
+            save();
+        }
+    }
+
+    /// [load]
     void load() {
         try {
             if (!"notes.json"_path.isRegularFileExists()) {
@@ -163,26 +189,49 @@ public:
             ALogger::info(LOG_TAG) << "Can't load notes: " << e;
         }
     }
+    /// [load]
 
+    /// [save]
     void save() {
         AFileOutputStream("notes.json") << aui::to_json(mNotes);
+        mDirty = false;
     }
+    /// [save]
 
+    /// [newNote]
     void newNote() {
         auto note = aui::ptr::manage(new Note { .title = "Untitled" });
         mNotes << note;
         mCurrentNote = std::move(note);
     }
+    /// [newNote]
 
+    /// [deleteCurrentNote]
     void deleteCurrentNote() {
+        if (mCurrentNote == nullptr) {
+            return;
+        }
+        if (AMessageBox::show(
+                this, "Do you really want to delete this note?",
+                "{}\n\nThis operation is irreversible!"_format((*mCurrentNote)->title), AMessageBox::Icon::NONE,
+                AMessageBox::Button::OK_CANCEL) != AMessageBox::ResultButton::OK) {
+            return;
+        }
+
         auto it = ranges::find(*mNotes, *mCurrentNote);
         it = mNotes->erase(it);
         mCurrentNote = it != mNotes->end() ? *it : nullptr;
+    }
+    /// [deleteCurrentNote]
+
+    void markDirty() {
+        mDirty = true;
     }
 
 private:
     _<AListModel<_<Note>>> mNotes = _new<AListModel<_<Note>>>();
     AProperty<_<Note>> mCurrentNote;
+    AProperty<bool> mDirty = false;
 };
 
 AUI_ENTRY {
