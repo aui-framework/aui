@@ -33,5 +33,6 @@ jobs:
           git checkout master
           sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" README.md
           git add README.md
+          git config user.name noreply
           git commit -m "update AUI version"
           git push
