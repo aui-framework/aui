@@ -107,7 +107,7 @@ jobs:
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler_cc }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -116,8 +116,10 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        compiler_cc: [""]
-        compiler_cxx: [""]
+        compiler: ["default", "clang"]
+        exclude:
+          - os: windows-2019
+            compiler: "clang"
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
@@ -152,10 +154,6 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: ubuntu-latest
-            compiler_cc: /usr/bin/clang
-            compiler_cxx: /usr/bin/clang++
-
     steps:
       - uses: actions/checkout@v4
         with:
@@ -187,11 +185,11 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Export Compiler
-        if: matrix.compiler_cc != ''
+      - name: Setup clang
+        if: matrix.compiler == 'clang'
         run: |
-          echo "CC=${{ matrix.compiler_cc }} " >> $GITHUB_ENV
-          echo "CXX=${{ matrix.compiler_cxx }} " >> $GITHUB_ENV
+          echo "CC=/usr/bin/clang " >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
