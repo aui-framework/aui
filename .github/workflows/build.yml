@@ -116,8 +116,8 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        compiler_cc: ""
-        compiler_cxx: ""
+        compiler_cc: [""]
+        compiler_cxx: [""]
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
