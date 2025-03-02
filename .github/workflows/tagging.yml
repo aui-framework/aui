@@ -36,3 +36,25 @@ jobs:
           git config user.name noreply
           git commit -m "update AUI version"
           git push
+
+  update-examples:
+    name: Update ${{ matrix.url }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        url: ["https://github.com/aui-framework/example_app"]
+    steps:
+      - name: Update Tag
+        shell: bash
+        run: |
+          git clone ${{ matrix.url }}
+          TAG=${GITHUB_REF##*/}
+          echo "New tag: $TAG"
+          git checkout -b feat/update-aui-$TAG
+          sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" CMakeLists.txt
+          git add -A
+          git config user.name noreply
+          git commit -m "update AUI version"
+          gh pr create --title "Update to $TAG"
+
