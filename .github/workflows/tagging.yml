@@ -61,5 +61,6 @@ jobs:
           sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" CMakeLists.txt
           git add -A
           git commit -m "update AUI version"
+          git push
           gh pr create --title "Update to $TAG" --fill
 
