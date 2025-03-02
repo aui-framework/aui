@@ -223,7 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
 # [cpack]
 
   # as a deployment test, let's build a small AUI-based app
@@ -264,7 +264,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} default
 
       - name: Configure test app
         run: |
