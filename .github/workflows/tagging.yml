@@ -28,6 +28,7 @@ jobs:
         shell: bash
         run: |
           git config user.name noreply
+          git config user.email "noreply@github.com"
           TAG=${GITHUB_REF##*/}
           echo "New tag: $TAG"
           git fetch origin master
@@ -51,6 +52,7 @@ jobs:
           git clone ${{ matrix.url }} repo
           cd repo
           git config user.name noreply
+          git config user.email "noreply@github.com"
           TAG=${GITHUB_REF##*/}
           echo "New tag: $TAG"
           git checkout -b feat/update-aui-$TAG
