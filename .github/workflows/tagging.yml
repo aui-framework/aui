@@ -27,13 +27,13 @@ jobs:
       - name: Update Tag
         shell: bash
         run: |
+          git config user.name noreply
           TAG=${GITHUB_REF##*/}
           echo "New tag: $TAG"
           git fetch origin master
           git checkout master
           sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" README.md
           git add README.md
-          git config user.name noreply
           git commit -m "update AUI version"
           git push
 
@@ -48,13 +48,14 @@ jobs:
       - name: Update Tag
         shell: bash
         run: |
-          git clone ${{ matrix.url }}
+          git clone ${{ matrix.url }} repo
+          cd repo
+          git config user.name noreply
           TAG=${GITHUB_REF##*/}
           echo "New tag: $TAG"
           git checkout -b feat/update-aui-$TAG
           sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" CMakeLists.txt
           git add -A
-          git config user.name noreply
           git commit -m "update AUI version"
           gh pr create --title "Update to $TAG"
 
