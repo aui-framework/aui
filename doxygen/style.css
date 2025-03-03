@@ -1,3 +1,14 @@
+.contents ul {
+    display: block;
+    list-style-type: disc;
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+    padding-inline-start: 40px;
+    unicode-bidi: isolate;
+}
+
 #nav-sync {
     display: none;
 }
@@ -131,6 +142,10 @@ table.doxtable td, table.doxtable th {
     padding: 0 20px;
 }
 
+.contents-rails-left {
+    width: 100%;
+}
+
 @media screen and (min-width: 1350px) {
     .contents-rails-left {
         width: calc(100% - 300px);
@@ -242,4 +257,18 @@ a .fa {
 
 tr.markdownTableRowEven {
     background-color: var(--blockquote-background);
+}
+
+/* enlarge code fragments to screen bounds */
+@media screen and (max-width: 767px) {
+    .contents .fragment {
+        margin: var(--spacing-medium) calc(0px - var(--spacing-large));
+        border-radius: 0;
+        border-left: 0;
+    }
+    .textblock li > .fragment, .textblock li > .doxygen-awesome-fragment-wrapper > .fragment {
+        margin: var(--spacing-medium);
+        margin-left: calc(-4em);
+        margin-right: calc(0px - var(--spacing-large));
+    }
 }
