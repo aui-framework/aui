@@ -33,7 +33,7 @@ To use a precompiled binary, you must specify a tag of a released version from
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
 set up a development and building with AUI.
 
-If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED :
+If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED "AUIB_FORCE_PRECOMPILED":
 
 ```shell
 cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
@@ -41,7 +41,7 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
-If usage of precompiled binaries break your built for whatever reason, you can set @ref AUIB_NO_PRECOMPILED :
+If usage of precompiled binaries break your built for whatever reason, you can set @ref AUIB_NO_PRECOMPILED "AUIB_NO_PRECOMPILED":
 
 ```shell
 cmake .. -DAUIB_NO_PRECOMPILED=TRUE
