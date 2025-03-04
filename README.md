@@ -2,7 +2,7 @@
 ![build badge](https://github.com/Alex2772/aui/actions/workflows/build.yml/badge.svg)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/9b8d9c80909a49ad8f171bb13a3bc675)](https://www.codacy.com/gh/Alex2772/aui/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Alex2772/aui&amp;utm_campaign=Badge_Grade)
 
-![logo](https://raw.githubusercontent.com/aui-framework/aui/master/examples/ui/views/assets/img/logo.svg)
+![logo](https://raw.githubusercontent.com/aui-framework/aui/master/logo.svg)
 
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++20.
