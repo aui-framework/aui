@@ -17,7 +17,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
    </tr>
    <tr>
      <td>
-       Windows
+       @ref windows
      </td>
      <td>
        @code{cpp}
@@ -40,7 +40,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       Linux (not Android)
+       @ref linux
      </td>
      <td>
        @code{cpp}
@@ -63,7 +63,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       macOS
+       @ref macos
      </td>
      <td>
        @code{cpp}
@@ -86,7 +86,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       Android
+       @ref android
      </td>
      <td>
        @code{cpp}
@@ -109,7 +109,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       iOS (both iPhone and iPad)
+       @ref ios <br/>(both iPhone and iPad)
      </td>
      <td>
        @code{cpp}
@@ -132,7 +132,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       Apple (macOS, iOS)
+       Apple<br/>(@ref macos "macOS", @ref ios "iOS")
      </td>
      <td>
        @code{cpp}
@@ -155,7 +155,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       Unix (Linux, Android, macOS, iOS)
+       Unix<br/>(@ref linux "Linux", @ref android "Android", @ref macos "macOS", @ref ios "iOS")
      </td>
      <td>
        @code{cpp}
@@ -178,7 +178,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
 
    <tr>
      <td>
-       Emscripten
+       @ref emscripten
      </td>
      <td>
        @code{cpp}
