@@ -19,6 +19,12 @@
 namespace {
 
     class View : public AView {
+    public:
+
+    protected:
+        void commitStyle() override {
+            AView::commitStyle();
+        }
     };
 
     using namespace declarative;
@@ -144,4 +150,29 @@ TEST_F(UIStyleTest, AndSelector) {
 
     mView->addAssName(".two");
     By::type<View>().check(averageColor(AColor::RED), "view should be colored");
+}
+
+
+TEST_F(UIStyleTest, SetExtraStylesheet) {
+    testing::InSequence s;
+    using namespace ass;
+
+    mView->addAssName(".one");
+    By::type<View>().check(averageColor(AColor::WHITE), "view should be uncolored");
+
+    mWindow->setExtraStylesheet(AStylesheet{
+        {
+            ass::c(".one"),
+            BackgroundSolid { AColor::RED },
+        }
+    });
+    By::type<View>().check(averageColor(AColor::RED), "view should be colored");
+
+    mWindow->setExtraStylesheet(AStylesheet{
+        {
+            ass::c(".one"),
+            BackgroundSolid { AColor::BLUE },
+        }
+    });
+    By::type<View>().check(averageColor(AColor::BLUE), "view should be colored");
 }
