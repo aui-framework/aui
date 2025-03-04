@@ -13,6 +13,7 @@
 
 #include "AObjectBase.h"
 #include "ASignal.h"
+#include <AUI/Common/detail/property.h>
 
 namespace aui::property_precomputed {
 namespace detail {
@@ -89,6 +90,12 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
         t.invokeSignal(nullptr);
     }
 
+    /**
+     * @brief Marks this precomputed property to be reevaluated.
+     * @details
+     * In common, you won't need to use this function. APropertyPrecomputed is reevaluated automatically as soon as one
+     * updates a property expression depends on.
+     */
     void invalidate() override {
         mCurrentValue.reset();
         if (this->changed) {
@@ -102,6 +109,7 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
 
     [[nodiscard]]
     const T& value() const {
+        aui::property_precomputed::addDependency(changed);
         return mCurrentValue;
     }
 
@@ -113,6 +121,20 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
     [[nodiscard]]
     const T& operator*() const {
         return value();
+    }
+
+    /**
+     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     */
+    template <aui::invocable<const Underlying&> Projection>
+    [[nodiscard]]
+    auto readProjected(Projection&& projection) noexcept {
+        return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
+    }
+
+    [[nodiscard]]
+    const T* operator->() const noexcept {
+        return &value();
     }
 
 signals:

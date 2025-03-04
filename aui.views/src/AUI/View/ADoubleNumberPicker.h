@@ -43,8 +43,17 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
     double mMin = 0;
     double mMax = 100;
 
-   public:
+public:
     ADoubleNumberPicker();
+
+    auto value() {
+        return APropertyDef {
+            this,
+            &ADoubleNumberPicker::getValue,
+            &ADoubleNumberPicker::setValue,
+            valueChanging,
+        };
+    }
 
     void setValue(double v);
 
@@ -74,7 +83,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
     /**
      * @brief Number is changing.
      */
-    emits<> valueChanging;
+    emits<double> valueChanging;
 };
 
 namespace aui::impl {

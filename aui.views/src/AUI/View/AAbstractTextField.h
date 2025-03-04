@@ -48,6 +48,10 @@ public:
         return mTextInputType;
     }
 
+    void setEditable(bool isEditable) {
+        mIsEditable = isEditable;
+    }
+
     void setPasswordMode(bool isPasswordField) {
         mIsPasswordTextField = isPasswordField;
         setCopyable(!isPasswordField);
@@ -104,6 +108,7 @@ protected:
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     bool mIsPasswordTextField = false;
+    bool mIsEditable = true;
     int mTextAlignOffset = 0;
     int mHorizontalScroll = 0; // positive only
     unsigned mAbsoluteCursorPos = 0;
