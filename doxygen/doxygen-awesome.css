@@ -74,7 +74,7 @@ html {
     --title-font-size: 22px;
 
     /* content text properties. These only affect the page content, not the navigation or any other ui elements */
-    --content-line-height: 27px;
+    --content-line-height: 1.5;
     /* The content is centered and constraint in it's width. To make the content fill the whole page, set the variable to auto.*/
     --content-maxwidth: 1300px;
 
@@ -1052,7 +1052,7 @@ code {
     display: inline;
     background: var(--code-background);
     color: var(--code-foreground);
-    padding: 2px 6px;
+    padding: 1px 4px;
     word-break: break-word;
 }
 
@@ -1065,6 +1065,10 @@ div.fragment, pre.fragment {
 }
 
 @media screen and (max-width: 767px) {
+    code {
+        padding: 0 2px;
+    }
+
     div.fragment, pre.fragment {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;

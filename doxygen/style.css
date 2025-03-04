@@ -262,12 +262,12 @@ tr.markdownTableRowEven {
 /* enlarge code fragments to screen bounds */
 @media screen and (max-width: 767px) {
     .contents .fragment {
-        margin: var(--spacing-medium) calc(0px - var(--spacing-large));
+        margin: var(--spacing-large) calc(0px - var(--spacing-large));
         border-radius: 0;
         border-left: 0;
     }
     .textblock li > .fragment, .textblock li > .doxygen-awesome-fragment-wrapper > .fragment {
-        margin: var(--spacing-medium);
+        margin: var(--spacing-large);
         margin-left: calc(-4em);
         margin-right: calc(0px - var(--spacing-large));
     }
