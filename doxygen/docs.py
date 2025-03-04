@@ -91,6 +91,11 @@ if __name__ == '__main__':
     patching.patch(target='*.html', matcher='</div><!-- contents -->', mode=patching.Mode.REPLACE, value=Path('doxygen/footer_inner.html'), unique=True)
     patching.patch(target='doxygen.css', matcher='var(--page-visited-link-color)', mode=patching.Mode.DELETE_LINE)
 
+    ROBOT_NOINDEX = '<meta name="robots" content="noindex">\n'
+
+    for target in ['*_source.html', '*-members.html', 'dir_*.html', '*2intermediate*']:
+        patching.patch(target=target, matcher='<meta', mode=patching.Mode.INSERT_AFTER, value=ROBOT_NOINDEX, unique=True)
+
     toc.run()
 
     if common.error_flag:
