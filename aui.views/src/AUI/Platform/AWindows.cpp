@@ -101,9 +101,7 @@ void AWindow::redraw() {
 
         if (mMarkedMinContentSizeInvalid) {
             ensureAssUpdated();
-            AUI_REPEAT(2) { // AText may trigger extra layout update
-                applyGeometryToChildrenIfNecessary();
-            }
+            applyGeometryToChildrenIfNecessary();
             mMarkedMinContentSizeInvalid = false;
 #if AUI_PLATFORM_LINUX
             if (CommonRenderingContext::ourDisplay != nullptr) {

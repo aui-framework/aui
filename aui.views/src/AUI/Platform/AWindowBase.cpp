@@ -418,7 +418,9 @@ void AWindowBase::flagRedraw() {
 
 void AWindowBase::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
-    AViewContainer::applyGeometryToChildren();
+    AUI_REPEAT(2) {   // AText may trigger extra layout update
+        AViewContainer::applyGeometryToChildren();
+    }
 }
 
 void AWindowBase::render(ARenderContext context) {
