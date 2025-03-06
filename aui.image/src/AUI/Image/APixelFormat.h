@@ -257,8 +257,8 @@ namespace aui::pixel_format {
     constexpr typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in) {
         using traits_from = aui::pixel_format::traits<from>;
         using traits_to = aui::pixel_format::traits<to>;
-        static constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
-        static constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
+        constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
+        constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
 
         typename traits_to::representation_t out;
 
@@ -313,7 +313,7 @@ public:
 
     template<typename Destination>
     constexpr operator Destination() const noexcept {
-        static constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
+        constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
         return aui::pixel_format::convert<source, aui::pixel_format::detail::format_of<std::decay_t<Destination>>>(
                 reinterpret_cast<const typename aui::pixel_format::traits<source>::representation_t&>(mColor)
                 );
