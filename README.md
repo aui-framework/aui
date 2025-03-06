@@ -184,7 +184,10 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
   ![Amplitude Studio](https://github.com/aui-framework/aui/blob/develop/docs/imgs/2njkb4fhjkcbjkw.jpg?raw=true)
 
 ## Examples
-Check the `examples/` folder.
+
+Check the [examples](https://aui-framework.github.io/develop/examples.html) page in our
+[docs](https://aui-framework.github.io) or [examples/](https://github.com/aui-framework/aui/tree/master/examples) dir in
+our repo.
 
 ![Fractal](https://sun9-42.userapi.com/impf/WruyOdMmMBrRfpjJ7QrhFepZj7obL3VMGxNSaw/Tr8XxKqdVV8.jpg?size=1261x740&quality=96&proxy=1&sign=f6b851a26a7c40a5f1c22367a34f4c71&type=album)
 
@@ -217,7 +220,7 @@ with contributions from many other people.
 
 Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
 
-## Contributing
+# Contributing
 
 You are welcome to open issues and pull requests on our GitHub repository. This project is maintained by a team of
 volunteers on a reasonable-effort basis. As such, we can accept your issue, but we can't guarantee resolution. It's all
@@ -225,3 +228,7 @@ depends on severity and our own needs. In fact, we'd be happy if you submit a pu
 best to help you merge your changes to upstream.
 
 Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/master/CONTRIBUTING.md)
+
+# Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=aui-framework/aui&type=Date)](https://star-history.com/#aui-framework/aui&Date)
