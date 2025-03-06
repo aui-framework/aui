@@ -117,7 +117,7 @@ private:
         }
         return accumulator;
     }
-};
+}; /// end
 
 class CellsView : public AView {
 public:
@@ -177,7 +177,7 @@ private:
         mTexture->setImage(image);
         redraw();
     }
-};
+}; /// end
 
 class GameOfLifeWindow : public AWindow {
 public:
@@ -207,7 +207,7 @@ public:
 
 private:
     Cells mCells { { 64, 64 } };
-};
+}; /// end
 
 AUI_ENTRY {
     auto w = _new<GameOfLifeWindow>();
