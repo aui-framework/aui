@@ -483,7 +483,7 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX((AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()), "this method should be used in ui thread only."); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() == AWindow::current()->getThread(), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -491,5 +491,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
 
