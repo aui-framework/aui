@@ -203,6 +203,7 @@ STRIP_FROM_INC_PATH    = aui.core/src \
                          aui.crypt/src \
                          aui.curl/src \
                          aui.data/src \
+                         aui.image/src \
                          aui.json/src \
                          aui.network/src \
                          aui.views/src \
@@ -969,6 +970,7 @@ INPUT                  = aui.core \
                          aui.curl \
                          aui.data \
                          aui.json \
+                         aui.image \
                          aui.network \
                          aui.views \
                          aui.audio \

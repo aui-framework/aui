@@ -22,6 +22,7 @@
 
 /**
  * @brief Pixel in-memory format descriptor (type, count and order of subpixel components).
+ * @ingroup image
  */
 class APixelFormat {
 public:
