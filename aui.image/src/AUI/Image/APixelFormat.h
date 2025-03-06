@@ -22,6 +22,7 @@
 
 /**
  * @brief Pixel in-memory format descriptor (type, count and order of subpixel components).
+ * @ingroup image
  */
 class APixelFormat {
 public:
@@ -253,11 +254,11 @@ namespace aui::pixel_format {
 
 
     template<APixelFormat::Value from, APixelFormat::Value to>
-    inline typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in) {
+    constexpr typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in) {
         using traits_from = aui::pixel_format::traits<from>;
         using traits_to = aui::pixel_format::traits<to>;
-        static constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
-        static constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
+        constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
+        constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
 
         typename traits_to::representation_t out;
 
@@ -308,11 +309,11 @@ using AFormattedColor = typename aui::pixel_format::traits<pixelFormat>::represe
 template<typename Source>
 struct AFormattedColorConverter {
 public:
-    explicit AFormattedColorConverter(const Source& color) : mColor(color) {}
+    constexpr explicit AFormattedColorConverter(const Source& color) : mColor(color) {}
 
     template<typename Destination>
-    operator Destination() const noexcept {
-        static constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
+    constexpr operator Destination() const noexcept {
+        constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
         return aui::pixel_format::convert<source, aui::pixel_format::detail::format_of<std::decay_t<Destination>>>(
                 reinterpret_cast<const typename aui::pixel_format::traits<source>::representation_t&>(mColor)
                 );

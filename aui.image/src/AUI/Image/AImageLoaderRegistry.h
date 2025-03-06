@@ -20,16 +20,16 @@
 #include "AUI/Image/IAnimatedImageFactory.h"
 
 /**
- * Image loader used for IDrawable::fromUrl and AImage::fromUrl
+ * @brief Image loader used for IDrawable::fromUrl and AImage::fromUrl.
+ * @ingroup image
  */
-class API_AUI_IMAGE AImageLoaderRegistry
-{
+class API_AUI_IMAGE AImageLoaderRegistry {
     friend class AImage::Cache;
     friend class IDrawable;
     friend class AImage;
 
 private:
-	ADeque<_<IImageLoader>> mRasterLoaders;
+    ADeque<_<IImageLoader>> mRasterLoaders;
     ADeque<_<IImageLoader>> mVectorLoaders;
     ADeque<_<IImageLoader>> mAnimatedLoaders;
     ADeque<AString> mSupportedFormats;
@@ -46,13 +46,13 @@ private:
     void registerLoader(ADeque<_<IImageLoader>>& d, _<IImageLoader> loader, AString name);
 
 public:
-	AImageLoaderRegistry() = default;
+    AImageLoaderRegistry() = default;
 
-	void registerRasterLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerRasterLoader(_<IImageLoader> imageLoader, AString name = "");
     void registerVectorLoader(_<IImageLoader> imageLoader, AString name = "");
     void registerAnimatedLoader(_<IImageLoader> imageLoader, AString name = "");
     [[nodiscard]]
     const ADeque<AString>& supportedFormats() const noexcept;
 
-	static AImageLoaderRegistry& inst();
+    static AImageLoaderRegistry& inst();
 };
