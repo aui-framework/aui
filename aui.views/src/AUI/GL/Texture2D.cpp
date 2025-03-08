@@ -19,6 +19,9 @@
 #include "gl.h"
 #include "TextureImpl.h"
 
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/AWindowBase.h>
+
 template
 class gl::Texture<gl::TEXTURE_2D>;
 
@@ -110,6 +113,7 @@ static Result recognize(AImageView image) {
 }
 
 void gl::Texture2D::tex2D(AImageView image) {
+    AUI_ASSERT_UI_THREAD_ONLY();
     bind();
     Result types = recognize(image);
 

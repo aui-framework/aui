@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AAbstractTypeable.h"
+#include <AUI/Platform/AWindow.h>
 
 /**
  * @brief Basic implementation of type shortcuts and selection for editable text fields.
@@ -57,6 +58,9 @@ public:
 
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
+        if (key == AInput::ESCAPE) {
+            AWindow::current()->setFocusedView(nullptr);
+        }
         AAbstractTypeable::handleKey(key);
         if (key == AInput::Key::RETURN && !AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
             emit this->actionButtonPressed;

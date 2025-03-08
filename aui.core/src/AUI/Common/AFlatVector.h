@@ -21,7 +21,7 @@
  * @tparam COUNT
  */
 template<typename T, std::size_t MAX_SIZE>
-class AFlatVector {
+class [[deprecated("deprecated in favour of AStaticVector")]] AFlatVector {
 public:
 
     ~AFlatVector() {

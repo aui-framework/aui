@@ -53,6 +53,9 @@ void AAbstractTextField::render(ARenderContext ctx) {
     drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
         doDrawString(ctx.render);
     });
+    if (!mIsEditable) {
+        return;
+    }
     drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, mPadding.top + getVerticalAlignmentOffset()});
 }
 
@@ -103,6 +106,9 @@ const AString& AAbstractTextField::getText() const {
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
+    if (!mIsEditable) {
+        return;
+    }
     if (begin >= mContents.length()) {
         return;
     }
@@ -110,6 +116,9 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
+    if (!mIsEditable) {
+        return false;
+    }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, toInsert.length()); // undo insert
@@ -119,6 +128,9 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
+    if (!mIsEditable) {
+        return false;
+    }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert

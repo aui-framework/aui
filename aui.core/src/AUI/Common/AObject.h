@@ -103,10 +103,10 @@ public:
      * @param function slot. Can be lambda
      */
     template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function>
-    static void connect(const Property& property, Object* object, Function&& function) {
+    static decltype(auto) connect(const Property& property, Object* object, Function&& function) {
         auto lambda = aui::detail::makeLambda(object, std::forward<Function>(function));
         property.changed.makeRawInvocable(lambda)(*property);
-        connect(property.changed, object, std::move(lambda));
+        return connect(property.changed, object, std::move(lambda));
     }
 
     /**

@@ -11,6 +11,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/kAUI.h>
 #include <gmock/gmock.h>
+#include "AUI/Util/AEvaluationLoopException.h"
 
 class PropertyPrecomputedTest : public testing::Test {
 public:
@@ -138,8 +139,18 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
     // `APropertyPrecomputed` might evaluate its expression several times during its lifetime. The developer must make
     // sure that all objects referenced in the expression live longer than `APropertyPrecomputed`.
     //
-    // The expression should not read from the property it's a binding for. Otherwise, there's an infinite evaluation
-    // loop.
+}
+
+TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
+    //
+    // The expression should not read from the property it's a binding for, including other referenced
+    // APropertyPrecomputes. Otherwise, there's an infinite evaluation loop, and @ref AEvaluationLoopException is
+    // thrown.
+
+    AOptional<APropertyPrecomputed<int>> v1 ,v2;
+    v1.emplace([&]{ return **v2; });
+    v2.emplace([&]{ return **v1; });
+    EXPECT_THROW({**v1;}, AEvaluationLoopException);
 }
 
 // # Copying and moving APropertyPrecomputed

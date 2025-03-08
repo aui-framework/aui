@@ -177,7 +177,7 @@ template <typename Slot, typename Signal>
 concept ACompatibleSlotFor = requires (Slot&& c) {
     { &std::decay_t<Slot>::operator() };
 } || requires (Slot&& c) {
-    typename aui::member<std::decay_t<Slot>>::args;
+    typename aui::reflect::member<std::decay_t<Slot>>::args;
 };
 
 class API_AUI_CORE AObjectBase;

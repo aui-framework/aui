@@ -1,0 +1,39 @@
+name: Update AUI Version
+
+on:
+  push:
+    tags-ignore:
+      - v*rc*
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  GIT_SUBMODULE_STRATEGY: recursive
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    name: Update README.md
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Update Tag
+        shell: bash
+        run: |
+          git config user.name noreply
+          git config user.email "noreply@github.com"
+          TAG=${GITHUB_REF##*/}
+          echo "New tag: $TAG"
+          git fetch origin master
+          git checkout master
+          sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" README.md
+          git add README.md
+          git commit -m "update AUI version"
+          git push

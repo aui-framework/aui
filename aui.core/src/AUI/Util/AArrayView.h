@@ -18,6 +18,13 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AStaticVector.h>
 
+template<typename Vector, typename T>
+concept AAnyVector = requires(Vector& vector)
+{
+    { vector.data() } -> aui::convertible_to<const T*>;
+    { vector.size() } -> aui::convertible_to<std::size_t>;
+};
+
 /**
  * @deprecated Use std::span instead.
  */
@@ -25,12 +32,8 @@ template<typename T>
 class AArrayView {
 public:
     AArrayView(const T* data, std::size_t count) noexcept : mData(data), mCount(count) {}
-    AArrayView(const AVector<T>& vector) noexcept: mData(vector.data()), mCount(vector.size()) {
 
-    }
-
-    template<size_t Capacity>
-    AArrayView(const AStaticVector<T, Capacity>& vector) noexcept: mData(vector.data()), mCount(vector.size()) {
+    AArrayView(const AAnyVector<T> auto& vector) noexcept: mData(vector.data()), mCount(vector.size()) {
 
     }
 
@@ -71,3 +74,6 @@ private:
     const T* mData;
     std::size_t mCount;
 };
+
+template<typename Vector>
+AArrayView(const Vector& vector) noexcept -> AArrayView<std::decay_t<decltype(*vector.data())>>;

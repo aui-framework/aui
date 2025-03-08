@@ -282,17 +282,18 @@ public:
         functor(*this);
         return *this;
     }
+
     // forward ranged-for loops
-    auto begin() const {
+    auto begin() const requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() const {
+    auto end() const requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
-    auto begin() {
+    auto begin() requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() {
+    auto end() requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
 

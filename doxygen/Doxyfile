@@ -135,7 +135,7 @@ BRIEF_MEMBER_DESC      = YES
 # brief descriptions will be completely suppressed.
 # The default value is: YES.
 
-REPEAT_BRIEF           = YES
+REPEAT_BRIEF           = NO
 
 # This tag implements a quasi-intelligent brief description abbreviator that is
 # used to form the text in various listings. Each string in this list, if found
@@ -203,6 +203,7 @@ STRIP_FROM_INC_PATH    = aui.core/src \
                          aui.crypt/src \
                          aui.curl/src \
                          aui.data/src \
+                         aui.image/src \
                          aui.json/src \
                          aui.network/src \
                          aui.views/src \
@@ -969,6 +970,7 @@ INPUT                  = aui.core \
                          aui.curl \
                          aui.data \
                          aui.json \
+                         aui.image \
                          aui.network \
                          aui.views \
                          aui.audio \

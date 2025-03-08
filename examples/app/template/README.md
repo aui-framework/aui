@@ -1,4 +1,4 @@
-# Full App Template ⚡ {#example_app_template}
+# App Template ⚡ {#example_app_template}
 
 @auiexample{app}
 GitHub-hosted app project with CI/CD building, @ref "docs/Writing tests.md" "testing", releasing,

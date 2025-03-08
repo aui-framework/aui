@@ -110,15 +110,15 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     } });
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     setCustomStyle({
-        Padding { 64_dp, {}, 16_dp },
+      Padding { 64_dp, {}, 16_dp },
     });
 #endif
 
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style {
-        Expanding(1, 0),
-      },
+            Expanding(1, 0),
+          },
       Horizontal {} let {
               mAsync << async {
                   auto drawable = IDrawable::fromUrl(
@@ -359,8 +359,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                   _new<ALabel>(i.color.toString()) with_style {
                                       TextColor { i.color.readableBlackOrWhite() },
                                   }
-                              }
-                              with_style {
+                              } with_style {
                                   BackgroundSolid { i.color },
                                   BorderRadius { 6_pt },
                                   Margin { 2_dp, 4_dp },
@@ -444,7 +443,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                             .build()
                         << ".input-field" let { it->setExpanding(); },
-                  } } with_style { Expanding {} } } }),
+                  } }
+    with_style { Expanding {} } } }),
             "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
@@ -476,9 +476,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                              [player = mOggAudio](aui::float_within_0_1 value) {
                                  player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
                              }) },
-              Vertical { _new<AButton>("Button produces sound when clicked") with_style { ass::on_state::Activated {
-                ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
-              } } } } }),
+              Vertical {
+                _new<AButton>("Button produces sound when clicked") with_style { ass::on_state::Activated {
+                  ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
+                } } } } }),
             "Sounds");
 #endif
 
@@ -487,8 +488,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> { Horizontal {
                   Vertical {
                     _new<ALabel>("Gif support!"),
-                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style {
-                      FixedSize { 100_dp } },   // gif from https://tenor.com/view/cat-gif-26024730
+                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } },   // gif from https://tenor.com/view/cat-gif-26024730
                   },
                   Vertical {
                     _new<ALabel>("Animated WebP support!"),
@@ -543,8 +543,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
                           "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style {
-                        ATextAlign::JUSTIFY },
+                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style { ATextAlign::JUSTIFY },
                     } with_style { MinSize { 200_dp } },
                     Vertical::Expanding {
                       _new<ALabel>("Word breaking"),
@@ -564,12 +563,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       for (int i = 0; i <= 9; ++i) {
                           v1->addView(Horizontal {
                             _new<ALabel>("{} px"_format(i + 6)),
-                            _new<ALabel>("Hello! [] .~123`") with_style {
-                              FontSize { AMetric(i + 6, AMetric::T_PX) } } });
+                            _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 6, AMetric::T_PX) } } });
                           v2->addView(Horizontal {
                             _new<ALabel>("{} px"_format(i + 16)),
-                            _new<ALabel>("Hello! [] .~123`") with_style {
-                              FontSize { AMetric(i + 16, AMetric::T_PX) } } });
+                            _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 16, AMetric::T_PX) } } });
                       }
                       return Horizontal { v1, v2 };
                   }(),
@@ -578,60 +575,62 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
         it->addTab(
             Vertical {
-                _new<A2FingerTransformArea>() let {
-                    it->setCustomStyle({
-                      MinSize { 256_dp },
-                      Border { 1_px, AColor::BLACK },
-                    });
+              _new<A2FingerTransformArea>() let {
+                      it->setCustomStyle({
+                        MinSize { 256_dp },
+                        Border { 1_px, AColor::BLACK },
+                      });
 
-                    _<AView> blackRect = Stacked { Stacked { _new<AButton>("Hi") } with_style {
-                      FixedSize { 200_dp, 100_dp },
-                      BackgroundSolid { AColor::BLACK },
-                      TextColor { AColor::WHITE },
-                      ATextAlign::CENTER,
-                    } };
-                    ALayoutInflater::inflate(it, Stacked { blackRect });
-                    connect(
-                        it->transformed, blackRect,
-                        [blackRect = blackRect.get(),
-                         keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
-                            keptTransform->applyDelta(transform);
-                            blackRect->setCustomStyle({
-                              TransformOffset {
-                                AMetric(keptTransform->offset.x, AMetric::T_PX),
-                                AMetric(keptTransform->offset.y, AMetric::T_PX) },
-                              TransformScale { keptTransform->scale },
-                              TransformRotate { keptTransform->rotation },
-                            });
-                        });
-                },
-                _new<ADragNDropView>(),
+                      _<AView> blackRect = Stacked {
+                          Stacked { _new<AButton>("Hi") } with_style {
+                            FixedSize { 200_dp, 100_dp },
+                            BackgroundSolid { AColor::BLACK },
+                            TextColor { AColor::WHITE },
+                            ATextAlign::CENTER,
+                          }
+                      };
+                      ALayoutInflater::inflate(it, Stacked { blackRect });
+                      connect(
+                          it->transformed, blackRect,
+                          [blackRect = blackRect.get(),
+                           keptTransform = _new<A2DTransform>()](const A2DTransform& transform) {
+                              keptTransform->applyDelta(transform);
+                              blackRect->setCustomStyle({
+                                TransformOffset {
+                                  AMetric(keptTransform->offset.x, AMetric::T_PX),
+                                  AMetric(keptTransform->offset.y, AMetric::T_PX) },
+                                TransformScale { keptTransform->scale },
+                                TransformRotate { keptTransform->rotation },
+                              });
+                          });
+                  },
+              _new<ADragNDropView>(),
 
-                Horizontal {
-                    Centered {
-                      Vertical {
-                          Label { "Custom cursor" } with_style {
-                              ACursor { ":img/logo.svg", 64 },
-                          },
-                          Label { "github.com/aui-framework/aui" }.clicked(
-                            this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) with_style {
+              Horizontal {
+                Centered {
+                  Vertical {
+                    Label { "Custom cursor" } with_style {
+                          ACursor { ":img/logo.svg", 64 },
+                        },
+                    Label { "github.com/aui-framework/aui" }.clicked(
+                        this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) with_style {
                           TextColor { AColor::BLUE },
                           BorderBottom { 1_px, AColor::BLUE },
                           ACursor::POINTER,
                         },
-                      },
-                    },
-                    Stacked {
-                        Icon { ":img/logo.svg" } with_style { FixedSize(32_dp) },
-                        Centered {
-                            Label { "Blur" } with_style { Margin { 1_dp, 16_dp } },
-                        } with_style {
-                            Expanding(1, 0),
-                            Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
-                            BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
-                        },
-                    },
+                  },
                 },
+                Stacked {
+                  Icon { ":img/logo.svg" } with_style { FixedSize(32_dp) },
+                  Centered {
+                    Label { "Blur" } with_style { Margin { 1_dp, 16_dp } },
+                  } with_style {
+                        Expanding(1, 0),
+                        Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
+                        BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
+                      },
+                },
+              },
             } let { it->setExpanding(); },
             "Others");
 
@@ -667,9 +666,9 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
     auto surface = createOverlappingSurface({ 0, 0 }, { 100, 100 }, false);
     _<AViewContainer> popup = Vertical {
         Label { "Drop event" } with_style {
-          FontSize { 18_pt },
-          ATextAlign::CENTER,
-        },
+              FontSize { 18_pt },
+              ATextAlign::CENTER,
+            },
         [&]() -> _<AView> {
             if (auto u = event.data.urls()) {
                 auto url = u->first();
@@ -679,8 +678,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             }
             return nullptr;
         }(),
-        AText::fromString("Caught drop event. See the logger output for contents.") with_style {
-          ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
+        AText::fromString("Caught drop event. See the logger output for contents.") with_style { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
         Centered { Button { "OK" }.clicked(this, [surface] { surface->close(); }) }
     };
     ALayoutInflater::inflate(surface, popup);

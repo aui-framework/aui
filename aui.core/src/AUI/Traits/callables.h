@@ -86,7 +86,7 @@ namespace aui {
     };
 
     template<not_overloaded_lambda Lambda>
-    using lambda_info = member<decltype(&Lambda::operator())>;
+    using lambda_info = ::aui::reflect::member<decltype(&Lambda::operator())>;
 
     /**
      * @brief Function object type whose `operator()` returns its argument unchanged.
