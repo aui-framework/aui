@@ -9,14 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Traits/values.h>
+#include <AUI/Util/AEvaluationLoopException.h>
 
-#pragma once
-
-#include <AUI/Action/AMenu.h>
-
-class IMenuProvider {
-public:
-    virtual void createMenu(const AVector<AMenuItem>& vector) = 0;
-    virtual void closeMenu() = 0;
-    virtual bool isOpen() = 0;
-};
+void aui::detail::evaluationLoop() {
+    throw AEvaluationLoopException();
+}

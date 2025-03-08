@@ -13,6 +13,7 @@
 
 #include "AObjectBase.h"
 #include "ASignal.h"
+#include "AUI/Util/AEvaluationLoopException.h"
 #include <AUI/Common/detail/property.h>
 
 namespace aui::property_precomputed {
@@ -99,6 +100,10 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
     void invalidate() override {
         mCurrentValue.reset();
         if (this->changed) {
+            if (this->changed.isAtSignalEmissionState()) {
+                mCurrentValue.setEvaluationLoopTrap();
+                return;
+            }
             emit this->changed(value());
         }
     }
