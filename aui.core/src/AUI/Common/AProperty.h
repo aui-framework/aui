@@ -88,6 +88,13 @@ struct AProperty: AObjectBase {
 
     /**
      * @brief Notify observers that a change was occurred (no preconditions).
+     * @details
+     * In common, you won't need to use this function. AProperty is reevaluated automatically as soon as one updates the
+     * value within property.
+     *
+     * If your scenario goes beyond @ref writeScope that explicitly defines modification scope within RAII scope, you
+     * can modify the underlying value by accessing `AProperty::raw` and then call @ref notify to notify the observers
+     * that value is changed.
      */
     void notify() {
         emit changed(this->raw);

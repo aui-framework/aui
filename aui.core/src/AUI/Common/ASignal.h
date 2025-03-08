@@ -19,6 +19,7 @@
 #include "AAbstractSignal.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "AUI/Util/AEvaluationLoopException.h"
 
 namespace aui::detail::signal {
 
@@ -412,7 +413,7 @@ private:
 
     template <aui::not_overloaded_lambda Lambda>
     auto makeRawInvocable(Lambda&& lambda) const {
-        return [lambda = std::forward<Lambda>(lambda)](const Args&... args) {
+        return [lambda = std::forward<Lambda>(lambda)](const Args&... args) mutable {
             aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
         };
     }
@@ -456,7 +457,9 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
 
     std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
     std::unique_lock lock2(mLoopGuard, std::try_to_lock);
-    AUI_ASSERTX(lock2.owns_lock(), "signal should not be emitted inside its handler");
+    if (!lock2.owns_lock()) {
+        throw AEvaluationLoopException();
+    }
     auto outgoingConnections = std::move(mOutgoingConnections);   // needed to safely iterate through the slots
     ARaiiHelper returnBack = [&] {
         if (!lock.owns_lock()) lock.lock();
@@ -495,7 +498,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
                  */
                 if (receiverWeakPtr.lock() != nullptr) {
                     outgoingConnection->receiver->getThread()->enqueue(
-                        [this, senderWeakPtr = senderPtr.weak(),
+                        [senderWeakPtr = senderPtr.weak(),
                          receiverWeakPtr = std::move(receiverWeakPtr),
                          connection = outgoingConnection,
                          args = aui::detail::signal::makeTupleOfCopies(args)] {

@@ -55,7 +55,9 @@ namespace aui {
         constexpr range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
 
         constexpr ~range() {
-            AUI_NO_OPTIMIZE_OUT(range::size)
+            if constexpr (requires { std::distance(mBegin, mEnd); }) {
+                AUI_NO_OPTIMIZE_OUT(range::size)
+            }
         }
 
         template<typename Container>
@@ -75,7 +77,7 @@ namespace aui {
         }
 
         [[nodiscard]]
-        constexpr std::size_t size() const noexcept {
+        constexpr std::size_t size() const noexcept requires requires { std::distance(mBegin, mEnd); }  {
             return std::distance(mBegin, mEnd);
         }
 
