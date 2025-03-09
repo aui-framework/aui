@@ -125,6 +125,8 @@ public:
     static const AColor GREEN;
     static const AColor BLUE;
     static const AColor GRAY;
+    static const AColor TRANSPARENT_BLACK;
+    static const AColor TRANSPARENT_WHITE;
 };
 
 inline const AColor AColor::BLACK = { 0.f, 0.f, 0.f, 1.f };
@@ -133,6 +135,8 @@ inline const AColor AColor::RED = { 1.f, 0.f, 0.f, 1.f };
 inline const AColor AColor::GREEN = { 0.f, 1.f, 0.f, 1.f };
 inline const AColor AColor::BLUE = { 0.f, 0.f, 1.f, 1.f };
 inline const AColor AColor::GRAY = { 0.5f, 0.5f, 0.5f, 1.f };
+inline const AColor AColor::TRANSPARENT_BLACK = { 0.f, 0.f, 0.f, 0.f };
+inline const AColor AColor::TRANSPARENT_WHITE = { 0.f, 0.f, 0.f, 1.f };
 
 inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
     o << "#";

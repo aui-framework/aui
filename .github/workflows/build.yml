@@ -95,20 +95,6 @@ jobs:
 
      - name: Build app 
        run: cmake --build ${{github.workspace}}/build -t apps
- 
-     - name: Build rest
-       working-directory: ${{github.workspace}}/build/app_project
-       run: cmake --build . -- CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
-     
-     - name: Pack framework
-       working-directory: ${{github.workspace}}/build/app_project
-       run: cpack -G TGZ -C Debug . 
-
-     - name: Upload framework
-       uses: actions/upload-artifact@v4
-       with:
-         path: ${{github.workspace}}/build/app_project/*.tar.gz
-         name: ios static Debug.tar.gz
 
      - name: Pack app
        working-directory: ${{github.workspace}}/build/app_project/bin/Debug
@@ -121,7 +107,7 @@ jobs:
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -130,6 +116,10 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
+        compiler: ["default", "clang"]
+        exclude:
+          - os: windows-2019
+            compiler: "clang"
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
@@ -163,7 +153,7 @@ jobs:
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
-            
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,7 +183,14 @@ jobs:
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
-        run: brew install ninja 
+        run: brew install ninja
+
+      - name: Setup clang
+        if: matrix.compiler == 'clang'
+        run: |
+          echo "CC=/usr/bin/clang " >> $GITHUB_ENV
+          echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
+
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
@@ -226,7 +223,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
 # [cpack]
 
   # as a deployment test, let's build a small AUI-based app
@@ -267,7 +264,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} default
 
       - name: Configure test app
         run: |

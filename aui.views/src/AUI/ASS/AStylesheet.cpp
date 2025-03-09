@@ -643,6 +643,10 @@ AStylesheet::AStylesheet() {
             t<ADrawableView>(),
             MinSize { 12_dp },
         },
+        {
+            t<ADrawableIconView>(),
+            BackgroundImage { {}, {}, {}, Sizing::CONTAIN },
+        },
 
         // AGroupBox
         {
@@ -684,7 +688,6 @@ AStylesheet::AStylesheet() {
     });
 }
 
-
 AColor AStylesheet::getOsThemeColor() {
 #if AUI_PLATFORM_WIN
     auto impl = []() {
@@ -694,7 +697,7 @@ AColor AStylesheet::getOsThemeColor() {
         c |= 0xff000000;
         AColor osThemeColor = AColor::fromAARRGGBB(static_cast<unsigned>(c));
         float readability = osThemeColor.readabilityOfForegroundColor(0xffffffff);
-        if (readability < 0.3f)  {
+        if (readability < 0.3f) {
             osThemeColor = osThemeColor.darker(1.f - readability * 0.5f);
         }
         return osThemeColor;
@@ -707,9 +710,7 @@ AColor AStylesheet::getOsThemeColor() {
 #endif
 }
 
-AStylesheet& AStylesheet::global() {
-    return *globalStorage();
-}
+AStylesheet& AStylesheet::global() { return *globalStorage(); }
 
 _<AStylesheet>& AStylesheet::globalStorage() {
     static _<AStylesheet> s = _new<AStylesheet>();

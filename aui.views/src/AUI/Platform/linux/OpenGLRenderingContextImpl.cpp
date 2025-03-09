@@ -24,45 +24,57 @@
 #include <AUI/GL/State.h>
 #include <GL/glx.h>
 
-
 /* Typedef for the GL 3.0 context creation function */
-typedef GLXContext (*PFNGLXCREATECONTEXTATTRIBSARBPROC)(Display *dpy,
-                                                        GLXFBConfig config,
-                                                        GLXContext
-                                                        share_context,
-                                                        Bool direct,
-                                                        const int
-                                                        *attrib_list);
+typedef GLXContext (*PFNGLXCREATECONTEXTATTRIBSARBPROC)(
+    Display* dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int* attrib_list);
 static PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
 
+typedef void (*PFNGLXSWAPINTERVALEXTPROC)(Display* dpy, GLXDrawable drawable, int interval);
+static PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = nullptr;
 
 GLXContext OpenGLRenderingContext::ourContext = nullptr;
 
-OpenGLRenderingContext::~OpenGLRenderingContext() {
-}
+OpenGLRenderingContext::~OpenGLRenderingContext() {}
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
     static XSetWindowAttributes swa;
     static XVisualInfo* vi;
     if (ourContext == nullptr) {
-        glXCreateContextAttribsARB = reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB")));
+        glXCreateContextAttribsARB = reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(
+            glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB")));
 
-        GLint att[] = {GLX_X_RENDERABLE, True, // 1
-                       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT, // 3
-                       GLX_RENDER_TYPE, GLX_RGBA_BIT, // 5
-                       GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR, // 7
-                       GLX_RED_SIZE, 8, // 9
-                       GLX_GREEN_SIZE, 8, // 11
-                       GLX_BLUE_SIZE, 8, // 13
-                       GLX_ALPHA_SIZE, 8, // 15
-                       GLX_DEPTH_SIZE, 24,
-                       GLX_STENCIL_SIZE, 8,
-                       GLX_DOUBLEBUFFER, true,
-                       GLX_STENCIL_SIZE, 8,
-                       GLX_SAMPLE_BUFFERS  , 0,
-                       GLX_SAMPLES         , 0,
-                       None};
+        GLint att[] = {
+            GLX_X_RENDERABLE,
+            True,   // 1
+            GLX_DRAWABLE_TYPE,
+            GLX_WINDOW_BIT,   // 3
+            GLX_RENDER_TYPE,
+            GLX_RGBA_BIT,   // 5
+            GLX_X_VISUAL_TYPE,
+            GLX_TRUE_COLOR,   // 7
+            GLX_RED_SIZE,
+            8,   // 9
+            GLX_GREEN_SIZE,
+            8,   // 11
+            GLX_BLUE_SIZE,
+            8,   // 13
+            GLX_ALPHA_SIZE,
+            8,   // 15
+            GLX_DEPTH_SIZE,
+            24,
+            GLX_STENCIL_SIZE,
+            8,
+            GLX_DOUBLEBUFFER,
+            true,
+            GLX_STENCIL_SIZE,
+            8,
+            GLX_SAMPLE_BUFFERS,
+            0,
+            GLX_SAMPLES,
+            0,
+            None
+        };
 
         int fbcount;
         GLXFBConfig* fbc = glXChooseFBConfig(ourDisplay, DefaultScreen(ourDisplay), att, &fbcount);
@@ -71,11 +83,12 @@ void OpenGLRenderingContext::init(const Init& init) {
             // try to reduce system requirements
             size_t indexToReduce = std::size(att) - 2;
             do {
-                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format((std::size(att) - indexToReduce) / 2 - 1));
+                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format(
+                    (std::size(att) - indexToReduce) / 2 - 1));
                 att[indexToReduce] = 0;
                 indexToReduce -= 2;
                 fbc = glXChooseFBConfig(ourDisplay, DefaultScreen(ourDisplay), att, &fbcount);
-            } while ((fbc == nullptr || fbcount <= 0) && indexToReduce > 13); // up to GLX_BLUE_SIZE
+            } while ((fbc == nullptr || fbcount <= 0) && indexToReduce > 13);   // up to GLX_BLUE_SIZE
 
             if (fbc == nullptr || fbcount <= 0) {
                 // try to disable rgba.
@@ -98,7 +111,6 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         int best_fbc = 0;
 
-
         for (int i = 0; i < fbcount; ++i) {
             vi = glXGetVisualFromFBConfig(ourDisplay, fbc[i]);
             if (vi) {
@@ -108,7 +120,6 @@ void OpenGLRenderingContext::init(const Init& init) {
                     best_fbc = i;
                     break;
                 }
-
             }
             XFree(vi);
         }
@@ -122,13 +133,17 @@ void OpenGLRenderingContext::init(const Init& init) {
         vi = glXGetVisualFromFBConfig(ourDisplay, bestFbc);
         auto cmap = XCreateColormap(ourDisplay, ourScreen->root, vi->visual, AllocNone);
         swa.colormap = cmap;
-        swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
-                         | PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
+        swa.event_mask =
+            ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask |
+            PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
         if (glXCreateContextAttribsARB) {
             int attribList[] = {
-                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
-                GLX_CONTEXT_MINOR_VERSION_ARB, 3,
-                GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+                GLX_CONTEXT_MAJOR_VERSION_ARB,
+                3,
+                GLX_CONTEXT_MINOR_VERSION_ARB,
+                3,
+                GLX_CONTEXT_PROFILE_MASK_ARB,
+                GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
                 None,
             };
             ourContext = glXCreateContextAttribsARB(ourDisplay, bestFbc, nullptr, true, attribList);
@@ -151,6 +166,18 @@ void OpenGLRenderingContext::init(const Init& init) {
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
+
+    // vsync
+    do_once {
+        glXSwapIntervalEXT = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(
+            glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXSwapIntervalEXT")));
+    }
+
+    if (glXSwapIntervalEXT) {
+        glXSwapIntervalEXT(
+            ourDisplay, init.window.mHandle, !(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
+    }
+
     mRenderer = ourRenderer();
 }
 
@@ -191,5 +218,13 @@ void OpenGLRenderingContext::endResize(AWindowBase& window) {
 }
 
 AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        fb->bindForRead();
+        AImage result(mViewportSize, APixelFormat::RGBA_BYTE);
+        glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
+        result.mirrorVertically();
+        gl::Framebuffer::unbind();
+        return result;
+    }
+    return {};
 }

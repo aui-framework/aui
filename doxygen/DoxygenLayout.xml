@@ -151,14 +151,17 @@
 
     <!-- Layout definition for a group page -->
     <group>
-        <detaileddescription title="" />
+        <briefdescription visible="yes"/>
         <memberdecl>
             <nestedgroups visible="yes" title=""/>
+        </memberdecl>
+        <detaileddescription visible="yes" title="Detailed Description" />
+        <memberdecl>
             <dirs visible="yes" title=""/>
             <files visible="yes" title=""/>
             <namespaces visible="yes" title=""/>
             <classes visible="yes" title=""/>
-            <defines title=""/>-
+            <defines title=""/>
             <typedefs title=""/>
             <sequences title=""/>
             <dictionaries title=""/>

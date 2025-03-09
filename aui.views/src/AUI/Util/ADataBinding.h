@@ -455,7 +455,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data,
     using data_deduced = std::decay_t<std::invoke_result_t<projection_deduced, Data>>;
 
     using getter = ASignal<Data>(View::*);
-    using setter = aui::member<decltype(ADataBindingDefault<View, data_deduced>::getSetter())>;
+    using setter = aui::reflect::member<decltype(ADataBindingDefault<View, data_deduced>::getSetter())>;
 
     using setter_ret = typename setter::return_t;
     using setter_args = typename setter::args;

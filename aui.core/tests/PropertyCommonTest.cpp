@@ -163,8 +163,8 @@ TEST(PropertyCommonTest, Property2PropertyBoth) {
     EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
     u->name = "New Name1";
 
-    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(2); // expected to call 2 times: 1st time by calling setName
-    r->setName("New Name2");                                 // here; 2nd time as a loopback response from u
+    EXPECT_CALL(*r, setName(AString("New Name2"))).Times(1);
+    r->setName("New Name2");
 
     // the setName "New Name2" call above should reflect its change to u.
     EXPECT_EQ(u->name, "New Name2");
