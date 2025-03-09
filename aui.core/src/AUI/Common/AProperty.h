@@ -76,6 +76,12 @@ struct AProperty: AObjectBase {
 
     template <aui::convertible_to<T> U>
     AProperty& operator=(U&& value) noexcept {
+        static constexpr auto IS_COMPARABLE = requires { this->raw == value; };
+        if constexpr (IS_COMPARABLE) {
+            if (this->raw == value) [[unlikely]] {
+                return *this;
+            }
+        }
         this->raw = std::forward<U>(value);
         notify();
         return *this;
