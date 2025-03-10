@@ -21,6 +21,7 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/ASpacerExpanding.h>
 #include <AUI/View/AForEachUI.h>
+#include <AUI/View/AForEachUILazy.h>
 #include <AUI/Layout/AWordWrappingLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>

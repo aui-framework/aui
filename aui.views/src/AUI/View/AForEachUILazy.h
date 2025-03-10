@@ -11,16 +11,17 @@
 
 #pragma once
 
-#include "AScrollArea.h"
+#include "AForEachUI.h"
 
 /**
- * @brief Version of AScrollArea with lazy layout semantics.
+ * @brief Version of @ref AUI_DECLARATIVE_FOR with lazy layout semantics.
  * @ingroup useful_views
  * @details
  * @experimental
  *
- * Allows lazy semantics in regards of layout processing inside the scroll area. That is, only visible view's layout
- * will be processed, saving CPU and memory especially with large (or potentially infinite) amounts of contents.
+ * Allows lazy semantics in regards of view instansiating and layout processing inside the scroll area environment. That
+ * is, only visible views will be processed, saving CPU and memory especially with large (or potentially infinite)
+ * amounts of contents.
  *
  * Possible use cases are: social media feed, messages lists.
  *
@@ -32,21 +33,13 @@
  * size and available data (in case of AUI_DECLARATIVE_FOR) to predict actual content size, to make scroll bars
  * as smooth as possible.
  */
-class API_AUI_VIEWS AScrollAreaLazy : public AScrollArea {
+template<typename T, typename Layout>
+class API_AUI_VIEWS AForEachUILazy : public AForEachUI<T, Layout> {
 public:
-    ~AScrollAreaLazy() override = default;
-    class Builder : public AScrollArea::Builder {
-        friend class AScrollArea;
+  using AForEachUI<T, Layout>::AForEachUI;
+    ~AForEachUILazy() override = default;
 
-    public:
-        Builder() = default;
-
-        _<AScrollAreaLazy> build() { return aui::ptr::manage(new AScrollAreaLazy(*this)); }
-
-        operator _<AView>() { return build(); }
-        operator _<AViewContainerBase>() { return build(); }
-    };
-
-private:
-    AScrollAreaLazy(Builder& builder);
 };
+
+#define AUI_DECLARATIVE_FOR_LAZY_EX(value, model, layout, ...) _new<AForEachUILazy<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
+#define AUI_DECLARATIVE_FOR_LAZY(value, model, layout) AUI_DECLARATIVE_FOR_LAZY_EX(value, model, layout, =)
