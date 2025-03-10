@@ -41,17 +41,17 @@ public:
     }
 
 
-    void setModel(const _<IListModel<T>>& model) {
+    void setModel(_<IListModel<T>> model) {
         if (mModel) {
             mModel->dataInserted.clearAllOutgoingConnectionsWith(this);
             mModel->dataChanged.clearAllOutgoingConnectionsWith(this);
             mModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
         }
-        mModel = model;
+        mModel = std::move(model);
 
-        if (model) {
-            for (size_t i = 0; i < model->listSize(); ++i) {
-                mListener->insertItem(i, model->listItemAt(i));
+        if (mModel) {
+            for (size_t i = 0; i < mModel->listSize(); ++i) {
+                mListener->insertItem(i, mModel->listItemAt(i));
             }
             mListener->onDataCountChanged();
             mListener->onDataChanged();

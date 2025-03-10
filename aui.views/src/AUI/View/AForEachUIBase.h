@@ -30,14 +30,14 @@ private:
     Factory mFactory;
 
 public:
-    AForEachUIBase(const List& list):
+    AForEachUIBase(List list):
         mObserver(_new<AListModelObserver<T>>(this)) {
         setLayout(std::make_unique<Layout>());
-        setModel(list);
+        setModel(std::move(list));
     }
 
-    void setModel(const List& list) {
-        mObserver->setModel(list);
+    void setModel(List list) {
+        mObserver->setModel(std::move(list));
     }
 
     void insertItem(size_t at, const T& value) override {

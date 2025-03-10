@@ -13,6 +13,20 @@
 
 #include "AForEachUIBase.h"
 
+namespace aui::detail {
+template <typename T>
+class SlidingWindowListModel : public IListModel<T> {
+public:
+    explicit SlidingWindowListModel(_<IListModel<T>> wrapped) : mWrapped(std::move(wrapped)) {}
+    ~SlidingWindowListModel() override = default;
+    size_t listSize() override { return glm::min(mWrapped->listSize(), std::size_t(20)); }
+    T listItemAt(const AListModelIndex& index) override { return mWrapped->listItemAt(index); }
+
+private:
+    _<IListModel<T>> mWrapped;
+};
+}   // namespace aui::detail
+
 /**
  * @brief Version of @ref AUI_DECLARATIVE_FOR_BASE with lazy layout semantics.
  * @ingroup useful_views
@@ -33,13 +47,28 @@
  * size and available data (in case of AUI_DECLARATIVE_FOR) to predict actual content size, to make scroll bars
  * as smooth as possible.
  */
-template<typename T, typename Layout>
+template <typename T, typename Layout>
 class API_AUI_VIEWS AForEachUILazy : public AForEachUIBase<T, Layout> {
 public:
-  using AForEachUIBase<T, Layout>::AForEachUIBase;
+    using super = AForEachUIBase<T, Layout>;
+    using List = super::List;
     ~AForEachUILazy() override = default;
 
+    explicit AForEachUILazy(List list) : super(nullptr), mSlidingWindow(std::move(list)) {
+        super::setModel(aui::ptr::fake(mSlidingWindow.ptr()));
+    }
+
+    void setModel(List list) {
+        super::setModel(nullptr);
+        mSlidingWindow.emplace(std::move(list));
+        super::setModel(aui::ptr::fake(mSlidingWindow.ptr()));
+    }
+
+private:
+    AOptional<aui::detail::SlidingWindowListModel<T>> mSlidingWindow;
 };
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) _new<AForEachUILazy<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                                    \
+    _new<AForEachUILazy<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - \
+        [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
