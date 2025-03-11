@@ -5,8 +5,10 @@ it in `~/.aui` folder for future reuse.
 
 # Importing AUI
 
+See [AUI's repository](https://github.com/aui-framework/aui) to check out the import script with the latest version.
+
 ```cmake
-set(AUI_VERSION v6.2.1)
+set(AUI_VERSION v6.2.1) # OLD!
 
 file(
     DOWNLOAD 
@@ -41,7 +43,7 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
-If usage of precompiled binaries break your built for whatever reason, you can set @ref AUIB_NO_PRECOMPILED "AUIB_NO_PRECOMPILED":
+If usage of precompiled binaries break your build for whatever reason, you can set @ref AUIB_NO_PRECOMPILED "AUIB_NO_PRECOMPILED":
 
 ```shell
 cmake .. -DAUIB_NO_PRECOMPILED=TRUE
@@ -69,19 +71,101 @@ Don't worry updating dependencies: GitHub `cache` action will restore the cache 
 fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
 occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
 
-# Importing 3rdparty libraries
+# Importing 3rdparty libraries {#AUI_BOOT_3RDPARTY}
 
-You can import any library that can be imported to your project by compiling it using CMake and finding it's package with `find_package`, i.e. Sentry:
+AUI Framework has a lot of modules and functionality, however, it never pretends to be all-in-one solution for
+everything. We value quality over quantity. It is just a basis (framework), where you are free to put whatever building
+blocks you want, and we encourage you to do so, particularly, by using 3rdparty libraries. Just don't forget to obey
+other projects' licensing conditions, which are, in common, pretty much applicable even for proprietary software.
+
+As was said in the beginning of this page, if a library has a good `CMakeLists.txt` (which mostly true for all popular
+C++ libraries), it can be imported with AUI.Boot:
+
 ```
 # importing Sentry with AUI.Boot
 auib_import(sentry https://github.com/getsentry/sentry-native
+            VERSION 0.8.1
             CMAKE_ARGS -DSENTRY_BACKEND=crashpad)
 aui_link(YOUR_APP PUBLIC sentry::sentry)
 ```
 
+The first argument to `auib_import` is the library name, which is then passed to CMake's `find_package` in order to
+import the library to your project. So, valid library name should be specified. You can obtain the library name from the
+following places:
+
+- In common, CMake package matches repository name on GitHub.
+- From library's `README`. 
+- If library name is incorrect, AUI.Boot prints the following message:
+  ```
+  Make Error at /home/.../.aui/repo/aui/as/0337639/aui/aui.boot.cmake:1019 (message):
+  AUI.Boot could not resolve dependency: sentry_bruh
+
+  note: check build logs in
+  /home/.../.aui/prefix/sentry_bruh/dd0cfe775cceb4610a5d55b5c257d660
+
+  note: package names are case sensitive
+
+  note: did you mean "sentry"?
+  ```
+  
+  Take a look on the last line:
+  ```
+  note: did you mean "sentry"?
+  ```
+  `sentry` is a valid library name that should have been passed to `auib_import`.
+
+The second argument to `auib_import` is the URL to the library's repository. You can copy&paste it from address bar from
+your web browser.
+
+The `VERSION` argument is tag name or hash name. You can copy&paste the latest release version name from GitHub Releases
+page of the library *(1)*, or discover their tags *(2,3,4)*:
+
+@image html Screenshot_20250311_045811.png
+
+The optional `CMAKE_ARGS` argument is arguments passed to library's CMake configure, another point of customization by
+AUI.Boot. These arguments are library specific; their documentation can be found on library's respective documentation
+pages. You won't need to use that unless you want an advanced tinkering of the library.
+
+After library is imported to the project, its *imported target* should be linked to your executable/library. As with 
+library's name, the name of the imported target probably can be found in library's `README`. Additionally, starting from
+CMake version `3.21`, AUI.Boot prints a handy line on configure time when a library is imported:
+
+```
+Imported: sentry (sentry::sentry) (/home/.../.aui/prefix/sentry/7542ab4956cac4e96fe399e976906221) (version e1ba734)
+```
+
+Here, you can see the imported target(s) name in braces, that one should be used with
+`aui_link`/`target_link_libraries`.
+The complete library import boilerplate is:
+
+`CMakeLists.txt:`
+```
+# importing Sentry with AUI.Boot
+auib_import(sentry https://github.com/getsentry/sentry-native
+            VERSION 0.8.1
+            CMAKE_ARGS -DSENTRY_BACKEND=crashpad)
+aui_link(YOUR_APP PUBLIC sentry::sentry)
+```
+
+`src/main.cpp`:
+```cpp
+#include <sentry.h>
+
+AUI_ENTRY {
+    sentry_options_t *options = sentry_options_new();
+    sentry_options_set_dsn(options, "https://YOUR_KEY@oORG_ID.ingest.sentry.io/PROJECT_ID");
+    sentry_init(options);
+
+    // your application code …
+
+    sentry_close();
+};
+
+```
+
 For more libraries, please visit https://github.com/aui-framework/boot.
 
-## Using AUI Boot without AUI
+# Using AUI Boot without AUI
 
 AUI Boot does not have any hard dependencies on AUI, so it can be used to manage dependencies on non-AUI projects.
 
@@ -137,7 +221,7 @@ This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) 
 configure time. See @ref "docs/Runtime Dependency Resolution.md" for more info.
 
 ### PackageName
-Specifies the package name which will be passed to `find_package`.
+Specifies the package name which will be passed to `find_package`. See @ref AUI_BOOT_3RDPARTY.
 
 ### URL
 URL to the git repository of the project you want to import.
@@ -159,6 +243,13 @@ Forces `find_package` to use the config mode only.
 
 ### VERSION
 Commit hash, tag or branch name to `checkout`.
+
+When unspecified, AUI.Boot uses the latest version from main branch of the library. Once discovered, **AUI.Boot never
+updates the library version**.
+
+@note
+Despite this argument is optional, we still encourage you to use it, to "lock" the version. This makes your builds
+precisely reproducible on other machines.
 
 ### COMPONENTS
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
