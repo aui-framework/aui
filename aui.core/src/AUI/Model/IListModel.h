@@ -18,26 +18,25 @@
 #include "AListModelRange.h"
 #include "AUI/Common/AObject.h"
 
-template<typename T>
-class IListModel: public AObject 
-{
+template <typename T>
+class IListModel : public AObject {
 public:
     using value_type = T;
-	~IListModel() override = default;
+    ~IListModel() override = default;
 
-	virtual size_t listSize() = 0;
-	virtual T listItemAt(const AListModelIndex& index) = 0;
+    virtual size_t listSize() = 0;
+    virtual T listItemAt(const AListModelIndex& index) = 0;
 
-	using stored_t = T;
+    using stored_t = T;
 
-	AListModelRange<T> range(const AListModelIndex& begin, const AListModelIndex& end) {
+    AListModelRange<T> range(const AListModelIndex& begin, const AListModelIndex& end) {
         return AListModelRange<T>(begin, end, std::dynamic_pointer_cast<IListModel<T>>(this->shared_from_this()));
-	}
+    }
 
-	AListModelRange<T> range(const AListModelIndex& item) {
-        return AListModelRange<T>(item, {item.getRow() + 1}, std::dynamic_pointer_cast<IListModel<T>>(this->shared_from_this()));
-	}
-
+    AListModelRange<T> range(const AListModelIndex& item) {
+        return AListModelRange<T>(
+            item, { item.getRow() + 1 }, std::dynamic_pointer_cast<IListModel<T>>(this->shared_from_this()));
+    }
 
     AVector<T> toVector() noexcept {
         AVector<T> result;
@@ -49,7 +48,7 @@ public:
         return result;
     }
 
-    template<typename Filter>
+    template <typename Filter>
     AVector<AListModelRange<T>> rangesIncluding(Filter&& filter) {
         AVector<AListModelRange<T>> result;
         size_t currentBeginning = 0;

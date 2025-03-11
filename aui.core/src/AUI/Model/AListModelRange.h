@@ -84,6 +84,10 @@ public:
         return {mEnd, mModel};
     }
 
+    bool empty() const {
+        return begin() == end();
+    }
+
     [[nodiscard]] const AListModelIndex& getBegin() const {
         return mBegin;
     }
