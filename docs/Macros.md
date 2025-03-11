@@ -4,7 +4,8 @@ This page is about macros generated in build-time (i.e., platform specifics). Fo
 
 # Writing platform dependent code
 
-AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in both CMake and C++.
+AUI provides a set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in
+both CMake and C++.
 
 ## Platform checks
 
@@ -13,7 +14,7 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
      <th>Platform</th>
      <th>C++</th>
      <th>CMake</th>
-     <th>Platform specific dir</th>
+     <th>Platform specific dir(s)</th>
    </tr>
    <tr>
      <td>
@@ -34,7 +35,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/win32`
+       `src/Platform/win32`<br/>
+       `src/platform/win32`
      </td>
    </tr>
 
@@ -57,7 +59,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/linux`
+       `src/Platform/linux`<br/>
+       `src/platform/linux`
      </td>
    </tr>
 
@@ -80,7 +83,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/macos`
+       `src/Platform/macos`<br/>
+       `src/platform/macos`
      </td>
    </tr>
 
@@ -103,7 +107,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/android`
+       `src/Platform/android`<br/>
+       `src/platform/android`
      </td>
    </tr>
 
@@ -126,7 +131,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/ios`
+       `src/Platform/ios`<br/>
+       `src/platform/ios`
      </td>
    </tr>
 
@@ -149,7 +155,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/apple`
+       `src/Platform/apple`<br/>
+       `src/platform/apple`
      </td>
    </tr>
 
@@ -172,7 +179,8 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/unix`
+       `src/Platform/unix`<br/>
+       `src/platform/unix`
      </td>
    </tr>
 
@@ -195,16 +203,19 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/emscripten`
+       `src/Platform/emscripten`<br/>
+       `src/platform/emscripten`
      </td>
    </tr>
 </table>
 
-
 ### Platform specific sources
 
-With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` dir, where `<PLATFORM_NAME>` is
-one of the supported platforms (see the table above).
+With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` or `src/platform/<PLATFORM_NAME>`
+dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table above).
+
+@note
+Both cases (Platform and platform) were added to honor projects with various directory naming agreements.
 
 
 ## Compiler checks

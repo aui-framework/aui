@@ -1,5 +1,7 @@
 # Crosscompiling (Android and iOS)
 
+See also: @ref docs/Macros.md
+
 ## The AUI_BUILD_FOR way
 
 AUI provides the unified way to cross-compile your application with AUI_BUILD_FOR CMake configure variable. When

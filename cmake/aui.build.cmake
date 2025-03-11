@@ -652,7 +652,7 @@ function(aui_executable AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?[Pp]latform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     if(ANDROID)
@@ -1023,7 +1023,7 @@ function(aui_module AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?[Pp]latform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     if (AUIE_FORCE_SHARED)
