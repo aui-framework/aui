@@ -88,6 +88,11 @@ public:
         super::setModel(mSlidingWindow);
     }
 
+protected:
+    void onViewGraphSubtreeChanged() override {
+        super::onViewGraphSubtreeChanged();
+    }
+
 private:
     _<aui::detail::SlidingWindowListModel<T>> mSlidingWindow;
 };

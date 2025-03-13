@@ -62,7 +62,7 @@ public:
     }
 
     void onDataChanged() override {
-        applyGeometryToChildrenIfNecessary();
+        markMinContentSizeInvalid();
     }
 
     void operator-(const Factory& f) {
