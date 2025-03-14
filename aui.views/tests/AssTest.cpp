@@ -14,7 +14,7 @@
 
 using namespace ass;
 
-TEST(AssTest, Merge) {
+TEST(AssTest, Merge1) {
     BackgroundImage rule1{ "icon.svg" };
     BackgroundImage rule2{ {}, AColor::RED };
 

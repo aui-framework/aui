@@ -15,63 +15,59 @@
 #include <AUI/View/AButton.h>
 #include "AUI/Util/ALayoutInflater.h"
 
-
 namespace {
 
-    class View : public AView {
-    public:
+class View : public AView {
+public:
 
-    protected:
-        void commitStyle() override {
-            AView::commitStyle();
-        }
-    };
+protected:
+    void commitStyle() override { AView::commitStyle(); }
+};
 
-    using namespace declarative;
+using namespace declarative;
 
-    class UIStyleTest : public testing::UITest {
-    public:
-    protected:
-        void SetUp() override {
-            UITest::SetUp();
+class UIStyleTest : public testing::UITest {
+public:
 
-            mWindow = _new<AWindow>();
-            ALayoutInflater::inflate(mWindow,
-                                     Vertical{
-                                         mView = _new<View>() with_style {
-                                             MinSize { 10_dp }
-                                         },
-                                         Label{"Some bullshit to complicate layout"},
-                                     }
-            );
-            mWindow->show();
-        }
+protected:
+    void SetUp() override {
+        UITest::SetUp();
 
-        void setupStateStyles() {
-            mView with_style {
-                    MinSize { 10_dp },
-                    BackgroundSolid{AColor::BLACK},
+        mWindow = _new<AWindow>();
+        ALayoutInflater::inflate(
+            mWindow,
+            Vertical {
+              mView = _new<View>() with_style { MinSize { 10_dp } },
+              Label { "Some bullshit to complicate layout" },
+            });
+        mWindow->show();
+    }
 
-                    on_state::Hovered {
-                            BackgroundSolid{AColor::RED},
-                    },
+    void setupStateStyles() {
+        mView with_style {
+            MinSize { 10_dp },
+            BackgroundSolid { AColor::BLACK },
 
-                    on_state::Activated {
-                            BackgroundSolid{AColor::GREEN},
-                    },
-            };
-        }
+            on_state::Hovered {
+              BackgroundSolid { AColor::RED },
+            },
 
-        void TearDown() override {
-            mWindow = nullptr;
-            mView = nullptr;
-            UITest::TearDown();
-        }
+            on_state::Activated {
+              BackgroundSolid { AColor::GREEN },
+            },
+        };
+    }
 
-        _<AWindow> mWindow;
-        _<AView> mView;
-    };
-}
+    void TearDown() override {
+        mWindow = nullptr;
+        mView = nullptr;
+        UITest::TearDown();
+    }
+
+    _<AWindow> mWindow;
+    _<AView> mView;
+};
+}   // namespace
 
 /**
  * Checks mouse move events.
@@ -82,13 +78,12 @@ TEST_F(UIStyleTest, MouseMoveNoClick) {
 
     By::type<View>().check(averageColor(AColor::BLACK));
 
-    mWindow->onPointerMove({ 10, 10 }, {}); // somewhere over the mView
+    mWindow->onPointerMove({ 10, 10 }, {});   // somewhere over the mView
     By::type<View>().check(averageColor(AColor::RED));
 
-    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
+    mWindow->onPointerMove({ 100, 100 }, {});   // somewhere outside the mView
     By::type<View>().check(averageColor(AColor::BLACK));
 }
-
 
 /**
  * Checks click with release outside the view.
@@ -99,16 +94,16 @@ TEST_F(UIStyleTest, MouseMoveWithClick) {
 
     By::type<View>().check(averageColor(AColor::BLACK));
 
-    mWindow->onPointerMove({ 10, 10 }, {}); // somewhere over the mView
+    mWindow->onPointerMove({ 10, 10 }, {});   // somewhere over the mView
     By::type<View>().check(averageColor(AColor::RED));
 
-    mWindow->onPointerPressed({.position = { 10, 10 } }); // somewhere over the mView
+    mWindow->onPointerPressed({ .position = { 10, 10 } });   // somewhere over the mView
     By::type<View>().check(averageColor(AColor::GREEN));
 
-    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
+    mWindow->onPointerMove({ 100, 100 }, {});   // somewhere outside the mView
     By::type<View>().check(averageColor(AColor::GREEN));
 
-    mWindow->onPointerReleased({.position = { 100, 100 }, .triggerClick = false }); // somewhere outside the view
+    mWindow->onPointerReleased({ .position = { 100, 100 }, .triggerClick = false });   // somewhere outside the view
     By::type<View>().check(averageColor(AColor::BLACK));
 }
 
@@ -138,12 +133,10 @@ TEST_F(UIStyleTest, AndSelector) {
     testing::InSequence s;
     using namespace ass;
 
-    mWindow->setExtraStylesheet(AStylesheet{
-        {
-            ass::c(".one") && ass::c(".two"),
-            BackgroundSolid { AColor::RED },
-        }
-    });
+    mWindow->setExtraStylesheet(AStylesheet { {
+      ass::c(".one") && ass::c(".two"),
+      BackgroundSolid { AColor::RED },
+    } });
 
     mView->addAssName(".one");
     By::type<View>().check(averageColor(AColor::WHITE), "view should be uncolored");
@@ -152,7 +145,6 @@ TEST_F(UIStyleTest, AndSelector) {
     By::type<View>().check(averageColor(AColor::RED), "view should be colored");
 }
 
-
 TEST_F(UIStyleTest, SetExtraStylesheet) {
     testing::InSequence s;
     using namespace ass;
@@ -160,19 +152,43 @@ TEST_F(UIStyleTest, SetExtraStylesheet) {
     mView->addAssName(".one");
     By::type<View>().check(averageColor(AColor::WHITE), "view should be uncolored");
 
-    mWindow->setExtraStylesheet(AStylesheet{
-        {
-            ass::c(".one"),
-            BackgroundSolid { AColor::RED },
-        }
-    });
+    mWindow->setExtraStylesheet(AStylesheet { {
+      ass::c(".one"),
+      BackgroundSolid { AColor::RED },
+    } });
     By::type<View>().check(averageColor(AColor::RED), "view should be colored");
 
-    mWindow->setExtraStylesheet(AStylesheet{
-        {
-            ass::c(".one"),
-            BackgroundSolid { AColor::BLUE },
-        }
-    });
+    mWindow->setExtraStylesheet(AStylesheet { {
+      ass::c(".one"),
+      BackgroundSolid { AColor::BLUE },
+    } });
     By::type<View>().check(averageColor(AColor::BLUE), "view should be colored");
+}
+
+TEST_F(UIStyleTest, Merge) {
+    testing::InSequence s;
+    using namespace ass;
+
+    mWindow->setExtraStylesheet(AStylesheet {
+      {
+        t<AWindowBase>(),
+        BackgroundSolid { AColor::BLACK },
+      },
+      {
+        ass::c("test1"),
+        BackgroundImage { ":uni/caption/close.svg", {}, {}, Sizing::COVER }, // white cross
+        FixedSize(32_px),
+      },
+      {
+        ass::c("test2"),
+        BackgroundImage { {}, AColor::RED },
+      },
+    });
+    By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::BLACK)); // no white cross
+    mView->addAssName("test1");
+    By::type<View>().check(pixelColorAt({0.f, 0.5f}, AColor::BLACK)); // outside of cross
+    By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::WHITE)); // within cross
+    mView->addAssName("test2");
+    By::type<View>().check(pixelColorAt({0.f, 0.5f}, AColor::BLACK)); // outside of cross
+    By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::RED)); // within cross, overlayed by red
 }
