@@ -28,11 +28,10 @@ namespace ass {
     struct unset_wrap {
     private:
         T stored;
-        bool set;
+        bool set = false;
 
     public:
-        unset_wrap() noexcept:
-            set(false)
+        unset_wrap() noexcept
         {
         }
 
