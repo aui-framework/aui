@@ -51,7 +51,7 @@ struct ViewAssertionPixelColorAt {
     bool operator()(const _<AView>& v) {
         auto screenshot = ScreenshotAnalyzer::makeScreenshot().clip(v);
         auto mappedPos = glm::uvec2(glm::vec2(screenshot.image().size() - 1u) * glm::vec2(mRelativePosition));
-        auto target = glm::vec3(screenshot.image().get(mappedPos));
+        auto target = glm::vec3(screenshot.image().get(glm::min(mappedPos, screenshot.image().size() - 1u)));
         auto d = glm::length2(target - glm::vec3(mColor)) / 3;
         return d <= mInaccuracy;
     }
