@@ -19,8 +19,13 @@
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
 
-template<typename T, typename Layout>
 class AForEachUIBase: public AViewContainerBase, public AListModelObserver<T>::IListModelListener {
+public:
+
+};
+
+template<typename T, typename Layout>
+class AForEachUIBaseImpl final: public AForEachUIBase, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
     using Factory = std::function<_<AView>(const T& value, size_t index)>;
@@ -30,11 +35,12 @@ private:
     Factory mFactory;
 
 public:
-    AForEachUIBase(List list):
+    AForEachUIBaseImpl(List list):
         mObserver(_new<AListModelObserver<T>>(this)) {
         setLayout(std::make_unique<Layout>());
         setModel(std::move(list));
     }
+    ~AForEachUIBaseImpl() override = default;
 
     void setModel(List list) {
         mObserver->setModel(std::move(list));
@@ -85,5 +91,5 @@ public:
     }
 };
 
-#define AUI_DECLARATIVE_FOR_BASE_EX(value, model, layout, ...) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
+#define AUI_DECLARATIVE_FOR_BASE_EX(value, model, layout, ...) _new<AForEachUIBaseImpl<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
 #define AUI_DECLARATIVE_FOR_BASE(value, model, layout) AUI_DECLARATIVE_FOR_BASE_EX(value, model, layout, =)
