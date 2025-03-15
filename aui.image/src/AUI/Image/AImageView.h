@@ -149,6 +149,8 @@ public:
      */
     [[nodiscard]]
     const char& rawDataAt(glm::uvec2 position) const noexcept {
+        AUI_ASSERT(width() != 0);
+        AUI_ASSERT(height() != 0);
         AUI_ASSERT(position.x < width());
         AUI_ASSERT(position.y < height());
         return mData.at<char>((position.y * width() + position.x) * bytesPerPixel());
