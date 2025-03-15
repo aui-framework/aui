@@ -21,11 +21,14 @@
 
 namespace ass {
 
+    template<typename T>
+    concept CompleteDeclaration = aui::is_complete<ass::prop::Property<T>>;
+
     struct PropertyListRecursive: public PropertyList {
     public:
         struct ConditionalPropertyList;
 
-        template<typename... Declarations>
+        template<CompleteDeclaration... Declarations>
         PropertyListRecursive(Declarations&& ... declarations): PropertyListRecursive() {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }

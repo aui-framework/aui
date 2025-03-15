@@ -43,6 +43,16 @@ public:
     }
 
     template <typename T>
+    auto operator&(const T& t) const {
+        return asViewFactory()->operator()() & t;
+    }
+
+    template <typename T>
+    auto operator|(const T& t) const {
+        return asViewFactory()->operator()() | t;
+    }
+
+    template <typename T>
     auto operator^(T&& t) const {
         return asViewFactory()->operator()() ^ std::forward<T>(t);
     }

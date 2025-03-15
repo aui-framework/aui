@@ -35,7 +35,7 @@ public:
 
 ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
 
-    auto wrapper = _new<WrapperContainer>(mWrappedView) with_style { Expanding { 2, 2 } } << ".arulerarea-content";
+    auto wrapper = _new<WrapperContainer>(mWrappedView) << ".arulerarea-content" with_style { Expanding { 2, 2 } };
 
     setContents(
         Horizontal {
