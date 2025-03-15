@@ -9,8 +9,38 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 9/2/21.
-//
-
 #include "AForEachUI.h"
+
+void AForEachUIBase::setModelImpl(_<IListModel<_<AView>>> model) {
+    if (mViewsModel) {
+        mViewsModel->dataInserted.clearAllOutgoingConnectionsWith(this);
+        mViewsModel->dataChanged.clearAllOutgoingConnectionsWith(this);
+        mViewsModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
+    }
+    mViewsModel = std::move(model);
+
+    if (!mViewsModel) {
+        return;
+    }
+    for (size_t i = 0; i < mViewsModel->listSize(); ++i) {
+        addView(mViewsModel->listItemAt(i));
+    }
+
+    connect(mViewsModel->dataInserted, this, [&](const AListModelRange<_<AView>>& data) {
+        for (const auto& row : data) {
+            addView(row.getIndex().getRow(), row.get());
+        }
+    });
+    connect(mViewsModel->dataChanged, this, [&](const AListModelRange<_<AView>>& data) {
+        for (const auto& row : data) {
+            // TODO optimize
+            removeView(row.getIndex().getRow());
+            addView(row.getIndex().getRow(), row.get());
+        }
+    });
+    connect(mViewsModel->dataRemoved, this, [&](const AListModelRange<_<AView>>& data) {
+        for (const auto& row : data) {
+            removeView(data.begin().getIndex().getRow());
+        }
+    });
+}

@@ -42,41 +42,6 @@ public:
 
 
     void setModel(const _<IListModel<T>>& model) {
-        if (mModel) {
-            mModel->dataInserted.clearAllOutgoingConnectionsWith(this);
-            mModel->dataChanged.clearAllOutgoingConnectionsWith(this);
-            mModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
-        }
-        mModel = model;
-
-        if (model) {
-            for (size_t i = 0; i < model->listSize(); ++i) {
-                mListener->insertItem(i, model->listItemAt(i));
-            }
-            mListener->onDataCountChanged();
-            mListener->onDataChanged();
-
-            connect(mModel->dataInserted, this, [&](const AListModelRange<T>& data) {
-                for (const auto& row : data) {
-                    mListener->insertItem(row.getIndex().getRow(), row.get());
-                }
-                mListener->onDataCountChanged();
-                mListener->onDataChanged();
-            });
-            connect(mModel->dataChanged, this, [&](const AListModelRange<T>& data) {
-                for (const auto& row : data) {
-                    mListener->updateItem(row.getIndex().getRow(), row.get());
-                }
-                mListener->onDataChanged();
-            });
-            connect(mModel->dataRemoved, this, [&](const AListModelRange<T>& data) {
-                for (const auto& row : data) {
-                    mListener->removeItem(data.begin().getIndex().getRow());
-                }
-                mListener->onDataCountChanged();
-                mListener->onDataChanged();
-            });
-        }
     }
 
     [[nodiscard]]

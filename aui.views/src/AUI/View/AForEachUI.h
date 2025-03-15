@@ -16,64 +16,61 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/AListModelObserver.h>
 #include <functional>
+#include <AUI/Model/AListModelAdapter.h>
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
 
-template<typename T, typename Layout>
-class AForEachUI: public AViewContainerBase, public AListModelObserver<T>::IListModelListener {
+class API_AUI_VIEWS AForEachUIBase: public AViewContainerBase {
 public:
-    using List = _<IListModel<T>>;
-    using Factory = std::function<_<AView>(const T& value, size_t index)>;
-private:
-    _<AListModelObserver<T>> mObserver;
-
-    Factory mFactory;
-
-public:
-    AForEachUI(const List& list):
-        mObserver(_new<AListModelObserver<T>>(this)) {
-        setLayout(std::make_unique<Layout>());
-        setModel(list);
-    }
-
-    void setModel(const List& list) {
-    }
-
-    void insertItem(size_t at, const T& value) override {
-        if (!mFactory) {
-            return;
-        }
-        addView(at, mFactory(value, at));
-    }
-
-    void updateItem(size_t at, const T& value) override {
-        // TODO optimize
-        removeView(at);
-        addView(at, mFactory(value, at));
-    }
-
-    void removeItem(size_t at) override {
-        removeView(at);
-    }
-
-    void onDataCountChanged() override {
-        markMinContentSizeInvalid();
-    }
-
-    void onDataChanged() override {
-        applyGeometryToChildrenIfNecessary();
-    }
-
-    void operator-(const Factory& f) {
-        mFactory = f;
-        setModel(mObserver->getModel());
-    }
+    AForEachUIBase() {}
 
 protected:
     void applyGeometryToChildren() override {
         AViewContainerBase::applyGeometryToChildren();
     }
+
+    void setModelImpl(_<IListModel<_<AView>>> model);
+
+private:
+    _<IListModel<_<AView>>> mViewsModel;
 };
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
+template<typename T, typename Layout, typename super = AForEachUIBase>
+class AForEachUI: public super {
+public:
+    using List = _<IListModel<T>>;
+    using Factory = std::function<_<AView>(const T& value)>;
+
+    AForEachUI(List list): mDataModel(std::move(list)) {
+        this->setLayout(std::make_unique<Layout>());
+    }
+
+    void setModel(List list) {
+        mDataModel = std::move(list);
+        updateUnderlyingModel();
+    }
+
+    void operator-(Factory f) {
+        mFactory = std::move(f);
+        updateUnderlyingModel();
+    }
+
+private:
+    List mDataModel;
+    Factory mFactory;
+
+    void updateUnderlyingModel() {
+        if (!mDataModel) {
+            return;
+        }
+        if (!mFactory) {
+            return;
+        }
+
+        this->setModelImpl(AModels::adapt<_<AView>>(mDataModel, [this](const T& t) { return mFactory(t); }));
+    }
+
+};
+
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
