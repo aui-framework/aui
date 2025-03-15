@@ -14,7 +14,6 @@
 
 #include "AViewContainer.h"
 #include <AUI/Model/IListModel.h>
-#include <AUI/Model/AListModelObserver.h>
 #include <functional>
 #include <AUI/Model/AListModelAdapter.h>
 #include <AUI/Util/ADataBinding.h>
@@ -53,6 +52,11 @@ public:
     void operator-(Factory f) {
         mFactory = std::move(f);
         updateUnderlyingModel();
+    }
+
+    [[nodiscard]]
+    const List& model() const noexcept {
+        return mDataModel;
     }
 
 private:

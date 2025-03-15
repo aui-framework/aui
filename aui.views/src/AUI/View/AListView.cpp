@@ -21,47 +21,6 @@
 
 #include "ALabel.h"
 
-class AListViewContainer : public AViewContainer {
-   private:
-    int mScrollY = 0;
-    mutable std::size_t mIndex = -1;
-
-   public:
-    void applyGeometryToChildren() override {
-        if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
-                                  getSize().y - mPadding.vertical());
-    }
-
-    _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
-        switch (mViews.size()) {
-            case 0:
-                return nullptr;
-            case 1: {
-                auto v = AViewContainerBase::getViewAt(pos, flags);
-                mIndex = v ? 0 : -1;
-                return v;
-            }
-            default: {
-                mIndex = -1;
-                pos.y += mScrollY;
-                pos.y /= mViews[1]->getPosition().y - mViews[0]->getPosition().y;
-                if (pos.y >= 0 && pos.y < mViews.size()) {
-                    return mViews[mIndex = pos.y];
-                }
-                return nullptr;
-            }
-        }
-    }
-
-    void setScrollY(int scrollY) {
-        mScrollY = scrollY;
-        applyGeometryToChildrenIfNecessary();
-    }
-
-    size_t getIndex() const { return mIndex; }
-};
-
 class AListItem : public ALabel, public ass::ISelectable {
    private:
     bool mSelected = false;
@@ -97,22 +56,21 @@ class AListItem : public ALabel, public ass::ISelectable {
 
 AListView::~AListView() {}
 
-AListView::AListView(const _<IListModel<AString>>& model) {
-    mObserver = _new<AListModelObserver<AString>>(this);
-    setModel(model);
+AListView::AListView(_<IListModel<AString>> model) {
+    horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
+    AScrollArea::setContents(mForEachUI = AUI_DECLARATIVE_FOR(i, std::move(model), AVerticalLayout) {
+        return _new<AListItem>(i);
+    });
 }
 
-void AListView::setModel(const _<IListModel<AString>>& model) {
-    horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
-    setContents(mContent = _new<AListViewContainer>());
-
-    mContent->setLayout(std::make_unique<AVerticalLayout>());
-    mContent->setExpanding();
-
-    mObserver->setModel(model);
+void AListView::setModel(_<IListModel<AString>> model) {
+    if (auto prevModel = mForEachUI->model()) {
+        prevModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
+    }
     if (model) {
         connect(model->dataRemoved, [&] { mSelectionModel.clear(); });
     }
+    mForEachUI->setModel(std::move(model));
 }
 
 void AListView::handleMousePressed(AListItem* item) {
@@ -120,7 +78,7 @@ void AListView::handleMousePressed(AListItem* item) {
         clearSelectionInternal();
     }
 
-    auto index = AListModelIndex(mContent->getIndex());
+    auto index = AListModelIndex(mForEachUI->getViews().indexOf(aui::ptr::fake(item)).valueOr(0));
     if (mSelectionModel.contains(index)) {
         mSelectionModel.erase(index);
         item->setSelected(false);
@@ -134,32 +92,20 @@ void AListView::handleMousePressed(AListItem* item) {
 
 void AListView::clearSelectionInternal() {
     for (auto& s : mSelectionModel) {
-        _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
+        _cast<AListItem>(mForEachUI->getViews()[s.getRow()])->setSelected(false);
     }
 
     mSelectionModel.clear();
 }
 
-void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClicked(mContent->getIndex()); }
-
-void AListView::insertItem(size_t at, const AString& value) { mContent->addView(at, _new<AListItem>(value)); }
-
-void AListView::updateItem(size_t at, const AString& value) {
-    _cast<AListItem>(mContent->getViews()[at])->text() = value;
-}
-
-void AListView::removeItem(size_t at) { mContent->removeView(at); }
-
-void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
-
-void AListView::onDataChanged() { redraw(); }
+void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClicked(mForEachUI->getViews().indexOf(aui::ptr::fake(item)).valueOr(0)); }
 
 void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
     switch (action) {
         case SelectAction::CLEAR_SELECTION_AND_SET:
             clearSelectionInternal();
             mSelectionModel = {AListModelIndex(i)};
-            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
             break;
         case SelectAction::SET:
             if (mAllowMultipleSelection) {
@@ -168,11 +114,11 @@ void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) 
                 clearSelectionInternal();
                 mSelectionModel = {AListModelIndex(i)};
             }
-            _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
             break;
         case SelectAction::UNSET:
             mSelectionModel.erase(i);
-            _cast<AListItem>(mContent->getViews()[i])->setSelected(false);
+            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(false);
             break;
         case SelectAction::TOGGLE:
             if (mSelectionModel.contains(i)) {
