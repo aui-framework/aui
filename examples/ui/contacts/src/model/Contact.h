@@ -10,7 +10,11 @@
 #pragma once
 
 #include <AUI/Common/AObject.h>
+#include "AUI/Common/AProperty.h"
 
 struct Contact {
     AProperty<AString> displayName;
+    AProperty<AString> phone;
+    AProperty<AString> address;
+    AProperty<AString> homepage;
 };
