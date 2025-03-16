@@ -42,7 +42,7 @@ static _<AView> contactDetails(const _<Contact>& contact) {
 
 class ContactsWindow : public AWindow {
 public:
-    ContactsWindow() : AWindow("AUI Contacts", 500_dp, 300_dp) {
+    ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
         connect(mContacts->dataInserted, slot(mContactCount)::invalidate);
         connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
         setContents(
@@ -67,7 +67,7 @@ public:
 
               AScrollArea::Builder()
                       .withContents(CustomLayout {} & mSelectedContact.readProjected(contactDetails))
-                      .build() with_style { Expanding(), MinSize(300_dp) },
+                      .build() with_style { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
             } with_style {
               Padding(0),
             });
