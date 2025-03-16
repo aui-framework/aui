@@ -39,11 +39,11 @@ namespace ass::on_state {
      * },
      * @endcode
      */
-    struct Hovered: public PropertyListRecursive::ConditionalPropertyList {
+    struct Hovered: public PropertyListConditional {
     public:
         template<typename... Declarations>
         Hovered(Declarations&&... declarations):
-                ConditionalPropertyList(hovered<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
+                PropertyListConditional(hovered<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
         {}
     };
 
@@ -62,11 +62,11 @@ namespace ass::on_state {
      * },
      * @endcode
      */
-    struct Activated: public PropertyListRecursive::ConditionalPropertyList {
+    struct Activated: public PropertyListConditional {
     public:
         template<typename... Declarations>
         Activated(Declarations&&... declarations):
-                ConditionalPropertyList(activated<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
+                PropertyListConditional(activated<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
         {}
     };
 
@@ -85,11 +85,11 @@ namespace ass::on_state {
      * },
      * @endcode
      */
-    struct Focused: public PropertyListRecursive::ConditionalPropertyList {
+    struct Focused: public PropertyListConditional {
     public:
         template<typename... Declarations>
         Focused(Declarations&&... declarations):
-                ConditionalPropertyList(focused<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
+                PropertyListConditional(focused<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
         {}
     };
 
@@ -108,11 +108,11 @@ namespace ass::on_state {
      * },
      * @endcode
      */
-    struct Disabled: public PropertyListRecursive::ConditionalPropertyList {
+    struct Disabled: public PropertyListConditional {
     public:
         template<typename... Declarations>
         Disabled(Declarations&&... declarations):
-                ConditionalPropertyList(disabled<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
+                PropertyListConditional(disabled<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
         {}
     };
 }
