@@ -300,12 +300,14 @@ public:
     // operators
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) << std::forward<Arg>(r); }
     const _<T>& operator<<(Arg&& value) const {
         (*super::get()) << std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) << std::forward<Arg>(r); }
     _<T>& operator<<(Arg&& value) {
         (*super::get()) << std::forward<Arg>(value);
         return *this;
@@ -317,43 +319,63 @@ public:
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) + std::forward<Arg>(r); }
     const _<T>& operator+(Arg&& value) const {
         (*super::get()) + std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) & std::forward<Arg>(r); }
+    const _<T>& operator&(Arg&& value) const {
+        (*super::get()) & std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) | std::forward<Arg>(r); }
+    const _<T>& operator|(Arg&& value) const {
+        (*super::get()) | std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) + std::forward<Arg>(r); }
     _<T>& operator+(Arg&& value) {
         (*super::get()) + std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) * std::forward<Arg>(r); }
     const _<T>& operator*(Arg&& value) {
         (*super::get()) * std::forward<Arg>(value);
         return *this;
     }
 
-    [[nodiscard]]
-    std::add_lvalue_reference_t<T> operator*() const noexcept {
-        return super::operator*();
-    }
-
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) - std::forward<Arg>(r); }
     const _<T>& operator-(Arg&& value) const {
         (*super::get()) - std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) - std::forward<Arg>(r); }
     _<T>& operator-(Arg&& value) {
         (*super::get()) - std::forward<Arg>(value);
         return *this;
     }
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) >> std::forward<Arg>(r); }
     _<T>& operator>>(Arg&& value) {
         (*super::get()) >> std::forward<Arg>(value);
         return *this;
+    }
+
+    [[nodiscard]]
+    std::add_lvalue_reference_t<T> operator*() const noexcept {
+        return super::operator*();
     }
 
     template<typename...Args>

@@ -33,8 +33,6 @@
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
  * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
- *
- * @see AScrollAreaLazy
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
@@ -136,7 +134,6 @@ public:
         _<AScrollbar> mExternalHorizontalScrollbar;
         _<AView> mContents;
         bool mExpanding = false;
-        bool mLazy = false;
 
     public:
         Builder() = default;

@@ -48,6 +48,12 @@ inline auto operator!=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
     return *lhs != std::forward<Rhs>(rhs);
 }
 
+template<typename T, typename Rhs>
+[[nodiscard]]
+inline auto operator<=>(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
+    return *lhs <=> std::forward<Rhs>(rhs);
+}
+
 template<AAnyProperty T, typename Rhs>
 [[nodiscard]]
 inline auto operator+(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {

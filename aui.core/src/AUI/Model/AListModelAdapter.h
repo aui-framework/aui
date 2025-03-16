@@ -23,11 +23,15 @@ private:
 
 public:
     using value_type = ItemTo;
-    
+
+    explicit AListModelAdapter(const _<IRemovableListModel<ItemFrom>>& other, Adapter&& adapter) :
+            AListModelAdapter(other, std::forward<Adapter>(adapter)) {
+        mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
+    }
+
     explicit AListModelAdapter(const _<IListModel<ItemFrom>>& other, Adapter&& adapter) :
             mOther(other),
             mAdapter(std::forward<Adapter>(adapter)) {
-        mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
         AObject::connect(other->dataChanged, this, [&](const AListModelRange<ItemFrom>& r){
             emit this->dataChanged(this->range(r.getBegin(), r.getEnd()));
         });

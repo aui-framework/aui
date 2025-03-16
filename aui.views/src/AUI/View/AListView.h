@@ -12,34 +12,23 @@
 #pragma once
 
 #include <AUI/Model/AListModelIndex.h>
-#include <AUI/Model/AListModelObserver.h>
 #include <AUI/Model/AListModelSelection.h>
 #include <AUI/Model/IListModel.h>
+#include <AUI/Layout/AVerticalLayout.h>
 
 #include "AScrollArea.h"
+#include "AForEachUI.h"
 
 class AListItem;
-class AListViewContainer;
 
 /**
  * @brief Displays a list model of strings.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {
+class API_AUI_VIEWS AListView : public AScrollArea {
     friend class AListItem;
 
-   private:
-    _<AListViewContainer> mContent;
-    ASet<AListModelIndex> mSelectionModel;
-    _<AListModelObserver<AString>> mObserver;
-    bool mAllowMultipleSelection = false;
-
-    void handleMousePressed(AListItem* item);
-    void handleMouseDoubleClicked(AListItem* item);
-
-    void clearSelectionInternal();
-
-   public:
+public:
     /**
      * @brief Selection action for updateSelectionOnItem.
      */
@@ -66,10 +55,10 @@ class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AS
     };
 
     AListView() : AListView(nullptr) {}
-    explicit AListView(const _<IListModel<AString>>& model);
+    explicit AListView(_<IListModel<AString>> model);
     virtual ~AListView();
 
-    void setModel(const _<IListModel<AString>>& model);
+    void setModel(_<IListModel<AString>> model);
 
     void updateSelectionOnItem(size_t i, AListView::SelectAction action);
 
@@ -83,19 +72,25 @@ class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AS
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
     [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
-        return AListModelSelection<AString>(mSelectionModel, mObserver->getModel());
+        return AListModelSelection<AString>(mSelectionModel, mForEachUI->model());
     }
-
-    void insertItem(size_t at, const AString& value) override;
-    void updateItem(size_t at, const AString& value) override;
-    void removeItem(size_t at) override;
-
-    void onDataCountChanged() override;
-    void onDataChanged() override;
 
 signals:
     emits<AListModelSelection<AString>> selectionChanged;
     emits<unsigned> itemDoubleClicked;
 
     void clearSelection();
+
+
+private:
+    using ForEachUI = AForEachUI<AString, AVerticalLayout>;
+    _<ForEachUI> mForEachUI;
+
+    ASet<AListModelIndex> mSelectionModel;
+    bool mAllowMultipleSelection = false;
+
+    void handleMousePressed(AListItem* item);
+    void handleMouseDoubleClicked(AListItem* item);
+
+    void clearSelectionInternal();
 };
