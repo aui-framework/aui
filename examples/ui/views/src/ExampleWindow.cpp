@@ -57,7 +57,7 @@
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextArea.h>
 #include <AUI/View/ARulerView.h>
-#include <AUI/View/AForEachUI.h>
+#include <AUI/View/AForEachUILazy.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/Platform/ADesktop.h>

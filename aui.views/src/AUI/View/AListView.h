@@ -11,13 +11,14 @@
 
 #pragma once
 
+#include "AForEachUIBase.h"
+
 #include <AUI/Model/AListModelIndex.h>
 #include <AUI/Model/AListModelSelection.h>
 #include <AUI/Model/IListModel.h>
 #include <AUI/Layout/AVerticalLayout.h>
 
 #include "AScrollArea.h"
-#include "AForEachUI.h"
 
 class AListItem;
 

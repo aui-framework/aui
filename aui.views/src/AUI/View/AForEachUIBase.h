@@ -28,14 +28,14 @@ protected:
         AViewContainerBase::applyGeometryToChildren();
     }
 
-    void setModelImpl(_<IListModel<_<AView>>> model);
+    virtual void setModelImpl(_<IListModel<_<AView>>> model);
 
 private:
     _<IListModel<_<AView>>> mViewsModel;
 };
 
 template<typename T, typename Layout, typename super = AForEachUIBase>
-class AForEachUI: public super {
+class AForEachUI final: public super {
 public:
     using List = _<IListModel<T>>;
     using Factory = std::function<_<AView>(const T& value)>;
@@ -76,5 +76,5 @@ private:
 
 };
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value) -> _<AView>
-#define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
+#define AUI_DECLARATIVE_FOR_EAGER_EX(value, model, layout, ...) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EAGER(value, model, layout) AUI_DECLARATIVE_FOR_EAGER_EX(value, model, layout, =)

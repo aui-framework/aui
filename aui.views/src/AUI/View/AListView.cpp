@@ -58,7 +58,7 @@ AListView::~AListView() {}
 
 AListView::AListView(_<IListModel<AString>> model) {
     horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
-    AScrollArea::setContents(mForEachUI = AUI_DECLARATIVE_FOR(i, std::move(model), AVerticalLayout) {
+    AScrollArea::setContents(mForEachUI = AUI_DECLARATIVE_FOR_EAGER(i, std::move(model), AVerticalLayout) {
         return _new<AListItem>(i);
     });
 }

@@ -13,44 +13,6 @@
 
 #include "AForEachUIBase.h"
 
-namespace aui::detail {
-template <typename T>
-class SlidingWindowListModel final: public IListModel<T> {
-public:
-    explicit SlidingWindowListModel(_<IListModel<T>> wrapped) : mWrapped(std::move(wrapped)) {
-        for (auto f : {&IListModel<T>::dataInserted, &IListModel<T>::dataChanged, &IListModel<T>::dataRemoved}) {
-            AObject::connect(std::invoke(f, *mWrapped), this, [this, f](const AListModelRange<T>& range) {
-                if (auto rng = wrapped2self(range); !rng.empty()) {
-                    emit std::invoke(f, this)(range);
-                }
-            });
-        }
-    }
-    ~SlidingWindowListModel() override = default;
-    size_t listSize() override {
-        const auto wrappedSize = mWrapped->listSize();
-        if (wrappedSize <= mOffset) {
-            return 0;
-        }
-        return glm::min(wrappedSize - mOffset, mWindowSize);
-    }
-    T listItemAt(const AListModelIndex& index) override { return mWrapped->listItemAt(index.getRow() - mOffset); }
-
-private:
-    _<IListModel<T>> mWrapped;
-    std::size_t mOffset = 0;
-    std::size_t mWindowSize = 20;
-
-    AListModelIndex wrapped2self(const AListModelIndex& wrapped) {
-        return glm::clamp(wrapped.getRow() - mOffset, std::size_t(0), mWindowSize - 1);
-    }
-
-    AListModelRange<T> wrapped2self(const AListModelRange<T>& wrapped) {
-        return this->range(wrapped2self(wrapped.getBegin()), wrapped2self(wrapped.getEnd()));
-    }
-};
-}   // namespace aui::detail
-
 /**
  * @brief Version of @ref AUI_DECLARATIVE_FOR_BASE with lazy layout semantics.
  * @ingroup useful_views
@@ -71,33 +33,19 @@ private:
  * size and available data (in case of AUI_DECLARATIVE_FOR) to predict actual content size, to make scroll bars
  * as smooth as possible.
  */
-template <typename T, typename Layout>
-class API_AUI_VIEWS AForEachUILazy final : public AForEachUIBase<T, Layout> {
+class API_AUI_VIEWS AForEachUILazy : public AForEachUIBase {
 public:
-    using super = AForEachUIBase<T, Layout>;
-    using List = super::List;
+    using super = AForEachUIBase;
+    AForEachUILazy() = default;
     ~AForEachUILazy() override = default;
 
-    explicit AForEachUILazy(List list) : super(nullptr) {
-        setModel(std::move(list));
-    }
-
-    void setModel(List list) {
-        super::setModel(nullptr);
-        mSlidingWindow = _new<aui::detail::SlidingWindowListModel<T>>(std::move(list));
-        super::setModel(mSlidingWindow);
-    }
+    void onViewGraphSubtreeChanged() override { super::onViewGraphSubtreeChanged(); }
 
 protected:
-    void onViewGraphSubtreeChanged() override {
-        super::onViewGraphSubtreeChanged();
-    }
-
-private:
-    _<aui::detail::SlidingWindowListModel<T>> mSlidingWindow;
+    void setModelImpl(_<IListModel<_<AView>>> model) override;
 };
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                                    \
-    _new<AForEachUILazy<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - \
-        [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value, size_t index) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                                                \
+    _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout, AForEachUILazy>>(model) - \
+        [__VA_ARGS__](const std::decay_t<decltype(model)>::stored_t::stored_t& value) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
