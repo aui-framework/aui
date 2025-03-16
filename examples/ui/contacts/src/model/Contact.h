@@ -16,5 +16,7 @@ struct Contact {
     AProperty<AString> displayName;
     AProperty<AString> phone;
     AProperty<AString> address;
+    AProperty<AString> email;
     AProperty<AString> homepage;
+    AProperty<AString> note;
 };

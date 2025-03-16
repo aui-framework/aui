@@ -14,6 +14,7 @@
 #include "common.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/ATextArea.h>
 
 using namespace ass;
 using namespace declarative;
@@ -70,11 +71,16 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                   presentation(mContact->displayName) with_style { FontSize { 12_pt } },
                 },
               } with_style { Margin { 8_dp, {} } },
-              common_views::divider(),
               row("Phone", mContact->phone),
               row("Address", mContact->address),
+              row("Email", mContact->email),
               row("Homepage", mContact->homepage),
-              SpacerExpanding(),
+              Horizontal::Expanding {
+                Vertical {
+                  Label { "Note" } with_style { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
+                },
+                _new<ATextArea>() && mContact->note,
+              } with_style { MinSize{ {}, 100_dp }, },
               Horizontal {
                 SpacerExpanding(),
                 Button { mEditorMode ? "Discard" : "Delete" } let { connect(it->clicked, me::drop); },
