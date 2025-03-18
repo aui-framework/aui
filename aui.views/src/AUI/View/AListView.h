@@ -72,7 +72,8 @@ public:
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
     [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
-        return AListModelSelection<AString>(mSelectionModel, mForEachUI->model());
+        return {};
+//        return AListModelSelection<AString>(mSelectionModel, mForEachUI->model());
     }
 
 signals:
@@ -83,8 +84,8 @@ signals:
 
 
 private:
-    using ForEachUI = AForEachUI<AString, AVerticalLayout>;
-    _<ForEachUI> mForEachUI;
+//    using ForEachUI = AForEachUI<AString, AVerticalLayout>;
+//    _<ForEachUI> mForEachUI;
 
     ASet<AListModelIndex> mSelectionModel;
     bool mAllowMultipleSelection = false;

@@ -58,22 +58,24 @@ AListView::~AListView() {}
 
 AListView::AListView(_<IListModel<AString>> model) {
     horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
-    AScrollArea::setContents(mForEachUI = AUI_DECLARATIVE_FOR(i, std::move(model), AVerticalLayout) {
-        return _new<AListItem>(i);
-    });
+//    AScrollArea::setContents(mForEachUI = AUI_DECLARATIVE_FOR(i, std::move(model), AVerticalLayout) {
+//        return _new<AListItem>(i);
+//    });
 }
 
 void AListView::setModel(_<IListModel<AString>> model) {
+    /*
     if (auto prevModel = mForEachUI->model()) {
         prevModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
     }
     if (model) {
         connect(model->dataRemoved, [&] { mSelectionModel.clear(); });
     }
-    mForEachUI->setModel(std::move(model));
+    mForEachUI->setModel(std::move(model));*/
 }
 
 void AListView::handleMousePressed(AListItem* item) {
+    /*
     if (!(AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) || !mAllowMultipleSelection) {
         clearSelectionInternal();
     }
@@ -85,27 +87,29 @@ void AListView::handleMousePressed(AListItem* item) {
     } else {
         mSelectionModel << index;
         item->setSelected(true);
-    }
+    }*/
 
     emit selectionChanged(getSelectionModel());
 }
 
 void AListView::clearSelectionInternal() {
     for (auto& s : mSelectionModel) {
-        _cast<AListItem>(mForEachUI->getViews()[s.getRow()])->setSelected(false);
+//        _cast<AListItem>(mForEachUI->getViews()[s.getRow()])->setSelected(false);
     }
 
     mSelectionModel.clear();
 }
 
-void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClicked(mForEachUI->getViews().indexOf(aui::ptr::fake(item)).valueOr(0)); }
+void AListView::handleMouseDoubleClicked(AListItem* item) {
+//    emit itemDoubleClicked(mForEachUI->getViews().indexOf(aui::ptr::fake(item)).valueOr(0));
+}
 
 void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
     switch (action) {
         case SelectAction::CLEAR_SELECTION_AND_SET:
             clearSelectionInternal();
             mSelectionModel = {AListModelIndex(i)};
-            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
+//            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
             break;
         case SelectAction::SET:
             if (mAllowMultipleSelection) {
@@ -114,11 +118,11 @@ void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) 
                 clearSelectionInternal();
                 mSelectionModel = {AListModelIndex(i)};
             }
-            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
+//            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(true);
             break;
         case SelectAction::UNSET:
             mSelectionModel.erase(i);
-            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(false);
+//            _cast<AListItem>(mForEachUI->getViews()[i])->setSelected(false);
             break;
         case SelectAction::TOGGLE:
             if (mSelectionModel.contains(i)) {

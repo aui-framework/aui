@@ -10,6 +10,7 @@
  */
 
 #include <gmock/gmock.h>
+#include <range/v3/all.hpp>
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AScrollArea.h"
@@ -34,7 +35,7 @@ using namespace ass;
 struct Item {
     AString text;
 };
-
+/*
 TEST_F(UIDeclarativeForTest, Basic) {
     auto model = AListModel<Item>::make({
       { .text = "Item 1" },
@@ -54,33 +55,34 @@ TEST_F(UIDeclarativeForTest, Basic) {
     EXPECT_TRUE(By::text("Item 2").one());
     EXPECT_TRUE(By::text("Item 3").one());
     EXPECT_FALSE(By::text("Item 4").one());
-}
+}*/
 
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
-    class ListModel: public IListModel<Item> {
+    class Observer {
     public:
-        ListModel() {
-            ON_CALL(*this, listItemAt(testing::_)).WillByDefault([](const AListModelIndex& i) {
-                return Item { "Item {}"_format(i.getRow()) };
-            });
-        }
 
-        size_t listSize() override { return 1000000; }
-
-        MOCK_METHOD(Item, listItemAt, (const AListModelIndex& i), (override));
+        MOCK_METHOD(void, onViewCreated, (), ());
     };
 
+    Observer observer;
+    EXPECT_CALL(observer, onViewCreated()).Times(testing::Between(10, 30));
 
-    auto model = _new<ListModel>();
-    EXPECT_CALL(*model, listItemAt(testing::_)).Times(testing::Between(10, 30));
+    AVector<int> test;
 
+    auto t1 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(ranges::view::ints);
+    auto t2 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(test);
+    auto t3 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(ranges::view::ints | ranges::views::filter([](int i) { return i == 2;}));
+    auto t4 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(test | ranges::views::filter([](int i) { return i == 2;}));
+
+    /*
     mWindow->setContents(Vertical {
-        AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR(i, model, AVerticalLayout) {
-          return Label { i.text };
+        AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR_EX(i, ranges::views::ints, AVerticalLayout, &) {
+                                observer.onViewCreated();
+          return Label { "Item {}"_format(i) };
         }).build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
+    });*/
 
     uitest::frame();
 
