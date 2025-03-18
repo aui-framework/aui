@@ -588,6 +588,22 @@ public:
         return super::back();
     }
 
+    AOptional<char16_t> firstOpt() const noexcept
+    {
+        if (empty()) {
+            return std::nullopt;
+        }
+        return super::front();
+    }
+
+    AOptional<char16_t> lastOpt() const noexcept
+    {
+        if (empty()) {
+            return std::nullopt;
+        }
+        return super::back();
+    }
+
     const char16_t* c_str() const
     {
         return super::c_str();

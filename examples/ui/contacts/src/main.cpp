@@ -45,6 +45,16 @@ public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
         connect(mContacts->dataInserted, slot(mContactCount)::invalidate);
         connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
+        /*
+        procedural way:
+        for (const auto& g : mContacts->toVector() | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs){
+                                 return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
+                             })) {
+            fmt::print("{}\n", AString(1, g.front()->displayName->firstOpt().valueOr(' ')));
+            for (const auto& contact : g) {
+                fmt::print("  {}\n", contact->displayName);
+            }
+        }*/
         setContents(
             Horizontal {
               AScrollArea::Builder()
