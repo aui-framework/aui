@@ -63,9 +63,7 @@ TEST(Iterators, Reverse) {
 
 TEST(Iterators, DynRange) {
     aui::dyn_range<int> ints = ranges::views::ints | ranges::views::take(10);
-
-
-    EXPECT_EQ(ints.size(), 10);
+    EXPECT_EQ(ints | ranges::to_vector, std::vector({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
 }
 
 

@@ -49,10 +49,10 @@ protected:
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {
     EXPECT_TRUE(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
     mWindow->setContents(Centered {
-      _new<AView>() with_style {
+      _new<AView>() << ".test" with_style {
         BackgroundSolid { AColor::RED },
         FixedSize { 32_dp },
-      } << ".test",
+      },
     });
     By::name(".test").check(averageColor(AColor::RED));
 }

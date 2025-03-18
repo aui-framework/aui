@@ -278,7 +278,7 @@ public:
 
 
     template <typename Functor>
-    inline _<T>& operator^(Functor&& functor) {
+    const _<T>& operator^(Functor&& functor) const {
         functor(*this);
         return *this;
     }
