@@ -13,10 +13,12 @@
 // Created by alex2 on 31.08.2020.
 //
 
+#include <range/v3/all.hpp>
 #include <gtest/gtest.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Traits/iterators.h>
 #include <array>
+#include "AUI/Traits/dyn_range.h"
 
 TEST(Iterators, Zip) {
     std::array<int, 3> ints = { 1, 2, 3 };
@@ -58,4 +60,12 @@ TEST(Iterators, Reverse) {
     AVector<int>::iterator iterator = aui::reverse_iterator_direction(ints.rbegin());
     EXPECT_EQ(*iterator, 4);
 }
+
+TEST(Iterators, DynRange) {
+    aui::dyn_range<int> ints = ranges::views::ints | ranges::views::take(10);
+
+
+    EXPECT_EQ(ints.size(), 10);
+}
+
 
