@@ -66,7 +66,13 @@ public:
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             common_views::divider(),
-                            AUI_DECLARATIVE_FOR(i, mContacts, AVerticalLayout) {
+                            AUI_DECLARATIVE_FOR(group, mContacts
+                                | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+                                    return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
+                                }), AVerticalLayout) {
+                                return Vertical {
+                                    Label { group },
+                                };
                                 return contactPreview(i) let {
                                     connect(it->clicked, [this, i] { mSelectedContact = i; });
                                 };

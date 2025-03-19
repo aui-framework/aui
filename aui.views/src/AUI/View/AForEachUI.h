@@ -92,5 +92,5 @@ auto makeForEach(Rng&& rng) {
 }
 }
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const std::decay_t<decltype(*ranges::begin(model))>& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
