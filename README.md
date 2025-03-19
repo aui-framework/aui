@@ -220,6 +220,9 @@ with contributions from many other people.
 
 Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
 
+The project evolves fast and inconsistently, possibly breaking backward compatibility. The APIs likely to be
+changed/removed are marked in docs as experimental. Consult with our migration guides on release pages.
+
 # Contributing
 
 You are welcome to open issues and pull requests on our GitHub repository. This project is maintained by a team of
