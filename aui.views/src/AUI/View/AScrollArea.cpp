@@ -21,6 +21,7 @@
 #include "AUI/View/AViewContainer.h"
 #include "glm/fwd.hpp"
 #include <AUI/Layout/AAdvancedGridLayout.h>
+#include <AUI/Platform/AWindow.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>

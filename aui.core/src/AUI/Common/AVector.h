@@ -48,7 +48,7 @@ public:
     template<typename Iterator>
     explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
 
-    explicit AVector(std::vector<StoredType, Allocator>&& rhs) noexcept: super(std::move(rhs)) {}
+    AVector(std::vector<StoredType, Allocator>&& rhs) noexcept: super(std::move(rhs)) {}
 
 
     /**

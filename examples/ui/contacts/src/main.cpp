@@ -10,6 +10,7 @@
  */
 
 #include <range/v3/all.hpp>
+#include <AUI/View/AForEachUI.h>
 #include <AUI/Platform/Entry.h>
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/UIBuildingHelpers.h"
@@ -18,6 +19,7 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AText.h>
 #include "model/PredefinedContacts.h"
+
 #include <view/ContactDetailsView.h>
 #include <view/common.h>
 #include <AUI/View/ASpacerFixed.h>
@@ -43,8 +45,8 @@ static _<AView> contactDetails(const _<Contact>& contact) {
 class ContactsWindow : public AWindow {
 public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
-        connect(mContacts->dataInserted, slot(mContactCount)::invalidate);
-        connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
+        // connect(mContacts->dataInserted, slot(mContactCount)::invalidate);
+        // connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
         /*
         procedural way:
         for (const auto& g : mContacts->toVector() | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs){
@@ -84,12 +86,12 @@ public:
     }
 
 private:
-    _<AListModel<_<Contact>>> mContacts = AListModel<_<Contact>>::fromVector(
+    AVector<_<Contact>> mContacts =
         predefined::PERSONS | ranges::views::transform([](Contact& p) { return _new<Contact>(std::move(p)); }) |
         ranges::to_vector |
-        ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; }));
+        ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
-    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts->listSize(); };
+    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts.size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
 };
 

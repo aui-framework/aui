@@ -17,7 +17,6 @@
 #include <AUI/Layout/AVerticalLayout.h>
 
 #include "AScrollArea.h"
-#include "AForEachUI.h"
 
 class AListItem;
 
@@ -71,10 +70,7 @@ public:
 
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
-    [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
-        return {};
-//        return AListModelSelection<AString>(mSelectionModel, mForEachUI->model());
-    }
+    [[nodiscard]] AListModelSelection<AString> getSelectionModel() const;
 
 signals:
     emits<AListModelSelection<AString>> selectionChanged;
@@ -84,8 +80,8 @@ signals:
 
 
 private:
-//    using ForEachUI = AForEachUI<AString, AVerticalLayout>;
-//    _<ForEachUI> mForEachUI;
+    // using ForEachUI = AForEachUI<AString, AVerticalLayout>;
+    // _<ForEachUI> mForEachUI;
 
     ASet<AListModelIndex> mSelectionModel;
     bool mAllowMultipleSelection = false;

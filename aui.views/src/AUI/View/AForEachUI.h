@@ -11,69 +11,86 @@
 
 #pragma once
 
+#include <range/v3/view/transform.hpp>
+
 #include "AViewContainer.h"
 #include <AUI/Model/IListModel.h>
 #include <functional>
 #include <AUI/Model/AListModelAdapter.h>
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Traits/dyn_range.h>
 
-class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
+class API_AUI_VIEWS AForEachUIBase: public AViewContainerBase {
 public:
+    using List = aui::dyn_range<_<AView>>;
     AForEachUIBase() {}
 
 protected:
-    void applyGeometryToChildren() override { AViewContainerBase::applyGeometryToChildren(); }
+    void applyGeometryToChildren() override {
+        AViewContainerBase::applyGeometryToChildren();
+    }
 
-    void setModelImpl(_<IListModel<_<AView>>> model);
+    void setModelImpl(List model);
 
 private:
-    _<IListModel<_<AView>>> mViewsModel;
+    List mViewsModel;
+};
+
+template<typename T, typename Layout, typename super = AForEachUIBase>
+class AForEachUI: public super {
+public:
+    using List = aui::dyn_range<_<AView>>;
+    using Factory = std::function<_<AView>(const T& value)>;
+
+    AForEachUI() {
+        this->setLayout(std::make_unique<Layout>());
+    }
+
+    template<ranges::range Rng>
+    AForEachUI(Rng&& rng) {
+        this->setLayout(std::make_unique<Layout>());
+        this->setModel(std::forward<Rng>(rng));
+    }
+
+    template<ranges::range Rng>
+    requires requires (Rng&& rng) { { *ranges::begin(rng) } -> aui::convertible_to<T>; }
+    void setModel(Rng && rng) {
+        mDataModel = rng | ranges::views::transform([this](const T& t) { return mFactory(t); });
+        updateUnderlyingModel();
+    }
+
+    void operator-(Factory f) {
+        mFactory = std::move(f);
+        updateUnderlyingModel();
+    }
+
+    [[nodiscard]]
+    const List& model() const noexcept {
+        return mDataModel;
+    }
+
+private:
+    List mDataModel;
+    Factory mFactory;
+
+    void updateUnderlyingModel() {
+        if (!mFactory) {
+            return;
+        }
+
+        this->setModelImpl(mDataModel);
+    }
+
 };
 
 namespace aui::detail {
-template <typename super, aui::derived_from<ALayout> Layout>
-struct ForEachUI {
-    template <typename Model>
-    class Impl : public super {
-    public:
-        using T = std::decay_t<decltype(*std::begin(std::declval<Model>()))>;
-        using Factory = std::function<_<AView>(const T& t)>;
+template<typename Base /* AForEachUIBase */, typename Layout, ranges::range Rng>
+auto makeForEach(Rng&& rng) {
+    using T = std::decay_t<decltype(*ranges::begin(rng))>;
+    return _new<AForEachUI<T, Layout, Base>>(std::forward<Rng>(rng));
+}
+}
 
-        Impl(Model&& list) : mDataModel(list) { this->setLayout(std::make_unique<Layout>()); }
-
-        void operator-(Factory f) {
-            mFactory = std::move(f);
-            updateUnderlyingModel();
-        }
-
-        [[nodiscard]]
-        const Model& model() const noexcept {
-            return mDataModel;
-        }
-
-    private:
-        Model mDataModel;
-        Factory mFactory;
-
-        void updateUnderlyingModel() {
-            if (!mFactory) {
-                return;
-            }
-
-            //        this->setModelImpl(AModels::adapt<_<AView>>(mDataModel, [this](const T& t) { return mFactory(t);
-            //        }));
-        }
-    };
-
-    template <typename Model>
-    static _<Impl<Model>> make(Model&& model) {
-        return _new<Impl<Model>>(std::forward<Model>(model));
-    }
-};
-}   // namespace aui::detail
-
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)             \
-    aui::ptr::manage(new aui::detail::ForEachUI<AForEachUIBase, layout>::make(model)) - \
-        [__VA_ARGS__](const std::decay_t<decltype(model)>::value_type& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const std::decay_t<decltype(*ranges::begin(model))>& value) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
