@@ -70,11 +70,11 @@ TEST_F(UILayoutTest, SmallCorner1) {
         } with_style {
             MinSize(0)
         }
-    }
+    } << "Box"
     with_style {
         FixedSize(22_dp),
         BackgroundSolid(0xffffff_rgb),
-    } << "Box";
+    };
 
     inflate(Centered::Expanding { box });
 
@@ -115,8 +115,8 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     inflate(Horizontal::Expanding {
-      _new<AView>() with_style { Expanding {}, MinSize { 200_dp, {} } } << ".expanding_minsize",
-      _new<AView>() with_style { Expanding {} } << ".expanding",
+      _new<AView>() << ".expanding_minsize" with_style { Expanding {}, MinSize { 200_dp, {} } },
+      _new<AView>() << ".expanding" with_style { Expanding {} },
     } with_style { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
@@ -125,8 +125,8 @@ TEST_F(UILayoutTest, ExpandingWithMinSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     inflate(Horizontal::Expanding {
-      _new<AView>() with_style { Expanding {} } << ".expanding",
-      _new<AView>() with_style { Expanding {}, MinSize { 200_dp, {} } } << ".expanding_minsize",
+      _new<AView>() << ".expanding" with_style { Expanding {} },
+      _new<AView>() << ".expanding_minsize" with_style { Expanding {}, MinSize { 200_dp, {} } },
     } with_style { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
@@ -135,8 +135,8 @@ TEST_F(UILayoutTest, ExpandingWithMinSize2) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
     inflate(Horizontal::Expanding {
-        _new<AView>() with_style { Expanding {}, MaxSize { 100_dp, {} } } << ".expanding_maxsize",
-        _new<AView>() with_style { Expanding {} } << ".expanding",
+        _new<AView>() << ".expanding_maxsize" with_style { Expanding {}, MaxSize { 100_dp, {} } },
+        _new<AView>() << ".expanding" with_style { Expanding {} },
     } with_style { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
@@ -145,8 +145,8 @@ TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize2) {
     inflate(Horizontal::Expanding {
-        _new<AView>() with_style { Expanding {} } << ".expanding",
-        _new<AView>() with_style { Expanding {}, MaxSize { 100_dp, {} } } << ".expanding_maxsize",
+        _new<AView>() << ".expanding" with_style { Expanding {} },
+        _new<AView>() << ".expanding_maxsize" with_style { Expanding {}, MaxSize { 100_dp, {} } },
     } with_style { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
