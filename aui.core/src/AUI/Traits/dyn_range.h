@@ -20,7 +20,29 @@ namespace aui {
 /**
  * @brief RTTI-wrapped range.
  * @ingroup core
+ * @tparam T element type
  * @details
+ * @experimental
+ * `aui::dyn_range` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
+ * interfaces. It allows for the creation of runtime-checked, polymorphic ranges with input iterators.
+ *
+ * The general idea is to preserve lazy nature of C++20 ranges/range-v3 and flexibility between compilation modules.
+ *
+ * Keep in mind that type erasure can lead to performance overhead due to dynamic dispatch.
+ *
+ * `aui::dyn_range` initialized with an lvalue reference will contain a reference to the container; thus the container
+ * can be modified.
+ *
+ * @snippet aui.core/tests/IteratorsTest.cpp DynRange4
+ *
+ * `aui::dyn_range` initialized with an rvalue reference will move the container into itself; thus it acquires
+ * ownership.
+ *
+ * @snippet aui.core/tests/IteratorsTest.cpp DynRange5
+ *
+ * Using `aui::dyn_range::iterator` acquired before modification of the referenced container may lead to undefined
+ * behaviour; it all depends on the referenced container.
+ *
  * `aui::dyn_range` follows the same principle as `std::function` for functors.
  */
 template<typename T>
@@ -30,8 +52,8 @@ struct dyn_range {
         using iterator_category = std::input_iterator_tag;
         using difference_type = std::ptrdiff_t;
 
-        template<typename Iterator>
-        iterator(Iterator&& it): mImpl(rttify(std::forward<Iterator>(it))) {
+        template<ranges::input_range Rng, typename Iterator>
+        iterator(Rng&& rng, Iterator&& it): mImpl(rttify(std::forward<Rng>(rng), std::forward<Iterator>(it))) {
 
         }
         iterator(iterator&& rhs) noexcept = default;
@@ -39,6 +61,9 @@ struct dyn_range {
 
         iterator() = default;
 
+        iterator(iterator& rhs) {
+            operator=(rhs);
+        }
         iterator(const iterator& rhs) {
             operator=(rhs);
         }
@@ -46,7 +71,9 @@ struct dyn_range {
             if (this == &rhs) {
                 return *this;
             }
-            mImpl = rhs.mImpl->clone();
+            if (rhs.mImpl) {
+                mImpl = rhs.mImpl->clone();
+            }
             return *this;
         }
 
@@ -54,7 +81,7 @@ struct dyn_range {
             mImpl->next();
             return *this;
         }
-        iterator& operator++(int) {
+        iterator& operator++(int) { // not accurate
             mImpl->next();
             return *this;
         }
@@ -81,36 +108,44 @@ struct dyn_range {
         };
         std::unique_ptr<iface> mImpl;
 
-    template<typename Iterator>
-    std::unique_ptr<iface> rttify(Iterator&& it) {
+    template<ranges::input_range Rng, typename Iterator>
+    std::unique_ptr<iface> rttify(Rng&& rng, Iterator&& it) {
         struct rttified: iface {
-            rttified(std::decay_t<Iterator> it): it(std::move(it)) {}
+            rttified(std::remove_reference_t<Rng>& rng, std::decay_t<Iterator> it): rng(rng), it(std::move(it)) {}
             ~rttified() = default;
 
             void next() override {
-                // ++it;
+                 ++it;
             }
 
             T value() override {
-                // return *it;
-                return {};
+                if constexpr (std::is_copy_constructible_v<T>) {
+                    return *it;
+                }
+                throw AException("can't make a copy");
             }
 
             std::unique_ptr<iface> clone() override {
-                return std::make_unique<rttified>(it);
+                return std::make_unique<rttified>(rng, it);
             }
 
             bool isEquals(iface* rhs) override {
+                if (rhs == nullptr) {
+                    // end sentinel; ask rng for end by ourselves
+                    return it == ranges::end(rng);
+                }
                 if (auto t = dynamic_cast<rttified*>(rhs)) {
-                    // return it == t->it;
+                     return it == t->it;
                 }
                 return false;
             }
 
         private:
             std::decay_t<Iterator> it;
+            std::remove_reference_t<Rng>& rng;
         };
-        return std::make_unique<rttified>(it);
+
+        return std::make_unique<rttified>(rng, it);
     }
     };
 
@@ -158,20 +193,28 @@ private:
     std::unique_ptr<iface> rttify(Rng&& rng) {
         struct rttified: iface {
         public:
-            rttified(Rng f): rng(std::move(f)) {}
+            rttified(Rng f): rng(std::forward<Rng>(f)) {}
             ~rttified() = default;
 
             iterator begin() override {
-                return ranges::begin(rng);
+                return { rng, ranges::begin(rng) };
 
             }
 
             iterator end() override {
-                return ranges::end(rng);
+                if constexpr (std::is_same_v<decltype(ranges::begin(rng)), decltype(ranges::end(rng))>) {
+                    return { rng, ranges::end(rng) };
+                } else {
+                    // sentinel?
+                    return {};
+                }
             }
 
             std::unique_ptr<iface> clone() override {
-                return std::make_unique<rttified>(rng);
+                if constexpr (std::is_copy_constructible_v<T>) {
+                    return std::make_unique<rttified>(rng);
+                }
+                throw AException("can't make a copy of this range");
             }
 
         private:
