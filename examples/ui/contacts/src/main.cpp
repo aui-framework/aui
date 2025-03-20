@@ -65,16 +65,20 @@ public:
                             _new<ATextField>(),
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
-                            common_views::divider(),
                             AUI_DECLARATIVE_FOR(group, mContacts
                                 | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                     return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
                                 }), AVerticalLayout) {
+                                auto firstContact = *ranges::begin(group);
+                                auto firstLetter = firstContact->displayName->firstOpt().valueOr(' ');
                                 return Vertical {
-                                    Label { group },
-                                };
-                                return contactPreview(i) let {
-                                    connect(it->clicked, [this, i] { mSelectedContact = i; });
+                                    Label { firstLetter } with_style { Opacity(0.5f), Padding { 12_dp, 0, 4_dp }, Margin { 0 }, FontSize { 8_pt } },
+                                    common_views::divider(),
+                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                                      return contactPreview(i) let {
+                                        connect(it->clicked, [this, i] { mSelectedContact = i; });
+                                      };
+                                    },
                                 };
                             },
                             Label {} & mContactCount.readProjected([](std::size_t c) {
