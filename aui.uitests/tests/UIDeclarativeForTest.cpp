@@ -11,6 +11,7 @@
 
 #include <gmock/gmock.h>
 #include <range/v3/all.hpp>
+#include <AUI/View/AForEachUI.h>
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AScrollArea.h"
@@ -69,20 +70,15 @@ TEST_F(UIDeclarativeForTest, Performance) {
     Observer observer;
     EXPECT_CALL(observer, onViewCreated()).Times(testing::Between(10, 30));
 
-    AVector<int> test;
-
-    auto t1 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(ranges::view::ints);
-    auto t2 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(test);
-    auto t3 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(ranges::view::ints | ranges::views::filter([](int i) { return i == 2;}));
-    auto t4 = aui::detail::ForEachUI<AForEachUIBase, AVerticalLayout>::make(test | ranges::views::filter([](int i) { return i == 2;}));
-
-    /*
     mWindow->setContents(Vertical {
-        AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR_EX(i, ranges::views::ints, AVerticalLayout, &) {
-                                observer.onViewCreated();
-          return Label { "Item {}"_format(i) };
-        }).build() with_style { FixedSize { 150_dp, 200_dp } },
-    });*/
+      AScrollArea::Builder()
+              .withContents(
+              AUI_DECLARATIVE_FOR_EX(i, ranges::views::ints, AVerticalLayout, &) {
+                  observer.onViewCreated();
+                  return Label { "Item {}"_format(i) };
+              })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
 
     uitest::frame();
 
