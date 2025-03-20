@@ -35,12 +35,17 @@ protected:
 private:
     _<AScrollAreaViewport> mViewport;
     List mViewsModel;
+    AOptional<glm::ivec2> mLastInflatedScroll{};
 
     struct Cache {
         aui::range<List::iterator> inflatedRange;
     };
 
     AOptional<Cache> mCache;
+
+    void inflateForward();
+    void inflateBackward();
+    glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
 };
 
 template<typename T, typename Layout, typename super = AForEachUIBase>

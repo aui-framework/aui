@@ -11,6 +11,8 @@
 
 #include "AForEachUI.h"
 
+static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
+
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     removeAllViews();
     mCache.reset();
@@ -33,24 +35,72 @@ void AForEachUIBase::applyGeometryToChildren() {
         return;
     }
 
+    if (!mLastInflatedScroll) {
+        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    }
+
     if (!mCache) {
         mCache = Cache {
             .inflatedRange = { mViewsModel.begin(), mViewsModel.begin() },
         };
+        inflateForward();
+        return;
     }
-    const auto viewportSize = mViewport->getSize();
-    const auto end = mViewsModel.end();
-    bool needsMinSizeUpdate = false;
-    for (auto it = mCache->inflatedRange.end(); it != end; ++it) {
-        if (!mViews.empty()) {
-            const auto& lastView = mViews.last();
-            if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), viewportSize))) {
-                break;
+    AViewContainerBase::applyGeometryToChildren();
+}
+
+void AForEachUIBase::onViewGraphSubtreeChanged() {
+    AViewContainerBase::onViewGraphSubtreeChanged();
+    AUI_NULLSAFE(mViewport)->scroll().changed.clearAllOutgoingConnectionsWith(this);
+    auto viewport = [&]() -> _<AScrollAreaViewport> {
+        for (auto p = getParent(); p != nullptr; p = p->getParent()) {
+            if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
+                return viewport;
             }
         }
-        addView(*it);
-        needsMinSizeUpdate = true;
-        AViewContainerBase::applyGeometryToChildren();
+        return nullptr;
+    }();
+    if (!viewport) {
+        mViewport = nullptr;
+        return;
+    }
+    connect(viewport->scroll().changed, [this](glm::uvec2 scroll) {
+        const auto diffVec = glm::ivec2(scroll) - mLastInflatedScroll.valueOr(glm::ivec2{0});
+        const auto diff = diffVec.x + diffVec.y;
+        if (glm::abs(diff) < RENDER_TO_TEXTURE_TILE_SIZE) {
+            return;
+        }
+        if (diff > 0) {
+            inflateForward();
+        } else {
+            inflateBackward();
+        }
+        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface() + glm::ivec2(scroll);
+    });
+    mLastInflatedScroll.reset();
+    mViewport = std::move(viewport);
+}
+
+void AForEachUIBase::inflateForward() {
+    const auto inflateRegion = glm::max(mViewport->getSize(), glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE));
+    const auto end = mViewsModel.end();
+    bool needsMinSizeUpdate = false;
+    {
+        auto it = mCache->inflatedRange.end();
+        for (; it != end; ++it) {
+            if (!mViews.empty()) {
+                const auto& lastView = mViews.last();
+                if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), inflateRegion))) {
+                    break;
+                }
+            }
+            addView(*it);
+            needsMinSizeUpdate = true;
+            AViewContainerBase::applyGeometryToChildren();
+        }
+        if (needsMinSizeUpdate) {
+            mCache->inflatedRange = { mCache->inflatedRange.begin(), it };
+        }
     }
 
     if (needsMinSizeUpdate) {
@@ -60,14 +110,18 @@ void AForEachUIBase::applyGeometryToChildren() {
     }
 }
 
-void AForEachUIBase::onViewGraphSubtreeChanged() {
-    AViewContainerBase::onViewGraphSubtreeChanged();
-    mViewport = [&]() -> _<AScrollAreaViewport> {
-        for (auto p = getParent(); p != nullptr; p = p->getParent()) {
-            if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
-                return viewport;
-            }
+void AForEachUIBase::inflateBackward() {}
+
+glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
+    AUI_ASSERT(mViewport != nullptr);
+
+    glm::ivec2 accumulator{};
+    for (AView* p = this; p != nullptr; p = p->getParent()) {
+        if (mViewport.get() == p) {
+            return accumulator;
         }
-        return nullptr;
-    }();
+        accumulator += p->getPosition();
+    }
+    AUI_ASSERT_NO_CONDITION("divergent mViewport");
+    return {};
 }

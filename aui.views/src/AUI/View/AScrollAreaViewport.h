@@ -64,8 +64,13 @@ public:
     }
 
     [[nodiscard]]
-    glm::uvec2 scroll() const noexcept {
-        return mScroll;
+    auto scroll() const noexcept {
+        return APropertyDef {
+            this,
+            &AScrollAreaViewport::mScroll,
+            &AScrollAreaViewport::setScroll,
+            mScrollChanged,
+        };
     }
 
 private:
@@ -74,6 +79,7 @@ private:
     _<AView> mContents;
 
     glm::uvec2 mScroll = {0, 0};
+    emits<glm::uvec2> mScrollChanged;
 
     void updateContentsScroll();
 };
