@@ -13,6 +13,7 @@
 
 #include <range/v3/view/transform.hpp>
 
+#include "AScrollAreaViewport.h"
 #include "AViewContainer.h"
 #include <AUI/Model/IListModel.h>
 #include <functional>
@@ -27,14 +28,19 @@ public:
     AForEachUIBase() {}
 
 protected:
-    void applyGeometryToChildren() override {
-        AViewContainerBase::applyGeometryToChildren();
-    }
-
+    void onViewGraphSubtreeChanged() override;
+    void applyGeometryToChildren() override;
     void setModelImpl(List model);
 
 private:
+    _<AScrollAreaViewport> mViewport;
     List mViewsModel;
+
+    struct Cache {
+        aui::range<List::iterator> inflatedRange;
+    };
+
+    AOptional<Cache> mCache;
 };
 
 template<typename T, typename Layout, typename super = AForEachUIBase>
@@ -92,7 +98,5 @@ auto makeForEach(Rng&& rng) {
 }
 }
 
-#ifndef __clang__
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
-#endif

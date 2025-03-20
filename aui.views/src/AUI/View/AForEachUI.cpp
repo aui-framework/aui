@@ -13,9 +13,61 @@
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     removeAllViews();
+    mCache.reset();
     mViewsModel = std::move(model);
+    markMinContentSizeInvalid();
+}
 
-    for (auto v : mViewsModel) {
-        addView(std::move(v));
+void AForEachUIBase::applyGeometryToChildren() {
+    if (!mViewport) {
+        if (!mCache) {
+            mCache = Cache {
+                .inflatedRange = { mViewsModel.begin(), mViewsModel.end() },
+            };
+            removeAllViews();
+            for (auto v : mCache->inflatedRange) {
+                addView(std::move(v));
+            }
+        }
+        AViewContainerBase::applyGeometryToChildren();
+        return;
     }
+
+    if (!mCache) {
+        mCache = Cache {
+            .inflatedRange = { mViewsModel.begin(), mViewsModel.begin() },
+        };
+    }
+    const auto viewportSize = mViewport->getSize();
+    const auto end = mViewsModel.end();
+    bool needsMinSizeUpdate = false;
+    for (auto it = mCache->inflatedRange.end(); it != end; ++it) {
+        if (!mViews.empty()) {
+            const auto& lastView = mViews.last();
+            if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), viewportSize))) {
+                break;
+            }
+        }
+        addView(*it);
+        needsMinSizeUpdate = true;
+        AViewContainerBase::applyGeometryToChildren();
+    }
+
+    if (needsMinSizeUpdate) {
+        markMinContentSizeInvalid();
+    } else {
+        AViewContainerBase::applyGeometryToChildren();
+    }
+}
+
+void AForEachUIBase::onViewGraphSubtreeChanged() {
+    AViewContainerBase::onViewGraphSubtreeChanged();
+    mViewport = [&]() -> _<AScrollAreaViewport> {
+        for (auto p = getParent(); p != nullptr; p = p->getParent()) {
+            if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
+                return viewport;
+            }
+        }
+        return nullptr;
+    }();
 }
