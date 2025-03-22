@@ -65,6 +65,7 @@ public:
                             _new<ATextField>(),
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
+                            /*
                             AUI_DECLARATIVE_FOR(group, mContacts
                                 | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                     return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
@@ -80,6 +81,11 @@ public:
                                       };
                                     },
                                 };
+                            },*/
+                            AUI_DECLARATIVE_FOR(i, mContacts, AVerticalLayout) {
+                              return contactPreview(i) let {
+                                connect(it->clicked, [this, i] { mSelectedContact = i; });
+                              };
                             },
                             Label {} & mContactCount.readProjected([](std::size_t c) {
                                 return "{} contact(s)"_format(c);
