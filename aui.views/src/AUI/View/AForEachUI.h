@@ -28,6 +28,10 @@
  * @details
  * Used to present possibly large or infinite linear non-hiearchial sequences of data.
  *
+ * @note
+ * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUIBase follows the same set
+ * of principles; with an exception: AForEachUIBase does not provide a scrollable area on its own.
+ *
  * AForEachUIBase is created by using AUI_DECLARATIVE_FOR macro.
  *
  * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically. AUI_DECLARATIVE_FOR consists of AForEachUIBase creation,
