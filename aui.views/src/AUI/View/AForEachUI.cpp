@@ -70,19 +70,29 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         if (glm::abs(diff) < RENDER_TO_TEXTURE_TILE_SIZE) {
             return;
         }
+      mLastInflatedScroll = glm::ivec2(scroll);
         if (diff > 0) {
             inflateForward();
         } else {
             inflateBackward();
         }
-        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface() + glm::ivec2(scroll);
     });
     mLastInflatedScroll.reset();
     mViewport = std::move(viewport);
 }
 
+void AForEachUIBase::setPosition(glm::ivec2 position) {
+    AView::setPosition(position);
+    if (!mCache) {
+        return;
+    }
+    mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    inflateBackward();
+    inflateForward();
+}
+
 void AForEachUIBase::inflateForward() {
-    const auto inflateRegion = glm::max(mViewport->getSize(), glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE));
+    const auto inflateTill = mViewport->getSize() + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + glm::max(mLastInflatedScroll.valueOr(glm::ivec2(0)), glm::ivec2(0));
     const auto end = mViewsModel.end();
     bool needsMinSizeUpdate = false;
     {
@@ -90,7 +100,7 @@ void AForEachUIBase::inflateForward() {
         for (; it != end; ++it) {
             if (!mViews.empty()) {
                 const auto& lastView = mViews.last();
-                if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), inflateRegion))) {
+                if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), inflateTill))) {
                     break;
                 }
             }

@@ -26,6 +26,7 @@ class API_AUI_VIEWS AForEachUIBase: public AViewContainerBase {
 public:
     using List = aui::dyn_range<_<AView>>;
     AForEachUIBase() {}
+    void setPosition(glm::ivec2 position) override;
 
 protected:
     void onViewGraphSubtreeChanged() override;

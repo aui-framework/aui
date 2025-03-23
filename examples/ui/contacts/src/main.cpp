@@ -82,10 +82,8 @@ public:
                                     },
                                 };
                             },*/
-                            AUI_DECLARATIVE_FOR(i, mContacts, AVerticalLayout) {
-                              return contactPreview(i) let {
-                                connect(it->clicked, [this, i] { mSelectedContact = i; });
-                              };
+                            AUI_DECLARATIVE_FOR(i, ranges::views::ints | ranges::views::take(1000), AVerticalLayout) {
+                                return Label { "{}"_format(i) };
                             },
                             Label {} & mContactCount.readProjected([](std::size_t c) {
                                 return "{} contact(s)"_format(c);
