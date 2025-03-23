@@ -39,6 +39,9 @@ class UIDataBindingTest : public testing::UITest {
 // @ref signal_slot "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
 // involve external tools (like `moc`). They are written in pure C++.
 //
+// @note
+// This page is about presenting single values. For lists, see @ref AForEachUIBase.
+//
 // AUI property system is relatively complex, as it involves a lot of features in a single place:
 // 1. thread safe
 // 2. many-to-many relationships between objects
