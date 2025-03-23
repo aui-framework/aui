@@ -83,7 +83,7 @@ public:
                                 };
                             },*/
                             AUI_DECLARATIVE_FOR(i, ranges::views::ints | ranges::views::take(1000), AVerticalLayout) {
-                                return Label { "{}"_format(i) };
+                                return Label { "{}"_format(i) } with_style { Border(1_px, AColor::BLACK), Padding(16_dp, 8_dp), ATextAlign::CENTER };
                             },
                             Label {} & mContactCount.readProjected([](std::size_t c) {
                                 return "{} contact(s)"_format(c);

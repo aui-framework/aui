@@ -202,6 +202,20 @@ void AViewContainerBase::removeView(const _<AView>& view) {
     emit childrenChanged;
 }
 
+void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> views) {
+    if (views.empty()) {
+        return;
+    }
+    auto idx = std::distance(mViews.begin(), views.begin());
+    for (const auto& view: views) {
+        view->mParent = nullptr;
+        AUI_NULLSAFE(mLayout)->removeView(view, idx);
+    }
+    mViews.erase(views.begin(), views.end());
+    invalidateCaches();
+    emit childrenChanged;
+}
+
 void AViewContainerBase::removeView(AView* view) {
     if (view->mParent == this) {
         view->mParent = nullptr;

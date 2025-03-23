@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
 #include "AForEachUI.h"
 
 static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
@@ -46,7 +47,21 @@ void AForEachUIBase::applyGeometryToChildren() {
         inflateForward();
         return;
     }
-    AViewContainerBase::applyGeometryToChildren();
+
+    auto fakeBeginOffset = mFakeBeginOffset.valueOr(glm::ivec2(0));
+    auto fakeEndOffset = mFakeEndOffset.valueOr(glm::ivec2(0));
+    getLayout()->onResize(
+        mPadding.left + fakeBeginOffset.x, mPadding.top + fakeBeginOffset.y,
+        getSize().x - mPadding.horizontal() - fakeEndOffset.x, getSize().y - mPadding.vertical() - fakeEndOffset.y);
+}
+
+int AForEachUIBase::getContentMinimumWidth() {
+    return AViewContainerBase::getContentMinimumWidth() + mFakeBeginOffset.valueOr(glm::ivec2(0)).x +
+           mFakeEndOffset.valueOr(glm::ivec2(0)).x;
+}
+int AForEachUIBase::getContentMinimumHeight() {
+    return AViewContainerBase::getContentMinimumHeight() + mFakeBeginOffset.valueOr(glm::ivec2(0)).y +
+           mFakeEndOffset.valueOr(glm::ivec2(0)).y;
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
@@ -65,12 +80,12 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         return;
     }
     connect(viewport->scroll().changed, [this](glm::uvec2 scroll) {
-        const auto diffVec = glm::ivec2(scroll) - mLastInflatedScroll.valueOr(glm::ivec2{0});
+        const auto diffVec = glm::ivec2(scroll) - mLastInflatedScroll.valueOr(glm::ivec2 { 0 });
         const auto diff = diffVec.x + diffVec.y;
         if (glm::abs(diff) < RENDER_TO_TEXTURE_TILE_SIZE) {
             return;
         }
-      mLastInflatedScroll = glm::ivec2(scroll);
+        mLastInflatedScroll = glm::ivec2(scroll);
         if (diff > 0) {
             inflateForward();
         } else {
@@ -86,16 +101,39 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     if (!mCache) {
         return;
     }
-    mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    mLastInflatedScroll.reset();
     inflateBackward();
     inflateForward();
 }
 
 void AForEachUIBase::inflateForward() {
-    const auto inflateTill = mViewport->getSize() + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + glm::max(mLastInflatedScroll.valueOr(glm::ivec2(0)), glm::ivec2(0));
-    const auto end = mViewsModel.end();
     bool needsMinSizeUpdate = false;
+
+    const auto posWithinSlidingSurface = calculateOffsetWithinViewportSlidingSurface();
+    const auto lastScroll = glm::max(mLastInflatedScroll.valueOr(glm::ivec2(0)), glm::ivec2(0));
+
+    // remove old views
+    [&] {
+        const auto uninflateFrom = lastScroll - posWithinSlidingSurface - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE);
+        auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
+            return glm::all(glm::greaterThan(view->getPosition(), uninflateFrom));
+        });
+        if (firstValidView == mViews.begin()) {
+            return;
+        }
+        if (firstValidView == mViews.end()) {
+            return;
+        }
+
+        mFakeBeginOffset = (*firstValidView)->getPosition() - (*firstValidView)->getMargin().leftTop();
+        removeViews({ mViews.begin(), firstValidView });
+    }();
+
+    const auto end = mViewsModel.end();
+    // append new views
     {
+        const auto inflateTill =
+            mViewport->getSize() + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + lastScroll - posWithinSlidingSurface;
         auto it = mCache->inflatedRange.end();
         for (; it != end; ++it) {
             if (!mViews.empty()) {
@@ -106,7 +144,7 @@ void AForEachUIBase::inflateForward() {
             }
             addView(*it);
             needsMinSizeUpdate = true;
-            AViewContainerBase::applyGeometryToChildren();
+            applyGeometryToChildren();
         }
         if (needsMinSizeUpdate) {
             mCache->inflatedRange = { mCache->inflatedRange.begin(), it };
@@ -116,7 +154,7 @@ void AForEachUIBase::inflateForward() {
     if (needsMinSizeUpdate) {
         markMinContentSizeInvalid();
     } else {
-        AViewContainerBase::applyGeometryToChildren();
+        applyGeometryToChildren();
     }
 }
 
@@ -125,9 +163,9 @@ void AForEachUIBase::inflateBackward() {}
 glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
     AUI_ASSERT(mViewport != nullptr);
 
-    glm::ivec2 accumulator{};
+    glm::ivec2 accumulator {};
     for (AView* p = this; p != nullptr; p = p->getParent()) {
-        if (mViewport.get() == p) {
+        if (mViewport.get() == p->getParent()) {
             return accumulator;
         }
         accumulator += p->getPosition();

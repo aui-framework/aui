@@ -369,6 +369,11 @@ protected:
     void addView(size_t index, const _<AView>& view);
 
     /**
+     * @brief Remove views from the container.
+     */
+    void removeViews(aui::range<AVector<_<AView>>::iterator> views);
+
+    /**
      * @brief Remove view from the container.
      */
     void removeView(const _<AView>& view);
