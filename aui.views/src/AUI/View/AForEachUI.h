@@ -33,7 +33,7 @@ struct InflateOpts {
  * @brief Customizable lists display.
  * @ingroup useful_views
  * @details
- * Used to present possibly large or infinite linear non-hiearchial sequences of data.
+ * Used to lazily present possibly large or infinite linear non-hiearchial sequences of data.
  *
  * @note
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUIBase follows the same set
@@ -41,9 +41,27 @@ struct InflateOpts {
  *
  * AForEachUIBase is created by using AUI_DECLARATIVE_FOR macro.
  *
- * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically. AUI_DECLARATIVE_FOR consists of AForEachUIBase creation,
- * single entry variable name, *range* definition and a lambda that creates a new view based on data entry, passed to
- * the lambda. *range* models one-dimensional list.
+ * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
+ *
+ * @code{cpp}
+ * static std::array users = { "Foo", "Bar", "Lol" };
+ * for (const auto& user : users) {
+ *   fmt::println("{}", user);
+ * }
+ * @endcode
+ * @code{cpp}
+ * static std::array users = { "Foo", "Bar", "Lol" };
+ * ...
+ * AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
+ *   return Label { fmt::format("{}", user) };
+ * }
+ * @endcode
+ *
+ * `AUI_DECLARATIVE_FOR` consists of AForEachUIBase creation, single entry variable name, *range* definition and a
+ * lambda that creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
+ * `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer.
+ *
+ * *range* models one-dimensional list.
  *
  * AForEachUIBase works on iterator level by design. In fact, any kind of *range* (C++20 ranges/range-v3) can be used,
  * starting from bidirectional containers such as `std::vector` and `std::list`, lazy non-owning dummies like
@@ -61,12 +79,18 @@ struct InflateOpts {
  *
  * The range's type is erased with runtime-based *range* layer @ref aui::dyn_range.
  *
- * AUI_DECLARATIVE_FOR can be nested with no restrictions.
+ * `AUI_DECLARATIVE_FOR` can be nested with no restrictions. When using the same dataset in nested declarative *for
+ * loops*, a hierarchical structure can be presented. For example, we can split a sorted array of people names by first
+ * letter to produce a labelled index:
+ *
+ * @snippet examples/ui/contacts/src/main.cpp NESTED_FOR_EXAMPLE
+ *
+ * (@ref example_contacts example)
  *
  * # Lazy Semantics
  *
  * AForEachUIBase presents all data available. If placed somewhere inside @ref AScrollArea (implies
- * @ref AScrollAreaViewport), lazy semantics take place. This means that AForEachUIBase knows scroll position and a
+ * @ref AScrollAreaViewport), lazy semantics take place. This means that AForEachUIBase knows scroll position and
  * sliding window size in pixels, making it possible to present a limited set of data that is actually visible, and
  * present data further as soon as the user scrolls down the scroll area.
  *
@@ -74,15 +98,16 @@ struct InflateOpts {
  * sliding window subrange. When the user scrolls down the list, both iterators are incremented; when the user scrolls
  * upwards, both iterators are decremented.
  *
- * The amount of displayed data is governed by *range* size, render-to-texture tile size, AScrollArea's viewport size
- * and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUIBase. In particular, the sliding is performed once per render-to-texture tile is passed.
+ * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
+ * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
+ * AForEachUIBase. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
  *
  * @note
- * During rendering inside AScrollArea, the renderer clips visible views more precisely; AForEachUIBase optimizes view
- * instantiation and layout processing overhead.
+ * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of
+ * AForEachUIBase is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
+ * semantics, thanks to iterators.
  *
- * In this scenario, AForEachUIBase adds an additional requirement to range's iterator:
+ * In this scenario, AForEachUIBase adds an extra requirement to range's iterator:
  *
  * - *iterator* has decrement operator `--it`
  */
