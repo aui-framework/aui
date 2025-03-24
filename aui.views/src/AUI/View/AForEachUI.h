@@ -33,7 +33,7 @@ struct InflateOpts {
  * @brief Customizable lists display.
  * @ingroup useful_views
  * @details
- * Used to lazily present possibly large or infinite linear non-hiearchial sequences of data.
+ * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
  *
  * @note
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUIBase follows the same set

@@ -144,7 +144,8 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     // append new views
     if (opts.backward && mCache && !mCache->items.empty()) {
         const auto inflateTill = lastScroll - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) - posWithinSlidingSurface;
-        for (auto it = std::prev(mCache->items.first().iterator); ; --it) {
+        for (auto it = mCache->items.first().iterator; it != mViewsModel.begin();) {
+            --it;
             if (!mViews.empty()) {
                 const auto& firstView = mViews.first();
             }
