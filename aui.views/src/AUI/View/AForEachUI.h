@@ -22,6 +22,13 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Traits/dyn_range.h>
 
+namespace aui::detail {
+struct InflateOpts {
+    bool backward = true;
+    bool forward = true;
+};
+}   // namespace aui::detail
+
 /**
  * @brief Customizable lists display.
  * @ingroup useful_views
@@ -71,11 +78,15 @@
  * and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
  * AForEachUIBase. In particular, the sliding is performed once per render-to-texture tile is passed.
  *
- * In lazy scenario, AForEachUIBase adds an additional requirement to range's iterator:
+ * @note
+ * During rendering inside AScrollArea, the renderer clips visible views more precisely; AForEachUIBase optimizes view
+ * instantiation and layout processing overhead.
+ *
+ * In this scenario, AForEachUIBase adds an additional requirement to range's iterator:
  *
  * - *iterator* has decrement operator `--it`
  */
-class API_AUI_VIEWS AForEachUIBase: public AViewContainerBase {
+class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
     using List = aui::dyn_range<_<AView>>;
     AForEachUIBase() {}
@@ -91,39 +102,45 @@ protected:
 private:
     _<AScrollAreaViewport> mViewport;
     List mViewsModel;
-    AOptional<glm::ivec2> mLastInflatedScroll{};
+    AOptional<glm::ivec2> mLastInflatedScroll {};
     AOptional<glm::ivec2> mFakeBeginOffset, mFakeEndOffset;
 
     struct Cache {
-        aui::range<List::iterator> inflatedRange;
+        struct LazyListItemInfo {
+            List::iterator iterator;
+            _<AView> view;
+        };
+        AVector<LazyListItemInfo> items;
     };
 
     AOptional<Cache> mCache;
 
-    void inflateForward();
-    void inflateBackward();
+    void addView(List::iterator iterator);
+    void removeViews(aui::range<AVector<_<AView>>::iterator> iterators);
+
+    void inflate(aui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
 };
 
-template<typename T, typename Layout, typename super = AForEachUIBase>
-class AForEachUI: public super {
+template <typename T, typename Layout, typename super = AForEachUIBase>
+class AForEachUI : public super {
 public:
     using List = aui::dyn_range<_<AView>>;
     using Factory = std::function<_<AView>(const T& value)>;
 
-    AForEachUI() {
-        this->setLayout(std::make_unique<Layout>());
-    }
+    AForEachUI() { this->setLayout(std::make_unique<Layout>()); }
 
-    template<ranges::range Rng>
+    template <ranges::range Rng>
     AForEachUI(Rng&& rng) {
         this->setLayout(std::make_unique<Layout>());
         this->setModel(std::forward<Rng>(rng));
     }
 
-    template<ranges::range Rng>
-    requires requires (Rng&& rng) { { *ranges::begin(rng) } -> aui::convertible_to<T>; }
-    void setModel(Rng && rng) {
+    template <ranges::range Rng>
+        requires requires(Rng&& rng) {
+            { *ranges::begin(rng) } -> aui::convertible_to<T>;
+        }
+    void setModel(Rng&& rng) {
         mDataModel = rng | ranges::views::transform([this](const T& t) { return mFactory(t); });
         updateUnderlyingModel();
     }
@@ -149,11 +166,10 @@ private:
 
         this->setModelImpl(mDataModel);
     }
-
 };
 
 namespace aui::detail {
-template<typename Base /* AForEachUIBase */, typename Layout, ranges::range Rng>
+template <typename Base /* AForEachUIBase */, typename Layout, ranges::range Rng>
 auto makeForEach(Rng&& rng) {
     using T = std::decay_t<decltype(*ranges::begin(rng))>;
     return _new<AForEachUI<T, Layout, Base>>(std::forward<Rng>(rng));
@@ -163,7 +179,8 @@ auto makeForEach(Rng&& rng) {
 /**
  * @see AForEachUIBase
  */
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) \
+    aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @see AForEachUIBase

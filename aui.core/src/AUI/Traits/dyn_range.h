@@ -81,8 +81,19 @@ struct dyn_range {
             mImpl->next();
             return *this;
         }
+
         iterator& operator++(int) { // not accurate
             mImpl->next();
+            return *this;
+        }
+
+        iterator& operator--() {
+            mImpl->prev();
+            return *this;
+        }
+
+        iterator& operator--(int) { // not accurate
+            mImpl->prev();
             return *this;
         }
 
@@ -101,6 +112,7 @@ struct dyn_range {
     private:
         struct iface {
             virtual ~iface() = default;
+            virtual void prev() = 0;
             virtual void next() = 0;
             virtual T value() = 0;
             virtual std::unique_ptr<iface> clone() = 0;
@@ -113,6 +125,10 @@ struct dyn_range {
         struct rttified: iface {
             rttified(std::remove_reference_t<Rng>& rng, std::decay_t<Iterator> it): rng(rng), it(std::move(it)) {}
             ~rttified() = default;
+
+            void prev() override {
+                --it;
+            }
 
             void next() override {
                  ++it;
