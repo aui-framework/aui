@@ -57,9 +57,9 @@ struct InflateOpts {
  * }
  * @endcode
  *
- * `AUI_DECLARATIVE_FOR` consists of AForEachUIBase creation, single entry variable name, *range* definition and a
- * lambda that creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
- * `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer.
+ * `AUI_DECLARATIVE_FOR` consists of AForEachUIBase creation, single entry variable name, *range* definition, layout
+ * name and a lambda that creates a new view based on data entry. In terms of C++ syntax, the lambda is partially
+ * defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer.
  *
  * *range* models one-dimensional list.
  *
