@@ -38,12 +38,11 @@
  * single entry variable name, *range* definition and a lambda that creates a new view based on data entry, passed to
  * the lambda. *range* models one-dimensional list.
  *
- * AForEachUIBase works on iterator level by design. Any kind of C++ 20 range/ranges-v3 *range* can be passed to
- * AForEachUIBase. In fact, any kind of *range* can be used, starting from bidirectional containers such as
- * `std::vector` and `std::list`, lazy non-owning dummies like `ranges::views::ints` and even fancy *range* views from
- * `std::ranges::views` or `ranges::views` are acceptable. One-directional containers like `std::queue` or `std::stack`
- * can't be used because they don't implement `begin()` and `end()`. As such, requirements to a *range* are dictated by
- * `ranges::range` concept.
+ * AForEachUIBase works on iterator level by design. In fact, any kind of *range* (C++20 ranges/range-v3) can be used,
+ * starting from bidirectional containers such as `std::vector` and `std::list`, lazy non-owning dummies like
+ * `ranges::views::ints` and even fancy *range* views from `std::ranges::views` or `ranges::views` are acceptable.
+ * One-directional containers like `std::queue` or `std::stack` can't be used because they don't implement `begin()` and
+ * `end()`. As such, requirements to a *range* are dictated by `ranges::range` concept.
  *
  * - *range* has `.begin()` method or `ranges::begin()` overload defined `auto it = ranges::begin(rng)`
  * - *range* has `.end()` method or `ranges::end()` overload defined `auto it = ranges::end(rng)`
@@ -51,7 +50,7 @@
  * - *iterator* has dereference operator `auto& value = *it`
  * - *iterator* has increment operator `++it`
  *
- * Alternatively, these requirements can be described by *ranged for loop*: `for (const auto& value : rng) { ... }`.
+ * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
  *
  * The range's type is erased with runtime-based *range* layer @ref aui::dyn_range.
  *
@@ -65,12 +64,12 @@
  * present data further as soon as the user scrolls down the scroll area.
  *
  * Under the hood, AForEachUIBase stores a pair of iterators of the passed *range* of presented entries, forming a
- * sliding window subrange. When the user scrolls down the list, both iterator are incremented; when the user scrolls
+ * sliding window subrange. When the user scrolls down the list, both iterators are incremented; when the user scrolls
  * upwards, both iterators are decremented.
  *
  * The amount of displayed data is governed by *range* size, render-to-texture tile size, AScrollArea's viewport size
- * and individual entry size. Optimal frequency of sliding and window size are determined by AForEachUIBase. In
- * particular, the sliding is performed once per render-to-texture tile is passed.
+ * and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
+ * AForEachUIBase. In particular, the sliding is performed once per render-to-texture tile is passed.
  *
  * In lazy scenario, AForEachUIBase adds an additional requirement to range's iterator:
  *
