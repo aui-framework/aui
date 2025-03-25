@@ -116,8 +116,6 @@ public:
     using List = aui::dyn_range<_<AView>>;
     AForEachUIBase() {}
     void setPosition(glm::ivec2 position) override;
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
 
 protected:
     void onViewGraphSubtreeChanged() override;
@@ -128,7 +126,6 @@ private:
     _<AScrollAreaViewport> mViewport;
     List mViewsModel;
     AOptional<glm::ivec2> mLastInflatedScroll {};
-    AOptional<glm::ivec2> mFakeBeginOffset, mFakeEndOffset;
 
     struct Cache {
         struct LazyListItemInfo {

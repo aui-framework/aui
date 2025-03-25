@@ -73,6 +73,35 @@ public:
         };
     }
 
+    /**
+     * @brief Compensates layout updates made in applyLayoutUpdate by scrolling by a diff of relative position of anchor.
+     * @param anchor direct or indirect child used as an anchor.
+     * @param applyLayoutUpdate layout update procedure.
+     * @details
+     * Helps preventing visual layout jittering by querying relative to AScrollAreaViewport position of anchor before
+     * and after applyLayoutUpdate. The diff of relative position is then used to scroll the viewport, maintaining
+     * consistent visual position of anchor.
+     *
+     * anchor must be direct or indirect child to this AScrollAreaViewport before and after applyLayoutUpdate.
+     *
+     * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
+     */
+    void compensateLayoutUpdatesByScroll(_<AView> anchor, aui::invocable auto&& applyLayoutUpdate) {
+        auto queryRelativePosition = [&] {
+            glm::ivec2 accumulator{};
+            for (auto v = anchor.get(); v->getParent() != this; v = v->getParent()) {
+                AUI_ASSERT(v != nullptr);
+                accumulator += v->getPosition();
+            }
+            return accumulator;
+        };
+        auto before = queryRelativePosition();
+        applyLayoutUpdate();
+        auto after = queryRelativePosition();
+        mScroll = glm::max(glm::ivec2(mScroll) + after - before, glm::ivec2(0));
+        updateContentsScroll();
+    }
+
 private:
     class Inner;
     _<Inner> mInner;
