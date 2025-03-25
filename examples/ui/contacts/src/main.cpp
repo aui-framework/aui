@@ -42,6 +42,10 @@ static _<AView> contactDetails(const _<Contact>& contact) {
     return _new<ContactDetailsView>(contact);
 }
 
+static auto groupLetter(const AString& s) {
+    return s.firstOpt().valueOr('_');
+}
+
 class ContactsWindow : public AWindow {
 public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
@@ -49,8 +53,8 @@ public:
         // connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
         /*
         procedural way:
-        for (const auto& g : mContacts->toVector() | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs){
-                                 return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
+        for (const auto& g : mContacts->toVector() | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>&
+        rhs){ return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
                              })) {
             fmt::print("{}\n", AString(1, g.front()->displayName->firstOpt().valueOr(' ')));
             for (const auto& contact : g) {
@@ -65,20 +69,24 @@ public:
                             _new<ATextField>(),
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
-                              /// [NESTED_FOR_EXAMPLE]
-                            AUI_DECLARATIVE_FOR(group, mContacts
-                                | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
-                                    return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
-                                }), AVerticalLayout) {
+                            /// [NESTED_FOR_EXAMPLE]
+                            AUI_DECLARATIVE_FOR(group, mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+                                return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
+                            }), AVerticalLayout) {
                                 auto firstContact = *ranges::begin(group);
-                                auto firstLetter = firstContact->displayName->firstOpt().valueOr(' ');
+                                auto firstLetter = groupLetter(firstContact->displayName);
                                 return Vertical {
-                                    Label { firstLetter } with_style { Opacity(0.5f), Padding { 12_dp, 0, 4_dp }, Margin { 0 }, FontSize { 8_pt } },
+                                    Label { firstLetter } with_style {
+                                          Opacity(0.5f),
+                                          Padding { 12_dp, 0, 4_dp },
+                                          Margin { 0 },
+                                          FontSize { 8_pt },
+                                    },
                                     common_views::divider(),
-                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
-                                      return contactPreview(i) let {
-                                        connect(it->clicked, [this, i] { mSelectedContact = i; });
-                                      };
+                                    AUI_DECLARATIVE_FOR(i, group | ranges::actions::sort, AVerticalLayout) {
+                                        return contactPreview(i) let {
+                                            connect(it->clicked, [this, i] { mSelectedContact = i; });
+                                        };
                                     },
                                 };
                             },
