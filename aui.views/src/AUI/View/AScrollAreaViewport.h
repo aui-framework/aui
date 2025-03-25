@@ -77,6 +77,7 @@ public:
      * @brief Compensates layout updates made in applyLayoutUpdate by scrolling by a diff of relative position of anchor.
      * @param anchor direct or indirect child used as an anchor.
      * @param applyLayoutUpdate layout update procedure.
+     * @param diffMask mask that is used to control axes of the compensation. Default is `{1, 1}`.
      * @details
      * Helps preventing visual layout jittering by querying relative to AScrollAreaViewport position of anchor before
      * and after applyLayoutUpdate. The diff of relative position is then used to scroll the viewport, maintaining
@@ -86,7 +87,7 @@ public:
      *
      * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
      */
-    void compensateLayoutUpdatesByScroll(_<AView> anchor, aui::invocable auto&& applyLayoutUpdate) {
+    void compensateLayoutUpdatesByScroll(_<AView> anchor, aui::invocable auto&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1)) {
         auto queryRelativePosition = [&] {
             glm::ivec2 accumulator{};
             for (auto v = anchor.get(); v->getParent() != this; v = v->getParent()) {
@@ -98,7 +99,9 @@ public:
         auto before = queryRelativePosition();
         applyLayoutUpdate();
         auto after = queryRelativePosition();
-        mScroll = glm::max(glm::ivec2(mScroll) + after - before, glm::ivec2(0));
+        auto diff = after - before;
+        diff *= diffMask;
+        mScroll = glm::max(glm::ivec2(mScroll) + diff, glm::ivec2(0));
         updateContentsScroll();
     }
 

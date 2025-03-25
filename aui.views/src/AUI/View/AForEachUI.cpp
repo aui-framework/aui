@@ -21,6 +21,7 @@ static constexpr auto LOG_TAG = "AForEachUIBase";
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     removeAllViews();
     mCache.reset();
+    mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
     markMinContentSizeInvalid();
 }
@@ -51,9 +52,10 @@ void AForEachUIBase::applyGeometryToChildren() {
     if (mViews.empty()) {
         return;
     }
+//    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
     mViewport->compensateLayoutUpdatesByScroll(mViews.first(), [this] {
         AViewContainerBase::applyGeometryToChildren();
-    });
+    }, axisMask());
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
@@ -80,6 +82,10 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         mLastInflatedScroll = glm::ivec2(scroll);
 
         getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff] {
+            if (getParent() == nullptr) {
+                // lost parent before queue message was processed - no need to operate.
+                return;
+            }
             inflate({ .backward = diff < 0, .forward = diff > 0 });
             mLastInflatedScroll = *mViewport->scroll();
         });
@@ -126,41 +132,43 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     auto lastScroll = glm::max(mLastInflatedScroll.valueOr(glm::ivec2(0)), glm::ivec2(0));
 
     // remove old views
-    if (opts.backward && mCache) {
-        [&] {
-            const auto uninflateFrom =
-                lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + mViewport->getSize() * 3;
-            auto firstValidView =
-                ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
-                    return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
-                }).base();
-            if (firstValidView == mViews.end()) {
-                return;
-            }
-            removeViews({ firstValidView, mViews.end() });
-        }();
-    }
-    if (opts.forward) {
-        [&] {
-            const auto uninflateFrom =
-                lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - mViewport->getSize() * 2;
-            auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
-                return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
-            });
-            if (firstValidView == mViews.begin()) {
-                return;
-            }
-            if (firstValidView == mViews.end()) {
-                return;
-            }
+    if (mViewsModelCapabilities.implementsOperatorMinusMinus) {
+        if (opts.backward && mCache) {
+            [&] {
+                const auto uninflateFrom =
+                    lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + mViewport->getSize() * 3;
+                auto firstValidView =
+                    ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
+                        return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
+                    }).base();
+                if (firstValidView == mViews.end()) {
+                    return;
+                }
+                removeViews({ firstValidView, mViews.end() });
+            }();
+        }
+        if (opts.forward) {
+            [&] {
+                const auto uninflateFrom =
+                    lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - mViewport->getSize() * 2;
+                auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
+                    return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
+                });
+                if (firstValidView == mViews.begin()) {
+                    return;
+                }
+                if (firstValidView == mViews.end()) {
+                    return;
+                }
 
-            removeViews({ mViews.begin(), firstValidView });
-        }();
+                removeViews({ mViews.begin(), firstValidView });
+            }();
+        }
     }
 
     const auto end = mViewsModel.end();
     // append new views
-    if (opts.backward && mCache && !mCache->items.empty()) {
+    if (opts.backward && mCache && !mCache->items.empty() && mViewsModelCapabilities.implementsOperatorMinusMinus) {
         auto inflateTill =
             lastScroll - glm::ivec2(INFLATE_STEP_PX) - posWithinSlidingSurface - mViews.first()->getPosition();
         for (auto it = mCache->items.first().iterator;
@@ -171,7 +179,7 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
 
             mViewport->compensateLayoutUpdatesByScroll(prevFirstView, [this] {
                 AViewContainerBase::applyGeometryToChildren();
-            });
+            }, axisMask());
             auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
             inflateTill += diff;
 
@@ -196,7 +204,7 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
             needsMinSizeUpdate = true;
             mViewport->compensateLayoutUpdatesByScroll(mViews.first(), [this] {
                 AViewContainerBase::applyGeometryToChildren();
-            });
+            }, axisMask());
         }
     }
 
@@ -251,4 +259,11 @@ void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::iterator> iterato
     auto size = iterators.size();
     AViewContainerBase::removeViews(iterators);
     mCache->items.erase(mCache->items.begin() + idx, mCache->items.begin() + idx + size);
+}
+
+glm::ivec2 AForEachUIBase::axisMask() {
+    if (getLayout()->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
+        return glm::ivec2{1, 0};
+    }
+    return glm::ivec2{0, 1};
 }

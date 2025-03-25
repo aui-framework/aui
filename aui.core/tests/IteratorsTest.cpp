@@ -105,3 +105,26 @@ TEST(Iterators, DynRangeNoCopy2) {
     AVector<std::unique_ptr<int>> elements{};
     aui::dyn_range<std::unique_ptr<int>> ints = elements;
 }
+
+TEST(Iterators, DynRangeCaps1) {
+    aui::dyn_range<int> r = ranges::views::ints;
+    EXPECT_TRUE(r.capabilities().implementsOperatorMinusMinus);
+    auto it = r.begin();
+    EXPECT_EQ(*it, 0);
+
+    ++it;
+    EXPECT_EQ(*it, 1);
+
+    --it;
+    EXPECT_EQ(*it, 0);
+}
+
+TEST(Iterators, DynRangeCaps2) {
+    aui::dyn_range<int> r = ranges::views::ints | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }) | ranges::views::transform([](const auto& i){ return 0; });
+    EXPECT_FALSE(r.capabilities().implementsOperatorMinusMinus);
+    auto it = r.begin();
+    EXPECT_EQ(*it, 0);
+
+    ++it;
+    EXPECT_ANY_THROW(--it);
+}

@@ -17,6 +17,10 @@
 
 namespace aui {
 
+struct dyn_range_capabilities {
+    bool implementsOperatorMinusMinus;
+};
+
 /**
  * @brief RTTI-wrapped range.
  * @ingroup core
@@ -127,7 +131,11 @@ struct dyn_range {
             ~rttified() = default;
 
             void prev() override {
-                --it;
+                if constexpr (requires { --it; }) {
+                    --it;
+                } else {
+                    throw AException("unimplemented");
+                }
             }
 
             void next() override {
@@ -174,9 +182,18 @@ struct dyn_range {
 
     dyn_range(dyn_range&& rhs) noexcept = default;
     dyn_range& operator=(dyn_range&& rhs) noexcept = default;
+
+    dyn_range(dyn_range& rhs) {
+        operator=(rhs);
+    }
     dyn_range(const dyn_range& rhs) {
         operator=(rhs);
     }
+
+    dyn_range& operator=(dyn_range& rhs) {
+        return operator=(const_cast<const dyn_range&>(rhs));
+    }
+
     dyn_range& operator=(const dyn_range& rhs) {
         if (this == &rhs) {
             return *this;
@@ -193,6 +210,13 @@ struct dyn_range {
         return mImpl->end();
     }
 
+    dyn_range_capabilities capabilities() const {
+        if (!mImpl) {
+            return {};
+        }
+        return mImpl->capabilities();
+    }
+
 private:
     struct iface {
         virtual ~iface() = default;
@@ -200,13 +224,15 @@ private:
         virtual iterator begin() = 0;
         virtual iterator end() = 0;
         virtual std::unique_ptr<iface> clone() = 0;
-
+        virtual dyn_range_capabilities capabilities() = 0;
     };
 
     std::unique_ptr<iface> mImpl;
 
     template<ranges::range Rng>
     std::unique_ptr<iface> rttify(Rng&& rng) {
+        static_assert(!requires() { rng.mImpl; }, "rttifying itself?");
+
         struct rttified: iface {
         public:
             rttified(Rng f): rng(std::forward<Rng>(f)) {}
@@ -231,6 +257,12 @@ private:
                     return std::make_unique<rttified>(rng);
                 }
                 throw AException("can't make a copy of this range");
+            }
+
+            dyn_range_capabilities capabilities() override {
+                return {
+                    .implementsOperatorMinusMinus = requires() { --++rng.begin(); },
+                };
             }
 
         private:

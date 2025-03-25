@@ -66,8 +66,6 @@ public:
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                               /// [NESTED_FOR_EXAMPLE]
-                            /*
-
                             AUI_DECLARATIVE_FOR(group, mContacts
                                 | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                     return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
@@ -83,11 +81,8 @@ public:
                                       };
                                     },
                                 };
-                            },*/
-                            /// [NESTED_FOR_EXAMPLE]
-                            AUI_DECLARATIVE_FOR(i, ranges::views::ints | ranges::views::take(1000), AVerticalLayout) {
-                                return Label { "{}"_format(i) } with_style { Border(1_px, AColor::BLACK), Padding(16_dp, 8_dp), ATextAlign::CENTER };
                             },
+                            /// [NESTED_FOR_EXAMPLE]
                             Label {} & mContactCount.readProjected([](std::size_t c) {
                                 return "{} contact(s)"_format(c);
                             }) with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },

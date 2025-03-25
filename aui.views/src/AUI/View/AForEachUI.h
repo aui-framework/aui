@@ -58,8 +58,9 @@ struct InflateOpts {
  * @endcode
  *
  * `AUI_DECLARATIVE_FOR` consists of AForEachUIBase creation, single entry variable name, *range* definition, layout
- * name and a lambda that creates a new view based on data entry. In terms of C++ syntax, the lambda is partially
- * defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer.
+ * name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that creates a new view based on data
+ * entry. In terms of C++ syntax, the lambda is partially defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body
+ * (including curly braces) is left up to developer.
  *
  * *range* models one-dimensional list.
  *
@@ -140,6 +141,7 @@ protected:
 private:
     _<AScrollAreaViewport> mViewport;
     List mViewsModel;
+    aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
     struct Cache {
@@ -157,6 +159,7 @@ private:
 
     void inflate(aui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
+    glm::ivec2 axisMask();
 };
 
 template <typename T, typename Layout, typename super = AForEachUIBase>
