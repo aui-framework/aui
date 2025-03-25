@@ -64,10 +64,16 @@ namespace {
 class FakeContainer: public AViewContainerBase {
 public:
     FakeContainer(_weak<AView> view): mView(std::move(view)) {
-
+        connect(redrawn, [&] {
+            if (mRedrawLock.is_locked()) {
+                return;
+            }
+            redraw();
+        });
     }
 
     void render(ARenderContext ctx) override {
+        std::unique_lock lock(mRedrawLock);
         AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
@@ -103,6 +109,7 @@ public:
     }
 
 private:
+    ASpinlockMutex mRedrawLock;
     _weak<AView> mView;
 };
 

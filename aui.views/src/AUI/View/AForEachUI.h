@@ -98,6 +98,10 @@ struct InflateOpts {
  * sliding window subrange. When the user scrolls down the list, both iterators are incremented; when the user scrolls
  * upwards, both iterators are decremented.
  *
+ * In this scenario, AForEachUIBase adds an extra requirement to range's iterator:
+ *
+ * - *iterator* has decrement operator `--it`
+ *
  * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
  * AForEachUIBase. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
@@ -107,9 +111,20 @@ struct InflateOpts {
  * AForEachUIBase is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
  * semantics, thanks to iterators.
  *
- * In this scenario, AForEachUIBase adds an extra requirement to range's iterator:
+ * ## Scrollbars
  *
- * - *iterator* has decrement operator `--it`
+ * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. The
+ * items that appear far from sliding window are unloaded (views are removed), the new items are loaded (new views are
+ * instantiated). To avoid content jittering, scroll position is synced with layout updates within AForEachUIBase. As
+ * such, these hijacking operations may confuse scroll bar.
+ *
+ * In modern software, especially when it comes to infinite lists in web/mobile applications (i.e., news feed),
+ * scrollbar might be completely hidden or significantly transparentized.
+ *
+ * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
+ * (scrollbar is the only visual confirmation), the scrolled contents appear normal and natural.
+ *
+ * @image html docs/imgs/edrfgsrgsrg.webp A lie is going on behind the scenes
  */
 class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:

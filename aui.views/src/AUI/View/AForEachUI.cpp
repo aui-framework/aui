@@ -13,7 +13,7 @@
 #include "AForEachUI.h"
 
 static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
-static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE;
+static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE / 2;
 static constexpr auto INFLATE_STEP_PX = RENDER_TO_TEXTURE_TILE_SIZE * 2;
 static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
 static constexpr auto LOG_TAG = "AForEachUIBase";
@@ -80,7 +80,8 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         mLastInflatedScroll = glm::ivec2(scroll);
 
         getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff] {
-          inflate({ .backward = diff < 0, .forward = diff > 0 });
+            inflate({ .backward = diff < 0, .forward = diff > 0 });
+            mLastInflatedScroll = *mViewport->scroll();
         });
     });
     mLastInflatedScroll.reset();
@@ -126,23 +127,23 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
 
     // remove old views
     if (opts.backward && mCache) {
-        /*
         [&] {
             const auto uninflateFrom =
-                lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) * 2 +
-        mViewport->getSize(); auto firstValidView = ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>&
-        view) { return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
+                lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + mViewport->getSize() * 3;
+            auto firstValidView =
+                ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
+                    return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
                 }).base();
             if (firstValidView == mViews.end()) {
                 return;
             }
             removeViews({ firstValidView, mViews.end() });
-        }();*/
+        }();
     }
     if (opts.forward) {
         [&] {
             const auto uninflateFrom =
-                lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - mViewport->getSize();
+                lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - mViewport->getSize() * 2;
             auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
                 return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
             });
@@ -160,32 +161,24 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     const auto end = mViewsModel.end();
     // append new views
     if (opts.backward && mCache && !mCache->items.empty()) {
-        /*
         auto inflateTill =
-            lastScroll - glm::ivec2(INFLATE_STEP_PX) - posWithinSlidingSurface -
-            mViews.first()->getPosition();
+            lastScroll - glm::ivec2(INFLATE_STEP_PX) - posWithinSlidingSurface - mViews.first()->getPosition();
         for (auto it = mCache->items.first().iterator;
              it != mViewsModel.begin() && glm::all(glm::lessThanEqual(inflateTill, glm::ivec2(0)));) {
             --it;
             auto prevFirstView = mViews.first();
             addView(it, 0);
-            applyGeometryToChildren();
+
+            mViewport->compensateLayoutUpdatesByScroll(prevFirstView, [this] {
+                AViewContainerBase::applyGeometryToChildren();
+            });
             auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
             inflateTill += diff;
-            if (mFakeBeginOffset) {
-                *mFakeBeginOffset -= diff;
-            }
 
             if (it == mViewsModel.begin()) {
-                mFakeBeginOffset.reset();
                 break;
             }
         }
-        if (mFakeBeginOffset) {
-            if (glm::any(glm::lessThanEqual(*mFakeBeginOffset, glm::ivec2(0)))) {
-                mFakeBeginOffset.reset();
-            }
-        }*/
     }
 
     if (opts.forward) {
@@ -201,14 +194,14 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
             }
             addView(it);
             needsMinSizeUpdate = true;
-            applyGeometryToChildren();
+            mViewport->compensateLayoutUpdatesByScroll(mViews.first(), [this] {
+                AViewContainerBase::applyGeometryToChildren();
+            });
         }
     }
 
     if (needsMinSizeUpdate) {
         markMinContentSizeInvalid();
-    } else {
-        applyGeometryToChildren();
     }
 }
 
