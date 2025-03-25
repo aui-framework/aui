@@ -13,6 +13,8 @@
 #include "AForEachUI.h"
 
 static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
+static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
+static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     removeAllViews();
@@ -104,6 +106,22 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
 
 void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     AUI_ASSERT(opts.forward || opts.backward);
+
+#if AUI_DEBUG
+    const auto prevViewsCount = mViews.size();
+    AUI_DEFER {
+        if (glm::abs(int(prevViewsCount) - int(mViews.size())) > POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD) {
+            ALogger::warn(LOG_TAG)
+                << "It appears like a large update to inflated AForEachUIBase views caused (view count "
+                << prevViewsCount << " -> " << mViews.size()
+                << "), which signals about a potential performance issue. If you really intend to work with >"
+                << POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD
+                << " views visible, you might end up ignoring this warning (it appears on debug build only). Otherwise, "
+                   "please report it.";
+        }
+    };
+#endif
+
     bool needsMinSizeUpdate = false;
 
     const auto posWithinSlidingSurface = calculateOffsetWithinViewportSlidingSurface();
@@ -112,14 +130,18 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     // remove old views
     if (opts.backward && mCache) {
         [&] {
-          const auto uninflateFrom = lastScroll - posWithinSlidingSurface + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + mViewport->getSize();
-          auto firstValidView = ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
-            return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
-          }).base();
-          if (firstValidView == mViews.end()) {
-              return;
-          }
-          removeViews({ firstValidView, mViews.end() });
+            const auto uninflateFrom =
+                lastScroll - posWithinSlidingSurface + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + mViewport->getSize();
+            auto firstValidView =
+                ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
+                    return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
+                }).base();
+            if (firstValidView == mViews.end()) {
+                return;
+            }
+            //          mFakeEndOffset = (mViews.last()->getPosition() + mViews.last()->getSize()) -
+            //          ((*firstValidView)->getPosition() + (*firstValidView)->getSize());
+            removeViews({ firstValidView, mViews.end() });
         }();
     }
     if (opts.forward) {
@@ -143,16 +165,20 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     const auto end = mViewsModel.end();
     // append new views
     if (opts.backward && mCache && !mCache->items.empty()) {
-        auto inflateTill = lastScroll - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) - posWithinSlidingSurface;
-        for (auto it = mCache->items.first().iterator; it != mViewsModel.begin() && glm::any(glm::lessThanEqual(inflateTill, glm::ivec2(0)));) {
+        /*
+        auto inflateTill =
+            lastScroll - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) - posWithinSlidingSurface -
+            mViews.first()->getPosition();
+        for (auto it = mCache->items.first().iterator;
+             it != mViewsModel.begin() && glm::all(glm::lessThanEqual(inflateTill, glm::ivec2(0)));) {
             --it;
-            if (!mViews.empty()) {
-                auto prevFirstView = mViews.first();
-                addView(it, 0);
-                applyGeometryToChildren();
-                inflateTill -= prevFirstView->getPosition() - mViews.first()->getPosition();
-            } else {
-                addView(it, 0);
+            auto prevFirstView = mViews.first();
+            addView(it, 0);
+            applyGeometryToChildren();
+            auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
+            inflateTill += diff;
+            if (mFakeBeginOffset) {
+                *mFakeBeginOffset -= diff;
             }
 
             if (it == mViewsModel.begin()) {
@@ -160,12 +186,18 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
                 break;
             }
         }
+        if (mFakeBeginOffset) {
+            if (glm::any(glm::lessThanEqual(*mFakeBeginOffset, glm::ivec2(0)))) {
+                mFakeBeginOffset.reset();
+            }
+        }*/
     }
 
     if (opts.forward) {
         const auto inflateTill =
             mViewport->getSize() + glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) + lastScroll - posWithinSlidingSurface;
-        for (auto it = mCache->items.empty() ? mViewsModel.begin() : std::next(mCache->items.last().iterator); it != end; ++it) {
+        auto it = mCache->items.empty() ? mViewsModel.begin() : std::next(mCache->items.last().iterator);
+        for (; it != end; ++it) {
             if (!mViews.empty()) {
                 const auto& lastView = mViews.last();
                 if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), inflateTill))) {
@@ -176,7 +208,12 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
             needsMinSizeUpdate = true;
             applyGeometryToChildren();
         }
+        if (it == mViewsModel.end()) {
+            mFakeEndOffset.reset();
+        }
     }
+
+    ALOG_DEBUG(LOG_TAG) << "mFakeBeginOffset = " << mFakeBeginOffset << ", mFakeEndOffset = " << mFakeEndOffset;
 
     if (needsMinSizeUpdate) {
         markMinContentSizeInvalid();
