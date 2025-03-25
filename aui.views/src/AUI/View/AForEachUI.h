@@ -140,7 +140,7 @@ private:
 
     AOptional<Cache> mCache;
 
-    void addView(List::iterator iterator);
+    void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
     void removeViews(aui::range<AVector<_<AView>>::iterator> iterators);
 
     void inflate(aui::detail::InflateOpts opts = {});

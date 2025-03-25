@@ -143,12 +143,18 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
     const auto end = mViewsModel.end();
     // append new views
     if (opts.backward && mCache && !mCache->items.empty()) {
-        const auto inflateTill = lastScroll - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) - posWithinSlidingSurface;
-        for (auto it = mCache->items.first().iterator; it != mViewsModel.begin();) {
+        auto inflateTill = lastScroll - glm::ivec2(RENDER_TO_TEXTURE_TILE_SIZE) - posWithinSlidingSurface;
+        for (auto it = mCache->items.first().iterator; it != mViewsModel.begin() && glm::any(glm::lessThanEqual(inflateTill, glm::ivec2(0)));) {
             --it;
             if (!mViews.empty()) {
-                const auto& firstView = mViews.first();
+                auto prevFirstView = mViews.first();
+                addView(it, 0);
+                applyGeometryToChildren();
+                inflateTill -= prevFirstView->getPosition() - mViews.first()->getPosition();
+            } else {
+                addView(it, 0);
             }
+
             if (it == mViewsModel.begin()) {
                 mFakeBeginOffset.reset();
                 break;
@@ -192,15 +198,27 @@ glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
     AUI_ASSERT_NO_CONDITION("divergent mViewport");
 }
 
-void AForEachUIBase::addView(List::iterator iterator) {
+void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> index) {
     if (!mCache) {
-        AViewContainerBase::addView(*iterator);
+        if (index) {
+            AViewContainerBase::addView(*index, *iterator);
+        } else {
+            AViewContainerBase::addView(*iterator);
+        }
         return;
     }
     AUI_ASSERT(mViews.size() == mCache->items.size());
     auto view = *iterator;
-    AViewContainerBase::addView(view);
-    mCache->items.push_back({ .iterator = std::move(iterator), .view = std::move(view) });
+    if (index) {
+        AViewContainerBase::addView(*index, view);
+    } else {
+        AViewContainerBase::addView(view);
+    }
+    auto at = mCache->items.end();
+    if (index) {
+        at = mCache->items.begin() + *index;
+    }
+    mCache->items.insert(at, { .iterator = std::move(iterator), .view = std::move(view) });
 }
 
 void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::iterator> iterators) {
