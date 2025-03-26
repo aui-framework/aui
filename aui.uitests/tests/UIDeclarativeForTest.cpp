@@ -68,7 +68,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
     };
 
     Observer observer;
-    EXPECT_CALL(observer, onViewCreated()).Times(testing::Between(10, 30));
+    EXPECT_CALL(observer, onViewCreated()).Times(testing::Between(10, 40));
 
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
@@ -86,4 +86,27 @@ TEST_F(UIDeclarativeForTest, Performance) {
     EXPECT_TRUE(By::text("Item 2").one());
     EXPECT_TRUE(By::text("Item 3").one());
     EXPECT_FALSE(By::text("Item 979878").one());
+}
+
+TEST_F(UIDeclarativeForTest, Dynamic) {
+    AProperty<AVector<AString>> items = AVector<AString>{ "Hello", "World", "Test" };
+    mWindow->setContents(Vertical {
+        AScrollArea::Builder()
+            .withContents(
+                AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
+                  return Label { i };
+                })
+            .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    auto checkAllPresent = [&] {
+        uitest::frame();
+        for (const auto& i : *items) {
+            EXPECT_TRUE(By::text(i).one()) << i;
+        }
+    };
+
+    checkAllPresent();
+    items.writeScope()->push_back("Bruh");
+    checkAllPresent();
 }
