@@ -40,7 +40,7 @@ struct AProperty: AObjectBase {
     = default;
 
     template <aui::convertible_to<T> U>
-    AProperty(U&& value) noexcept : raw(std::forward<U>(value)) {}
+    AProperty(U&& value) noexcept(noexcept(T(std::forward<U>(value)))): raw(std::forward<U>(value)) {}
 
     AObjectBase* boundObject() {
         return this;
