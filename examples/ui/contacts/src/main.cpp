@@ -83,7 +83,7 @@ public:
                                           FontSize { 8_pt },
                                     },
                                     common_views::divider(),
-                                    AUI_DECLARATIVE_FOR(i, group | ranges::actions::sort, AVerticalLayout) {
+                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                                         return contactPreview(i) let {
                                             connect(it->clicked, [this, i] { mSelectedContact = i; });
                                         };

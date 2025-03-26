@@ -103,6 +103,9 @@ struct InflateOpts {
  *
  * - *iterator* has decrement operator `--it`
  *
+ * If this requirement is not satisfied (case of some `ranges::views`), AForEachUIBase would not unload old items,
+ * unless a @ref AFOREACHUI_UPDATE "data update event" occurred.
+ *
  * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
  * AForEachUIBase. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
@@ -114,18 +117,20 @@ struct InflateOpts {
  *
  * ## Scrollbars
  *
- * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. The
- * items that appear far from sliding window are unloaded (views are removed), the new items are loaded (new views are
- * instantiated). To avoid content jittering, scroll position is synced with layout updates within AForEachUIBase. As
- * such, these hijacking operations may confuse scroll bar.
+ * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. If
+ * possible, the items that appear far from sliding window are unloaded (views are removed). The new items are loaded
+ * (new views are instantiated). To avoid content jittering, scroll position is synced with layout updates within
+ * AForEachUIBase. As such, these hijacking operations may confuse scroll bar.
  *
  * In modern software, especially when it comes to infinite lists in web/mobile applications (i.e., news feed),
  * scrollbar might be completely hidden or significantly transparentized.
  *
  * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
- * (scrollbar is the only visual confirmation), the scrolled contents appear normal and natural.
+ * (scrollbar is the only visual confirmation), the scrolled contents appears normal and natural.
  *
  * @image html docs/imgs/edrfgsrgsrg.webp A lie is going on behind the scenes
+ *
+ * # List Updates {#AFOREACHUI_UPDATE}
  */
 class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
