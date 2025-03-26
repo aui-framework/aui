@@ -58,6 +58,7 @@ TEST_F(UIDeclarativeForTest, Basic) {
     EXPECT_FALSE(By::text("Item 4").one());
 }*/
 
+
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 

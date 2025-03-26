@@ -167,57 +167,64 @@ private:
     glm::ivec2 axisMask();
 };
 
+namespace aui::detail {
+template<typename Factory, typename T>
+concept RangeFactory = requires (Factory&& factory) {
+    { factory } -> aui::invocable;
+    { factory() } -> aui::range_consisting_of<T>;
+};
+}
+
 template <typename T, typename Layout, typename super = AForEachUIBase>
-class AForEachUI : public super {
+class AForEachUI : public super, public aui::react::DependencyObserver {
 public:
     using List = aui::dyn_range<_<AView>>;
-    using Factory = std::function<_<AView>(const T& value)>;
+    using ListFactory = std::function<List()>;
+    using ViewFactory = std::function<_<AView>(const T& value)>;
 
     AForEachUI() { this->setLayout(std::make_unique<Layout>()); }
 
-    template <ranges::range Rng>
-    AForEachUI(Rng&& rng) {
+    template<aui::detail::RangeFactory<T> RangeFactory>
+    AForEachUI(RangeFactory&& rangeFactory) {
         this->setLayout(std::make_unique<Layout>());
-        this->setModel(std::forward<Rng>(rng));
+        this->setModel(std::forward<RangeFactory>(rangeFactory));
     }
 
-    template <ranges::range Rng>
-        requires requires(Rng&& rng) {
-            { *ranges::begin(rng) } -> aui::convertible_to<T>;
-        }
-    void setModel(Rng&& rng) {
-        mDataModel = rng | ranges::views::transform([this](const T& t) { return mFactory(t); });
-        updateUnderlyingModel();
+    template<aui::detail::RangeFactory<T> RangeFactory>
+    void setModel(RangeFactory&& rangeFactory) {
+        mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
+            aui::react::DependencyObserverRegistrar r(*this);
+            return rangeFactory() | ranges::views::transform([this](const T& t) { return mFactory(t); });
+        };
     }
 
-    void operator-(Factory f) {
+    void operator-(ViewFactory f) {
         mFactory = std::move(f);
         updateUnderlyingModel();
     }
 
-    [[nodiscard]]
-    const List& model() const noexcept {
-        return mDataModel;
+    void invalidate() override {
+        updateUnderlyingModel();
     }
 
 private:
-    List mDataModel;
-    Factory mFactory;
+    ListFactory mListFactory;
+    ViewFactory mFactory;
 
     void updateUnderlyingModel() {
         if (!mFactory) {
             return;
         }
 
-        this->setModelImpl(mDataModel);
+        this->setModelImpl(mListFactory());
     }
 };
 
 namespace aui::detail {
-template <typename Base /* AForEachUIBase */, typename Layout, ranges::range Rng>
-auto makeForEach(Rng&& rng) {
-    using T = std::decay_t<decltype(*ranges::begin(rng))>;
-    return _new<AForEachUI<T, Layout, Base>>(std::forward<Rng>(rng));
+template <typename Base /* AForEachUIBase */, typename Layout, aui::invocable RangeFactory>
+auto makeForEach(RangeFactory&& rangeFactory) requires requires { { rangeFactory() } -> ranges::range; } {
+    using T = std::decay_t<decltype(*ranges::begin(rangeFactory()))>;
+    return _new<AForEachUI<T, Layout, Base>>(std::forward<RangeFactory>(rangeFactory));
 }
 }   // namespace aui::detail
 
@@ -225,7 +232,7 @@ auto makeForEach(Rng&& rng) {
  * @see AForEachUIBase
  */
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) \
-    aui::detail::makeForEach<AForEachUIBase, layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
+    aui::detail::makeForEach<AForEachUIBase, layout>([&]() -> decltype(auto) { return ( model ); }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @see AForEachUIBase

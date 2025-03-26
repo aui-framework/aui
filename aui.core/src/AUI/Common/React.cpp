@@ -9,22 +9,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "APropertyPrecomputed.h"
+#include "React.h"
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AAbstractSignal.h>
 
-using namespace aui::property_precomputed;
+using namespace aui::react;
 
 namespace {
-thread_local detail::DependencyObserver* gCurrentDependencyObserver = nullptr;
+thread_local DependencyObserver* gCurrentDependencyObserver = nullptr;
 }
 
-detail::DependencyObserverRegistrar::DependencyObserverRegistrar(detail::DependencyObserver& observer)
+DependencyObserverRegistrar::DependencyObserverRegistrar(DependencyObserver& observer)
   : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {}
 
-detail::DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
+DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
 
-void ::aui::property_precomputed::addDependency(const AAbstractSignal& signal) {
+void ::aui::react::addDependency(const AAbstractSignal& signal) {
     if (!gCurrentDependencyObserver) {
         return;
     }

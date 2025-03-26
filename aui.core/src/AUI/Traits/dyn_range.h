@@ -15,6 +15,15 @@
 #include <range/v3/range_concepts.hpp>
 
 
+
+namespace aui {
+template<typename Rng, typename T>
+concept range_consisting_of = requires(Rng&& rng) {
+    { rng } -> ranges::range;
+    { std::move(*::ranges::begin(rng)) } -> aui::convertible_to<T>;
+};
+}
+
 namespace aui {
 
 struct dyn_range_capabilities {
@@ -173,7 +182,7 @@ struct dyn_range {
     }
     };
 
-    template<ranges::range Rng>
+    template<typename Rng>
     dyn_range(Rng&& rng): mImpl(rttify(std::forward<Rng>(rng))) {
 
     }
@@ -229,7 +238,7 @@ private:
 
     std::unique_ptr<iface> mImpl;
 
-    template<ranges::range Rng>
+    template<aui::range_consisting_of<T> Rng>
     std::unique_ptr<iface> rttify(Rng&& rng) {
         static_assert(!requires() { rng.mImpl; }, "rttifying itself?");
 
