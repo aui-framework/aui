@@ -14,10 +14,13 @@
 #include "common.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/AScrollArea.h>
 #include <AUI/View/ATextArea.h>
 
 using namespace ass;
 using namespace declarative;
+
+static constexpr auto EDITOR_CONTENT_MAX_WIDTH = 400_dp;
 
 namespace {
 _<AView> profilePhoto(const _<Contact>& contact) {
@@ -42,7 +45,7 @@ _<AView> editor(AProperty<T>& property);
 
 template <>
 _<AView> editor(AProperty<AString>& property) {
-    return _new<ATextField>() && property ;
+    return _new<ATextField>() && property;
 }
 }   // namespace
 
@@ -63,7 +66,8 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
       },
     });
     connect(mEditorMode, [this] {
-        setContents(
+        setContents(Vertical::Expanding {
+          AScrollArea::Builder().withContents(Centered {
             Vertical::Expanding {
               Horizontal {
                 profilePhoto(mContact),
@@ -80,13 +84,19 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                   Label { "Note" } with_style { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
                 },
                 _new<ATextArea>() && mContact->note,
-              } with_style { MinSize{ {}, 100_dp }, },
-              Horizontal {
-                SpacerExpanding(),
-                Button { mEditorMode ? "Discard" : "Delete" } let { connect(it->clicked, me::drop); },
-                Button { mEditorMode ? "Done" : "Edit" } let { connect(it->clicked, me::toggleEdit); },
-              },
-            } with_style { MaxSize(400_dp, {}), Padding(8_dp) });
+              } with_style {
+                    MinSize { {}, 100_dp },
+                  },
+            } with_style { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp) },
+          }),
+          Centered {
+            Horizontal::Expanding {
+              SpacerExpanding(),
+              Button { mEditorMode ? "Discard" : "Delete" } let { connect(it->clicked, me::drop); },
+              Button { mEditorMode ? "Done" : "Edit" } let { connect(it->clicked, me::toggleEdit); },
+            } with_style { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
+          },
+        });
     });
 }
 
@@ -115,7 +125,7 @@ void ContactDetailsView::toggleEdit() {
 template <typename T>
 _<AView> ContactDetailsView::row(AString title, AProperty<T>& property) {
     if (!mEditorMode) {
-        if (property == T{}) {
+        if (property == T {}) {
             return nullptr;
         }
     }

@@ -19,6 +19,7 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AText.h>
 #include "model/PredefinedContacts.h"
+#include "model/State.h"
 
 #include <view/ContactDetailsView.h>
 #include <view/common.h>
@@ -27,6 +28,8 @@
 using namespace declarative;
 using namespace ass;
 using namespace std::chrono_literals;
+
+static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
 static _<AView> contactPreview(const _<Contact>& contact) {
     return Vertical {
@@ -42,9 +45,7 @@ static _<AView> contactDetails(const _<Contact>& contact) {
     return _new<ContactDetailsView>(contact);
 }
 
-static auto groupLetter(const AString& s) {
-    return s.firstOpt().valueOr('_');
-}
+static auto groupLetter(const AString& s) { return s.firstOpt().valueOr('_'); }
 
 class ContactsWindow : public AWindow {
 public:
@@ -70,7 +71,7 @@ public:
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             /// [NESTED_FOR_EXAMPLE]
-                            AUI_DECLARATIVE_FOR(group, mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+                            AUI_DECLARATIVE_FOR(group, mState.contacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                 return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
                             }), AVerticalLayout) {
                                 auto firstContact = *ranges::begin(group);
@@ -81,9 +82,9 @@ public:
                                           Padding { 12_dp, 0, 4_dp },
                                           Margin { 0 },
                                           FontSize { 8_pt },
-                                    },
+                                        },
                                     common_views::divider(),
-                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                                AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                                         return contactPreview(i) let {
                                             connect(it->clicked, [this, i] { mSelectedContact = i; });
                                         };
@@ -97,21 +98,28 @@ public:
                           } with_style { Padding(0, 8_dp) })
                       .build() with_style { Expanding(0, 1), MinSize(200_dp) },
 
-              AScrollArea::Builder()
-                      .withContents(CustomLayout {} & mSelectedContact.readProjected(contactDetails))
-                      .build() with_style { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
+              CustomLayout::Expanding {} & mSelectedContact.readProjected([this](const _<Contact>& selectedContact) {
+                  auto editor = contactDetails(selectedContact);
+                  if (editor != nullptr) {
+                      connect(selectedContact->displayName.changed, editor, [this] {
+                          mState.contacts |= CONTACTS_SORT;
+                      });
+                  }
+                  return editor;
+              }) with_style { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
             } with_style {
               Padding(0),
             });
     }
 
 private:
-    AVector<_<Contact>> mContacts =
-        predefined::PERSONS | ranges::views::transform([](Contact& p) { return _new<Contact>(std::move(p)); }) |
-        ranges::to_vector |
-        ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
+    State mState = {
+        .contacts =
+            predefined::PERSONS | ranges::views::transform([](Contact& p) { return _new<Contact>(std::move(p)); }) |
+            ranges::to_vector | CONTACTS_SORT,
+    };
 
-    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts.size(); };
+    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mState.contacts.size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
 };
 
