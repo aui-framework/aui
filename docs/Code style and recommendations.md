@@ -148,8 +148,8 @@ constexpr std::size_t forEachKey(const T& value) { // ====================> std:
 }
 
 template<typename T>
-requires requires(T& t) { { t.base() } -> ranges::range; }  // ====================> specialization for subranges
-constexpr std::size_t forEachKey(const T& value) {
+requires requires(T& t) { { t.base() } -> ranges::range; }
+constexpr std::size_t forEachKey(const T& value) { // ====================> specialization for subranges
 ...    
 ```
 
