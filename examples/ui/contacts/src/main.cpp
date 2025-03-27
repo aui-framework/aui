@@ -71,7 +71,7 @@ public:
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             /// [NESTED_FOR_EXAMPLE]
-                            AUI_DECLARATIVE_FOR(group, mState.contacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+                            AUI_DECLARATIVE_FOR(group, *mState.contacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                 return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
                             }), AVerticalLayout) {
                                 auto firstContact = *ranges::begin(group);
@@ -102,7 +102,7 @@ public:
                   auto editor = contactDetails(selectedContact);
                   if (editor != nullptr) {
                       connect(selectedContact->displayName.changed, editor, [this] {
-                          mState.contacts |= CONTACTS_SORT;
+                          *mState.contacts.writeScope() |= CONTACTS_SORT;
                       });
                   }
                   return editor;
@@ -119,7 +119,7 @@ private:
             ranges::to_vector | CONTACTS_SORT,
     };
 
-    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mState.contacts.size(); };
+    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mState.contacts->size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
 };
 

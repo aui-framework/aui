@@ -15,5 +15,5 @@
 #include "Contact.h"
 
 struct State {
-    AVector<_<Contact>> contacts;
+    AProperty<AVector<_<Contact>>> contacts;
 };

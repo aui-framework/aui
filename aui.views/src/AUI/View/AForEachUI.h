@@ -223,7 +223,10 @@ private:
 namespace aui::detail {
 template <typename Base /* AForEachUIBase */, typename Layout, aui::invocable RangeFactory>
 auto makeForEach(RangeFactory&& rangeFactory) requires requires { { rangeFactory() } -> ranges::range; } {
-    using T = std::decay_t<decltype(*ranges::begin(rangeFactory()))>;
+    using T = decltype([&] {
+        auto rng = rangeFactory();
+        return *ranges::begin(rng);
+    }());
     return _new<AForEachUI<T, Layout, Base>>(std::forward<RangeFactory>(rangeFactory));
 }
 }   // namespace aui::detail
