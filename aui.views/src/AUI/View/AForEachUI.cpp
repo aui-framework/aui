@@ -274,5 +274,6 @@ void AForEachUIBase::invalidate() {
         removeAllViews();
         markMinContentSizeInvalid();
 //    }
+    mCache.reset();
 
 }

@@ -29,18 +29,24 @@ struct InflateOpts {
 };
 }   // namespace aui::detail
 
-template<typename T>
-requires requires(T& t) { std::hash<T>{}(t); }
-constexpr std::size_t forEachKey(const T& value) { // default key impl for types with std::hash specialization
-    return std::hash<T>{}(value);
+namespace aui::for_each_ui {
+template <typename T>
+    requires requires(T& t) { std::hash<T> {}(t); }
+constexpr std::size_t defaultKey(const T& value, long primaryCandidate = 0L) {   // std::hash specialization
+    return std::hash<T> {}(value);
 }
 
-template<typename T>
-requires requires(T& t) { { t.base() } -> ranges::range; }  // default AForEachUIHash specialization for subranges
-constexpr std::size_t forEachKey(const T& value) {
+template <typename T>
+constexpr std::size_t defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
+    return reinterpret_cast<std::uintptr_t>(value.get());
+}
+
+template <ranges::input_range T>
+constexpr std::size_t defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
     AUI_ASSERT(ranges::begin(value) != ranges::end(value));
     return forEachKey(*ranges::begin(value));
 }
+}   // namespace aui::for_each_ui
 
 /**
  * @brief Customizable lists display.
@@ -217,7 +223,7 @@ public:
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
             aui::react::DependencyObserverRegistrar r(*this);
             return rangeFactory() | ranges::views::transform([this](const T& t) {
-                       return AForEachUIBase::Entry { .view = mFactory(t), .id = forEachKey(t) };
+                       return AForEachUIBase::Entry { .view = mFactory(t), .id = aui::for_each_ui::defaultKey(t) };
                    });
         };
     }
