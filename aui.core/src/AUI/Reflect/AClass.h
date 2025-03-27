@@ -14,6 +14,7 @@
 #include "AUI/Common/AString.h"
 
 
+/// [ARROW_ERROR_MESSAGE_EXAMPLE]
 /**
  * @brief Compile-time class introspection.
  * @ingroup reflection
@@ -22,6 +23,7 @@ template<class T>
 class AClass {
 public:
     static_assert(!std::is_reference<T>::value, "====================> AClass: attempt to use AClass on a reference.");
+/// [ARROW_ERROR_MESSAGE_EXAMPLE]
 
     static AString name() {
 #if AUI_COMPILER_MSVC

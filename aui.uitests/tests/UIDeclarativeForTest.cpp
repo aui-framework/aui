@@ -64,7 +64,6 @@ TEST_F(UIDeclarativeForTest, Performance) {
 
     class Observer {
     public:
-
         MOCK_METHOD(void, onViewCreated, (), ());
     };
 
@@ -110,4 +109,35 @@ TEST_F(UIDeclarativeForTest, Dynamic) {
     checkAllPresent();
     items.writeScope()->push_back("Bruh");
     checkAllPresent();
+}
+
+TEST_F(UIDeclarativeForTest, DynamicPerformance) {
+    AProperty<AVector<AString>> items = AVector<AString>{ "Hello", "World", "Test" };
+
+    ::testing::GTEST_FLAG(throw_on_failure) = true;
+
+    class Observer {
+    public:
+        MOCK_METHOD(void, onViewCreated, (const AString &i), ());
+    };
+
+    Observer observer;
+    testing::InSequence s;
+    EXPECT_CALL(observer, onViewCreated("Hello"_as));
+    EXPECT_CALL(observer, onViewCreated("World"_as));
+    EXPECT_CALL(observer, onViewCreated("Test"_as));
+    EXPECT_CALL(observer, onViewCreated("Bruh"_as));
+
+    mWindow->setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
+                  observer.onViewCreated(i);
+                  return Label { i };
+              })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    uitest::frame();
+    items.writeScope()->push_back("Bruh");
+    uitest::frame();
 }

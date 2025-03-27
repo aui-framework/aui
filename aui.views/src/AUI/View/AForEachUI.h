@@ -29,6 +29,19 @@ struct InflateOpts {
 };
 }   // namespace aui::detail
 
+template<typename T>
+requires requires(T& t) { std::hash<T>{}(t); }
+constexpr std::size_t forEachKey(const T& value) { // default key impl for types with std::hash specialization
+    return std::hash<T>{}(value);
+}
+
+template<typename T>
+requires requires(T& t) { { t.base() } -> ranges::range; }  // default AForEachUIHash specialization for subranges
+constexpr std::size_t forEachKey(const T& value) {
+    AUI_ASSERT(ranges::begin(value) != ranges::end(value));
+    return forEachKey(*ranges::begin(value));
+}
+
 /**
  * @brief Customizable lists display.
  * @ingroup useful_views
@@ -134,9 +147,19 @@ struct InflateOpts {
  */
 class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
-    using List = aui::dyn_range<_<AView>>;
+    struct Entry {
+        _<AView> view;
+        std::size_t id;
+    };
+
+    using List = aui::dyn_range<Entry>;
     AForEachUIBase() {}
     void setPosition(glm::ivec2 position) override;
+
+    /**
+     * @brief Notifies that range was changed or iterators might have invalidated.
+     */
+    void invalidate();
 
 protected:
     void onViewGraphSubtreeChanged() override;
@@ -150,9 +173,8 @@ private:
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
     struct Cache {
-        struct LazyListItemInfo {
+        struct LazyListItemInfo : Entry {
             List::iterator iterator;
-            _<AView> view;
         };
         AVector<LazyListItemInfo> items;
     };
@@ -168,33 +190,35 @@ private:
 };
 
 namespace aui::detail {
-template<typename Factory, typename T>
-concept RangeFactory = requires (Factory&& factory) {
+template <typename Factory, typename T>
+concept RangeFactory = requires(Factory&& factory) {
     { factory } -> aui::invocable;
     { factory() } -> aui::range_consisting_of<T>;
 };
-}
+}   // namespace aui::detail
 
 template <typename T, typename Layout, typename super = AForEachUIBase>
 class AForEachUI : public super, public aui::react::DependencyObserver {
 public:
-    using List = aui::dyn_range<_<AView>>;
+    using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;
 
     AForEachUI() { this->setLayout(std::make_unique<Layout>()); }
 
-    template<aui::detail::RangeFactory<T> RangeFactory>
+    template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
         this->setLayout(std::make_unique<Layout>());
         this->setModel(std::forward<RangeFactory>(rangeFactory));
     }
 
-    template<aui::detail::RangeFactory<T> RangeFactory>
+    template <aui::detail::RangeFactory<T> RangeFactory>
     void setModel(RangeFactory&& rangeFactory) {
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
             aui::react::DependencyObserverRegistrar r(*this);
-            return rangeFactory() | ranges::views::transform([this](const T& t) { return mFactory(t); });
+            return rangeFactory() | ranges::views::transform([this](const T& t) {
+                       return AForEachUIBase::Entry { .view = mFactory(t), .id = forEachKey(t) };
+                   });
         };
     }
 
@@ -203,9 +227,10 @@ public:
         updateUnderlyingModel();
     }
 
-    void invalidate() override {
-        updateUnderlyingModel();
-    }
+    /**
+     * @copybrief AForEachUIBase::invalidate
+     */
+    void invalidate() override { super::invalidate(); }
 
 private:
     ListFactory mListFactory;
@@ -222,7 +247,11 @@ private:
 
 namespace aui::detail {
 template <typename Base /* AForEachUIBase */, typename Layout, aui::invocable RangeFactory>
-auto makeForEach(RangeFactory&& rangeFactory) requires requires { { rangeFactory() } -> ranges::range; } {
+auto makeForEach(RangeFactory&& rangeFactory)
+    requires requires {
+        { rangeFactory() } -> ranges::range;
+    }
+{
     using T = decltype([&] {
         auto rng = rangeFactory();
         return *ranges::begin(rng);
@@ -234,8 +263,10 @@ auto makeForEach(RangeFactory&& rangeFactory) requires requires { { rangeFactory
 /**
  * @see AForEachUIBase
  */
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...) \
-    aui::detail::makeForEach<AForEachUIBase, layout>([&]() -> decltype(auto) { return ( model ); }) - [__VA_ARGS__](const auto& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                      \
+    aui::detail::makeForEach<AForEachUIBase, layout>([&]() -> decltype(auto) { \
+        return (model);                                                        \
+    }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @see AForEachUIBase

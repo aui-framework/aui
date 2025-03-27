@@ -229,24 +229,25 @@ glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
 void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> index) {
     if (!mCache) {
         if (index) {
-            AViewContainerBase::addView(*index, *iterator);
+            AViewContainerBase::addView(*index, (*iterator).view);
         } else {
-            AViewContainerBase::addView(*iterator);
+            AViewContainerBase::addView((*iterator).view);
         }
         return;
     }
     AUI_ASSERT(mViews.size() == mCache->items.size());
-    auto view = *iterator;
+    Cache::LazyListItemInfo entry{*iterator};
     if (index) {
-        AViewContainerBase::addView(*index, view);
+        AViewContainerBase::addView(*index, entry.view);
     } else {
-        AViewContainerBase::addView(view);
+        AViewContainerBase::addView(entry.view);
     }
     auto at = mCache->items.end();
     if (index) {
         at = mCache->items.begin() + *index;
     }
-    mCache->items.insert(at, { .iterator = std::move(iterator), .view = std::move(view) });
+    entry.iterator = std::move(iterator);
+    mCache->items.insert(at, std::move(entry));
 }
 
 void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::iterator> iterators) {
@@ -266,4 +267,12 @@ glm::ivec2 AForEachUIBase::axisMask() {
         return glm::ivec2{1, 0};
     }
     return glm::ivec2{0, 1};
+}
+
+void AForEachUIBase::invalidate() {
+//    if (!mCache) {
+        removeAllViews();
+        markMinContentSizeInvalid();
+//    }
+
 }
