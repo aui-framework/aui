@@ -20,17 +20,20 @@ thread_local DependencyObserver* gCurrentDependencyObserver = nullptr;
 }
 
 DependencyObserverRegistrar::DependencyObserverRegistrar(DependencyObserver& observer)
-  : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {}
+  : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {
+    observer.mObserverConnections.clear();
+}
 
 DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
 
-void ::aui::react::addDependency(const AAbstractSignal& signal) {
+void DependencyObserverRegistrar::addDependency(const AAbstractSignal& signal) {
     if (!gCurrentDependencyObserver) {
         return;
     }
     if (signal.hasOutgoingConnectionsWith(gCurrentDependencyObserver)) {
         return;
     }
-    const_cast<AAbstractSignal&>(signal).addGenericObserver(
+    auto connection = const_cast<AAbstractSignal&>(signal).addGenericObserver(
         gCurrentDependencyObserver, [observer = gCurrentDependencyObserver] { observer->invalidate(); });
+    gCurrentDependencyObserver->mObserverConnections << std::move(connection);
 }

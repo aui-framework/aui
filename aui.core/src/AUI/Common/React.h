@@ -21,21 +21,26 @@
  */
 namespace aui::react {
 struct DependencyObserver : AObjectBase {
+    friend struct API_AUI_CORE DependencyObserverRegistrar;
+
 public:
     virtual void invalidate() = 0;
+
+private:
+    AVector<AAbstractSignal::AutoDestroyedConnection> mObserverConnections;
 };
 
 struct API_AUI_CORE DependencyObserverRegistrar {
     explicit DependencyObserverRegistrar(DependencyObserver& observer);
     ~DependencyObserverRegistrar();
 
-    private:
+    /**
+     * @brief Adds observer to the specified signal, if called inside a reactive expression evaluation.
+     */
+    static void addDependency(const AAbstractSignal& signal);
+
+private:
     DependencyObserver* mPrevObserver;
 };
-
-/**
- * @brief Adds observer to the specified signal, if called inside a reactive expression evaluation.
- */
-API_AUI_CORE void addDependency(const AAbstractSignal& signal);
 
 }   // namespace aui::react

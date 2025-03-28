@@ -397,7 +397,7 @@ public:
         _<Connection> value = nullptr;
 
         AutoDestroyedConnection() = default;
-        explicit AutoDestroyedConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
+        AutoDestroyedConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
         AutoDestroyedConnection(const AutoDestroyedConnection&) = default;
         AutoDestroyedConnection(AutoDestroyedConnection&&) noexcept = default;
 
@@ -453,7 +453,7 @@ public:
      * @param receiver receiver object.
      * @param observer function to be called when signal is fired.
      */
-    virtual void addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
+    virtual _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
 
 protected:
     /* some handy functions accessed from public headers */

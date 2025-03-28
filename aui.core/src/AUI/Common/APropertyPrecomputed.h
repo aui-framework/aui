@@ -54,7 +54,6 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
 
     template<aui::factory<T> Factory>
     APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] { // NOLINT(*-explicit-constructor)
-      clearAllIngoingConnections();
       aui::react::DependencyObserverRegistrar r(*this);
       return expression();
     }) {
@@ -92,7 +91,7 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
 
     [[nodiscard]]
     const T& value() const {
-        aui::react::addDependency(changed);
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return mCurrentValue;
     }
 

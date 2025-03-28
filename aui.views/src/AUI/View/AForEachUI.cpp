@@ -20,10 +20,17 @@ static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     removeAllViews();
-    mCache.reset();
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
-    markMinContentSizeInvalid();
+
+    if (!mCache) {
+        return;
+    }
+    mPreInvalidationCache.clear();
+    for (auto& e : mCache->items) {
+        mPreInvalidationCache[e.id] = std::move(e.view);
+    }
+    mCache.reset();
 }
 
 void AForEachUIBase::applyGeometryToChildren() {
@@ -92,6 +99,9 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     });
     mLastInflatedScroll.reset();
     mViewport = std::move(viewport);
+
+    setModelImpl(std::move(mViewsModel)); // if parent AUI_DECLARATIVE_FOR was invalidated, ours
+                                          // onViewGraphSubtreeChanged should be called. We should invalidate as well.
 }
 
 void AForEachUIBase::setPosition(glm::ivec2 position) {
@@ -214,7 +224,8 @@ void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
 }
 
 glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
-    AUI_ASSERT(mViewport != nullptr);
+    AUI_ASSERTX(mViewport != nullptr, "can't be used without a viewport set");
+    AUI_ASSERTX(getParent() != nullptr, "parent is undefined");
 
     glm::ivec2 accumulator {};
     for (AView* p = this; p != nullptr; p = p->getParent()) {
@@ -223,7 +234,9 @@ glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
         }
         accumulator += p->getPosition();
     }
-    AUI_ASSERT_NO_CONDITION("divergent mViewport");
+    ALogger::err(LOG_TAG) << "Divergent mViewport! this = " << this;
+//    AUI_ASSERT_NO_CONDITION("divergent mViewport");
+    return {};
 }
 
 void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> index) {
@@ -267,13 +280,4 @@ glm::ivec2 AForEachUIBase::axisMask() {
         return glm::ivec2{1, 0};
     }
     return glm::ivec2{0, 1};
-}
-
-void AForEachUIBase::invalidate() {
-//    if (!mCache) {
-        removeAllViews();
-        markMinContentSizeInvalid();
-//    }
-    mCache.reset();
-
 }

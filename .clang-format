@@ -62,6 +62,6 @@ StatementAttributeLikeMacros:
 Macros:
   - let=+[]
   - async=[]
-  - AUI_DECLARATIVE_FOR(a,b,c)=[a,b,c]()
-  - AUI_DECLARATIVE_FOR_EX(a,b,c)=[a,b,c]()
+  - AUI_DECLARATIVE_FOR(a,b,c)=[v2=b,v3=c](a)
+  - AUI_DECLARATIVE_FOR_EX(a,b,c,d)=[d,v2=b,v3=c](a)
   - with_style=+std::vector

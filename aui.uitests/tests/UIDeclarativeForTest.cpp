@@ -17,17 +17,62 @@
 #include "AUI/View/AScrollArea.h"
 #include "AUI/Model/AListModel.h"
 
-class UIDeclarativeForTest: public testing::UITest {
+static constexpr auto LOG_TAG = "UIDeclarativeForTest";
+
+namespace {
+    class Observer {
+    public:
+        MOCK_METHOD(void, onViewCreated, (const AString &s), ());
+    };
+}   // namespace
+
+class UIDeclarativeForTest : public testing::UITest {
 public:
     ~UIDeclarativeForTest() override = default;
 
 protected:
     void SetUp() override {
         UITest::SetUp();
+
+        ON_CALL(mTestObserver, onViewCreated(testing::_)).WillByDefault([](const AString &s) {
+            ALOG_DEBUG(LOG_TAG) << "View instantiated: " << s;
+        });
+
         mWindow = _new<AWindow>();
         mWindow->show();
     }
+
     _<AWindow> mWindow;
+    Observer mTestObserver;
+
+    void validateOrder() {
+        uitest::frame();
+        auto labels = By::type<ALabel>().toVector();
+        ASSERT_FALSE(labels.empty());
+
+        AOptional<int> lastGroup;
+        AOptional<int> lastItem;
+
+        for (const auto &view : labels) {
+            auto text = *_cast<ALabel>(view)->text();
+            if (text.startsWith("Group")) {
+                auto currentGroup = text.substr(6).toIntOrException();
+                if (lastGroup) {
+                    EXPECT_LT(*lastGroup, currentGroup);
+                }
+                lastGroup = currentGroup;
+                continue;
+            }
+            auto currentItem = text.toIntOrException();
+            if (lastItem) {
+                EXPECT_LT(*lastItem, currentItem);
+                if (lastGroup) {
+                    EXPECT_LE(*lastGroup, currentItem);
+                }
+            }
+            lastItem = currentItem;
+        }
+    }
 };
 
 using namespace declarative;
@@ -58,23 +103,16 @@ TEST_F(UIDeclarativeForTest, Basic) {
     EXPECT_FALSE(By::text("Item 4").one());
 }*/
 
-
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
-    class Observer {
-    public:
-        MOCK_METHOD(void, onViewCreated, (), ());
-    };
-
-    Observer observer;
-    EXPECT_CALL(observer, onViewCreated()).Times(testing::Between(10, 40));
+    EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 40));
 
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
               AUI_DECLARATIVE_FOR_EX(i, ranges::views::ints, AVerticalLayout, &) {
-                  observer.onViewCreated();
+                  mTestObserver.onViewCreated("");
                   return Label { "Item {}"_format(i) };
               })
               .build() with_style { FixedSize { 150_dp, 200_dp } },
@@ -89,19 +127,14 @@ TEST_F(UIDeclarativeForTest, Performance) {
 }
 
 TEST_F(UIDeclarativeForTest, Dynamic) {
-    AProperty<AVector<AString>> items = AVector<AString>{ "Hello", "World", "Test" };
+    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
     mWindow->setContents(Vertical {
-        AScrollArea::Builder()
-            .withContents(
-                AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
-                  return Label { i };
-                })
-            .build() with_style { FixedSize { 150_dp, 200_dp } },
+      AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) { return Label { i }; }).build() with_style { FixedSize { 150_dp, 200_dp } },
     });
 
     auto checkAllPresent = [&] {
         uitest::frame();
-        for (const auto& i : *items) {
+        for (const auto &i : *items) {
             EXPECT_TRUE(By::text(i).one()) << i;
         }
     };
@@ -112,26 +145,21 @@ TEST_F(UIDeclarativeForTest, Dynamic) {
 }
 
 TEST_F(UIDeclarativeForTest, DynamicPerformance) {
-    AProperty<AVector<AString>> items = AVector<AString>{ "Hello", "World", "Test" };
+    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
 
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
-    class Observer {
-    public:
-        MOCK_METHOD(void, onViewCreated, (const AString &i), ());
-    };
-
-    Observer observer;
     testing::InSequence s;
-    EXPECT_CALL(observer, onViewCreated("Hello"_as));
-    EXPECT_CALL(observer, onViewCreated("World"_as));
-    EXPECT_CALL(observer, onViewCreated("Test"_as));
-    EXPECT_CALL(observer, onViewCreated("Bruh"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("Hello"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("World"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("Test"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("Bruh"_as));
 
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
-              .withContents(AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
-                  observer.onViewCreated(i);
+              .withContents(
+              AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
+                  mTestObserver.onViewCreated(i);
                   return Label { i };
               })
               .build() with_style { FixedSize { 150_dp, 200_dp } },
@@ -140,4 +168,124 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     uitest::frame();
     items.writeScope()->push_back("Bruh");
     uitest::frame();
+}
+
+TEST_F(UIDeclarativeForTest, IntBasic) {
+    mWindow->setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+              AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) { return Label { "{}"_format(i) }; })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    validateOrder();
+}
+
+TEST_F(UIDeclarativeForTest, IntBasic2) {
+    AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    mWindow->setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+              AUI_DECLARATIVE_FOR(i, mInts, AVerticalLayout) { return Label { "{}"_format(i) }; })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    validateOrder();
+}
+
+TEST_F(UIDeclarativeForTest, IntGrouping) {
+    AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    mWindow->setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+              AUI_DECLARATIVE_FOR(
+                  group, mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
+                  AVerticalLayout) {
+                  return Vertical {
+                      Label { "Group {}"_format(*ranges::begin(group) / 10 * 10) } with_style { FontSize(10_pt) },
+                      AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) { return Label { "{}"_format(i) }; }
+                  };
+              })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    validateOrder();
+    EXPECT_TRUE(By::text("Group 0").one());
+    EXPECT_TRUE(By::text("Group 10").one());
+}
+
+TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
+    AProperty<AVector<int>> mInts = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    testing::InSequence s;
+
+    mWindow->setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+              AUI_DECLARATIVE_FOR(
+                  group, *mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
+                  AVerticalLayout) {
+                  auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
+                  mTestObserver.onViewCreated(groupName);
+                  return Vertical {
+                      Label { groupName } with_style { FontSize(10_pt) },
+                      AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                          auto str = "{}"_format(i);
+                          mTestObserver.onViewCreated(str);
+                          return Label { std::move(str) };
+                      }
+                  };
+              })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("1"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("2"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("3"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("4"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("5"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("6"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("7"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("8"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("9"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("10"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("11"_as));
+    EXPECT_CALL(mTestObserver, onViewCreated("12"_as));
+
+    validateOrder();
+    EXPECT_TRUE(By::text("Group 0").one());
+    EXPECT_TRUE(By::text("Group 10").one());
+
+    /* basic removal */
+    /* an attempt to change the first chunk will re-evaluate view callback for it */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
+    mInts.writeScope()->removeAll(2);
+    validateOrder();
+
+    /* update & reorder to existing group */
+    {
+        auto write = mInts.writeScope();
+        write->removeAll(3);
+        write->push_back(15);
+    }
+    validateOrder();
+    EXPECT_FALSE(By::text("3").one());
+    EXPECT_TRUE(By::text("15").one());
+
+    /* update & reorder to new group */
+    {
+        auto write = mInts.writeScope();
+        write->removeAll(4);
+        write->push_back(22);
+    }
+    validateOrder();
+    EXPECT_FALSE(By::text("4").one());
+    EXPECT_TRUE(By::text("Group 20").one());
+    EXPECT_TRUE(By::text("22").one());
+
+    /* remove first element from the group */
+    mInts.writeScope()->removeAll(1);
 }

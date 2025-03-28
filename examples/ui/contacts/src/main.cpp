@@ -76,6 +76,7 @@ public:
                             }), AVerticalLayout) {
                                 auto firstContact = *ranges::begin(group);
                                 auto firstLetter = groupLetter(firstContact->displayName);
+                                ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
                                 return Vertical {
                                     Label { firstLetter } with_style {
                                           Opacity(0.5f),
@@ -85,6 +86,7 @@ public:
                                         },
                                     common_views::divider(),
                                 AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                                        ALogger::info("Test") << "Computing view for item " << i->displayName;
                                         return contactPreview(i) let {
                                             connect(it->clicked, [this, i] { mSelectedContact = i; });
                                         };

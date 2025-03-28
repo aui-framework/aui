@@ -30,21 +30,32 @@ struct InflateOpts {
 }   // namespace aui::detail
 
 namespace aui::for_each_ui {
+
+/**
+ * @brief Key, used to avoid view instantiation on AForEachUI::setModelImpl.
+ * @details
+ * Typically consists of a hash of underlying value.
+ */
+using Key = std::size_t;
+
 template <typename T>
     requires requires(T& t) { std::hash<T> {}(t); }
-constexpr std::size_t defaultKey(const T& value, long primaryCandidate = 0L) {   // std::hash specialization
+constexpr aui::for_each_ui::Key defaultKey(const T& value, long primaryCandidate) {   // std::hash specialization
     return std::hash<T> {}(value);
 }
 
 template <typename T>
-constexpr std::size_t defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
+constexpr aui::for_each_ui::Key defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
     return reinterpret_cast<std::uintptr_t>(value.get());
 }
 
 template <ranges::input_range T>
-constexpr std::size_t defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
-    AUI_ASSERT(ranges::begin(value) != ranges::end(value));
-    return forEachKey(*ranges::begin(value));
+constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
+    aui::for_each_ui::Key k{};
+    for (const auto& i : value) {
+        k ^= defaultKey(i, 0L);
+    }
+    return k;
 }
 }   // namespace aui::for_each_ui
 
@@ -155,22 +166,23 @@ class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
     struct Entry {
         _<AView> view;
-        std::size_t id;
+        aui::for_each_ui::Key id;
     };
 
     using List = aui::dyn_range<Entry>;
     AForEachUIBase() {}
     void setPosition(glm::ivec2 position) override;
 
-    /**
-     * @brief Notifies that range was changed or iterators might have invalidated.
-     */
-    void invalidate();
-
 protected:
     void onViewGraphSubtreeChanged() override;
     void applyGeometryToChildren() override;
+
+    /**
+     * @brief Notifies that range was changed or iterators might have invalidated.
+     */
     void setModelImpl(List model);
+
+    AMap<aui::for_each_ui::Key, _<AView>> mPreInvalidationCache;
 
 private:
     _<AScrollAreaViewport> mViewport;
@@ -223,7 +235,15 @@ public:
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
             aui::react::DependencyObserverRegistrar r(*this);
             return rangeFactory() | ranges::views::transform([this](const T& t) {
-                       return AForEachUIBase::Entry { .view = mFactory(t), .id = aui::for_each_ui::defaultKey(t) };
+                       auto key = aui::for_each_ui::defaultKey(t, 0L);
+                       _<AView> view;
+                       if (auto c = super::mPreInvalidationCache.contains(key)) {
+                           view = std::exchange(c->second, nullptr);
+                       }
+                       if (!view) {
+                           view = mFactory(t);
+                       }
+                       return AForEachUIBase::Entry { .view = std::move(view), .id = key };
                    });
         };
     }
@@ -234,9 +254,9 @@ public:
     }
 
     /**
-     * @copybrief AForEachUIBase::invalidate
+     * @copybrief AForEachUIBase::setModelImpl
      */
-    void invalidate() override { super::invalidate(); }
+    void invalidate() override { updateUnderlyingModel(); }
 
 private:
     ListFactory mListFactory;

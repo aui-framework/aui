@@ -90,8 +90,7 @@ public:
     void compensateLayoutUpdatesByScroll(_<AView> anchor, aui::invocable auto&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1)) {
         auto queryRelativePosition = [&] {
             glm::ivec2 accumulator{};
-            for (auto v = anchor.get(); v->getParent() != this; v = v->getParent()) {
-                AUI_ASSERT(v != nullptr);
+            for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {
                 accumulator += v->getPosition();
             }
             return accumulator;

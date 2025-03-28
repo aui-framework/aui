@@ -108,7 +108,7 @@ struct AProperty: AObjectBase {
 
     [[nodiscard]]
     const T& value() const noexcept {
-        aui::react::addDependency(changed);
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return raw;
     }
 
