@@ -19,14 +19,13 @@ static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
 static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
-    removeAllViews();
+    putOurViewsToSharedCache();
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
-
-    putOurViewsToSharedCache();
 }
 
 void AForEachUIBase::putOurViewsToSharedCache() {
+    removeAllViews();
     if (!mCache) {
         return;
     }
@@ -211,7 +210,14 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     if (opts.forward) {
         const auto inflateTill =
             mViewport->getSize() + glm::ivec2(INFLATE_STEP_PX) + lastScroll - posWithinSlidingSurface;
-        auto it = mCache->items.empty() ? mViewsModel.begin() : std::next(mCache->items.last().iterator);
+        auto it = [&] {
+            if (mCache) {
+                if (!mCache->items.empty()) {
+                    return std::next(mCache->items.last().iterator);
+                }
+            }
+            return mViewsModel.begin();
+        }();
         for (; it != end; ++it) {
             if (!mViews.empty()) {
                 const auto& lastView = mViews.last();

@@ -24,6 +24,7 @@
 #include <view/ContactDetailsView.h>
 #include <view/common.h>
 #include <AUI/View/ASpacerFixed.h>
+#include "AUI/Platform/AMessageBox.h"
 
 using namespace declarative;
 using namespace ass;
@@ -38,7 +39,7 @@ static _<AView> contactPreview(const _<Contact>& contact) {
     };
 }
 
-static _<AView> contactDetails(const _<Contact>& contact) {
+static _<ContactDetailsView> contactDetails(const _<Contact>& contact) {
     if (!contact) {
         return nullptr;
     }
@@ -73,7 +74,7 @@ public:
                             /// [NESTED_FOR_EXAMPLE]
                             AUI_DECLARATIVE_FOR(group, *mState.contacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                 return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
-                            }), AVerticalLayout) {
+                              }), AVerticalLayout) {
                                 auto firstContact = *ranges::begin(group);
                                 auto firstLetter = groupLetter(firstContact->displayName);
                                 ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
@@ -85,7 +86,7 @@ public:
                                           FontSize { 8_pt },
                                         },
                                     common_views::divider(),
-                                AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                                         ALogger::info("Test") << "Computing view for item " << i->displayName;
                                         return contactPreview(i) let {
                                             connect(it->clicked, [this, i] { mSelectedContact = i; });
@@ -100,12 +101,13 @@ public:
                           } with_style { Padding(0, 8_dp) })
                       .build() with_style { Expanding(0, 1), MinSize(200_dp) },
 
-              CustomLayout::Expanding {} & mSelectedContact.readProjected([this](const _<Contact>& selectedContact) {
+              CustomLayout::Expanding {} & mSelectedContact.readProjected([this](const _<Contact>& selectedContact) -> _<AView> {
                   auto editor = contactDetails(selectedContact);
                   if (editor != nullptr) {
                       connect(selectedContact->displayName.changed, editor, [this] {
                           *mState.contacts.writeScope() |= CONTACTS_SORT;
                       });
+                      connect(editor->deleteAction, me::deleteCurrentContact);
                   }
                   return editor;
               }) with_style { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
@@ -123,6 +125,20 @@ private:
 
     APropertyPrecomputed<std::size_t> mContactCount = [this] { return mState.contacts->size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
+
+    void deleteCurrentContact() {
+        if (mSelectedContact == nullptr) {
+            return;
+        }
+        if (AMessageBox::show(nullptr,
+                              "Do you really want to delete?",
+                              "This action is irreversible!",
+                              AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
+            return;
+        }
+        mState.contacts.writeScope()->removeFirst(mSelectedContact);
+        mSelectedContact = nullptr;
+    }
 };
 
 AUI_ENTRY {

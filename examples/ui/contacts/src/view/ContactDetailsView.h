@@ -18,6 +18,9 @@ class ContactDetailsView : public AViewContainerBase {
 public:
     ContactDetailsView(_<Contact> contact);
 
+signals:
+    emits<> deleteAction;
+
 private:
     _<Contact> mContact;
     _<Contact> mOriginalContact;

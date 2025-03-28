@@ -12,6 +12,7 @@
 #include "ContactDetailsView.h"
 #include "AUI/View/ATextField.h"
 #include "common.h"
+#include "AUI/Platform/AMessageBox.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AScrollArea.h>
@@ -101,13 +102,18 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
 }
 
 void ContactDetailsView::drop() {
-    if (mEditorMode) {
-        // discard
-        mContact = mOriginalContact;
-        mEditorMode = false;
-    } else {
+    if (!mEditorMode) {
         // delete
+        emit deleteAction;
+        return;
     }
+
+    // discard
+    if (AMessageBox::show(nullptr, "Do you really want to discard?", "This action is irreversible!", AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
+        return;
+    }
+    mContact = mOriginalContact;
+    mEditorMode = false;
 }
 
 void ContactDetailsView::toggleEdit() {
