@@ -20,10 +20,10 @@
 static constexpr auto LOG_TAG = "UIDeclarativeForTest";
 
 namespace {
-    class Observer {
-    public:
-        MOCK_METHOD(void, onViewCreated, (const AString &s), ());
-    };
+class Observer {
+public:
+    MOCK_METHOD(void, onViewCreated, (const AString &s), ());
+};
 }   // namespace
 
 class UIDeclarativeForTest : public testing::UITest {
@@ -225,24 +225,24 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
       AScrollArea::Builder()
               .withContents(
                   /* group foreach */
-              AUI_DECLARATIVE_FOR(
+                  AUI_DECLARATIVE_FOR(
                   group, *mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
                   AVerticalLayout) {
-                  /* group foreach data to view transformer callback, aka group's view callback */
-                  auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
-                  mTestObserver.onViewCreated(groupName);
-                  return Vertical {
-                      Label { groupName } with_style { FontSize(10_pt) },
-                      /* single item foreach */
-                      AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
-                          /* single item data to view transformer callback, aka item's view callback */
-                          auto str = "{}"_format(i);
-                          mTestObserver.onViewCreated(str);
-                          return Label { std::move(str) };
-                      }
-                  };
-              })
-              .build() with_style { FixedSize { 150_dp, 200_dp } },
+                      /* group foreach data to view transformer callback, aka group's view callback */
+                      auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
+                      mTestObserver.onViewCreated(groupName);
+                      return Vertical {
+                          Label { groupName } with_style { FontSize(10_pt) },
+                          /* single item foreach */
+                          AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                              /* single item data to view transformer callback, aka item's view callback */
+                              auto str = "{}"_format(i);
+                              mTestObserver.onViewCreated(str);
+                              return Label { std::move(str) };
+                          }
+                      };
+                  })
+              .build() with_style { FixedSize { 150_dp, 300_dp } },
     });
 
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
@@ -265,15 +265,27 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_TRUE(By::text("Group 10").one());
 
     /* basic removal */
-    /* An attempt to change the first chunk will re-evaluate group's view callback for "Group 0". */
+    /* An attempt to change contents of the first chunk will re-evaluate group's view callback for "Group 0". */
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
-    mInts.writeScope()->removeAll(2);
+    /* Also, depending on used container's iterator implementation, other groups might be evaluated as well. In our
+     * case, we are using AVector, whose iterator is an offset from beginning. Since the offset has changed due to
+     * removal, the iterator is considered dirty. This might not be the case for containers whose items are stored in
+     * heap, i.e., `std::list`. */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as));
+    {
+        mInts.writeScope()->removeAll(2);
+    }
+
     validateOrder();
-    /* Despite that, in fact, a new single item foreach (of "Group 0") is created, its callback won't be reevaluated for
-     * each single item ("0", "1", "2", ...). There's a cache of instantiated views, denoted by callback's type. This
-     * cache is shared within one C++'s compilation unit (a cpp file). */
+
+    /* Despite that, in fact, a new group foreach (of "Group 0" and potentially others) is created, single item callback
+     * ("0", "1", "2", ...) won't be reevaluated . There's a cache of instantiated views, denoted by
+     * callback's type. This cache is shared within one C++'s compilation unit (a cpp file). */
 
     /* update & reorder to existing group */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as)); /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("15"_as));       /* new item */
     {
         auto write = mInts.writeScope();
         write->removeAll(3);
@@ -284,6 +296,10 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_TRUE(By::text("15").one());
 
     /* update & reorder to new group */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as)); /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 20"_as)); /* new group */
+    EXPECT_CALL(mTestObserver, onViewCreated("22"_as));       /* new group */
     {
         auto write = mInts.writeScope();
         write->removeAll(4);
@@ -295,5 +311,21 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_TRUE(By::text("22").one());
 
     /* remove first element from the group */
-    mInts.writeScope()->removeAll(1);
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as)); /* offsets changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 20"_as)); /* offsets changed */
+    {
+        mInts.writeScope()->removeAll(1);
+    }
+    validateOrder();
+
+    /* update value, preserving order */
+    EXPECT_FALSE(By::text("2").one());
+    {
+        EXPECT_EQ((*mInts)[0], 5);
+        (*mInts.writeScope())[0] = 2;
+    }
+    validateOrder();
+    EXPECT_TRUE(By::text("2").one());
+    saveScreenshot("");
 }

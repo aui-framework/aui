@@ -23,6 +23,10 @@ void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
 
+    putOurViewsToSharedCache();
+}
+
+void AForEachUIBase::putOurViewsToSharedCache() {
     if (!mCache) {
         return;
     }
@@ -69,6 +73,13 @@ void AForEachUIBase::applyGeometryToChildren() {
 void AForEachUIBase::onViewGraphSubtreeChanged() {
     ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
+
+    AUI_DEFER {
+        // if parent AUI_DECLARATIVE_FOR was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
+        // on parent's AUI_DECLARATIVE_FOR subrange, so we put our views to shared cache.
+        putOurViewsToSharedCache();
+    };
+
     AUI_NULLSAFE(mViewport)->scroll().changed.clearAllOutgoingConnectionsWith(this);
     auto viewport = [&]() -> _<AScrollAreaViewport> {
         for (auto p = getParent(); p != nullptr; p = p->getParent()) {

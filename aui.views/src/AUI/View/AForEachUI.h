@@ -45,13 +45,7 @@ defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for 
 
 template <ranges::input_range T>
 constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
-    aui::for_each_ui::Key k {};
-    for (const auto& i : value) {
-        // sub produces order sensitive hash.
-        // lshift distinguishes equal hashes.
-        k = (k << 1) - defaultKey(i, 0L);
-    }
-    return k;
+    return std::hash<AByteBufferView>{}(AByteBufferView::fromRaw(value));
 }
 
 namespace detail {
@@ -216,6 +210,8 @@ private:
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
+    void putOurViewsToSharedCache();
+
 };
 
 namespace aui::detail {
