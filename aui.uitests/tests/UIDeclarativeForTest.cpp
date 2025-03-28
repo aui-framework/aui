@@ -216,6 +216,7 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
 }
 
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
+    ::testing::GTEST_FLAG(throw_on_failure) = true;
     AProperty<AVector<int>> mInts = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
     testing::InSequence s;
@@ -223,14 +224,18 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
+                  /* group foreach */
               AUI_DECLARATIVE_FOR(
                   group, *mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
                   AVerticalLayout) {
+                  /* group foreach data to view transformer callback, aka group's view callback */
                   auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
                   mTestObserver.onViewCreated(groupName);
                   return Vertical {
                       Label { groupName } with_style { FontSize(10_pt) },
+                      /* single item foreach */
                       AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                          /* single item data to view transformer callback, aka item's view callback */
                           auto str = "{}"_format(i);
                           mTestObserver.onViewCreated(str);
                           return Label { std::move(str) };
@@ -260,10 +265,13 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_TRUE(By::text("Group 10").one());
 
     /* basic removal */
-    /* an attempt to change the first chunk will re-evaluate view callback for it */
+    /* An attempt to change the first chunk will re-evaluate group's view callback for "Group 0". */
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
     mInts.writeScope()->removeAll(2);
     validateOrder();
+    /* Despite that, in fact, a new single item foreach (of "Group 0") is created, its callback won't be reevaluated for
+     * each single item ("0", "1", "2", ...). There's a cache of instantiated views, denoted by callback's type. This
+     * cache is shared within one C++'s compilation unit (a cpp file). */
 
     /* update & reorder to existing group */
     {

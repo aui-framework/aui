@@ -22,13 +22,6 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Traits/dyn_range.h>
 
-namespace aui::detail {
-struct InflateOpts {
-    bool backward = true;
-    bool forward = true;
-};
-}   // namespace aui::detail
-
 namespace aui::for_each_ui {
 
 /**
@@ -56,6 +49,14 @@ constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidat
         k ^= defaultKey(i, 0L);
     }
     return k;
+}
+
+namespace detail {
+struct InflateOpts {
+    bool backward = true;
+    bool forward = true;
+};
+using ViewsSharedCache = AMap<aui::for_each_ui::Key, _<AView>>;
 }
 }   // namespace aui::for_each_ui
 
@@ -174,22 +175,6 @@ public:
     void setPosition(glm::ivec2 position) override;
 
 protected:
-    void onViewGraphSubtreeChanged() override;
-    void applyGeometryToChildren() override;
-
-    /**
-     * @brief Notifies that range was changed or iterators might have invalidated.
-     */
-    void setModelImpl(List model);
-
-    AMap<aui::for_each_ui::Key, _<AView>> mPreInvalidationCache;
-
-private:
-    _<AScrollAreaViewport> mViewport;
-    List mViewsModel;
-    aui::dyn_range_capabilities mViewsModelCapabilities;
-    AOptional<glm::ivec2> mLastInflatedScroll {};
-
     struct Cache {
         struct LazyListItemInfo : Entry {
             List::iterator iterator;
@@ -199,10 +184,33 @@ private:
 
     AOptional<Cache> mCache;
 
+    void onViewGraphSubtreeChanged() override;
+    void applyGeometryToChildren() override;
+
+    /**
+     * @brief Notifies that range was changed or iterators might have invalidated.
+     */
+    void setModelImpl(List model);
+
+    /**
+     * @brief Returns a cache of views, if any.
+     * @details
+     * Called by `setModelImpl`. The implementation might then use the shared cache to return views from `List` range.
+     *
+     * The implementation is responsible to clean up the cache.
+     */
+    virtual aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() = 0;
+
+private:
+    _<AScrollAreaViewport> mViewport;
+    List mViewsModel;
+    aui::dyn_range_capabilities mViewsModelCapabilities;
+    AOptional<glm::ivec2> mLastInflatedScroll {};
+
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
     void removeViews(aui::range<AVector<_<AView>>::iterator> iterators);
 
-    void inflate(aui::detail::InflateOpts opts = {});
+    void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
 };
@@ -215,18 +223,17 @@ concept RangeFactory = requires(Factory&& factory) {
 };
 }   // namespace aui::detail
 
-template <typename T, typename Layout, typename super = AForEachUIBase>
-class AForEachUI : public super, public aui::react::DependencyObserver {
+template <typename T>
+class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver {
 public:
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;
 
-    AForEachUI() { this->setLayout(std::make_unique<Layout>()); }
+    AForEachUI() {}
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
-        this->setLayout(std::make_unique<Layout>());
         this->setModel(std::forward<RangeFactory>(rangeFactory));
     }
 
@@ -237,8 +244,10 @@ public:
             return rangeFactory() | ranges::views::transform([this](const T& t) {
                        auto key = aui::for_each_ui::defaultKey(t, 0L);
                        _<AView> view;
-                       if (auto c = super::mPreInvalidationCache.contains(key)) {
-                           view = std::exchange(c->second, nullptr);
+                       if (mViewsSharedCache) {
+                           if (auto c = mViewsSharedCache->contains(key)) {
+                               view = std::exchange(c->second, nullptr);
+                           }
                        }
                        if (!view) {
                            view = mFactory(t);
@@ -248,8 +257,14 @@ public:
         };
     }
 
-    void operator-(ViewFactory f) {
-        mFactory = std::move(f);
+    /**
+     * @internal
+     * @brief Helper function for AUI_DECLARATIVE_FOR
+     */
+    template<aui::invocable<const T&> ViewFactoryT>
+    void operator-(ViewFactoryT&& f) {
+        mFactory = std::forward<ViewFactoryT>(f);
+        mViewsSharedCache = &VIEWS_SHARED_CACHE<ViewFactoryT>;
         updateUnderlyingModel();
     }
 
@@ -258,7 +273,18 @@ public:
      */
     void invalidate() override { updateUnderlyingModel(); }
 
+    using AViewContainerBase::setLayout;
+
+protected:
+    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override {
+        return mViewsSharedCache;
+    }
+
 private:
+    template <typename FactoryTypeTag>
+    static aui::for_each_ui::detail::ViewsSharedCache VIEWS_SHARED_CACHE;
+
+    aui::for_each_ui::detail::ViewsSharedCache* mViewsSharedCache = nullptr;
     ListFactory mListFactory;
     ViewFactory mFactory;
 
@@ -271,8 +297,12 @@ private:
     }
 };
 
+template<typename T>
+template<typename FactoryTypeTag>
+aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE{};
+
 namespace aui::detail {
-template <typename Base /* AForEachUIBase */, typename Layout, aui::invocable RangeFactory>
+template <typename Layout, aui::invocable RangeFactory>
 auto makeForEach(RangeFactory&& rangeFactory)
     requires requires {
         { rangeFactory() } -> ranges::range;
@@ -282,7 +312,10 @@ auto makeForEach(RangeFactory&& rangeFactory)
         auto rng = rangeFactory();
         return *ranges::begin(rng);
     }());
-    return _new<AForEachUI<T, Layout, Base>>(std::forward<RangeFactory>(rangeFactory));
+
+    auto result = _new<AForEachUI<T>>(std::forward<RangeFactory>(rangeFactory));
+    result->setLayout(std::make_unique<Layout>());
+    return result;
 }
 }   // namespace aui::detail
 
@@ -290,7 +323,7 @@ auto makeForEach(RangeFactory&& rangeFactory)
  * @see AForEachUIBase
  */
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                      \
-    aui::detail::makeForEach<AForEachUIBase, layout>([&]() -> decltype(auto) { \
+    aui::detail::makeForEach<layout>([&]() -> decltype(auto) { \
         return (model);                                                        \
     }) - [__VA_ARGS__](const auto& value) -> _<AView>
 

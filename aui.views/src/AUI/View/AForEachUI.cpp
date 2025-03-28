@@ -26,9 +26,11 @@ void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     if (!mCache) {
         return;
     }
-    mPreInvalidationCache.clear();
-    for (auto& e : mCache->items) {
-        mPreInvalidationCache[e.id] = std::move(e.view);
+    if (auto viewsCache = getViewsCache()) {
+        for (auto& e : mCache->items) {
+            (*viewsCache)[e.id] = std::move(e.view);
+            ALOG_DEBUG(LOG_TAG) << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
+        }
     }
     mCache.reset();
 }
@@ -117,7 +119,7 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     inflate();
 }
 
-void AForEachUIBase::inflate(aui::detail::InflateOpts opts) {
+void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     AUI_ASSERT(opts.forward || opts.backward);
 
 #if AUI_DEBUG
