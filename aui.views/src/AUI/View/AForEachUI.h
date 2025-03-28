@@ -45,7 +45,13 @@ defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for 
 
 template <ranges::input_range T>
 constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
-    return std::hash<AByteBufferView>{}(AByteBufferView::fromRaw(value));
+    auto key = std::hash<AByteBufferView>{}(AByteBufferView::fromRaw(value));
+    for (const auto& i : value) {
+        // sub produces order sensitive hash.
+        // lshift distinguishes equal hashes.
+        key = (key << 1) - defaultKey(i, 0L);
+    }
+    return key;
 }
 
 namespace detail {

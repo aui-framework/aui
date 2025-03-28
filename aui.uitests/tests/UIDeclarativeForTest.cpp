@@ -321,6 +321,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
 
     /* update value, preserving order */
     EXPECT_FALSE(By::text("2").one());
+    EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* contents changed */
     {
         EXPECT_EQ((*mInts)[0], 5);
         (*mInts.writeScope())[0] = 2;
