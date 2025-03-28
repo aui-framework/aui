@@ -19,7 +19,6 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AText.h>
 #include "model/PredefinedContacts.h"
-#include "model/State.h"
 
 #include <view/ContactDetailsView.h>
 #include <view/common.h>
@@ -32,70 +31,28 @@ using namespace std::chrono_literals;
 
 static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
-static _<AView> contactPreview(const _<Contact>& contact) {
-    return Vertical {
-        Label {} & contact->displayName with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
-        common_views::divider(),
-    };
-}
-
-static _<ContactDetailsView> contactDetails(const _<Contact>& contact) {
-    if (!contact) {
-        return nullptr;
-    }
-    return _new<ContactDetailsView>(contact);
-}
-
 static auto groupLetter(const AString& s) { return s.firstOpt().valueOr('_'); }
 
 class ContactsWindow : public AWindow {
 public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
-        // connect(mContacts->dataInserted, slot(mContactCount)::invalidate);
-        // connect(mContacts->dataRemoved, slot(mContactCount)::invalidate);
-        /*
-        procedural way:
-        for (const auto& g : mContacts->toVector() | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>&
-        rhs){ return lhs->displayName->firstOpt().valueOr(' ') == rhs->displayName->firstOpt().valueOr(' ');
-                             })) {
-            fmt::print("{}\n", AString(1, g.front()->displayName->firstOpt().valueOr(' ')));
-            for (const auto& contact : g) {
-                fmt::print("  {}\n", contact->displayName);
-            }
-        }*/
         setContents(
             Horizontal {
               AScrollArea::Builder()
                       .withContents(
                           Vertical {
-                            _new<ATextField>(),
+                            _new<ATextField>() && mSearchQuery,
                             AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
-                            /// [NESTED_FOR_EXAMPLE]
-                            AUI_DECLARATIVE_FOR(group, *mState.contacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
-                                return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
-                              }), AVerticalLayout) {
-                                auto firstContact = *ranges::begin(group);
-                                auto firstLetter = groupLetter(firstContact->displayName);
-                                ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
-                                return Vertical {
-                                    Label { firstLetter } with_style {
-                                          Opacity(0.5f),
-                                          Padding { 12_dp, 0, 4_dp },
-                                          Margin { 0 },
-                                          FontSize { 8_pt },
-                                        },
-                                    common_views::divider(),
-                                    AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
-                                        ALogger::info("Test") << "Computing view for item " << i->displayName;
-                                        return contactPreview(i) let {
-                                            connect(it->clicked, [this, i] { mSelectedContact = i; });
-                                        };
-                                    },
-                                };
-                            },
-                            /// [NESTED_FOR_EXAMPLE]
-                            Label {} & mContactCount.readProjected([](std::size_t c) {
+                            CustomLayout {} & mSearchQuery.readProjected([&](const AString& q) {
+                                if (q.empty()) {
+                                    return indexedList();
+                                }
+                                return searchQueryList();
+                            }),
+                            Label {}
+                                & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
+                                & mContactCount.readProjected([](std::size_t c) {
                                 return "{} contact(s)"_format(c);
                             }) with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
                           } with_style { Padding(0, 8_dp) })
@@ -105,7 +62,7 @@ public:
                   auto editor = contactDetails(selectedContact);
                   if (editor != nullptr) {
                       connect(selectedContact->displayName.changed, editor, [this] {
-                          *mState.contacts.writeScope() |= CONTACTS_SORT;
+                          *mContacts.writeScope() |= CONTACTS_SORT;
                       });
                       connect(editor->deleteAction, me::deleteCurrentContact);
                   }
@@ -117,14 +74,13 @@ public:
     }
 
 private:
-    State mState = {
-        .contacts =
+    AProperty<AVector<_<Contact>>> mContacts =
             predefined::PERSONS | ranges::views::transform([](Contact& p) { return _new<Contact>(std::move(p)); }) |
-            ranges::to_vector | CONTACTS_SORT,
-    };
-
-    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mState.contacts->size(); };
+            ranges::to_vector | CONTACTS_SORT;
+    APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts->size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
+    AProperty<AString> mSearchQuery;
+    APropertyPrecomputed<AString> mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
 
     void deleteCurrentContact() {
         if (mSelectedContact == nullptr) {
@@ -136,8 +92,61 @@ private:
                               AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
             return;
         }
-        mState.contacts.writeScope()->removeFirst(mSelectedContact);
+        mContacts.writeScope()->removeFirst(mSelectedContact);
         mSelectedContact = nullptr;
+    }
+
+    _<AView> indexedList() {
+        return AUI_DECLARATIVE_FOR(group, *mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+                                return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
+                            }), AVerticalLayout) {
+            auto firstContact = *ranges::begin(group);
+            auto firstLetter = groupLetter(firstContact->displayName);
+            ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
+            return Vertical {
+                Label { firstLetter } with_style {
+                                        Opacity(0.5f),
+                                        Padding { 12_dp, 0, 4_dp },
+                                        Margin { 0 },
+                                        FontSize { 8_pt },
+                                      },
+                common_views::divider(),
+                AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
+                    ALogger::info("Test") << "Computing view for item " << i->displayName;
+                    return contactPreview(i);
+                },
+            };
+        };
+    }
+
+    _<AView> searchQueryList() {
+        auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
+            for (const auto& field : { c->displayName, c->note }) {
+                if (field->lowercase().contains(mSearchQueryLowercased)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        return AUI_DECLARATIVE_FOR(i, *mContacts | searchFilter, AVerticalLayout) {
+            return contactPreview(i);
+        };
+    }
+
+    _<AView> contactPreview(const _<Contact>& contact) {
+        return Vertical {
+            Label {} & contact->displayName with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
+            common_views::divider(),
+        } let {
+            connect(it->clicked, [this, contact] { mSelectedContact = contact; });
+        };
+    }
+
+    _<ContactDetailsView> contactDetails(const _<Contact>& contact) {
+        if (!contact) {
+            return nullptr;
+        }
+        return _new<ContactDetailsView>(contact);
     }
 };
 
