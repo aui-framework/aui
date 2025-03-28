@@ -29,7 +29,7 @@ void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     if (auto viewsCache = getViewsCache()) {
         for (auto& e : mCache->items) {
             (*viewsCache)[e.id] = std::move(e.view);
-            ALOG_DEBUG(LOG_TAG) << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
+            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
         }
     }
     mCache.reset();
@@ -61,13 +61,13 @@ void AForEachUIBase::applyGeometryToChildren() {
     if (mViews.empty()) {
         return;
     }
-//    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
-    mViewport->compensateLayoutUpdatesByScroll(mViews.first(), [this] {
-        AViewContainerBase::applyGeometryToChildren();
-    }, axisMask());
+    //    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
+    mViewport->compensateLayoutUpdatesByScroll(
+        mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
+    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
     AUI_NULLSAFE(mViewport)->scroll().changed.clearAllOutgoingConnectionsWith(this);
     auto viewport = [&]() -> _<AScrollAreaViewport> {
@@ -101,9 +101,6 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     });
     mLastInflatedScroll.reset();
     mViewport = std::move(viewport);
-
-    setModelImpl(std::move(mViewsModel)); // if parent AUI_DECLARATIVE_FOR was invalidated, ours
-                                          // onViewGraphSubtreeChanged should be called. We should invalidate as well.
 }
 
 void AForEachUIBase::setPosition(glm::ivec2 position) {
@@ -189,9 +186,8 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             auto prevFirstView = mViews.first();
             addView(it, 0);
 
-            mViewport->compensateLayoutUpdatesByScroll(prevFirstView, [this] {
-                AViewContainerBase::applyGeometryToChildren();
-            }, axisMask());
+            mViewport->compensateLayoutUpdatesByScroll(
+                prevFirstView, [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
             auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
             inflateTill += diff;
 
@@ -214,9 +210,8 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             }
             addView(it);
             needsMinSizeUpdate = true;
-            mViewport->compensateLayoutUpdatesByScroll(mViews.first(), [this] {
-                AViewContainerBase::applyGeometryToChildren();
-            }, axisMask());
+            mViewport->compensateLayoutUpdatesByScroll(
+                mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
         }
     }
 
@@ -237,7 +232,7 @@ glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
         accumulator += p->getPosition();
     }
     ALogger::err(LOG_TAG) << "Divergent mViewport! this = " << this;
-//    AUI_ASSERT_NO_CONDITION("divergent mViewport");
+    //    AUI_ASSERT_NO_CONDITION("divergent mViewport");
     return {};
 }
 
@@ -251,7 +246,7 @@ void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> ind
         return;
     }
     AUI_ASSERT(mViews.size() == mCache->items.size());
-    Cache::LazyListItemInfo entry{*iterator};
+    Cache::LazyListItemInfo entry { *iterator };
     if (index) {
         AViewContainerBase::addView(*index, entry.view);
     } else {
@@ -279,7 +274,7 @@ void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::iterator> iterato
 
 glm::ivec2 AForEachUIBase::axisMask() {
     if (getLayout()->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
-        return glm::ivec2{1, 0};
+        return glm::ivec2 { 1, 0 };
     }
-    return glm::ivec2{0, 1};
+    return glm::ivec2 { 0, 1 };
 }

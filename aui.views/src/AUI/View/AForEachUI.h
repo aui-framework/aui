@@ -38,15 +38,18 @@ constexpr aui::for_each_ui::Key defaultKey(const T& value, long primaryCandidate
 }
 
 template <typename T>
-constexpr aui::for_each_ui::Key defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
+constexpr aui::for_each_ui::Key
+defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
     return reinterpret_cast<std::uintptr_t>(value.get());
 }
 
 template <ranges::input_range T>
 constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
-    aui::for_each_ui::Key k{};
+    aui::for_each_ui::Key k {};
     for (const auto& i : value) {
-        k ^= defaultKey(i, 0L);
+        // sub produces order sensitive hash.
+        // lshift distinguishes equal hashes.
+        k = (k << 1) - defaultKey(i, 0L);
     }
     return k;
 }
@@ -57,7 +60,7 @@ struct InflateOpts {
     bool forward = true;
 };
 using ViewsSharedCache = AMap<aui::for_each_ui::Key, _<AView>>;
-}
+}   // namespace detail
 }   // namespace aui::for_each_ui
 
 /**
@@ -240,13 +243,17 @@ public:
     template <aui::detail::RangeFactory<T> RangeFactory>
     void setModel(RangeFactory&& rangeFactory) {
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
+            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
             aui::react::DependencyObserverRegistrar r(*this);
             return rangeFactory() | ranges::views::transform([this](const T& t) {
                        auto key = aui::for_each_ui::defaultKey(t, 0L);
                        _<AView> view;
                        if (mViewsSharedCache) {
                            if (auto c = mViewsSharedCache->contains(key)) {
-                               view = std::exchange(c->second, nullptr);
+                               ALOG_DEBUG("AForEachUIBase")
+                                   << this << "(" << AReflect::name(this) << ") Trying to view from cache: " << key;
+                               view = std::move(c->second);
+                               mViewsSharedCache->erase(c);
                            }
                        }
                        if (!view) {
@@ -261,7 +268,7 @@ public:
      * @internal
      * @brief Helper function for AUI_DECLARATIVE_FOR
      */
-    template<aui::invocable<const T&> ViewFactoryT>
+    template <aui::invocable<const T&> ViewFactoryT>
     void operator-(ViewFactoryT&& f) {
         mFactory = std::forward<ViewFactoryT>(f);
         mViewsSharedCache = &VIEWS_SHARED_CACHE<ViewFactoryT>;
@@ -271,14 +278,16 @@ public:
     /**
      * @copybrief AForEachUIBase::setModelImpl
      */
-    void invalidate() override { updateUnderlyingModel(); }
+    void invalidate() override {
+        ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
+        updateUnderlyingModel();
+    }
 
     using AViewContainerBase::setLayout;
 
 protected:
-    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override {
-        return mViewsSharedCache;
-    }
+
+    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override { return mViewsSharedCache; }
 
 private:
     template <typename FactoryTypeTag>
@@ -297,9 +306,9 @@ private:
     }
 };
 
-template<typename T>
-template<typename FactoryTypeTag>
-aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE{};
+template <typename T>
+template <typename FactoryTypeTag>
+aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE {};
 
 namespace aui::detail {
 template <typename Layout, aui::invocable RangeFactory>
@@ -322,9 +331,9 @@ auto makeForEach(RangeFactory&& rangeFactory)
 /**
  * @see AForEachUIBase
  */
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)                      \
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
     aui::detail::makeForEach<layout>([&]() -> decltype(auto) { \
-        return (model);                                                        \
+        return (model);                                        \
     }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**

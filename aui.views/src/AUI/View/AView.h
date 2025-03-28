@@ -1101,6 +1101,10 @@ protected:
     /**
      * @brief Called when direct or indirect parent has changed.
      * @details
+     * Called when a new direct or indirect parent was assigned or removed.
+     *
+     * If a subtree reattached atomically (i.e., there were no dangling state), the method is called once.
+     *
      * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
      * the new (in)direct parent.
      *
