@@ -231,6 +231,11 @@ concept RangeFactory = requires(Factory&& factory) {
 template <typename T>
 class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver {
 public:
+    static_assert(
+        requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); },
+        "// ====================> AForEachUI: aui::for_each_ui::defaultKey overload or std::hash specialization is "
+        "required for your type.");
+
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;

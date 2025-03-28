@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
 #include <AUI/View/ARadioButton.h>
 #include <AUI/View/ARadioGroup.h>
 #include <AUI/Model/AListModel.h>
@@ -74,10 +75,6 @@
 #include <AUI/Traits/platform.h>
 
 using namespace declarative;
-
-struct MyModel {
-    AColor color;
-};
 
 void fillWindow(_<AViewContainer> t) {
     t->setLayout(std::make_unique<AStackedLayout>());
@@ -333,34 +330,37 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "AForEachUI" },
                   [this] {   // lambda style inlining
-                      auto model = _new<AListModel<MyModel>>();
+                      struct State {
+                          AProperty<AVector<AColor>> colors;
+                      };
+                      auto state = _new<State>();
 
                       return Vertical {
                           Horizontal {
                             _new<AButton>("Add").connect(
                                 &AButton::clicked, this,
-                                [model] {
+                                [state] {
                                     static std::default_random_engine re;
                                     do_once { re.seed(std::time(nullptr)); };
                                     static std::uniform_real_distribution<float> d(0.f, 1.f);
-                                    model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
+                                    state->colors.writeScope()->push_back({ AColor(d(re), d(re), d(re), 1.f) });
                                 }),
                             _new<AButton>("Remove").connect(
                                 &AButton::clicked, this,
-                                [model] {
-                                    if (!model->empty()) {
-                                        model->pop_back();
+                                [state] {
+                                    if (!state->colors->empty()) {
+                                        state->colors.writeScope()->pop_back();
                                     }
                                 }),
                             _new<ASpacerExpanding>(),
                           },
-                          AUI_DECLARATIVE_FOR(i, model, AWordWrappingLayout) {
+                          AUI_DECLARATIVE_FOR(i, *state->colors, AVerticalLayout) {
                               return Horizontal {
-                                  _new<ALabel>(i.color.toString()) with_style {
-                                      TextColor { i.color.readableBlackOrWhite() },
+                                  _new<ALabel>(i.toString()) with_style {
+                                      TextColor { i.readableBlackOrWhite() },
                                   }
                               } with_style {
-                                  BackgroundSolid { i.color },
+                                  BackgroundSolid { i },
                                   BorderRadius { 6_pt },
                                   Margin { 2_dp, 4_dp },
                               };

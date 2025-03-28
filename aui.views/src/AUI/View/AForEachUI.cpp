@@ -86,8 +86,12 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     AUI_NULLSAFE(mViewport)->scroll().changed.clearAllOutgoingConnectionsWith(this);
     auto viewport = [&]() -> _<AScrollAreaViewport> {
         for (auto p = getParent(); p != nullptr; p = p->getParent()) {
-            if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
-                return viewport;
+            try {
+                if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
+                    return viewport;
+                }
+            } catch (const std::bad_weak_ptr&) {
+                return nullptr;
             }
         }
         return nullptr;

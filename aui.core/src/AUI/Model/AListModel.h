@@ -22,8 +22,9 @@ namespace aui::detail {
 }
 
 template <typename StoredType>
-class AListModel: public IRemovableListModel<StoredType>,
-                  public IValueMutableListModel<StoredType> {
+class [[deprecated("check AUI_DECLARATIVE_FOR docs")]] AListModel
+  : public IRemovableListModel<StoredType>,
+    public IValueMutableListModel<StoredType> {
 private:
     AVector<StoredType> mVector;
 
