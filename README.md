@@ -208,8 +208,7 @@ Google Play or App Store), does not matter open source, closed source or proprie
  - Release your changes to AUI (if any) under the same terms (the License).
 
 As for the latter, you are welcome to upstream your changes (i.e., propose your changes to
-[this repository](https://github.com/aui-framework/aui)). If you decided to not do so, please keep in mind that the
-License allows us to take your changes and upstream them.
+[this repository](https://github.com/aui-framework/aui)).
 
 You are not obligated to disclose your own sources nor release your own project under the same terms (License).
 
