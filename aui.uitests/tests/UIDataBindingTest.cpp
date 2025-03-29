@@ -40,7 +40,7 @@ class UIDataBindingTest : public testing::UITest {
 // involve external tools (like `moc`). They are written in pure C++.
 //
 // @note
-// This page is about presenting single values. For lists, see @ref AForEachUIBase.
+// This page is about presenting single values. For lists, see @ref AForEachUI.
 //
 // AUI property system is relatively complex, as it involves a lot of features in a single place:
 // 1. thread safe

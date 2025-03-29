@@ -81,34 +81,86 @@ using namespace ass;
 struct Item {
     AString text;
 };
-/*
-TEST_F(UIDeclarativeForTest, Basic) {
-    auto model = AListModel<Item>::make({
-      { .text = "Item 1" },
-      { .text = "Item 2" },
-      { .text = "Item 3" },
-    });
 
-    mWindow->setContents(Vertical {
-      AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR(i, model, AVerticalLayout) {
-          return Label { i.text };
-      }).build() with_style { FixedSize { 150_dp, 200_dp } },
+
+// AUI_DOCS_OUTPUT: doxygen/intermediate/foreach.h
+// @class AForEachUI
+
+TEST_F(UIDeclarativeForTest, Basic_example) { // HEADER_H1
+    // The most straightforward way, using global static data:
+#ifdef AUI_ENTRY
+#undef AUI_ENTRY
+#endif
+#define AUI_ENTRY [&]
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow() {
+            setContents(Vertical {
+                  AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
+                      return Label { "{}"_format(i) };
+                  }
+            });
+        }
+    };
+    AUI_ENTRY {
+        auto w = _new<MyWindow>();
+        w->show();
+        return 0;
+    }
+    // AUI_DOCS_CODE_END
+();
+    uitest::frame();
+    EXPECT_TRUE(By::text("Red").one());
+    EXPECT_TRUE(By::text("White").one());
+}
+
+TEST_F(UIDeclarativeForTest, InitializerList2) {
+    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
+    // It's a good idea to wrap AForEachUI with a @ref AScrollArea.
+    // AUI_DOCS_CODE_BEGIN
+    mWindow-> // HIDE
+    setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+               AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
+                 return Label { "{}"_format(i) };
+               })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
     });
+    // AUI_DOCS_CODE_END
 
     uitest::frame();
+    EXPECT_TRUE(By::text("Red").one());
+    EXPECT_TRUE(By::text("White").one());
+}
 
-    EXPECT_TRUE(By::text("Item 1").one());
-    EXPECT_TRUE(By::text("Item 2").one());
-    EXPECT_TRUE(By::text("Item 3").one());
-    EXPECT_FALSE(By::text("Item 4").one());
-}*/
+TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H1
+    // Most generators, ranges and views are expected to work.
+    // AUI_DOCS_CODE_BEGIN
+    mWindow-> // HIDE
+    setContents(Vertical {
+      AScrollArea::Builder()
+              .withContents(
+               AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) {
+                  return Label { "{}"_format(i) };
+               })
+              .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    // AUI_DOCS_CODE_END
+
+    validateOrder();
+}
 
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
     EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 40));
 
-    mWindow->setContents(Vertical {
+    mWindow-> // HIDE
+    setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
               AUI_DECLARATIVE_FOR_EX(i, ranges::views::ints, AVerticalLayout, &) {
@@ -117,6 +169,11 @@ TEST_F(UIDeclarativeForTest, Performance) {
               })
               .build() with_style { FixedSize { 150_dp, 200_dp } },
     });
+    // A static range like in the example above will not blow up the machine because AForEachUI is wrapped with a
+    // @ref AScrollArea, thus it is not required to evaluate the whole range, which is infinite in our case.
+    //
+    // An attempt to update AForEachUI with a large range still can lead to high resource consumption, due to need of
+    // recomposition.
 
     uitest::frame();
 
@@ -126,11 +183,75 @@ TEST_F(UIDeclarativeForTest, Performance) {
     EXPECT_FALSE(By::text("Item 979878").one());
 }
 
-TEST_F(UIDeclarativeForTest, Dynamic) {
-    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+/**********************************************************************************************************************/
+//
+// # Static, dynamic usecases and lifetime {#AFOREACHUI_UPDATE}
+//
+
+TEST_F(UIDeclarativeForTest, Static) {
+    // Suppose we'd like to define some string dataset and modify it in process, to display it reactively.
+    // AUI_DOCS_CODE_BEGIN
+    auto items = AVector<AString> { "Hello", "World", "Test" };
     mWindow->setContents(Vertical {
-      AScrollArea::Builder().withContents(AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) { return Label { i }; }).build() with_style { FixedSize { 150_dp, 200_dp } },
+      AScrollArea::Builder().withContents(
+           AUI_DECLARATIVE_FOR(i, items, AVerticalLayout) {
+                return Label { i };
+            }).build() with_style { FixedSize { 150_dp, 200_dp } },
     });
+    // AUI_DOCS_CODE_END
+
+    uitest::frame();
+    for (const auto &i : items) {
+        EXPECT_TRUE(By::text(i).one()) << i;
+    }
+    // AUI_DOCS_CODE_BEGIN
+    items.push_back("Bruh");
+    // AUI_DOCS_CODE_END
+    //
+    // Our first three items are appeared, but the one we have added after constructing AUI_DECLARATIVE_FOR doesn't.
+    // That's because our `items` is not observable and AUI_DECLARATIVE_FOR is simply unaware that a change was
+    // occurred.
+    //
+    EXPECT_FALSE(By::text("Bruh").one());
+}
+
+TEST_F(UIDeclarativeForTest, Dynamic1) {
+    // To make it observable, we simply wrap it with @ref property_system "AProperty":
+    // AUI_DOCS_CODE_BEGIN
+    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+    mWindow-> // HIDE
+    setContents(Vertical {
+      AScrollArea::Builder().withContents(
+           AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout) {
+                return Label { i };
+            }).build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    // AUI_DOCS_CODE_END
+
+    uitest::frame();
+    for (const auto &i : items) {
+        EXPECT_TRUE(By::text(i).one()) << i;
+    }
+    // AUI_DOCS_CODE_BEGIN
+    items.writeScope()->push_back("Bruh");
+    // AUI_DOCS_CODE_END
+    //
+    // This example gives essentially the same result.
+    EXPECT_FALSE(By::text("Bruh").one());
+}
+
+TEST_F(UIDeclarativeForTest, Dynamic2) {
+    // To make it observable, we simply wrap it with @ref property_system "AProperty":
+    // AUI_DOCS_CODE_BEGIN
+    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+    mWindow-> // HIDE
+    setContents(Vertical {
+      AScrollArea::Builder().withContents(
+           AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout) {
+                return Label { i };
+            }).build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    // AUI_DOCS_CODE_END
 
     auto checkAllPresent = [&] {
         uitest::frame();
@@ -140,7 +261,9 @@ TEST_F(UIDeclarativeForTest, Dynamic) {
     };
 
     checkAllPresent();
+    // AUI_DOCS_CODE_BEGIN
     items.writeScope()->push_back("Bruh");
+    // AUI_DOCS_CODE_END
     checkAllPresent();
 }
 
@@ -168,17 +291,6 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     uitest::frame();
     items.writeScope()->push_back("Bruh");
     uitest::frame();
-}
-
-TEST_F(UIDeclarativeForTest, IntBasic) {
-    mWindow->setContents(Vertical {
-      AScrollArea::Builder()
-              .withContents(
-              AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) { return Label { "{}"_format(i) }; })
-              .build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
-
-    validateOrder();
 }
 
 TEST_F(UIDeclarativeForTest, IntBasic2) {

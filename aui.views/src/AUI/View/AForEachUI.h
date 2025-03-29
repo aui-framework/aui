@@ -63,109 +63,6 @@ using ViewsSharedCache = AMap<aui::for_each_ui::Key, _<AView>>;
 }   // namespace detail
 }   // namespace aui::for_each_ui
 
-/**
- * @brief Customizable lists display.
- * @ingroup useful_views
- * @details
- * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
- *
- * @note
- * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUIBase follows the same set
- * of principles; with an exception: AForEachUIBase does not provide a scrollable area on its own.
- *
- * AForEachUIBase is created by using AUI_DECLARATIVE_FOR macro.
- *
- * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
- *
- * @code{cpp}
- * static std::array users = { "Foo", "Bar", "Lol" };
- * for (const auto& user : users) {
- *   fmt::println("{}", user);
- * }
- * @endcode
- * @code{cpp}
- * static std::array users = { "Foo", "Bar", "Lol" };
- * ...
- * AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
- *   return Label { fmt::format("{}", user) };
- * }
- * @endcode
- *
- * `AUI_DECLARATIVE_FOR` consists of AForEachUIBase creation, single entry variable name, *range* definition, layout
- * name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that creates a new view based on data
- * entry. In terms of C++ syntax, the lambda is partially defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body
- * (including curly braces) is left up to developer.
- *
- * *range* models one-dimensional list.
- *
- * AForEachUIBase works on iterator level by design. In fact, any kind of *range* (C++20 ranges/range-v3) can be used,
- * starting from bidirectional containers such as `std::vector` and `std::list`, lazy non-owning dummies like
- * `ranges::views::ints` and even fancy *range* views from `std::ranges::views` or `ranges::views` are acceptable.
- * One-directional containers like `std::queue` or `std::stack` can't be used because they don't implement `begin()` and
- * `end()`. As such, requirements to a *range* are dictated by `ranges::range` concept.
- *
- * - *range* has `.begin()` method or `ranges::begin()` overload defined `auto it = ranges::begin(rng)`
- * - *range* has `.end()` method or `ranges::end()` overload defined `auto it = ranges::end(rng)`
- * - both `begin()` and `end()` return an *iterator*
- * - *iterator* has dereference operator `auto& value = *it`
- * - *iterator* has increment operator `++it`
- *
- * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
- *
- * The range's type is erased with runtime-based *range* layer @ref aui::any_view.
- *
- * `AUI_DECLARATIVE_FOR` can be nested with no restrictions. When using the same dataset in nested declarative *for
- * loops*, a hierarchical structure can be presented. For example, we can split a sorted array of people names by first
- * letter to produce a labelled index:
- *
- * @snippet examples/ui/contacts/src/main.cpp NESTED_FOR_EXAMPLE
- *
- * (@ref example_contacts example)
- *
- * # Lazy Semantics
- *
- * AForEachUIBase presents all data available. If placed somewhere inside @ref AScrollArea (implies
- * @ref AScrollAreaViewport), lazy semantics take place. This means that AForEachUIBase knows scroll position and
- * sliding window size in pixels, making it possible to present a limited set of data that is actually visible, and
- * present data further as soon as the user scrolls down the scroll area.
- *
- * Under the hood, AForEachUIBase stores a pair of iterators of the passed *range* of presented entries, forming a
- * sliding window subrange. When the user scrolls down the list, both iterators are incremented; when the user scrolls
- * upwards, both iterators are decremented.
- *
- * In this scenario, AForEachUIBase adds an extra requirement to range's iterator:
- *
- * - *iterator* has decrement operator `--it`
- *
- * If this requirement is not satisfied (case of some `ranges::views`), AForEachUIBase would not unload old items,
- * unless a @ref AFOREACHUI_UPDATE "data update event" occurred.
- *
- * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
- * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUIBase. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
- *
- * @note
- * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of
- * AForEachUIBase is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
- * semantics, thanks to iterators.
- *
- * ## Scrollbars
- *
- * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. If
- * possible, the items that appear far from sliding window are unloaded (views are removed). The new items are loaded
- * (new views are instantiated). To avoid content jittering, scroll position is synced with layout updates within
- * AForEachUIBase. As such, these hijacking operations may confuse scroll bar.
- *
- * In modern software, especially when it comes to infinite lists in web/mobile applications (i.e., news feed),
- * scrollbar might be completely hidden or significantly transparentized.
- *
- * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
- * (scrollbar is the only visual confirmation), the scrolled contents appears normal and natural.
- *
- * @image html docs/imgs/edrfgsrgsrg.webp A lie is going on behind the scenes
- *
- * # List Updates {#AFOREACHUI_UPDATE}
- */
 class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
     struct Entry {
@@ -228,6 +125,102 @@ concept RangeFactory = requires(Factory&& factory) {
 };
 }   // namespace aui::detail
 
+
+/**
+ * @brief Customizable lists display.
+ * @ingroup useful_views
+ * @details
+ * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ *
+ * @note
+ * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
+ * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
+ *
+ * AForEachUI is created by using AUI_DECLARATIVE_FOR macro.
+ *
+ * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
+ *
+ * @code{cpp}
+ * static std::array users = { "Foo", "Bar", "Lol" };
+ * for (const auto& user : users) {
+ *   fmt::println("{}", user);
+ * }
+ * @endcode
+ * @code{cpp}
+ * static std::array users = { "Foo", "Bar", "Lol" };
+ * ...
+ * AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
+ *   return Label { fmt::format("{}", user) };
+ * }
+ * @endcode
+ *
+ * `AUI_DECLARATIVE_FOR` consists of AForEachUI creation, single entry variable name, *range* definition, layout
+ * name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that creates a new view based on data
+ * entry. In terms of C++ syntax, the lambda is partially defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body
+ * (including curly braces) is left up to developer.
+ *
+ * *range* models one-dimensional list.
+ *
+ * AForEachUI works on iterator level by design. In fact, any kind of *range* (C++20 ranges/range-v3) can be used,
+ * starting from bidirectional containers such as `std::vector` and `std::list`, lazy non-owning dummies like
+ * `ranges::views::ints` and even fancy *range* views from `std::ranges::views` or `ranges::views` are acceptable.
+ * One-directional containers like `std::queue` or `std::stack` can't be used because they don't implement `begin()` and
+ * `end()`. As such, requirements to a *range* are dictated by `ranges::range` concept.
+ *
+ * - *range* has `.begin()` method or `ranges::begin()` overload defined `auto it = ranges::begin(rng)`
+ * - *range* has `.end()` method or `ranges::end()` overload defined `auto it = ranges::end(rng)`
+ * - both `begin()` and `end()` return an *iterator*
+ * - *iterator* has dereference operator `auto& value = *it`
+ * - *iterator* has increment operator `++it`
+ *
+ * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
+ *
+ * The range's type is erased with runtime-based *range* layer @ref aui::any_view.
+ *
+ * `AUI_DECLARATIVE_FOR` can be nested with no restrictions in both directions.
+ *
+ * # Lazy Semantics
+ *
+ * AForEachUI presents all data available. If placed somewhere inside @ref AScrollArea (implies
+ * @ref AScrollAreaViewport), lazy semantics take place. This means that AForEachUI knows scroll position and
+ * sliding window size in pixels, making it possible to present a limited set of data that is actually visible, and
+ * present data further as soon as the user scrolls down the scroll area.
+ *
+ * Under the hood, AForEachUI stores a pair of iterators of the passed *range* of presented entries, forming a
+ * sliding window subrange. When the user scrolls down the list, both iterators are incremented; when the user scrolls
+ * upwards, both iterators are decremented.
+ *
+ * In this scenario, AForEachUI adds an extra requirement to range's iterator:
+ *
+ * - *iterator* has decrement operator `--it`
+ *
+ * If this requirement is not satisfied (case of some `ranges::views`), AForEachUI would not unload old items,
+ * unless a @ref AFOREACHUI_UPDATE "data update event" occurred.
+ *
+ * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
+ * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
+ * AForEachUI. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
+ *
+ * @note
+ * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of
+ * AForEachUI is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
+ * semantics, thanks to iterators.
+ *
+ * ## Scrollbars
+ *
+ * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. If
+ * possible, the items that appear far from sliding window are unloaded (views are removed). The new items are loaded
+ * (new views are instantiated). To avoid content jittering, scroll position is synced with layout updates within
+ * AForEachUI. As such, these hijacking operations may confuse scroll bar.
+ *
+ * In modern software, especially when it comes to infinite lists in web/mobile applications (i.e., news feed),
+ * scrollbar might be completely hidden or significantly transparentized.
+ *
+ * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
+ * (scrollbar is the only visual confirmation), the scrolled contents appears normal and natural.
+ *
+ * @image html docs/imgs/edrfgsrgsrg.webp A lie is going on behind the scenes
+ */
 template <typename T>
 class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver {
 public:
@@ -373,7 +366,7 @@ auto makeForEach(RangeFactory&& rangeFactory)
 }   // namespace aui::detail
 
 /**
- * @see AForEachUIBase
+ * @see AForEachUI
  */
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
     aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
@@ -381,6 +374,6 @@ auto makeForEach(RangeFactory&& rangeFactory)
     }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
- * @see AForEachUIBase
+ * @see AForEachUI
  */
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
