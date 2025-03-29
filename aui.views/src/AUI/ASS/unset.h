@@ -28,16 +28,18 @@ namespace ass {
     struct unset_wrap {
     private:
         T stored;
-        bool set;
+        bool set = false;
 
     public:
-        unset_wrap() noexcept:
-            set(false)
+        unset_wrap() noexcept
         {
         }
 
         template<typename V>
         unset_wrap(const V& v);
+
+        template<typename V>
+        unset_wrap(V&& v);
 
         T& operator*() {
             AUI_ASSERT(bool(*this));
@@ -107,8 +109,20 @@ namespace ass {
             }
         }
         template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, unset_wrap<U>&& value) {
+            if (value) {
+                dst = static_cast<T&&>(*value);
+                set = true;
+            }
+        }
+        template<typename T, aui::convertible_to<T> U>
         void init(unset_wrap<T>& wrap, T& dst, bool& set, U&& value) {
-            dst = static_cast<T>(std::forward<U>(value));
+            dst = static_cast<T&&>(value);
+            set = true;
+        }
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const U& value) {
+            dst = static_cast<T>(value);
             set = true;
         }
     }
@@ -119,6 +133,14 @@ namespace ass {
     unset_wrap<T>::unset_wrap(const V& v)
     {
         detail::unset::init(*this, stored, set, v);
+    }
+
+
+    template<typename T>
+    template<typename V>
+    unset_wrap<T>::unset_wrap(V&& v)
+    {
+        detail::unset::init(*this, stored, set, std::forward<V>(v));
     }
 
     template<typename T>

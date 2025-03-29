@@ -52,6 +52,15 @@ private:
 };
 ```
 
+@note
+With @ref property_system, a better way of defining data models will be:
+```cpp
+struct User {
+    AProperty<AString> username;
+};
+```
+It allows aggregate initialization: `User u { .username = "Test" };`
+
 
 # Assertions
 
@@ -84,9 +93,10 @@ void loginButtonClicked() {
 }
 ```
 
-# STL-like functionality
+# Code style exceptions
 
-It's hard to say which functionality can be called 'STL-like'. Commonly, any iterator-based algorithm (i.e. `aui::binary_search`), global functions, trait structs are STL-like functionality. The final goal is to avoid mixed-style expressions like `AString::const_iterator` which hurts eyes.
+Commonly, any iterator-based algorithm (i.e. `aui::binary_search`), global functions, trait structs are STL-like
+functionality. The final goal is to avoid mixed-style expressions like `AString::const_iterator` which hurts eyes.
 
 # Template metaprogramming and macros
 
@@ -96,3 +106,61 @@ understand. Use TMP deliberately.
 
 Since TMP and macros often evolve custom syntax and usage scenarios, consider writing especially well documentation with
 examples when defining public API templates and macros.
+
+# Improving compiler error messages techniques
+
+## Try to break your templates {#TRY_TO_BREAK}
+
+After considering actions listed below, try your types/traits/concepts against various awkward types/arguments/use 
+cases.
+
+## Concepts are preferable
+
+Use concepts instead of SFINAE were possible.
+
+## Raise static_assert messages
+
+With `static_assert` with potentially helpful message, use `====================>` prefix in your message to raise your
+message among a long list of compiler diagnostics.
+
+@snippet aui.core/src/AUI/Reflect/AClass.h ARROW_ERROR_MESSAGE_EXAMPLE
+
+## Single line comment error messages
+
+You can exploit the fact that a compiler prints code lines in its diagnostics. Put a single line comment with long arrow
+prefix to put potentially helpful messages. Use @ref TRY_TO_BREAK technique to discover the lines to put the comments
+in.
+
+Cast failure example:
+
+```cpp
+auto& [a] = const_cast<std::remove_cv_t<Clazz>&>(clazz); // ====================> aui::reflect: Clazz is not a SimpleAggregate.
+```
+
+Overload substitution failure example:
+
+```cpp
+...
+template<typename T>
+requires requires(T& t) { std::hash<T>{}(t); }
+constexpr std::size_t forEachKey(const T& value) { // ====================> std::hash based specialization
+    return std::hash<T>{}(value);
+}
+
+template<typename T>
+requires requires(T& t) { { t.base() } -> ranges::range; }
+constexpr std::size_t forEachKey(const T& value) { // ====================> specialization for subranges
+...    
+```
+
+Produces the following diagnostics:
+
+```
+.../AForEachUI.h:220:92: error: no matching function for call to ‘forEachKey(...)’
+220 |     return AForEachUIBase::Entry { .view = mFactory(t), .id = forEachKey(t) };
+    |                                                               ~~~~~~~~~~^~~
+...View/AForEachUI.h:34:23: note: candidate: template<class T> requires(T& t) {{}(t);} ...
+34 | constexpr std::size_t forEachKey(const T& value) { // ====================> std::hash based specialization
+```
+
+This makes it obvious what does this overload do.

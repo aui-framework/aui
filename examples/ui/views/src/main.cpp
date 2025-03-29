@@ -13,7 +13,6 @@
 #include <AUI/Platform/Entry.h>
 
 AUI_ENTRY {
-    auto w = _new<ExampleWindow>();
-    w->show();
+    _new<ExampleWindow>()->show();
     return 0;
 }

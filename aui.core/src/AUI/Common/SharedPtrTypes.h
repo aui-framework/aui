@@ -15,6 +15,7 @@
 #include <functional>
 #include <optional>
 #include <type_traits>
+#include <AUI/Util/Assert.h>
 
 class AObject;
 
@@ -283,6 +284,42 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_lvalue_reference_t<T> value() const noexcept {
+#if AUI_DEBUG
+        AUI_ASSERTX(super::get() != nullptr, "an attempt to dereference a null pointer");
+#endif
+        return *super::get();
+    }
+
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_lvalue_reference_t<T> operator*() const noexcept {
+        return value();
+    }
+
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_pointer_t<T> operator->() const noexcept {
+        return &value();
+    }
+
     // forward ranged-for loops
     auto begin() const requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
@@ -302,6 +339,12 @@ public:
     template<typename Arg>
     requires requires (T&& l, Arg&& r) { std::forward<T>(l) << std::forward<Arg>(r); }
     const _<T>& operator<<(Arg&& value) const {
+        (*super::get()) << std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    _<T>& operator<<(Arg&& value) {
         (*super::get()) << std::forward<Arg>(value);
         return *this;
     }
@@ -333,8 +376,13 @@ public:
     }
 
     template<typename Arg>
-    requires requires (T&& l, Arg&& r) { std::forward<T>(l) * std::forward<Arg>(r); }
-    const _<T>& operator*(Arg&& value) const {
+    _<T>& operator+(Arg&& value) {
+        (*super::get()) + std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    const _<T>& operator*(Arg&& value) {
         (*super::get()) * std::forward<Arg>(value);
         return *this;
     }
@@ -347,15 +395,16 @@ public:
     }
 
     template<typename Arg>
+    _<T>& operator-(Arg&& value) {
+        (*super::get()) - std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
     requires requires (T&& l, Arg&& r) { std::forward<T>(l) >> std::forward<Arg>(r); }
     const _<T>& operator>>(Arg&& value) const {
         (*super::get()) >> std::forward<Arg>(value);
         return *this;
-    }
-
-    [[nodiscard]]
-    std::add_lvalue_reference_t<T> operator*() const noexcept {
-        return super::operator*();
     }
 
     template<typename...Args>

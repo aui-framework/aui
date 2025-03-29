@@ -9,16 +9,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <gmock/gmock.h>
-#include <AUI/ASS/ASS.h>
+#include <benchmark/benchmark.h>
+#include "UIBenchmarkScene.h"
 
-using namespace ass;
+static void Layout(benchmark::State& state) {
+    _<AWindow> window = _new<AWindow>();
 
-TEST(AssTest, Merge1) {
-    BackgroundImage rule1{ "icon.svg" };
-    BackgroundImage rule2{ {}, AColor::RED };
-
-    rule1 = rule2;
-    EXPECT_EQ(std::get<AString>(*rule1.image), "icon.svg");
-    EXPECT_EQ(*rule1.overlayColor, AColor::RED);
+    for (auto _2 : state) {
+        _<AViewContainer> v = Centered { uiBenchmarkScene() };
+        v->pack();
+        v->applyGeometryToChildrenIfNecessary();
+    }
 }
+
+BENCHMARK(Layout);

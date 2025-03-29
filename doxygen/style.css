@@ -108,6 +108,7 @@ table.doxtable th {
     color: var(--tablehead-foreground) !important;
     font-weight: 600 !important;
     font-size: var(--page-font-size) !important;
+    white-space: pre; /* forbid line breaking on small screens */
 }
 
 table.doxtable td, table.doxtable th {
@@ -261,12 +262,12 @@ tr.markdownTableRowEven {
 
 /* enlarge code fragments to screen bounds */
 @media screen and (max-width: 767px) {
-    .contents .fragment {
+    .contents .fragment:not(table .fragment) {
         margin: var(--spacing-large) calc(0px - var(--spacing-large));
         border-radius: 0;
         border-left: 0;
     }
-    .textblock li > .fragment, .textblock li > .doxygen-awesome-fragment-wrapper > .fragment {
+    .textblock li > .fragment:not(table .fragment), .textblock li > .doxygen-awesome-fragment-wrapper > .fragment:not(table .fragment) {
         margin: var(--spacing-large);
         margin-left: calc(-4em);
         margin-right: calc(0px - var(--spacing-large));

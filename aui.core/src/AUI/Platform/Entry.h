@@ -19,18 +19,39 @@
  * @brief Application entry point.
  * @ingroup useful_macros
  * @details
+ * Entry point of any AUI application.
+ *
  * Native entry point varies platform to platform (i.e. Windows requires `int main` entry point for console applications
- * and `WinMain` for graphical applications; entry point of an Android application is located in Java code). AUI_ENTRY
- * unifies your entry point, efficiently supporting every platform.
+ * and `WinMain` for graphical applications; entry point of an Android application is located in Java code). `AUI_ENTRY`
+ * unifies your entry point, effectively supporting every platform.
  *
- * AUI_ENTRY of a graphical application should be non-blocking since on mobile platforms application's event loop is
- * located outsize of the entry point. On desktop platforms an event loop is created outside AUI_ENTRY in order to
- * unify the mobile and desktop behaviour. If there are no open windows, the event loop breaks causing the application
- * to exit.
+ * `AUI_ENTRY` of a graphical application should be non-blocking since on mobile platforms application's event loop is
+ * located outsize of the entry point. On desktop platforms, an event loop is created outside `AUI_ENTRY` in order to
+ * unify the mobile and desktop behaviour. If there are no open windows, the event loop breaks, causing the application
+ * to exit with the exit code returned by `AUI_ENTRY` earlier, or `0`.
  *
- * Application arguments (int argc, char** argv) are forwarded to AUI_ENTRY as `AStringVector args`.
+ * Application arguments `(int argc, char** argv)` are forwarded to `AUI_ENTRY` as `AStringVector args`.
  *
- * @note On Android, iOS and macOS only the main thread is able to initialize graphics context.
+ * Minimal entrypoint of an UI application:
+ *
+ * @include examples/ui/views/src/main.cpp
+ *
+ * Minimal entrypoint of a console application:
+ * @include examples/basic/hello_world/src/main.cpp
+ *
+ * Prototype of `AUI_ENTRY` function you are actually implementing:
+ * @code{cpp}
+ * AUI_EXPORT int aui_entry(const AStringVector& args);
+ * @endcode
+ *
+ * @specificto{android}
+ * Only the main thread is able to initialize graphics context.
+ *
+ * @specificto{ios}
+ * Only the main thread is able to initialize graphics context.
+ *
+ * @specificto{macos}
+ * Only the main thread is able to initialize graphics context.
  */
 
 #if defined(WIN32)
