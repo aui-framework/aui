@@ -249,7 +249,7 @@ public:
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     void setModel(RangeFactory&& rangeFactory) {
-        mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)]() mutable {
+        mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
             ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
             aui::react::DependencyObserverRegistrar r(*this);
             return rangeFactory() | ranges::views::transform([this](const T& t) {
@@ -318,6 +318,7 @@ template <typename FactoryTypeTag>
 aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE {};
 
 namespace aui::detail {
+/*
 template <typename Layout, ranges::range Rng>
 auto makeForEach(Rng&& rng)
 {
@@ -352,6 +353,7 @@ auto makeForEach(Rng&& rng)
     result->setLayout(std::make_unique<Layout>());
     return result;
 }
+*/
 
 template <typename Layout, aui::invocable RangeFactory>
 auto makeForEach(RangeFactory&& rangeFactory)
@@ -359,33 +361,10 @@ auto makeForEach(RangeFactory&& rangeFactory)
         { rangeFactory() } -> ranges::range;
     }
 {
-
-    using ImmediateValueType = decltype([&]() -> decltype(auto) {
-      auto rng = rangeFactory();
-      return *ranges::begin(rng);
+    using T = decltype([&] {
+        auto rng = rangeFactory();
+        return *ranges::begin(rng);
     }());
-
-    // | is_reference<ImmediateValueType> | is_const<ImmediateValueType> |   |
-    // | -------------------------------- | ---------------------------- | - |
-    // | 0                                | 0                            | 1 |
-    // | 0                                | 1                            | 1 |
-    // | 1                                | 0                            | 0 |
-    // | 1                                | 1                            | 1 |
-    // won't give proper diagnostics for
-    // ```cpp
-    // AVector<int> ints = { 1, 2, 3 };
-    // AUI_DECLARATIVE_FOR(i, ints | ranges::views::transform([](int i) { return true; }), ...
-    // ```
-    // but will in others.
-    static_assert(!std::is_reference_v<ImmediateValueType> || std::is_const_v<std::remove_reference_t<ImmediateValueType>>, "\n"
-        "====================> AUI_DECLARATIVE_FOR: attempt to use non-const reference. You can:\n"
-        "====================> (1) transfer ownership of the container to AUI_DECLARATIVE_FOR via std::move, or\n"
-        "====================> (2) define your container as const field and manually make sure its lifetime exceeds AUI_DECLARATIVE_FOR's, or\n"
-        "====================> (3) make a reactive expression by wrapping it to lambda, if you want to modify the container in process.\n"
-        "====================> Please consult with TODO for more info."
-    );
-
-    using T = std::remove_reference_t<ImmediateValueType>;
 
     auto result = _new<AForEachUI<T>>(std::forward<RangeFactory>(rangeFactory));
     result->setLayout(std::make_unique<Layout>());
@@ -397,7 +376,9 @@ auto makeForEach(RangeFactory&& rangeFactory)
  * @see AForEachUIBase
  */
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
-    aui::detail::makeForEach<layout>(model) - [__VA_ARGS__](const auto& value) -> _<AView>
+    aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
+        return (model);                                        \
+    }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @see AForEachUIBase
