@@ -20,7 +20,7 @@
 #include <AUI/Model/AListModelAdapter.h>
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Traits/dyn_range.h>
+#include <AUI/Traits/any_view.h>
 
 namespace aui::for_each_ui {
 
@@ -112,7 +112,7 @@ using ViewsSharedCache = AMap<aui::for_each_ui::Key, _<AView>>;
  *
  * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
  *
- * The range's type is erased with runtime-based *range* layer @ref aui::dyn_range.
+ * The range's type is erased with runtime-based *range* layer @ref aui::any_view.
  *
  * `AUI_DECLARATIVE_FOR` can be nested with no restrictions. When using the same dataset in nested declarative *for
  * loops*, a hierarchical structure can be presented. For example, we can split a sorted array of people names by first
@@ -173,7 +173,7 @@ public:
         aui::for_each_ui::Key id;
     };
 
-    using List = aui::dyn_range<Entry>;
+    using List = aui::any_view<Entry>;
     AForEachUIBase() {}
     void setPosition(glm::ivec2 position) override;
 

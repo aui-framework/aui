@@ -36,7 +36,7 @@ struct dyn_range_capabilities {
  * @tparam T element type
  * @details
  * @experimental
- * `aui::dyn_range` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
+ * `aui::any_view` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
  * interfaces. It allows for the creation of runtime-checked, polymorphic ranges with input iterators.
  *
  * Alternative implementation of `ranges::views::any_view`.
@@ -45,23 +45,23 @@ struct dyn_range_capabilities {
  *
  * Keep in mind that type erasure can lead to performance overhead due to dynamic dispatch.
  *
- * `aui::dyn_range` initialized with an lvalue reference will contain a reference to the container; thus the container
+ * `aui::any_view` initialized with an lvalue reference will contain a reference to the container; thus the container
  * can be modified.
  *
  * @snippet aui.core/tests/IteratorsTest.cpp DynRange4
  *
- * `aui::dyn_range` initialized with an rvalue reference will move the container into itself; thus it acquires
+ * `aui::any_view` initialized with an rvalue reference will move the container into itself; thus it acquires
  * ownership.
  *
  * @snippet aui.core/tests/IteratorsTest.cpp DynRange5
  *
- * Using `aui::dyn_range::iterator` acquired before modification of the referenced container may lead to undefined
+ * Using `aui::any_view::iterator` acquired before modification of the referenced container may lead to undefined
  * behaviour; it all depends on the referenced container.
  *
- * `aui::dyn_range` follows the same principle as `std::function` for functors.
+ * `aui::any_view` follows the same principle as `std::function` for functors.
  */
 template<typename T>
-struct dyn_range {
+struct any_view {
     struct iterator {
         using value_type = T;
         using iterator_category = std::input_iterator_tag;
@@ -185,27 +185,27 @@ struct dyn_range {
     };
 
     template<typename Rng>
-    dyn_range(Rng&& rng): mImpl(rttify(std::forward<Rng>(rng))) {
+    any_view(Rng&& rng): mImpl(rttify(std::forward<Rng>(rng))) {
 
     }
 
-    dyn_range(): mImpl(nullptr) {}
+    any_view(): mImpl(nullptr) {}
 
-    dyn_range(dyn_range&& rhs) noexcept = default;
-    dyn_range& operator=(dyn_range&& rhs) noexcept = default;
+    any_view(any_view&& rhs) noexcept = default;
+    any_view& operator=(any_view&& rhs) noexcept = default;
 
-    dyn_range(dyn_range& rhs) {
+    any_view(any_view& rhs) {
         operator=(rhs);
     }
-    dyn_range(const dyn_range& rhs) {
+    any_view(const any_view& rhs) {
         operator=(rhs);
     }
 
-    dyn_range& operator=(dyn_range& rhs) {
-        return operator=(const_cast<const dyn_range&>(rhs));
+    any_view& operator=(any_view& rhs) {
+        return operator=(const_cast<const any_view&>(rhs));
     }
 
-    dyn_range& operator=(const dyn_range& rhs) {
+    any_view& operator=(const any_view& rhs) {
         if (this == &rhs) {
             return *this;
         }
@@ -283,9 +283,9 @@ private:
     }
 };
 
-static_assert(ranges::input_iterator<dyn_range<int>::iterator>);
-static_assert(ranges::sentinel_for<dyn_range<int>::iterator, dyn_range<int>::iterator>);
-static_assert(ranges::range<dyn_range<int>>);
+static_assert(ranges::input_iterator<any_view<int>::iterator>);
+static_assert(ranges::sentinel_for<any_view<int>::iterator, any_view<int>::iterator>);
+static_assert(ranges::range<any_view<int>>);
 
 }
 

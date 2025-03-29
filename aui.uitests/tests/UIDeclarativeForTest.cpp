@@ -203,7 +203,7 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
                   group, mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
                   AVerticalLayout) {
                   return Vertical {
-                      Label { "Group {}"_format(*ranges::begin(group) / 10 * 10) } with_style { FontSize(10_pt) },
+                      Label { "Group {}"_format(*ranges::begin(group) / 10 * 10) } with_style { FontSize{10_pt} },
                       AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) { return Label { "{}"_format(i) }; }
                   };
               })
@@ -233,7 +233,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
                       auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
                       mTestObserver.onViewCreated(groupName);
                       return Vertical {
-                          Label { groupName } with_style { FontSize(10_pt) },
+                          Label { groupName } with_style { FontSize{10_pt} },
                           /* single item foreach */
                           AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                               /* single item data to view transformer callback, aka item's view callback */
