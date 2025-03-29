@@ -182,7 +182,7 @@ TEST_F(UIDeclarativeForTest, IntBasic) {
 }
 
 TEST_F(UIDeclarativeForTest, IntBasic2) {
-    AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    const AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
@@ -194,7 +194,7 @@ TEST_F(UIDeclarativeForTest, IntBasic2) {
 }
 
 TEST_F(UIDeclarativeForTest, IntGrouping) {
-    AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    const AVector<int> mInts = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
@@ -216,6 +216,7 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
 }
 
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
+
     ::testing::GTEST_FLAG(throw_on_failure) = true;
     AProperty<AVector<int>> mInts = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
 

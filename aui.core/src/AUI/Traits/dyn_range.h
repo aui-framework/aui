@@ -39,6 +39,8 @@ struct dyn_range_capabilities {
  * `aui::dyn_range` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
  * interfaces. It allows for the creation of runtime-checked, polymorphic ranges with input iterators.
  *
+ * Alternative implementation of `ranges::views::any_view`.
+ *
  * The general idea is to preserve lazy nature of C++20 ranges/range-v3 and flexibility between compilation modules.
  *
  * Keep in mind that type erasure can lead to performance overhead due to dynamic dispatch.
