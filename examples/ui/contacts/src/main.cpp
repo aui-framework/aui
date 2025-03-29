@@ -86,7 +86,7 @@ private:
         if (mSelectedContact == nullptr) {
             return;
         }
-        if (AMessageBox::show(nullptr,
+        if (AMessageBox::show(this,
                               "Do you really want to delete?",
                               "This action is irreversible!",
                               AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
