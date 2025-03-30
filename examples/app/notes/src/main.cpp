@@ -161,8 +161,7 @@ public:
                             }) > &AView::setEnabled,
                       },
                       CustomLayout::Expanding {} & mCurrentNote.readProjected(noteEditor),
-                    } with_style { MinSize { 200_dp } }
-                        << ".plain_bg",
+                    }<< ".plain_bg" with_style { MinSize { 200_dp } },
                   })
                   .build() with_style { Expanding() },
         });
@@ -193,7 +192,7 @@ public:
 
     /// [save]
     void save() {
-        AFileOutputStream("notes.json") << aui::to_json(mNotes);
+        AFileOutputStream("notes.json") << aui::to_json(*mNotes);
         mDirty = false;
     }
     /// [save]
@@ -201,7 +200,7 @@ public:
     /// [newNote]
     void newNote() {
         auto note = aui::ptr::manage(new Note { .title = "Untitled" });
-        mNotes << note;
+        mNotes.writeScope()->push_back(note);
         mCurrentNote = std::move(note);
     }
     /// [newNote]
@@ -219,7 +218,7 @@ public:
         }
 
         auto it = ranges::find(*mNotes, *mCurrentNote);
-        it = mNotes->erase(it);
+        it = mNotes.writeScope()->erase(it);
         mCurrentNote = it != mNotes->end() ? *it : nullptr;
     }
     /// [deleteCurrentNote]
@@ -229,7 +228,7 @@ public:
     }
 
 private:
-    _<AListModel<_<Note>>> mNotes = _new<AListModel<_<Note>>>();
+    AProperty<AVector<_<Note>>> mNotes;
     AProperty<_<Note>> mCurrentNote;
     AProperty<bool> mDirty = false;
 };
