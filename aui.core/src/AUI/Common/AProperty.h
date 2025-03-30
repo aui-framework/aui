@@ -377,8 +377,38 @@ inline auto operator!=(const Lhs& lhs, Rhs&& rhs) {
 
 template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
-inline auto operator<=>(const Lhs& lhs, Rhs&& rhs) {
-    return *lhs <=> std::forward<Rhs>(rhs);
+inline auto operator<<(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs << std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>>(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs >> std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator<(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs < std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs > std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator<=(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs <= std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>=(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs >= std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>

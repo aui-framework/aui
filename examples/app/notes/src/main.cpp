@@ -25,6 +25,8 @@
 #include "AUI/Reflect/for_each_field.h"
 #include "AUI/Platform/AMessageBox.h"
 
+#include <AUI/View/AForEachUI.h>
+
 static constexpr auto LOG_TAG = "Notes";
 
 using namespace declarative;
@@ -112,8 +114,7 @@ public:
         });
         load();
 
-        connect(mNotes->dataChanged, me::markDirty);
-        connect(mNotes->dataRemoved, me::markDirty);
+        connect(mNotes.changed, me::markDirty);
 
         setContents(Vertical {
           ASplitter::Horizontal()
@@ -130,7 +131,7 @@ public:
                       /// [scrollarea]
                       AScrollArea::Builder()
                           .withContents(
-                          AUI_DECLARATIVE_FOR(note, mNotes, AVerticalLayout) {
+                          AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
                               aui::reflect::for_each_field_value(
                                   *note,
                                   aui::lambda_overloaded {
