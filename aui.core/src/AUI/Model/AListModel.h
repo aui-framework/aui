@@ -22,7 +22,7 @@ namespace aui::detail {
 }
 
 template <typename StoredType>
-class [[deprecated("check AUI_DECLARATIVE_FOR docs")]] AListModel
+class [[deprecated("check @ref AUI_DECLARATIVE_FOR docs")]] AListModel
   : public IRemovableListModel<StoredType>,
     public IValueMutableListModel<StoredType> {
 private:

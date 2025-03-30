@@ -132,22 +132,24 @@ concept RangeFactory = requires(Factory&& factory) {
  * @details
  * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
  *
+ * @experimental
+ *
  * @note
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
  *
- * AForEachUI is created by using AUI_DECLARATIVE_FOR macro.
+ * AForEachUI is created by using @ref AUI_DECLARATIVE_FOR macro.
  *
- * AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
+ * @ref AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
  *
  * @code{cpp}
- * static std::array users = { "Foo", "Bar", "Lol" };
+ * static const std::array users = { "Foo", "Bar", "Lol" };
  * for (const auto& user : users) {
  *   fmt::println("{}", user);
  * }
  * @endcode
  * @code{cpp}
- * static std::array<AString> users = { "Foo", "Bar", "Lol" };
+ * static const std::array users = { "Foo", "Bar", "Lol" };
  * ...
  * setContents(Centered {
  *   AScrollArea::Builder().withContents(
@@ -158,11 +160,13 @@ concept RangeFactory = requires(Factory&& factory) {
  * });
  * @endcode
  *
- * `AUI_DECLARATIVE_FOR` consists of single entry variable name, a potentially @ref aui::react "reactive" expression
+ * @image html docs/imgs/UIDeclarativeForTest.Example_.png
+ *
+ * @ref AUI_DECLARATIVE_FOR consists of single entry variable name, a potentially @ref aui::react "reactive" expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
  * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
- * `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer. The final
- * declaration of `AUI_DECLARATIVE_FOR` returns an instance of AForEachUI.
+ * @ref AUI_DECLARATIVE_FOR macro; the lambda's body (including curly braces) is left up to developer. The final
+ * declaration of @ref AUI_DECLARATIVE_FOR returns an instance of AForEachUI.
  *
  * *range* models one-dimensional list.
  *
@@ -182,7 +186,11 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * The range's type is erased with runtime-based *range* layer @ref aui::any_view.
  *
- * `AUI_DECLARATIVE_FOR` can be nested with no restrictions in both directions.
+ * @ref AUI_DECLARATIVE_FOR can be nested with no restrictions in both directions.
+ *
+ * # Examples
+ *
+ * See examples of @ref AUI_DECLARATIVE_FOR.
  *
  * # Lazy Semantics
  *
@@ -316,42 +324,6 @@ template <typename FactoryTypeTag>
 aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE {};
 
 namespace aui::detail {
-/*
-template <typename Layout, ranges::range Rng>
-auto makeForEach(Rng&& rng)
-{
-
-    using ImmediateValueType = decltype(*ranges::begin(rng));
-
-    // | is_reference<ImmediateValueType> | is_const<ImmediateValueType> |   |
-    // | -------------------------------- | ---------------------------- | - |
-    // | 0                                | 0                            | 1 |
-    // | 0                                | 1                            | 1 |
-    // | 1                                | 0                            | 0 |
-    // | 1                                | 1                            | 1 |
-    // won't give proper diagnostics for
-    // ```cpp
-    // AVector<int> ints = { 1, 2, 3 };
-    // AUI_DECLARATIVE_FOR(i, ints | ranges::views::transform([](int i) { return true; }), ...
-    // ```
-    // but will in others.
-    static_assert(!std::is_reference_v<ImmediateValueType> || std::is_const_v<std::remove_reference_t<ImmediateValueType>>,
-        "\n"
-        "====================> AUI_DECLARATIVE_FOR: attempt to use non-const reference. You can:\n"
-        "====================> (1) transfer ownership of the container to AUI_DECLARATIVE_FOR via std::move, or\n"
-        "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
-        "AUI_DECLARATIVE_FOR's, or\n"
-        "====================> (3) make a reactive expression by wrapping it to lambda, if you want to modify the "
-        "container in process.\n"
-        "====================> Please consult with TODO for more info.");
-
-    using T = std::remove_reference_t<ImmediateValueType>;
-
-    auto result = _new<AForEachUI<T>>([rng = std::forward<Rng>(rng)]() mutable -> auto& { return rng; });
-    result->setLayout(std::make_unique<Layout>());
-    return result;
-}
-*/
 
 template <typename Layout, aui::invocable RangeFactory>
 auto makeForEach(RangeFactory&& rangeFactory)
@@ -359,10 +331,48 @@ auto makeForEach(RangeFactory&& rangeFactory)
         { rangeFactory() } -> ranges::range;
     }
 {
-    using T = decltype([&] {
-        auto rng = rangeFactory();
+    using ImmediateValueType = decltype([&]() -> decltype(auto) {
+        decltype(auto) rng = rangeFactory();
         return *ranges::begin(rng);
     }());
+
+    // | is_reference<ImmediateValueType> | is_const<ImmediateValueType> |   |
+    // | -------------------------------- | ---------------------------- | - |
+    // | 0                                | 0                            | 1 |
+    // | 0                                | 1                            | 1 |
+    // | 1                                | 0                            | 0 |
+    // | 1                                | 1                            | 1 |
+    //
+    // This ensures that a borrowed container is constant, and throws a compile-time diagnostics if is not in most
+    // scenarios:
+    // ```cpp
+    // class MyWindow {
+    //   void test() {
+    //     AUI_DECLARATIVE_FOR(i, ints, ... // error; mark ints as const
+    //   }
+    //   AVector<int> ints = { 1, 2, 3 };
+    // };
+    // ```
+    //
+    // The only known case where this check does not work:
+    // ```cpp
+    // class MyWindow {
+    //   void test() {
+    //     AUI_DECLARATIVE_FOR(i, ints | ranges::views::transform([](int i) { return true; }), ... // bad but compiles
+    //   }
+    //   AVector<int> ints = { 1, 2, 3 };
+    // };
+    // ```
+    static_assert(!std::is_reference_v<ImmediateValueType> || std::is_const_v<std::remove_reference_t<ImmediateValueType>>,
+                  "\n"
+                  "====================> AUI_DECLARATIVE_FOR: attempt to use a non-const reference. You can:\n"
+                  "====================> (1) transfer ownership of the container to @ref AUI_DECLARATIVE_FOR by referencing a local, or\n"
+                  "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
+                  "AUI_DECLARATIVE_FOR's, or\n"
+                  "====================> (3) wrap your container as AProperty.\n"
+                  "====================> Please consult with TODO for more info.");
+
+    using T = std::decay_t<ImmediateValueType>;
 
     auto result = _new<AForEachUI<T>>(std::forward<RangeFactory>(rangeFactory));
     result->setLayout(std::make_unique<Layout>());
@@ -370,15 +380,15 @@ auto makeForEach(RangeFactory&& rangeFactory)
 }
 }   // namespace aui::detail
 
-/**
- * @see AForEachUI
- */
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
     aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
         return (model);                                        \
     }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
- * @see AForEachUI
+ * @brief ranged-for-loop style wrapped for @ref AForEachUI.
+ * @ingroup useful_macros
+ * @details
+ * See @ref AForEachUI
  */
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)

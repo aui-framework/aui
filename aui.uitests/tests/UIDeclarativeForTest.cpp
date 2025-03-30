@@ -16,6 +16,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AScrollArea.h"
 #include "AUI/Model/AListModel.h"
+#include "AUI/View/AButton.h"
 
 static constexpr auto LOG_TAG = "UIDeclarativeForTest";
 
@@ -84,6 +85,22 @@ struct Item {
     AString text;
 };
 
+TEST_F(UIDeclarativeForTest, Example) {
+    static const std::array users = { "Foo", "Bar", "Lol" };
+    mWindow->setContents(Centered {
+        AScrollArea::Builder().withContents(
+            AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
+                return Label { fmt::format("{}", user) };
+            }
+        ).build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    uitest::frame();
+    EXPECT_TRUE(By::text("Foo").one());
+    EXPECT_TRUE(By::text("Bar").one());
+    EXPECT_TRUE(By::text("Lol").one());
+    saveScreenshot("");
+}
+
 
 // AUI_DOCS_OUTPUT: doxygen/intermediate/foreach.h
 // @class AForEachUI
@@ -121,10 +138,10 @@ TEST_F(UIDeclarativeForTest, Performance) {
 //
 // # Initialization {#AFOREACHUI_UPDATE}
 //
-// This section explains how to initialize `AUI_DECLARATIVE_FOR`, manage lifetime of containers and how to make them
+// This section explains how to initialize @ref AUI_DECLARATIVE_FOR, manage lifetime of containers and how to make them
 // reactive.
 //
-// In `AUI_DECLARATIVE_FOR`, a potentially @ref aui::react "reactive" expression evaluating to *range* and the lambda
+// In @ref AUI_DECLARATIVE_FOR, a potentially @ref aui::react "reactive" expression evaluating to *range* and the lambda
 // that creates a new views are both lambdas with capture default by value `[=]`. This means that:
 //
 // 1. All mentioned *local* variables are captured by copying.
@@ -168,7 +185,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
     EXPECT_TRUE(By::text("White").one());
 }
 
-TEST_F(UIDeclarativeForTest, InitializerList2) {
+TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
     // It's a good idea to wrap AForEachUI with an @ref AScrollArea.
     // AUI_DOCS_CODE_BEGIN
@@ -186,6 +203,9 @@ TEST_F(UIDeclarativeForTest, InitializerList2) {
     uitest::frame();
     EXPECT_TRUE(By::text("Red").one());
     EXPECT_TRUE(By::text("White").one());
+
+    // @image html docs/imgs/UIDeclarativeForTest.Constant_global_data2_.png
+    saveScreenshot("");
 }
 
 TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
@@ -202,6 +222,8 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
     // AUI_DOCS_CODE_END
 
     validateOrder();
+    // @image html docs/imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png
+    saveScreenshot("");
 }
 
 TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
@@ -229,13 +251,17 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     // AUI_DOCS_CODE_END
 
     EXPECT_FALSE(By::text("Bruh").one());
+
+    // @image html docs/imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png
+    saveScreenshot("");
 }
 
 TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
-    // If your container lives inside your class, it's value is not copied but referenced:
+    // If your container lives inside your class, its value is not copied but referenced. To avoid unobserved iterator
+    // invalidation and content changes, @ref AUI_DECLARATIVE_FOR requires borrowed containers to be constant. There's a
+    // compile-time check to verify this requirement that does work in most cases, like this one.
     //
     // AUI_DOCS_CODE_BEGIN
-
     class MyWindow: public AWindow {
     public:
         MyWindow(AVector<AString> colors): mColors(std::move(colors)) {
@@ -246,71 +272,92 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
             });
         }
     private:
-        AVector<AString> mColors;
+        const AVector<AString> mColors;
     };
     AUI_ENTRY {
          auto w = _new<MyWindow>(AVector<AString>{ "Red", "Green", "Blue", "Black", "White" });
          w->show();
          return 0;
     }
-        // AUI_DOCS_CODE_END
+    // AUI_DOCS_CODE_END
         ();
-}
 
-TEST_F(UIDeclarativeForTest, Dynamic1) {
-    // To make it observable, we simply wrap it with @ref property_system "AProperty":
-    // AUI_DOCS_CODE_BEGIN
-    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
-    mWindow-> // HIDE
-    setContents(Vertical {
-      AScrollArea::Builder().withContents(
-           AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout) {
-                return Label { i };
-            }).build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
-    // AUI_DOCS_CODE_END
-
-    uitest::frame();
-    for (const auto &i : *items) {
-        EXPECT_TRUE(By::text(i).one()) << i;
-    }
-    // AUI_DOCS_CODE_BEGIN
-    items.writeScope()->push_back("Bruh");
-    // AUI_DOCS_CODE_END
     //
-    // This example gives essentially the same result.
-    EXPECT_FALSE(By::text("Bruh").one());
+    // @image html docs/imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png
+    uitest::frame();
+    saveScreenshot("");
+
+    //
+    // Marking the borrowed container as const effectively saves you from unintended borrowed data changes. If you'd
+    // like to change the container or view options and @ref AUI_DECLARATIVE_FOR to respond to the changes, read the section
+    // below.
 }
 
-TEST_F(UIDeclarativeForTest, Dynamic2) {
-    // To make it observable, we simply wrap it with @ref property_system "AProperty":
+TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
+    // The reason why @ref AUI_DECLARATIVE_FOR is so restrictive about using borrowed non-const data is because it stores
+    // *range*'s iterators under the hood. Various containers have different rules on iterator invalidation, but, since
+    // it accepts any type of *range*, we consider using its iterators after a modifying access to the container or a
+    // view as unsafe:
+    // - visual presentation by @ref AUI_DECLARATIVE_FOR might seem unresponsive to borrowed data changes,
+    // - may lead to program crash.
+    //
+    // To address this issue, we provide a convenient @ref property_system "way" to make iterator invalidation
+    // *observable*:
+    //
+    // - wrap the container with `AProperty`,
+    // - dereference `mColors` in @ref AUI_DECLARATIVE_FOR clause.
+    //
     // AUI_DOCS_CODE_BEGIN
-    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
-    mWindow-> // HIDE
-    setContents(Vertical {
-      AScrollArea::Builder().withContents(
-           AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout) {
-                return Label { i };
-            }).build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
-    // AUI_DOCS_CODE_END
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(AVector<AString> colors): mColors(std::move(colors)) {
+            setContents(Vertical {
+                _new<AButton>("Add A new color").connect(&AView::clicked, me::addColor),
+                AScrollArea::Builder().withContents(
+                  AUI_DECLARATIVE_FOR(i, *mColors, AVerticalLayout) {
+                    return Label { "{}"_format(i) };
+                  }
+                ).build() with_style { FixedSize { 150_dp, 200_dp } },
+            });
+        }
+    private:
+        AProperty<AVector<AString>> mColors;
 
-    auto checkAllPresent = [&] {
-        uitest::frame();
-        for (const auto &i : *items) {
-            EXPECT_TRUE(By::text(i).one()) << i;
+        void addColor() {
+            mColors.writeScope()->push_back("A new color");
         }
     };
-
-    checkAllPresent();
-    // AUI_DOCS_CODE_BEGIN
-    items.writeScope()->push_back("Bruh");
+    AUI_ENTRY {
+        auto w = _new<MyWindow>(AVector<AString>{ "Red", "Green", "Blue", "Black", "White" });
+        w->show();
+        return 0;
+    }
     // AUI_DOCS_CODE_END
-    checkAllPresent();
+    ();
+
+
+    //
+    // @image html docs/imgs/UIDeclarativeForTest.Reactive_lists_1.png
+    uitest::frame();
+    saveScreenshot("1");
+    EXPECT_TRUE(By::text("Red").one());
+    EXPECT_TRUE(By::text("White").one());
+    EXPECT_FALSE(By::text("A new color").one());
+
+    // Upon clicking "Add A new color" button, the "A new color" label will appear in the list.
+    By::text("Add A new color").perform(click());
+    //
+    // @image html docs/imgs/UIDeclarativeForTest.Reactive_lists_2.png
+    uitest::frame();
+    saveScreenshot("2");
+    EXPECT_TRUE(By::text("A new color").one());
 }
 
 TEST_F(UIDeclarativeForTest, DynamicPerformance) {
-    AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+    struct State {
+        AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+    };
+    auto state = _new<State>();
 
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
@@ -323,7 +370,7 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
-              AUI_DECLARATIVE_FOR_EX(i, *items, AVerticalLayout, &) {
+              AUI_DECLARATIVE_FOR_EX(i, *state->items, AVerticalLayout, &) {
                   mTestObserver.onViewCreated(i);
                   return Label { i };
               })
@@ -331,7 +378,7 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     });
 
     uitest::frame();
-    items.writeScope()->push_back("Bruh");
+    state->items.writeScope()->push_back("Bruh");
     uitest::frame();
 }
 
@@ -372,7 +419,11 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
 
     ::testing::GTEST_FLAG(throw_on_failure) = true;
-    AProperty<AVector<int>> mInts = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+
+    struct State {
+        AProperty<AVector<int>> ints = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
+    };
+    auto state = _new<State>();
 
     testing::InSequence s;
 
@@ -381,7 +432,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
               .withContents(
                   /* group foreach */
                   AUI_DECLARATIVE_FOR(
-                  group, *mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
+                  group, *state->ints | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
                   AVerticalLayout) {
                       /* group foreach data to view transformer callback, aka group's view callback */
                       auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
@@ -428,7 +479,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
      * heap, i.e., `std::list`. */
     EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as));
     {
-        mInts.writeScope()->removeAll(2);
+        state->ints.writeScope()->removeAll(2);
     }
 
     validateOrder();
@@ -442,7 +493,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as)); /* offsets changed */
     EXPECT_CALL(mTestObserver, onViewCreated("15"_as));       /* new item */
     {
-        auto write = mInts.writeScope();
+        auto write = state->ints.writeScope();
         write->removeAll(3);
         write->push_back(15);
     }
@@ -456,7 +507,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_CALL(mTestObserver, onViewCreated("Group 20"_as)); /* new group */
     EXPECT_CALL(mTestObserver, onViewCreated("22"_as));       /* new group */
     {
-        auto write = mInts.writeScope();
+        auto write = state->ints.writeScope();
         write->removeAll(4);
         write->push_back(22);
     }
@@ -470,7 +521,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as)); /* offsets changed */
     EXPECT_CALL(mTestObserver, onViewCreated("Group 20"_as)); /* offsets changed */
     {
-        mInts.writeScope()->removeAll(1);
+        state->ints.writeScope()->removeAll(1);
     }
     validateOrder();
 
@@ -478,8 +529,8 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_FALSE(By::text("2").one());
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* contents changed */
     {
-        EXPECT_EQ((*mInts)[0], 5);
-        (*mInts.writeScope())[0] = 2;
+        EXPECT_EQ((*state->ints)[0], 5);
+        (*state->ints.writeScope())[0] = 2;
     }
     validateOrder();
     EXPECT_TRUE(By::text("2").one());
