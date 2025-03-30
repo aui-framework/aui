@@ -33,23 +33,6 @@
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
  * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
- *
- * # Lazy Scroll Area Layout {#LAZY_SCROLLAREA_LAYOUT}
- *
- * Enabled when AScrollArea::Builder::withLazyLayout.
- *
- * Allows lazy semantics in regards of layout processing inside the scroll area. That is, only visible view's layout
- * will be processed, saving CPU and memory especially with large (or potentially infinite) amounts of contents.
- *
- * Possible use cases are: social media feed, messages lists.
- *
- * As a downside, scroll area's content size can't be predicted properly. This mostly affects scroll bars only,
- * which is considered as small cost compared to performance benefits achieved by lazy layout semantics. With
- * potentially infinite contents, scroll bars are considered useless anyway.
- *
- * AUI, however, does its best by making certain assumptions based on current scroll position, current content
- * size and available data (in case of AUI_DECLARATIVE_FOR) to predict actual content size, to make scroll bars
- * as smooth as possible.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
@@ -151,7 +134,6 @@ public:
         _<AScrollbar> mExternalHorizontalScrollbar;
         _<AView> mContents;
         bool mExpanding = false;
-        bool mLazy = false;
 
     public:
         Builder() = default;
@@ -173,16 +155,6 @@ public:
 
         Builder& withExpanding() {
             mExpanding = true;
-            return *this;
-        }
-
-        /**
-         * @brief Allows lazy layout processing.
-         * @details
-         * @see LAZY_SCROLLAREA_LAYOUT
-         */
-        Builder& withLazyLayout(bool lazy = true) {
-            mLazy = lazy;
             return *this;
         }
 
