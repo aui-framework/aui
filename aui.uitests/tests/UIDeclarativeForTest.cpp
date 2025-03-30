@@ -19,6 +19,8 @@
 
 static constexpr auto LOG_TAG = "UIDeclarativeForTest";
 
+// clang-format off
+
 namespace {
 class Observer {
 public:
@@ -86,74 +88,6 @@ struct Item {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/foreach.h
 // @class AForEachUI
 
-TEST_F(UIDeclarativeForTest, Basic_example) { // HEADER_H1
-    // The most straightforward way, using global static data:
-#ifdef AUI_ENTRY
-#undef AUI_ENTRY
-#endif
-#define AUI_ENTRY [&]
-    // AUI_DOCS_CODE_BEGIN
-    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow() {
-            setContents(Vertical {
-                  AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
-                      return Label { "{}"_format(i) };
-                  }
-            });
-        }
-    };
-    AUI_ENTRY {
-        auto w = _new<MyWindow>();
-        w->show();
-        return 0;
-    }
-    // AUI_DOCS_CODE_END
-();
-    uitest::frame();
-    EXPECT_TRUE(By::text("Red").one());
-    EXPECT_TRUE(By::text("White").one());
-}
-
-TEST_F(UIDeclarativeForTest, InitializerList2) {
-    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
-    // It's a good idea to wrap AForEachUI with a @ref AScrollArea.
-    // AUI_DOCS_CODE_BEGIN
-    mWindow-> // HIDE
-    setContents(Vertical {
-      AScrollArea::Builder()
-              .withContents(
-               AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
-                 return Label { "{}"_format(i) };
-               })
-              .build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
-    // AUI_DOCS_CODE_END
-
-    uitest::frame();
-    EXPECT_TRUE(By::text("Red").one());
-    EXPECT_TRUE(By::text("White").one());
-}
-
-TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H1
-    // Most generators, ranges and views are expected to work.
-    // AUI_DOCS_CODE_BEGIN
-    mWindow-> // HIDE
-    setContents(Vertical {
-      AScrollArea::Builder()
-              .withContents(
-               AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) {
-                  return Label { "{}"_format(i) };
-               })
-              .build() with_style { FixedSize { 150_dp, 200_dp } },
-    });
-    // AUI_DOCS_CODE_END
-
-    validateOrder();
-}
-
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
@@ -185,18 +119,102 @@ TEST_F(UIDeclarativeForTest, Performance) {
 
 /**********************************************************************************************************************/
 //
-// # Static, dynamic usecases and lifetime {#AFOREACHUI_UPDATE}
+// # Initialization {#AFOREACHUI_UPDATE}
 //
+// This section explains how to initialize `AUI_DECLARATIVE_FOR`, manage lifetime of containers and how to make them
+// reactive.
+//
+// In `AUI_DECLARATIVE_FOR`, a potentially @ref aui::react "reactive" expression evaluating to *range* and the lambda
+// that creates a new views are both lambdas with capture default by value `[=]`. This means that:
+//
+// 1. All mentioned *local* variables are captured by copying.
+// 2. All mentioned class member variables (fields) are captured by reference.
+//
+// Both lambdas can be evaluated at any point during lifetime of a AForEachUI, so the by-value capture makes it's hard
+// to introduce dangling references, by either copying locals or referencing class members.
+//
+// Most modern compilers are capable to optimize out copying and initialize \*copied\* locals just in place.
+//
+// An attempt to go out of the scenarios listed below will likely lead to a `static_assert` with a link to this section.
 
-TEST_F(UIDeclarativeForTest, Static) {
-    // Suppose we'd like to define some string dataset and modify it in process, to display it reactively.
+TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
+    // The most straightforward way is using constant global data:
+#ifdef AUI_ENTRY
+#undef AUI_ENTRY
+#endif
+#define AUI_ENTRY [&]
+    // AUI_DOCS_CODE_BEGIN
+    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow() {
+            setContents(Vertical {
+                AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
+                  return Label { "{}"_format(i) };
+                }
+            });
+        }
+    };
+    AUI_ENTRY {
+      auto w = _new<MyWindow>();
+      w->show();
+      return 0;
+    }
+        // AUI_DOCS_CODE_END
+        ();
+    uitest::frame();
+    EXPECT_TRUE(By::text("Red").one());
+    EXPECT_TRUE(By::text("White").one());
+}
+
+TEST_F(UIDeclarativeForTest, InitializerList2) {
+    static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
+    // It's a good idea to wrap AForEachUI with an @ref AScrollArea.
+    // AUI_DOCS_CODE_BEGIN
+    mWindow-> // HIDE
+    setContents(Vertical {
+        AScrollArea::Builder()
+            .withContents(
+                AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
+                  return Label { "{}"_format(i) };
+                })
+            .build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    // AUI_DOCS_CODE_END
+
+    uitest::frame();
+    EXPECT_TRUE(By::text("Red").one());
+    EXPECT_TRUE(By::text("White").one());
+}
+
+TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
+    // Most generators, ranges and views are expected to work.
+    // AUI_DOCS_CODE_BEGIN
+    mWindow-> // HIDE
+    setContents(Vertical {
+        AScrollArea::Builder().withContents(
+            AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) {
+                return Label { "{}"_format(i) };
+            }
+        ).build() with_style { FixedSize { 150_dp, 200_dp } },
+    });
+    // AUI_DOCS_CODE_END
+
+    validateOrder();
+}
+
+TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
+    // When using locals, their immediate values are copied during initialization of AUI_DECLARATIVE_FOR.
     // AUI_DOCS_CODE_BEGIN
     auto items = AVector<AString> { "Hello", "World", "Test" };
-    mWindow->setContents(Vertical {
-      AScrollArea::Builder().withContents(
-           AUI_DECLARATIVE_FOR(i, items, AVerticalLayout) {
-                return Label { i };
-            }).build() with_style { FixedSize { 150_dp, 200_dp } },
+    mWindow-> // hide
+    setContents(Vertical {
+        AScrollArea::Builder().withContents(
+            AUI_DECLARATIVE_FOR(i, items, AVerticalLayout) {
+               return Label { i };
+            }
+        ).build() with_style { FixedSize { 150_dp, 200_dp } },
     });
     // AUI_DOCS_CODE_END
 
@@ -204,15 +222,39 @@ TEST_F(UIDeclarativeForTest, Static) {
     for (const auto &i : items) {
         EXPECT_TRUE(By::text(i).one()) << i;
     }
+
+    // As such, an attempt to modify `items` will not reflect on presentation, because it has own copy of `items`.
     // AUI_DOCS_CODE_BEGIN
     items.push_back("Bruh");
     // AUI_DOCS_CODE_END
-    //
-    // Our first three items are appeared, but the one we have added after constructing AUI_DECLARATIVE_FOR doesn't.
-    // That's because our `items` is not observable and AUI_DECLARATIVE_FOR is simply unaware that a change was
-    // occurred.
-    //
+
     EXPECT_FALSE(By::text("Bruh").one());
+}
+
+TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
+    // If your container lives inside your class, it's value is not copied but referenced:
+    //
+    // AUI_DOCS_CODE_BEGIN
+
+    class MyWindow: public AWindow {
+    public:
+        MyWindow(AVector<AString> colors): mColors(std::move(colors)) {
+            setContents(Vertical {
+                AUI_DECLARATIVE_FOR(i, mColors, AVerticalLayout) {
+                  return Label { "{}"_format(i) };
+                }
+            });
+        }
+    private:
+        AVector<AString> mColors;
+    };
+    AUI_ENTRY {
+         auto w = _new<MyWindow>(AVector<AString>{ "Red", "Green", "Blue", "Black", "White" });
+         w->show();
+         return 0;
+    }
+        // AUI_DOCS_CODE_END
+        ();
 }
 
 TEST_F(UIDeclarativeForTest, Dynamic1) {
@@ -229,7 +271,7 @@ TEST_F(UIDeclarativeForTest, Dynamic1) {
     // AUI_DOCS_CODE_END
 
     uitest::frame();
-    for (const auto &i : items) {
+    for (const auto &i : *items) {
         EXPECT_TRUE(By::text(i).one()) << i;
     }
     // AUI_DOCS_CODE_BEGIN

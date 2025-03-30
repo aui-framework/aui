@@ -147,17 +147,22 @@ concept RangeFactory = requires(Factory&& factory) {
  * }
  * @endcode
  * @code{cpp}
- * static std::array users = { "Foo", "Bar", "Lol" };
+ * static std::array<AString> users = { "Foo", "Bar", "Lol" };
  * ...
- * AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
- *   return Label { fmt::format("{}", user) };
- * }
+ * setContents(Centered {
+ *   AScrollArea::Builder().withContents(
+ *     AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
+ *       return Label { fmt::format("{}", user) };
+ *     }
+ *   ).build() with_style { FixedSize { 150_dp, 200_dp } },
+ * });
  * @endcode
  *
- * `AUI_DECLARATIVE_FOR` consists of AForEachUI creation, single entry variable name, *range* definition, layout
- * name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that creates a new view based on data
- * entry. In terms of C++ syntax, the lambda is partially defined by `AUI_DECLARATIVE_FOR` macro; the lambda's body
- * (including curly braces) is left up to developer.
+ * `AUI_DECLARATIVE_FOR` consists of single entry variable name, a potentially @ref aui::react "reactive" expression
+ * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
+ * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
+ * `AUI_DECLARATIVE_FOR` macro; the lambda's body (including curly braces) is left up to developer. The final
+ * declaration of `AUI_DECLARATIVE_FOR` returns an instance of AForEachUI.
  *
  * *range* models one-dimensional list.
  *
