@@ -230,7 +230,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * scrollbar might be completely hidden or significantly transparentized.
  *
  * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
- * (scrollbar is the only visual confirmation), the scrolled contents appears normal and natural.
+ * (scrollbar is the only visual confirmation), the scrolled contents appear normal and natural.
  *
  * @image html docs/imgs/edrfgsrgsrg.webp A lie is going on behind the scenes
  */
