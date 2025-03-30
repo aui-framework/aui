@@ -12,19 +12,20 @@
 #pragma once
 
 #include <AUI/Model/AListModelIndex.h>
+#include <AUI/Model/AListModelObserver.h>
 #include <AUI/Model/AListModelSelection.h>
 #include <AUI/Model/IListModel.h>
-#include <AUI/Layout/AVerticalLayout.h>
 
 #include "AScrollArea.h"
 
 class AListItem;
+class AListViewContainer;
 
 /**
  * @brief Displays a list model of strings.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AListView : public AScrollArea {
+class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {
     friend class AListItem;
 
 public:
@@ -70,7 +71,16 @@ public:
 
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
-    [[nodiscard]] AListModelSelection<AString> getSelectionModel() const;
+    [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
+        return AListModelSelection<AString>(mSelectionModel, mObserver->getModel());
+    }
+
+    void insertItem(size_t at, const AString& value) override;
+    void updateItem(size_t at, const AString& value) override;
+    void removeItem(size_t at) override;
+
+    void onDataCountChanged() override;
+    void onDataChanged() override;
 
 signals:
     emits<AListModelSelection<AString>> selectionChanged;
@@ -78,12 +88,10 @@ signals:
 
     void clearSelection();
 
-
 private:
-    // using ForEachUI = AForEachUI<AString, AVerticalLayout>;
-    // _<ForEachUI> mForEachUI;
-
+    _<AListViewContainer> mContent;
     ASet<AListModelIndex> mSelectionModel;
+    _<AListModelObserver<AString>> mObserver;
     bool mAllowMultipleSelection = false;
 
     void handleMousePressed(AListItem* item);
