@@ -40,7 +40,7 @@ struct AProperty: AObjectBase {
     = default;
 
     template <aui::convertible_to<T> U>
-    AProperty(U&& value) noexcept : raw(std::forward<U>(value)) {}
+    AProperty(U&& value) noexcept(noexcept(T(std::forward<U>(value)))): raw(std::forward<U>(value)) {}
 
     AObjectBase* boundObject() {
         return this;
@@ -108,7 +108,7 @@ struct AProperty: AObjectBase {
 
     [[nodiscard]]
     const T& value() const noexcept {
-        aui::property_precomputed::addDependency(changed);
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return raw;
     }
 
@@ -188,22 +188,12 @@ public:
     }
 
     [[nodiscard]]
-    const Underlying& value() const noexcept {
-        return mOwner->value();
+    Underlying& value() const noexcept {
+        return mOwner->raw;
     }
 
     [[nodiscard]]
-    Underlying& value() noexcept {
-        return const_cast<Underlying&>(mOwner->value());
-    }
-
-    [[nodiscard]]
-    const Underlying* operator->() const noexcept {
-        return &value();
-    }
-
-    [[nodiscard]]
-    Underlying* operator->() noexcept {
+    Underlying* operator->() const noexcept {
         return &value();
     }
 
@@ -373,6 +363,42 @@ template<AAnyProperty Lhs, typename Rhs>
 [[nodiscard]]
 inline auto operator!=(const Lhs& lhs, Rhs&& rhs) {
     return *lhs != std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator<<(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs << std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>>(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs >> std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator<(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs < std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs > std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator<=(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs <= std::forward<Rhs>(rhs);
+}
+
+template<AAnyProperty Lhs, typename Rhs>
+[[nodiscard]]
+inline auto operator>=(const Lhs& lhs, Rhs&& rhs) {
+    return *lhs >= std::forward<Rhs>(rhs);
 }
 
 template<AAnyProperty Lhs, typename Rhs>

@@ -18,21 +18,13 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/AWindowManager.h>
 
-ASet<_<AView>> UIMatcher::toSet() const {
-    ASet<_<AView>> result;
-
-    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
-        processContainer(result, window);
-    }
-    return result;
-}
-
 UIMatcher*& UIMatcher::currentImpl() {
     thread_local UIMatcher* matcher;
     return matcher;
 }
 
-void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainerBase>& container) const {
+template<typename Container>
+void UIMatcher::processContainer(Container& destination, const _<AViewContainerBase>& container) const {
     for (auto& view : container) {
         if (mIncludeInvisibleViews || (view->getVisibility() == Visibility::VISIBLE)) {
             if (mMatcher->matches(view)) {
@@ -43,4 +35,22 @@ void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewConta
             }
         }
     }
+}
+
+ASet<_<AView>> UIMatcher::toSet() const {
+    ASet<_<AView>> result;
+
+    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
+        processContainer(result, window);
+    }
+    return result;
+}
+
+AVector<_<AView>> UIMatcher::toVector() const {
+    AVector<_<AView>> result;
+
+    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
+        processContainer(result, window);
+    }
+    return result;
 }

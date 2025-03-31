@@ -15,6 +15,7 @@
 #include <cassert>
 #include <utility>
 #include <optional>
+#include <fstream>
 #include <stdexcept>
 #include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
@@ -298,3 +299,14 @@ private:
     }
 
 };
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const AOptional<T>& v) {
+    if (!v) {
+        o << "[empty]";
+    } else {
+        o << *v;
+    }
+    return o;
+}
+

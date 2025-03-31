@@ -28,18 +28,7 @@ class AListViewContainer;
 class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {
     friend class AListItem;
 
-   private:
-    _<AListViewContainer> mContent;
-    ASet<AListModelIndex> mSelectionModel;
-    _<AListModelObserver<AString>> mObserver;
-    bool mAllowMultipleSelection = false;
-
-    void handleMousePressed(AListItem* item);
-    void handleMouseDoubleClicked(AListItem* item);
-
-    void clearSelectionInternal();
-
-   public:
+public:
     /**
      * @brief Selection action for updateSelectionOnItem.
      */
@@ -66,10 +55,10 @@ class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AS
     };
 
     AListView() : AListView(nullptr) {}
-    explicit AListView(const _<IListModel<AString>>& model);
+    explicit AListView(_<IListModel<AString>> model);
     virtual ~AListView();
 
-    void setModel(const _<IListModel<AString>>& model);
+    void setModel(_<IListModel<AString>> model);
 
     void updateSelectionOnItem(size_t i, AListView::SelectAction action);
 
@@ -98,4 +87,15 @@ signals:
     emits<unsigned> itemDoubleClicked;
 
     void clearSelection();
+
+private:
+    _<AListViewContainer> mContent;
+    ASet<AListModelIndex> mSelectionModel;
+    _<AListModelObserver<AString>> mObserver;
+    bool mAllowMultipleSelection = false;
+
+    void handleMousePressed(AListItem* item);
+    void handleMouseDoubleClicked(AListItem* item);
+
+    void clearSelectionInternal();
 };

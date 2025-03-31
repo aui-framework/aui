@@ -284,7 +284,7 @@ namespace aui::impl::slot {
  * });
  * @endcode
  */
-#define with_style + ass::PropertyListRecursive
+#define with_style & ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
@@ -391,16 +391,16 @@ namespace aui::impl::slot {
 #define do_once if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
- * @brief Executes lambda on current object's thread.
+ * @brief Executes lambda on main thread.
  * @ingroup useful_macros
  */
-#define ui_thread (*getThread()) * [=]()
+#define ui_thread (*AThread::main()) * [=]()
 
 /**
- * @brief Executes lambda on current object's thread. Allows to determine lambda's capture.
+ * @brief Executes lambda on main thread. Allows to determine lambda's capture.
  * @ingroup useful_macros
  */
-#define ui_threadX (*getThread()) *
+#define ui_threadX (*AThread::main()) *
 
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

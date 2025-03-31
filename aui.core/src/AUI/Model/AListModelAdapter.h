@@ -23,7 +23,7 @@ private:
 
 public:
     using value_type = ItemTo;
-    
+
     explicit AListModelAdapter(const _<IListModel<ItemFrom>>& other, Adapter&& adapter) :
             mOther(other),
             mAdapter(std::forward<Adapter>(adapter)) {

@@ -15,6 +15,7 @@
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/IMutableListModel.h>
+#include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AButton.h>

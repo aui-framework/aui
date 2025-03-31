@@ -403,12 +403,14 @@ private:
 
             return mOutgoingConnections.emplace_back(std::move(conn)).value;
         }();
-        addIngoingConnectionIn(objectBase, connection);
+        if (objectBase != AObject::GENERIC_OBSERVER) {
+            addIngoingConnectionIn(objectBase, connection);
+        }
         return connection;
     }
 
-    void addGenericObserver(AObjectBase* receiver, std::function<void()> observer) override {
-        connect(receiver, [observer = std::move(observer)] { observer(); });
+    _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) override {
+        return connect(receiver, [observer = std::move(observer)] { observer(); });
     }
 
     template <aui::not_overloaded_lambda Lambda>

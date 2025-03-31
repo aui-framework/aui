@@ -15,30 +15,7 @@
 #include "ASignal.h"
 #include "AUI/Util/AEvaluationLoopException.h"
 #include <AUI/Common/detail/property.h>
-
-namespace aui::property_precomputed {
-namespace detail {
-struct DependencyObserver : AObjectBase {
-public:
-    virtual void invalidate() = 0;
-};
-
-struct API_AUI_CORE DependencyObserverRegistrar {
-    explicit DependencyObserverRegistrar(DependencyObserver& observer);
-    ~DependencyObserverRegistrar();
-
-private:
-    DependencyObserver* mPrevObserver;
-};
-}   // namespace detail
-
-/**
- * @brief Adds observer to the signal in the face of APropertyPrecomputed whose expression callback the call stack is
- * currently in.
- */
-API_AUI_CORE void addDependency(const AAbstractSignal& signal);
-
-}   // namespace aui::property_precomputed
+#include <AUI/Common/React.h>
 
 /**
  * @brief Readonly property that holds a value computed by an expression.
@@ -54,7 +31,8 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
  * want to track and process values of several properties.
  *
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
- * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
+ * Its value is determined by a @ref aui::react "reactive" expression specified in `APropertyPrecomputed<T>`'s
+ * constructor, typically a C++ lambda.
  *
  * It's convenient to access values from another properties inside the expression. The properties accessed during
  * invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
@@ -70,14 +48,13 @@ API_AUI_CORE void addDependency(const AAbstractSignal& signal);
  * value with `value()` method or implicit conversion `operator T()` as with other properties.
  */
 template<typename T>
-struct APropertyPrecomputed final : aui::property_precomputed::detail::DependencyObserver {
+struct APropertyPrecomputed final : aui::react::DependencyObserver {
     using Underlying = T;
     using Factory = std::function<T()>;
 
     template<aui::factory<T> Factory>
     APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] { // NOLINT(*-explicit-constructor)
-      clearAllIngoingConnections();
-      aui::property_precomputed::detail::DependencyObserverRegistrar r(*this);
+      aui::react::DependencyObserverRegistrar r(*this);
       return expression();
     }) {
 
@@ -114,7 +91,7 @@ struct APropertyPrecomputed final : aui::property_precomputed::detail::Dependenc
 
     [[nodiscard]]
     const T& value() const {
-        aui::property_precomputed::addDependency(changed);
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return mCurrentValue;
     }
 

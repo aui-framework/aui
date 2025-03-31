@@ -183,3 +183,10 @@ struct API_AUI_CORE AColorHSV {
 
     [[nodiscard]] AColor toRGB() const noexcept;
 };
+
+template<>
+struct std::hash<AColor> {
+    auto operator()(const AColor& c) {
+        return std::hash<std::string_view>{}({ reinterpret_cast<const char*>(&c), sizeof(c) });
+    }
+};

@@ -115,6 +115,9 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     aui::detail::argv = argv;
     setupUIThread();
     ATimer::scheduler();
+    {
+        [[maybe_unused]] auto mainThread = AThread::main();
+    }
 
     AThread::setName("UI thread");
 

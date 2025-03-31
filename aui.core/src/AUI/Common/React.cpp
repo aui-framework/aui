@@ -9,28 +9,31 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "APropertyPrecomputed.h"
+#include "React.h"
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AAbstractSignal.h>
 
-using namespace aui::property_precomputed;
+using namespace aui::react;
 
 namespace {
-thread_local detail::DependencyObserver* gCurrentDependencyObserver = nullptr;
+thread_local DependencyObserver* gCurrentDependencyObserver = nullptr;
 }
 
-detail::DependencyObserverRegistrar::DependencyObserverRegistrar(detail::DependencyObserver& observer)
-  : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {}
+DependencyObserverRegistrar::DependencyObserverRegistrar(DependencyObserver& observer)
+  : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {
+    observer.mObserverConnections.clear();
+}
 
-detail::DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
+DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
 
-void ::aui::property_precomputed::addDependency(const AAbstractSignal& signal) {
+void DependencyObserverRegistrar::addDependency(const AAbstractSignal& signal) {
     if (!gCurrentDependencyObserver) {
         return;
     }
     if (signal.hasOutgoingConnectionsWith(gCurrentDependencyObserver)) {
         return;
     }
-    const_cast<AAbstractSignal&>(signal).addGenericObserver(
+    auto connection = const_cast<AAbstractSignal&>(signal).addGenericObserver(
         gCurrentDependencyObserver, [observer = gCurrentDependencyObserver] { observer->invalidate(); });
+    gCurrentDependencyObserver->mObserverConnections << std::move(connection);
 }

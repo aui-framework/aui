@@ -82,9 +82,9 @@ public:
 
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
-        else mInner->setScrollX(mInner->scroll().x + deltaByX);
+        else mInner->setScrollX(mInner->scroll()->x + deltaByX);
         AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
-        else mInner->setScrollY(mInner->scroll().y + deltaByY);
+        else mInner->setScrollY(mInner->scroll()->y + deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;

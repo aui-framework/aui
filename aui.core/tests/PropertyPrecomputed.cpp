@@ -26,7 +26,7 @@ public:
 };
 
 namespace {
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property_precomputed.h
+// AUI_DOCS_OUTPUT: doxygen/intermediate/reactive.h
 // @class APropertyPrecomputed
 // # Declaration
 // Declare a property with custom expression determining it's value as follows:

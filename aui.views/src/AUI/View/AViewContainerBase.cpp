@@ -198,6 +198,22 @@ void AViewContainerBase::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
     if (!index) return;
     AUI_NULLSAFE(mLayout)->removeView(view, *index);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
+    emit childrenChanged;
+}
+
+void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> views) {
+    if (views.empty()) {
+        return;
+    }
+    auto idx = std::distance(mViews.begin(), views.begin());
+    for (const auto& view: views) {
+        view->mParent = nullptr;
+        AUI_NULLSAFE(mLayout)->removeView(view, idx);
+        view->onViewGraphSubtreeChanged();
+    }
+    mViews.erase(views.begin(), views.end());
     invalidateCaches();
     emit childrenChanged;
 }
@@ -208,6 +224,7 @@ void AViewContainerBase::removeView(AView* view) {
     }
     auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
     if (it == mViews.end()) {
+        view->onViewGraphSubtreeChanged();
         return;
     }
     if (mLayout) {
@@ -218,6 +235,7 @@ void AViewContainerBase::removeView(AView* view) {
     } else {
         mViews.erase(it);
     }
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
 }
@@ -228,6 +246,7 @@ void AViewContainerBase::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
 }
@@ -501,7 +520,10 @@ void AViewContainerBase::removeAllViews() {
             x->mParent = nullptr;
         }
     }
-    mViews.clear();
+    auto views = std::exchange(mViews, {});
+    for (const auto& v : views) {
+        v->onViewGraphSubtreeChanged();
+    }
     invalidateCaches();
 }
 

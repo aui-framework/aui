@@ -42,5 +42,8 @@ Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstrin
 #ifdef AUI_CATCH_UNHANDLED
     aui_init_signal_handler();
 #endif
+    {
+        [[maybe_unused]] auto mainThread = AThread::main();
+    }
     _gEntry({});
 }

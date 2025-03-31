@@ -97,12 +97,12 @@ class AListItem : public ALabel, public ass::ISelectable {
 
 AListView::~AListView() {}
 
-AListView::AListView(const _<IListModel<AString>>& model) {
+AListView::AListView(_<IListModel<AString>> model) {
     mObserver = _new<AListModelObserver<AString>>(this);
-    setModel(model);
+    setModel(std::move(model));
 }
 
-void AListView::setModel(const _<IListModel<AString>>& model) {
+void AListView::setModel(_<IListModel<AString>> model) {
     horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
     setContents(mContent = _new<AListViewContainer>());
 

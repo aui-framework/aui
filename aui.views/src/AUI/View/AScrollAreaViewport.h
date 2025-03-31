@@ -27,6 +27,8 @@
  */
 class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:
+    class Inner;
+
     AScrollAreaViewport();
     ~AScrollAreaViewport() override;
 
@@ -64,17 +66,57 @@ public:
     }
 
     [[nodiscard]]
-    glm::uvec2 scroll() const noexcept {
-        return mScroll;
+    auto scroll() const noexcept {
+        return APropertyDef {
+            this,
+            &AScrollAreaViewport::mScroll,
+            &AScrollAreaViewport::setScroll,
+            mScrollChanged,
+        };
     }
 
+    /**
+     * @brief Compensates layout updates made in applyLayoutUpdate by scrolling by a diff of relative position of anchor.
+     * @param anchor direct or indirect child used as an anchor.
+     * @param applyLayoutUpdate layout update procedure.
+     * @param diffMask mask that is used to control axes of the compensation. Default is `{1, 1}`.
+     * @details
+     * Helps preventing visual layout jittering by querying relative to AScrollAreaViewport position of anchor before
+     * and after applyLayoutUpdate. The diff of relative position is then used to scroll the viewport, maintaining
+     * consistent visual position of anchor.
+     *
+     * anchor must be direct or indirect child to this AScrollAreaViewport before and after applyLayoutUpdate.
+     *
+     * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
+     */
+    template<aui::invocable ApplyLayoutUpdate>
+    void compensateLayoutUpdatesByScroll(_<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1));
+
 private:
-    class Inner;
     _<Inner> mInner;
     _<AView> mContents;
 
     glm::uvec2 mScroll = {0, 0};
+    emits<glm::uvec2> mScrollChanged;
 
     void updateContentsScroll();
 };
 
+template <aui::invocable ApplyLayoutUpdate>
+void AScrollAreaViewport::compensateLayoutUpdatesByScroll(
+    _<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask) {
+    auto queryRelativePosition = [&] {
+      glm::ivec2 accumulator{};
+      for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {
+          accumulator += v->getPosition();
+      }
+      return accumulator;
+    };
+    auto before = queryRelativePosition();
+    applyLayoutUpdate();
+    auto after = queryRelativePosition();
+    auto diff = after - before;
+    diff *= diffMask;
+    mScroll = glm::max(glm::ivec2(mScroll) + diff, glm::ivec2(0));
+    updateContentsScroll();
+}

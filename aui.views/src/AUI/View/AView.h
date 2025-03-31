@@ -824,7 +824,7 @@ public:
     /**
      * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(ass::PropertyListRecursive rule) {
+    void operator&(ass::PropertyListRecursive rule) {
         setCustomStyle(std::move(rule));
     }
 
@@ -904,6 +904,15 @@ signals:
      * @see onViewGraphSubtreeChanged()
      */
     emits<> viewGraphSubtreeChanged;
+
+    /**
+     * @brief View is painted onto the some surface.
+     * @details
+     * This signal is emitted when view's AView::postRender() is called. This signal can be used to keep track if view
+     * is visible; however, AUI performs some optimizations when painting views. For example, a view located somewhere
+     * in AScrollArea is not painted until it is outside of AScrollArea's frame or at least barely reaches it.
+     */
+    emits<> redrawn;
 
     emits<bool> hoveredState;
     emits<> mouseEnter;
@@ -1092,6 +1101,10 @@ protected:
     /**
      * @brief Called when direct or indirect parent has changed.
      * @details
+     * Called when a new direct or indirect parent was assigned or removed.
+     *
+     * If a subtree reattached atomically (i.e., there were no dangling state), the method is called once.
+     *
      * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
      * the new (in)direct parent.
      *

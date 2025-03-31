@@ -22,9 +22,12 @@
 
 namespace ass {
 
+    template<typename T>
+    concept ValidDeclaration = aui::is_complete<ass::prop::Property<std::decay_t<T>>>;
+
     struct PropertyList {
     public:
-        template<typename... Declarations>
+        template<ValidDeclaration... Declarations>
         PropertyList(Declarations&& ... declarations) {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }

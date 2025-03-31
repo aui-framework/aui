@@ -94,6 +94,20 @@ TEST_F(SignalSlotTest, Basic) {
     master->broadcastMessage("hello");
 }
 
+TEST_F(SignalSlotTest, GenericObserver) {
+    /// [GENERIC_OBSERVER]
+    struct State {
+        bool called = false;
+    };
+    auto state = _new<State>();
+    AObject::connect(master->message, AObject::GENERIC_OBSERVER, [state] {
+        state->called = true;
+    });
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(state->called);
+    /// [GENERIC_OBSERVER]
+}
+
 TEST_F(SignalSlotTest, BasicProjection1) {
     slave = _new<Slave>();
     AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), slot(slave)::acceptMessageInt);

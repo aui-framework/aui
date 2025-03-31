@@ -59,5 +59,6 @@ void AScrollAreaViewport::applyGeometryToChildren() {
 }
 void AScrollAreaViewport::updateContentsScroll() {
     mInner->setPosition(-glm::ivec2(mScroll));
+    emit mScrollChanged(mScroll);
     redraw();
 }
