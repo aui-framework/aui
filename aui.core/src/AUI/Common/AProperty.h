@@ -188,22 +188,12 @@ public:
     }
 
     [[nodiscard]]
-    const Underlying& value() const noexcept {
-        return mOwner->value();
+    Underlying& value() const noexcept {
+        return mOwner->raw;
     }
 
     [[nodiscard]]
-    Underlying& value() noexcept {
-        return const_cast<Underlying&>(mOwner->value());
-    }
-
-    [[nodiscard]]
-    const Underlying* operator->() const noexcept {
-        return &value();
-    }
-
-    [[nodiscard]]
-    Underlying* operator->() noexcept {
+    Underlying* operator->() const noexcept {
         return &value();
     }
 

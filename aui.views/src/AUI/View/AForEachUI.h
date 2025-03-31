@@ -368,11 +368,11 @@ auto makeForEach(RangeFactory&& rangeFactory)
     static_assert(!std::is_reference_v<ImmediateValueType> || std::is_const_v<std::remove_reference_t<ImmediateValueType>>,
                   "\n"
                   "====================> AUI_DECLARATIVE_FOR: attempt to use a non-const reference. You can:\n"
-                  "====================> (1) transfer ownership of the container to @ref AUI_DECLARATIVE_FOR by referencing a local, or\n"
+                  "====================> (1) transfer ownership of the container to AUI_DECLARATIVE_FOR by referencing a local, or\n"
                   "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
                   "AUI_DECLARATIVE_FOR's, or\n"
                   "====================> (3) wrap your container as AProperty.\n"
-                  "====================> Please consult with TODO for more info.");
+                  "====================> Please consult with https://aui-framework.github.io/develop/classAForEachUI.html#AFOREACHUI_UPDATE for more info.");
 
     using T = std::decay_t<ImmediateValueType>;
 
