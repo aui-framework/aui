@@ -27,6 +27,8 @@
  */
 class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:
+    class Inner;
+
     AScrollAreaViewport();
     ~AScrollAreaViewport() override;
 
@@ -87,25 +89,10 @@ public:
      *
      * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
      */
-    void compensateLayoutUpdatesByScroll(_<AView> anchor, aui::invocable auto&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1)) {
-        auto queryRelativePosition = [&] {
-            glm::ivec2 accumulator{};
-            for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {
-                accumulator += v->getPosition();
-            }
-            return accumulator;
-        };
-        auto before = queryRelativePosition();
-        applyLayoutUpdate();
-        auto after = queryRelativePosition();
-        auto diff = after - before;
-        diff *= diffMask;
-        mScroll = glm::max(glm::ivec2(mScroll) + diff, glm::ivec2(0));
-        updateContentsScroll();
-    }
+    template<aui::invocable ApplyLayoutUpdate>
+    void compensateLayoutUpdatesByScroll(_<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1));
 
 private:
-    class Inner;
     _<Inner> mInner;
     _<AView> mContents;
 
@@ -115,3 +102,21 @@ private:
     void updateContentsScroll();
 };
 
+template <aui::invocable ApplyLayoutUpdate>
+void AScrollAreaViewport::compensateLayoutUpdatesByScroll(
+    _<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask) {
+    auto queryRelativePosition = [&] {
+      glm::ivec2 accumulator{};
+      for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {
+          accumulator += v->getPosition();
+      }
+      return accumulator;
+    };
+    auto before = queryRelativePosition();
+    applyLayoutUpdate();
+    auto after = queryRelativePosition();
+    auto diff = after - before;
+    diff *= diffMask;
+    mScroll = glm::max(glm::ivec2(mScroll) + diff, glm::ivec2(0));
+    updateContentsScroll();
+}
