@@ -241,7 +241,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     // When using locals, their immediate values are copied during initialization of AUI_DECLARATIVE_FOR.
     // AUI_DOCS_CODE_BEGIN
     auto items = AVector<AString> { "Hello", "World", "Test" };
-    mWindow-> // hide
+    mWindow-> // HIDE
     setContents(Vertical {
         AScrollArea::Builder().withContents(
             AUI_DECLARATIVE_FOR(i, items, AVerticalLayout) {
