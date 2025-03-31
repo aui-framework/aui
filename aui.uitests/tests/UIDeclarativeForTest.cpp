@@ -76,6 +76,11 @@ protected:
             lastItem = currentItem;
         }
     }
+
+    template<typename T>
+    static const auto& cache(const AForEachUI<T>& view) {
+        return *view.mViewsSharedCache;
+    }
 };
 
 using namespace declarative;
@@ -417,7 +422,6 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
 }
 
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
-
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
     struct State {
@@ -528,6 +532,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     /* update value, preserving order */
     EXPECT_FALSE(By::text("2").one());
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));  /* contents changed */
+    EXPECT_CALL(mTestObserver, onViewCreated("2"_as));  /* contents changed */
     {
         EXPECT_EQ((*state->ints)[0], 5);
         (*state->ints.writeScope())[0] = 2;
@@ -535,4 +540,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     validateOrder();
     EXPECT_TRUE(By::text("2").one());
     saveScreenshot("");
+    for (const auto& i : By::type<AForEachUI<int>>().toVector()) {
+        ASSERT_EQ(cache(*_cast<AForEachUI<int>>(i)).size(), 0);
+    }
 }

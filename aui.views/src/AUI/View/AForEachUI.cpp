@@ -16,7 +16,6 @@ static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
 static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE / 2;
 static constexpr auto INFLATE_STEP_PX = RENDER_TO_TEXTURE_TILE_SIZE * 2;
 static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
-static constexpr auto CACHE_COUNT_CAP = 50;
 static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
@@ -31,12 +30,15 @@ void AForEachUIBase::putOurViewsToSharedCache() {
         return;
     }
     if (auto viewsCache = getViewsCache()) {
-        if (viewsCache->size() + mCache->items.size() > 50) {
-            viewsCache->clear();
-        }
         for (auto& e : mCache->items) {
             (*viewsCache)[e.id] = std::move(e.view);
             ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
+        }
+
+        if (auto w = AWindow::current()) {
+            connect(w->layoutUpdateComplete, AObject::GENERIC_OBSERVER, [viewsCache] {
+                viewsCache->clear();
+            });
         }
     }
     mCache.reset();

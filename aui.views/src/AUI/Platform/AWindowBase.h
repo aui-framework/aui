@@ -373,6 +373,7 @@ signals:
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
     emits<>            redrawn;
+    emits<>            layoutUpdateComplete;
 
     /**
      * @brief On touch screen keyboard show.

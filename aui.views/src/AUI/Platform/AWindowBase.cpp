@@ -421,6 +421,7 @@ void AWindowBase::applyGeometryToChildren() {
     AUI_REPEAT(2) {   // AText may trigger extra layout update
         AViewContainer::applyGeometryToChildren();
     }
+    emit layoutUpdateComplete;
 }
 
 void AWindowBase::render(ARenderContext context) {
