@@ -132,15 +132,7 @@ public:
                       AScrollArea::Builder()
                           .withContents(
                           AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
-                              aui::reflect::for_each_field_value(
-                                  *note,
-                                  aui::lambda_overloaded {
-                                    [&](auto& field) {},
-                                    [&](APropertyReadable auto& field) {
-                                        ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
-                                        AObject::connect(field.changed, me::markDirty);
-                                    },
-                                  });
+                              observeChangesForDirty(note);
                               return notePreview(note) let {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });
                                   it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
@@ -226,6 +218,18 @@ public:
 
     void markDirty() {
         mDirty = true;
+    }
+
+    void observeChangesForDirty(const _<Note>& note) {
+        aui::reflect::for_each_field_value(
+                *note,
+                aui::lambda_overloaded {
+                        [&](auto& field) {},
+                        [&](APropertyReadable auto& field) {
+                            ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
+                            AObject::connect(field.changed, me::markDirty);
+                        },
+                });
     }
 
 private:

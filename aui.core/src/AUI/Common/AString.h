@@ -588,6 +588,7 @@ public:
         return super::back();
     }
 
+    [[nodiscard]]
     AOptional<char16_t> firstOpt() const noexcept
     {
         if (empty()) {
@@ -596,6 +597,7 @@ public:
         return super::front();
     }
 
+    [[nodiscard]]
     AOptional<char16_t> lastOpt() const noexcept
     {
         if (empty()) {
