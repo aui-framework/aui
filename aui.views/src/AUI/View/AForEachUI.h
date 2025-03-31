@@ -258,15 +258,15 @@ public:
     template <aui::detail::RangeFactory<T> RangeFactory>
     void setModel(RangeFactory&& rangeFactory) {
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
-            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
+//            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
             aui::react::DependencyObserverRegistrar r(*this);
             return rangeFactory() | ranges::views::transform([this](const T& t) {
                        auto key = aui::for_each_ui::defaultKey(t, 0L);
                        _<AView> view;
                        if (mViewsSharedCache) {
                            if (auto c = mViewsSharedCache->contains(key)) {
-                               ALOG_DEBUG("AForEachUIBase")
-                                   << this << "(" << AReflect::name(this) << ") Trying to view from cache: " << key;
+//                               ALOG_DEBUG("AForEachUIBase")
+//                                   << this << "(" << AReflect::name(this) << ") Trying to view from cache: " << key;
                                view = std::move(c->second);
                                mViewsSharedCache->erase(c);
                            }
@@ -294,7 +294,7 @@ public:
      * @copybrief AForEachUIBase::setModelImpl
      */
     void invalidate() override {
-        ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
+//        ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
         updateUnderlyingModel();
     }
 

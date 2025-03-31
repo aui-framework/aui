@@ -32,7 +32,7 @@ void AForEachUIBase::putOurViewsToSharedCache() {
     if (auto viewsCache = getViewsCache()) {
         for (auto& e : mCache->items) {
             (*viewsCache)[e.id] = std::move(e.view);
-            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
+//            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
         }
 
         if (auto w = AWindow::current()) {
@@ -76,7 +76,7 @@ void AForEachUIBase::applyGeometryToChildren() {
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
-    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
+//    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
 
     AUI_DEFER {
