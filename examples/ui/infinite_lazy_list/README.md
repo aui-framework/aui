@@ -1,7 +1,7 @@
 # Infinite Lazy List
 
 @auiexample{ui}
-Usage of IListModel to make an infinite lazy list.
+Usage of AUI_DECLARATIVE_FOR to make an infinite lazy list.
 
 This example demonstrates making an optimal infinite list. That is, when you infinitely scroll down to load new items,
 the older items are unloaded from memory.
