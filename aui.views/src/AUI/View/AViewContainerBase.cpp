@@ -121,7 +121,6 @@ AViewContainerBase::~AViewContainerBase() {
     mLayout = nullptr;
     for (auto& view: mViews) {
         view->mParent = nullptr;
-        view->onViewGraphSubtreeChanged();
     }
     //Stylesheet::inst().invalidateCache();
 }
