@@ -221,7 +221,9 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
         auto it = [&] {
             if (mCache) {
                 if (!mCache->items.empty()) {
-                    return std::next(mCache->items.last().iterator);
+                    auto it = mCache->items.last().iterator;
+                    ++it;
+                    return it;
                 }
             }
             return mViewsModel.begin();
