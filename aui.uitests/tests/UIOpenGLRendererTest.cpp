@@ -35,6 +35,7 @@ protected:
         });
 
         try {
+            AWindow::setWindowManager<AWindowManager>();
             mWindow = _new<AWindow>();
             mWindow->show();
         } catch (const AException& e) {

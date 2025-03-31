@@ -23,7 +23,7 @@
  * @details
  * This view is intended to store only one single view with setContents()/contents() methods.
  *
- * This view does not handle scroll events and tocuh events related to scroll. Use AScrollArea for such case.
+ * This view does not handle scroll events and touch events related to scroll. Use AScrollArea for such case.
  */
 class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:
