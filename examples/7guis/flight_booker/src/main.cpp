@@ -1,0 +1,144 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2024 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#include <AUI/Platform/Entry.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include "AUI/View/ADropdownList.h"
+#include "AUI/Model/AListModel.h"
+#include "AUI/View/ATextField.h"
+#include "AUI/Platform/AMessageBox.h"
+#include <regex>
+
+using namespace declarative;
+using namespace std::chrono;
+
+struct DateTextFieldState {
+    AProperty<AOptional<system_clock::time_point>> parsed;
+};
+
+auto formatDate(system_clock::time_point date) {
+    return "{0:%d}.{0:%m}.{0:%G}"_format(date);
+}
+
+auto dateTextField(DateTextFieldState& state) {
+    return _new<ATextField>() let {
+        AObject::biConnect(
+            state.parsed.biProjected(aui::lambda_overloaded {
+              [](const AOptional<system_clock::time_point>& v) -> AString {
+                  if (!v) {
+                      return "";
+                  }
+                  return formatDate(*v);
+              },
+              [](const AString& s) -> AOptional<system_clock::time_point> {
+                  static std::regex r("([0-9]+)\\.([0-9]+)\\.([0-9]{4})");
+                  std::smatch match;
+                  auto std = s.toStdString();
+                  if (!std::regex_match(std, match, r)) {
+                      return std::nullopt;
+                  }
+                  return sys_days(year_month_day(
+                      year(std::stoi(match[3].str())), month(std::stoi(match[2].str())),
+                      day(std::stoi(match[1].str()))));
+              },
+            }),
+            it->text());
+        it & state.parsed > [](AView& textField, const AOptional<system_clock::time_point>& value) {
+            textField.setAssName(".red", !value.hasValue());
+        };
+    };
+}
+
+class FlightBookerWindow : public AWindow {
+public:
+    FlightBookerWindow() : AWindow("AUI - 7GUIs - Book Flight", 150_dp, 50_dp) {
+        setExtraStylesheet(AStylesheet { {
+          ass::c(".red"),
+          ass::BackgroundSolid { AColor::RED },
+        } });
+        setContents(Centered {
+          Vertical {
+            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) let {
+                    connect(it->selectionId().readProjected([](int selectionId) { return selectionId == 1; }),
+                            mIsReturnFlight);
+                },
+            dateTextField(mDepartureDate),
+            dateTextField(mReturnDate) let { connect(mIsReturnFlight, slot(it)::setEnabled); },
+            _new<AButton>("Book") let {
+                    connect(it->clicked, me::book);
+                    connect(mIsValid, slot(it)::setEnabled);
+                },
+          },
+        });
+    }
+
+private:
+    DateTextFieldState mDepartureDate { system_clock::now() }, mReturnDate { system_clock::now() };
+    AProperty<bool> mIsReturnFlight;
+    APropertyPrecomputed<bool> mIsValid = [&] {
+        if (!mDepartureDate.parsed->hasValue()) {
+            return false;
+        }
+        if (!mIsReturnFlight) {
+            return true;
+        }
+        if (!mReturnDate.parsed->hasValue()) {
+            return false;
+        }
+        if (mDepartureDate.parsed->value() > mReturnDate.parsed->value()) {
+            return false;
+        }
+        return true;
+    };
+
+    void book() {
+        AString msg = "Departure - {}"_format(formatDate(mDepartureDate.parsed->value()));
+        if (mIsReturnFlight) {
+            msg += "\nReturn - {}"_format(formatDate(mReturnDate.parsed->value()));
+        }
+        AMessageBox::show(this, "You've booked the flight", msg);
+    }
+};
+
+AUI_ENTRY {
+    _new<FlightBookerWindow>()->show();
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
