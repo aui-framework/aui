@@ -45,7 +45,8 @@ void AForEachUIBase::putOurViewsToSharedCache() {
 }
 
 void AForEachUIBase::applyGeometryToChildren() {
-    if (!mViewport) {
+    auto viewport = mViewport.lock();
+    if (!viewport) {
         if (!mCache) {
             mCache.emplace();
             removeAllViews();
@@ -71,7 +72,7 @@ void AForEachUIBase::applyGeometryToChildren() {
         return;
     }
     //    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
-    mViewport->compensateLayoutUpdatesByScroll(
+    viewport->compensateLayoutUpdatesByScroll(
         mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
 }
 
@@ -85,7 +86,7 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         putOurViewsToSharedCache();
     };
 
-    AUI_NULLSAFE(mViewport)->scroll().changed.clearAllOutgoingConnectionsWith(this);
+    AUI_NULLSAFE(mViewport.lock())->scroll().changed.clearAllOutgoingConnectionsWith(this);
     auto viewport = [&]() -> _<AScrollAreaViewport> {
         for (auto p = getParent(); p != nullptr; p = p->getParent()) {
             try {
@@ -99,7 +100,7 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         return nullptr;
     }();
     if (!viewport) {
-        mViewport = nullptr;
+        mViewport.reset();
         return;
     }
     connect(viewport->scroll().changed, [this](glm::uvec2 scroll) {
@@ -110,13 +111,13 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         }
         mLastInflatedScroll = glm::ivec2(scroll);
 
-        getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff] {
+        getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff, viewport = mViewport.lock()] {
             if (getParent() == nullptr) {
                 // lost parent before queue message was processed - no need to operate.
                 return;
             }
             inflate({ .backward = diff < 0, .forward = diff > 0 });
-            mLastInflatedScroll = *mViewport->scroll();
+            mLastInflatedScroll = *viewport->scroll();
         });
     });
     mLastInflatedScroll.reset();
@@ -154,6 +155,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
         }
     };
 #endif
+    const auto viewport = mViewport.lock();
 
     bool needsMinSizeUpdate = false;
 
@@ -165,7 +167,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
         if (opts.backward && mCache) {
             [&] {
                 const auto uninflateFrom =
-                    lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + mViewport->getSize() * 3;
+                    lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + viewport->getSize() * 3;
                 auto firstValidView =
                     ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
                         return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
@@ -179,7 +181,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
         if (opts.forward) {
             [&] {
                 const auto uninflateFrom =
-                    lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - mViewport->getSize() * 2;
+                    lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - viewport->getSize() * 2;
                 auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
                     return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
                 });
@@ -206,7 +208,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             auto prevFirstView = mViews.first();
             addView(it, 0);
 
-            mViewport->compensateLayoutUpdatesByScroll(
+            viewport->compensateLayoutUpdatesByScroll(
                 prevFirstView, [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
             auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
             inflateTill += diff;
@@ -219,7 +221,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
 
     if (opts.forward) {
         const auto inflateTill =
-            mViewport->getSize() + glm::ivec2(INFLATE_STEP_PX) + lastScroll - posWithinSlidingSurface;
+            viewport->getSize() + glm::ivec2(INFLATE_STEP_PX) + lastScroll - posWithinSlidingSurface;
         auto it = [&] {
             if (mCache) {
                 if (!mCache->items.empty()) {
@@ -239,7 +241,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             }
             addView(it);
             needsMinSizeUpdate = true;
-            mViewport->compensateLayoutUpdatesByScroll(
+            viewport->compensateLayoutUpdatesByScroll(
                 mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
         }
     }
@@ -250,12 +252,13 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
 }
 
 glm::ivec2 AForEachUIBase::calculateOffsetWithinViewportSlidingSurface() {
-    AUI_ASSERTX(mViewport != nullptr, "can't be used without a viewport set");
+    auto viewport = mViewport.lock();
+    AUI_ASSERTX(viewport != nullptr, "can't be used without a viewport set");
     AUI_ASSERTX(getParent() != nullptr, "parent is undefined");
 
     glm::ivec2 accumulator {};
     for (AView* p = this; p != nullptr; p = p->getParent()) {
-        if (mViewport.get() == p->getParent()) {
+        if (viewport.get() == p->getParent()) {
             return accumulator;
         }
         accumulator += p->getPosition();

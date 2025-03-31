@@ -78,8 +78,8 @@ protected:
     }
 
     template<typename T>
-    static const auto& cache(const AForEachUI<T>& view) {
-        return *view.mViewsSharedCache;
+    static const auto& cache() {
+        return *_cast<T>(By::type<T>().one())->mViewsSharedCache;
     }
 };
 
@@ -137,6 +137,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
     EXPECT_TRUE(By::text("Item 2").one());
     EXPECT_TRUE(By::text("Item 3").one());
     EXPECT_FALSE(By::text("Item 979878").one());
+    EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }
 
 /**********************************************************************************************************************/
@@ -188,6 +189,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
     uitest::frame();
     EXPECT_TRUE(By::text("Red").one());
     EXPECT_TRUE(By::text("White").one());
+    EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, Constant_global_data2) {
@@ -211,6 +213,8 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
 
     // @image html docs/imgs/UIDeclarativeForTest.Constant_global_data2_.png
     saveScreenshot("");
+
+    EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
@@ -229,6 +233,8 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
     validateOrder();
     // @image html docs/imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png
     saveScreenshot("");
+
+    EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
@@ -256,6 +262,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     // AUI_DOCS_CODE_END
 
     EXPECT_FALSE(By::text("Bruh").one());
+    EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
     // @image html docs/imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png
     saveScreenshot("");
@@ -291,6 +298,7 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
     // @image html docs/imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png
     uitest::frame();
     saveScreenshot("");
+    EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
     //
     // Marking the borrowed container as const effectively saves you from unintended borrowed data changes. If you'd
@@ -356,6 +364,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
     uitest::frame();
     saveScreenshot("2");
     EXPECT_TRUE(By::text("A new color").one());
+    EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, DynamicPerformance) {
@@ -385,6 +394,7 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     uitest::frame();
     state->items.writeScope()->push_back("Bruh");
     uitest::frame();
+    EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, IntBasic2) {
@@ -419,6 +429,7 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
     validateOrder();
     EXPECT_TRUE(By::text("Group 0").one());
     EXPECT_TRUE(By::text("Group 10").one());
+    EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }
 
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
@@ -540,7 +551,5 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     validateOrder();
     EXPECT_TRUE(By::text("2").one());
     saveScreenshot("");
-    for (const auto& i : By::type<AForEachUI<int>>().toVector()) {
-        ASSERT_EQ(cache(*_cast<AForEachUI<int>>(i)).size(), 0);
-    }
+    EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }

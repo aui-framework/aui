@@ -72,6 +72,7 @@ public:
 
     using List = aui::any_view<Entry>;
     AForEachUIBase() {}
+    ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
 
 protected:
@@ -102,7 +103,7 @@ protected:
     virtual aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() = 0;
 
 private:
-    _<AScrollAreaViewport> mViewport;
+    _weak<AScrollAreaViewport> mViewport;
     List mViewsModel;
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
@@ -249,6 +250,7 @@ public:
     using ViewFactory = std::function<_<AView>(const T& value)>;
 
     AForEachUI() {}
+    ~AForEachUI() override = default;
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
