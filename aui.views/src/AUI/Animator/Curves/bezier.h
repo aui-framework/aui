@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -25,7 +25,6 @@ namespace aui::animation_curves {
         float operator()(float t) {
             float oneMinusX = 1 - t;
             float oneMinusX2 = oneMinusX * oneMinusX;
-            float oneMinusX3 = oneMinusX2 * oneMinusX;
             float x2 = t * t;
             float x3 = x2 * t;
 

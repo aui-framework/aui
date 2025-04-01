@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,17 +15,13 @@
 
 /**
  * @brief Controls the text alignment inside AView.
- * @ingroup ass
+ * @ingroup ass_properties
  */
 enum class ATextAlign {
-	LEFT,
-	CENTER,
-	RIGHT,
+    LEFT,
+    CENTER,
+    RIGHT,
     JUSTIFY,
 };
 
-AUI_ENUM_VALUES(ATextAlign, ATextAlign::LEFT,
-                ATextAlign::CENTER,
-                ATextAlign::RIGHT,
-                ATextAlign::JUSTIFY)
-
+AUI_ENUM_VALUES(ATextAlign, ATextAlign::LEFT, ATextAlign::CENTER, ATextAlign::RIGHT, ATextAlign::JUSTIFY)

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -48,11 +48,24 @@ public:
     explicit ADrawableView(const AUrl& url);
 
     /**
+     * @brief Drawable property.
+     */
+    auto drawable() const {
+        return APropertyDef {
+            this,
+            &ADrawableView::getDrawable,
+            &ADrawableView::setDrawable,
+            mDrawableChanged,
+        };
+    }
+
+    /**
      * @brief Create an instance from the given drawable.
      * @param drawable The IDrawable to be rendered.
      */
     explicit ADrawableView(_<IDrawable> drawable);
     ADrawableView();
+    ~ADrawableView() override = default;
     void render(ARenderContext context) override;
 
     void setDrawable(const _<IDrawable>& drawable) {
@@ -67,17 +80,28 @@ public:
 
 private:
     _<IDrawable> mDrawable;
+    emits<_<IDrawable>> mDrawableChanged;
 };
 
-template<>
-struct ADataBindingDefault<ADrawableView, _<IDrawable>> {
+template<aui::derived_from<ADrawableView> T>
+struct ADataBindingDefault<T, _<IDrawable>> {
 public:
+    static auto property(const _<ADrawableView>& view) {
+        return view->drawable();
+    }
+
     static void setup(const _<ADrawableView>& view) {
     }
 
     static auto getSetter() { return &ADrawableView::setDrawable; }
 };
 
+class ADrawableIconView: public ADrawableView {
+public:
+    using ADrawableView::ADrawableView;
+    ~ADrawableIconView() override = default;
+};
+
 namespace declarative {
-    using Icon = aui::ui_building::view<ADrawableView>;
+    using Icon = aui::ui_building::view<ADrawableIconView>;
 }

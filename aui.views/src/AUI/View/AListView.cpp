@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -97,12 +97,12 @@ class AListItem : public ALabel, public ass::ISelectable {
 
 AListView::~AListView() {}
 
-AListView::AListView(const _<IListModel<AString>>& model) {
+AListView::AListView(_<IListModel<AString>> model) {
     mObserver = _new<AListModelObserver<AString>>(this);
-    setModel(model);
+    setModel(std::move(model));
 }
 
-void AListView::setModel(const _<IListModel<AString>>& model) {
+void AListView::setModel(_<IListModel<AString>> model) {
     horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
     setContents(mContent = _new<AListViewContainer>());
 
@@ -145,7 +145,7 @@ void AListView::handleMouseDoubleClicked(AListItem* item) { emit itemDoubleClick
 void AListView::insertItem(size_t at, const AString& value) { mContent->addView(at, _new<AListItem>(value)); }
 
 void AListView::updateItem(size_t at, const AString& value) {
-    _cast<AListItem>(mContent->getViews()[at])->setText(value);
+    _cast<AListItem>(mContent->getViews()[at])->text() = value;
 }
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }

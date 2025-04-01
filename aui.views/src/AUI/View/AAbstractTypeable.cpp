@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -138,7 +138,7 @@ void AAbstractTypeable::handleKey(AInput::Key key)
     }
 
     if (textChanging) {
-        emitTextChanging(text());
+        emitTextChanging(getText());
     }
 
     onCursorIndexChanged();
@@ -160,7 +160,7 @@ void AAbstractTypeable::paste(AString content) {
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
     if (mCursorSelection) {
-        prevContents = text();
+        prevContents = getText();
         auto sel = selection();
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
@@ -273,7 +273,7 @@ AMenuModel AAbstractTypeable::composeContextMenuImpl() {
              { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
              { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
              { .type = AMenu::SEPARATOR, },
-             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !text().empty() } };
+             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !getText().empty() } };
 }
 
 void AAbstractTypeable::setText(const AString& t)
@@ -292,7 +292,7 @@ void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
 }
 
 AString AAbstractTypeable::getDisplayText() {
-    return text();
+    return getText();
 }
 
 void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {

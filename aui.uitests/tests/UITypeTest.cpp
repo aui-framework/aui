@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -51,11 +51,11 @@ protected:
                                 Horizontal {
                                         mTextField = _new<ATextField>() << "#username",
                                         _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                                            if (mTextField->text().empty()) {
+                                            if (mTextField->getText().empty()) {
                                                 mHelloLabel->setVisibility(Visibility::INVISIBLE);
                                                 return;
                                             }
-                                            mHelloLabel->setText("Hello, {}!"_format(mTextField->text()));
+                                            mHelloLabel->text() = "Hello, {}!"_format(mTextField->getText());
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
                                         }) let { it->setDefault(); },
                                 },

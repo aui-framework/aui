@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -53,7 +53,7 @@ public:
      *   text().</dd>
      * </dl>
      */
-    [[nodiscard]] virtual const AString& text() const = 0;
+    [[nodiscard]] virtual const AString& getText() const = 0;
 
     /**
      * @return Text field text length.
@@ -63,7 +63,7 @@ public:
     {
         if (!hasSelection())
             return {};
-        auto t = text();
+        auto t = getText();
     	return {t.begin() + selection().begin, t.begin() + selection().end };
     }
 

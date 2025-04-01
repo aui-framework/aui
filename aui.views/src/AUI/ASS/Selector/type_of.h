@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -50,6 +50,23 @@ namespace ass {
         using disabled = ass::disabled<detail::Type<T>>;
     };
 
+    /**
+     * @brief Selects views that are of the specified C++ types.
+     * @ingroup ass_selectors
+     * @details
+     * This selector selects views that are of the specified classes. The selector can be accessed explicitly via
+     * `ass::type_of`.
+     *
+     * For example:
+     * @code{cpp}
+     * {
+     *   t<AButton>(),
+     *   BackgroundSolid(...),
+     * }
+     * @endcode
+     * This will select all `AButton`s.
+     *
+     */
     template<typename T>
     using t = type_of<T>;
 }

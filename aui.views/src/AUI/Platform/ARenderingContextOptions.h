@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -42,14 +42,12 @@ AUI_ENUM_FLAG(ARenderContextFlags) {
  *    OpenGL {},
  *    Software {},
  * });
- * @endcode{cpp}
+ * @endcode
  * You may call this before initializating windows in order to define your own settings and priorities.
  *
- * The priority can be overridden by --aui-renderer=GRAPHICS_API argument passed to your application.
+ * The priority can be overridden by `--aui-renderer=GRAPHICS_API` argument passed to your application.
  */
 struct API_AUI_VIEWS ARenderingContextOptions {
-public:
-
     struct DirectX11 {
         int majorVersion;
     };

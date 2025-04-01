@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -25,7 +25,7 @@
  * Handles standard web url (schema://host:port/path).
  *
  * Empty schema is mapped to the assets file. In example, ":icon.svg" references to `icon.svg` file in your assets.
- * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/AUI.Example.Views)
+ * See aui_compile_assets() and [examples](https://github.com/aui-framework/aui/tree/master/examples/ui/views)
  * of asset usage.
  */
 class API_AUI_CORE AUrl {

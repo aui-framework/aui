@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -43,6 +43,18 @@ public:
     ARadioGroup();
     ~ARadioGroup() override;
 
+    /**
+     * @brief Selected id property.
+     */
+    auto selectionId() const {
+        return APropertyDef {
+            this,
+            &ARadioGroup::getSelectedId,
+            &ARadioGroup::setSelectedId,
+            selectionChanged,
+        };
+    }
+
     void setViews(AVector<_<AView>> views) {
         for (const _<AView>& v : views) {
             if (auto rb = _cast<ARadioButton>(v)) {
@@ -63,15 +75,15 @@ public:
     void setSelectedId(int id) const;
 
 signals:
-    emits<AListModelIndex> selectionChanged;
+    emits<int> selectionChanged;
 };
 
 
 namespace declarative {
-    struct RadioGroup: aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup> {
-        using aui::ui_building::layouted_container_factory<AVerticalLayout, ARadioGroup>::layouted_container_factory;
-        struct Horizontal: aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup> {
-            using aui::ui_building::layouted_container_factory<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
+    struct RadioGroup: aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
+        using aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup>::layouted_container_factory;
+        struct Horizontal: aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup> {
+            using aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
         };
     };
 }

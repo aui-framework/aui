@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -89,7 +89,7 @@ TEST_F(UIRepaintTest, ContainerRepaint2) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(testing::AtLeast(1));
-        label->setText("ololo");
+        label->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }
@@ -110,14 +110,14 @@ TEST_F(UIRepaintTest, ContainerRepaint3) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(testing::AtLeast(1));
-        label->setText("ololo");
+        label->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
     {
         testing::InSequence s;
         // should not cause invalidation events
         EXPECT_CALL(*container, markPixelDataInvalid).Times(0);
-        label->setText("ololo");
+        label->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }
@@ -139,7 +139,7 @@ TEST_F(UIRepaintTest, ContainerRepaint4) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(testing::AtLeast(1));
-        label->setText("ololo");
+        label->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
     {
@@ -168,7 +168,7 @@ TEST_F(UIRepaintTest, ContainerRepaint5) {
     {
         testing::InSequence s;
         EXPECT_CALL(*container, markPixelDataInvalid).Times(testing::AtLeast(1));
-        label->setText("ololo");
+        label->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
     {
@@ -214,7 +214,7 @@ TEST_F(UIRepaintTest, SurroundingRepaint1) {
         testing::InSequence s;
         EXPECT_CALL(*labelRight, renderMock).Times(testing::AtLeast(1));
         // arbitrary mark min size case
-        labelLeft->setText("ololo");
+        labelLeft->text() = "ololo";
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }

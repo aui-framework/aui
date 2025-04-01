@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -404,6 +404,8 @@ public:
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
+     * @param begin begin angle of the sector
+     * @param end end angle of the sector
      * @details
      * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
      */
@@ -423,7 +425,7 @@ public:
     }
 
     /**
-     * @bruef Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
+     * @brief Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
      * by the previous color.
      * @param color color
      */

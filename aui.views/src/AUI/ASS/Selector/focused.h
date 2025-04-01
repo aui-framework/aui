@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,7 +18,7 @@
 
 namespace ass {
     template<typename Base>
-    struct focused: Base {
+    struct focused: Base {// ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         focused(Args&&... args):
                 Base(std::forward<Args>(args)...)
@@ -32,7 +32,7 @@ namespace ass {
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->focusState.clearAllConnectionsWith(helper.get());
+            view->focusState.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->focusState, slot(helper)::onInvalidateStateAss);
         }
     };

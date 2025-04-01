@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -58,7 +58,7 @@ public:
     bool capturesFocus() override;
 
     AString toString() const override;
-    const AString& text() const override;
+    const AString& getText() const override;
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;
@@ -83,6 +83,7 @@ protected:
 private:
     mutable AOptional<AString> mCompiledText;
     glm::ivec2 mCursorPosition{0, 0};
+    AAbstractSignal::AutoDestroyedConnection mUpdatedMaxScrollSignal;
 
     struct EntityQueryResult {
         Iterator iterator;
@@ -106,6 +107,16 @@ private:
     Iterator splitIfNecessary(EntityQueryResult at);
 
     AScrollArea* findScrollArea();
+};
+
+template<>
+struct ADataBindingDefault<ATextArea, AString> {
+public:
+    static auto property(const _<ATextArea>& view) {
+        return view->text();
+    }
+
+    static void setup(const _<ATextArea>& view) {}
 };
 
 

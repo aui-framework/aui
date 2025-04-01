@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -21,7 +21,7 @@ namespace ass {
 
     /**
      * @brief Controls the text color of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct TextColor {
         AColor color;

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -13,6 +13,7 @@
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Traits/values.h>
+#include <AUI/Util/ADataBinding.h>
 
 /**
  * @brief A progress bar.
@@ -38,12 +39,17 @@ public:
         updateInnerWidth();
         redraw();
 
-        emit valueChanged(value);
+        emit mValueChanged(value);
     }
 
     [[nodiscard]]
-    aui::float_within_0_1 value() const noexcept {
-        return mValue;
+    auto value() const noexcept {
+        return APropertyDef {
+            this,
+            &AProgressBar::mValue,
+            &AProgressBar::setValue,
+            mValueChanged,
+        };
     }
 
     [[nodiscard]]
@@ -59,12 +65,16 @@ public:
 
 private:
     aui::float_within_0_1 mValue = 0.f;
+    emits<aui::float_within_0_1> mValueChanged;
     void updateInnerWidth();
     _<Inner> mInner;
-
-
-signals:
-    emits<aui::float_within_0_1> valueChanged;
 };
 
-
+template<>
+struct ADataBindingDefault<AProgressBar, aui::float_within_0_1> {
+public:
+    static auto property(const _<AProgressBar>& view) {
+        return view->value();
+    }
+    static void setup(const _<AProgressBar>& view) {}
+};

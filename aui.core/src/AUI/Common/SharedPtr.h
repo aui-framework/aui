@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -25,24 +25,7 @@ inline _<T> _new(Args&& ... args)
 
 template<typename T, typename E>
 inline _<T> _new(std::initializer_list<E> il) {
-
-    if constexpr (std::is_base_of_v<AObject, T>) {
-        auto o = new T(il.begin(), il.end());
-        return _<T>(o, [](T* obj)
-        {
-            static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-            {
-                obj->clearSignals();
-                static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-                {
-                    delete obj;
-                });
-            });
-        });
-    }
-    else {
-        return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
-    }
+    return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
 }
 
 

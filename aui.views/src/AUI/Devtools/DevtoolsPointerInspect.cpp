@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -64,10 +64,16 @@ namespace {
 class FakeContainer: public AViewContainerBase {
 public:
     FakeContainer(_weak<AView> view): mView(std::move(view)) {
-
+        connect(redrawn, [&] {
+            if (mRedrawLock.is_locked()) {
+                return;
+            }
+            redraw();
+        });
     }
 
     void render(ARenderContext ctx) override {
+        std::unique_lock lock(mRedrawLock);
         AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
@@ -103,6 +109,7 @@ public:
     }
 
 private:
+    ASpinlockMutex mRedrawLock;
     _weak<AView> mView;
 };
 
@@ -155,7 +162,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
             Button { "Inspect" }.clicked(this, [this] {
                 try {
                     auto ptr = [&] {
-                        auto ptr = mAddress->text().toStdString();
+                        auto ptr = mAddress->text()->toStdString();
                         char* end = nullptr;
                         return (AView*)uintptr_t(std::strtoull(ptr.data(), &end, 16));
                     }();

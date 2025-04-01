@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -24,7 +24,8 @@ private:
     bool mIncludeInvisibleViews = false;
 
 
-    void processContainer(ASet<_<AView>>& destination, const _<AViewContainerBase>& container) const;
+    template<typename Container>
+    void processContainer(Container& destination, const _<AViewContainerBase>& container) const;
 
     template<typename T, typename = int>
     struct ignores_visibility : std::false_type { };
@@ -61,6 +62,7 @@ public:
     }
 
     ASet<_<AView>> toSet() const;
+    AVector<_<AView>> toVector() const;
 
     _<AView> one() const {
         auto set = toSet();

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -99,7 +99,7 @@ ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
 void ACurlMulti::removeCurl(const _<ACurl>& curl) {
     curl_multi_remove_handle(mMulti, curl->handle());
     mEasyCurls.erase(curl->handle());
-    curl->closeRequested.clearAllConnectionsWith(curl.get());
+    curl->closeRequested.clearAllOutgoingConnectionsWith(curl.get());
 }
 
 void ACurlMulti::clear() {

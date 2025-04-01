@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,13 +18,6 @@ name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
 processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #endif
-
-/**
- * @defgroup views aui::views
- * @brief Graphical User Interface library.
- * @details AUI's flagship module which provides modern declarative ways to create graphical user interfaces.
- */
-
 
 
 struct AViewsInit

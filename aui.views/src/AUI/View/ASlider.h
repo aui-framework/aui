@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -40,8 +40,13 @@ public:
     }
 
     [[nodiscard]]
-    aui::float_within_0_1 value() const noexcept {
-        return mProgress->value();
+    auto value() const noexcept {
+        return APropertyDef {
+            this,
+            &ASlider::getValue,
+            &ASlider::setValue,
+            valueChanging,
+        };
     }
 
     [[nodiscard]]
@@ -62,7 +67,21 @@ private:
     _<Handle> mHandle;
     _<AProgressBar> mProgress;
 
+    [[nodiscard]]
+    aui::float_within_0_1 getValue() const noexcept {
+        return mProgress->value();
+    }
+
     void updateSliderWithPosition(glm::ivec2 pointerPosition);
 
     void updateHandlePosition();
+};
+
+template<>
+struct ADataBindingDefault<ASlider, aui::float_within_0_1> {
+public:
+    static auto property(const _<ASlider>& view) {
+        return view->value();
+    }
+    static void setup(const _<ASlider>& view) {}
 };

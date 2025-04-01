@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -101,6 +101,7 @@ namespace gl {
          * @param data vertex data
          * @param dataSize vertex data size in bytes
          * @param vertexSize count of floats per vertex
+         * @param dataType GL data type, i.e, GL_FLOAT
          * @param key see gl::Vao::Buffer::lastModifierKey
          */
 		void insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key);
@@ -111,6 +112,7 @@ namespace gl {
          * @param data vertex data
          * @param dataSize vertex data size in bytes
          * @param vertexSize count of floats per vertex
+         * @param dataType GL data type, i.e, GL_FLOAT
          * @param key see gl::Vao::Buffer::lastModifierKey
          */
 		void insertIfKeyMismatches(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key);
@@ -122,6 +124,7 @@ namespace gl {
          * @param data vertex data
          * @param dataSize vertex data size in bytes
          * @param vertexSize count of integers per vertex
+         * @param dataType GL data type, i.e, GL_FLOAT
          */
 		void insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 	};

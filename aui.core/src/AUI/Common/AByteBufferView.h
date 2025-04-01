@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -104,6 +104,11 @@ public:
         return { reinterpret_cast<const char*>(&data), sizeof(data) };
     }
 
+    [[nodiscard]]
+    std::string_view toStdStringView() const noexcept {
+        return { data(), size() };
+    }
+
 
     _unique<IInputStream> toStream() const;
 };
@@ -123,5 +128,14 @@ template<>
 struct ASerializable<AByteBufferView> {
     static void write(IOutputStream& os, AByteBufferView view) {
         os.write(view.data(), view.size());
+    }
+};
+
+template<>
+struct std::hash<AByteBufferView>
+{
+    size_t operator()(AByteBufferView t) const noexcept
+    {
+        return std::hash<std::string_view>{}(t.toStdStringView());
     }
 };

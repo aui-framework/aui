@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -20,7 +20,7 @@ static float gaussian(float x, float mu, float sigma) {
     return glm::exp(-0.5f * a * a);
 }
 
-AArrayView<float> aui::detail::gaussianKernel(unsigned int radius) {
+AArrayView<float> aui::detail::gaussianKernel(unsigned radius) {
     using Kernel = AVector<float>;
     static AUnorderedMap<unsigned /* radius */, Kernel> kernels;
     return kernels.getOrInsert(radius, [radius]() {

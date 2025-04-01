@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -45,9 +45,11 @@ namespace ass::prop {
 
     /**
      * @brief Base class for all properties.
+     * @ingroup ass
      */
-    struct API_AUI_VIEWS IPropertyBase {
+    struct API_AUI_VIEWS IPropertyBase { // ignore ass_properties
     public:
+        virtual ~IPropertyBase() = default;
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view, const ARenderContext& ctx) {}
         virtual bool isNone() { return false; }
@@ -55,6 +57,7 @@ namespace ass::prop {
             return PropertySlot::NONE;
         }
         virtual void updateInvalidPixelRect(ARect<int>& invalidRect) const {}
+
     };
     template<typename PropertyStruct>
     struct Property;

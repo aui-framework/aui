@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -42,7 +42,7 @@ namespace ass {
         };
     }
 
-    struct debug_selector: detail::debug_selector {
+    struct debug_selector: detail::debug_selector { // ignore ass_selectors
     public:
         debug_selector() = default;
 

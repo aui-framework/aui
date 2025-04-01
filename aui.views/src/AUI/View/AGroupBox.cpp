@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -57,7 +57,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
         mFrame = _new<Inner>(mTitle,
                             /*
                              * Using two nested container because view's masking does not affect it's background (style), but does for
-                             * it's children.
+                             * its children.
                              */
                              Vertical {
                                  Vertical::Expanding {
@@ -71,11 +71,9 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     });
 
     if (auto asCheckbox = _cast<ACheckBox>(mTitle)) {
-        connect(asCheckbox->checked, me::updateCheckboxState);
-        updateCheckboxState(asCheckbox->isChecked());
+        connect(asCheckbox->checked(), me::updateCheckboxState);
     } else if (auto asCheckbox = _cast<ACheckBoxWrapper>(mTitle)) {
-        connect(asCheckbox->checked, me::updateCheckboxState);
-        updateCheckboxState(asCheckbox->isChecked());
+        connect(asCheckbox->checked(), me::updateCheckboxState);
     }
 }
 

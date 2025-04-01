@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -221,7 +221,6 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
-    gl::setupDebug();
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
     ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
@@ -1185,7 +1184,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 };
                 mRenderer.mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "OpenGLRenderViewToTexture");
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-                if (AWindow::current()->profiling().renderToTextureDecay) [[unlikely]] {
+                if (auto& p = AWindow::current()->profiling(); p && p->renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
                     using namespace std::chrono_literals;
@@ -1450,7 +1449,7 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
     return aui::ptr::make_unique_with_deleter(
         [&]() -> FramebufferWithTextureRT* {
           auto applicableSizeOnly =
-              mFramebuffersForMultiPassEffectsPool | ranges::view::filter([&](const auto& fb) {
+              mFramebuffersForMultiPassEffectsPool | ranges::views::filter([&](const auto& fb) {
                 return glm::all(glm::greaterThanEqual(fb->framebuffer.size(), minRequiredSize));
               });
           auto smallestFb = [](ranges::range auto& rng) {

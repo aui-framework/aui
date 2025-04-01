@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -48,8 +48,6 @@ void aui::impl::lastErrorToException(AString message) {
             throw AFileNotFoundException("{} (underlying directory does not exist)"_format(message));
         case ERROR_ACCESS_DENIED:
             throw AAccessDeniedException(message);
-        case ERROR_ALREADY_EXISTS:
-            break;
         default:
             throw AIOException("{} (code {})"_format(message, lastErrorCode));
     }

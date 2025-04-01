@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -63,8 +63,10 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     const bool showRedraw = [&] {
       if (view->mRedrawRequested) [[unlikely]] {
           if (auto w = AWindow::current()) [[unlikely]] {
-              if (w->profiling().highlightRedrawRequests) {
-                  return true;
+              if (auto& p = w->profiling()) {
+                  if (p->highlightRedrawRequests) {
+                      return true;
+                  }
               }
           }
       }
@@ -196,6 +198,22 @@ void AViewContainerBase::removeView(const _<AView>& view) {
     auto index = mViews.removeFirst(view);
     if (!index) return;
     AUI_NULLSAFE(mLayout)->removeView(view, *index);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
+    emit childrenChanged;
+}
+
+void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> views) {
+    if (views.empty()) {
+        return;
+    }
+    auto idx = std::distance(mViews.begin(), views.begin());
+    for (const auto& view: views) {
+        view->mParent = nullptr;
+        AUI_NULLSAFE(mLayout)->removeView(view, idx);
+        view->onViewGraphSubtreeChanged();
+    }
+    mViews.erase(views.begin(), views.end());
     invalidateCaches();
     emit childrenChanged;
 }
@@ -206,6 +224,7 @@ void AViewContainerBase::removeView(AView* view) {
     }
     auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
     if (it == mViews.end()) {
+        view->onViewGraphSubtreeChanged();
         return;
     }
     if (mLayout) {
@@ -216,6 +235,7 @@ void AViewContainerBase::removeView(AView* view) {
     } else {
         mViews.erase(it);
     }
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
 }
@@ -226,6 +246,7 @@ void AViewContainerBase::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
 }
@@ -291,7 +312,7 @@ void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
     mFocusChainTarget.reset();
 
     auto p = getViewAt(event.position);
-    if (p && p->isEnabled()) {
+    if (p && p->enabled()) {
         mPointerEventsMapping.push_back({event.pointerIndex, p, isBlockClicksWhenPressed() && p->isBlockClicksWhenPressed()});
         auto& pointerEvent = mPointerEventsMapping.back();
         pointerEvent.isBlockClicksWhenPressed &= isBlockClicksWhenPressed();
@@ -333,7 +354,7 @@ void AViewContainerBase::onPointerReleased(const APointerReleasedEvent& event) {
         targetView = viewUnderPointer;
     }
 
-    if (targetView && targetView->isEnabled() && targetView->isPressed()) {
+    if (targetView && targetView->enabled() && targetView->isPressed()) {
         auto copy = event;
         copy.position -= targetView->getPosition();
         copy.triggerClick &= viewUnderPointer == targetView;
@@ -349,7 +370,7 @@ void AViewContainerBase::onPointerDoubleClicked(const APointerPressedEvent& even
     AView::onPointerDoubleClicked(event);
 
     auto p = getViewAt(event.position);
-    if (p && p->isEnabled()) {
+    if (p && p->enabled()) {
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerDoubleClicked(copy);
@@ -359,7 +380,7 @@ void AViewContainerBase::onPointerDoubleClicked(const APointerPressedEvent& even
 void AViewContainerBase::onScroll(const AScrollEvent& event) {
     AView::onScroll(event);
     auto p = getViewAt(event.origin);
-    if (p && p->isEnabled()) {
+    if (p && p->enabled()) {
         auto eventCopy = event;
         eventCopy.origin -= p->getPosition();
         p->onScroll(eventCopy);
@@ -499,7 +520,10 @@ void AViewContainerBase::removeAllViews() {
             x->mParent = nullptr;
         }
     }
-    mViews.clear();
+    auto views = std::exchange(mViews, {});
+    for (const auto& v : views) {
+        v->onViewGraphSubtreeChanged();
+    }
     invalidateCaches();
 }
 
@@ -511,8 +535,10 @@ void AViewContainerBase::onDpiChanged() {
 }
 
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
+    // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
                 "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
+    // NOLINTEND(clang-diagnostic-potentially-evaluated-expression)
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v: mViews) {
@@ -525,7 +551,7 @@ void AViewContainerBase::setContents(const _<AViewContainer>& container) {
 }
 
 void AViewContainerBase::setEnabled(bool enabled) {
-    if (isEnabled() == enabled) [[unlikely]] {
+    if (this->enabled() == enabled) [[unlikely]] {
         return;
     }
     AView::setEnabled(enabled);
@@ -546,7 +572,7 @@ bool AViewContainerBase::capturesFocus() {
 
 bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
     auto p = getViewAt(origin);
-    if (p && p->isEnabled())
+    if (p && p->enabled())
         return p->onGesture(origin - p->getPosition(), event);
     return false;
 }
@@ -582,7 +608,7 @@ void AViewContainerBase::onClickPrevented() {
     AView::onClickPrevented();
     auto pointerEvents = std::move(mPointerEventsMapping);
     for (const auto& e : pointerEvents) {
-        if (auto v = e.targetView.lock(); v && v->isEnabled() && v->isPressed(e.pointerIndex)) {
+        if (auto v = e.targetView.lock(); v && v->enabled() && v->isPressed(e.pointerIndex)) {
             v->onClickPrevented();
         }
     }

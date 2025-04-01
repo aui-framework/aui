@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -20,6 +20,7 @@
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "AUI/UITestState.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -99,9 +100,8 @@ void AWindow::redraw() {
         };
 
         if (mMarkedMinContentSizeInvalid) {
-            AUI_REPEAT(2) { // AText may trigger extra layout update
-                applyGeometryToChildrenIfNecessary();
-            }
+            ensureAssUpdated();
+            applyGeometryToChildrenIfNecessary();
             mMarkedMinContentSizeInvalid = false;
 #if AUI_PLATFORM_LINUX
             if (CommonRenderingContext::ourDisplay != nullptr) {
@@ -165,6 +165,9 @@ void AWindow::onFocusAcquired() {
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AWindowBase::onPointerMove(pos, event);
+    if (UITestState::isTesting()) {
+        return;
+    }
     AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 
@@ -240,7 +243,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     setWindowStyle(ws);
 
     ui_thread {
-        emit sizeChanged(getSize());
+        emit mSizeChanged(getSize());
     };
 }
 
@@ -300,6 +303,9 @@ void AWindow::forceUpdateCursor() {
     AWindowBase::forceUpdateCursor();
     if (!mCursor) {
         mCursor = ACursor::DEFAULT;
+    }
+    if (UITestState::isTesting()) {
+        return;
     }
     mCursor->applyNativeCursor(this);
 }

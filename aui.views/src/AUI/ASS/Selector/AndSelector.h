@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -36,8 +36,20 @@ namespace ass {
             r.setupConnections(view, helper);
         }
     };
-
-    template <typename L, typename R, std::enable_if_t<std::is_base_of_v<IAssSubSelector, L> && std::is_base_of_v<IAssSubSelector, R>, bool> = true>
+    /**
+     * @brief Makes a selector that applies two selectors.
+     * @ingroup ass_selectors
+     * @details
+     *
+     * In this example, we want to select all views that match both ".btn" and ".accent".
+     * @code{cpp}
+     * {
+     *   class_of(".btn-title") && class_of(".accent"),
+     *   BackgroundSolid { 0xe81123_rgb }
+     * },
+     * @endcode
+     */
+    template <aui::derived_from<IAssSubSelector> L, aui::derived_from<IAssSubSelector> R>
     AndSelector<L, R> operator&&(L l, R r) {
         return AndSelector<L, R>(std::move(l), std::move(r));
     }

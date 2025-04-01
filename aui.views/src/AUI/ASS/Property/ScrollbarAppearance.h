@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -25,7 +25,7 @@ namespace ass {
 
     /**
      * @brief Controls how do scrollbars and content appear in AScrollArea. This rule is applicable to AScrollArea only.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct ScrollbarAppearance {
     public:

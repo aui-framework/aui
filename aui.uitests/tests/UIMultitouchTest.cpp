@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -88,7 +88,7 @@ TEST_F(UIMultitouchTest, Single) {
         .pointerIndex = APointerIndex::finger(0),
     });
 
-    EXPECT_NEAR(mTestWindow->mSlider1->value(), 1.f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider1->value(), 1.f, 0.1f);
 }
 
 
@@ -131,6 +131,6 @@ TEST_F(UIMultitouchTest, Multi) {
         .pointerIndex = APointerIndex::finger(1),
     });
 
-    EXPECT_NEAR(mTestWindow->mSlider1->value(), 1.f, 0.1f);
-    EXPECT_NEAR(mTestWindow->mSlider2->value(), 0.5f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider1->value(), 1.f, 0.1f);
+    EXPECT_NEAR(*mTestWindow->mSlider2->value(), 0.5f, 0.1f);
 }

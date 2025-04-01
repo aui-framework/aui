@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,7 +19,6 @@
 /**
  * @brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
  *        connect function:
- * @ingroup useful_macros
  * @ingroup signal_slot
  * @details
  * <table>
@@ -62,7 +61,6 @@ namespace aui::impl::slot {
 /**
  * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function (see examples).
- * @ingroup useful_macros
  * @ingroup signal_slot
  * @details
  * Quick example:
@@ -149,6 +147,7 @@ namespace aui::impl::slot {
 
 /**
  * @brief Emits a signal of a foreign object.
+ * @ingroup signal_slot
  * @details
  * <table>
  *   <tr>
@@ -250,7 +249,8 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       setContents(Vertical { // clean, less code and easy to understand
+ *       // clean, less code and easy to understand
+ *       setContents(Vertical {
  *           _new<ATextField>() let { it->setText("Hello!") },
  *           _new<ATextField>() let { it->setText("World!") },
  *       });
@@ -284,7 +284,7 @@ namespace aui::impl::slot {
  * });
  * @endcode
  */
-#define with_style + ass::PropertyListRecursive
+#define with_style & ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
@@ -391,13 +391,16 @@ namespace aui::impl::slot {
 #define do_once if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
- * @brief Executes lambda on current object's thread.
+ * @brief Executes lambda on main thread.
+ * @ingroup useful_macros
  */
-#define ui_thread (*getThread()) * [=]()
+#define ui_thread (*AThread::main()) * [=]()
 
 /**
- * @brief Executes lambda on current object's thread. Allows to determine lambda's capture.
+ * @brief Executes lambda on main thread. Allows to determine lambda's capture.
+ * @ingroup useful_macros
  */
-#define ui_threadX (*getThread()) *
+#define ui_threadX (*AThread::main()) *
+
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

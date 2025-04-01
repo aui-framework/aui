@@ -3,7 +3,7 @@ information.
 
 # Becoming a contributor
 
-1. Follow [AUI's code style](@ref md_docs_Code_style_and_recommendations).
+1. Follow [AUI's code style](docs/Code style and recommendations.md).
 2. Anyone may become an AUI contributor: there are no restrictions.
 3. Tasks and todos are listed on the [GitHub Issues page](https://github.com/aui-framework/aui/issues). Issues marked
    as `good first issue` are relatively simple and can be done without deep dive into AUI.
@@ -30,7 +30,7 @@ Suppose whe want to create a module called `aui::my_module`:
 2. In `docs/Doxyfile`:
    1. Append `aui.my_module/src` to the `STRIP_FROM_INC_PATH` variable.
    2. Append `aui.my_module` to the `INPUT` variable.
-3. If `aui::my_module` has dependencies (excluding `aui::core`), handle them at `# add dependencies` in 
+3. If `aui::my_module` has external dependencies, handle them at `# add dependencies` in 
    `cmake/aui-config.cmake.in`.
 4. Put the reference to the module in `docs/index.html`.
 5. Create `aui.my_module` dir.

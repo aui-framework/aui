@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -40,7 +40,8 @@ public:
 
 protected:
     void processMessagesImpl() override {
-        AUI_ASSERTX(mId == std::this_thread::get_id(), "AAbstractThread::processMessages() should not be called from other thread");
+        AUI_ASSERTX(mId == std::this_thread::get_id(),
+                    "AAbstractThread::processMessages() should not be called from other thread");
         std::unique_lock lock(mMessageQueue.sync(), std::defer_lock);
 
         using namespace std::chrono;
@@ -114,6 +115,9 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     aui::detail::argv = argv;
     setupUIThread();
     ATimer::scheduler();
+    {
+        [[maybe_unused]] auto mainThread = AThread::main();
+    }
 
     AThread::setName("UI thread");
 

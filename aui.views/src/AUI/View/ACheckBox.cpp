@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -35,9 +35,5 @@ ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
 
     connect(clicked, me::toggle);
 
-    mCheckBox->clicked.clearAllConnectionsWith(mCheckBox); // fixes double toggle
-
-    connect(mCheckBox->checked, [this](bool v) {
-        emit checked(v);
-    });
+    mCheckBox->clicked.clearAllOutgoingConnectionsWith(mCheckBox); // fixes double toggle
 }

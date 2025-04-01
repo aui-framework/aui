@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -546,6 +546,7 @@ namespace aui::impl::future {
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
+ * @experimental
  * AFuture is used as a result for asynchronous functions.
  *
  * AFuture is returned by @ref async keyword:
@@ -668,6 +669,16 @@ public:
     AFuture& operator=(std::nullptr_t) noexcept {
         super::mInner = nullptr;
         return *this;
+    }
+
+    [[nodiscard]]
+    bool operator==(std::nullptr_t) const noexcept {
+        return super::mInner == nullptr;
+    }
+
+    [[nodiscard]]
+    bool operator!=(std::nullptr_t) const noexcept {
+        return super::mInner != nullptr;
     }
 
     [[nodiscard]]
@@ -802,6 +813,16 @@ public:
     AFuture& operator=(std::nullptr_t) noexcept {
         super::mInner = nullptr;
         return *this;
+    }
+
+    [[nodiscard]]
+    bool operator==(std::nullptr_t) const noexcept {
+        return super::mInner == nullptr;
+    }
+
+    [[nodiscard]]
+    bool operator!=(std::nullptr_t) const noexcept {
+        return super::mInner != nullptr;
     }
 
     [[nodiscard]]

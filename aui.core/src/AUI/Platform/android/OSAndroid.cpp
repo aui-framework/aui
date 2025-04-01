@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -42,5 +42,8 @@ Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstrin
 #ifdef AUI_CATCH_UNHANDLED
     aui_init_signal_handler();
 #endif
+    {
+        [[maybe_unused]] auto mainThread = AThread::main();
+    }
     _gEntry({});
 }

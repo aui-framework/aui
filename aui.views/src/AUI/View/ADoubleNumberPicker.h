@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -43,8 +43,17 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
     double mMin = 0;
     double mMax = 100;
 
-   public:
+public:
     ADoubleNumberPicker();
+
+    auto value() {
+        return APropertyDef {
+            this,
+            &ADoubleNumberPicker::getValue,
+            &ADoubleNumberPicker::setValue,
+            valueChanging,
+        };
+    }
 
     void setValue(double v);
 
@@ -52,7 +61,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
 
     [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
 
-    [[nodiscard]] double getValue() const { return mTextField->text().toDouble().valueOr(0.0); }
+    [[nodiscard]] double getValue() const { return mTextField->getText().toDouble().valueOr(0.0); }
 
     [[nodiscard]] double getMin() const { return mMin; }
 
@@ -74,7 +83,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
     /**
      * @brief Number is changing.
      */
-    emits<> valueChanging;
+    emits<double> valueChanging;
 };
 
 namespace aui::impl {

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,7 +18,7 @@
 
 namespace ass {
     template<typename Base>
-    struct hovered: Base {
+    struct hovered: Base { // ignore ass_selectors it's used in compound by class_of or t
         template<typename... Args>
         hovered(Args&&... args):
             Base(std::forward<Args>(args)...)
@@ -27,12 +27,12 @@ namespace ass {
         }
 
         bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && view->isEnabled() && view->isMouseHover();
+            return Base::isStateApplicable(view) && *view->enabled() && view->isMouseHover();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->hoveredState.clearAllConnectionsWith(helper.get());
+            view->hoveredState.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->hoveredState, slot(helper)::onInvalidateStateAss);
         }
     };

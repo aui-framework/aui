@@ -14,16 +14,13 @@ set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location"
 if(AUIB_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUIB_COMPONENTS core)
+    list(APPEND AUIB_COMPONENTS crypt) # toolbox
+    list(APPEND AUIB_COMPONENTS image) # toolbox
     if (views IN_LIST AUIB_COMPONENTS)
-        list(APPEND AUIB_COMPONENTS xml image)
+        list(APPEND AUIB_COMPONENTS xml)
         if (NOT CMAKE_CROSSCOMPILING)
-            list(APPEND AUIB_COMPONENTS crypt toolbox)
+            list(APPEND AUIB_COMPONENTS toolbox)
         endif()
-    elseif (toolbox IN_LIST AUIB_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
-        list(APPEND AUIB_COMPONENTS crypt)
-    endif()
-    if (curl IN_LIST AUIB_COMPONENTS)
-        list(APPEND AUIB_COMPONENTS crypt)
     endif()
 endif()
 list(REMOVE_DUPLICATES AUIB_COMPONENTS)
@@ -45,6 +42,11 @@ function(define_aui_component AUI_COMPONENT_NAME)
             return()
         endif()
         message(STATUS "[+] ${AUI_COMPONENT_NAME}")
+    endif()
+    string(TOUPPER ${AUI_COMPONENT_NAME} AUI_COMPONENT_NAME_UPPER)
+    option("AUI_BUILD_${AUI_COMPONENT_NAME_UPPER}" "Build aui::${AUI_COMPONENT_NAME}" ON)
+    if (NOT AUI_BUILD_${AUI_COMPONENT_NAME_UPPER})
+        return()
     endif()
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
@@ -70,12 +72,11 @@ define_aui_component(audio)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
+    define_aui_component(updater)
 endif()
 
 if (AUI_BUILD_EXAMPLES) 
-    add_subdirectory(examples/AUI.Example.Views)
-    #add_subdirectory(examples/AUI.Example.Fractal)
-    #add_subdirectory(examples/AUI.Example.Minesweeper)
+    add_subdirectory(examples)
 endif()
 
 if (NOT AUI_NO_TESTS)
@@ -103,6 +104,7 @@ set(AUI_ALL_COMPONENTS core
                        uitests
                        toolbox
                        audio
+                       updater
         )
 
 
@@ -172,16 +174,20 @@ set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
     endif()
 endforeach()
 
+
+# [auib_precompiled_binary]
 auib_precompiled_binary()
+# [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
 add_subdirectory(test/)
 
+# [configure file example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
-#install(EXPORT AUI DESTINATION cmake/)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
+# [configure file example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

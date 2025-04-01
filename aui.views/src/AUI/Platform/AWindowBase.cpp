@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -190,7 +190,7 @@ void AWindowBase::focusNextView() {
     }
 
     if (target != this) {
-        setFocusedView(target->sharedPtr());
+        target->focus();
     }
 }
 
@@ -418,7 +418,10 @@ void AWindowBase::flagRedraw() {
 
 void AWindowBase::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
-    AViewContainer::applyGeometryToChildren();
+    AUI_REPEAT(2) {   // AText may trigger extra layout update
+        AViewContainer::applyGeometryToChildren();
+    }
+    emit layoutUpdateComplete;
 }
 
 void AWindowBase::render(ARenderContext context) {
@@ -457,8 +460,10 @@ void AWindowBase::render(ARenderContext context) {
 
     AViewContainer::render(context);
 
-    if (auto v = profiling().highlightView.lock()) {
-        AViewProfiler::displayBoundsOn(*v, context);
+    if (auto& p = profiling()) {
+        if (auto v = p->highlightView->lock()) {
+            AViewProfiler::displayBoundsOn(*v, context);
+        }
     }
 
 #if AUI_SHOW_TOUCHES
@@ -601,9 +606,11 @@ void AWindowBase::processTouchscreenKeyboardRequest() {
 
 
 void AWindowBase::markMinContentSizeInvalid() {
-    if (profiling().breakpointOnMarkMinContentSizeInvalid) {
-        profiling().breakpointOnMarkMinContentSizeInvalid = false;
-        AUI_BREAKPOINT();
+    if (auto& p = profiling()) {
+        if (p->breakpointOnMarkMinContentSizeInvalid) {
+            p->breakpointOnMarkMinContentSizeInvalid = false;
+            AUI_BREAKPOINT();
+        }
     }
     AViewContainer::markMinContentSizeInvalid();
     flagRedraw();

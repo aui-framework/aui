@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -57,8 +57,19 @@ void CommonRenderingContext::init(const Init& init) {
         auto myCtx = reinterpret_cast<CommonRenderingContext *>(ctx);
         if (!myCtx->mFrameScheduled)
         {
+            std::shared_ptr<AView>* windowSharedPtr = nullptr;
+            try {
+                if (auto sharedPtr = myCtx->mWindow->sharedPtr()) {
+                    windowSharedPtr = new std::shared_ptr(std::move(sharedPtr));
+                } else {
+                    return kCVReturnSuccess;
+                }
+            } catch(...) {
+                return kCVReturnSuccess;
+            }
             myCtx->mFrameScheduled = true;
             dispatch_async(dispatch_get_main_queue(), ^{
+                AUI_DEFER { delete windowSharedPtr; };
                 myCtx->mWindow->mRedrawFlag = false;
                 myCtx->mWindow->redraw();
                 myCtx->mFrameScheduled = false;

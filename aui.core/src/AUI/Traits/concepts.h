@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <AUI/api.h>
 #include <concepts>
 #include <utility>
 #include <functional>
@@ -121,8 +122,8 @@ namespace aui {
 
 
     template<typename F, typename... Args>
-    concept predicate = requires(F&& f, Args&&... args) {
-        { f(std::forward<Args>(args)...) } -> same_as<bool>;
+    concept predicate = requires(F&& f, Args&... args) {
+        { f(args...) } -> same_as<bool>;
     };
 
     // aui concepts
@@ -145,4 +146,97 @@ namespace aui {
 
     template<typename T>
     concept unsigned_integral = std::is_unsigned_v<T>;
+
+    template<typename T>
+    concept is_tuple = requires { std::tuple_size<T>::value; };
+    static_assert(is_tuple<std::tuple<>>);
+    static_assert(is_tuple<std::tuple<int>>);
+    static_assert(is_tuple<std::tuple<double>>);
+    static_assert(!is_tuple<int>);
+    static_assert(!is_tuple<double>);
 }
+
+// AObject-related concepts
+class AString;
+class AAbstractSignal;
+class AAbstractThread;
+class API_AUI_CORE AObjectBase;
+
+template <typename T>
+concept AAnySignal = requires(T&& t) {
+    typename std::decay_t<T>::emits_args_t;
+
+    // signal must be contextually convertible to bool (to check if there are any slots connected to it)
+    { t } -> aui::convertible_to<bool>;
+};
+
+template <typename C>
+concept ASignalInvokable = requires(C&& c) { c.invokeSignal(nullptr); };
+
+template <typename Slot, typename Signal>
+concept ACompatibleSlotFor = requires (Slot&& c) {
+    { &std::decay_t<Slot>::operator() };
+} || requires (Slot&& c) {
+    typename aui::reflect::member<std::decay_t<Slot>>::args;
+};
+
+class API_AUI_CORE AObjectBase;
+
+struct ASlotDefBase {};
+
+template<aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
+struct ASlotDef: ASlotDefBase {
+    ObjectPtr boundObject;
+    Invocable invocable;
+    ASlotDef(ObjectPtr boundObject, Invocable invocable) : boundObject(std::move(boundObject)), invocable(std::move(invocable)) {}
+};
+
+template <typename T>
+concept APropertyReadable = requires(T&& t) {
+    // Property must have Underlying type which it represents.
+    typename std::decay_t<T>::Underlying;
+
+    // Property must have value() which returns its underlying value.
+    { t.value() } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
+
+    // Property must have boundObject() which returns AObjectBase* associated with this property.
+    { t.boundObject() } -> aui::convertible_to<const AObjectBase*>;
+
+    // Property must be convertible to its underlying type.
+    { t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
+
+    // Property has operator* to explicitly pull the underlying value.
+    { *t } -> aui::convertible_to<typename std::decay_t<T>::Underlying>;
+
+    // Property has the "changed" signal
+    { t.changed } -> AAnySignal;
+};
+
+template <typename T>
+concept APropertyWritable = requires(T&& t) {
+    { t } -> APropertyReadable;
+
+    t.notify();
+
+    // Property has operator= overloaded so it can be used in assignment statement.
+    { t = std::declval<typename std::decay_t<T>::Underlying>() };
+};
+
+template <typename T>
+concept AAnyProperty = APropertyReadable<T> || APropertyWritable<T>;
+
+template <typename T>
+concept AAnySignalOrProperty = AAnySignal<T> || AAnyProperty<T>;
+
+
+template<AAnySignalOrProperty T>
+struct AAnySignalOrPropertyTraits;
+
+template<AAnySignal T>
+struct AAnySignalOrPropertyTraits<T> {
+    using args = typename T::emits_args_t;
+};
+template<AAnyProperty T>
+struct AAnySignalOrPropertyTraits <T>{
+    using args = std::tuple<typename T::Underlying>;
+};

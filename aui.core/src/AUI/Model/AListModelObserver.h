@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -43,9 +43,9 @@ public:
 
     void setModel(const _<IListModel<T>>& model) {
         if (mModel) {
-            mModel->dataInserted.clearAllConnectionsWith(this);
-            mModel->dataChanged.clearAllConnectionsWith(this);
-            mModel->dataRemoved.clearAllConnectionsWith(this);
+            mModel->dataInserted.clearAllOutgoingConnectionsWith(this);
+            mModel->dataChanged.clearAllOutgoingConnectionsWith(this);
+            mModel->dataRemoved.clearAllOutgoingConnectionsWith(this);
         }
         mModel = model;
 

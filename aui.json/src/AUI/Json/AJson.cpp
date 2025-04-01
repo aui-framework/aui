@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -27,7 +27,11 @@ AJson AJson::fromString(const AString& json) {
 }
 
 AJson AJson::fromBuffer(AByteBufferView buffer) {
-    return aui::deserialize<AJson>(AByteBufferInputStream(buffer));
+    try {
+        return aui::deserialize<AJson>(AByteBufferInputStream(buffer));
+    } catch (...) {
+        throw AJsonException("While parsing:\n" + AString::fromUtf8(buffer), std::current_exception());
+    }
 }
 
 AJson AJson::mergedWith(const AJson &other) {

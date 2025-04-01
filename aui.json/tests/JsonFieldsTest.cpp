@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,6 +19,9 @@
 #include <AUI/Json/AJson.h>
 #include <AUI/Traits/parameter_pack.h>
 #include <AUI/Traits/members.h>
+#include "AUI/Common/AProperty.h"
+
+#include <AUI/Model/AListModel.h>
 
 // ORM data class
 struct Data2 {
@@ -59,14 +62,18 @@ TEST(Json, FieldsTestBasic)
     EXPECT_THROW(aui::from_json<Data2>(AJson::fromString(R"({"i":228})") /* no "values" field present */), AJsonException);
 }
 
+// [clang format toggle]
 struct DataOptional {
     int v1;
     int v2;
 };
 
+// clang-format off
 AJSON_FIELDS(DataOptional,
              (v1, "v1")
              (v2, "v2", AJsonFieldFlags::OPTIONAL))
+// clang-format on
+// [clang format toggle]
 
 TEST(Json, FieldsTestOptional)
     {
@@ -83,4 +90,40 @@ TEST(Json, FieldsTestOptional)
 
     // here it should throw an exception since v1 is not optional
     EXPECT_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v2":228})")), AJsonException);
+}
+
+struct DataProperty {
+    AProperty<int> v1;
+    AProperty<AString> v2;
+};
+
+AJSON_FIELDS(DataProperty,
+             (v1, "v1")
+             (v2, "v2"))
+
+TEST(Json, DataProperty)
+{
+    DataProperty property {
+        .v1 = 111,
+        .v2 = "string",
+    };
+
+    auto str = AJson::toString(aui::to_json(property));
+    EXPECT_EQ(str, R"({"v1":111,"v2":"string"})");
+
+    // and back
+    auto parsed = aui::from_json<DataProperty>(AJson::fromString(str));
+    EXPECT_EQ(parsed.v1, property.v1);
+    EXPECT_EQ(parsed.v2, property.v2);
+}
+
+TEST(Json, ListModel) {
+    auto list = AListModel<AString>::fromVector(AVector<AString>{"1", "2", "3"});
+    auto str = AJson::toString(aui::to_json(list));
+    EXPECT_EQ(str, R"(["1","2","3"])");
+
+    // and back
+    auto parsed = aui::from_json<_<AListModel<AString>>>(AJson::fromString(str));
+    EXPECT_EQ(parsed->size(), list->size());
+    EXPECT_EQ(*parsed, *list);
 }

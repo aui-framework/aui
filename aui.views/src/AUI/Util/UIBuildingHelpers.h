@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -10,6 +10,7 @@
  */
 
 #pragma once
+
 #include "AUI/Common/AVector.h"
 #include "AUI/View/AView.h"
 #include "AUI/Layout/AGridLayout.h"
@@ -20,7 +21,6 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/ASpacerExpanding.h>
-#include <AUI/View/AForEachUI.h>
 #include <AUI/Layout/AWordWrappingLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
@@ -34,10 +34,8 @@
 #include <AUI/Traits/strings.h>
 #include "Declarative.h"
 
-
-template<typename Layout, typename... Args>
-inline auto _container(AVector<_<AView>> views, Args&&... args)
-{
+template <typename Layout, typename... Args>
+inline auto _container(AVector<_<AView>> views, Args&&... args) {
     auto c = _new<AViewContainer>();
     c->setLayout(std::make_unique<Layout>(std::forward<Args>(args)...));
 
@@ -46,28 +44,25 @@ inline auto _container(AVector<_<AView>> views, Args&&... args)
     return c;
 }
 
-inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views)
-{
-	auto c = _new<AViewContainer>();
-	c->setLayout(std::make_unique<AAdvancedGridLayout>(2, views.size()));
-	c->setExpanding({2, 0});
-	for (const auto& v : views) {
-		try {
-			c->addView(_new<ALabel>(std::get<AString>(v.first)));
-		}
-		catch (const std::bad_variant_access&) {
-			c->addView(std::get<_<AView>>(v.first));
-		}
-		v.second->setExpanding({2, 0});
-		c->addView(v.second);
-	}
+inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views) {
+    auto c = _new<AViewContainer>();
+    c->setLayout(std::make_unique<AAdvancedGridLayout>(2, int(views.size())));
+    c->setExpanding({ 2, 0 });
+    for (const auto& v : views) {
+        try {
+            c->addView(_new<ALabel>(std::get<AString>(v.first)));
+        } catch (const std::bad_variant_access&) {
+            c->addView(std::get<_<AView>>(v.first));
+        }
+        v.second->setExpanding({ 2, 0 });
+        c->addView(v.second);
+    }
 
-	return c;
+    return c;
 }
 
-
 /**
- * Places views in a column.
+ * @brief Places views in a column.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  *
@@ -77,10 +72,10 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
  *  </dl>
  * </p>
  */
-using Vertical = aui::ui_building::layouted_container_factory<AVerticalLayout>;
+using Vertical = aui::ui_building::view_container_layout<AVerticalLayout>;
 
 /**
- * Places views in a row.
+ * @brief Places views in a row.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  *
@@ -90,10 +85,10 @@ using Vertical = aui::ui_building::layouted_container_factory<AVerticalLayout>;
  *  </dl>
  * </p>
  */
-using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayout>;
+using Horizontal = aui::ui_building::view_container_layout<AHorizontalLayout>;
 
 /**
- * Places views in a stack, centering them.
+ * @brief Places views in a stack, centering them.
  * <p>
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  *
@@ -103,10 +98,10 @@ using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayou
  *  </dl>
  * </p>
  */
-using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
+using Stacked = aui::ui_building::view_container_layout<AStackedLayout>;
 
 /**
- * Places views according to specified xy coordinates.
+ * @brief Places views according to specified xy coordinates.
  * <p>
  *  <dl>
  *    <dt><b>View:</b> AViewContainer</dt>
@@ -114,7 +109,7 @@ using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
  *  </dl>
  * </p>
  */
-using Absolute = aui::ui_building::layouted_container_factory<AAbsoluteLayout>;
+using Absolute = aui::ui_building::view_container_layout<AAbsoluteLayout>;
 
 /**
  * Does not actually set the layout. The views' geometry is determined manually.
@@ -126,9 +121,7 @@ using Absolute = aui::ui_building::layouted_container_factory<AAbsoluteLayout>;
  *  </dl>
  * </p>
  */
-using CustomLayout = aui::ui_building::layouted_container_factory<std::nullopt_t>;
-
-
+using CustomLayout = aui::ui_building::view_container_layout<std::nullopt_t>;
 
 /**
  * <p>

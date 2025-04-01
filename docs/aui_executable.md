@@ -16,6 +16,8 @@ aui_executable(
  
     # windows only
     [WIN32_SUBSYSTEM_CONSOLE]
+        
+    [WHOLEARCHIVE]
 )
 ```
 
@@ -37,3 +39,8 @@ Adds the resulting target to CMake export `<export-name>`.
 ### WIN32_SUBSYSTEM_CONSOLE
 
 The resulting `.exe` file would open console window, regardless of whether the application opens it's own window or not.
+
+### WHOLEARCHIVE {#WHOLEARCHIVE}
+
+The target is compiled with `wholearchive` compiler-specific flag, forcing all unused variables to be included to the
+binary. This may be required by AUI assets.

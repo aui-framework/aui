@@ -33,30 +33,14 @@
 #include "ShadingLanguage/Lang/AST/ImportNode.h"
 #include <range/v3/view.hpp>
 #include <range/v3/algorithm.hpp>
+#include <AUI/Traits/variant.h>
 
 
 class Terminated {};
-template<typename variant, typename type>
-struct index_of {
-private:
-    template<size_t i, size_t... next>
-    static constexpr size_t value_impl2(std::index_sequence<i, next...>) {
-        if constexpr (std::is_same_v<std::variant_alternative_t<i, variant>, type>) {
-            return i;
-        } else {
-            return value_impl2(std::index_sequence<next...>{});
-        }
-    }
 
-    static constexpr size_t value_impl() {
-        return value_impl2(std::make_index_sequence<std::variant_size_v<variant>>());
-    }
-public:
-    static constexpr size_t value = value_impl();
-};
 
 template<typename type>
-constexpr size_t got = index_of<AnyToken , type>::value;
+constexpr size_t got = aui::variant::index_of<AnyToken, type>::value;
 
 _<AST> Parser::parseShader() {
     AVector<_<INode>> nodes;
@@ -830,6 +814,7 @@ _<VariableDeclarationNode> Parser::parseVariableDeclaration() {
             switch (mIterator->index()) {
                 case got<KeywordToken>: {
                     switch (std::get<KeywordToken>(*mIterator).getType()) {
+                        default: break;
                         case KeywordToken::CONST:
                             isConst = true;
                             break;

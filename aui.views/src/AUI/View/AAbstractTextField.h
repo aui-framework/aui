@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -48,6 +48,10 @@ public:
         return mTextInputType;
     }
 
+    void setEditable(bool isEditable) {
+        mIsEditable = isEditable;
+    }
+
     void setPasswordMode(bool isPasswordField) {
         mIsPasswordTextField = isPasswordField;
         setCopyable(!isPasswordField);
@@ -60,7 +64,7 @@ public:
 
     bool handlesNonMouseNavigation() override;
 
-    const AString& text() const override;
+    const AString& getText() const override;
 
     void onCharEntered(char16_t c) override;
 
@@ -104,6 +108,7 @@ protected:
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
     bool mIsPasswordTextField = false;
+    bool mIsEditable = true;
     int mTextAlignOffset = 0;
     int mHorizontalScroll = 0; // positive only
     unsigned mAbsoluteCursorPos = 0;

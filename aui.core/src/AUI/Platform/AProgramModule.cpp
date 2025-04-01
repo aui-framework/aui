@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,11 +19,9 @@
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AStringVector.h>
 
-
 #endif
 
-_<AProgramModule> AProgramModule::load(const AString& path)
-{
+_<AProgramModule> AProgramModule::load(const AString& path) {
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
 #else
@@ -42,44 +40,38 @@ _<AProgramModule> AProgramModule::load(const AString& path)
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-	auto lib = LoadLibrary(aui::win32::toWchar(fullname));
-	if (!lib)
-	{
-		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
-	}
-	return aui::ptr::manage(new AProgramModule(lib));
+    auto lib = LoadLibrary(aui::win32::toWchar(fullname));
+    if (!lib) {
+        throw LoadException(
+            "Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
+    }
+    return aui::ptr::manage(new AProgramModule(lib));
 #elif AUI_PLATFORM_ANDROID
-	auto name = ("lib" + fullname).toStdString();
-	auto lib = dlopen(name.c_str(), RTLD_LAZY);
-	if (!lib)
-	{
-		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + dlerror());
-	}
-	return aui::ptr::manage(new AProgramModule(lib));
+    auto name = ("lib" + fullname).toStdString();
+    auto lib = dlopen(name.c_str(), RTLD_LAZY);
+    if (!lib) {
+        throw LoadException("Could not load shared library: " + fullname + ": " + dlerror());
+    }
+    return aui::ptr::manage(new AProgramModule(lib));
 #else
-	char buf[0x1000];
-	getcwd(buf, sizeof(buf));
+    char buf[0x1000];
+    getcwd(buf, sizeof(buf));
 
-	APath paths[] = {
-            ""_as,
-            "lib/"_as,
-            AString(buf) + "/",
-            AString(buf) + "/../lib/",
-            "/usr/local/lib/"_as,
-            "/usr/lib/"_as,
-            "/lib/"_as,
+    APath paths[] = {
+        ""_as,          "lib/"_as,  AString(buf) + "/", AString(buf) + "/../lib/", "/usr/local/lib/"_as,
+        "/usr/lib/"_as, "/lib/"_as,
     };
 
-	std::string dlErrors[std::size(paths)];
+    std::string dlErrors[std::size(paths)];
 
-	size_t counter = 0;
-	for (auto& fp : paths) {
-	    try {
+    size_t counter = 0;
+    for (auto& fp : paths) {
+        try {
             fp = APath(fp + fullname).absolute();
-	    } catch (...) {
-	        fp = fp + fullname;
+        } catch (...) {
+            fp = fp + fullname;
         }
-	    try {
+        try {
             if (fp.isRegularFileExists()) {
                 if (auto dll = doLoad(fp)) {
                     return dll;
@@ -87,45 +79,38 @@ _<AProgramModule> AProgramModule::load(const AString& path)
                 dlErrors[counter] = dlerror();
             }
         } catch (...) {
-
         }
-	    ++counter;
-	}
-
-	AString diagnostic = "Could not load shared library: " + fullname + "\n";
-	counter = 0;
-	for (auto& fp : paths) {
-	    auto& dlError = dlErrors[counter];
-	    diagnostic += " - " + fp + " -> " + (dlError.empty() ? "not found" : dlError) + "\n";
         ++counter;
-	}
+    }
 
-    throw AProgramModuleLoadException(diagnostic);
+    AString diagnostic = "Could not load shared library: " + fullname + "\n";
+    counter = 0;
+    for (auto& fp : paths) {
+        auto& dlError = dlErrors[counter];
+        diagnostic += " - " + fp + " -> " + (dlError.empty() ? "not found" : dlError) + "\n";
+        ++counter;
+    }
+
+    throw LoadException(diagnostic);
 #endif
 }
 
-AString AProgramModule::getDllExtension()
-{
+AString AProgramModule::getDllExtension() {
 #if AUI_PLATFORM_WIN
-	return "dll";
+    return "dll";
 #else
-	return "so";
+    return "so";
 #endif
 }
 
-void(*AProgramModule::getProcAddressRawPtr(const AString& name) const noexcept)()
-{
+AProgramModule::ProcRawPtr AProgramModule::getProcAddressRawPtr(const AString& name) const noexcept {
 #if AUI_PLATFORM_WIN
-	auto r = reinterpret_cast<void(*)()>(
-		GetProcAddress(mHandle, name.toStdString().c_str()));
+    auto r = reinterpret_cast<ProcRawPtr>(GetProcAddress(mHandle, name.toStdString().c_str()));
 #else
-    auto r = reinterpret_cast<void(*)()>(
-            dlsym(mHandle, name.toStdString().c_str()));
+    auto r = reinterpret_cast<ProcRawPtr>(dlsym(mHandle, name.toStdString().c_str()));
 #endif
     return r;
 }
-
-AProgramModuleLoadException::~AProgramModuleLoadException() = default;
 
 _<AProgramModule> AProgramModule::self() {
 #if AUI_PLATFORM_WIN

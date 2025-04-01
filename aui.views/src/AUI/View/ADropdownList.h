@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -43,6 +43,18 @@ public:
     explicit ADropdownList(const _<IListModel<AString>>& model);
     ADropdownList();
     ~ADropdownList() override;
+
+    /**
+     * @brief Selected id property.
+     */
+    auto selectionId() const {
+        return APropertyDef {
+            this,
+            &ADropdownList::getSelectionId,
+            &ADropdownList::setSelectionId,
+            selectionChanged,
+        };
+    }
 
     void setModel(const _<IListModel<AString>>& model);
     void render(ARenderContext context) override;

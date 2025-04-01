@@ -1,6 +1,11 @@
+@note
+This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
+@ref useful_macros.
+
 # Writing platform dependent code
 
-AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in both CMake and C++.
+AUI provides a set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in
+both CMake and C++.
 
 ## Platform checks
 
@@ -9,11 +14,11 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
      <th>Platform</th>
      <th>C++</th>
      <th>CMake</th>
-     <th>Platform specific dir</th>
+     <th>Platform specific dir(s)</th>
    </tr>
    <tr>
      <td>
-       Windows
+       @ref windows
      </td>
      <td>
        @code{cpp}
@@ -30,13 +35,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/win32`
+       `src/Platform/win32`<br/>
+       `src/platform/win32`
      </td>
    </tr>
 
    <tr>
      <td>
-       Linux (not Android)
+       @ref linux
      </td>
      <td>
        @code{cpp}
@@ -53,13 +59,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/linux`
+       `src/Platform/linux`<br/>
+       `src/platform/linux`
      </td>
    </tr>
 
    <tr>
      <td>
-       macOS
+       @ref macos
      </td>
      <td>
        @code{cpp}
@@ -76,13 +83,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/macos`
+       `src/Platform/macos`<br/>
+       `src/platform/macos`
      </td>
    </tr>
 
    <tr>
      <td>
-       Android
+       @ref android
      </td>
      <td>
        @code{cpp}
@@ -99,13 +107,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/android`
+       `src/Platform/android`<br/>
+       `src/platform/android`
      </td>
    </tr>
 
    <tr>
      <td>
-       iOS (both iPhone and iPad)
+       @ref ios <br/>(both iPhone and iPad)
      </td>
      <td>
        @code{cpp}
@@ -122,13 +131,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/ios`
+       `src/Platform/ios`<br/>
+       `src/platform/ios`
      </td>
    </tr>
 
    <tr>
      <td>
-       Apple (macOS, iOS)
+       Apple<br/>(@ref macos "macOS", @ref ios "iOS")
      </td>
      <td>
        @code{cpp}
@@ -145,13 +155,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/apple`
+       `src/Platform/apple`<br/>
+       `src/platform/apple`
      </td>
    </tr>
 
    <tr>
      <td>
-       Unix (Linux, Android, macOS, iOS)
+       Unix<br/>(@ref linux "Linux", @ref android "Android", @ref macos "macOS", @ref ios "iOS")
      </td>
      <td>
        @code{cpp}
@@ -168,13 +179,14 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/unix`
+       `src/Platform/unix`<br/>
+       `src/platform/unix`
      </td>
    </tr>
 
    <tr>
      <td>
-       Emscripten
+       @ref emscripten
      </td>
      <td>
        @code{cpp}
@@ -191,16 +203,19 @@ AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platfo
        @endcode
      </td>
      <td>
-       `Platform/emscripten`
+       `src/Platform/emscripten`<br/>
+       `src/platform/emscripten`
      </td>
    </tr>
 </table>
 
-
 ### Platform specific sources
 
-With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` dir, where `<PLATFORM_NAME>` is
-one of the supported platforms (see the table above).
+With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` or `src/platform/<PLATFORM_NAME>`
+dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table above).
+
+@note
+Both cases (Platform and platform) were added to honor projects with various directory naming agreements.
 
 
 ## Compiler checks
@@ -276,7 +291,16 @@ one of the supported platforms (see the table above).
 
 ## AUI_MODULE_NAME
 
-Target name exposed by [aui_module](@ref md_docs_aui_module) and [aui_executable](@ref md_docs_aui_executable).
+Target name exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+
+## AUI_CMAKE_PROJECT_VERSION
+
+`${CMAKE_PROJECT_VERSION}` exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+
+`CMAKE_PROJECT_VERSION` is typically defined by [project](https://cmake.org/cmake/help/latest/command/project.html) 
+CMake command:
+
+@snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION
 
 ## API_\<module name\>
 

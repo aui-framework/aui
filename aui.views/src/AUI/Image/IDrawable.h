@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -23,25 +23,25 @@ class IRenderer;
 /**
  * @brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
  *        raster graphics.
+ * @ingroup image
  */
-class IDrawable
-{
+class IDrawable {
     friend class AImageLoaderRegistry;
 
     class Cache;
     friend class ::Cache<IDrawable, Cache, AUrl>;
     friend class AImageLoaderRegistry;
-    class Cache: public ::Cache<IDrawable, Cache, AUrl> {
+    class Cache : public ::Cache<IDrawable, Cache, AUrl> {
     public:
         static Cache& inst();
+
     protected:
         _<IDrawable> load(const AUrl& key) override;
     };
 
 public:
-
     struct Params {
-        glm::vec2 offset = {0.f, 0.f};
+        glm::vec2 offset = { 0.f, 0.f };
         glm::vec2 size;
         AOptional<glm::vec2> cropUvTopLeft;
         AOptional<glm::vec2> cropUvBottomRight;
@@ -60,27 +60,21 @@ public:
      */
     virtual AImage rasterize(glm::ivec2 imageSize);
 
-	/**
-	 * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
-	 *        desired state (coordinates, color, etc.)
-	 */
-	virtual void draw(IRenderer& render, const IDrawable::Params& params) = 0;
+    /**
+     * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
+     *        desired state (coordinates, color, etc.)
+     */
+    virtual void draw(IRenderer& render, const IDrawable::Params& params) = 0;
 
-	
-	/**
-	 * @return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}
-	 */
-	virtual glm::ivec2 getSizeHint() = 0;
+    /**
+     * @return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}
+     */
+    virtual glm::ivec2 getSizeHint() = 0;
 
-
-	/**
-	 * @return true if the size hint of this drawable needs to be multiplied by the DPI ratio
-	 */
-	virtual bool isDpiDependent() const
-	{
-		return false;
-	}
-
+    /**
+     * @return true if the size hint of this drawable needs to be multiplied by the DPI ratio
+     */
+    virtual bool isDpiDependent() const { return false; }
 
     /**
      * @brief Creates a drawable from an url.

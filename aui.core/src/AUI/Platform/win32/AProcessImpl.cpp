@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -28,6 +28,7 @@
 #include <AUI/Platform/PipeInputStream.h>
 #include <AUI/Platform/PipeOutputStream.h>
 #include <AUI/Platform/ErrorToException.h>
+#include <Shlwapi.h>
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
@@ -55,13 +56,15 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 
 class AOtherProcess: public AProcess {
 private:
-    HANDLE mHandle;
+    HANDLE mHandle = 0;
 
 public:
     AOtherProcess(HANDLE handle) : mHandle(handle) {}
 
     ~AOtherProcess() {
-        CloseHandle(mHandle);
+        if (mHandle) {
+            CloseHandle(mHandle);
+        }
     }
 
     APath getPathToExecutable() override {
@@ -73,20 +76,16 @@ public:
     }
 
     int waitForExitCode() override {
-        WaitForSingleObject(mHandle, INFINITE);
+        int r = WaitForSingleObject(mHandle, INFINITE);
+        AUI_ASSERT(r != WAIT_FAILED);
         DWORD exitCode;
-        waitForExitCode();
-        int r = GetExitCodeProcess(mHandle, &exitCode);
-        AUI_ASSERT(r && r != STILL_ACTIVE);
+        r = GetExitCodeProcess(mHandle, &exitCode);
+        AUI_ASSERT(r && exitCode != STILL_ACTIVE);
         return exitCode;
     }
 
     APath getModuleName() override {
-        APath result;
-        result.resize(0x1000);
-        result.resize(GetProcessImageFileName(mHandle, aui::win32::toWchar(result), result.length()));
-        result.replaceAll('\\', '/');
-        return result;
+        return getPathToExecutable().filename();
     }
 
     uint32_t getPid() const noexcept override {
@@ -200,12 +199,17 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         },
     }, mInfo.args);
 
+    int creationFlags = 0;
+    if (bool(flags & ASubProcessExecutionFlags::DETACHED)) {
+        creationFlags |= DETACHED_PROCESS;
+    }
+
     if (!CreateProcess(aui::win32::toWchar(mInfo.executable.c_str()),
                        aui::win32::toWchar(args),
                        nullptr,
                        nullptr,
                        true,
-                       0,
+                       creationFlags,
                        nullptr,
                        mInfo.workDir.empty() ? nullptr : aui::win32::toWchar(mInfo.workDir),
                        &startupInfo,
@@ -251,7 +255,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     pipeStderr.closeIn();
     pipeStdin.closeOut();
 
-    mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
+    mStdInStream = _new<Pipe>(std::move(pipeStdin));
 }
 
 
@@ -262,7 +266,7 @@ int AChildProcess::waitForExitCode() {
 AChildProcess::~AChildProcess() = default;
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+    auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE, false, pid);
     if (handle) {
         DWORD exitCode;
         GetExitCodeProcess(handle, &exitCode);

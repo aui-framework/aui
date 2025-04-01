@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -44,7 +44,7 @@ public:
     }
 
     void setupConnectionsIfNotPresent(aui::no_escape<AViewContainerBase> container) {
-        if (container->childrenChanged.hasConnectionsWith(this)) {
+        if (container->childrenChanged.hasOutgoingConnectionsWith(this)) {
             return;
         }
 
@@ -73,7 +73,7 @@ public:
         }
         std::size_t row = 0;
         if (auto p = view->getParent()) {
-            row = p->getViews().indexOf(view->sharedPtr());
+            row = p->getViews().indexOf(view->sharedPtr()).valueOr(0);
         }
         return ATreeModelIndex(row, 0, view->sharedPtr());
     }
@@ -140,7 +140,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
-        mTargetWindow->profiling().highlightView.reset();
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
         mTargetWindow->redraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {

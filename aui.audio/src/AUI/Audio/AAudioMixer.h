@@ -10,6 +10,8 @@ class API_AUI_AUDIO IAudioPlayer;
 /**
  * @brief Manages audio players and mixes them into one sound stream.
  * @ingroup audio
+ * @details
+ * @experimental
  */
 class API_AUI_AUDIO AAudioMixer {
 public:
@@ -27,8 +29,7 @@ public:
 
     /**
      * @brief Write mixed audio data into buffer.
-     * @param dst Buffer for writing into
-     * @param size Size of mixed audio data for writing
+     * @param destination Pre-allocated buffer to write into
      * @return Number of bytes written
      */
     std::size_t readSoundData(std::span<std::byte> destination);

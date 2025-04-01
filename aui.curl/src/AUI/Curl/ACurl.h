@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -143,6 +143,19 @@ public:
 
     /**
      * @brief A read callback.
+     * @param curl curl instance
+     * @param data received data
+     * @return bytes written to the destination buffer. Zero means buffer does not have enough space to store supplied
+     *         data (but the stream may be continued in the future), the supplied data is not discarded and being kept
+     *         in the curl buffers.
+     * @details
+     * Unlike regular streams, blocking is not allowed. To indicate buffer overflow, return zero. To indicate
+     * end of file, throw an AEOFException.
+     */
+    using WriteCallbackV2 = std::function<size_t(ACurl& curl, AByteBufferView data)>;
+
+    /**
+     * @brief A read callback.
      * @param dst destination buffer you should write to.
      * @param maxLen destination buffer size aka max length.
      * @return bytes written to the destination buffer. Zero means data unavailability (but the stream may be continued
@@ -177,7 +190,7 @@ public:
     friend class ACurl;
     private:
         void* mCURL;
-        WriteCallback mWriteCallback;
+        WriteCallbackV2 mWriteCallback;
         ReadCallback mReadCallback;
         ErrorCallback mErrorCallback;
         HeaderCallback mHeaderCallback;
@@ -199,6 +212,18 @@ public:
          * @see withDestinationBuffer
          */
         Builder& withWriteCallback(WriteCallback callback) {
+            return withWriteCallback([callback = std::move(callback)](ACurl&, AByteBufferView buffer) {
+                return callback(buffer);
+            });
+        }
+
+        /**
+         * @brief Called on server -> client data received (download).
+         * @param callback callback to call.
+         * @return this
+         * @see withDestinationBuffer
+         */
+        Builder& withWriteCallback(WriteCallbackV2 callback) {
             AUI_ASSERTX(mWriteCallback == nullptr, "write callback already set");
             mWriteCallback = std::move(callback);
             return *this;
@@ -229,7 +254,7 @@ public:
 
         /**
          * @brief Called on client -> server data requested (upload).
-         * @param callback callback to call.
+         * @param inputStream input stream to get data to upload from.
          * @return this
          */
         Builder& withInputStream(_<IInputStream> inputStream) {
@@ -328,7 +353,6 @@ public:
          * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * @param begin start index of the part
-         * @param end end index of the part.
          * @return this
          */
         Builder& withRanges(size_t begin) {
@@ -490,13 +514,14 @@ private:
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
     bool mCloseRequested = false;
+    bool mThrowExceptionOnError = false;
     std::string mPostFieldsStorage;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
     static size_t readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
     static size_t headerCallback(char *buffer, size_t size, size_t nitems, void *userdata) noexcept;
 
-    WriteCallback mWriteCallback;
+    WriteCallbackV2 mWriteCallback;
     ReadCallback mReadCallback;
     HeaderCallback mHeaderCallback;
 
@@ -504,8 +529,12 @@ private:
         emit success;
     }
 
+    void reportFail(const ErrorDescription& errorDescription) {
+        emit fail(errorDescription);
+    }
+
     void reportFail(int statusCode) {
-        emit fail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
+        reportFail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
     }
 
     template<typename Ret>

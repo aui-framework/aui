@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -23,10 +23,12 @@
  * @details
  * This view is intended to store only one single view with setContents()/contents() methods.
  *
- * This view does not handle scroll events and tocuh events related to scroll. Use AScrollArea for such case.
+ * This view does not handle scroll events and touch events related to scroll. Use AScrollArea for such case.
  */
 class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:
+    class Inner;
+
     AScrollAreaViewport();
     ~AScrollAreaViewport() override;
 
@@ -64,17 +66,57 @@ public:
     }
 
     [[nodiscard]]
-    glm::uvec2 scroll() const noexcept {
-        return mScroll;
+    auto scroll() const noexcept {
+        return APropertyDef {
+            this,
+            &AScrollAreaViewport::mScroll,
+            &AScrollAreaViewport::setScroll,
+            mScrollChanged,
+        };
     }
 
+    /**
+     * @brief Compensates layout updates made in applyLayoutUpdate by scrolling by a diff of relative position of anchor.
+     * @param anchor direct or indirect child used as an anchor.
+     * @param applyLayoutUpdate layout update procedure.
+     * @param diffMask mask that is used to control axes of the compensation. Default is `{1, 1}`.
+     * @details
+     * Helps preventing visual layout jittering by querying relative to AScrollAreaViewport position of anchor before
+     * and after applyLayoutUpdate. The diff of relative position is then used to scroll the viewport, maintaining
+     * consistent visual position of anchor.
+     *
+     * anchor must be direct or indirect child to this AScrollAreaViewport before and after applyLayoutUpdate.
+     *
+     * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
+     */
+    template<aui::invocable ApplyLayoutUpdate>
+    void compensateLayoutUpdatesByScroll(_<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1));
+
 private:
-    class Inner;
     _<Inner> mInner;
     _<AView> mContents;
 
     glm::uvec2 mScroll = {0, 0};
+    emits<glm::uvec2> mScrollChanged;
 
     void updateContentsScroll();
 };
 
+template <aui::invocable ApplyLayoutUpdate>
+void AScrollAreaViewport::compensateLayoutUpdatesByScroll(
+    _<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask) {
+    auto queryRelativePosition = [&] {
+      glm::ivec2 accumulator{};
+      for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {
+          accumulator += v->getPosition();
+      }
+      return accumulator;
+    };
+    auto before = queryRelativePosition();
+    applyLayoutUpdate();
+    auto after = queryRelativePosition();
+    auto diff = after - before;
+    diff *= diffMask;
+    mScroll = glm::max(glm::ivec2(mScroll) + diff, glm::ivec2(0));
+    updateContentsScroll();
+}

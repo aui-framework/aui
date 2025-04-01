@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AAbstractTypeable.h"
+#include <AUI/Platform/AWindow.h>
 
 /**
  * @brief Basic implementation of type shortcuts and selection for editable text fields.
@@ -40,10 +41,26 @@ public:
         });
     }
 
+
+    /**
+     * @brief Text property.
+     */
+    auto text() const {
+        return APropertyDef {
+            this,
+            &AAbstractTypeable::getText,
+            &AAbstractTypeable::setText,
+            textChanging,
+        };
+    }
+
     ~AAbstractTypeableView() override = default;
 
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
+        if (key == AInput::ESCAPE) {
+            AWindow::current()->setFocusedView(nullptr);
+        }
         AAbstractTypeable::handleKey(key);
         if (key == AInput::Key::RETURN && !AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
             emit this->actionButtonPressed;

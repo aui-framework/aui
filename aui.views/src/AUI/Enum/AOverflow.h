@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,8 +19,7 @@
 
 /**
  * @brief Controls visibility of the overflowed contents of AView with AView::drawStencilMask.
- * @ingroup ass
- * @ingroup views
+ * @ingroup ass_properties
  */
 enum class AOverflow {
     /**
@@ -43,8 +42,7 @@ enum class AOverflow {
 
 /**
  * @brief Controls behavior of the overflowed text. Relevant to AAbstractLabel and its derivatives only.
- * @ingroup ass
- * @ingroup views
+ * @ingroup ass_properties
  */
 enum class ATextOverflow {
     NONE,
@@ -58,8 +56,7 @@ AUI_ENUM_VALUES(ATextOverflow,
 
 /**
  * @brief Controls the behaviour of the default AView::drawStencilMask() implementation.
- * @ingroup ass
- * @ingroup views
+ * @ingroup ass_properties
  * @details
  * Controls how does the overflow mask is produced.
  *

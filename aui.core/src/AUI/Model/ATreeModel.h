@@ -1,5 +1,5 @@
 // AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2024 Alex2772 and Contributors
+// Copyright (C) 2020-2025 Alex2772 and Contributors
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
@@ -82,7 +82,7 @@ public:
     ATreeModelIndex makeIndex(_<Node> node) {
         auto parent = node->parent.lock();
         auto& children = parent ? parent->children : mChildren;
-        return ATreeModelIndex(children.indexOf(node), 0, std::move(node));
+        return ATreeModelIndex(children.indexOf(node).valueOr(0), 0, std::move(node));
     }
 
     ATreeModelIndexOrRoot parent(const ATreeModelIndex& vertex) override {

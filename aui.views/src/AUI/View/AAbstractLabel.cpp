@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -185,6 +185,8 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                     }
 
                     break;
+                case ATextAlign::JUSTIFY:
+                    break;
             }
         }
 
@@ -206,20 +208,22 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
 }
 
 AString AAbstractLabel::getTransformedText() {
-    if (text().empty())
+    if (text()->empty())
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return text().uppercase();
+            return text()->uppercase();
         case TextTransform::LOWERCASE:
-            return text().lowercase();
+            return text()->lowercase();
+        case TextTransform::NONE:
+            break;
     }
     return text();
 }
 
 void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
-    ui_threadX [&] {
+    ui_threadX [this, self = shared_from_this()] {
         mPrerendered = nullptr;
         redraw();
     };
@@ -256,6 +260,8 @@ void AAbstractLabel::setText(AString newText) {
 
     markMinContentSizeInvalid();
     redraw();
+
+    emit mTextChanged(mText);
 }
 
 void AAbstractLabel::invalidateAllStyles() {

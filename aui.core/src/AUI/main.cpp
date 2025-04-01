@@ -1,50 +1,12 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
- */
-
-
-/**
- * @defgroup core aui::core
- * @brief Main central library.
- * @details AUI's core central library without graphical components used by other modules.
- * Adds these features to C++:
- * - @ref signal_slot "signal-slot system"
- * - @ref AAbstractThread::interrupt() "interruptable threads"
- * - @ref io "input-output"
- * - @ref AI18n "i18n"
- * - @ref ALogger "logging"
- * - data models
- * - reflection
- * - trait classes
- * - @ref AUrl "urls"
- * - @ref jni "C++/Java JNI bridge"
- */
-
-
-
-/**
- * @defgroup useful_macros Useful macros
- * @ingroup core
- * @brief A set of functionality that introduces non-standard syntax which seems like the C++ features.
- */
-
-/**
- * @defgroup io IO streams
- * @ingroup core
- * @brief Input-output streams
- */
-
-
-/**
- * @mainpage AUI Framework
- * @htmlinclude ./docs/index.html
  */
 
 #if AUI_PLATFORM_WIN

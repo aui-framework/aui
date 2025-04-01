@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,22 +15,23 @@
 #include "AUI/Common/AException.h"
 #include "AUI/IO/IInputStream.h"
 
+#include <AUI/IO/APath.h>
+#include <AUI/IO/ISeekableInputStream.h>
+
 class AByteBuffer;
 
 class AByteBufferView;
 
 class AZLibException : public AException {
 public:
-    AZLibException() {
-    }
+    AZLibException() {}
 
-    AZLibException(const AString& message)
-            : AException(message) {
-    }
+    AZLibException(const AString& message) : AException(message) {}
 };
 
 namespace aui::zlib {
-    void API_AUI_CORE compress(AByteBufferView b, AByteBuffer& dst);
-    void API_AUI_CORE decompress(AByteBufferView b, AByteBuffer& dst);
-    _unique<IInputStream> API_AUI_CORE decompressToStream(AByteBufferView b);
-}
+void API_AUI_CORE compress(AByteBufferView b, AByteBuffer& dst);
+void API_AUI_CORE decompress(AByteBufferView b, AByteBuffer& dst);
+_unique<IInputStream> API_AUI_CORE decompressToStream(AByteBufferView b);
+
+}   // namespace aui::zlib

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -50,6 +50,8 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
             mForwardButton << ".scrollbar_down";
             mBackwardButton << ".scrollbar_up";
             break;
+        case ALayoutDirection::NONE:
+            break;
     }
     mHandle = aui::ptr::manage(new AScrollbarHandle(*this));
 
@@ -69,6 +71,8 @@ void AScrollbar::setOffset(size_t o) {
             break;
         case ALayoutDirection::VERTICAL:
             mOffsetSpacer->setSize({0, o});
+            break;
+        case ALayoutDirection::NONE:
             break;
     }
 }
@@ -116,6 +120,8 @@ void AScrollbar::updateScrollHandleSize() {
             case ScrollbarAppearance::ON_DEMAND:
                 setVisibility(Visibility::GONE);
                 break;
+            case ScrollbarAppearance::NEVER:
+                break;
         }
         return;
     }
@@ -128,6 +134,8 @@ void AScrollbar::updateScrollHandleSize() {
             break;
         case ALayoutDirection::VERTICAL:
             scrollbarSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight());
+            break;
+        case ALayoutDirection::NONE:
             break;
     }
     scrollbarSpace = glm::max(scrollbarSpace, 0);
@@ -172,6 +180,8 @@ void AScrollbar::updateScrollHandleOffset(int max) {
             break;
         case ALayoutDirection::VERTICAL:
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
+            break;
+        case ALayoutDirection::NONE:
             break;
     }
     applyGeometryToChildren();
@@ -242,6 +252,8 @@ float AScrollbar::getAvailableSpaceForSpacer() {
         case ALayoutDirection::VERTICAL:
             return glm::max(0, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
 
+        case ALayoutDirection::NONE:
+            break;
     }
     return 0;
 }
@@ -256,6 +268,8 @@ void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& eve
             case ALayoutDirection::VERTICAL:
                 mScrollbar.handleScrollbar(pos.y - mScrollOffset);
                 break;
+            case ALayoutDirection::NONE:
+                break;
         }
     }
 }
@@ -268,6 +282,8 @@ void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
             break;
         case ALayoutDirection::VERTICAL:
             mScrollOffset = event.position.y;
+            break;
+        case ALayoutDirection::NONE:
             break;
     }
 
@@ -288,6 +304,8 @@ void AScrollbarHandle::setSize(glm::ivec2 size) {
 
         case ALayoutDirection::HORIZONTAL:
             size = {mOverridenSize, 15_dp};
+            break;
+        case ALayoutDirection::NONE:
             break;
     }
 

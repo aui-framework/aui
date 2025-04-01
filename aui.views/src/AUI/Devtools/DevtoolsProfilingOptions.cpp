@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -35,33 +35,36 @@ namespace {
         });
         l->setCustomStyle({
             ACursor::POINTER,
+            Margin { 0 },
+            Padding { 0 },
             BorderBottom{1_px, AColor::BLACK}
         });
         return l;
     }
 }
 
-DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow): mModel(&targetWindow->profiling()) {
-
+DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
     setContents(Centered {
         Vertical::Expanding {
+            /// [fromItems]
             AText::fromItems({"These settings are applicable for render-to-texture optimizations.",
                               makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html")}),
-            CheckBoxWrapper { Label { "Highlight redraw requests" } } && mModel(&AWindowBase::Profiling::highlightRedrawRequests),
+            CheckBoxWrapper { Label { "Highlight redraw requests" } } && targetWindow->profiling()->highlightRedrawRequests,
             AText::fromItems({"Draws purple rect ", coloredRect(0xff00ff_rgb), " over view that requested redraw "
                               "(AView::redraw). This can help to find views that causes window to repaint which "
                               "affects application performance and device's battery life."}),
-            CheckBoxWrapper { Label { "Render to texture decay" } } && mModel(&AWindowBase::Profiling::renderToTextureDecay),
+            CheckBoxWrapper { Label { "Render to texture decay" } } && targetWindow->profiling()->renderToTextureDecay,
             AText::fromItems({"Visually displays render to texture optimization by gradually transforming old pixel ",
                               "data to gray ", coloredRect(AColor::GRAY), " color. When a view is redrawn it pixel "
                               "data would be represented as unaffected to gray color and seem bright and saturated "
                               "color. From perspective of performance it's good that whole screen transformed to gray "
                               "color and thus no redraw is performed."
                                 }),
-            CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } && mModel(&AWindowBase::Profiling::breakpointOnMarkMinContentSizeInvalid),
+            CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } && targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid,
             AText::fromItems({"Stops the attached debugger at the point when window's update layout flag is set. This "
                               "can be used to walk through stacktrace and find which view and why triggered layout "
                               "update. When breakpoint is triggered, checkbox is unset. Note: when debugger is not attached, behaviour is undefined."}),
+            /// [fromItems]
         } with_style {
             MaxSize { 700_dp, {} },
         }
@@ -80,8 +83,5 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow): m
            Margin { 4_dp, 24_dp, 8_dp },
            Opacity { 0.5f },
        }
-    });
-    connect(targetWindow->redrawn, [this] {
-        mModel.notifyUpdate();
     });
 }

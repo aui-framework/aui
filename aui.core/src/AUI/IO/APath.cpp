@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -22,6 +22,8 @@
 #include "AFileInputStream.h"
 #include "AFileOutputStream.h"
 #include "AUI/Platform/ErrorToException.h"
+#include "AUI/Platform/AProcess.h"
+#include "AUI/Util/ACleanup.h"
 #include <AUI/Traits/platform.h>
 #include <AUI/Util/kAUI.h>
 
@@ -58,6 +60,11 @@ APath APath::filenameWithoutExtension() const {
         return name;
     }
     return name.substr(0, it);
+}
+
+AString APath::extension() const {
+    auto it = rfind('.');
+    return AString::substr(it + 1);
 }
 
 APath APath::file(const AString& fileName) const {
@@ -122,13 +129,21 @@ const APath& APath::removeFile() const {
 }
 
 const APath& APath::removeFileRecursive() const {
-    if (isDirectoryExists()) {
-        for (auto& l : listDir()) {
-            l.removeFileRecursive();
-        }
-    }
+    removeDirContentsRecursive();
     if (exists())
         removeFile();
+    return *this;
+}
+
+const APath& APath::removeDirContentsRecursive() const {
+    if (!isDirectoryExists()) {
+        return *this;
+    }
+
+    for (auto& l : listDir()) {
+        l.removeFileRecursive();
+    }
+
     return *this;
 }
 
@@ -278,7 +293,17 @@ struct stat APath::stat() const {
 
 
 void APath::copy(const APath& source, const APath& destination) {
+    if (!source.isRegularFileExists()) {
+        throw AFileNotFoundException("APath::copy: regular file (source) does not exist: {}"_format(source));
+    }
     AFileOutputStream(destination) << AFileInputStream(source);
+}
+
+APath APath::withoutUppermostFolder() const {
+    auto r = AString::find('/');
+    if (r == NPOS)
+        return *this;
+    return substr(r + 1);
 }
 
 #if AUI_PLATFORM_WIN
@@ -306,14 +331,6 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     result.resizeToNullTerminator();
     result.removeBackSlashes();
     return result;
-}
-
-
-APath APath::withoutUppermostFolder() const {
-    auto r = AString::find('/');
-    if (r == NPOS)
-        return *this;
-    return substr(r + 1);
 }
 
 APath APath::workingDir() {
@@ -422,6 +439,14 @@ time_t APath::fileModifyTime() const {
 }
 
 void APath::move(const APath& source, const APath& destination) {
+    if (source.isRegularFileExists()) {
+        if (destination.isRegularFileExists()) {
+            try {
+                destination.removeFile();
+            } catch (...) {}
+        }
+    }
+
 #if AUI_PLATFORM_WIN
     if (MoveFile(aui::win32::toWchar(source.c_str()), aui::win32::toWchar(destination.c_str())) == 0) {
 #else
@@ -464,4 +489,58 @@ APath APath::extensionChanged(const AString& newExtension) const {
         return *this + "." + newExtension;
     }
     return substr(0, it) + "." + newExtension;
+}
+
+const APath& APath::processTemporaryDir() {
+    static APath result = [] {
+      APath result = APath::getDefaultPath(TEMP) / "aui-temp-{}"_format(AProcess::self()->getPid());
+      while (result.exists()) {
+          result += "-";
+      }
+      result.makeDirs();
+      ACleanup::afterEntry([result] {
+          try {
+              result.removeFileRecursive();
+          } catch (...) {
+          }
+      });
+
+      return result;
+    }();
+    return result;
+}
+
+APath APath::nextRandomTemporary() {
+    auto base = processTemporaryDir();
+    static std::atomic_uint64_t i = 0;
+    for (;;) {
+        APath result = base / "randomtemporary{}"_format(i++);
+        if (!result.exists()) {
+            return result;
+        }
+    }
+}
+
+bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
+#if AUI_PLATFORM_WIN
+    int wflags = 0;
+    if (bool(flags & AFileAccess::R)) {
+        wflags |= 04;
+    }
+    if (bool(flags & AFileAccess::W)) {
+        wflags |= 02;
+    }
+    if (wflags == 0) {
+        return true;
+    }
+    return _waccess(aui::win32::toWchar(*this), wflags) == 0;
+#elif AUI_PLATFORM_LINUX
+    return euidaccess(toStdString().c_str(), int(flags)) == 0;
+#elif AUI_PLATFORM_ANDROID
+    return access(toStdString().c_str(), int(flags)) == 0;
+#elif AUI_PLATFORM_APPLE
+    return access(toStdString().c_str(), int(flags)) == 0;
+#elif
+#error "unimplemented"
+#endif
 }

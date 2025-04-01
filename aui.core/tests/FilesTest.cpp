@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -43,6 +43,7 @@ TEST(Path, Copy) {
     ASSERT_TRUE(s == 4);
     ASSERT_TRUE(memcmp(buf, "test", 4) == 0);
 }
+
 TEST(Path, Windows) {
     APath p = "C:/home";
     ASSERT_EQ(p.parent(), "C:");
@@ -53,4 +54,10 @@ TEST(Path, Windows) {
         ASSERT_EQ(p.file("one.cpp"), "C:/home/user/work/one.cpp");
     }
     ASSERT_EQ(APath("C:/home/user/file.txt").filename(), "file.txt");
+}
+
+TEST(Path, Extension) {
+    EXPECT_EQ(APath("test.txt").extension(), "txt");
+    EXPECT_EQ(APath("te.st.txt").extension(), "txt");
+    EXPECT_EQ(APath("C:/te.st.txt").extension(), "txt");
 }
