@@ -262,7 +262,11 @@ public:
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
 //            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
             aui::react::DependencyObserverRegistrar r(*this);
-            return rangeFactory() | ranges::views::transform([this](const T& t) {
+            decltype(auto) rng = rangeFactory();
+            if (auto it = ranges::begin(rng); it != ranges::end(rng)) {
+                [[maybe_unused]] auto discoverReferencedProperties = *it;
+            }
+            return rng | ranges::views::transform([this](const T& t) {
                        auto key = aui::for_each_ui::defaultKey(t, 0L);
                        _<AView> view;
                        if (mViewsSharedCache) {

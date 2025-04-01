@@ -16,6 +16,7 @@ CATEGORIES = [
     ('app', "Application Examples", "These examples typically go beyond single-file projects and delve into more substantial applications that showcase how multiple techniques can be integrated to create nearly production-ready applications. Each example not only demonstrates specific features of the AUI Framework but also covers practical aspects such as dependency management, data binding and user interface customization."),
     ('ui', "UI", "Various UI building samples."),
     ('desktop', "Desktop", "Desktop-specific examples."),
+    ('7guis', "7GUIs", "[7GUIs](https://7guis.github.io/7guis/) is a GUI toolkit benchmark that defines seven tasks representing typical challenges in GUI programming. In addition, 7GUIs provide a recommended set of evaluation dimensions. As such, implementations of these tasks can be compared side by side. AUI project provides its own implementations."),
 ]
 
 
