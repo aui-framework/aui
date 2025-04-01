@@ -58,6 +58,7 @@ public:
     void add(_unique<IAction> action) {
         action->redo();
         nextAction = std::next(mStack.insert(mStack.erase(*nextAction, mStack.end()), std::move(action)));
+        nextAction.notify();
     }
 
     Iterator begin() const {

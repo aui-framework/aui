@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <ctre.hpp>
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -16,10 +17,11 @@
 #include "AUI/Model/AListModel.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/Platform/AMessageBox.h"
-#include <regex>
 
 using namespace declarative;
 using namespace std::chrono;
+
+constexpr auto REGEX_DATE = ctre::match<"([0-9]+)\\.([0-9]+)\\.([0-9]{4})">;
 
 struct DateTextFieldState {
     AProperty<AOptional<system_clock::time_point>> parsed;
@@ -40,15 +42,15 @@ auto dateTextField(DateTextFieldState& state) {
                   return formatDate(*v);
               },
               [](const AString& s) -> AOptional<system_clock::time_point> {
-                  static std::regex r("([0-9]+)\\.([0-9]+)\\.([0-9]{4})");
-                  std::smatch match;
                   auto std = s.toStdString();
-                  if (!std::regex_match(std, match, r)) {
+                  auto match = REGEX_DATE.match(std);
+                  if (!match) {
                       return std::nullopt;
                   }
+
                   return sys_days(year_month_day(
-                      year(std::stoi(match[3].str())), month(std::stoi(match[2].str())),
-                      day(std::stoi(match[1].str()))));
+                      year(std::stoi(match.get<3>().str())), month(std::stoi(match.get<2>().str())),
+                      day(std::stoi(match.get<1>().str()))));
               },
             }),
             it->text());
