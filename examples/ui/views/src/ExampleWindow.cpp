@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -434,7 +434,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     AScrollArea::Builder()
                             .withContents(_new<ATextArea>(
                                 "AUI Framework - Declarative UI toolkit for modern C++20\n"
-                                "Copyright (C) 2020-2024 Alex2772 and Contributors\n"
+                                "Copyright (C) 2020-2025 Alex2772 and Contributors\n"
                                 "\n"
                                 "SPDX-License-Identifier: MPL-2.0\n"
                                 "\n"
