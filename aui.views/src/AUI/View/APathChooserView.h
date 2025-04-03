@@ -34,6 +34,15 @@ public:
     void setPath(const APath& path);
     APath getPath() const;
 
+    auto path() {
+        return APropertyDef {
+            this,
+            &APathChooserView::getPath,
+            &APathChooserView::setPath,
+            changed,
+        };
+    }
+
 signals:
     emits<APath> changed;
 };
@@ -44,6 +53,10 @@ template<>
 struct ADataBindingDefault<APathChooserView, APath> {
 public:
     static auto setup(const _<APathChooserView>& v) {}
+
+    static auto property(const _<APathChooserView>& v) {
+        return v->path();
+    }
 
     static auto getGetter() {
         return &APathChooserView::changed;

@@ -32,7 +32,18 @@ struct AProperty: AObjectBase {
 
     using Underlying = T;
 
+    /**
+     * @brief Stored value.
+     * @details
+     * This field stores AProperty's wrapped value. It is not recommended to use this in casual use; although there are
+     * might be an use case to modify the value without notifying. You can use `notify()` to send a change notification.
+     * Use at your own risk.
+     */
     T raw{};
+
+    /**
+     * @brief Signal that notifies data changes.
+     */
     emits<T> changed;
 
     AProperty()
