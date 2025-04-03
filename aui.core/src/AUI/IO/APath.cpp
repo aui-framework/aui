@@ -242,16 +242,21 @@ const APath& APath::makeDir() const {
         return *this;
     }
 #endif
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        // race condition issue.
+        return *this;
+    }
     aui::impl::lastErrorToException("could not create directory: {}"_format(*this));
     return *this;
 }
 
 const APath& APath::makeDirs() const {
-    if (!empty()) {
-        if (!isDirectoryExists()) {
-            parent().makeDirs();
-            makeDir();
-        }
+    if (empty()) {
+        return *this;
+    }
+    if (!isDirectoryExists()) {
+        parent().makeDirs();
+        makeDir();
     }
     return *this;
 }
