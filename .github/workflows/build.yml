@@ -112,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest]
+        os: [windows-2019, ubuntu-latest, macos-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
@@ -120,6 +120,8 @@ jobs:
         exclude:
           - os: windows-2019
             compiler: "clang"
+          - os: macos-latest
+            compiler: "clang" # default only
         include:
           - os: windows-2019
             generator: "Visual Studio 16 2019"
@@ -131,9 +133,6 @@ jobs:
 
           - os: macos-latest
             generator: "Ninja"
-            debug_or_release: Release
-            shared_or_static: static
-            additional_cmake_flags: ''
 
           - os: ubuntu-latest
             generator: "Ninja"
