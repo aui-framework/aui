@@ -237,15 +237,15 @@ APath APath::absolute() const {
 const APath& APath::makeDir() const {
 #ifdef WIN32
     if (CreateDirectory(aui::win32::toWchar(*this), nullptr)) return *this;
+    if (GetLastError() == ERROR_ALREADY_EXISTS) {
+        // race condition issue.
+        return *this;
+    }
 #else
     if (::mkdir(toStdString().c_str(), 0755) == 0) {
         return *this;
     }
 #endif
-    if (GetLastError() == ERROR_ALREADY_EXISTS) {
-        // race condition issue.
-        return *this;
-    }
     aui::impl::lastErrorToException("could not create directory: {}"_format(*this));
     return *this;
 }
