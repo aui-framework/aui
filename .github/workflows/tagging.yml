@@ -2,6 +2,8 @@ name: Update AUI Version
 
 on:
   push:
+    branches:
+      - develop
     tags-ignore:
       - v*rc*
 
