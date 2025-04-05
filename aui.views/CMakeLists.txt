@@ -2,18 +2,13 @@ cmake_minimum_required(VERSION 3.10)
 
 option(AUI_SHOW_TOUCHES "Show debug touches" OFF)
 
-auib_use_system_libs_begin()
 cmake_policy(SET CMP0072 NEW)
+
+auib_use_system_libs_begin()
 find_package(OpenGL)
-if (AUI_PLATFORM_LINUX)
-    find_package(X11 REQUIRED)
-    find_package(Fontconfig REQUIRED)
-endif ()
 auib_use_system_libs_end()
 
 if (OPENGL_FOUND OR ANDROID OR IOS)
-
-#    auib_import(Freetype https://github.com/aui-framework/freetype
     auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
                 CONFIG_ONLY
                 CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
@@ -97,6 +92,12 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         if (AUI_PLATFORM_LINUX)
             # glew defines unwanted dependencies to OpenGL which may vary from distro to distro; silence them
             set_target_properties(GLEW::GLEW PROPERTIES INTERFACE_LINK_LIBRARIES "")
+
+            auib_use_system_libs_begin()
+            find_package(X11 REQUIRED)
+            find_package(Fontconfig REQUIRED)
+            auib_use_system_libs_end()
+
         endif ()
         aui_link(aui.views PUBLIC GLEW::GLEW)
 
