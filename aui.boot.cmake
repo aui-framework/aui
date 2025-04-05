@@ -308,12 +308,15 @@ function(_auib_validate_target_installation _target)
             message(FATAL_ERROR
                     "While importing ${AUI_MODULE_NAME}:\n"
                     "Imported target ${_target} depends on a out-of-tree (system) file\n${_property_item} IN ${_property}\n"
-                    "This effectively means that the library (and thus your project) is not portable.\n"
+                    "This effectively means that the library (and thus your project) is not portable."
                     "CMake targets should be used instead of hardcoded paths.\n"
-                    "You can silence this error by setting -DAUIB_NO_PRECOMPILED=TRUE\n"
-                    "(https://aui-framework.github.io/develop/md_docs_AUI_configure_flags.html)\n"
-                    "but you would probably encounter issues while deploying your app.\n\n"
-                    "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s).")
+                    "Possible solutions:\n"
+                    "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
+                    "2. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
+                    "3. if ${_property_item} is a part of another library, import that library via auib_import as well.\n"
+                    "\n"
+                    "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s) "
+                    "but you would probably encounter issues while deploying your app.")
         endforeach()
     endforeach ()
 endfunction()

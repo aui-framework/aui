@@ -15,7 +15,9 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 #    auib_import(Freetype https://github.com/aui-framework/freetype
     auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
-            CONFIG_ONLY)
+                CONFIG_ONLY
+                CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
+    )
 
     if (NOT TARGET freetype)
         message(FATAL_ERROR "Freetype not imported")
