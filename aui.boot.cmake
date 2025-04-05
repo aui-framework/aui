@@ -65,6 +65,7 @@ option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" 
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
+cmake_policy(SET CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -754,7 +755,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             ${SOURCE_BINARY_DIRS_ARG}
                     )
 
-                    FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+                    FetchContent_MakeAvailable(${AUI_MODULE_NAME}_FC)
 
 
                     FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
@@ -785,6 +786,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 endforeach()
                 set(FINAL_CMAKE_ARGS
                         -DAUI_BOOT=TRUE
+                        --no-warn-unused-cli # zaebalo
                         ${FORWARDED_LIBS}
                         ${AUIB_IMPORT_CMAKE_ARGS}
                         -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
