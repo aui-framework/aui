@@ -13,9 +13,8 @@ auib_use_system_libs_end()
 
 if (OPENGL_FOUND OR ANDROID OR IOS)
 
-    #auib_import(Freetype https://github.com/aui-framework/freetype
-    auib_import(Freetype https://github.com/aui-framework/freetype/archive/refs/heads/master.zip ARCHIVE
-            PRECOMPILED_URL_PREFIX https://github.com/aui-framework/freetype/releases/download/refs%2Fheads%2Fmaster
+#    auib_import(Freetype https://github.com/aui-framework/freetype
+    auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
             CONFIG_ONLY)
 
     if (NOT TARGET freetype)

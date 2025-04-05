@@ -525,7 +525,7 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(TAG_OR_HASH latest)
     if (AUIB_IMPORT_ARCHIVE)
-        set(TAG_OR_HASH ${AUI_MODULE_PREFIX})
+        string(SHA1 TAG_OR_HASH ${URL})
     elseif (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
@@ -1028,6 +1028,10 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
+
+    if (AUIB_IMPORT_ARCHIVE)
+        set(TAG_OR_HASH "is n/a")
+    endif()
 
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
