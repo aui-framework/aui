@@ -26,6 +26,7 @@ option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages o
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
+set(AUIB_VALIDATION_LEVEL 1 CACHE STRING "Package validation level")
 
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
@@ -107,8 +108,8 @@ endif()
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
     # [RPATH apple]
-set(CMAKE_INSTALL_NAME_DIR "@rpath")
-set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+    set(CMAKE_INSTALL_NAME_DIR "@rpath")
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
     # [RPATH apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
@@ -116,8 +117,8 @@ elseif(UNIX AND NOT ANDROID)
         set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
     else()
         # [RPATH linux]
-set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
-set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+        set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
         # [RPATH linux]
     endif()
 endif()
@@ -268,6 +269,9 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
     if (AUIB_NO_PRECOMPILED)
         return()
     endif()
+    if (AUIB_VALIDATION_LEVEL EQUAL 0)
+        return()
+    endif()
     option(AUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE "AUI.Boot: validate ${AUI_MODULE_NAME} installation." ON)
     if (NOT AUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE)
         return()
@@ -281,12 +285,18 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
         return()
     endif()
 
-    get_target_property(_v ${_target} INTERFACE_AUIB_SYSTEM_LIB)
+    get_target_property(_v ${_target} INTERFACE_AUIB_SYSTEM_LIB) # libraries defined within  auib_use_system_libs_*
     if (_v) # skip system libraries
         return()
     endif()
     set(_exclusions "${AUIB_VALID_INSTALLATION_PATHS}")
-    list(APPEND _exclusions "${_dep_install_prefix}")
+
+    if (AUIB_VALIDATION_LEVEL GREATER_EQUAL 2)
+        list(APPEND _exclusions "${_dep_install_prefix}")
+    else()
+        list(APPEND _exclusions "${AUIB_CACHE_DIR}")
+    endif()
+
     string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
     foreach(_property IMPORTED_LOCATION IMPORTED_LOCATION_${CMAKE_BUILD_TYPE_UPPER} IMPORTED_LOCATION_${CMAKE_BUILD_TYPE} IMPORTED_LOCATION_RELEASE IMPORTED_IMPLIB IMPORTED_OBJECTS INTERFACE_LINK_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_LINK_LIBRARIES)
         get_target_property(_v ${_target} ${_property})
@@ -1111,7 +1121,18 @@ function(auib_import AUI_MODULE_NAME URL)
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
         _auib_update_imported_targets_list()
-        message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
+
+        set(_imported_target_pretty "")
+        foreach (_target ${_imported_targets_after})
+            get_target_property(_is_sys ${_target} INTERFACE_AUIB_SYSTEM_LIB)
+            if (_is_sys)
+                list(APPEND _imported_target_pretty "sys ${_target}")
+            else()
+                list(APPEND _imported_target_pretty "${_target}")
+            endif()
+        endforeach()
+
+        message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_target_pretty}) (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
         foreach (_target ${_imported_targets_after})
             _auib_validate_target_installation(${_target} ${DEP_INSTALL_PREFIX})
         endforeach()
@@ -1147,8 +1168,9 @@ macro(auib_use_system_libs_end)
     get_property(_imported_targets_before GLOBAL PROPERTY AUIB_SYSTEM_LIBS_BEGIN)
     get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
 
-    # find the new targets by excluding _imported_targets_before from _imported_targets_after
-    if ("${_imported_targets_before}")
+    list(LENGTH _imported_targets_before _n)
+    if (NOT _n STREQUAL 0)
+        # find the new targets by excluding _imported_targets_before from _imported_targets_after
         list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
 
         foreach (_t ${_imported_targets_after})

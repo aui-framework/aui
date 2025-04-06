@@ -11,6 +11,9 @@ project(AUI)
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
 set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location" FORCE)
 
+# raise aui.boot validation level.
+set(AUIB_VALIDATION_LEVEL 2 CACHE STRING "Package validation level")
+
 if(AUIB_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUIB_COMPONENTS core)

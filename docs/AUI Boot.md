@@ -24,7 +24,7 @@ aui_link(YOUR_APP PUBLIC aui::core
                          aui::views)
 ```
 
-# Prebuilt packages
+# Prebuilt packages {#PREBUILT_PACKAGES}
 
 AUI Boot is a source-first package manager, however, it can pull precompiled packages instead of building them locally.
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
@@ -185,6 +185,8 @@ target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 # Importing project as a subdirectory
 
+Useful for library developers. They can use consumer's project to develop their library.
+
 ```
 -DAUIB_LIB_AS=ON
 ```
@@ -193,7 +195,7 @@ target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 -DAUIB_AUI_AS=ON
 ```
 
-This action disables usage of precompiled binary.
+This action disables usage of precompiled binary and validation.
 
 # CMake commands
 
@@ -283,7 +285,110 @@ validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_
 It is useful when some package root is implicitly defined in your project somewhere and aui.boot does not know about it,
 thus does not forward.
 
-# Using same dependencies
+# Variables {#AUIB_VARIABLES}
+
+See @ref "docs/AUI configure flags.md" on how to set variables.
+
+## AUIB_ALL_AS (=NO)
+
+All dependencies will be imported with `add_subdirectory` command instead of `find_package`. It is useful if you want
+to work on the dependency along with your project.
+
+This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NAME_UPPER}_AS` flag, where
+`${AUI_MODULE_NAME_UPPER}` is the dependency name (i.e. for AUI it's `-DAUIB_AUI_AS=ON`).
+
+## AUIB_DISABLE (=NO) {#AUIB_DISABLE}
+
+Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
+
+## AUIB_SKIP_REPOSITORY_WAIT (=NO)
+
+Disables "Waiting for repository" lock.
+
+## AUIB_NO_PRECOMPILED (=NO) {#AUIB_NO_PRECOMPILED}
+
+Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
+
+## AUIB_FORCE_PRECOMPILED (=NO) {#AUIB_FORCE_PRECOMPILED}
+
+Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
+
+## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=NO) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
+
+The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
+Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
+archive in the `deps/` dir.
+
+See @ref aui_boot_producing_packages
+
+## AUIB_VALIDATION_LEVEL
+
+Applies a set of checks on each *dependency* pulled by AUI.Boot. These checks verify that the *dependency* follows
+so-called [modern CMake practices](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake).
+Raising this value may help to localize some errors related to the dependency in your build system that would have
+appeared somewhere in the future unexpectedly.
+
+It is a forced measure due to lack of proper CMake usage.
+
+All AUI's dependencies are marked with the highest validation level.
+
+Defaults to `1`.
+
+### AUIB_VALIDATION_LEVEL 0
+
+All checks are disabled.
+
+### AUIB_VALIDATION_LEVEL 1
+
+*Covers scenario*: `cmake --install .` of *dependency* produces a valid local CMake package installation.
+
+*Requirements*:
+
+1. *Dependency*'s installation in directory `A` can be produced with `cmake --install . --prefix=A`. A `find_package`
+   call with dependency's name is capable of importing the *dependency*'s into the *consumer*'s build system.
+2. Targets created as a result of calling `find_package` on the *dependency* can and should define properties so the
+   *consumer* can actually use the functionality provided by the *dependency*. If such property refer to a local file,
+   this file must be located in AUI.Boot's cache dir (`~/aui`). In case of *dependency*'s dependencies (aka grand
+   dependencies), those be imported by a prior `auib_import`.
+   ```cmake
+   auib_import(ZLIB https://github.com/aui-framework/zlib)
+   auib_import(Freetype https://github.com/freetype/freetype
+               CONFIG_ONLY
+               CMAKE_ARGS ...
+   )
+   # Freetype depends on ZLIB, must refer to one located in
+   # ~/.aui/prefix/zlib/.../libz.a, not the system one: /usr/libz.so
+   ```
+
+   As an exception, a system file can be mentioned via CMake target. System packages must be wrapped with
+   `auib_use_system_libs_begin`/`auib_use_system_libs_end` in such scenario.
+   @dontinclude aui.views/CMakeLists.txt
+   @skip auib_use
+   @until auib_use_system_libs_end
+
+### AUIB_VALIDATION_LEVEL 2
+
+*Covers scenario*: `cmake --install .` of *dependency* produces a @ref PREBUILT_PACKAGES "relocatable binary package".
+
+*Requirements*:
+
+1. Implies `VALIDATION_LEVEL 1`.
+2. Targets and variables created as a result of calling `find_package` on the *dependency* cannot contain absolute
+   paths, with an exception to commonly available system files.
+3. If a target depend on another library, it should express it by referring on exported target of that library instead
+   of referring to its file.
+
+   ```cmake
+   target_link_libraries(awesomelib PUBLIC ${ZLIB_LIBRARIES}) # WRONG!
+   target_link_libraries(awesomelib PUBLIC ZLIB::ZLIB) # GOOD!
+   ```
+
+   @note
+   AUI.Boot is capable of replacing absolute paths to libraries by their respective target names in order to support
+   legacy libraries.
+
+
+# Diamond Shape Graphs
 ## Case 1
 
 For example, your application uses `aui.core` module, which actually uses `ZLIB`:
