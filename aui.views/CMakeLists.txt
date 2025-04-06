@@ -29,6 +29,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_enable_tests(aui.views)
 
     if (AUI_PLATFORM_LINUX)
+        auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
 
         pkg_check_modules(DBUS REQUIRED dbus-1)
@@ -38,6 +39,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
         include_directories(${GTK3_INCLUDE_DIRS})
         link_directories(${GTK3_LIBRARY_DIRS})
+
+        auib_use_system_libs_end()
 
         aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
     endif ()
