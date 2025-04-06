@@ -4,6 +4,8 @@ project(test_project)
 
 set(AUIB_FORCE_PRECOMPILED ON CACHE BOOL "Force used precompiled binaries")
 set(AUI_TEST_DEPLOY_VERSION v6.2.1 CACHE BOOL "AUI version")
+# raise aui.boot validation level.
+set(AUIB_VALIDATION_LEVEL 2 CACHE STRING "Package validation level")
 
 include(FetchContent)
 FetchContent_Declare(aui
