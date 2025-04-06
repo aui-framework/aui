@@ -33,8 +33,8 @@ jobs:
           git config user.email "noreply@github.com"
           TAG=${GITHUB_REF##*/}
           echo "New tag: $TAG"
-          git fetch origin master
-          git checkout master
+          git fetch origin develop
+          git checkout develop
           sed -i "s/set(AUI_VERSION.*)/set\(AUI_VERSION $TAG\)/g" README.md
           git add README.md
           git commit -m "update AUI version"
