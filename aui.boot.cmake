@@ -985,7 +985,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     )
                     _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
-                        message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
+                        message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                     endif()
                 endif()
 
@@ -1002,13 +1002,13 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE
+                        RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
                 )
                 _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
-                    message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
+                    message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                 endif()
 
                 message(STATUS "Installing ${AUI_MODULE_NAME}")
@@ -1018,13 +1018,13 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE
+                        RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log
                         OUTPUT_QUIET)
                 _auib_dump_with_prefix("[Installing ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
-                    message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
+                    message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                 endif()
                 if (NOT EXISTS ${DEP_INSTALL_PREFIX})
                     message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
