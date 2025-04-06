@@ -1,9 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 
-auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/refs/heads/master.zip
-            ARCHIVE
-            PRECOMPILED_URL_PREFIX https://github.com/aui-framework/openssl-cmake/releases/download/refs%2Fheads%2Fmaster)
+auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/56ee19b7e11b418e0f29825414abdca96ff6b83e.zip ARCHIVE)
 
 # https://github.com/aui-framework/aui/issues/84
 get_target_property(_l OpenSSL::Crypto IMPORTED_LOCATION)
