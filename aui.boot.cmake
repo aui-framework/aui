@@ -24,6 +24,9 @@ cmake_minimum_required(VERSION 3.16)
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
+option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
+
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
     message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")
@@ -61,10 +64,8 @@ function(_auib_fix_multiconfiguration)
     return()
 endfunction()
 
-option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
-option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
-
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
+cmake_policy(SET CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -263,10 +264,15 @@ macro(_auib_update_imported_targets_list) # used for displaying imported target 
     set_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS ${_imported_targets_before})
 endmacro()
 
-function(_auib_validate_target_installation _target)
+function(_auib_validate_target_installation _target _dep_install_prefix)
     if (AUIB_NO_PRECOMPILED)
         return()
     endif()
+    option(AUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE "AUI.Boot: validate ${AUI_MODULE_NAME} installation." ON)
+    if (NOT AUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE)
+        return()
+    endif()
+
     if (NOT TARGET ${_target})
         message(FATAL_ERROR "${_target} expected to be a target")
     endif()
@@ -279,13 +285,14 @@ function(_auib_validate_target_installation _target)
     if (_v) # skip system libraries
         return()
     endif()
-    foreach(_property IMPORTED_LOCATION IMPORTED_LOCATION_${CMAKE_BUILD_TYPE} IMPORTED_IMPLIB IMPORTED_OBJECTS INTERFACE_LINK_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_LINK_LIBRARIES)
+    set(_exclusions "${AUIB_VALID_INSTALLATION_PATHS}")
+    list(APPEND _exclusions "${_dep_install_prefix}")
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+    foreach(_property IMPORTED_LOCATION IMPORTED_LOCATION_${CMAKE_BUILD_TYPE_UPPER} IMPORTED_LOCATION_${CMAKE_BUILD_TYPE} IMPORTED_LOCATION_RELEASE IMPORTED_IMPLIB IMPORTED_OBJECTS INTERFACE_LINK_DIRECTORIES INTERFACE_INCLUDE_DIRECTORIES INTERFACE_LINK_LIBRARIES)
         get_target_property(_v ${_target} ${_property})
         if (NOT _v)
             continue()
         endif()
-        set(_exclusions "${AUIB_VALID_INSTALLATION_PATHS}")
-        list(APPEND _exclusions "${AUIB_CACHE_DIR}")
         foreach (_property_item ${_v})
             if (TARGET ${_property_item})
                 continue()
@@ -307,13 +314,16 @@ function(_auib_validate_target_installation _target)
             endif()
             message(FATAL_ERROR
                     "While importing ${AUI_MODULE_NAME}:\n"
-                    "Imported target ${_target} depends on a out-of-tree (system) file\n${_property_item} IN ${_property}\n"
-                    "This effectively means that the library (and thus your project) is not portable.\n"
-                    "CMake targets should be used instead of hardcoded paths.\n"
-                    "You can silence this error by setting -DAUIB_NO_PRECOMPILED=TRUE\n"
-                    "(https://aui-framework.github.io/develop/md_docs_AUI_configure_flags.html)\n"
-                    "but you would probably encounter issues while deploying your app.\n\n"
-                    "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s).")
+                    "Imported target ${_target} depends on an out-of-tree file\n${_property_item} IN ${_property}\n"
+                    "This effectively means that the library (and thus your project) is not portable. "
+                    "Possible solutions:\n"
+                    "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
+                    "2. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
+                    "3. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
+                    "4. if ${_property_item} is a part of another library, import that library via auib_import as well. "
+                    "\n"
+                    "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s) "
+                    "but you would probably encounter issues while deploying your app.")
         endforeach()
     endforeach ()
 endfunction()
@@ -434,6 +444,55 @@ function(_auib_find_git)
     set(GIT_EXECUTABLE ${GIT_EXECUTABLE} PARENT_SCOPE)
 endfunction()
 
+function(_auib_postprocess_check_hardcoded_paths _cmake_file)
+    file(READ ${_cmake_file} _contents)
+
+    string(FIND "${_contents}" "\"${AUIB_CACHE_DIR}" _match)
+    if (_match STREQUAL "-1")
+        return()
+    endif()
+
+    # dependency (AUI_MODULE_NAME) has another dependency (B). B is provided by auib_import (hence the aui boot
+    # cache path). B's path is hardcoded which makes the package not portable.
+    # this might be as a result of linking B via target_link_libraries(A ${B_LIBRARIES}) instead of
+    # using CMake targets target_link_libraries(A B::B).
+    # Let's find the target and fix it.
+    # If we wont do this, _auib_validate_target_installation would probably yield an error.
+    get_property(_previously_imported_targets GLOBAL PROPERTY AUIB_IMPORTED_TARGETS)
+    foreach (_previously_imported_target ${_previously_imported_targets})
+        if (NOT TARGET ${_previously_imported_target})
+            continue()
+        endif()
+        string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
+        foreach(_property IMPORTED_LOCATION IMPORTED_LOCATION_${CMAKE_BUILD_TYPE_UPPER} IMPORTED_LOCATION_${CMAKE_BUILD_TYPE} IMPORTED_LOCATION_RELEASE IMPORTED_IMPLIB IMPORTED_OBJECTS INTERFACE_LINK_LIBRARIES)
+            get_target_property(_v ${_previously_imported_target} ${_property})
+            if (NOT _v)
+                continue()
+            endif()
+            string(REPLACE "\"${_v}\"" ${_previously_imported_target} _contents2 "${_contents}")
+            if (_contents2 STREQUAL "${_contents}")
+                continue()
+            endif()
+            message(STATUS "[AUI.BOOT] Fix: in \"${_cmake_file}\": \"${_v}\" -> ${_previously_imported_target}")
+            set(_contents "${_contents2}")
+        endforeach()
+    endforeach ()
+    file(WRITE ${_cmake_file} "${_contents}")
+endfunction()
+
+function(_auib_postprocess)
+    # tries to fix obvious CMake violations, if any.
+    option(AUIB_${AUI_MODULE_NAME_UPPER}_POSTPROCESS "AUI.Boot: apply fixes on ${AUI_MODULE_NAME} installation if needed." ON)
+    if (NOT AUIB_${AUI_MODULE_NAME_UPPER}_POSTPROCESS)
+        return()
+    endif()
+    file(GLOB_RECURSE _cmakes ${DEP_INSTALL_PREFIX}/*.cmake)
+    foreach(_cmake ${_cmakes})
+        _auib_postprocess_check_hardcoded_paths(${_cmake})
+    endforeach ()
+
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -515,6 +574,7 @@ function(auib_import AUI_MODULE_NAME URL)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
     endif()
 
+    option(AUIB_${AUI_MODULE_NAME_UPPER}_AS "AUI.Boot: import ${AUI_MODULE_NAME} as a subdirectory.")
     if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS OR AUIB_IMPORT_ADD_SUBDIRECTORY)
         set(DEP_ADD_SUBDIRECTORY TRUE)
     else()
@@ -525,7 +585,7 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(TAG_OR_HASH latest)
     if (AUIB_IMPORT_ARCHIVE)
-        set(TAG_OR_HASH ${AUI_MODULE_PREFIX})
+        string(SHA1 TAG_OR_HASH ${URL})
     elseif (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
@@ -741,25 +801,37 @@ function(auib_import AUI_MODULE_NAME URL)
                     set(_import_type GIT_REPOSITORY)
                 endif()
                 if (NOT _skip_fetch)
-                    FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                            PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                            ${_import_type} "${URL}"
-                            GIT_TAG ${AUIB_IMPORT_VERSION}
-                            GIT_PROGRESS TRUE # show progress of download
-                            USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                            USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                            ${SOURCE_BINARY_DIRS_ARG}
-                    )
+                    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
+                        # deprecated "FetchContent_Populate(${AUI_MODULE_NAME}_FC)", using a "new" form instead
+                        FetchContent_Populate(${AUI_MODULE_NAME}_FC
+                                PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                                ${_import_type} "${URL}"
+                                GIT_TAG ${AUIB_IMPORT_VERSION}
+                                GIT_PROGRESS TRUE # show progress of download
+                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                                USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
+                                ${SOURCE_BINARY_DIRS_ARG}
+                        )
+                    else()
+                        FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                                PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                                ${_import_type} "${URL}"
+                                GIT_TAG ${AUIB_IMPORT_VERSION}
+                                GIT_PROGRESS TRUE # show progress of download
+                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                                USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                                ${SOURCE_BINARY_DIRS_ARG}
+                        )
 
-                    FetchContent_Populate(${AUI_MODULE_NAME}_FC)
-
+                        FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+                    endif()
 
                     FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
                             BINARY_DIR DEP_BINARY_DIR
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                endif()
+                endif ()
             endif()
         endif()
 
@@ -782,6 +854,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 endforeach()
                 set(FINAL_CMAKE_ARGS
                         -DAUI_BOOT=TRUE
+                        --no-warn-unused-cli # zaebalo
                         ${FORWARDED_LIBS}
                         ${AUIB_IMPORT_CMAKE_ARGS}
                         -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
@@ -946,10 +1019,12 @@ function(auib_import AUI_MODULE_NAME URL)
                 if (NOT EXISTS ${DEP_INSTALL_PREFIX})
                     message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                 endif()
+                _auib_postprocess()
                 file(TOUCH ${DEP_INSTALLED_FLAG})
 
                 message(STATUS "Cleaning up build directory")
                 file(REMOVE_RECURSE ${DEP_BINARY_DIR})
+
             endif()
         endif()
     endif()
@@ -1029,12 +1104,16 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
+    if (AUIB_IMPORT_ARCHIVE)
+        set(TAG_OR_HASH "is n/a")
+    endif()
+
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
         _auib_update_imported_targets_list()
         message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
         foreach (_target ${_imported_targets_after})
-            _auib_validate_target_installation(${_target})
+            _auib_validate_target_installation(${_target} ${DEP_INSTALL_PREFIX})
         endforeach()
     else()
         message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
@@ -1069,11 +1148,13 @@ macro(auib_use_system_libs_end)
     get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
 
     # find the new targets by excluding _imported_targets_before from _imported_targets_after
-    list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
+    if ("${_imported_targets_before}")
+        list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
 
-    foreach (_t ${_imported_targets_after})
-        set_target_properties(${_t} PROPERTIES INTERFACE_AUIB_SYSTEM_LIB ON)
-    endforeach()
+        foreach (_t ${_imported_targets_after})
+            set_target_properties(${_t} PROPERTIES INTERFACE_AUIB_SYSTEM_LIB ON)
+        endforeach()
+    endif()
 
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
