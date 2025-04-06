@@ -745,25 +745,22 @@ function(auib_import AUI_MODULE_NAME URL)
                     set(_import_type GIT_REPOSITORY)
                 endif()
                 if (NOT _skip_fetch)
-                    FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                    FetchContent_Populate(${AUI_MODULE_NAME}_FC
                             PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
                             ${_import_type} "${URL}"
                             GIT_TAG ${AUIB_IMPORT_VERSION}
                             GIT_PROGRESS TRUE # show progress of download
                             USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                            USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                            USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
                             ${SOURCE_BINARY_DIRS_ARG}
                     )
-
-                    FetchContent_MakeAvailable(${AUI_MODULE_NAME}_FC)
-
 
                     FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
                             BINARY_DIR DEP_BINARY_DIR
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                endif()
+                endif ()
             endif()
         endif()
 
@@ -1078,11 +1075,13 @@ macro(auib_use_system_libs_end)
     get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
 
     # find the new targets by excluding _imported_targets_before from _imported_targets_after
-    list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
+    if (${_imported_targets_before})
+        list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
 
-    foreach (_t ${_imported_targets_after})
-        set_target_properties(${_t} PROPERTIES INTERFACE_AUIB_SYSTEM_LIB ON)
-    endforeach()
+        foreach (_t ${_imported_targets_after})
+            set_target_properties(${_t} PROPERTIES INTERFACE_AUIB_SYSTEM_LIB ON)
+        endforeach()
+    endif()
 
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
