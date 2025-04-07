@@ -506,17 +506,22 @@ Introducing additional building layer literally multiplies the building complexi
 already introduce such a layer (called Gradle). For example, if we were using [Conan](https://conan.io/), Android
 building process would have 4 layers: Gradle, CMake, Conan, CMake (yes, 2 CMake layers).
 
-AUI Boot (and [CPM](https://github.com/cpm-cmake/CPM.cmake)) require CMake only and don't involve extra runtime.
+AUI Boot (and [CPM](https://github.com/cpm-cmake/CPM.cmake)) require CMake only and don't involve extra runtime. Build
+should be easily reproducible, i.e., invocation of CMake (`cmake -S . -B build`) is sufficient to set up a dev
+environment. No additional tinkering (i.e, downloading and installing external tools or libraries, passing them to
+the build) is required, with an exception to application's domain (for example, auth/API keys).
 
 That being said, let's overview alternatives:
 
 - [CPM](https://github.com/cpm-cmake/CPM.cmake) (CMake's missing package manager) - almost perfectly suits our needs but
   lacks precompiled packages support which renders painful to some of our users.
-- [vcpkg](https://github.com/microsoft/vcpkg) - external and maintained by Microsoft.
+- [vcpkg](https://github.com/microsoft/vcpkg) - external and maintained by Microsoft. Requires additional setup and
+  overwriting `CMAKE_TOOLCHAIN_FILE`. In case of Android, additional tinkering with Gradle script is required.
 - [conan](https://conan.io/) - external, requires Python runtime and knowledge. Using Conan leads to 3 browser tabs
-  always opened: Python docs, Conan docs and CMake docs. Pushes Artifactory which is a paid self-hosted solution but
-  thanks to that offers free large repository of precompiled packages. Conan is slowly becoming a de facto standard for
-  C++ so we're looking forward for adding conan support (without dropping AUI Boot).
+  always opened: Python docs, Conan docs and CMake docs. In case of Android, additional tinkering with Gradle script is
+  required. Pushes Artifactory which is a paid self-hosted solution but thanks to that offers free large repository of
+  precompiled packages. Conan is slowly becoming a de facto standard for C++ so we're looking forward for adding conan
+  support (without dropping AUI Boot).
 - CMake's FindPackage/FetchContent/ExternalProject - limited, involve a lot of boilerplate, can't be tweaked from
   configure-time variables, lack precompiled binaries.
 
