@@ -16,6 +16,8 @@
 #include <AUI/Platform/AWindow.h>
 #include "AUIView.h"
 
+static constexpr auto LOG_TAG = "AUIView";
+
 glm::ivec2 pos(AWindow* window, NSEvent* event) {
     float s = window->getDpiRatio();
     const NSPoint pos = [event locationInWindow];
@@ -40,6 +42,7 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (AUIView*)initWithWindow:(AWindow*)window {
+    ALOG_DEBUG(LOG_TAG) << "initWithWindow";
     [super init];
     mAWindow = window;
     
@@ -47,59 +50,70 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (BOOL)isOpaque {
+    ALOG_DEBUG(LOG_TAG) << "isOpaque";
     return YES;
 }
 
 - (BOOL)canBecomeKeyView {
+    ALOG_DEBUG(LOG_TAG) << "canBecomeKeyView";
     return YES;
 }
 
 - (BOOL)acceptsFirstResponder {
+    ALOG_DEBUG(LOG_TAG) << "acceptsFirstResponder";
     return YES;
 }
 
 - (BOOL)becomeFirstResponder {
+    ALOG_DEBUG(LOG_TAG) << "becomeFirstResponder";
     return YES;
 }
 
 - (BOOL)resignFirstResponder {
+    ALOG_DEBUG(LOG_TAG) << "resignFirstResponder";
     return YES;
 }
 
 - (void)insertText:(id)string replacementRange:(NSRange)replacementRange {
-    printf("\n");
+    ALOG_DEBUG(LOG_TAG) << "insertTex";
 }
 
 - (void)doCommandBySelector:(SEL)selector {
+    ALOG_DEBUG(LOG_TAG) << "doCommandBySelector";
     printf("\n");
 }
 
 - (void)setMarkedText:(id)string selectedRange:(NSRange)selectedRange replacementRange:(NSRange)replacementRange {
-    printf("\n");
-
+    ALOG_DEBUG(LOG_TAG) << "setMarkedText";
 }
 
 - (void)unmarkText {
+    ALOG_DEBUG(LOG_TAG) << "unmarkText";
     printf("\n");
 }
 
 - (NSRange)selectedRange {
+    ALOG_DEBUG(LOG_TAG) << "selectedRange";
     return NSMakeRange(0, 0);
 }
 
 - (NSRange)markedRange {
+    ALOG_DEBUG(LOG_TAG) << "markedRange";
     return NSMakeRange(0, 0);
 }
 
 - (BOOL)hasMarkedText {
+    ALOG_DEBUG(LOG_TAG) << "hasMarkedText";
     return NO;
 }
 
 - (nullable NSAttributedString *)attributedSubstringForProposedRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
+    ALOG_DEBUG(LOG_TAG) << "attributedSubstringForProposedRange";
     return nil;
 }
 
 - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText {
+    ALOG_DEBUG(LOG_TAG) << "validAttributesForMarkedText";
     // This code is just copied from WebKit except renaming variables.
     static NSArray* const kAttributes = @[
       NSUnderlineStyleAttributeName, NSUnderlineColorAttributeName,
@@ -109,15 +123,18 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
+    ALOG_DEBUG(LOG_TAG) << "firstRectForCharacterRange";
     return NSMakeRect(0, 0, 0, 0);
 }
 
 - (NSUInteger)characterIndexForPoint:(NSPoint)point {
+    ALOG_DEBUG(LOG_TAG) << "characterIndexForPoint";
     return 0;
 }
 
 - (void)keyDown:(NSEvent *)event
 {
+    ALOG_DEBUG(LOG_TAG) << "keyDown";
 //    [super keyDown:event];
     printf("\n");
     
@@ -128,7 +145,8 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 
 - (void)keyUp:(NSEvent *)event
 {
-    
+    ALOG_DEBUG(LOG_TAG) << "keyUp";
+
 }
 
 - (void)mouseMoved:(NSEvent *)event {
