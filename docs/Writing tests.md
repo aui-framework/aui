@@ -27,7 +27,7 @@ the following contents:
 In order to enable tests for your project, call `aui_enable_tests(<target-name>)` in the end of your `CMakeLists.txt`
 and create `tests/` dir along with `src/` and `CMakeLists.txt`. Place your test suites inside the `tests/` directory.
 
-# Example
+# Usage Example
 
 Suppose we want to test the `sum` function of the following program:
 

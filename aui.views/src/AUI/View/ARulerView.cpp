@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -26,6 +26,8 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
             break;
         case ALayoutDirection::HORIZONTAL:
             setExpanding({2, 0});
+        case ALayoutDirection::NONE:
+            break;
     }
 }
 
@@ -97,6 +99,8 @@ int ARulerView::getLongestSide() const {
             return getHeight();
         case ALayoutDirection::HORIZONTAL:
             return getWidth();
+        case ALayoutDirection::NONE:
+            break;
     }
     return -1;
 }
@@ -106,6 +110,8 @@ int ARulerView::getShortestSide() const {
             return getWidth();
         case ALayoutDirection::HORIZONTAL:
             return getHeight();
+        case ALayoutDirection::NONE:
+            break;
     }
     return -1;
 }

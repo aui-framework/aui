@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,12 +18,13 @@ public:
     /**
      * @brief Wraps <code>view</code> with <code>root</code> using <code>Stacked</code> layout and expanding.
      * @details Used when usage of AViewContainer::setContents is not possible (see AViewContainer::setContents)
-     *
      * @param root container to wrap with
      * @param view view to be wrapped
-     * @note Clears contents of <code>root</code>.
-     * @note Stolen from Android.
-     * @return <code>root</code>
+     * @note
+     * Clears contents of <code>root</code>.
+     *
+     * @note
+     * Stolen from Android.
      */
     static void inflate(aui::no_escape<AViewContainer> root, const _<AView>& view);
 };

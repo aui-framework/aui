@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <AUI/Platform/ACursor.h>
+#include <AUI/Platform/ACursor.h> // defined here
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
 

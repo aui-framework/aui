@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -42,6 +42,7 @@
 #include <Command/Css2ass.h>
 #include <Command/PackManual.h>
 #include <Command/Svg2ico.h>
+#include <Command/ConvertImage.h>
 
 #include "Toolbox.h"
 #include "Command/Svg2png.h"
@@ -62,6 +63,7 @@ Toolbox::Toolbox() {
     registerCommand<Svg2png>();
     registerCommand<Svg2ico>();
     registerCommand<Auisl>();
+    registerCommand<ConvertImage>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -16,7 +16,7 @@
 #pragma once
 
 #include "IProperty.h"
-#include <AUI/Render/FontRendering.h>
+#include <AUI/Render/FontRendering.h> // defined here
 
 namespace ass {
     namespace prop {

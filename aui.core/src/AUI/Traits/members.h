@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -13,58 +13,12 @@
 
 #include <algorithm>
 #include <tuple>
+#include <AUI/Reflect/members.h>
 
 namespace aui {
+    /**
+     * @experimental
+     */
     template<typename Type>
-    struct member;
-
-    template<typename Type, typename Clazz>
-    struct member<Type(Clazz::*)> {
-        using type = Type;
-        using clazz = Clazz;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) const> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...)> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) noexcept> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
-
-    template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...) const noexcept> {
-        using return_t = Type;
-        using clazz = Clazz;
-        /**
-         * @brief Argument types.
-         * @see aui::tuple_visitor
-         */
-        using args = std::tuple<Args...>;
-    };
+    using member [[deprecated("aui::member moved to aui::reflect::member")]] = aui::reflect::member<Type>;
 }

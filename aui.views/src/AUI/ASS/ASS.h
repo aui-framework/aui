@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -21,10 +21,10 @@
  * @brief CSS-like styling system
  * @details
  * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
- * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_property "properties".
- * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not. Selector
- * is the first statement in a rule and further statements are @ref ass_property "style properties".
- * @ref ass_property "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * of rules. A rule consists of a @ref ass_selectors and a list of @ref ass_properties . Selector is a basic matcher
+ * that determines whether apply a rule to the specific @ref AView "view" or not. Selector is the first statement in a
+ * rule and further statements are @ref ass_properties "style properties".
+ * @ref ass_properties "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
@@ -147,7 +147,7 @@
  * # Selectors
  * As said earlier, first statement in a rule is selector. Here's some examples.
  *
- * ### Select all ALabel's
+ * ## Select all ALabels
  * @code{cpp}
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -159,7 +159,7 @@
  * });
  * @endcode
  *
- * ### Select all ASS name
+ * ## Select all ASS name
  * @code{cpp}
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -179,7 +179,7 @@
  * });
  * @endcode
  *
- * ### Select all ALabel's or AButton's
+ * ## Select all ALabel's or AButton's
  * @code{cpp}
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -191,7 +191,7 @@
  * });
  * @endcode
  *
- * ### Select all labels with ASS name
+ * ## Select all labels with ASS name
  * @code{cpp}
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -208,7 +208,7 @@
  * });
  * @endcode
  *
- * ### Select indirect child
+ * ## Select indirect child
  * @code{cpp}
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -230,7 +230,7 @@
  * });
  * @endcode
  *
- * ### Select direct child
+ * ## Select direct child
  * Works faster than selecting indirect child
  * @code{cpp}
  * using namespace ass;
@@ -258,7 +258,7 @@
  * other selectors don't replace previous rules entirely. Instead, they extend existing rules. However, same properties
  * are replaced.
  *
- * ### Hover sub selector
+ * ## Hover sub selector
  * Hovered view is a view below mouse cursor.
  * @code{cpp}
  * using namespace ass;
@@ -271,7 +271,7 @@
  * });
  * @endcode
  *
- * ### Active sub selector
+ * ## Active sub selector
  * Active view is a pressed view.
  * @code{cpp}
  * using namespace ass;
@@ -283,7 +283,7 @@
  * });
  * @endcode
  *
- * ### Focus sub selector
+ * ## Focus sub selector
  * Focused view is a view that was clicked and currently receiving keyboard input.
  * @code{cpp}
  * using namespace ass;
@@ -296,7 +296,7 @@
  * });
  * @endcode
  *
- * ### Disabled sub selector
+ * ## Disabled sub selector
  * Disabled view is a view with AView::setEnabled(false) thus not able to change it's state.
  * @code{cpp}
  * using namespace ass;
@@ -309,11 +309,31 @@
  * });
  * @endcode
  *
+ * # Box Model (Padding, Margin)
+ *
+ * See @ref "docs/ASS Box Model.md".
+ *
+ * # ASS Refenence
  * See below for declarations and selectors.
  *
  */
 
+/**
+ * @defgroup ass_selectors ASS selectors
+ * @ingroup ass
+ * @details
+ * AUI Style Sheets selector is a predicate whether view suit certain rules or not.
+ */
+
+/**
+* @defgroup ass_properties ASS properties
+* @ingroup ass
+* @details
+* AUI Style Sheets property customizes view's appearance and behavior.
+*/
+
 // Declarations
+#include "Property/Backdrop.h"
 #include "Property/BackgroundImage.h"
 #include "Property/BackgroundSolid.h"
 #include "Property/BackgroundGradient.h"
@@ -327,6 +347,7 @@
 #include "Property/BoxShadow.h"
 #include "Property/BoxShadowInner.h"
 #include "Property/Cursor.h"
+#include "Property/CustomProperty.h"
 #include "Property/Expanding.h"
 #include "Property/FixedSize.h"
 #include "Property/Float.h"
@@ -363,6 +384,7 @@
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
 #include "Selector/AndSelector.h"
+#include "Selector/NotSelector.h"
 #include "Selector/type_of.h"
 #include "Selector/activated.h"
 #include "Selector/disabled.h"

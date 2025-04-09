@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -72,7 +72,7 @@ namespace aui::enumerate {
 
 /**
  * @brief Enum trait to transform enum to name, name to enum, list all enums and vise versa.
- * @ingroup core
+ * @ingroup reflection
  * @see AUI_ENUM_VALUES
  */
 template<typename enum_t>
@@ -173,7 +173,7 @@ namespace aui::enumerate {
      * @see AUI_ENUM_VALUES
      */
     template<typename enum_t> requires aui::is_complete<AEnumerateAllValues<enum_t>>
-    inline constexpr auto ALL_VALUES = []<enum_t... values>(typename AEnumerate<enum_t>::template Values<values...>) {
+    inline constexpr auto ALL_VALUES = []<auto... values>(typename AEnumerate<enum_t>::template Values<values...>) {
         constexpr enum_t ITEMS[] = {values...};
         return std::to_array(ITEMS);
     }(AEnumerateAllValues<enum_t>::get());
@@ -189,6 +189,21 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
 
 /**
  * @brief Defines all enum values for AEnumerate.
+ * @ingroup useful_macros
+ * @details
+ * Defines all enum values to by used by AEnumerate.
+ * @code{cpp}
+ * enum class ATextOverflow {
+ *     NONE,
+ *     ELLIPSIS,
+ *     CLIP
+ * };
+ * AUI_ENUM_VALUES(ATextOverflow,
+ *                 ATextOverflow::ELLIPSIS,
+ *                 ATextOverflow::CLIP)
+ *
+ * // AEnumerate<ATextOverflow>::toName(ATextOverflow::CLIP) -> "CLIP"
+ * @endcode
  */
 #define AUI_ENUM_VALUES(enum_t, ...) template<> \
 struct AEnumerateAllValues<enum_t>{         \
@@ -205,8 +220,10 @@ template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_co
     }
 };
 
-
-
+/**
+ * @brief Make a bitfield-style enum class.
+ * @ingroup core
+ */
 #define AUI_ENUM_FLAG(name) enum class name: int; \
                             constexpr inline name operator|(name a, name b) {return static_cast<name>(static_cast<int>(a) | static_cast<int>(b));} \
                             constexpr inline name operator&(name a, name b) {return static_cast<name>(static_cast<int>(a) & static_cast<int>(b));} \

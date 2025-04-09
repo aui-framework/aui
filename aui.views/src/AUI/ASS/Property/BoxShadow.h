@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -23,8 +23,10 @@ namespace ass {
 
     /**
      * @brief Represents box shadow.
-     * @ingroup ass.
-     * @note Unlike CSS, box shadow is not affected by BorderRadius.
+     * @ingroup ass_properties
+     * @details
+     * @note
+     * Unlike CSS, box shadow is not affected by BorderRadius.
      */
     struct BoxShadow {
         AMetric offsetX;

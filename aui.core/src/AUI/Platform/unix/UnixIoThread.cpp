@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -33,12 +33,12 @@ UnixIoThread& UnixIoThread::inst() noexcept {
 #include <AUI/Platform/ErrorToException.h>
 
 
-class MyEventLoop: public IEventLoop {
+class UnixIoEventLoop: public IEventLoop {
 public:
-    MyEventLoop(UnixIoThread& parent) : mParent(parent) {
+    UnixIoEventLoop(UnixIoThread& parent) : mParent(parent) {
     }
 
-    ~MyEventLoop() override {
+    ~UnixIoEventLoop() override {
 
     }
 
@@ -100,7 +100,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
 
 UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     AThread::setName("AUI IO");
-    MyEventLoop loop(*this);
+    UnixIoEventLoop loop(*this);
     IEventLoop::Handle handle(&loop);
     AThread::current()->getCurrentEventLoop()->loop();
 })), mEpollFd(epoll_create1(0)) {
@@ -118,11 +118,11 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
 
 #else
 
-class MyEventLoop: public IEventLoop {
+class UnixIoEventLoop: public IEventLoop {
 public:
-    MyEventLoop(UnixIoThread& parent) : mParent(parent) {}
+    UnixIoEventLoop(UnixIoThread& parent) : mParent(parent) {}
 
-    ~MyEventLoop() override {
+    ~UnixIoEventLoop() override {
 
     }
 
@@ -189,7 +189,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
 
 UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     AThread::setName("AUI IO");
-    MyEventLoop loop(*this);
+    UnixIoEventLoop loop(*this);
     IEventLoop::Handle handle(&loop);
     AThread::current()->getCurrentEventLoop()->loop();
 })) {

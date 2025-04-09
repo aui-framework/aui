@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -14,32 +14,37 @@
 #include "ASignal.h"
 #include "AUI/Util/AScheduler.h"
 
-
 /**
  * @brief Async timer.
  * @ingroup core
  */
-class API_AUI_CORE ATimer: public AObject
-{
+class API_AUI_CORE ATimer : public AObject {
 private:
-	std::chrono::milliseconds mPeriod;
+    std::chrono::milliseconds mPeriod;
 
     AOptional<AScheduler::TimerHandle> mTimer;
 
     static _<AThread>& timerThread();
 
 public:
-	explicit ATimer(std::chrono::milliseconds period);
-	~ATimer();
-	
-	void restart();
+    explicit ATimer(std::chrono::milliseconds period);
+    ~ATimer();
 
-	void start();
-	void stop();
-	bool isStarted();
+    void restart();
+
+    void start();
+    void stop();
+    bool isStarted();
+    void setRunning(bool isStart) {
+      if (isStart) {
+        start();
+      } else {
+        stop();
+      }
+    }
 
     static AScheduler& scheduler();
 
 signals:
-	emits<> fired;
+    emits<> fired;
 };

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,7 +15,19 @@
 #include <Windows.h>
 
 namespace aui::win32 {
+    /**
+     * @brief HICON to AImage.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
     API_AUI_VIEWS AImage iconToImage(HICON hIcon);
+
+    /**
+     * @brief HBITMAP to AImage.
+     * @ingroup core
+     * @exclusivefor{windows}
+     */
     API_AUI_VIEWS AImage bitmapToImage(HBITMAP hbitmap);
 
 

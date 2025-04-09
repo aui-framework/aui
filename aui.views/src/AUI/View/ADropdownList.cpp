@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -37,14 +37,18 @@ ADropdownList::ADropdownList() {
 
 void ADropdownList::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
+    mSelectionId = -1;
     setSelectionId(0);
 
-    connect(model->dataInserted, &ADropdownList::updateText);
-    connect(model->dataRemoved,  &ADropdownList::updateText);
-    connect(model->dataChanged,  &ADropdownList::updateText);
+    connect(model->dataInserted, me::updateText);
+    connect(model->dataRemoved,  me::updateText);
+    connect(model->dataChanged,  me::updateText);
 }
 
 void ADropdownList::setSelectionId(int id) {
+    if (mSelectionId == id) {
+        return;
+    }
     mSelectionId = id;
     if (mModel->listSize() > id) {
         updateText();

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -14,7 +14,7 @@
 #include <AUI/IO/IOutputStream.h>
 #include "Pipe.h"
 
-class PipeOutputStream: public IOutputStream {
+class [[deprecated("use Pipe directly")]] PipeOutputStream: public IOutputStream {
 public:
     explicit PipeOutputStream(Pipe pipe);
     ~PipeOutputStream();

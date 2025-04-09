@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -20,6 +20,7 @@
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Render/ABorderStyle.h"
+#include "AUI/ASS/Property/Backdrop.h"
 #include "AUI/Util/AMetric.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
@@ -403,6 +404,8 @@ public:
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
+     * @param begin begin angle of the sector
+     * @param end end angle of the sector
      * @details
      * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
      */
@@ -422,7 +425,7 @@ public:
     }
 
     /**
-     * @bruef Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
+     * @brief Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
      * by the previous color.
      * @param color color
      */
@@ -569,6 +572,16 @@ public:
         return mAllowRenderToTexture;
     }
 
+    /**
+     * @brief Draws rectangular backdrop effects.
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param backdrops array of backdrop effects. Impl might apply optimizations on using several effects at once.
+     * @details
+     * Implementation might draw stub (i.e., gray rectangle) instead of drawing complex backdrop effects.
+     */
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
+
 protected:
     AColor mColor;
     glm::mat4 mTransform;
@@ -577,6 +590,15 @@ protected:
     uint8_t mStencilDepth = 0;
 
     virtual _unique<ITexture> createNewTexture() = 0;
+
+    /**
+     * @brief Draws stub (i.e., gray rectangle)
+     * @details
+     * This can be used if implementation does not support or can't draw complex effects (i.e., blur)
+     */
+    void stub(glm::vec2 position, glm::vec2 size);
+
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops);
 
 private:
     bool mAllowRenderToTexture = false;

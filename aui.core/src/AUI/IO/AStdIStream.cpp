@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -25,4 +25,8 @@ int AStdIStream::StreamBuf::underflow() {
     if (r == 0) return std::basic_ios<char>::traits_type::eof();
     setg(mBuffer, mBuffer, mBuffer + r);
     return std::basic_ios<char>::traits_type::to_int_type(*gptr());
+}
+
+AStdIStream::AStdIStream(_<IInputStream> is) : std::istream(new StreamBuf(std::move(is))) {
+
 }

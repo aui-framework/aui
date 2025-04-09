@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -258,7 +258,7 @@ public:
 
     /**
      * @brief Does the INSERT query to DB.
-     * @param args... column names
+     * @param args column names
      * @return helper object for adding rows
      */
     template<typename... Args>
@@ -280,7 +280,7 @@ public:
 
     /**
      * @brief Does the SELECT query to DB.
-     * @param args... column names
+     * @param args column names
      * @return helper object for retrieving rows
      */
     template<typename... Args>

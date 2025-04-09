@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -13,6 +13,10 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/ErrorToException.h"
+
+#if AUI_PLATFORM_WIN
+#include <share.h>
+#endif
 
 AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path)), mFile(nullptr)
 {

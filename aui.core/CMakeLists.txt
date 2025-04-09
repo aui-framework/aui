@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
 option(AUI_COROUTINES "Use C++20 coroutines" OFF)
+option(AUI_ENABLE_ASAN "Enable AddressSanitizer" OFF)
+option(AUI_ENABLE_DEATH_TESTS "Enable GTest death tests" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
@@ -88,7 +90,7 @@ elseif(_use_unwind)
     message(STATUS "Stacktrace backend: unwind")
     target_compile_definitions(aui.core PRIVATE AUI_USE_UNWIND=1)
 elseif(WIN32)
-    aui_link(aui.core PRIVATE dbghelp)
+    aui_link(aui.core PRIVATE dbghelp shlwapi.lib)
     message(STATUS "Stacktrace backend: dbghelp")
 else()
     message(STATUS "Stacktrace backend: none")
@@ -109,6 +111,7 @@ if (ANDROID)
 endif()
 
 aui_link(aui.core PRIVATE ZLIB::ZLIB)
+add_subdirectory(3rdparty/minizip)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN
@@ -132,12 +135,18 @@ foreach(_var AUI_PLATFORM_WIN
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
 
+if (AUI_ENABLE_DEATH_TESTS)
+    target_compile_definitions(aui.core PUBLIC AUI_ENABLE_DEATH_TESTS=1)
+else()
+    target_compile_definitions(aui.core PUBLIC AUI_ENABLE_DEATH_TESTS=0)
+endif()
 
 if (AUI_SHARED_PTR_FIND_INSTANCES)
     target_compile_definitions(aui.core PUBLIC AUI_SHARED_PTR_FIND_INSTANCES=1)
 endif()
 
 
+# [auib_import examples]
 auib_import(fmt https://github.com/fmtlib/fmt
             VERSION 9.1.0
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
@@ -145,6 +154,7 @@ auib_import(fmt https://github.com/fmtlib/fmt
 auib_import(range-v3 https://github.com/ericniebler/range-v3
         VERSION 0.12.0
         CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
+# [auib_import examples]
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
@@ -154,3 +164,12 @@ if (NOT MSVC AND AUI_CATCH_UNHANDLED)
         target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
     endif()
 endif()
+
+if (AUI_ENABLE_ASAN)
+    message(STATUS "AUI_ENABLE_ASAN=${AUI_ENABLE_ASAN}")
+    target_compile_options(aui.core PUBLIC -fsanitize=address)
+    target_link_options(aui.core PUBLIC -fsanitize=address)
+endif()
+
+# uncomment this to debug concepts
+# target_compile_options(aui.core PUBLIC -fconcepts-diagnostics-depth=5)

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -330,6 +330,7 @@ TEST_F(UITextArea, EraseFuzzy) {
 TEST_F(UITextArea, CursorPosDel) {
     const std::string_view SAMPLE = " aui  framework   ";
     mTextArea->setText(SAMPLE);
+    mTextArea->setSelection(0);
     for (unsigned i = 0; i <= SAMPLE.length(); ++i) {
         uitest::frame();
         EXPECT_EQ(mTextArea->getCursorPosition(), glm::ivec2{0}) << "(del count: " << i << ")";

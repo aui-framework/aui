@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -13,7 +13,7 @@
 
 // Code from several projects used here, such as boost and gtest.
 
-//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-usage)
+//NOLINTBEGIN(modernize-*,cppcoreguidelines-macro-*)
 
 /**
  * @brief Expands and concatenates the arguments. Constructed macros reevaluate.
@@ -48,14 +48,16 @@
 /**
  * @brief Evaluates to the number of arguments after expansion.
  * @details
- *   #define PAIR x, y
+ * @code{cpp}
+ * #define PAIR x, y
  *
- *   AUI_PP_NARG() => 1
- *   AUI_PP_NARG(x) => 1
- *   AUI_PP_NARG(x, y) => 2
- *   AUI_PP_NARG(PAIR) => 2
+ * AUI_PP_NARG() => 1
+ * AUI_PP_NARG(x) => 1
+ * AUI_PP_NARG(x, y) => 2
+ * AUI_PP_NARG(PAIR) => 2
+ * @endcode
  *
- *   Requires: the number of arguments after expansion is at most 15.
+ * Requires: the number of arguments after expansion is at most 15.
  * @ingroup useful_macros
  */
 #define AUI_PP_NARG(...) \
@@ -96,29 +98,29 @@
 /**
  * @brief If the arguments after expansion have no tokens, evaluates to `1`. Otherwise evaluates to `0`.
  * @details
- * Requires: * the number of arguments after expansion is at most 15.
- *           * If the argument is a macro, it must be able to be called with one
- *             argument.
+ * Requires:
+ * - the number of arguments after expansion is at most 15.
+ * - If the argument is a macro, it must be able to be called with one argument.
  *
- * Implementation details:
+ * ### Implementation details
  *
  * There is one case when it generates a compile error: if the argument is macro
  * that cannot be called with one argument.
  *
- *   #define M(a, b)  // it doesn't matter what it expands to
+ * @code{cpp}
+ * #define M(a, b)  // it doesn't matter what it expands to
  *
- *   // Expected: expands to `0`.
- *   // Actual: compile error.
- *   AUI_PP_IS_EMPTY(M)
+ * // Expected: expands to `0`.
+ * // Actual: compile error.
+ * AUI_PP_IS_EMPTY(M)
+ * @endcode
  *
  * There are 4 cases tested:
  *
- * * __VA_ARGS__ possible expansion has no unparen'd commas. Expected 0.
- * * __VA_ARGS__ possible expansion is not enclosed in parenthesis. Expected 0.
- * * __VA_ARGS__ possible expansion is not a macro that ()-evaluates to a comma.
- *   Expected 0
- * * __VA_ARGS__ is empty, or has unparen'd commas, or is enclosed in
- *   parenthesis, or is a macro that ()-evaluates to comma. Expected 1.
+ * - `__VA_ARGS__` possible expansion has no unparen'd commas. Expected 0.
+ * - `__VA_ARGS__` possible expansion is not enclosed in parenthesis. Expected 0.
+ * - `__VA_ARGS__` possible expansion is not a macro that ()-evaluates to a comma. Expected 0
+ * - `__VA_ARGS__` is empty, or has unparen'd commas, or is enclosed in parenthesis, or is a macro that ()-evaluates to comma. Expected 1.
  *
  * We trigger detection on '0001', i.e. on empty.
  * @ingroup useful_macros
@@ -139,8 +141,10 @@
 /**
  * @brief Similar to AUI_PP_IF but takes _Then and _Else in parentheses.
  * @details
+ * @code{cpp}
  * AUI_PP_GENERIC_IF(1, (a, b, c), (d, e, f)) => a, b, c
  * AUI_PP_GENERIC_IF(0, (a, b, c), (d, e, f)) => d, e, f
+ * @endcode
  * @ingroup useful_macros
  */
 #define AUI_PP_GENERIC_IF(_Cond, _Then, _Else) \
@@ -149,15 +153,18 @@
 /**
  * @brief Evaluates to the number of arguments after expansion. Identifies 'empty' as 0.
  * @details
- *   #define PAIR x, y
+ * @code{cpp}
+ * #define PAIR x, y
  *
- *   AUI_PP_NARG0() => 0
- *   AUI_PP_NARG0(x) => 1
- *   AUI_PP_NARG0(x, y) => 2
- *   AUI_PP_NARG0(PAIR) => 2
+ * AUI_PP_NARG0() => 0
+ * AUI_PP_NARG0(x) => 1
+ * AUI_PP_NARG0(x, y) => 2
+ * AUI_PP_NARG0(PAIR) => 2
+ * @endcode
  *
- * Requires: * the number of arguments after expansion is at most 15.
- *           * If the argument is a macro, it must be able to be called with one argument.
+ * Requires:
+ * - the number of arguments after expansion is at most 15.
+ * - If the argument is a macro, it must be able to be called with one argument.
  * @ingroup useful_macros
  */
 #define AUI_PP_NARG0(...) \
@@ -188,8 +195,9 @@
 /**
  * @brief Expands to _Macro(0, _Data, e1) _Macro(1, _Data, e2) ... _Macro(K -1, _Data, eK) as many of AUI_INTERNAL_NARG0 _Tuple.
  * @details
- * Requires: * |_Macro| can be called with 3 arguments.
- *           * |_Tuple| expansion has no more than 15 elements.
+ * Requires:
+ * - `_Macro` can be called with 3 arguments.
+ * - `_Tuple` expansion has no more than 15 elements.
  * @ingroup useful_macros
  */
 #define AUI_PP_FOR_EACH(_Macro, _Data, _Tuple)                        \
@@ -199,9 +207,10 @@
 /**
  * @brief Expands to _Macro(0, _Data, ) _Macro(1, _Data, ) ... _Macro(K - 1, _Data, )
  * @details
- * Empty if _K = 0.
- * Requires: * |_Macro| can be called with 3 arguments.
- *           * |_K| literal between 0 and 15
+ * Empty if `_K = 0`.
+ * Requires:
+ * - `_Macro` can be called with 3 arguments.
+ * - `_K` literal between 0 and 15.
  * @ingroup useful_macros
  */
 #define AUI_PP_REPEAT(_Macro, _Data, _N)           \
@@ -215,7 +224,7 @@
 #define AUI_PP_INC(_i) AUI_PP_CAT(AUI_PP_INTERNAL_INC_, _i)
 
 /**
- * @brief Returns comma if _i != 0. Requires _i to be between 0 and 15.
+ * @brief Returns comma if `_i != 0`. Requires `_i` to be between 0 and 15.
  * @ingroup useful_macros
  */
 #define AUI_PP_COMMA_IF(_i) AUI_PP_CAT(AUI_PP_INTERNAL_COMMA_IF_, _i)
@@ -351,4 +360,4 @@
   AUI_PP_INTERNAL_FOR_EACH_IMPL_14(AUI_PP_INC(_i), _Macro, _Data,   \
                                      (AUI_PP_TAIL _Tuple))
 
-//NOLINTEND(modernize-*,cppcoreguidelines-macro-usage)
+//NOLINTEND(modernize-*,cppcoreguidelines-macro-*)

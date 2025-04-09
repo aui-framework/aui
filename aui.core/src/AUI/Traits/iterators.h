@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -33,16 +33,16 @@ namespace aui {
     template <typename T>
     struct reverse_iterator_wrap {
     private:
-        const T& mIterable;
+        const T* mIterable;
 
     public:
-        reverse_iterator_wrap(const T& mIterable) : mIterable(mIterable) {}
+        explicit reverse_iterator_wrap(const T& mIterable) : mIterable(&mIterable) {}
 
         auto begin() {
-            return mIterable.rbegin();
+            return mIterable->rbegin();
         }
         auto end() {
-            return mIterable.rend();
+            return mIterable->rend();
         }
     };
 
@@ -55,7 +55,9 @@ namespace aui {
         constexpr range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
 
         constexpr ~range() {
-            AUI_NO_OPTIMIZE_OUT(range::size)
+            if constexpr (requires { std::distance(mBegin, mEnd); }) {
+                AUI_NO_OPTIMIZE_OUT(range::size)
+            }
         }
 
         template<typename Container>
@@ -75,7 +77,7 @@ namespace aui {
         }
 
         [[nodiscard]]
-        constexpr std::size_t size() const noexcept {
+        constexpr std::size_t size() const noexcept requires requires { std::distance(mBegin, mEnd); }  {
             return std::distance(mBegin, mEnd);
         }
 
@@ -219,17 +221,13 @@ namespace aui {
      */
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->
-        std::enable_if_t<!impl::is_forward_iterator<Iterator>,
-                         decltype((iterator + 1).base())
-                         > {
+        decltype((iterator + 1).base()) requires (!impl::is_forward_iterator<Iterator>) {
         return (iterator + 1).base();
     }
 
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->
-        std::enable_if_t<impl::is_forward_iterator<Iterator>,
-                         decltype(std::make_reverse_iterator(std::declval<Iterator>()))
-                         > {
+        decltype(std::make_reverse_iterator(std::declval<Iterator>())) requires (impl::is_forward_iterator<Iterator>) {
 
         return std::make_reverse_iterator(iterator + 1);
     }

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -42,12 +42,6 @@ public:
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ARadioButton : public AViewContainerBase, public ass::ISelectable {
-private:
-    _<ALabel> mText;
-    bool mChecked = false;
-protected:
-    bool selectableIsSelectedImpl() override;
-
 public:
     ARadioButton();
     ARadioButton(const AString& text);
@@ -64,7 +58,17 @@ public:
     void setChecked(const bool checked) {
         mChecked = checked;
         emit customCssPropertyChanged();
-        emit ARadioButton::checked(checked);
+        emit ARadioButton::mCheckedChanged(checked);
+    }
+
+    [[nodiscard]]
+    auto checked() const {
+        return APropertyDef {
+            this,
+            &ARadioButton::mChecked,
+            &ARadioButton::setChecked,
+            mCheckedChanged,
+        };
     }
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -101,8 +105,13 @@ public:
         emits<int> selectionChanged;
     };
 
-signals:
-    emits<bool> checked;
+protected:
+    bool selectableIsSelectedImpl() override;
+
+private:
+    _<ALabel> mText;
+    bool mChecked = false;
+    emits<bool> mCheckedChanged;
 };
 
 namespace declarative {

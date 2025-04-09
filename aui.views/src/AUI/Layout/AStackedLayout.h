@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,11 +18,11 @@
  * @brief Places views in a stack (along z axis).
  * @ingroup layout_managers
  * @details
- * <dl>
- *   <dt><b>UI Builder</b></dt>
- *   <dd><code>Stacked</code></dd>
- *   <dd><code>Centered</code></dd>
- * </dl>
+ *
+ * |             |                               |
+ * |-------------|-------------------------------|
+ * | Declarative notation | `Stacked { }`<br/> `Centered { }` |
+ *
  * Stacked layout manager places views stacking them onto each other. If the @ref AView "view" is not expanding,
  * the @ref AView "view" is centered.
  *

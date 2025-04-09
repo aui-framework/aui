@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -49,24 +49,24 @@ public:
         /**
          * @brief View to highlight.
          */
-        _weak<AView> highlightView;
+        AProperty<_weak<AView>> highlightView;
 
         /**
          * @brief Highlight redraw requests.
          */
-        bool highlightRedrawRequests = false;
+        AProperty<bool> highlightRedrawRequests = false;
 
         /**
          * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
          * this frame. This effect may help to debug AView::redraw issues.
          */
-        bool renderToTextureDecay = false;
+        AProperty<bool> renderToTextureDecay = false;
 
         /**
          * @brief When set to true, the next time window's markMinContentSizeInvalid, debugger is invoked. Value is
          * reset to false.
          */
-        bool breakpointOnMarkMinContentSizeInvalid = false;
+        AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
     };
 
 
@@ -362,7 +362,7 @@ public:
     /**
      * @brief Get profiling settings (mutable).
      */
-    Profiling& profiling() {
+    aui::lazy<Profiling>& profiling() {
         return mProfiling;
     }
 
@@ -373,6 +373,7 @@ signals:
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
     emits<>            redrawn;
+    emits<>            layoutUpdateComplete;
 
     /**
      * @brief On touch screen keyboard show.
@@ -433,7 +434,7 @@ private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
-    Profiling mProfiling{};
+    aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
 
@@ -483,7 +484,7 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX((AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()), "this method should be used in ui thread only."); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() == AWindow::current()->getThread(), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -491,5 +492,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
 

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -22,7 +22,7 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
     gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
     gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");
-    gl::Program::Uniform PIXEL_TO_UV("SL_uniform_pixelToUv");
+    gl::Program::Uniform PIXEL_TO_UV("SL_uniform_pixel_to_uv");
     gl::Program::Uniform OUTER_SIZE("SL_uniform_outerSize");
     gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
     gl::Program::Uniform OUTER_TO_INNER("SL_uniform_outerToInner");
@@ -31,4 +31,5 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform M2("SL_uniform_m2");
     gl::Program::Uniform DIVIDER("SL_uniform_divider");
     gl::Program::Uniform THRESHOLD("SL_uniform_threshold");
+    gl::Program::Uniform KERNEL("SL_uniform_kernel");
 }

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -27,6 +27,8 @@
  * To perform word breaking, AText requires it's width to be fully defined (either by FixedSize, Expanding or MaxSize),
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
+ *
+ * @snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems
  */
 class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
 public:

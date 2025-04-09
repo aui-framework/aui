@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -67,11 +67,14 @@ public:
         return this->erase(begin, begin + 1);
     }
     iterator erase(iterator begin, iterator end) noexcept {
+        if (!this->dataRemoved.hasOutgoingConnections()) {
+            return mVector.erase(begin, end);
+        }
+
         auto range = this->range(AListModelIndex{size_t(begin - mVector.begin())},
                                  AListModelIndex{size_t(end   - mVector.begin())});
         auto it = mVector.erase(begin, end);
         emit this->dataRemoved(range);
-
         return it;
     }
 
@@ -84,15 +87,32 @@ public:
         insert(end(), std::forward<StoredType>(data));
     }
 
-    const_iterator insert(const_iterator at, StoredType data) {
-        at = mVector.insert(at, std::move(data));
-        emit this->dataInserted(this->range(AListModelIndex(at - begin()),
-                                            AListModelIndex(at - begin() + 1)));
-        return at;
+    auto insert(const_iterator at, StoredType data) -> decltype(mVector.insert(at, std::move(data))) {
+        auto result = mVector.insert(at, std::move(data));
+        if (!this->dataInserted.hasOutgoingConnections()) {
+            return result;
+        }
+        emit this->dataInserted(this->range(AListModelIndex(result - begin()),
+                                            AListModelIndex(result - begin() + 1)));
+        return result;
+    }
+
+    template<typename Iterator>
+    auto insert(const_iterator at, Iterator begin, Iterator end) -> decltype(mVector.insert(at, begin, end)) {
+        auto result = mVector.insert(at, begin, end);
+        if (!this->dataInserted.hasOutgoingConnections()) {
+            return result;
+        }
+        emit this->dataInserted(this->range(AListModelIndex(result - this->begin()),
+                                            AListModelIndex(result - this->begin() + std::distance(begin, end))));
+        return result;
     }
 
     void pop_back() noexcept {
         mVector.pop_back();
+        if (!this->dataRemoved.hasOutgoingConnections()) {
+            return;
+        }
         emit this->dataRemoved(this->range(AListModelIndex(mVector.size()    ),
                                            AListModelIndex(mVector.size() + 1)));
     }
@@ -113,7 +133,11 @@ public:
     StoredType listItemAt(const AListModelIndex& index) override {
         return mVector.at(index.getRow());
     }
+
     void invalidate(size_t index) {
+        if (!this->dataChanged.hasOutgoingConnections()) {
+            return;
+        }
         emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
     }
 
@@ -223,7 +247,7 @@ public:
      * @tparam V type that converts to T
      * @return a new AListModel
      */
-    template<typename V>
+    template<typename V = StoredType>
     static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
         auto list = _new<AListModel<StoredType>>();
         list->reserve(t.size());
@@ -240,7 +264,7 @@ public:
      * @tparam V type that converts to T
      * @return a new AListModel
      */
-    template<typename V>
+    template<typename V = StoredType>
     static _<AListModel<StoredType>> fromVector(AVector<V> t) {
         auto list = _new<AListModel<StoredType>>();
         list->mVector = std::move(t);
@@ -269,5 +293,15 @@ public:
     [[nodiscard]]
     const AVector<StoredType>& toVector() noexcept {
         return mVector;
+    }
+
+    [[nodiscard]]
+    bool operator==(const AListModel& rhs) const noexcept {
+        return mVector == rhs.mVector;
+    }
+
+    [[nodiscard]]
+    bool operator!=(const AListModel& rhs) const noexcept {
+        return mVector != rhs.mVector;
     }
 };

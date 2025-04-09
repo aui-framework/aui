@@ -26,10 +26,14 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 */
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("https://aui-framework.github.io/JetBrainsMono-Regular.woff2") format("woff2");
+}
 
 html {
     /* primary theme color. This will affect the entire websites color scheme: links, arrows, labels, ... */
-    --primary-color: #1779c4;
+    --primary-color: #1e94d5;
     --primary-dark-color: #335c80;
     --primary-light-color: #70b1e9;
 
@@ -61,7 +65,7 @@ html {
      * font-family-monospace: used for preformatted text in memtitle, code, fragments
      */
     --font-family: -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Oxygen,Ubuntu,Cantarell,Fira Sans,Droid Sans,Helvetica Neue,sans-serif;
-    --font-family-monospace: ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
+    --font-family-monospace: "JetBrains Mono", ui-monospace,SFMono-Regular,SF Mono,Menlo,Consolas,Liberation Mono,monospace;
 
     /* font sizes */
     --page-font-size: 15.6px;
@@ -70,9 +74,9 @@ html {
     --title-font-size: 22px;
 
     /* content text properties. These only affect the page content, not the navigation or any other ui elements */
-    --content-line-height: 27px;
+    --content-line-height: 1.5;
     /* The content is centered and constraint in it's width. To make the content fill the whole page, set the variable to auto.*/
-    --content-maxwidth: 1000px;
+    --content-maxwidth: 1300px;
 
     /* colors for various content boxes: @warning, @note, @deprecated @bug */
     --warning-color: #f8d1cc;
@@ -93,6 +97,8 @@ html {
     --invariant-color: #d8f1e3;
     --invariant-color-dark: #44b86f;
     --invariant-color-darker: #265532;
+
+    --index-even-item-bg-color: var(--page-background-color);
 
     /* blockquote colors */
     --blockquote-background: #f8f9fa;
@@ -317,7 +323,7 @@ p, div, table, dl {
 }
 
 a:link, a:visited, a:hover, a:focus, a:active {
-    color: var(--primary-color) !important;
+    color: var(--primary-color);
     font-weight: 500;
 }
 
@@ -918,23 +924,6 @@ html.dark-mode div.contents table iframe {
 h2.groupheader {
     border-bottom: 0px;
     color: var(--page-foreground-color);
-    box-shadow: 
-        100px 0 var(--page-background-color), 
-        -100px 0 var(--page-background-color),
-        100px 0.75px var(--separator-color),
-        -100px 0.75px var(--separator-color),
-        500px 0 var(--page-background-color), 
-        -500px 0 var(--page-background-color),
-        500px 0.75px var(--separator-color),
-        -500px 0.75px var(--separator-color),
-        1500px 0 var(--page-background-color),
-        -1500px 0 var(--page-background-color), 
-        1500px 0.75px var(--separator-color),
-        -1500px 0.75px var(--separator-color),
-        2000px 0 var(--page-background-color),
-        -2000px 0 var(--page-background-color),
-        2000px 0.75px var(--separator-color),
-        -2000px 0.75px var(--separator-color);
 }
 
 blockquote {
@@ -1063,7 +1052,7 @@ code {
     display: inline;
     background: var(--code-background);
     color: var(--code-foreground);
-    padding: 2px 6px;
+    padding: 1px 4px;
     word-break: break-word;
 }
 
@@ -1076,6 +1065,10 @@ div.fragment, pre.fragment {
 }
 
 @media screen and (max-width: 767px) {
+    code {
+        padding: 0 2px;
+    }
+
     div.fragment, pre.fragment {
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
@@ -2131,4 +2124,8 @@ a.anchorlink:hover {
 
 h2:hover a.anchorlink, h1:hover a.anchorlink, h3:hover a.anchorlink, h4:hover a.anchorlink  {
     display: inline-block;
+}
+
+.contents > .groupheader {
+    display: none;
 }

@@ -2,23 +2,19 @@ cmake_minimum_required(VERSION 3.10)
 
 option(AUI_SHOW_TOUCHES "Show debug touches" OFF)
 
-auib_use_system_libs_begin()
 cmake_policy(SET CMP0072 NEW)
+
+auib_use_system_libs_begin()
 find_package(OpenGL)
-if (AUI_PLATFORM_LINUX)
-    find_package(X11 REQUIRED)
-    find_package(Fontconfig REQUIRED)
-endif ()
 auib_use_system_libs_end()
 
 if (OPENGL_FOUND OR ANDROID OR IOS)
+    auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
+                CONFIG_ONLY
+                CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
+    )
 
-    #auib_import(Freetype https://github.com/aui-framework/freetype
-    auib_import(Freetype https://github.com/aui-framework/freetype/archive/refs/heads/master.zip ARCHIVE
-            PRECOMPILED_URL_PREFIX https://github.com/aui-framework/freetype/releases/download/refs%2Fheads%2Fmaster
-            CONFIG_ONLY)
-
-    if (NOT TARGET freetype)
+    if (NOT TARGET Freetype::Freetype)
         message(FATAL_ERROR "Freetype not imported")
     endif ()
 
@@ -33,6 +29,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_enable_tests(aui.views)
 
     if (AUI_PLATFORM_LINUX)
+        auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
 
         pkg_check_modules(DBUS REQUIRED dbus-1)
@@ -42,6 +39,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
         include_directories(${GTK3_INCLUDE_DIRS})
         link_directories(${GTK3_LIBRARY_DIRS})
+
+        auib_use_system_libs_end()
 
         aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
     endif ()
@@ -77,25 +76,31 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
     aui_link(aui.views PUBLIC aui::core aui::image)
     aui_link(aui.views PRIVATE aui::xml)
-    set_target_properties(freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
+    set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
     if (AUI_PLATFORM_ANDROID)
         aui_link(aui.views PRIVATE EGL GLESv2 GLESv3)
-        aui_link(aui.views PRIVATE freetype)
+        aui_link(aui.views PRIVATE Freetype::Freetype)
     elseif (AUI_PLATFORM_IOS)
         auib_use_system_libs_begin()
         find_library(OPENGL OpenGLES REQUIRED)
         auib_use_system_libs_end()
         aui_link(aui.views PRIVATE ${OPENGL})
-        aui_link(aui.views PUBLIC freetype)
+        aui_link(aui.views PUBLIC Freetype::Freetype)
     elseif (AUI_PLATFORM_EMSCRIPTEN)
-        aui_link(aui.views PUBLIC freetype)
+        aui_link(aui.views PUBLIC Freetype::Freetype)
     else ()
-        aui_link(aui.views PRIVATE freetype)
+        aui_link(aui.views PRIVATE Freetype::Freetype)
         aui_link(aui.views PRIVATE OpenGL::GL)
 
         if (AUI_PLATFORM_LINUX)
             # glew defines unwanted dependencies to OpenGL which may vary from distro to distro; silence them
             set_target_properties(GLEW::GLEW PROPERTIES INTERFACE_LINK_LIBRARIES "")
+
+            auib_use_system_libs_begin()
+            find_package(X11 REQUIRED)
+            find_package(Fontconfig REQUIRED)
+            auib_use_system_libs_end()
+
         endif ()
         aui_link(aui.views PUBLIC GLEW::GLEW)
 

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,7 +15,8 @@
 
 #pragma once
 
-#include "AUI/Util/Assert.h"
+#include <AUI/Traits/concepts.h>
+#include <AUI/Util/Assert.h>
 #include <algorithm>
 #include <ostream>
 
@@ -27,16 +28,18 @@ namespace ass {
     struct unset_wrap {
     private:
         T stored;
-        bool set;
+        bool set = false;
 
     public:
-        unset_wrap() noexcept:
-            set(false)
+        unset_wrap() noexcept
         {
         }
 
         template<typename V>
         unset_wrap(const V& v);
+
+        template<typename V>
+        unset_wrap(V&& v);
 
         T& operator*() {
             AUI_ASSERT(bool(*this));
@@ -70,6 +73,9 @@ namespace ass {
 
         unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
 
+        template<aui::convertible_to<T> U>
+        unset_wrap<T>& operator=(const unset_wrap<U>& v) noexcept;
+
         bool operator==(const unset_wrap<T>& other) const {
             if (set != other.set) {
                 return false;
@@ -90,19 +96,33 @@ namespace ass {
         operator bool() const {
             return set;
         }
+
+        struct unset_wrap_tag {};
     };
 
     namespace detail::unset {
-        template<typename T>
-        void init(unset_wrap<T>& wrap, T& dst, bool& set, const unset_wrap<T>& value) {
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const unset_wrap<U>& value) {
             if (value) {
-                dst = *value;
+                dst = static_cast<T>(*value);
                 set = true;
             }
         }
-        template<typename T, typename V>
-        void init(unset_wrap<T>& wrap, T& dst, bool& set, const V& value) {
-            dst = value;
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, unset_wrap<U>&& value) {
+            if (value) {
+                dst = static_cast<T&&>(*value);
+                set = true;
+            }
+        }
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, U&& value) {
+            dst = static_cast<T&&>(value);
+            set = true;
+        }
+        template<typename T, aui::convertible_to<T> U>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const U& value) {
+            dst = static_cast<T>(value);
             set = true;
         }
     }
@@ -115,8 +135,23 @@ namespace ass {
         detail::unset::init(*this, stored, set, v);
     }
 
+
+    template<typename T>
+    template<typename V>
+    unset_wrap<T>::unset_wrap(V&& v)
+    {
+        detail::unset::init(*this, stored, set, std::forward<V>(v));
+    }
+
     template<typename T>
     unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) noexcept {
+        detail::unset::init(*this, stored, set, v);
+        return *this;
+    }
+
+    template<typename T>
+    template<aui::convertible_to<T> U>
+    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<U>& v) noexcept {
         detail::unset::init(*this, stored, set, v);
         return *this;
     }

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -31,6 +31,9 @@ struct AScrollEvent {
      * @brief The amount of scroll
      * @details
      * This field is mutable in order to be consumable.
+     *
+     * By default, 120 is single mouse wheel click.
+     * 120 = mouse scroll down, -120 = mouse scroll up.
      */
     mutable glm::vec2 delta;
 

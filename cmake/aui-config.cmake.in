@@ -8,8 +8,6 @@
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
-include_directories(${SELF_DIR}/include)
-
 set(AUI_BUILD_AUI_ROOT ${SELF_DIR} CACHE PATH "")
 include(${SELF_DIR}/cmake/aui.build.cmake)
 

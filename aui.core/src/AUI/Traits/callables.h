@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -21,7 +21,9 @@ namespace aui {
 
     template<typename F>
     concept not_overloaded_lambda = requires(F&& f) {
-        { &F::operator() };
+        // we can't 100% guarantee that T is actual lambda, but C++ lambdas have following traits:
+        std::is_class_v<F>;
+        { &std::decay_t<F>::operator() };
     };
 
     static_assert(not_overloaded_lambda<decltype([]{})>, "aui::not_overloaded_lambda failed");
@@ -48,8 +50,43 @@ namespace aui {
         using args = std::tuple<Args...>;
     };
 
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(*)(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(&)(Args...) noexcept> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<typename T>
+    concept function_pointer = requires(T&& t) {
+        typename function_info<T>::args;
+    };
+
     template<not_overloaded_lambda Lambda>
-    using lambda_info = member<decltype(&Lambda::operator())>;
+    using lambda_info = ::aui::reflect::member<decltype(&Lambda::operator())>;
 
     /**
      * @brief Function object type whose `operator()` returns its argument unchanged.

@@ -58,10 +58,10 @@ _<IInputStream> AFormMultipart::makeInputStream() const {
                           (_<IInputStream>)_new<AStringStream>(fmt::format("\r\n")),
                       };
                     })
-                  | ranges::action::join
+                  | ranges::actions::join
                   | ranges::to<ADeque<_<IInputStream>>>()
-                  //| ranges::action::push_front({(_<IInputStream>)_new<AStringStream>(fmt::format("\r\n", mBoundary))})
-                  | ranges::action::push_back({(_<IInputStream>)_new<AStringStream>(fmt::format("--{}--\r\n", mBoundary))});
+                  //| ranges::actions::push_front({(_<IInputStream>)_new<AStringStream>(fmt::format("\r\n", mBoundary))})
+                  | ranges::actions::push_back({(_<IInputStream>)_new<AStringStream>(fmt::format("--{}--\r\n", mBoundary))});
 
     return _new<AConcatInputStream>(std::move(result));
 }

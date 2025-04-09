@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -186,7 +186,9 @@ struct ASqlModel {
 
     /**
      * @return name of the relation column for other tables.
-     * \example struct User -> table users -> column user_id is the result.
+     * @details
+     * Example:
+     * `struct User -> table users -> column user_id is the result.`
      */
     static AString getIdColumnNameInOtherTables() {
         AString tableName = AModelMeta<Model>::getSqlTable();

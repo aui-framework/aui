@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,6 +15,7 @@
 #include <cassert>
 #include <utility>
 #include <optional>
+#include <fstream>
 #include <stdexcept>
 #include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
@@ -284,7 +285,7 @@ public:
     }
 
 private:
-    std::aligned_storage_t<sizeof(T), alignof(T)> mStorage;
+    std::aligned_storage_t<sizeof(T), alignof(T)> mStorage{};
     bool mInitialized = false;
 
     [[nodiscard]]
@@ -298,3 +299,14 @@ private:
     }
 
 };
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const AOptional<T>& v) {
+    if (!v) {
+        o << "[empty]";
+    } else {
+        o << *v;
+    }
+    return o;
+}
+

@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -53,6 +53,9 @@ void AAbstractTextField::render(ARenderContext ctx) {
     drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
         doDrawString(ctx.render);
     });
+    if (!mIsEditable) {
+        return;
+    }
     drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, mPadding.top + getVerticalAlignmentOffset()});
 }
 
@@ -98,11 +101,14 @@ void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 
-const AString& AAbstractTextField::text() const {
+const AString& AAbstractTextField::getText() const {
     return mContents;
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
+    if (!mIsEditable) {
+        return;
+    }
     if (begin >= mContents.length()) {
         return;
     }
@@ -110,6 +116,9 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
+    if (!mIsEditable) {
+        return false;
+    }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, toInsert.length()); // undo insert
@@ -119,6 +128,9 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
+    if (!mIsEditable) {
+        return false;
+    }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert
@@ -201,7 +213,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getPosByIndexAbsolute(text().length());
+    auto w = getPosByIndexAbsolute(getText().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -274,7 +286,7 @@ void AAbstractTextField::onCursorIndexChanged() {
         absoluteCursorPos -= 1;
     }
     mAbsoluteCursorPos = absoluteCursorPos;
-    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(text().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
+    auto horizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getPosByIndex(getText().length()).x - this->getContentWidth()) + mHorizontalScroll, 0));
     if (horizontalScroll != mHorizontalScroll) {
         mAbsoluteCursorPos = mHorizontalScroll - horizontalScroll;
         mHorizontalScroll = horizontalScroll;

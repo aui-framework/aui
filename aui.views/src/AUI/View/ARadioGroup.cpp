@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,7 +19,7 @@
 
 
 ARadioGroup::ARadioGroup() : mGroup(_new<ARadioButton::Group>()) {
-    connect(mGroup->selectionChanged, this, [&](const AListModelIndex& index) {
+    connect(mGroup->selectionChanged, this, [&](int index) {
         emit selectionChanged(index);
     });
 }

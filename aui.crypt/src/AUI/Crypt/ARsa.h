@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,26 +18,25 @@
  * @brief Stores public and/or private RSA key.
  * @ingroup crypt
  */
-class API_AUI_CRYPT ARsa: public aui::noncopyable
-{
+class API_AUI_CRYPT ARsa : public aui::noncopyable {
 private:
-	void* mRsa = nullptr;
+    void* mRsa = nullptr;
+    void* mBne = nullptr;
 
-
-	explicit ARsa(void* rsa);
+    explicit ARsa(void* rsa, void* bne);
 
 public:
-	~ARsa();
+    ~ARsa();
 
-	AByteBuffer encrypt(AByteBufferView in);
-	AByteBuffer decrypt(AByteBufferView in);
+    AByteBuffer encrypt(AByteBufferView in);
+    AByteBuffer decrypt(AByteBufferView in);
 
-	size_t getKeyLength() const;
+    size_t getKeyLength() const;
 
-	AByteBuffer getPrivateKeyPEM() const;
-	AByteBuffer getPublicKeyPEM() const;
-	
-	static _<ARsa> generate(int bits = 0x800);
-	static _<ARsa> fromPrivateKeyPEM(AByteBufferView buffer);
-	static _<ARsa> fromPublicKeyPEM(AByteBufferView buffer);
+    AByteBuffer getPrivateKeyPEM() const;
+    AByteBuffer getPublicKeyPEM() const;
+
+    static _<ARsa> generate(int bits = 0x800);
+    static _<ARsa> fromPrivateKeyPEM(AByteBufferView buffer);
+    static _<ARsa> fromPublicKeyPEM(AByteBufferView buffer);
 };

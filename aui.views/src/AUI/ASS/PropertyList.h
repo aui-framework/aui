@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -22,9 +22,12 @@
 
 namespace ass {
 
+    template<typename T>
+    concept ValidDeclaration = aui::is_complete<ass::prop::Property<std::decay_t<T>>>;
+
     struct PropertyList {
     public:
-        template<typename... Declarations>
+        template<ValidDeclaration... Declarations>
         PropertyList(Declarations&& ... declarations) {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }

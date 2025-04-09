@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -24,8 +24,8 @@ template <class KeyType, class Comparator = std::less<KeyType>, class Allocator 
 class ASet: public std::set<KeyType, Comparator, Allocator>
 {
 private:
-	using p = std::set<KeyType, Comparator, Allocator>;
-	using self = ASet<KeyType, Comparator, Allocator>;
+    using p = std::set<KeyType, Comparator, Allocator>;
+    using self = ASet<KeyType, Comparator, Allocator>;
 
 public:
 
@@ -37,7 +37,6 @@ public:
      * Inserts all values of the specified container to the end.
      * @tparam OtherContainer other container type.
      * @param c other container
-     * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
     void insertAll(const OtherContainer& c) noexcept {
@@ -87,7 +86,7 @@ public:
 
     /**
      * Shortcut to <code>insertAll</code>.
-     * @param rhs container to push
+     * @param c container to push
      * @return self
      */
     template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, KeyType>, bool> = true>
@@ -97,11 +96,10 @@ public:
         return *this;
     }
 
-
-	bool contains(const KeyType& value) const noexcept
-	{
-		return p::find(value) != p::end();
-	}
+    bool contains(const KeyType& value) const noexcept
+    {
+        return p::find(value) != p::end();
+    }
 };
 
 

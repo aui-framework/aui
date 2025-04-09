@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -59,7 +59,7 @@ public:
 
     IcmpImpl(const AInet4Address& mDestination) : mSocket(socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP)), mDestination(mDestination) {
         if (mSocket < 0) {
-            throw AIOException(aui::impl::formatSystemError().description);
+            throw AIOException("bad socket: "_format(aui::impl::formatSystemError().description));
         }
     }
 
@@ -235,7 +235,7 @@ private:
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
     auto impl = _new<IcmpImpl>(destination);
     auto timer = _new<ATimer>(timeout);
-    AObject::connect(timer->fired, timer, [impl]() {
+    AObject::connect(timer->fired, timer, [impl = impl.get()]() {
         impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
         UnixIoThread::inst().unregisterCallback(impl->mSocket);
     });

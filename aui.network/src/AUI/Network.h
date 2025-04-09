@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -13,3 +13,8 @@
 #pragma warning(disable: 4251)
 
 #include "AUI/api.h"
+
+/**
+ *@defgroup network aui::network
+* @brief Provides raw network capabilities.
+*/

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -82,9 +82,9 @@ public:
 
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
-        else mInner->setScrollX(mInner->scroll().x + deltaByX);
+        else mInner->setScrollX(mInner->scroll()->x + deltaByX);
         AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
-        else mInner->setScrollY(mInner->scroll().y + deltaByY);
+        else mInner->setScrollY(mInner->scroll()->y + deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;

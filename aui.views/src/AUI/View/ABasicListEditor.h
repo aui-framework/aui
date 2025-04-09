@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,6 +15,7 @@
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/IMutableListModel.h>
+#include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AButton.h>

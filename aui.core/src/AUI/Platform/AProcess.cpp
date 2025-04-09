@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -24,22 +24,22 @@
 #include "AUI/IO/AFileOutputStream.h"
 
 _<AChildProcess>
-AProcess::create(AProcess::ProcessCreationInfo info) {
+AProcess::create(AProcess::ProcessCreationInfo args) {
     auto p = aui::ptr::manage(new AChildProcess);
-    p->mInfo = std::move(info);
+    p->mInfo = std::move(args);
     return p;
 }
 
 int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory,
                                  ASubProcessExecutionFlags flags) {
-    AChildProcess p;
-    p.mInfo = {
+    auto p = aui::ptr::manage(new AChildProcess);
+    p->mInfo = {
         .executable = std::move(applicationFile),
         .args = ArgSingleString { std::move(args) },
     };
-    p.run(flags);
+    p->run(flags);
 
-    return p.waitForExitCode();
+    return p->waitForExitCode();
 }
 
 _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
@@ -96,6 +96,18 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
 
     return nullptr;
+}
+
+AString AChildProcess::toString() const {
+    return "<AChildProcess pid={}, exe={}, args=[ {} ], workdir={}>"_format(
+        getPid(), getApplicationFile(),
+        std::visit(
+            aui::lambda_overloaded {
+              [](const AProcess::ArgStringList& args) { return args.list.join(','); },
+              [](const AProcess::ArgSingleString& arg) { return "\"" + arg.arg + "\""; },
+            },
+            getArgs()),
+        getWorkingDirectory());
 }
 
 

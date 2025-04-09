@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,6 +19,9 @@ class API_AUI_VIEWS AAssHelper;
 struct ARenderContext;
 
 namespace ass::prop {
+    /**
+     * @brief Defines the types of renderable properties and order of their rendering.
+     */
     enum class PropertySlot {
         NONE,
 
@@ -29,6 +32,7 @@ namespace ass::prop {
         SHADOW,
         RENDER_OVERFLOW,
         IMAGE_RENDERING,
+        BACKDROP,
         BACKGROUND_SOLID,
         BACKGROUND_IMAGE,
         BACKGROUND_EFFECT,
@@ -39,8 +43,13 @@ namespace ass::prop {
         COUNT,
     };
 
-    struct API_AUI_VIEWS IPropertyBase {
+    /**
+     * @brief Base class for all properties.
+     * @ingroup ass
+     */
+    struct API_AUI_VIEWS IPropertyBase { // ignore ass_properties
     public:
+        virtual ~IPropertyBase() = default;
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view, const ARenderContext& ctx) {}
         virtual bool isNone() { return false; }
@@ -48,6 +57,7 @@ namespace ass::prop {
             return PropertySlot::NONE;
         }
         virtual void updateInvalidPixelRect(ARect<int>& invalidRect) const {}
+
     };
     template<typename PropertyStruct>
     struct Property;

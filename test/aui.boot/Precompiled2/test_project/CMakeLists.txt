@@ -4,6 +4,8 @@ project(test_project)
 
 include(../../../../aui.boot.cmake)
 set(AUIB_DEBUG_PRECOMPILED aui)
+# raise aui.boot validation level.
+set(AUIB_VALIDATION_LEVEL 2 CACHE STRING "Package validation level")
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core views
             VERSION ${AUI_TEST_DEPLOY_VERSION})

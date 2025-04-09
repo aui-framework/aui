@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <shlobj.h>
@@ -18,7 +19,9 @@
 
 /**
  * @brief Helper class implementing COM AddRef Release, and QueryInterface.
- * @ingroup windows_specific
+ * @ingroup core
+ * @details
+ * @exclusivefor{windows}
  */
 template<typename Child, typename Base>
 class AComBase: public Base {

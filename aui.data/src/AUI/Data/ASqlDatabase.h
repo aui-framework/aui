@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -60,7 +60,7 @@ public:
 
 	/**
 	 * @brief Connect to the database using the specified details and driver.
-     * @param drivername name of the database driver. If the driver is not loaded, an attempt will be made to load the
+     * @param driverName name of the database driver. If the driver is not loaded, an attempt will be made to load the
      *        driver based on the template aui.DRIVERNAME (aui.DRIVERNAME.dll for Windows, libaui.DRIVERNAME.so for
      *        Linux, etc...). If the driver failed to load SQLException will be thrown.
      *

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -26,6 +26,11 @@
 #include <AUI/Traits/callables.h>
 #include <variant>
 
+/**
+* @defgroup json aui::json
+* @brief aui::json is a json parser/writer.
+*/
+
 class AJson;
 namespace aui::impl {
     struct JsonObject: AVector<std::pair<AString, AJson>> {
@@ -49,7 +54,7 @@ namespace aui::impl {
 
         [[nodiscard]] API_AUI_JSON AJson& operator[](const AString& key);
 
-        [[nodiscard]] API_AUI_JSON const AJson& operator[](const AString& key) const {
+        [[nodiscard]] const AJson& operator[](const AString& key) const {
             return at(key);
         }
 
@@ -63,7 +68,7 @@ namespace aui::impl {
          * @brief If container contains key, returns reference to the element.
          * @throws AException if key is not found.
          */
-        [[nodiscard]] API_AUI_JSON const AJson& at(const AString& key) const {
+        [[nodiscard]] const AJson& at(const AString& key) const {
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-const-cast)
             return const_cast<JsonObject&>(*this).at(key);
         }

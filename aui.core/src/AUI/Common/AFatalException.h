@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -22,13 +22,13 @@
  * @ingroup core
  * @details
  * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not as it
- * uses compiler-specific flags and hacks. See @ref "Platform support" for further info.
+ * uses compiler-specific flags and hacks. See @ref "AFatalException_Platform_support" for further info.
  *
  * Translation to throwing AFatalException recovers the application from crashed state, providing you ability to handle
  * such errors and continue normal application execution. However, still recommended to handle such errors with
  * setGlobalHandler() to at least save user data.
  *
- * # Platform support
+ * # Platform support {#AFatalException_Platform_support}
  * | Platform | Translation to throwing AFatalException | setGlobalHandler() |
  * |----------|-----------------------------------------|--------------------|
  * | Windows  | MSVC                                    | +                  |

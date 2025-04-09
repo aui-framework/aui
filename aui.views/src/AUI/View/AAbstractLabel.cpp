@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -59,33 +59,35 @@ void AAbstractLabel::setSize(glm::ivec2 size) {
 }
 
 template<class Iterator>
-size_t AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
-                                                const Iterator& end,
-                                                int overflowingWidth) {
+Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
+                                                  const Iterator& end,
+                                                  int overflowingWidth) {
     size_t gotWidth = 0;
     for (Iterator it = begin; it != end; ++it) {
         gotWidth += getFontStyle().getWidth(it, it + 1);
         if (gotWidth <= overflowingWidth)
             continue;
 
-        return it - begin;
+        return it;
     }
 
-    return end - begin;
+    return end;
 }
 
 template<class Iterator>
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    size_t firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
+    static constexpr auto ELLIPSIS = u'…';
+    auto firstOverflowedIt = findFirstOverflowedIndex(
+        begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({ELLIPSIS}) : 0));
+    if (firstOverflowedIt == end) {
+        return;
+    }
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        if (firstOverflowedIndex >= 3) {
-            std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
-        } else {
-            std::fill(begin, end, ' ');
-        }
+        *firstOverflowedIt = ELLIPSIS;
+        firstOverflowedIt++;
     }
 
-    std::fill(begin + firstOverflowedIndex, end, ' ');
+    std::fill(firstOverflowedIt, end, ' ');
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
@@ -183,6 +185,8 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                     }
 
                     break;
+                case ATextAlign::JUSTIFY:
+                    break;
             }
         }
 
@@ -204,20 +208,22 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
 }
 
 AString AAbstractLabel::getTransformedText() {
-    if (text().empty())
+    if (text()->empty())
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return text().uppercase();
+            return text()->uppercase();
         case TextTransform::LOWERCASE:
-            return text().lowercase();
+            return text()->lowercase();
+        case TextTransform::NONE:
+            break;
     }
     return text();
 }
 
 void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
-    ui_threadX [&] {
+    ui_threadX [this, self = shared_from_this()] {
         mPrerendered = nullptr;
         redraw();
     };
@@ -254,6 +260,8 @@ void AAbstractLabel::setText(AString newText) {
 
     markMinContentSizeInvalid();
     redraw();
+
+    emit mTextChanged(mText);
 }
 
 void AAbstractLabel::invalidateAllStyles() {

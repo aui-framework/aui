@@ -1,5 +1,7 @@
 # Crosscompiling (Android and iOS)
 
+See also: @ref docs/Macros.md
+
 ## The AUI_BUILD_FOR way
 
 AUI provides the unified way to cross-compile your application with AUI_BUILD_FOR CMake configure variable. When
@@ -20,7 +22,7 @@ In iOS, there's no "official" toolchain so there are community-provided toolchai
 
 AUI.Boot forwards `CMAKE_TOOLCHAIN_FILE` across all the dependencies.
 
-### Example
+### Usage Example
 Assuming working directory is the build directory:
 
 To configure the project use

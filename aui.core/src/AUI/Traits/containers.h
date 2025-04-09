@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -28,37 +28,6 @@
 namespace aui::container {
 
     namespace vector_impl { // basic vector implementation
-
-        /**
-         * @brief Corrects size so it's aligned to power of 2.
-         */
-        static constexpr std::size_t ceilPower2(std::size_t size) {
-            switch (size) {
-                case 0: return 0;
-                case 1: return 1;
-                default: break;
-            }
-
-            size -= 1;
-            std::size_t power = 1;
-            while (size != 0) {
-                size >>= 1;
-
-                if (size == 0) {
-                    break;
-                }
-                ++power;
-            }
-            return std::size_t(1) << power;
-        }
-
-        static_assert(ceilPower2(228) == 256, "check ceilPower2");
-        static_assert(ceilPower2(256) == 256, "check ceilPower2");
-        static_assert(ceilPower2(512) == 512, "check ceilPower2");
-        static_assert(ceilPower2(0) == 0, "check ceilPower2");
-        static_assert(ceilPower2(1) == 1, "check ceilPower2");
-        static_assert(ceilPower2(2) == 2, "check ceilPower2");
-
         template<typename T, typename OtherIterator>
         auto insert_no_growth(T*& vectorEnd, T* at, OtherIterator begin, OtherIterator end) {
             auto distance = std::distance(begin, end);
@@ -122,6 +91,7 @@ namespace aui::container {
      *   <dt><b>Sneaky assertions</b></dt>
      *   <dd><code>index</code> points to the existing element.</dd>
      * </dl>
+     * @param c container to perform on.
      * @param index index of the element.
      */
     template<typename Container>
@@ -133,14 +103,15 @@ namespace aui::container {
     /**
      * @brief Finds the index of the first occurrence of the value.
      * @ingroup core
+     * @param c container to perform on.
      * @param value element to find.
-     * @return index of the specified element. If element is not found, -1 is returned.
+     * @return index of the specified element. If element is not found, std::nullopt is returned.
      */
     template<typename Container>
     [[nodiscard]]
-    size_t index_of(const Container& c, const typename Container::const_reference value) noexcept {
+    AOptional<size_t> index_of(const Container& c, const typename Container::const_reference value) noexcept {
         auto it = std::find(c.begin(), c.end(), value);
-        if (it == c.end()) return static_cast<size_t>(-1);
+        if (it == c.end()) return std::nullopt;
         return it - c.begin();
     }
 
@@ -178,8 +149,9 @@ namespace aui::container {
 
 
     /**
-     * Removes all occurrences of <code>item</code> with specified projection.
-     * @param item element to remove.
+     * @brief Removes all occurrences of <code>item</code> with specified projection.
+     * @param container container to perform on.
+     * @param value element to remove.
      * @param projection callable that transforms <code>const StoredType&</code> to <code>const T&</code>. Can be any
      *        operator() cappable object, including lambda and pointer-to-member.
      */
@@ -240,4 +212,19 @@ namespace aui::container {
         }
         return true;
     }
+}
+
+namespace aui {
+/**
+ * @brief Finds the index of the first occurrence of the value.
+ * @ingroup core
+ * @param c container to perform on.
+ * @param value element to find.
+ * @return index of the specified element. If element is not found, std::nullopt is returned.
+ */
+template<typename Container>
+[[nodiscard]]
+AOptional<size_t> indexOf(const Container& c, const typename Container::const_reference value) noexcept {
+    return aui::container::index_of(c, value);
+}
 }

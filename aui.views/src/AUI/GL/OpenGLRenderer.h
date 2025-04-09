@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -17,6 +17,7 @@
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
+#include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
 class OpenGLRenderer final: public IRenderer {
 friend class OpenGLPrerenderedString;
@@ -60,6 +61,24 @@ private:
     ADeque<FontEntryData> mFontEntryData;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
+    struct FramebufferWithTextureRT {
+        gl::Framebuffer framebuffer;
+        _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> rendertarget;
+    };
+
+    struct FramebufferBackToPool {
+        OpenGLRenderer* renderer;
+        void operator()(FramebufferWithTextureRT* framebuffer) const;
+    };
+
+    using FramebufferFromPool = std::unique_ptr<FramebufferWithTextureRT, FramebufferBackToPool>;
+    using OffscreenFramebufferPool = AVector<FramebufferFromPool>;
+
+    /**
+     * @brief use getFramebufferForMultiPassEffect
+     */
+    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
+
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
 
@@ -71,6 +90,28 @@ private:
      * @return true, if the caller should compute distances
      */
     bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
+
+
+    /**
+     * @brief get a framebuffer for rendering multi pass effects (i.e., blur)
+     * @param minRequiredSize minimum required size of the framebuffer
+     * @return framebuffer, or null if unsupported
+     * @details
+     * Returns a shared color-only framebuffer that can be used for rendering multi pass effects. The size of
+     * framebuffer is guaranteed to be no lower than minRequiredSize. Generally, the buffer would be larger than
+     * requested.
+     *
+     * Buffer may contain dirty data.
+     *
+     * The function acts like pool aggregator.
+     *
+     * The returned framebuffer object is wrapped by smart pointer. Caller takes unique ownership of the framebuffer.
+     * When smart pointer is destroyed, the framebuffer object is returned back to the pool. Thus, while caller owns
+     * framebuffer object, the function would never return the same object until caller releases ownership.
+     */
+    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
+
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) override;
 
 protected:
     _unique<ITexture> createNewTexture() override;

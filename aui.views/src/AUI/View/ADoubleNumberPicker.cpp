@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -86,9 +86,9 @@ ADoubleNumberPicker::ADoubleNumberPicker()
         emit valueChanged(v);
     });
 
-    connect(mTextField->textChanging, this, [&]()
+    connect(mTextField->textChanging, this, [this]()
     {
-        emit valueChanging();
+        emit valueChanging(getValue());
     });
 
     addView(c);
@@ -130,6 +130,7 @@ void ADoubleNumberPicker::decrease() {
 }
 
 void ADoubleNumberPicker::changeBy(double v) {
-    setValue(getValue() + v);
-    emit valueChanging();
+    v += getValue();
+    setValue(v);
+    emit valueChanging(v);
 }

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -156,11 +156,11 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
+    onMouseButtonDown(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
+    onMouseButtonUp(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)scrollWheel:(NSEvent *)event {

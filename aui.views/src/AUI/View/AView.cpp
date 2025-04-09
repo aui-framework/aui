@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -63,7 +63,9 @@ AView::AView()
     setSlotsCallsOnlyOnMyThread(true);
 }
 
-AView::~AView() = default;
+AView::~AView() {
+    AUI_ASSERT_UI_THREAD_ONLY();
+}
 
 void AView::redraw()
 {
@@ -123,6 +125,8 @@ void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
         mAnimator->postRender(this, ctx.render);
     popStencilIfNeeded(ctx);
+
+    emit redrawn;
 }
 
 void AView::popStencilIfNeeded(ARenderContext ctx) {
@@ -228,7 +232,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     mAssHelper->state.backgroundUrl.rep.reset();
     mAssHelper->state.backgroundUrl.scale.reset();
     mAssHelper->state.backgroundUrl.sizing.reset();
-    mAssHelper->state.backgroundUrl.url.reset();
+    mAssHelper->state.backgroundUrl.image.reset();
 
     for (const auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r.getSelector().isStateApplicable(this)) {
@@ -452,8 +456,14 @@ void AView::updateEnableState()
         onMouseLeave();
     }
 
-    mEnabled.set(this, mDirectlyEnabled && mParentEnabled);
-    emit customCssPropertyChanged();
+    bool newEnabled = mDirectlyEnabled && mParentEnabled;
+    if (mEnabled == newEnabled) {
+        return;
+    }
+
+    mEnabled = newEnabled;
+    emit mEnabledChanged(newEnabled);
+    emit customCssPropertyChanged;
     setSignalsEnabled(mEnabled);
     emit customCssPropertyChanged();
     redraw();
@@ -476,12 +486,12 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 void AView::setPosition(glm::ivec2 position) {
     mSkipUntilLayoutUpdate = false;
-    if (mPosition == position) {
+    if (mPosition == position) [[unlikely]] {
         return;
     }
     mPosition = position;
     redraw();
-    emit positionChanged(position);
+    emit mPositionChanged(position);
 }
 void AView::setSize(glm::ivec2 size)
 {
@@ -510,12 +520,12 @@ void AView::setSize(glm::ivec2 size)
     }
     newSize = glm::min(newSize, mMaxSize);
 
-    if (mSize == newSize) {
+    if (mSize == newSize) [[unlikely]] {
         return;
     }
     mSize = newSize;
     redraw();
-    emit sizeChanged(newSize);
+    emit mSizeChanged(newSize);
 }
 
 void AView::setGeometry(int x, int y, int width, int height) {
@@ -525,7 +535,7 @@ void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
     setSize({width, height});
 
-    if (mPosition == oldPosition && mSize == oldSize) {
+    if (mPosition == oldPosition && mSize == oldSize) [[unlikely]] {
         return;
     }
     emit geometryChanged({x, y}, {width, height});
@@ -700,7 +710,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
-    emit visibilityChanged(visibility);
+    emit mVisibilityChanged(visibility);
 }
 
 namespace aui::view::impl {
@@ -754,7 +764,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
             APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
             auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
-            if (!mRenderToTexture->rendererInterface->begin(renderer, getSize(), invalidArea)) {
+            if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
                 // unsuccessful
                 mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
                 return;
@@ -770,7 +780,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             };
             ARect<int> initialRect {
                 .p1 = { 0, 0 },
-                .p2 = getSize(),
+                .p2 = size(),
             };
             if (contextOfTheView.clippingRects.empty()) {
                 contextOfTheView.clippingRects << initialRect;
@@ -789,7 +799,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
             mRenderToTexture->drawFromTexture = true;
         });
-        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), size()));
         return;
     }
 

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -128,13 +128,16 @@ void AWindow::flagRedraw() {
 
 
 void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
+    auto s = static_cast<NSWindow*>(mHandle);
+    float dpi = getDpiRatio();
+    [s setMinSize:NSSizeFromCGSize({getMinimumWidth() / dpi, getMinimumHeight() / dpi})];
+    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
+    [s setContentSize:NSSizeFromCGSize({size.x / dpi, size.y / dpi})];
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize({width, height});
-
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {

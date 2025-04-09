@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,11 +15,16 @@
     #define AUI_IMPORT
     #define AUI_EXPORT
 #else
-    #if defined(_WIN32)
+    #if AUI_PLATFORM_WIN
         #define AUI_IMPORT __declspec(dllimport)
         #define AUI_EXPORT __declspec(dllexport)
     #else
         #define AUI_IMPORT
         #define AUI_EXPORT __attribute__((visibility("default")))
     #endif
+#endif
+
+
+#if !__cpp_rtti
+#error "You have RTTI disabled."
 #endif

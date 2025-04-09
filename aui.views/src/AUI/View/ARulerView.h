@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -23,7 +23,7 @@
 
 /**
  * @brief A Photoshop-like ruler for measuring display units.
- * @ingroup userful_views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:

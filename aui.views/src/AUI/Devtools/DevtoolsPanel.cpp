@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,6 +19,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/ATabView.h"
 #include "DevtoolsProfilingOptions.h"
+#include "DevtoolsThreadsTab.h"
 
 DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
     auto tabs = _new<ATabView>();
@@ -28,6 +29,7 @@ DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
     tabs->addTab(_new<DevtoolsPerformanceTab>(targetWindow), "Performance");
     tabs->addTab(_new<DevtoolsProfilingOptions>(targetWindow), "Profiling");
     tabs->addTab(_new<DevtoolsPointerInspect>(targetWindow), "Pointer inspect");
+    tabs->addTab(_new<DevtoolsThreadsTab>(AThreadPool::global()), "Task queues");
 
     setContents(Centered { tabs });
 }

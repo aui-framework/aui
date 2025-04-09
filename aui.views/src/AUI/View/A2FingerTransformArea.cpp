@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -56,7 +56,13 @@ void A2FingerTransformArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent
             trackedPoint->pos = pos;
             auto newLength = calculateLength();
             auto newAngle = calculateAngle();
-            emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = newLength / prevLength });
+            auto scale = newLength / prevLength;
+            if (scale != scale) { // nan
+                scale = 1.f;
+            } else {
+                scale = glm::clamp(scale, 0.000001f, 1000000.f);
+            }
+            emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = scale });
             break;   
         }
         default:

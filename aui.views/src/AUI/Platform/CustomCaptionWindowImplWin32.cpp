@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -69,11 +69,11 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
 void CustomCaptionWindowImplWin32::updateMiddleButtonIcon() {
     if (isCustomCaptionMaximized()) {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/restore.svg" }
+            ass::BackgroundImage {":uni/caption/restore.svg", {}, {}, ass::Sizing::CENTER }
         });
     } else {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/maximize.svg" }
+            ass::BackgroundImage {":uni/caption/maximize.svg", {}, {}, ass::Sizing::CENTER }
         });
     }
 }

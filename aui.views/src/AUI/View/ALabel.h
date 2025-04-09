@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -18,7 +18,7 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
  * @ingroup useful_views
  * @details
- * ALabel is used for displayed nonformatted single-line text.
+ * ALabel is used for displaying nonformatted single-line text.
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {
 public:
@@ -32,7 +32,11 @@ namespace declarative {
 
 template<>
 struct ADataBindingDefault<ALabel, AString> {
-   public:
+public:
+    static auto property(const _<ALabel>& view) {
+        return view->text();
+    }
+
     static void setup(const _<ALabel>& view) {
     }
 

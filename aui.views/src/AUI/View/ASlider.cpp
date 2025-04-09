@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -27,7 +27,7 @@ ASlider::ASlider() {
         mHandle = _new<Handle>()
     });
 
-    connect(mProgress->valueChanged, [this](aui::float_within_0_1 v) {
+    connect(mProgress->value().changed, [this](aui::float_within_0_1 v) {
         emit valueChanging(v); // we would emit ed signal in pointer release method
         updateHandlePosition();
     });

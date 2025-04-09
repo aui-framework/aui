@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -21,11 +21,14 @@
 
 namespace ass {
 
+    struct PropertyListConditional;
+
+    template<typename T>
+    concept ValidDeclarationOrPropertyList = ValidDeclaration<T> || aui::derived_from<T, PropertyListConditional>;
+
     struct PropertyListRecursive: public PropertyList {
     public:
-        struct ConditionalPropertyList;
-
-        template<typename... Declarations>
+        template<ValidDeclarationOrPropertyList... Declarations>
         PropertyListRecursive(Declarations&& ... declarations): PropertyListRecursive() {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }
@@ -39,12 +42,12 @@ namespace ass {
         PropertyListRecursive(PropertyList&& p);
 
         [[nodiscard]]
-        const AVector<ConditionalPropertyList>& conditionalPropertyLists() const noexcept {
+        const AVector<PropertyListConditional>& conditionalPropertyLists() const noexcept {
             return mConditionalPropertyLists;
         }
 
     private:
-        AVector<ConditionalPropertyList> mConditionalPropertyLists;
+        AVector<PropertyListConditional> mConditionalPropertyLists;
 
         template<typename Property, typename... Declarations>
         void processDeclarations(Property&& declaration, Declarations&& ... declarations) {
@@ -59,12 +62,12 @@ namespace ass {
 
     };
 
-    struct PropertyListRecursive::ConditionalPropertyList {
+    struct PropertyListConditional {
         AAssSelector selector;
         PropertyListRecursive list;
 
         template<typename... Declarations>
-        ConditionalPropertyList(AAssSelector selector, Declarations&&... declarations):
+        PropertyListConditional(AAssSelector selector, Declarations&&... declarations):
                 selector(std::move(selector)), list(std::forward<Declarations>(declarations)...)
         {}
     };
@@ -78,8 +81,8 @@ namespace ass {
 
     template<typename T>
     void PropertyListRecursive::processDeclaration(T&& t) {
-        if constexpr (std::is_base_of_v<PropertyListRecursive::ConditionalPropertyList, T>) {
-            mConditionalPropertyLists << std::forward<ConditionalPropertyList&&>(t);
+        if constexpr (std::is_base_of_v<PropertyListConditional, T>) {
+            mConditionalPropertyLists << std::forward<PropertyListConditional&&>(t);
         } else if constexpr (std::is_same_v<T, PropertyListRecursive>) {
             // aka move constructor
             mProperties = std::move(t.mProperties);

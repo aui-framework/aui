@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -20,29 +20,29 @@ class IDrawable;
 
 /**
  * @brief Class-loader of abstract images that can be displayed on the screen.
+ * @ingroup image
  */
-class IImageLoader
-{
+class IImageLoader {
 public:
-	/**
-	 * @param buffer buffer with the raw image file contents.
-	 * @return true, if this IImageLoader accepts image stored in this buffer
-	 */
-	virtual bool matches(AByteBufferView buffer) = 0;
+    /**
+     * @param buffer buffer with the raw image file contents.
+     * @return true, if this IImageLoader accepts image stored in this buffer
+     */
+    virtual bool matches(AByteBufferView buffer) = 0;
 
-	/**
-	 * @brief The drawable (vector) image loader implementation.
-	 * @note Called if and only if <code>matches</code> returned true.
-	 * @return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
-	 */
-	virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
+    /**
+     * @brief The drawable (vector) image loader implementation.
+     * @note Called if and only if <code>matches</code> returned true.
+     * @return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
+     */
+    virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
 
-	/**
-	 * @brief The image loader implementation (raster).
-	 * @note Called if and only if <code>matches</code> returned true.
-	 * @return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
-	 */
-	virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
+    /**
+     * @brief The image loader implementation (raster).
+     * @note Called if and only if <code>matches</code> returned true.
+     * @return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
+     */
+    virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
 };
 
 #include "AUI/Common/AByteBuffer.h"

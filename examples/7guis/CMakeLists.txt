@@ -1,0 +1,7 @@
+add_subdirectory(counter)
+add_subdirectory(temperature_converter)
+add_subdirectory(flight_booker)
+add_subdirectory(timer)
+add_subdirectory(crud)
+add_subdirectory(circle_drawer)
+add_subdirectory(cells)

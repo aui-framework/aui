@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -29,7 +29,9 @@ public:
         mBuffer.reserve(0x1000);
         UnixIoThread::inst().registerCallback(fileHandle, UnixPollEvent::IN, [self = weak_from_this()](ABitField<UnixPollEvent>) {
             auto s = self.lock();
-            AUI_ASSERTX(s != nullptr, "UnixIoAsync::Impl is dead, but callback is called");
+            if (!s) {
+                return;
+            }
             AUI_ASSERT(s->mBuffer.data() != nullptr);
             auto r = read(s->mFileHandle, s->mBuffer.data(), s->mBuffer.capacity());
             AUI_ASSERT(r >= 0);

@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -40,6 +40,9 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
 
 void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     auto& size = params.size;
+    if (size.x < 1 || size.y < 1) {
+        return;
+    }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
         render.rectangle(ATexturedBrush{

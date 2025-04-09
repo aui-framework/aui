@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -44,10 +44,11 @@
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASlider.h"
 #include "AUI/View/ATextArea.h"
-
+#include "AUI/View/ASpinnerV2.h"
 
 AStylesheet::AStylesheet() {
     using namespace ass;
+    using namespace std::chrono_literals;
 
     addRules({
         // COMMON VIEWS ======================================
@@ -79,6 +80,16 @@ AStylesheet::AStylesheet() {
             Margin { 4_dp },
             FixedSize { 16_dp }
         },
+
+        /// [ASpinnerV2]
+        {
+            t<ASpinnerV2>(),
+            BackgroundImage { ":uni/svg/spinner_v2.svg", 0x993c3c43_argb },
+            Margin { 4_dp },
+            FixedSize { 16_dp },
+            ASpinnerV2::Configuration { .period = 1000ms, .steps = 8 },
+        },
+        /// [ASpinnerV2]
 
         // AText
         {
@@ -259,18 +270,18 @@ AStylesheet::AStylesheet() {
             Margin { 1_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
-            BackgroundImage {0x333333_rgb },
+            BackgroundImage { {}, 0x333333_rgb },
         },
         {
             t<ACheckBox>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage {0x0078d7_rgb },
+            BackgroundImage { {}, 0x0078d7_rgb },
         },
         {
             t<ACheckBox>::active(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
-            BackgroundImage {0x005499_rgb },
+            BackgroundImage { {}, 0x005499_rgb },
         },
         {
             Selected(t<ACheckBox>()),
@@ -279,7 +290,7 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { 0xa0a0a0_rgb },
+            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
         },
 
@@ -322,21 +333,21 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
-            BackgroundImage {0x333333_rgb },
+            BackgroundImage { {}, 0x333333_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage {0x0078d7_rgb },
+            BackgroundImage { {}, 0x0078d7_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
-            BackgroundImage {0x005499_rgb },
+            BackgroundImage { {}, 0x005499_rgb },
         },
         {
-                Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
+            Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
             BackgroundImage {":uni/svg/radio.svg" },
         },
         {
@@ -346,7 +357,7 @@ AStylesheet::AStylesheet() {
         {
             t<ARadioButton>::disabled() > t<ARadioButtonInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { 0xa0a0a0_rgb },
+            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
         },
 
@@ -632,6 +643,10 @@ AStylesheet::AStylesheet() {
             t<ADrawableView>(),
             MinSize { 12_dp },
         },
+        {
+            t<ADrawableIconView>(),
+            BackgroundImage { {}, {}, {}, Sizing::CONTAIN },
+        },
 
         // AGroupBox
         {
@@ -673,7 +688,6 @@ AStylesheet::AStylesheet() {
     });
 }
 
-
 AColor AStylesheet::getOsThemeColor() {
 #if AUI_PLATFORM_WIN
     auto impl = []() {
@@ -683,7 +697,7 @@ AColor AStylesheet::getOsThemeColor() {
         c |= 0xff000000;
         AColor osThemeColor = AColor::fromAARRGGBB(static_cast<unsigned>(c));
         float readability = osThemeColor.readabilityOfForegroundColor(0xffffffff);
-        if (readability < 0.3f)  {
+        if (readability < 0.3f) {
             osThemeColor = osThemeColor.darker(1.f - readability * 0.5f);
         }
         return osThemeColor;
@@ -696,9 +710,7 @@ AColor AStylesheet::getOsThemeColor() {
 #endif
 }
 
-AStylesheet& AStylesheet::global() {
-    return *globalStorage();
-}
+AStylesheet& AStylesheet::global() { return *globalStorage(); }
 
 _<AStylesheet>& AStylesheet::globalStorage() {
     static _<AStylesheet> s = _new<AStylesheet>();

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -219,7 +219,7 @@ public:
     }
 
     int getContentMinimumWidth() override {
-        if (mExpanding.x != 0 || mFixedSize.x != 0) {
+        if (expanding()->x != 0 || mFixedSize.x != 0) {
             // there's no need to calculate min size because width is defined.
             return 0;
         }

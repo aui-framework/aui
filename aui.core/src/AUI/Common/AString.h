@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <string>
 #include <iostream>
 #include "AUI/Core.h"
@@ -285,10 +286,9 @@ public:
 
 
     /**
-     * Inserts all values of the specified container to the end.
+     * @brief Inserts all values of the specified container to the end.
      * @tparam OtherContainer other container type.
      * @param c other container
-     * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
     void insertAll(const OtherContainer& c) noexcept {
@@ -588,6 +588,24 @@ public:
         return super::back();
     }
 
+    [[nodiscard]]
+    AOptional<char16_t> firstOpt() const noexcept
+    {
+        if (empty()) {
+            return std::nullopt;
+        }
+        return super::front();
+    }
+
+    [[nodiscard]]
+    AOptional<char16_t> lastOpt() const noexcept
+    {
+        if (empty()) {
+            return std::nullopt;
+        }
+        return super::back();
+    }
+
     const char16_t* c_str() const
     {
         return super::c_str();
@@ -641,15 +659,15 @@ public:
         return *this;
     }
 
-    const AString& operator=(const AString& value) noexcept
+    AString& operator=(const AString& value) noexcept
     {
         super::operator=(value);
         return *this;
     }
 
-    const AString& operator=(AString&& value) noexcept
+    AString& operator=(AString&& value) noexcept
     {
-        super::operator=(value);
+        super::operator=(std::move(value));
         return *this;
     }
 
@@ -704,7 +722,7 @@ public:
     AString processEscapes() const;
 
     AString& removeAll(char16_t c) noexcept {
-        erase(std::remove(begin(), end(), c));
+        erase(std::remove(begin(), end(), c), end());
         return *this;
     }
 
@@ -763,7 +781,7 @@ inline std::ostream& operator<<(std::ostream& o, const AString& s)
 template<>
 struct std::hash<AString>
 {
-    size_t operator()(const AString& t) const
+    size_t operator()(const AString& t) const noexcept
     {
         return std::hash<std::u16string>()(t);
     }
@@ -776,20 +794,44 @@ namespace aui::win32 {
      * convert AString to wchar_t* and back.
      */
 
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
     inline const wchar_t* toWchar(const AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return reinterpret_cast<const wchar_t *const>(string.data());
     }
 
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
     inline wchar_t* toWchar(AString& string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return reinterpret_cast<wchar_t*>(string.data());
     }
 
+    /**
+     * @brief AString to wchar_t string view.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
     inline std::wstring_view toWcharView(const AString& string) {
         return {toWchar(string), string.length() };
     }
 
+    /**
+     * @brief wchar_t string view to AString.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
     inline AString fromWchar(std::wstring_view string) {
         // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
         return {reinterpret_cast<const char16_t *>(string.data()), string.size()};

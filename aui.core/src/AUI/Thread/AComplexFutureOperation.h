@@ -56,7 +56,7 @@ public:
      * @param rhs other future
      * @details
      * Stores other AFuture to internal AAsyncHolder storage. Passes rhs's onError calls to AComplexFutureOperation's
-     * future, if it does not have result (!AFuture::hasResult()).
+     * future, if it does not have result.
      */
     template<typename OtherT>
     AComplexFutureOperation& operator<<(AFuture<OtherT> rhs) {

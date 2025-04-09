@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -14,3 +14,56 @@
 
 #include "AUI/api.h"
 #include "AUI/Util/Assert.h"
+
+#if AUI_ENABLE_DEATH_TESTS
+#define AUI_EXPECT_DEATH(statement, matcher) EXPECT_DEATH(statement, matcher)
+#else
+#define AUI_EXPECT_DEATH(statement, matcher)
+#endif
+
+
+/**
+ * @mainpage AUI Framework
+ * @htmlinclude ./docs/index.html
+ */
+
+
+/**
+ * @defgroup core aui::core
+ * @brief Main central library.
+ * @details
+ * Some additional features:
+ * - @ref AAbstractThread::interrupt() "interruptable threads"
+ * - @ref AI18n "i18n"
+ * - @ref ALogger "logging"
+ * - data models
+ * - trait classes
+ * - @ref AUrl "urls"
+ */
+
+
+
+/**
+ * @defgroup useful_macros Useful macros
+ * @ingroup core
+ * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
+ * @details
+ * @note
+ * For build-time macros, see @ref "docs/Macros.md".
+ */
+
+/**
+ * @defgroup io IO streams
+ * @ingroup core
+ * @brief Input-output streams
+ */
+
+/**
+ * @defgroup reflection Reflection
+ * @ingroup core
+ * @brief Basic reflection capabilities.
+ * @details
+ * @experimental
+ * This component provides functionality for reflection and introspection of classes and their members in compile-time.
+ * Some runtime methods are also available.
+ */

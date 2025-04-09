@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -210,7 +210,7 @@ ATreeView::ATreeView(const _<ITreeModel<AString>>& model):
 
 void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     if (mModel) {
-        clearSignals();
+        clearAllIngoingConnections();
     }
     mModel = model;
     setLayout(std::make_unique<AHorizontalLayout>());

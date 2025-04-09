@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -19,10 +19,11 @@
  * @brief Places views in a row.
  * @ingroup layout_managers
  * @details
- * <dl>
- *   <dt><b>UI Builder</b></dt>
- *   <dd><code>Horizontal</code></dd>
- * </dl>
+ *
+ * |             |                               |
+ * |-------------|-------------------------------|
+ * | Declarative notation | ` Horizontal { }` |
+ *
  * Horizontal layout manager places views in a row, fitting their height to the container's height.
  * Has a `Horizontal` shortcut that allows easy usage in UI building:
  * @code{cpp}

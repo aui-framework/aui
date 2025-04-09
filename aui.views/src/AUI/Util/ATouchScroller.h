@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -21,7 +21,7 @@
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.
- * @ingroup view
+ * @ingroup views
  * @details
  * To use this class, you have to pass APointerPressedEvent APointerReleasedEvent to handlePointerPressed and handlePointerReleased
  * methods accordingly. To receive scroll value, use handlePointerMove method.

@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -469,12 +469,14 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
                                                 &status);
 
-                        // delete key
-                        if (buf[0] != 127) {
-                            if (count) {
-                                AString s(buf);
-                                AUI_ASSERT(!s.empty());
-                                window->onCharEntered(s[0]);
+                        if (count > 0) {
+                            switch (buf[0]) {
+                                case 27: break; // esc
+                                case 127: break; // del
+                                default:
+                                    AString s(buf);
+                                    AUI_ASSERT(!s.empty());
+                                    window->onCharEntered(s[0]);
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));

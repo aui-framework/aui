@@ -1,7 +1,7 @@
 
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,7 +15,11 @@
 
 #include <Windows.h>
 #include <cassert>
+#if AUI_COMPILER_GCC
+#include <shlobj.h>
+#else
 #include <ShlObj_core.h>
+#endif
 #include "Ole.h"
 #include "AComPtr.h"
 #include "AUI/Logging/ALogger.h"

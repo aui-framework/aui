@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -59,5 +59,6 @@ void AScrollAreaViewport::applyGeometryToChildren() {
 }
 void AScrollAreaViewport::updateContentsScroll() {
     mInner->setPosition(-glm::ivec2(mScroll));
+    emit mScrollChanged(mScroll);
     redraw();
 }

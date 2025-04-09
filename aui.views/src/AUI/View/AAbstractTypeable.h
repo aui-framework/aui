@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -35,7 +35,7 @@ public:
     }
 
     void trimText() {
-        setText(text().trim());
+        setText(getText().trim());
     }
 
     void setCopyable(bool isCopyable) {
@@ -120,35 +120,22 @@ public:
 
 signals:
     /**
-     * <dl>
-     *   <dt><b>Emits</b></dt>
-     *   <dd>When the user changed text and focused another view.</dd>
-     *   <dd>When <code>AAbstractTextField::updateText</code> is called.</dd>
-     * </dl>
+     * @brief The user changed text and focused another view or `AAbstractTextField::updateText` is called.
      */
     emits<AString> textChanged;
 
     /**
-     * <dl>
-     *   <dt><b>Emits</b></dt>
-     *   <dd>When the user added/removed one or more symbols.</dd>
-     * </dl>
+     * @brief When the user changed one or more symbols.
      */
     emits<AString> textChanging;
 
     /**
-     * <dl>
-     *   <dt><b>Emits</b></dt>
-     *   <dd>When selection is changed due to user operation or code operation.</dd>
-     * </dl>
+     * @brief Selection is changed due to user's action or code operation.
      */
     emits<Selection> selectionChanged;
 
     /**
-     * <dl>
-     *   <dt><b>Emits</b></dt>
-     *   <dd>When action button of touchscreen keyboard or AInput::RETURN is pressed.</dd>
-     * </dl>
+     * @brief When action button of touchscreen keyboard or AInput::RETURN is pressed.
      */
     emits<> actionButtonPressed;
 

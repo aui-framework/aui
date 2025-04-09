@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -164,6 +164,7 @@ public:
     /**
      * @brief Acts as AViewContainerBase::getViewAtRecursive but calls a callback instead of returning value.
      * @param pos position relative to this container
+     * @param callback callback to call
      * @param flags see AViewLookupFlags
      * @return true if callback returned true; false otherwise
      * @details
@@ -218,10 +219,10 @@ public:
     }
 
     /**
-     * @brief
-     * @param pos position relative to this container
+     * @brief Performs recursive view traversal.
+     * @param callback callback to call. Returns true to finish traversal.
      * @param flags see AViewLookupFlags
-     * @return found view or nullptr
+     * @return true if there's at least one view for which callback returned true, false otherwise.
      */
     template<aui::predicate<_<AView>> Callback>
     bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
@@ -366,6 +367,11 @@ protected:
      * @brief Add view at specific index to the container.
      */
     void addView(size_t index, const _<AView>& view);
+
+    /**
+     * @brief Remove views from the container.
+     */
+    void removeViews(aui::range<AVector<_<AView>>::iterator> views);
 
     /**
      * @brief Remove view from the container.

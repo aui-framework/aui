@@ -1,7 +1,7 @@
 
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -24,7 +24,9 @@
 #include <AUI/Util/AStubWindowManager.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
-private:
+public:
+    MyListener() noexcept = default;
+
     static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
@@ -36,9 +38,6 @@ private:
         PngImageLoader::save(fos, image);
         return p;
     }
-
-public:
-    MyListener() noexcept = default;
 
     void OnTestPartResult(const testing::TestPartResult& result) override {
         EmptyTestEventListener::OnTestPartResult(result);
@@ -118,4 +117,15 @@ void testing::UITest::TearDown() {
     AWindow::destroyWindowManager();
 
     Test::TearDown();
+    UITestState::endUITest();
+}
+void testing::UITest::saveScreenshot(const AString& name) {
+    auto i = testing::UnitTest::GetInstance();
+    if (!i) return;
+    auto testCase = i->current_test_case();
+    if (!testCase) return;
+    auto testInfo = i->current_test_info();
+    if (!testInfo) return;
+    uitest::frame();
+    MyListener::saveScreenshot("", "{}.{}_{}.png"_format(testCase->name(), testInfo->name(), name));
 }

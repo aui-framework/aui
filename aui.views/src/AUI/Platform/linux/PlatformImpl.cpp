@@ -1,6 +1,6 @@
 ﻿/*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -26,30 +26,29 @@ float APlatform::getDpiRatio()
 {
     CommonRenderingContext::ensureXLibInitialized();
     if (CommonRenderingContext::ourDisplay == nullptr) return 1.f;
-    char *resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
-    XrmDatabase db;
-    XrmValue value;
-    char *type = NULL;
-    float dpi = 1.f;
 
-    if (!resourceString) {
-        return dpi;
-    }
-    do_once {
+    static auto value = [] {
+        char* resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
+
+        if (!resourceString) {
+            return 1.f;
+        }
         XrmInitialize();
-    };
 
-    db = XrmGetStringDatabase(resourceString);
+        XrmValue value;
+        char* type = nullptr;
 
-    if (resourceString) {
-        if (XrmGetResource(db, "Xft.dpi", "String", &type, &value)) {
+        auto db = aui::ptr::make_unique_with_deleter(XrmGetStringDatabase(resourceString), XrmDestroyDatabase);
+
+        if (XrmGetResource(db.get(), "Xft.dpi", "String", &type, &value)) {
             if (value.addr) {
-                dpi = atof(value.addr) / 96.f;
+                return float(atof(value.addr)) / 96.f;
             }
         }
-    }
+        return 1.f;
+    }();
 
-    return dpi;
+    return value;
 }
 
 void APlatform::openUrl(const AUrl& url) {

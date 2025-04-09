@@ -16,11 +16,12 @@ if(TARGET backtrace)
   return()
 endif()
 add_library(backtrace STATIC IMPORTED)
+get_filename_component(_IMPORT_PREFIX "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set_target_properties(backtrace PROPERTIES
-                      IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libbacktrace.a
-                      INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
+                      IMPORTED_LOCATION ${_IMPORT_PREFIX}/lib/libbacktrace.a
+                      INTERFACE_INCLUDE_DIRECTORIES ${_IMPORT_PREFIX}/include)
 ]])
 
-configure_file(backtrace-config.cmake.in ${CMAKE_BINARY_DIR}/backtrace-config.cmake)
+configure_file(backtrace-config.cmake.in ${CMAKE_BINARY_DIR}/backtrace-config.cmake @ONLY)
 
 install(FILES ${CMAKE_BINARY_DIR}/backtrace-config.cmake DESTINATION .)

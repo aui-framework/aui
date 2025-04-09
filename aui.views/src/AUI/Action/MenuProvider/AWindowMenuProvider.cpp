@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -76,7 +76,7 @@ class AMenuContainer : public AViewContainerBase {
 
                     if (i.enabled) {
                         connect(view->mouseEnter, [this] {
-                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
                             mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {
@@ -103,7 +103,7 @@ class AMenuContainer : public AViewContainerBase {
                     auto items = i.subItems;
                     if (i.enabled) {
                         connect(view->mouseEnter, [this, view, items] {
-                            mSublistOnHoverDisplayDelay->fired.clearAllConnections();
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
                             mSublistOnHoverDisplayDelay->stop();
 
                             if (mSubWindow) {

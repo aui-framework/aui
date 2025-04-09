@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -15,6 +15,7 @@
 #include <functional>
 #include <optional>
 #include <type_traits>
+#include <AUI/Util/Assert.h>
 
 class AObject;
 
@@ -127,7 +128,7 @@ namespace aui {
         }
 
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
          * @tparam T any type
          * @param raw raw pointer to manage memory of
          * @return shared pointer
@@ -136,7 +137,7 @@ namespace aui {
         static _<T> manage(T* raw);
 
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
          * @tparam T any type
          * @tparam Deleter object implementing <code>operator()(T*)</code>
          * @param raw raw pointer to manage memory of
@@ -145,8 +146,9 @@ namespace aui {
          */
         template<typename T, typename Deleter>
         static _<T> manage(T* raw, Deleter deleter);
+
         /**
-         * Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
          * @tparam T any type
          * @param raw raw pointer to manage memory of
          * @return unique pointer
@@ -155,7 +157,7 @@ namespace aui {
         static _unique<T> unique(T* raw);
 
         /**
-         * Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
+         * @brief Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
          * when some function accept shared pointer but you have only raw one.
          * @tparam T any type
          * @param raw raw pointer to manage memory of
@@ -277,27 +279,65 @@ public:
 
 
     template <typename Functor>
-    inline _<T>& operator^(Functor&& functor) {
+    const _<T>& operator^(Functor&& functor) const {
         functor(*this);
         return *this;
     }
+
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_lvalue_reference_t<T> value() const noexcept {
+#if AUI_DEBUG
+        AUI_ASSERTX(super::get() != nullptr, "an attempt to dereference a null pointer");
+#endif
+        return *super::get();
+    }
+
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_lvalue_reference_t<T> operator*() const noexcept {
+        return value();
+    }
+
+    /**
+     * @brief Dereferences the stored pointer.
+     * @details
+     * On a debug build, throws an assertion failure if the stored pointer is `nullptr`, otherwise behaviour is
+     * undefined.
+     */
+    [[nodiscard]]
+    std::add_pointer_t<T> operator->() const noexcept {
+        return &value();
+    }
+
     // forward ranged-for loops
-    auto begin() const {
+    auto begin() const requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() const {
+    auto end() const requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
-    auto begin() {
+    auto begin() requires requires(T& t) { t.begin(); } {
         return super::operator->()->begin();
     }
-    auto end() {
+    auto end() requires requires(T& t) { t.end(); } {
         return super::operator->()->end();
     }
 
     // operators
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) << std::forward<Arg>(r); }
     const _<T>& operator<<(Arg&& value) const {
         (*super::get()) << std::forward<Arg>(value);
         return *this;
@@ -315,8 +355,23 @@ public:
     }
 
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) + std::forward<Arg>(r); }
     const _<T>& operator+(Arg&& value) const {
         (*super::get()) + std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) & std::forward<Arg>(r); }
+    const _<T>& operator&(Arg&& value) const {
+        (*super::get()) & std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) | std::forward<Arg>(r); }
+    const _<T>& operator|(Arg&& value) const {
+        (*super::get()) | std::forward<Arg>(value);
         return *this;
     }
 
@@ -332,12 +387,8 @@ public:
         return *this;
     }
 
-    [[nodiscard]]
-    std::add_lvalue_reference_t<T> operator*() const noexcept {
-        return super::operator*();
-    }
-
     template<typename Arg>
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) - std::forward<Arg>(r); }
     const _<T>& operator-(Arg&& value) const {
         (*super::get()) - std::forward<Arg>(value);
         return *this;
@@ -348,8 +399,10 @@ public:
         (*super::get()) - std::forward<Arg>(value);
         return *this;
     }
+
     template<typename Arg>
-    _<T>& operator>>(Arg&& value) {
+    requires requires (T&& l, Arg&& r) { std::forward<T>(l) >> std::forward<Arg>(r); }
+    const _<T>& operator>>(Arg&& value) const {
         (*super::get()) >> std::forward<Arg>(value);
         return *this;
     }

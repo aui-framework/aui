@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -26,7 +26,7 @@ namespace {
     private:
         IFontView* mText;
         size_t mCount;
-        glm::ivec2 mPosition;
+        glm::ivec2 mPosition{};
 
     public:
         friend class ::ATextArea;
@@ -100,7 +100,7 @@ namespace {
         }
 
     private:
-        glm::ivec2 mPosition;
+        glm::ivec2 mPosition{};
     };
 
     class WordEntry final : public aui::detail::WordEntry {
@@ -187,7 +187,7 @@ AString ATextArea::toString() const {
     return text();
 }
 
-const AString& ATextArea::text() const {
+const AString& ATextArea::getText() const {
     if (!mCompiledText) {
         AString compiledText;
         compiledText.reserve(length());
@@ -242,11 +242,13 @@ void ATextArea::typeableErase(size_t begin, size_t end) {
 bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
     mCompiledText.reset();
     auto [target, relativeIndex] = getLeftEntity(at);
-    if ((*target)->getCharacterCount() == relativeIndex) {
-        target++;
-        relativeIndex = 0;
+    if (target != entities().end()) {
+        if ((*target)->getCharacterCount() == relativeIndex) {
+            target++;
+            relativeIndex = 0;
+        }
+        target = splitIfNecessary({ target, relativeIndex });
     }
-    target = splitIfNecessary({target, relativeIndex});
     for (auto i: toInsert | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
     }
@@ -431,7 +433,7 @@ void ATextArea::setSize(glm::ivec2 size) {
                 continue;
             }
 
-            connect(scrollbar->updatedMaxScroll, this, [this] {
+            mUpdatedMaxScrollSignal = connect(scrollbar->updatedMaxScroll, this, [this] {
                 AObject::disconnect();
                 AUI_NULLSAFE(findScrollArea())->scrollTo(ARect<int>::fromTopLeftPositionAndSize(
                             getPositionInWindow() + mCursorPosition - mPadding.leftTop(), {1, getFontStyle().size}));

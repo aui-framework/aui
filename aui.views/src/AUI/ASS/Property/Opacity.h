@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2024 Alex2772 and Contributors
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -16,13 +16,14 @@
 
 #include <AUI/Util/AMetric.h>
 #include <AUI/Traits/values.h>
+#include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
 namespace ass {
 
     /**
      * @brief Controls the opacity of AView.
-     * @ingroup ass
+     * @ingroup ass_properties
      */
     struct Opacity {
         aui::float_within_0_1 opacity;
@@ -32,7 +33,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<Opacity>: IPropertyBase {
+        struct API_AUI_VIEWS Property<Opacity>: IPropertyBase, IStringable {
         private:
             Opacity mInfo;
 
@@ -46,6 +47,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "Opacity({})"_format(mInfo.opacity);
             }
         };
     }
