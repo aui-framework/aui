@@ -159,11 +159,10 @@ bool isEventReserved(NSEvent* event) {
 - (NSArray<NSAttributedStringKey> *)validAttributesForMarkedText {
     ALOG_DEBUG(LOG_TAG) << "validAttributesForMarkedText";
     // This code is just copied from WebKit except renaming variables.
-    static NSArray* const kAttributes = @[
+    return @[
       NSUnderlineStyleAttributeName, NSUnderlineColorAttributeName,
       NSMarkedClauseSegmentAttributeName
     ];
-    return kAttributes;
 }
 
 - (NSRect)firstRectForCharacterRange:(NSRange)range actualRange:(NSRangePointer)actualRange {
