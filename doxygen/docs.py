@@ -47,6 +47,7 @@ if __name__ == '__main__':
 
     checks.are_all_in_group(Path("aui.views/src/AUI/ASS/Property"), "ass_properties")
     checks.are_all_in_group(Path("aui.views/src/AUI/ASS/Selector"), "ass_selectors")
+    checks.declarative_notation()
 
     generators.docs_from_tests()
     generators.docs_from_gen()

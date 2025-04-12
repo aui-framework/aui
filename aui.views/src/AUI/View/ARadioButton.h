@@ -39,6 +39,8 @@ public:
  * group of radio buttons, only one radio button at a time can be checked thus checking another radio button in a group
  * causes to switch off the previous one.
  *
+ * See @ref declarative::RadioButton for a declarative form and examples.
+ *
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ARadioButton : public AViewContainerBase, public ass::ISelectable {
@@ -115,5 +117,10 @@ private:
 };
 
 namespace declarative {
-    using RadioButton = aui::ui_building::view<ARadioButton>;
+    /**
+     * @declarativeformof{ARadioButton}
+     */
+    struct RadioButton: aui::ui_building::view<ARadioButton> {
+        using aui::ui_building::view<ARadioButton>::view;
+    };
 }

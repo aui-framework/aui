@@ -23,6 +23,8 @@
  * ASpacerFixed is fixed size blank view which acquires specified space in `Horizontal` and `Vertical` layouts. For the
  * rest of layout managers it does nothing.
  *
+ * See @ref declarative::SpacerFixed for a declarative form and examples.
+ *
  * ASpacerFixed follows direction of its container layout. That is, for `Horizontal` layout it consumes horizontal space
  * only and for `Vertical` layout it consumes vertical space only.
  *
@@ -36,9 +38,9 @@
  * @endcode
  * In this case, SpacerFixed occupies `100_dp` in horizontal but nothing in vertical.
  */
-class API_AUI_VIEWS ASpacerFixed: public AView {
+class API_AUI_VIEWS ASpacerFixed : public AView {
 public:
-    explicit ASpacerFixed(AMetric space): mSpace(space) {}
+    explicit ASpacerFixed(AMetric space) : mSpace(space) {}
     bool consumesClick(const glm::ivec2& pos) override;
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
@@ -47,7 +49,12 @@ private:
     AMetric mSpace;
 };
 
-
 namespace declarative {
-    using SpacerFixed = aui::ui_building::view<ASpacerFixed>;
-}
+
+/**
+ * @declarativeformof{ASpacerFixed}
+ */
+struct SpacerFixed : aui::ui_building::view<ASpacerFixed> {
+    using aui::ui_building::view<ASpacerFixed>::view;
+};
+}   // namespace declarative
