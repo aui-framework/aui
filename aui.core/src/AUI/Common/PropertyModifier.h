@@ -36,74 +36,39 @@ inline decltype(auto) operator*(const aui::PropertyModifier<T>& t) {
     return t.value();
 }
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator==(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs == std::forward<Rhs>(rhs);
-}
+#define AUI_DETAIL_BINARY_OP(op)                                                     \
+template<typename T, typename Rhs>                                                   \
+inline decltype(auto) operator op (const aui::PropertyModifier<T>& lhs, Rhs&& rhs) { \
+    return *lhs op std::forward<Rhs>(rhs);                                           \
+}                                                                                    \
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator!=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs != std::forward<Rhs>(rhs);
-}
+// keep in sync with AProperty.h
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator<<(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs << std::forward<Rhs>(rhs);
-}
+// comparison
+AUI_DETAIL_BINARY_OP(==)
+AUI_DETAIL_BINARY_OP(!=)
+AUI_DETAIL_BINARY_OP(<=)
+AUI_DETAIL_BINARY_OP(>=)
+AUI_DETAIL_BINARY_OP(<)
+AUI_DETAIL_BINARY_OP(>)
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator>>(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs >> std::forward<Rhs>(rhs);
-}
+// arithmetic/logical
+AUI_DETAIL_BINARY_OP(+)
+AUI_DETAIL_BINARY_OP(-)
+AUI_DETAIL_BINARY_OP(*)
+AUI_DETAIL_BINARY_OP(/)
+AUI_DETAIL_BINARY_OP(&)
+AUI_DETAIL_BINARY_OP(&&)
+AUI_DETAIL_BINARY_OP(|)
+AUI_DETAIL_BINARY_OP(||)
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator<(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs < std::forward<Rhs>(rhs);
-}
+// assignment
+AUI_DETAIL_BINARY_OP(+=)
+AUI_DETAIL_BINARY_OP(-=)
+AUI_DETAIL_BINARY_OP(*=)
+AUI_DETAIL_BINARY_OP(/=)
+AUI_DETAIL_BINARY_OP(&=)
+AUI_DETAIL_BINARY_OP(|=)
 
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator>(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs > std::forward<Rhs>(rhs);
-}
-
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator<=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs <= std::forward<Rhs>(rhs);
-}
-
-template<typename T, typename Rhs>
-[[nodiscard]]
-inline auto operator>=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs >= std::forward<Rhs>(rhs);
-}
-
-template<AAnyProperty T, typename Rhs>
-[[nodiscard]]
-inline auto operator+(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs + std::forward<Rhs>(rhs);
-}
-
-template<AAnyProperty T, typename Rhs>
-[[nodiscard]]
-inline auto operator-(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs - std::forward<Rhs>(rhs);
-}
-
-template<AAnyProperty T, typename Rhs>
-[[nodiscard]]
-inline auto operator+=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs += std::forward<Rhs>(rhs);
-}
-
-template<AAnyProperty T, typename Rhs>
-[[nodiscard]]
-inline auto operator-=(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {
-    return *lhs -= std::forward<Rhs>(rhs);
-}
+#undef AUI_DETAIL_BINARY_OP
+#undef AUI_DETAIL_BINARY_OP_ASSIGN
