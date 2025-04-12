@@ -19,6 +19,7 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
 #include <AUI/View/AViewContainer.h>
+#include <AUI/Reflect/members.h>
 
 
 /**
@@ -550,6 +551,7 @@ struct Binding {
 };
 
 template <AAnyProperty Property, typename Destination>
+requires aui::reflect::pointer_to_member<Destination> || std::is_class_v<Destination>
 inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
     return Binding<Property, Destination>(std::forward<Property>(sourceProperty), std::forward<Destination>(rhs));
 }

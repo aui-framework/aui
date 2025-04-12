@@ -370,6 +370,16 @@ struct AJsonConv<AJson::Object> {
     }
 };
 
+template<typename T, auto min, auto max>
+struct AJsonConv<aui::ranged_number<T, min, max>> {
+    static AJson toJson(aui::ranged_number<T, min, max> value) {
+        return *value;
+    }
+    static void fromJson(const AJson& json, aui::ranged_number<T, min, max>& dst) {
+        *dst = json.asLongInt();
+    }
+};
+
 template<ranges::range T>
 struct AJsonConv<T> {
     static AJson toJson(const T& v) {

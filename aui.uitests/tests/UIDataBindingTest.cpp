@@ -28,6 +28,53 @@
 class UIDataBindingTest : public testing::UITest {
 };
 
+TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
+    AProperty<float> less = 1;
+    AProperty<float> larger = 2;
+    EXPECT_TRUE(less != larger);
+
+    EXPECT_TRUE(less < larger);
+    EXPECT_TRUE(less <= larger);
+
+    EXPECT_FALSE(less > larger);
+    EXPECT_FALSE(less > larger);
+
+    EXPECT_TRUE(less < larger && less < larger);
+    EXPECT_TRUE(less <= larger && less <= larger);
+    EXPECT_FALSE(less > larger && less > larger);
+    EXPECT_FALSE(less >= larger && less >= larger);
+
+    EXPECT_TRUE(less != 0.f);
+
+    EXPECT_TRUE(less < 2.f);
+    EXPECT_TRUE(less <= 2.f);
+
+    EXPECT_FALSE(less > 2.f);
+    EXPECT_FALSE(less > 2.f);
+
+    EXPECT_TRUE(less < 2.f && less < 2.f);
+    EXPECT_TRUE(less <= 2.f && less <= 2.f);
+    EXPECT_FALSE(less > 2.f && less > 2.f);
+    EXPECT_FALSE(less >= 2.f && less >= 2.f);
+
+    EXPECT_TRUE(less != 0);
+
+    EXPECT_TRUE(less < 2);
+    EXPECT_TRUE(less <= 2);
+
+    EXPECT_FALSE(less > 2);
+    EXPECT_FALSE(less > 2);
+
+    EXPECT_TRUE(less < 2 && less < 2);
+    EXPECT_TRUE(less <= 2 && less <= 2);
+    EXPECT_FALSE(less > 2 && less > 2);
+    EXPECT_FALSE(less >= 2 && less >= 2);
+
+
+    AProperty<bool> isValid;
+    isValid = less > 0 && larger > 0 && larger > 0;
+}
+
 
 // AUI_DOCS_OUTPUT: doxygen/intermediate/properties.h
 // @defgroup property_system Property System

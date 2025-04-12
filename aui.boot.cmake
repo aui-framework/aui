@@ -505,6 +505,7 @@ endfunction()
 
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
