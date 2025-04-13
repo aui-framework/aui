@@ -121,6 +121,7 @@ AInput::Key AInput::fromNative(int key) {
 	case VK_F13:        vkey = AInput::F13;        break;
 	case VK_F14:        vkey = AInput::F14;        break;
 	case VK_F15:        vkey = AInput::F15;        break;
+	case VK_SNAPSHOT:   vkey = AInput::PRINTSCREEN;break;
 	case VK_PAUSE:      vkey = AInput::PAUSE;      break;
 	case VK_LBUTTON:    vkey = AInput::LBUTTON;    break;
 	case VK_RBUTTON:    vkey = AInput::RBUTTON;    break;
