@@ -148,19 +148,14 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 
 #define AUI_DETAIL_BINARY_OP(op)                                                       \
 template<AAnyProperty T, typename Rhs>                                                 \
-[[nodiscard]]                                                                          \
-inline decltype(auto) operator op (const T& lhs, Rhs&& rhs) {                          \
-    return *lhs op std::forward<Rhs>(rhs);                                             \
-}                                                                                      \
-
-#define AUI_DETAIL_BINARY_OP_ASSIGN(op)                                                \
-template<AAnyProperty T, typename Rhs>                                                 \
-inline decltype(auto) operator op (T&& lhs, Rhs&& rhs) {                               \
-    if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) { /* const operator?*/ \
+inline decltype(auto) operator op (T&& lhs, Rhs&& rhs) { /* property forwarding op */  \
+    /* try const operator first */                                                     \
+    if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                      \
         return *lhs op std::forward<Rhs>(rhs);                                         \
-   } else {                                                                            \
-       return *lhs.writeScope() op std::forward<Rhs>(rhs);                             \
-   }                                                                                   \
+    } else {                                                                           \
+        /* fallback to a non-const version, involving writeScope() */                  \
+        return *lhs.writeScope() op std::forward<Rhs>(rhs);                            \
+    }                                                                                  \
 }                                                                                      \
 // note: sync this PropertyModifier.h
 
@@ -181,17 +176,20 @@ AUI_DETAIL_BINARY_OP(&)
 AUI_DETAIL_BINARY_OP(&&)
 AUI_DETAIL_BINARY_OP(|)
 AUI_DETAIL_BINARY_OP(||)
+AUI_DETAIL_BINARY_OP(<<)
+AUI_DETAIL_BINARY_OP(>>)
 
 // assignment
-AUI_DETAIL_BINARY_OP_ASSIGN(+=)
-AUI_DETAIL_BINARY_OP_ASSIGN(-=)
-AUI_DETAIL_BINARY_OP_ASSIGN(*=)
-AUI_DETAIL_BINARY_OP_ASSIGN(/=)
-AUI_DETAIL_BINARY_OP_ASSIGN(&=)
-AUI_DETAIL_BINARY_OP_ASSIGN(|=)
+AUI_DETAIL_BINARY_OP(+=)
+AUI_DETAIL_BINARY_OP(-=)
+AUI_DETAIL_BINARY_OP(*=)
+AUI_DETAIL_BINARY_OP(/=)
+AUI_DETAIL_BINARY_OP(&=)
+AUI_DETAIL_BINARY_OP(|=)
+AUI_DETAIL_BINARY_OP(<<=)
+AUI_DETAIL_BINARY_OP(>>=)
 
 #undef AUI_DETAIL_BINARY_OP
-#undef AUI_DETAIL_BINARY_OP_ASSIGN
 
 
 

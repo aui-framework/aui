@@ -172,6 +172,11 @@ struct AProperty: AObjectBase {
         return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
     }
 
+    template<typename Rhs>
+    decltype(auto) operator[](Rhs&& rhs) const {
+        return raw[std::forward<Rhs>(rhs)];
+    }
+
 private:
     friend class AObject;
     /**
