@@ -165,7 +165,12 @@ namespace AInput {
         KEYCOUNT,                ///< Keep last -- the total number of keyboard keys
 
         /* meta keys */
-        CMD_CTRL = AUI_PLATFORM_APPLE ? CMD : LCONTROL, ///< Maps to CMD on Apple platforms, CTRL otherwise
+        CMD_CTRL =               ///< Maps to CMD on Apple platforms, CTRL otherwise
+#if AUI_PLATFORM_APPLE
+      CMD,
+#else
+      LCONTROL,
+#endif
     };
     API_AUI_VIEWS Key fromNative(int w);
 
