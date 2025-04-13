@@ -157,7 +157,7 @@ namespace AInput {
         INTERNATIONAL1,          ///< The Ro (JIS) key (Cosmo_USB2ADB.c)
         INTERNATIONAL3,          ///< The Yen (JIS) key (Cosmo_USB2ADB.c)
 
-#if AUI_PLATFORM_MACOS
+#if AUI_PLATFORM_APPLE
         CMD = LSYSTEM,           ///< The CMD key (Apple only)
 #endif
 
