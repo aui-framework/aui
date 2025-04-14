@@ -83,10 +83,12 @@ void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
     if (!mHandle) return;
     if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
+    /*
+        breaks text input and looks poor
         auto s = static_cast<NSWindow*>(mHandle);
         [s setStyleMask:NSWindowStyleMaskBorderless];
         [s setTitlebarAppearsTransparent:YES];
-        [s setTitleVisibility:NSWindowTitleHidden];
+        [s setTitleVisibility:NSWindowTitleHidden];*/
     }
 }
 

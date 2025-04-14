@@ -68,3 +68,16 @@ def are_all_in_group(directory: Path, group: str):
                         if matching != expected:
                             common.report_error(src.file, f"\"{matching}\" does not match \"{expected}\"",
                                                 line=src.line_number)
+
+def declarative_notation():
+    for root, dirs, files in os.walk("aui.views/src/AUI/View"):
+        for file in files:
+            if file.endswith(".h"):
+                full_path = (Path(root) / file)
+                content = full_path.read_text()
+                if not "namespace declarative" in content:
+                    continue
+                if not "@ref declarative::" in content:
+                    common.report_error(full_path, "no references to declarative form")
+                if not "@declarativeformof" in content:
+                    common.report_error(full_path, "does not contain @declarativeformof")

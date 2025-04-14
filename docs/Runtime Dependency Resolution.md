@@ -57,6 +57,10 @@ Additionally, RPATH is populated by compiler with hardcoded absolute paths to th
 copying might seem redundant when the entire project with all its dependencies are built on the same machine. Since AUI
 Boot allows usage of precompiled binaries, instead of paying extra cost determining whether the dependencies are built
 locally or externally it just copies them to the build tree regardless of their origin.
+@note
+The hardcoded full path is suitable for the only machine where binary is built. CMake's
+@ref CMAKE_INSTALL "--install" command clears these paths, opting to use an universal RPATH to make these binaries
+relocable. AUI.Boot populates RPATH on its own, see the section above.
 
 # Install-time shared library resolution {#CMAKE_INSTALL}
 

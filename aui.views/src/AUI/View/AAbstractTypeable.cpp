@@ -65,13 +65,20 @@ void AAbstractTypeable::handleKey(AInput::Key key)
     mTextChangedFlag = true;
     switch (key)
     {
+        case AInput::BACKSPACE:
+            if (hasSelection()) {
+                eraseSelection();
+            } else {
+                if (mCursorIndex != 0) {
+                    typeableErase(mCursorIndex - 1, mCursorIndex);
+                    mCursorIndex -= 1;
+                    typeableInvalidateFont();
+                }
+            }
+            break;
         case AInput::DEL:
             if (hasSelection()) {
-                auto sel = selection();
-                typeableErase(sel.begin, sel.end);
-                typeableInvalidateFont();
-                mCursorSelection.reset();
-                mCursorIndex = sel.begin;
+                eraseSelection();
             } else {
                 if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
                     auto index = typeableFind(' ', mCursorIndex);
@@ -150,10 +157,19 @@ void AAbstractTypeable::handleKey(AInput::Key key)
 void AAbstractTypeable::fastenSelection() {
     if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
         mCursorSelection.reset();
-    } else if (!mCursorSelection)
-    {
+    } else if (!mCursorSelection) {
         mCursorSelection = mCursorIndex;
     }
+}
+
+void AAbstractTypeable::eraseSelection() {
+    AUI_ASSERT(hasSelection());
+
+    auto sel = selection();
+    typeableErase(sel.begin, sel.end);
+    typeableInvalidateFont();
+    mCursorSelection.reset();
+    mCursorIndex = sel.begin;
 }
 
 void AAbstractTypeable::paste(AString content) {
@@ -213,6 +229,9 @@ void AAbstractTypeable::enterChar(char16_t c)
         AInput::isKeyDown(AInput::RCONTROL) ||
         c == '\t')
         return;
+    if (c == '\b') { // some OSes report backspace as char event.
+        return;
+    }
     if (c == '\r') {
         c = '\n';
     }
@@ -226,9 +245,6 @@ void AAbstractTypeable::enterChar(char16_t c)
 
         switch (c)
         {
-            case '\b':
-                mCursorIndex = sel.begin;
-                break;
             default:
                 if (typeableInsert(sel.begin, c)) {
                     mCursorIndex = sel.begin + 1;
@@ -238,23 +254,12 @@ void AAbstractTypeable::enterChar(char16_t c)
         }
         mCursorSelection.reset();
     } else {
-        switch (c)
-        {
-            case '\b':
-                if (mCursorIndex != 0) {
-                    typeableErase(mCursorIndex - 1, mCursorIndex);
-                    mCursorIndex -= 1;
-                }
-                break;
-            default:
-                if (mMaxTextLength <= length())
-                    return;
-                if (!typeableInsert(mCursorIndex, c)) {
-                    return;
-                }
-                ++mCursorIndex;
-
+        if (mMaxTextLength <= length())
+            return;
+        if (!typeableInsert(mCursorIndex, c)) {
+            return;
         }
+        ++mCursorIndex;
     }
     typeableInvalidateFont();
     updateCursorBlinking();

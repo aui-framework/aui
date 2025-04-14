@@ -21,6 +21,8 @@
  * @details
  * Group box provides a frame and a customizable title on top.
  *
+ * See @ref declarative::GroupBox for a declarative form and examples.
+ *
  * If the title is a checkbox then it's checked state used to enable/disable the elements of this group box.
  *
  * Frame of the groupbox can be customized by `".agroupbox-inner"` class as like the title is customized by
@@ -50,5 +52,10 @@ private:
 
 
 namespace declarative {
-    using GroupBox = aui::ui_building::view<AGroupBox>;
+    /**
+     * @declarativeformof{AGroupBox}
+     */
+    struct GroupBox: aui::ui_building::view<AGroupBox> {
+        GroupBox(_<AView> titleView, _<AView> contentView): aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
+    };
 }

@@ -65,8 +65,10 @@ function(_auib_fix_multiconfiguration)
     return()
 endfunction()
 
+# note: declaring those as a variables to support backward compatibility
+# cmake_policy fires an error if an unknown policy is passed
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
-cmake_policy(SET CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
+set(CMAKE_POLICY_DEFAULT_CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"

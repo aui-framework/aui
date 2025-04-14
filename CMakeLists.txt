@@ -72,10 +72,10 @@ define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
 define_aui_component(audio)
+define_aui_component(updater)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
-    define_aui_component(updater)
 endif()
 
 if (AUI_BUILD_EXAMPLES) 

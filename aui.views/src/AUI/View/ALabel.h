@@ -19,6 +19,8 @@
  * @ingroup useful_views
  * @details
  * ALabel is used for displaying nonformatted single-line text.
+ *
+ * See @ref declarative::Label for a declarative form and examples.
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {
 public:
@@ -27,7 +29,12 @@ public:
 
 
 namespace declarative {
-    using Label = aui::ui_building::view<ALabel>;
+/**
+ * @declarativeformof{ALabel}
+ */
+struct Label: aui::ui_building::view<ALabel> {
+    using aui::ui_building::view<ALabel>::view;
+};
 }
 
 template<>

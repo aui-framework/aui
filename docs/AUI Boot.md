@@ -73,6 +73,8 @@ occurred on non-primary key, the newer cache will be uploaded to GitHub so the s
 
 # Importing 3rdparty libraries {#AUI_BOOT_3RDPARTY}
 
+For a maintained list of `auib_import`ed libraries, please visit https://github.com/aui-framework/boot.
+
 AUI Framework has a lot of modules and functionality, however, it never pretends to be all-in-one solution for
 everything. We value quality over quantity. It is just a basis (framework), where you are free to put whatever building
 blocks you want, and we encourage you to do so, particularly, by using 3rdparty libraries. Just don't forget to obey
@@ -160,10 +162,38 @@ AUI_ENTRY {
 
     sentry_close();
 };
-
 ```
 
-For more libraries, please visit https://github.com/aui-framework/boot.
+## How to fix "Could not resolve dependency" error
+
+Common scenario:
+
+1. Remove AUI.Boot cache `~/.aui`
+2. Remove your build directory
+
+And try again.
+
+### "looks like a config file does not exist for your project" {#AFJKLF}
+
+This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
+this scenario will be forking the library and append their `CMakeLists.txt` on your own.
+
+You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
+
+### "did you mean PACKAGE_NAME?" {#AKJFHJ}
+
+You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
+`auib_import` to `PACKAGE_NAME`.
+
+### "Imported target ... depends on an out-of-tree file" {#AFKJNJKAN}
+
+The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
+library by forking it. You can consult with
+[Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
 
 # Using AUI Boot without AUI
 
@@ -476,17 +506,22 @@ Introducing additional building layer literally multiplies the building complexi
 already introduce such a layer (called Gradle). For example, if we were using [Conan](https://conan.io/), Android
 building process would have 4 layers: Gradle, CMake, Conan, CMake (yes, 2 CMake layers).
 
-AUI Boot (and [CPM](https://github.com/cpm-cmake/CPM.cmake)) require CMake only and don't involve extra runtime.
+AUI Boot (and [CPM](https://github.com/cpm-cmake/CPM.cmake)) require CMake only and don't involve extra runtime. Build
+should be easily reproducible, i.e., invocation of CMake (`cmake -S . -B build`) is sufficient to set up a dev
+environment. No additional tinkering (i.e, downloading and installing external tools or libraries, passing them to
+the build) is required, with an exception to application's domain (for example, auth/API keys).
 
 That being said, let's overview alternatives:
 
 - [CPM](https://github.com/cpm-cmake/CPM.cmake) (CMake's missing package manager) - almost perfectly suits our needs but
   lacks precompiled packages support which renders painful to some of our users.
-- [vcpkg](https://github.com/microsoft/vcpkg) - external and maintained by Microsoft.
+- [vcpkg](https://github.com/microsoft/vcpkg) - external and maintained by Microsoft. Requires additional setup and
+  overwriting `CMAKE_TOOLCHAIN_FILE`. In case of Android, additional tinkering with Gradle script is required.
 - [conan](https://conan.io/) - external, requires Python runtime and knowledge. Using Conan leads to 3 browser tabs
-  always opened: Python docs, Conan docs and CMake docs. Pushes Artifactory which is a paid self-hosted solution but
-  thanks to that offers free large repository of precompiled packages. Conan is slowly becoming a de facto standard for
-  C++ so we're looking forward for adding conan support (without dropping AUI Boot).
+  always opened: Python docs, Conan docs and CMake docs. In case of Android, additional tinkering with Gradle script is
+  required. Pushes Artifactory which is a paid self-hosted solution but thanks to that offers free large repository of
+  precompiled packages. Conan is slowly becoming a de facto standard for C++ so we're looking forward for adding conan
+  support (without dropping AUI Boot).
 - CMake's FindPackage/FetchContent/ExternalProject - limited, involve a lot of boilerplate, can't be tweaked from
   configure-time variables, lack precompiled binaries.
 

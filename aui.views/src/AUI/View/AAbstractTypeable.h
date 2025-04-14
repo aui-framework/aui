@@ -208,6 +208,7 @@ private:
     void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
 
     void fastenSelection();
+    void eraseSelection();
 };
 
 
