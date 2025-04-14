@@ -212,34 +212,34 @@ AInput::Key AInput::fromNative(int k) {
             key = AInput::DOWN;
             break;
         case XK_KP_Insert:
-            key = AInput::NUMPAD0;
+            key = AInput::NUMPAD_0;
             break;
         case XK_KP_End:
-            key = AInput::NUMPAD1;
+            key = AInput::NUMPAD_1;
             break;
         case XK_KP_Down:
-            key = AInput::NUMPAD2;
+            key = AInput::NUMPAD_2;
             break;
         case XK_KP_Page_Down:
-            key = AInput::NUMPAD3;
+            key = AInput::NUMPAD_3;
             break;
         case XK_KP_Left:
-            key = AInput::NUMPAD4;
+            key = AInput::NUMPAD_4;
             break;
         case XK_KP_Begin:
-            key = AInput::NUMPAD5;
+            key = AInput::NUMPAD_5;
             break;
         case XK_KP_Right:
-            key = AInput::NUMPAD6;
+            key = AInput::NUMPAD_6;
             break;
         case XK_KP_Home:
-            key = AInput::NUMPAD7;
+            key = AInput::NUMPAD_7;
             break;
         case XK_KP_Up:
-            key = AInput::NUMPAD8;
+            key = AInput::NUMPAD_8;
             break;
         case XK_KP_Page_Up:
-            key = AInput::NUMPAD9;
+            key = AInput::NUMPAD_9;
             break;
         case XK_a:
             key = AInput::A;
@@ -523,34 +523,34 @@ int AInput::toNative(Key key) {
         case AInput::DOWN:
             keysym = XK_Down;
             break;
-        case AInput::NUMPAD0:
+        case AInput::NUMPAD_0:
             keysym = XK_KP_Insert;
             break;
-        case AInput::NUMPAD1:
+        case AInput::NUMPAD_1:
             keysym = XK_KP_End;
             break;
-        case AInput::NUMPAD2:
+        case AInput::NUMPAD_2:
             keysym = XK_KP_Down;
             break;
-        case AInput::NUMPAD3:
+        case AInput::NUMPAD_3:
             keysym = XK_KP_Page_Down;
             break;
-        case AInput::NUMPAD4:
+        case AInput::NUMPAD_4:
             keysym = XK_KP_Left;
             break;
-        case AInput::NUMPAD5:
+        case AInput::NUMPAD_5:
             keysym = XK_KP_Begin;
             break;
-        case AInput::NUMPAD6:
+        case AInput::NUMPAD_6:
             keysym = XK_KP_Right;
             break;
-        case AInput::NUMPAD7:
+        case AInput::NUMPAD_7:
             keysym = XK_KP_Home;
             break;
-        case AInput::NUMPAD8:
+        case AInput::NUMPAD_8:
             keysym = XK_KP_Up;
             break;
-        case AInput::NUMPAD9:
+        case AInput::NUMPAD_9:
             keysym = XK_KP_Page_Up;
             break;
         case AInput::A:

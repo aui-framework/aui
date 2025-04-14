@@ -36,32 +36,33 @@ MacosApp& MacosApp::inst() {
 
 MacosApp::MacosApp() {
     AUI_ASSERTX([NSThread isMainThread], "MacosApp should be used only in main thread");
-    auto pool = [[NSAutoreleasePool alloc] init];
-    // NSString *d = [[[NSBundle mainBundle] bundleIdentifier];
-    auto nsApp = [AUINSApplication sharedApplication];
-    [nsApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    //[NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
-    auto mainMenu = [NSMenu new];
-    [nsApp setMainMenu:mainMenu];
+    @autoreleasepool {
+        auto nsApp = [AUINSApplication sharedApplication];
+        [nsApp setActivationPolicy:NSApplicationActivationPolicyRegular];
+        auto mainMenu = [NSMenu new];
+        [nsApp setMainMenu:mainMenu];
 
-    auto appMenu = [NSMenu new];
-    auto appMenuItem = [NSMenuItem new];
-    [appMenu addItemWithTitle: @"About" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
-    [appMenu addItem: [NSMenuItem separatorItem]];
-    // [appMenu addItemWithTitle: @"Preferences…" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@","];
-    [appMenu addItemWithTitle: @"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
-    [appMenuItem setSubmenu:appMenu];
-    [mainMenu addItem:appMenuItem];
+        auto appMenu = [NSMenu new];
+        auto appMenuItem = [NSMenuItem new];
+        [appMenu addItemWithTitle: @"About" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@""];
+        [appMenu addItem: [NSMenuItem separatorItem]];
+        // [appMenu addItemWithTitle: @"Preferences…" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@","];
+        [appMenu addItemWithTitle: @"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+        [appMenuItem setSubmenu:appMenu];
+        [mainMenu addItem:appMenuItem];
 
-    [pool release];
-    mNsApp = nsApp;
+        mNsApp = (__bridge void*)nsApp;
+    }
 }
 
 void MacosApp::run() {
-    [static_cast<AUINSApplication*>(mNsApp) run];
+    @autoreleasepool {
+        auto app = (__bridge AUINSApplication*)mNsApp;
+        [app run];
+    }
 }
 void MacosApp::activateIgnoringOtherApps() {
-    auto app = static_cast<AUINSApplication*>(mNsApp);
+    auto app = (__bridge AUINSApplication*)mNsApp;
     [app activateIgnoringOtherApps:YES];
     if (auto w = dynamic_cast<AWindow*>(AWindow::current())) {
         [static_cast<NSWindow*>(w->nativeHandle()) makeKeyAndOrderFront:app];
