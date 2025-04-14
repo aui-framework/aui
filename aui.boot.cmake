@@ -750,7 +750,8 @@ function(auib_import AUI_MODULE_NAME URL)
             _auib_try_find()
         endif()
     endif()
-    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
+
+    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/FETCHED) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -846,6 +847,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                    file(TOUCH "${DEP_SOURCE_DIR}/FETCHED")
                 endif ()
             endif()
         endif()
@@ -1041,6 +1043,10 @@ function(auib_import AUI_MODULE_NAME URL)
                 file(REMOVE_RECURSE ${DEP_BINARY_DIR})
 
             endif()
+        endif()
+    else()
+        if (DEP_ADD_SUBDIRECTORY AND AUIB_IMPORT_CMAKE_WORKING_DIR)
+            set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
         endif()
     endif()
     if (_locked)
