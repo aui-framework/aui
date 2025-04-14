@@ -286,7 +286,7 @@ TEST_F(UITextArea, Backspace) {
     EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>().perform(type("aui"));
     EXPECT_EQ(mTextArea->text(), "aui");
-    By::type<ATextArea>().perform(type("\b"));
+    By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
     EXPECT_EQ(mTextArea->text(), "au");
     EXPECT_EQ(entries().size(), 1);
 }
@@ -301,7 +301,7 @@ TEST_F(UITextArea, BackspaceFuzzy) {
             expected.erase(i - 1, 1);
         }
         mTextArea->setSelection(static_cast<int>(i));
-        By::type<ATextArea>().perform(type("\b"));
+        By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
         ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << i << ")";
     }
 }
@@ -321,7 +321,7 @@ TEST_F(UITextArea, EraseFuzzy) {
             }
             mTextArea->setSelection({i, j});
             auto selection = mTextArea->selection();
-            By::type<ATextArea>().perform(type("\b"));
+            By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
             ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << selection << ")";
         }
     }
