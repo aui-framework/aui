@@ -555,7 +555,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -642,10 +642,13 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SHARED_OR_STATIC static)
         set(CMAKE_POSITION_INDEPENDENT_CODE ON) # -fPIC required on linux
     endif()
+
+    # [[BUILD_SPECIFIER]]
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
     string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+    # [[BUILD_SPECIFIER]]
 
     # append module name to build specifier in order to distinguish modules in prefix/ dir
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
@@ -720,28 +723,6 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                 BINARY_DIR ${DEP_BINARY_DIR})
-    endif()
-
-    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-        # validate the CMAKELISTS_CUSTOM param
-        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
-            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
-        endif()
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
-        endif()
-    endif()
-
-    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-        # validate the CMAKELISTS_CUSTOM param
-        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
-            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
-        endif()
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
-        endif()
     endif()
 
     if (NOT DEP_ADD_SUBDIRECTORY)
@@ -858,10 +839,6 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
             if (NOT DEP_ADD_SUBDIRECTORY)
-                if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-                    configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
-                endif()
-
                 message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
                 get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
@@ -1055,9 +1032,6 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
-        if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-            configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
-        endif()
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     elseif(NOT ${AUI_MODULE_NAME}_FOUND)

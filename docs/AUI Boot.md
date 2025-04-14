@@ -1,7 +1,7 @@
 AUI Boot is yet another package manager based on CMake. If a library uses CMake with
 [good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases 
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
-it in `~/.aui` folder for future reuse.
+it in @ref AUIB_CACHE folder for future reuse.
 
 # Importing AUI
 
@@ -53,7 +53,7 @@ This way AUI Boot will never try to use precompiled binaries and will try to bui
 
 # CI caching {#CI_CACHING}
 
-No matter using precompiled binaries or building them locally, it's convenient to cache AUI Boot cache (`~/.aui`) in
+No matter using precompiled binaries or building them locally, it's convenient to cache @ref AUIB_CACHE in
 your CIs:
 
 @snippet .github/workflows/build.yml cache example
@@ -74,6 +74,15 @@ occurred on non-primary key, the newer cache will be uploaded to GitHub so the s
 # Importing 3rdparty libraries {#AUI_BOOT_3RDPARTY}
 
 For a maintained list of `auib_import`ed libraries, please visit https://github.com/aui-framework/boot.
+
+```
+auib_import(Boost https://github.com/boostorg/boost/releases/download/boost-1.84.0/boost-1.84.0.tar.xz
+    ARCHIVE
+    CMAKE_ARGS -DBOOST_ENABLE_CMAKE=ON
+)
+
+aui_link(${PROJECT_NAME} PRIVATE Boost::boost)
+```
 
 AUI Framework has a lot of modules and functionality, however, it never pretends to be all-in-one solution for
 everything. We value quality over quantity. It is just a basis (framework), where you are free to put whatever building
@@ -168,7 +177,7 @@ AUI_ENTRY {
 
 Common scenario:
 
-1. Remove AUI.Boot cache `~/.aui`
+1. Remove @ref AUIB_CACHE
 2. Remove your build directory
 
 And try again.
@@ -178,10 +187,6 @@ And try again.
 This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
 this scenario will be forking the library and append their `CMakeLists.txt` on your own.
 
-You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
-[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
-`CMakeLists.txt` of the library.
-
 ### "did you mean PACKAGE_NAME?" {#AKJFHJ}
 
 You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
@@ -190,9 +195,29 @@ You have mispelled the package name (the first argument to `auib_import`). Pleas
 ### "Imported target ... depends on an out-of-tree file" {#AFKJNJKAN}
 
 The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
-library by forking it. You can consult with
-[Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
-[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+library by forking it.
+
+## Fixing 3rdparty library's CMakeLists.txt
+
+As was mentioned, AUI.Boot might fail to import a 3rdparty library. Reasons include:
+
+1. Misusage of CMake. Mostly, this applies to CMake's `install` family of commands. Some library maintainers might
+   forget to configure CMake so other CMake projects can actually use their library.
+
+   We can't blame them because making proper CMake install export is not an out-of-the-box feature and requires proper
+   knowledge with testing. See [this](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake) for
+   opinionated guidelines.
+2. Lack of CMakeLists.txt. Some libraries might not even use CMake either (mostly in favor to Makefile).
+
+For these reasons, you might want to fix the `CMakeLists.txt` on your own by forking them. AUI Project does it for some
+of its dependencies:
+
+1. backtrace: implement CMakeLists.txt over Makefile: https://github.com/ianlancetaylor/libbacktrace/compare/master...aui-framework:libbacktrace:master
+2. zlib: arbitrary fixes: https://github.com/madler/zlib/compare/master...aui-framework:zlib:master
+3. OpenSSL: arbitrary fixes: https://github.com/janbar/openssl-cmake/compare/master...aui-framework:openssl-cmake:master
+
+Also, you can consult with [Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workaround the broken
 `CMakeLists.txt` of the library.
 
 # Using AUI Boot without AUI
@@ -241,7 +266,6 @@ auib_import(<PackageName> <URL>
             [COMPONENTS components...]
             [CONFIG_ONLY]
             [CMAKE_WORKING_DIR workingdir.txt]
-            [CMAKELISTS_CUSTOM cmakelist]
             [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
             [LINK <STATIC|SHARED>]
             [REQUIRES dependencies...]
@@ -258,7 +282,7 @@ Specifies the package name which will be passed to `find_package`. See @ref AUI_
 ### URL
 URL to the git repository of the project you want to import.
 
-### ADD_SUBDIRECTORY
+### ADD_SUBDIRECTORY {#AUIB_ADD_SUBDIRECTORY}
 
 Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
 
@@ -289,11 +313,6 @@ dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
 
 ### CMAKE_WORKING_DIR
 Run cmake in specified directory, in relation to the pulled repo's root directory.
-
-### CMAKELISTS_CUSTOM
-Replace/put the specified file from your project to the pulled repo's root directory as `CMakeLists.txt`.
-
-This way you can customize the behavior of dependency's cmake.
 
 ### PRECOMPILED_URL_PREFIX
 Instead of building the dependency from sources, try to import the precompiled binaries first.
@@ -331,9 +350,9 @@ This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NA
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
-## AUIB_SKIP_REPOSITORY_WAIT (=NO)
+## AUIB_SKIP_REPOSITORY_WAIT (=NO) {#AUIB_SKIP_REPOSITORY_WAIT}
 
-Disables "Waiting for repository" lock.
+Disables "Waiting for repository" @ref REPO_LOCK "lock".
 
 ## AUIB_NO_PRECOMPILED (=NO) {#AUIB_NO_PRECOMPILED}
 
@@ -492,6 +511,53 @@ self-sufficient. That is, they have AUI's dependencies bundled, so they can be u
 requiring AUI Boot.
 
 @include test/aui.boot/Precompiled3/test_project/CMakeLists.txt
+
+# ~/.aui (AUI.Boot Cache Dir) {#AUIB_CACHE}
+
+AUI.Boot Cache Dir is a directory located in your home directory (can be changed with @ref AUIB_CACHE_DIR). This
+directory contains dependencies' source code and installation artifacts of each dependency. AUI.Boot looks up there
+for built libraries or their source code in order to reduce build latency and bandwidth.
+
+If a dependency is not present in the cache, AUI.Boot will download a precompiled binary or build it from source, so the
+subsequent `auib_import` invocations even across different projects can reuse that.
+
+On a CI/CD, you can @ref CI_CACHING cache this directory to drastically improve build times.
+
+## Structure
+
+### ~/.aui/prefix
+
+Contains dependencies produced by `cmake -B build -S .`, `cmake --build build` and
+`cmake --install build --prefix=~/.aui/prefix/../` series of commands, potentially invoked inside `auib_import`.
+
+Dependency installations are located in following path: `~/.aui/prefix/<PackageName>/<BUILD_SPECIFIER>`.
+
+`<BUILD_SPECIFIER>` is a special hex string that identifies the build configuration, similarly to Conan's
+[package_id](https://docs.conan.io/2/reference/binary_model/package_id.html). `<BUILD_SPECIFIER>` is a hashed string
+that includes information such as version, platform, architecture, or being a static or a shared library. When something
+changes in this information, it produces a new `<BUILD_SPECIFIER>` because it represents a different binary.
+
+Here's how exactly it is computed:
+
+@snippet aui.boot.cmake BUILD_SPECIFIER
+
+### ~/.aui/repo
+
+Contains dependencies source code (if any), downloaded by `auib_import`.
+
+- `~/.aui/repo/<PackageName>/src` - source code of `<PackageName>`. If it is a git repository, AUI.Boot will try to
+  checkout a specific version first instead of cloning the whole repo again.
+- `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
+- `~/.aui/repo/<PackageName>/as/<VERSION>` - in case of @ref AUIB_ADD_SUBDIRECTORY, a copy of sourced to be used by
+  CMake's `add_subdirectory`.
+
+### ~/.aui/crosscompile-host
+
+In case of @ref docs/Crosscompiling.md, contains AUI.Boot sub cache for the host system.
+
+### ~/.aui/repo.lock {#REPO_LOCK}
+
+Lock file of `auib_import` to forbid multiple parallel processes to modify `auib_import`.
 
 # Philosophy behind AUI Boot
 
