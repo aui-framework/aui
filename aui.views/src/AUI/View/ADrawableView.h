@@ -26,6 +26,9 @@
  * ADrawableView brings you more control over the drawable. This is useful for drawables with extended interface
  * (i.e., AAnimatedImage).
  *
+ *
+ * See @ref declarative::Icon for a declarative form and examples.
+ *
  * The sizing and positioning acts like ass::BackgroundImage. Moreover, these rules are taken from ass::BackgroundImage
  * applied to ADrawableView:
  * @code{cpp}
@@ -39,7 +42,7 @@
  * When applying ass::BackgroundImage, do not pass url to it, it's redundant for ADrawableView and would cause a debug
  * error.
  */
-class API_AUI_VIEWS ADrawableView: public AView {
+class API_AUI_VIEWS ADrawableView : public AView {
 public:
     /**
      * @brief Create an instance with the URL of a image resource.
@@ -83,25 +86,28 @@ private:
     emits<_<IDrawable>> mDrawableChanged;
 };
 
-template<aui::derived_from<ADrawableView> T>
+template <aui::derived_from<ADrawableView> T>
 struct ADataBindingDefault<T, _<IDrawable>> {
 public:
-    static auto property(const _<ADrawableView>& view) {
-        return view->drawable();
-    }
+    static auto property(const _<ADrawableView>& view) { return view->drawable(); }
 
-    static void setup(const _<ADrawableView>& view) {
-    }
+    static void setup(const _<ADrawableView>& view) {}
 
     static auto getSetter() { return &ADrawableView::setDrawable; }
 };
 
-class ADrawableIconView: public ADrawableView {
+class ADrawableIconView : public ADrawableView {
 public:
     using ADrawableView::ADrawableView;
     ~ADrawableIconView() override = default;
 };
 
 namespace declarative {
-    using Icon = aui::ui_building::view<ADrawableIconView>;
-}
+
+/**
+ * @declarativeformof{ADrawableView}
+ */
+struct Icon : aui::ui_building::view<ADrawableIconView> {
+    using aui::ui_building::view<ADrawableIconView>::view;
+};
+}   // namespace declarative

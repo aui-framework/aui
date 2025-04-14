@@ -22,7 +22,11 @@
  * @details
  * Checkbox is a checkable button that is typically used to enable/disable some action.
  *
- * Whenever the radio button is checked or unchecked, it emits checked() signal.
+ * See @ref declarative::CheckBox for a declarative form and examples.
+ *
+ * For a checkbox with label, see @ref ACheckBoxWrapper.
+ *
+ * Whenever the checkbox is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
 public:
@@ -74,9 +78,17 @@ private:
 /**
  * @brief View container with a checkbox.
  * @ingroup useful_views
+ * @details
+ * For a checkbox itself, see @ref ACheckBox.
+ *
+ * See @ref declarative::CheckBoxWrapper for a declarative form and examples.
  */
 class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:
+    /**
+     * @brief Construct ACheckBoxWrapper with a view.
+     * @param viewToWrap view to wrap.
+     */
     explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
     [[nodiscard]]
@@ -146,6 +158,21 @@ public:
 };
 
 namespace declarative {
-    using CheckBox = aui::ui_building::view<ACheckBox>;
-    using CheckBoxWrapper = aui::ui_building::view<ACheckBoxWrapper>;
+    /**
+     * @declarativeformof{ACheckBox}
+     */
+    struct CheckBox: aui::ui_building::view<ACheckBox> {
+        CheckBox() = default;
+    };
+
+    /**
+     * @declarativeformof{ACheckBoxWrapper}
+     */
+    struct CheckBoxWrapper: aui::ui_building::view<ACheckBoxWrapper> {
+        /**
+         * @brief Construct ACheckBoxWrapper with a view.
+         * @param viewToWrap view to wrap.
+         */
+        explicit CheckBoxWrapper(const _<AView>& viewToWrap): aui::ui_building::view<ACheckBoxWrapper>(viewToWrap) {}
+    };
 }

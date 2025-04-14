@@ -28,15 +28,17 @@
  * @details
  * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a @ref AViewContainer "view container" it
  * places the initialized radio buttons to itself.
+ *
+ * See @ref declarative::RadioGroup for a declarative form and examples.
  */
-class API_AUI_VIEWS ARadioGroup: public AViewContainer {
+class API_AUI_VIEWS ARadioGroup : public AViewContainer {
 private:
     _<IListModel<AString>> mModel;
     _<ARadioButton::Group> mGroup;
 
 public:
-    template<typename... RadioButtons>
-    explicit ARadioGroup(RadioButtons&&... radioButtons): ARadioGroup() {
+    template <typename... RadioButtons>
+    explicit ARadioGroup(RadioButtons&&... radioButtons) : ARadioGroup() {
         setLayout(std::make_unique<AVerticalLayout>());
         setViews({ std::forward<RadioButtons>(radioButtons)... });
     }
@@ -66,24 +68,23 @@ public:
 
     void setModel(const _<IListModel<AString>>& model);
 
-    [[nodiscard]] bool isSelected() const {
-        return mGroup->isSelected();
-    }
-    [[nodiscard]] int getSelectedId() const {
-        return mGroup->getSelectedId();
-    }
+    [[nodiscard]] bool isSelected() const { return mGroup->isSelected(); }
+    [[nodiscard]] int getSelectedId() const { return mGroup->getSelectedId(); }
     void setSelectedId(int id) const;
 
 signals:
     emits<int> selectionChanged;
 };
 
-
 namespace declarative {
-    struct RadioGroup: aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
-        using aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup>::layouted_container_factory;
-        struct Horizontal: aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup> {
-            using aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
-        };
+
+/**
+ * @declarativeformof{ARadioGroup}
+ */
+struct RadioGroup : aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
+    using aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup>::layouted_container_factory;
+    struct Horizontal : aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup> {
+        using aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup>::layouted_container_factory;
     };
-}
+};
+}   // namespace declarative
