@@ -39,7 +39,8 @@ Use our setup-free repository templates for quick start:
 
 ## Integrating AUI to existing CMake project
 
-To link AUI to your project, use the following CMake script:
+To link AUI to your project, use the following CMake script. This script is self sufficient and does not require additional setup, AUI is imported to your project thanks to
+[AUI.Boot](https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html).
 
 `CMakeLists.txt`:
 ```cmake
