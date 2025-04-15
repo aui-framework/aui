@@ -514,14 +514,14 @@ requiring AUI Boot.
 
 # ~/.aui (AUI.Boot Cache Dir) {#AUIB_CACHE}
 
-AUI.Boot Cache Dir is a directory located in your home directory (can be changed with @ref AUIB_CACHE_DIR). This
+It is a directory located in your home directory (can be changed with @ref AUIB_CACHE_DIR). This
 directory contains dependencies' source code and installation artifacts of each dependency. AUI.Boot looks up there
 for built libraries or their source code in order to reduce build latency and bandwidth.
 
 If a dependency is not present in the cache, AUI.Boot will download a precompiled binary or build it from source, so the
-subsequent `auib_import` invocations even across different projects can reuse that.
+subsequent `auib_import` invocations can reuse that even across different projects.
 
-On a CI/CD, you can @ref CI_CACHING cache this directory to drastically improve build times.
+On a CI/CD, you can @ref CI_CACHING "cache" this directory to drastically improve build times.
 
 ## Structure
 
