@@ -28,12 +28,16 @@ sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr
 sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
 ```
 
-## AUI App Template
+## AUI App Template ⚡
 
-Use our [app template](https://github.com/aui-framework/example_app) to create a GitHub-hosted app project with CI/CD building, testing, releasing, auto
-updating, code quality checking and more.
+Use our setup-free repository templates for quick start:
 
-## Your project CMake script
+1. [Minimal UI](https://github.com/aui-framework/example_minimal_ui) - an absolute minimum to start a graphical UI application, without any boilerplate.
+2. [Minimal UI with assets](https://github.com/aui-framework/example_assets_ui) - same as above but with assets.
+3. [Full-fledged App Template](https://aui-framework.github.io/develop/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
+   testing, releasing, auto updating, code quality checking and more.
+
+## Integrating AUI to existing CMake project
 
 To link AUI to your project, use the following CMake script:
 
