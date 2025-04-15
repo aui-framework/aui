@@ -962,12 +962,12 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                     # adding target's interface include directories and definitions keeping original visibility.
                     get_target_property(_dep_includes ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
                     if (_dep_includes)
-                        target_include_directories(${AUI_MODULE_NAME} ${_visibility} ${_dep_includes})
+                        target_include_directories(${AUI_MODULE_NAME} ${_visibility} $<BUILD_INTERFACE:${_dep_includes}>)
                     endif()
 
                     get_target_property(_dep_defs ${_dep} INTERFACE_COMPILE_DEFINITIONS)
                     if (_dep_defs)
-                        target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
+                        target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} $<BUILD_INTERFACE:${_dep_defs}>)
                     endif()
                 endif()
             endforeach()
@@ -1063,6 +1063,7 @@ function(aui_module AUI_MODULE_NAME)
                 PATTERN "*.hpp"
 
         )
+        target_include_directories(${AUI_MODULE_NAME} INTERFACE $<INSTALL_INTERFACE:${AUI_MODULE_NAME}/include/>)
     endif()
     if (NOT BUILD_AS_IMPORTED_NAME STREQUAL ${AUI_MODULE_NAME})
         add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
@@ -1514,7 +1515,7 @@ macro(aui_app)
 
         set(RESOURCES
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
-                )
+        )
 
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
@@ -1565,7 +1566,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
                 XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
-                )
+        )
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
         # build product output directory.
@@ -1594,18 +1595,18 @@ macro(aui_app)
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
                 ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if ${CMAKE_COMMAND} -E make_directory
-        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Failed to create Frameworks directory in app bundle \;
-        exit 1 \;
-        fi\"
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if ${CMAKE_COMMAND} -E make_directory
+                \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if [ \\$$COMMAND_DONE -eq 0 ] \; then
+                echo Failed to create Frameworks directory in app bundle \;
+                exit 1 \;
+                fi\"
         )
 
         # Copy the framework into the app bundle
