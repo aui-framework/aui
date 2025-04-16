@@ -547,9 +547,15 @@ Contains dependencies source code (if any), downloaded by `auib_import`.
 
 - `~/.aui/repo/<PackageName>/src` - source code of `<PackageName>`. If it is a git repository, AUI.Boot will try to
   checkout a specific version first instead of cloning the whole repo again.
+- `~/.aui/repo/<PackageName>/src/FETCHED` - indicates the latest download is successful.
 - `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
-- `~/.aui/repo/<PackageName>/as/<VERSION>` - in case of @ref AUIB_ADD_SUBDIRECTORY, a copy of sourced to be used by
-  CMake's `add_subdirectory`.
+
+If the dependency imported as a @ref AUIB_ADD_SUBDIRECTORY "subdirectory", these paths are used instead:
+
+- `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>` - a copy of source to be used by CMake's `add_subdirectory`.
+  The second `<PackageName>` helps IDEs such as CLion to identify dependency name.
+- `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>/FETCHED` - indicates the latest download is successful.
+- `~/.aui/repo/<PackageName>/as/<VERSION>/build` - build directory.
 
 ### ~/.aui/crosscompile-host
 
