@@ -673,12 +673,17 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     if (DEP_ADD_SUBDIRECTORY)
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
+
+        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
+        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
+        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
     else()
         set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     endif()
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -732,7 +737,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
     endif()
 
-    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/FETCHED) AND DEP_ADD_SUBDIRECTORY))
+    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_FETCHED_FLAG}) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -828,7 +833,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                    file(TOUCH "${DEP_SOURCE_DIR}/FETCHED")
+                    file(TOUCH ${DEP_FETCHED_FLAG})
                 endif ()
             endif()
         endif()
