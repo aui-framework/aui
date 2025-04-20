@@ -87,7 +87,7 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
       Button { "1", []{} } with_style { Expanding {} },
     } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
-    auto b = By::type<AButtonEx>().one();
+    auto b = By::type<AButton>().one();
 
     // checks the buttons margins are perfectly equal
     auto parent = b->getParent();
@@ -99,15 +99,15 @@ TEST_F(UILayoutTest, LayoutSpacing2) {
       Button { "2", []{} } with_style { Expanding {} },
     } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
-    By::type<AButtonEx>().check(sameWidth(), "widths of the buttons are not equal");
+    By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
-      Button { "1", []{} } with_style { Expanding {} },
-      Button { "2", []{} } with_style { Expanding {} },
-      Button { "3", []{} } with_style { Expanding {} },
-      Button { "4", []{} } with_style { Expanding {} },
+      ButtonEx { { Label { "1" } }, []{} } with_style { Expanding {} },
+      ButtonEx { { Label { "2" } }, []{} } with_style { Expanding {} },
+      ButtonEx { { Label { "3" } }, []{} } with_style { Expanding {} },
+      ButtonEx { { Label { "4" } }, []{} } with_style { Expanding {} },
     } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButtonEx>().check(sameWidth(), "widths of the buttons are not equal");
