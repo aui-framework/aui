@@ -17,6 +17,8 @@
 #include <AUI/View/AScrollArea.h>
 #include <gmock/gmock.h>
 
+using namespace declarative;
+
 class MockedViewContainer: public AViewContainer {
 public:
     MockedViewContainer() {

@@ -14,6 +14,8 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 
+using namespace declarative;
+
 /**
  * This test suite checks a simple program.
  * There's a button "Say hello":

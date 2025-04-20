@@ -50,7 +50,14 @@ private:
 
 public:
     template <aui::convertible_to<T> F>
-    In(F&& t) : mImpl(Constant { std::forward<F>(t) }) {}
+    In(F&& t) : mImpl(Constant { std::forward<F>(t) }) {
+        static_assert(
+            !AAnyProperty<F>,
+            "====================> contract::In: An attempt to use a property as a value in a declarative contract.\n"
+            "1. Explicitly express an intention to use a reactive value by using AUI_REACT macro, or\n"
+            "2. Dereference the property via asterisk * to obtain immediate value.\n");
+    }
+
     In(aui::factory<T> auto&& t) : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(t)) }) {}
 
     template <APropertyWritable DestinationProperty>

@@ -34,11 +34,11 @@ namespace declarative {
  * @declarativeformof{ALabel}
  */
 struct Label {
-   contract::In<AString> text;
+   AOptional<contract::In<AString>> text;
 
    _<ALabel> operator()() {
        auto label = _new<ALabel>();
-       text.bindTo(label->text());
+       AUI_NULLSAFE(text)->bindTo(label->text());
        return label;
    }
 };

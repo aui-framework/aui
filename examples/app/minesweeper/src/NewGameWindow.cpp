@@ -19,6 +19,8 @@
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 
+using namespace declarative;
+
 int gWidth = 10;
 int gHeight = 10;
 int gMines = 10;

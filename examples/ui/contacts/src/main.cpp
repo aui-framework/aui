@@ -33,6 +33,8 @@ static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](con
 
 static auto groupLetter(const AString& s) { return s.firstOpt().valueOr('_'); }
 
+сломал
+
 class ContactsWindow : public AWindow {
 public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
@@ -50,11 +52,9 @@ public:
                                 }
                                 return searchQueryList();
                             }),
-                            Label {}
+                            Label { AUI_REACT("{}"_format(mContactCount)) }
                                 & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
-                                & mContactCount.readProjected([](std::size_t c) {
-                                return "{} contact(s)"_format(c);
-                            }) with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
+                                 with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
                           } with_style { Padding(0, 8_dp) })
                       .build() with_style { Expanding(0, 1), MinSize(200_dp) },
 
@@ -135,7 +135,7 @@ private:
 
     _<AView> contactPreview(const _<Contact>& contact) {
         return Vertical {
-            Label {} & contact->displayName with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
+            Label { AUI_REACT(contact->displayName) } with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
         } let {
             connect(it->clicked, [this, contact] { mSelectedContact = contact; });

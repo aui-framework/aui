@@ -37,9 +37,7 @@ public:
                     },
               },
             },
-            Label {} & mElapsedTime.readProjected([](high_resolution_clock::duration d) {
-                return "{:.1f}s"_format(duration_cast<milliseconds>(d).count() / 1000.f);
-            }),
+            Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
               _new<ASlider>() let {
