@@ -44,7 +44,7 @@ To link AUI to your project, use the following CMake script:
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION develop)
+set(AUI_VERSION v7.0.2)
 
 # Use AUI.Boot
 file(

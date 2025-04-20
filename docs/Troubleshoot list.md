@@ -20,4 +20,4 @@ invalidate caches:
 1. Delete `CMakeCache.txt` from your CMake binary dir (`cmake-build-debug` or `cmake-build-release` in CLion).
 2. Delete your CMake binary dir.
 3. Change AUI version (also may need `CMakeCache.txt` to be deleted)
-4. Delete aui.boot cache dir (`~/.aui` unless otherwise specified)
+4. Delete aui.boot cache dir (@ref AUIB_CACHE unless otherwise specified)

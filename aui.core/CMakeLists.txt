@@ -49,8 +49,8 @@ if (NOT WIN32)
     endif()
 
     if (AUI_PLATFORM_LINUX)
-        auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
-                    CMAKELISTS_CUSTOM cmake/backtrace.cmake)
+        auib_import(backtrace https://github.com/aui-framework/libbacktrace
+                    VERSION a5a32e3cc8e22a9fc40689a884b032c52ee3f88e)
         set(_use_backtrace TRUE)
     else()
 

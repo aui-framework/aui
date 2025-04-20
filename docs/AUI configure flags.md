@@ -40,8 +40,8 @@ Whether build examples or not.
 ## AUI_BUILD_FOR {#AUI_BUILD_FOR}
 Specifies target platform for cross-compilation (see [cross-compiling](@ref docs/Crosscompiling.md)).
 
-## AUIB_CACHE_DIR
-Changes aui.boot's cache dir (which is `~/.aui` by default).
+## AUIB_CACHE_DIR {#AUIB_CACHE_DIR}
+Changes @ref AUIB_CACHE.
 
 Can be defined as environment variable.
 
