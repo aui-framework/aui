@@ -11,7 +11,7 @@
 
 #pragma once
 #include "AView.h"
-#include <AUI/Util/Declarative.h>
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
  * @brief Expanding view which is useful in UI building.

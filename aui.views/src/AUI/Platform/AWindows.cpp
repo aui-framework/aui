@@ -31,7 +31,7 @@
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
-
+using namespace declarative;
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
     return AViewContainer::consumesClick(pos);

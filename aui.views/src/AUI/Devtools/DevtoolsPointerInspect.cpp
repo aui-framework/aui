@@ -57,6 +57,7 @@
 #include "glm/vector_relational.hpp"
 
 using namespace ass;
+using namespace declarative;
 
 static constexpr auto LOG_TAG = "DevtoolsPointerInspect";
 
@@ -122,7 +123,7 @@ public:
 
     void render(ARenderContext context) override {
         AViewContainerBase::render(context);
-        
+
         auto v = mFake->view();
         mButton->setEnabled(!(v == nullptr || v->getParent() == nullptr));
     }
@@ -159,7 +160,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
           Horizontal {
             Label { "Address (AView*):" },
             mAddress,
-            Button { "Inspect" }.clicked(this, [this] {
+            Button { .text = "Inspect", .onClick = [this] {
                 try {
                     auto ptr = [&] {
                         auto ptr = mAddress->text()->toStdString();
@@ -175,7 +176,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
                     ALayoutInflater::inflate(mResultView, Label { e.getMessage() });
                     ALogger::err(LOG_TAG) << "Unable to inspect: " << e;
                 }
-            }),
+            }},
           },
         },
         Centered { mResultView },

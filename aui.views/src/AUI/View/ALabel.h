@@ -12,6 +12,7 @@
 #pragma once
 
 #include "AAbstractLabel.h"
+#include <AUI/Util/Declarative/Contracts.h>
 
 /**
  * @brief Represents a simple single-line text display view.
@@ -32,8 +33,14 @@ namespace declarative {
 /**
  * @declarativeformof{ALabel}
  */
-struct Label: aui::ui_building::view<ALabel> {
-    using aui::ui_building::view<ALabel>::view;
+struct Label {
+   contract::In<AString> text;
+
+   _<ALabel> operator()() {
+       auto label = _new<ALabel>();
+       text.bindTo(label->text());
+       return label;
+   }
 };
 }
 

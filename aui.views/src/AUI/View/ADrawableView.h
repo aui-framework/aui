@@ -16,7 +16,7 @@
 #pragma once
 
 #include <AUI/Image/IDrawable.h>
-#include <AUI/Util/Declarative.h>
+#include <AUI/Util/Declarative/Containers.h>
 #include "AView.h"
 
 /**

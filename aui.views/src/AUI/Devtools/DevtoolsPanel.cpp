@@ -21,6 +21,8 @@
 #include "DevtoolsProfilingOptions.h"
 #include "DevtoolsThreadsTab.h"
 
+using namespace declarative;
+
 DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
     auto tabs = _new<ATabView>();
     tabs->setExpanding();

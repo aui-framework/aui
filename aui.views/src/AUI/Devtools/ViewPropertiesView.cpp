@@ -26,6 +26,7 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ALabel.h>
+#include <AUI/View/AButton.h>
 #include <AUI/Model/AListModel.h>
 
 #include "AUI/View/AText.h"
@@ -35,6 +36,7 @@
 #include "AUI/View/AGroupBox.h"
 
 using namespace ass;
+using namespace declarative;
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setCustomStyle({
@@ -64,7 +66,6 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
-    using namespace declarative;
     auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
         Horizontal {
@@ -72,7 +73,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
             Horizontal {
               Label { addressStr },
-              Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
+              Button { .text = "Copy", .onClick = [addressStr] { AClipboard::copyToClipboard(addressStr); } },
             },
 
             Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
@@ -80,13 +81,14 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             CheckBoxWrapper { Label { "Enabled" } } && targetView->enabled(),
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             Horizontal {
-              Button { "Add \"DevtoolsTest\" stylesheet name" } let {
-                      it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
-                      connect(it->clicked, [=] {
-                          targetView->addAssName("DevtoolsTest");
-                          setTargetView(targetView);
-                      });
-                  },
+              Button {
+                .text = "Add \"DevtoolsTest\" stylesheet name",
+                .onClick =
+                    [this, targetView] {
+                        setTargetView(targetView);
+                        targetView->addAssName("DevtoolsTest");
+                    },
+              } let { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
             },
             CheckBoxWrapper {
               Label { "Expanding" },

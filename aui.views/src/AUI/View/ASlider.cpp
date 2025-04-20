@@ -18,6 +18,7 @@
 #include "AProgressBar.h"
 
 using namespace ass;
+using namespace declarative;
 
 ASlider::ASlider() {
     setContents(Stacked {
