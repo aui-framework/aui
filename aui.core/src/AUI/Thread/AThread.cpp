@@ -194,7 +194,7 @@ void AThread::sleep(std::chrono::milliseconds duration) {
 
 AAbstractThread::id AAbstractThread::getId() const { return mId; }
 
-_<AAbstractThread> AThread::current() {
+const _<AAbstractThread>& AThread::current() {
     auto& t = threadStorage();
     if (t == nullptr)   // abstract thread
     {

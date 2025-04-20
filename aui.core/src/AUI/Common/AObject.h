@@ -289,7 +289,8 @@ public:
         }
     }
 
-    _<AAbstractThread> getThread() const { return mAttachedThread; }
+    [[nodiscard]]
+    const _<AAbstractThread>& getThread() const noexcept { return mAttachedThread; }
 
     bool isSlotsCallsOnlyOnMyThread() const noexcept { return mSlotsCallsOnlyOnMyThread; }
 

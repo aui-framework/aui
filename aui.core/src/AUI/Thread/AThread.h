@@ -228,7 +228,8 @@ public:
     /**
      * @return current thread.
      */
-    static _<AAbstractThread> current();
+    [[nodiscard]]
+    static const _<AAbstractThread>& current();
 
     /**
      * @brief Interruption point

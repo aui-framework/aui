@@ -180,6 +180,14 @@ void AView::render(ARenderContext ctx)
     mRedrawRequested = false;
 }
 
+static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callback) {
+    if (view == nullptr) {
+        return;
+    }
+    walkToParentStack(view->getParent(), callback);
+    callback(view);
+}
+
 void AView::invalidateAllStyles()
 {
     static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
@@ -205,18 +213,12 @@ void AView::invalidateAllStyles()
 
     applyStylesheet(AStylesheet::global());
 
-    std::stack<AView*> viewTree;
-
-    for (auto target = this; target != nullptr; target = target->getParent()) {
-        if (target->mExtraStylesheet) {
-            viewTree.push(target);
+    walkToParentStack(this, [&](AView* v) {
+        if (!v->mExtraStylesheet) {
+            return;
         }
-    }
-
-    while (!viewTree.empty()) {
-        applyStylesheet(*viewTree.top()->mExtraStylesheet);
-        viewTree.pop();
-    }
+        applyStylesheet(*v->mExtraStylesheet);
+    });
 
     invalidateStateStylesImpl(prevMinSize);
 }
