@@ -97,6 +97,14 @@ public:
     }
 };
 
+static _<AView> link(const AString& url) {
+    return Label { url } with_style {
+               TextColor { AColor::BLUE },
+               BorderBottom { 1_px, AColor::BLUE },
+               ACursor::POINTER,
+           } let { AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [url] { APlatform::openUrl(url); }); };
+}
+
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();
 
@@ -152,13 +160,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Common button"),
                     _new<AButton>("Default button") let { it->setDefault(); },
                     _new<AButton>("Disabled button") let { it->setDisabled(); },
-                    Button {
-                      Icon { ":img/logo.svg" },
-                      Label { "Button with icon" },
-                    }
-                        .clicked(this, [&] {
-                            AMessageBox::show(this, "Title", "Message");
-                        }),
+                    ButtonEx {
+                      .contents = { Icon { ":img/logo.svg" }, Label { "Button with icon" }, },
+                      .onClick = [this] {
+                        AMessageBox::show(this, "Title", "Message");
+                      },
+                    },
                   },
                 },
 
@@ -612,12 +619,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Label { "Custom cursor" } with_style {
                           ACursor { ":img/logo.svg", 64 },
                         },
-                    Label { "github.com/aui-framework/aui" }.clicked(
-                        this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) with_style {
-                          TextColor { AColor::BLUE },
-                          BorderBottom { 1_px, AColor::BLUE },
-                          ACursor::POINTER,
-                        },
+                    link("https://github.com/aui-framework/aui"),
                   },
                 },
                 Stacked {
@@ -679,7 +681,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") with_style { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { "OK" }.clicked(this, [surface] { surface->close(); }) }
+        Centered { Button { .text = "OK", .onClick = [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

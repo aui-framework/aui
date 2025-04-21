@@ -72,9 +72,9 @@ public:
             },
           },
           Horizontal {
-            Button { "Create" }.connect(&AView::clicked, me::createClicked) & mCreateEnabled > &AView::setEnabled,
-            Button { "Update" }.connect(&AView::clicked, me::updateClicked) & mUpdateEnabled > &AView::setEnabled,
-            Button { "Delete" }.connect(&AView::clicked, me::deleteClicked) & mDeleteEnabled > &AView::setEnabled,
+            Button { "Create", {me::createClicked} } & mCreateEnabled > &AView::setEnabled,
+            Button { "Update", {me::updateClicked} } & mUpdateEnabled > &AView::setEnabled,
+            Button { "Delete", {me::deleteClicked} } & mDeleteEnabled > &AView::setEnabled,
           },
         });
     }

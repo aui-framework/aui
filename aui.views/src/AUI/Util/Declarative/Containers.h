@@ -74,11 +74,6 @@ public:
             std::forward<SignalField>(signalField), std::forward<Object>(object), std::forward<Function>(function));
     }
 
-    template <typename Object, typename Function>
-    auto clicked(Object&& object, Function&& function) {
-        return connect(&AView::clicked, std::forward<Object>(object), std::forward<Function>(function));
-    }
-
     template <typename SignalField, typename Function>
     auto connect(SignalField&& signalField, Function&& function) {
         return asViewFactory()->operator()().connect(

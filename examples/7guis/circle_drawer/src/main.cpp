@@ -221,12 +221,10 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              Button { "Undo" } let {
-                  connect(it->clicked, me::undo);
+              Button { "Undo", {me::undo} } let {
                   it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
               },
-              Button { "Redo" } let {
-                connect(it->clicked, me::redo);
+              Button { "Redo", {me::redo} } let {
                 it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
               },
             },

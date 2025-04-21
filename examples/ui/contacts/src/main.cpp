@@ -33,8 +33,6 @@ static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](con
 
 static auto groupLetter(const AString& s) { return s.firstOpt().valueOr('_'); }
 
-сломал
-
 class ContactsWindow : public AWindow {
 public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
