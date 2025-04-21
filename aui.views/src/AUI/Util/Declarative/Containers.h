@@ -234,6 +234,7 @@ private:
 
 AUI_DETAIL_BINARY_OP(&) // forwards with_style
 AUI_DETAIL_BINARY_OP(^) // forwards let
+AUI_DETAIL_BINARY_OP(<<) // forwards stylesheet name assignment
 
 
 namespace declarative {
