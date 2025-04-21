@@ -219,7 +219,7 @@ jobs:
 # [cpack]
 
       - name: Enable examples
-        run: cmake -B ${{github.workspace}}/build -DAUI_BUILD_EXAMPLES=TRUE
+        run: cmake -B ${{github.workspace}}/build -DAUI_BUILD_EXAMPLES=TRUE -DAUI_BUILD_AUDIO=ON
 
       - name: Build examples
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
