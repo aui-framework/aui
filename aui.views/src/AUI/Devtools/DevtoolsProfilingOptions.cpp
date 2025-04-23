@@ -37,7 +37,7 @@ _<AView> makeLink(AString text, AUrl destination) {
 }
 
 _<ALabel> header(AString title) {
-    return Label { std::move(title) } with_style { FontSize(16_pt), Padding(0), Margin { 4_dp, 24_dp, 8_dp } };
+    return Label { std::move(title) } with_style { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
 }
 }   // namespace
 
