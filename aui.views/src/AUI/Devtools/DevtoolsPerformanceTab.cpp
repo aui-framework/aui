@@ -334,9 +334,11 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
     setContents(Centered { 
         Centered::Expanding {
             graphView,
-            Vertical::Expanding {
-                treeView,
-            },
+            AScrollArea::Builder().withContents(
+                Vertical::Expanding {
+                    treeView,
+                }
+            ),
         } let {
             mModel.addObserver(&Model::state, [it](const Model::State& state) {
                 using namespace ass;
