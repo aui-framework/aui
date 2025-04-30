@@ -31,16 +31,16 @@ glm::ivec2 ADesktop::getMousePosition() {
     int unused1;
     unsigned unused2;
     XQueryPointer(
-        CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), &w, &w, &p.x, &p.y,
+        PlatformAbstractionX11::ourDisplay, XRootWindow(PlatformAbstractionX11::ourDisplay, 0), &w, &w, &p.x, &p.y,
         &unused1, &unused1, &unused2);
     return p;
 }
 
 void ADesktop::setMousePos(const glm::ivec2 &pos) {
-    auto rootWindow = XRootWindow(CommonRenderingContext::ourDisplay, 0);
-    XSelectInput(CommonRenderingContext::ourDisplay, rootWindow, KeyReleaseMask);
-    XWarpPointer(CommonRenderingContext::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
-    XFlush(CommonRenderingContext::ourDisplay);
+    auto rootWindow = XRootWindow(PlatformAbstractionX11::ourDisplay, 0);
+    XSelectInput(PlatformAbstractionX11::ourDisplay, rootWindow, KeyReleaseMask);
+    XWarpPointer(PlatformAbstractionX11::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
+    XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
 AFuture<APath>

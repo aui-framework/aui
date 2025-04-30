@@ -57,8 +57,8 @@ void AWindow::quit() {
         return p.get() == this;
     });
 
-    if (CommonRenderingContext::ourDisplay) {
-        XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    if (PlatformAbstractionX11::ourDisplay) {
+        XUnmapWindow(PlatformAbstractionX11::ourDisplay, mHandle);
     }
 
     AThread::current()->enqueue([&]() {
@@ -93,7 +93,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         //code to remove decoration
         hints.flags = 2;
         hints.decorations = 0;
-        XChangeProperty(CommonRenderingContext::ourDisplay, mHandle, CommonRenderingContext::ourAtoms.wmHints, CommonRenderingContext::ourAtoms.wmHints, 32, PropModeReplace,
+        XChangeProperty(PlatformAbstractionX11::ourDisplay, mHandle, PlatformAbstractionX11::ourAtoms.wmHints, PlatformAbstractionX11::ourAtoms.wmHints, 32, PropModeReplace,
                         (unsigned char *)&hints, 5);
     }
 }
@@ -103,21 +103,21 @@ float AWindow::fetchDpiFromSystem() const {
 }
 
 void AWindow::restore() {
-    if (CommonRenderingContext::ourAtoms.netWmState &&
-        CommonRenderingContext::ourAtoms.netWmStateMaximizedVert &&
-        CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
+    if (PlatformAbstractionX11::ourAtoms.netWmState &&
+        PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert &&
+        PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz)
         {
-            xSendEventToWM(CommonRenderingContext::ourAtoms.netWmState,
+            xSendEventToWM(PlatformAbstractionX11::ourAtoms.netWmState,
                            0,
-                           CommonRenderingContext::ourAtoms.netWmStateMaximizedVert,
-                           CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz,
+                           PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert,
+                           PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz,
                            1, 0);
         }
 }
 
 void AWindow::minimize() {
     if (!mHandle) return;
-    XIconifyWindow(CommonRenderingContext::ourDisplay, mHandle, 0);
+    XIconifyWindow(PlatformAbstractionX11::ourDisplay, mHandle, 0);
 }
 
 bool AWindow::isMinimized() const {
@@ -128,7 +128,7 @@ bool AWindow::isMinimized() const {
         Window icon;
     } *state = NULL;
 
-    if (xGetWindowProperty(CommonRenderingContext::ourAtoms.wmState, CommonRenderingContext::ourAtoms.wmState, (unsigned char**) &state) >= 2)
+    if (xGetWindowProperty(PlatformAbstractionX11::ourAtoms.wmState, PlatformAbstractionX11::ourAtoms.wmState, (unsigned char**) &state) >= 2)
     {
         result = state->state;
     }
@@ -146,19 +146,19 @@ bool AWindow::isMaximized() const {
     unsigned long i;
     bool maximized = false;
 
-    if (!CommonRenderingContext::ourAtoms.netWmState ||
-        !CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
-        !CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
+    if (!PlatformAbstractionX11::ourAtoms.netWmState ||
+        !PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert ||
+        !PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz)
     {
         return maximized;
     }
 
-    const unsigned long count = xGetWindowProperty(CommonRenderingContext::ourAtoms.netWmState, XA_ATOM, (unsigned char**) &states);
+    const unsigned long count = xGetWindowProperty(PlatformAbstractionX11::ourAtoms.netWmState, XA_ATOM, (unsigned char**) &states);
 
     for (i = 0;  i < count;  i++)
     {
-        if (states[i] == CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
-            states[i] == CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
+        if (states[i] == PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert ||
+            states[i] == PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz)
         {
             maximized = true;
             break;
@@ -175,23 +175,23 @@ void AWindow::maximize() {
     if (!mHandle) return;
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
-    if (!CommonRenderingContext::ourAtoms.netWmState ||
-        !CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
-        !CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
+    if (!PlatformAbstractionX11::ourAtoms.netWmState ||
+        !PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert ||
+        !PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz)
     {
         return;
     }
 
     XWindowAttributes wa;
-    XGetWindowAttributes(CommonRenderingContext::ourDisplay, mHandle, &wa);
+    XGetWindowAttributes(PlatformAbstractionX11::ourDisplay, mHandle, &wa);
 
     if (wa.map_state == IsViewable) {
-        xSendEventToWM(CommonRenderingContext::ourAtoms.netWmState, 1, CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz, CommonRenderingContext::ourAtoms.netWmStateMaximizedVert, 0, 0);
+        xSendEventToWM(PlatformAbstractionX11::ourAtoms.netWmState, 1, PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz, PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert, 0, 0);
     } else {
 
         Atom* states = NULL;
         unsigned long count =
-                xGetWindowProperty(CommonRenderingContext::ourAtoms.netWmState,
+                xGetWindowProperty(PlatformAbstractionX11::ourAtoms.netWmState,
                                           XA_ATOM,
                                           (unsigned char**) &states);
 
@@ -200,8 +200,8 @@ void AWindow::maximize() {
 
         Atom missing[2] =
                 {
-                        CommonRenderingContext::ourAtoms.netWmStateMaximizedVert,
-                        CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz
+                        PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert,
+                        PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz
                 };
         unsigned long missingCount = 2;
 
@@ -223,13 +223,13 @@ void AWindow::maximize() {
         if (!missingCount)
             return;
 
-        XChangeProperty(CommonRenderingContext::ourDisplay, mHandle,
-                        CommonRenderingContext::ourAtoms.netWmState, XA_ATOM, 32,
+        XChangeProperty(PlatformAbstractionX11::ourDisplay, mHandle,
+                        PlatformAbstractionX11::ourAtoms.netWmState, XA_ATOM, 32,
                         PropModeAppend,
                         (unsigned char*) missing,
                         missingCount);
     }
-    XFlush(CommonRenderingContext::ourDisplay);
+    XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
@@ -237,13 +237,13 @@ glm::ivec2 AWindow::getWindowPosition() const {
     int x, y;
     Window child;
     XWindowAttributes xwa;
-    XTranslateCoordinates(CommonRenderingContext::ourDisplay,
+    XTranslateCoordinates(PlatformAbstractionX11::ourDisplay,
                           mHandle,
-                          CommonRenderingContext::ourScreen->root,
+                          PlatformAbstractionX11::ourScreen->root,
                           0, 0,
                           &x, &y,
                           &child);
-    XGetWindowAttributes(CommonRenderingContext::ourDisplay, mHandle, &xwa);
+    XGetWindowAttributes(PlatformAbstractionX11::ourDisplay, mHandle, &xwa);
 
     return {x, y};
 }
@@ -261,9 +261,9 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
+    if (bool(PlatformAbstractionX11::ourDisplay) && mHandle) {
         AThread::current() << [&]() {
-            XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
+            XMapWindow(PlatformAbstractionX11::ourDisplay, mHandle);
         };
     }
 
@@ -279,26 +279,26 @@ void AWindow::setSize(glm::ivec2 size) {
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;
 
-        XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
+        XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, mHandle, sizehints, &userhints);
 
         sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
         sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
         sizehints->flags |= PMinSize | PMaxSize;
 
-        XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
+        XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, mHandle, sizehints);
 
         XFree(sizehints);
     } else {
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;
 
-        XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
+        XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, mHandle, sizehints, &userhints);
 
         sizehints->min_width = getMinimumWidth();
         sizehints->min_height = getMinimumHeight();
         sizehints->flags |= PMinSize;
 
-        XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
+        XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, mHandle, sizehints);
 
         XFree(sizehints);
     }
@@ -309,8 +309,8 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
-    XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
-    XResizeWindow(CommonRenderingContext::ourDisplay, mHandle, width, height);
+    XMoveWindow(PlatformAbstractionX11::ourDisplay, mHandle, x, y);
+    XResizeWindow(PlatformAbstractionX11::ourDisplay, mHandle, width, height);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
@@ -326,7 +326,7 @@ void AWindow::setIcon(const AImage& image) {
 
 void AWindow::hide() {
     if (!mHandle) return;
-    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    XUnmapWindow(PlatformAbstractionX11::ourDisplay, mHandle);
 }
 
 // HELPER FUNCTIONS FOR XLIB
@@ -336,7 +336,7 @@ unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned cha
     int actualFormat;
     unsigned long itemCount, bytesAfter;
 
-    XGetWindowProperty(CommonRenderingContext::ourDisplay, mHandle, property, 0, std::numeric_limits<long>::max(), false, type, &actualType,
+    XGetWindowProperty(PlatformAbstractionX11::ourDisplay, mHandle, property, 0, std::numeric_limits<long>::max(), false, type, &actualType,
                        &actualFormat, &itemCount, &bytesAfter, value);
 
     return itemCount;
@@ -355,7 +355,7 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
     event.xclient.data.l[3] = d;
     event.xclient.data.l[4] = e;
 
-    XSendEvent(CommonRenderingContext::ourDisplay, DefaultRootWindow(CommonRenderingContext::ourDisplay),
+    XSendEvent(PlatformAbstractionX11::ourDisplay, DefaultRootWindow(PlatformAbstractionX11::ourDisplay),
                False,
                SubstructureNotifyMask | SubstructureRedirectMask,
                &event);
@@ -378,7 +378,7 @@ void AWindowManager::loop() {
     fcntl(mNotifyPipe.in(), F_SETFL, O_NONBLOCK);
     pollfd ps[] = {
         {
-            .fd = XConnectionNumber(CommonRenderingContext::ourDisplay),
+            .fd = XConnectionNumber(PlatformAbstractionX11::ourDisplay),
             .events = POLLIN,
         },
         {
@@ -436,9 +436,9 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
         throw NotFound();
     };
     try {
-        while (XPending(CommonRenderingContext::ourDisplay)) {
+        while (XPending(PlatformAbstractionX11::ourDisplay)) {
             mWatchdog.runOperation([&] {
-                XNextEvent(CommonRenderingContext::ourDisplay, &ev);
+                XNextEvent(PlatformAbstractionX11::ourDisplay, &ev);
                 _<AWindow> window;
                 switch (ev.type) {
                     case Expose: {
@@ -447,12 +447,12 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         break;
                     }
                     case ClientMessage: {
-                        if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
+                        if (ev.xclient.message_type == PlatformAbstractionX11::ourAtoms.wmProtocols) {
                             auto window = locateWindow(ev.xclient.window);
-                            if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
+                            if(ev.xclient.data.l[0] == PlatformAbstractionX11::ourAtoms.wmDeleteWindow) {
                                 // close button clicked
                                 window->onCloseButtonClicked();
-                            } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
+                            } else if (ev.xclient.data.l[0] == PlatformAbstractionX11::ourAtoms.netWmSyncRequest) {
                                 // flicker-fix sync on resize
                                 window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
                                 window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
@@ -483,17 +483,17 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         break;
                     }
                     case KeyRelease:
-                        if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                        if (XEventsQueued(PlatformAbstractionX11::ourDisplay, QueuedAfterReading)) // check for key repeat
                         {
                             XEvent nextEvent;
-                            XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+                            XPeekEvent(PlatformAbstractionX11::ourDisplay, &nextEvent);
 
                             if (nextEvent.type == KeyPress &&
                                 nextEvent.xkey.time == ev.xkey.time &&
                                 nextEvent.xkey.keycode == ev.xkey.keycode) {
                                 // key wasn't actually released
 
-                                XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+                                XNextEvent(PlatformAbstractionX11::ourDisplay, &nextEvent); // consume the event from queue
 
                                 break;
                             }
@@ -520,7 +520,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         XSyncIntsToValue(&syncValue,
                                         window->mXsyncRequestCounter.lo,
                                         window->mXsyncRequestCounter.hi);
-                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
+                        XSyncSetCounter(PlatformAbstractionX11::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
 
                         break;
                     }
@@ -579,7 +579,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                     case PropertyNotify: {
                         window = locateWindow(ev.xproperty.window);
-                        if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
+                        if (ev.xproperty.atom == PlatformAbstractionX11::ourAtoms.netWmState) {
                             auto maximized = window->isMaximized();
                             if (maximized != window->mWasMaximized) {
                                 if (window->mWasMaximized) {
@@ -605,15 +605,15 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         }
 
 
-                        char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
-                        char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
+                        char* targetName = XGetAtomName(PlatformAbstractionX11::ourDisplay, ev.xselectionrequest.target);
+                        char* propertyName = XGetAtomName(PlatformAbstractionX11::ourDisplay, ev.xselectionrequest.property);
                         ALogger::info("{}: {}"_format(targetName, propertyName));
                         XFree(targetName);
                         XFree(propertyName);
-                        if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
-                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
-                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
-                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                        if (ev.xselectionrequest.target == PlatformAbstractionX11::ourAtoms.utf8String ||
+                            ev.xselectionrequest.target == PlatformAbstractionX11::ourAtoms.textPlain ||
+                            ev.xselectionrequest.target == PlatformAbstractionX11::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
+                            XChangeProperty(PlatformAbstractionX11::ourDisplay,
                                             ev.xselectionrequest.requestor,
                                             ev.xselectionrequest.property,
                                             ev.xselectionrequest.target,
@@ -621,18 +621,18 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                                             PropModeReplace,
                                             (unsigned char*) mXClipboardText.c_str(),
                                             mXClipboardText.length());
-                        } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
+                        } else if (ev.xselectionrequest.target == PlatformAbstractionX11::ourAtoms.targets) { // data type request
                             Atom atoms[] = {
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
-                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "TIMESTAMP", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "TARGETS", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "SAVE_TARGETS", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "MULTIPLE", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "STRING", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "UTF8_STRING", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "text/plain", false),
+                                    XInternAtom(PlatformAbstractionX11::ourDisplay, "text/plain;charset=utf-8", false),
                             };
-                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                            XChangeProperty(PlatformAbstractionX11::ourDisplay,
                                             ev.xselectionrequest.requestor,
                                             ev.xselectionrequest.property,
                                             ev.xselectionrequest.target,
@@ -650,7 +650,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         ssev.property = ev.xselectionrequest.property;
                         ssev.time = ev.xselectionrequest.time;
 
-                        XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+                        XSendEvent(PlatformAbstractionX11::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
                         break;
                     }
                 }
@@ -664,7 +664,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
 AString AWindowManager::xClipboardPasteImpl() {
 
-    auto owner = XGetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard);
+    auto owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard);
     if (owner == None)
     {
         return {};
@@ -676,13 +676,13 @@ AString AWindowManager::xClipboardPasteImpl() {
     auto nativeHandle = auiWindow->getNativeHandle();
     AUI_ASSERT(nativeHandle);
 
-    XConvertSelection(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, CommonRenderingContext::ourAtoms.utf8String, CommonRenderingContext::ourAtoms.auiClipboard, nativeHandle,
+    XConvertSelection(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);
 
     XEvent ev;
     for (int i = 0; i < 30; ++i)
     {
-        XNextEvent(CommonRenderingContext::ourDisplay, &ev);
+        XNextEvent(PlatformAbstractionX11::ourDisplay, &ev);
         switch (ev.type)
         {
             case SelectionNotify: {
@@ -694,22 +694,22 @@ AString AWindowManager::xClipboardPasteImpl() {
                 unsigned long size, dul;
                 unsigned char *prop_ret = NULL;
 
-                XGetWindowProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
+                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
                                    &type, &di, &dul, &size, &prop_ret);
                 XFree(prop_ret);
 
-                if (type == CommonRenderingContext::ourAtoms.incr)
+                if (type == PlatformAbstractionX11::ourAtoms.incr)
                 {
                     ALogger::warn("Clipboard data is too large and INCR mechanism not implemented");
                     return {};
                 }
 
-                XGetWindowProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
+                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
                                    &da, &di, &dul, &dul, &prop_ret);
                 AString clipboardData = (const char*)prop_ret;
                 XFree(prop_ret);
 
-                XDeleteProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard);
+                XDeleteProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard);
                 return clipboardData;
             }
             default:
@@ -726,7 +726,7 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow) return;
     mXClipboardText = text.toStdString();
-    XSetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, auiWindow->mHandle, CurrentTime);
+    XSetSelectionOwner(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {

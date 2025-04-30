@@ -68,7 +68,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
         viTemplate.c_class = TrueColor;
 
         int count;
-        vi = XGetVisualInfo(CommonRenderingContext::ourDisplay,
+        vi = XGetVisualInfo(PlatformAbstractionX11::ourDisplay,
                             VisualIDMask | VisualClassMask,
                             &viTemplate,
                             &count);
@@ -87,7 +87,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
         .graphics_exposures = false,
     };
     mGC = aui::ptr::make_unique_with_deleter(XCreateGC(ourDisplay, init.window.nativeHandle(), GCGraphicsExposures, &gcv),
-                                             [](GC c) { XFreeGC(CommonRenderingContext::ourDisplay, c); });
+                                             [](GC c) { XFreeGC(PlatformAbstractionX11::ourDisplay, c); });
     reallocate();
     if (!mXImage) {
         throw AException("unable to create XImage");

@@ -27,11 +27,11 @@ void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
         if (isCaptionAt(event.position)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
-            XUngrabPointer(CommonRenderingContext::ourDisplay, 0);
-            XFlush(CommonRenderingContext::ourDisplay);
+            XUngrabPointer(PlatformAbstractionX11::ourDisplay, 0);
+            XFlush(PlatformAbstractionX11::ourDisplay);
             xclient.type = ClientMessage;
             xclient.window = mHandle;
-            xclient.message_type = XInternAtom(CommonRenderingContext::ourDisplay, "_NET_WM_MOVERESIZE", False);
+            xclient.message_type = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_MOVERESIZE", False);
             xclient.format = 32;
             auto newPos = ADesktop::getMousePosition();
             xclient.data.l[0] = newPos.x;
@@ -39,7 +39,7 @@ void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
             xclient.data.l[2] = 8;
             xclient.data.l[3] = 0;
             xclient.data.l[4] = 0;
-            XSendEvent(CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
+            XSendEvent(PlatformAbstractionX11::ourDisplay, XRootWindow(PlatformAbstractionX11::ourDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
                        (XEvent*) &xclient);
 
             mDragging = true;

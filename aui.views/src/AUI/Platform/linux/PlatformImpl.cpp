@@ -25,10 +25,10 @@
 float APlatform::getDpiRatio()
 {
     CommonRenderingContext::ensureXLibInitialized();
-    if (CommonRenderingContext::ourDisplay == nullptr) return 1.f;
+    if (PlatformAbstractionX11::ourDisplay == nullptr) return 1.f;
 
     static auto value = [] {
-        char* resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
+        char* resourceString = XResourceManagerString(PlatformAbstractionX11::ourDisplay);
 
         if (!resourceString) {
             return 1.f;

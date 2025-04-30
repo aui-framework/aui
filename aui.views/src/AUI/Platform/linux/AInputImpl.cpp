@@ -16,7 +16,7 @@
 #include "AUI/Platform/CommonRenderingContext.h"
 
 bool isMouseKeyDown(AInput::Key button) {
-    if (CommonRenderingContext::ourDisplay == nullptr)
+    if (PlatformAbstractionX11::ourDisplay == nullptr)
         return false;
     // we don't care about these but they are required
     ::Window root, child;
@@ -25,7 +25,7 @@ bool isMouseKeyDown(AInput::Key button) {
 
     unsigned int buttons = 0;
     XQueryPointer(
-        CommonRenderingContext::ourDisplay, DefaultRootWindow(CommonRenderingContext::ourDisplay), &root, &child, &gx,
+        PlatformAbstractionX11::ourDisplay, DefaultRootWindow(PlatformAbstractionX11::ourDisplay), &root, &child, &gx,
         &gy, &wx, &wy, &buttons);
 
     switch (button) {
@@ -41,10 +41,10 @@ bool isMouseKeyDown(AInput::Key button) {
     return false;
 }
 AInput::Key AInput::fromNative(int k) {
-    if (CommonRenderingContext::ourDisplay == nullptr)
+    if (PlatformAbstractionX11::ourDisplay == nullptr)
         return AInput::UNKNOWN;
     Key key;
-    KeySym keycode = XKeycodeToKeysym(CommonRenderingContext::ourDisplay, k, 0); // NOLINT
+    KeySym keycode = XKeycodeToKeysym(PlatformAbstractionX11::ourDisplay, k, 0); // NOLINT
     switch (keycode) {
         case XK_Shift_L:
             key = AInput::LSHIFT;
@@ -668,7 +668,7 @@ int AInput::toNative(Key key) {
     return keysym;
 }
 bool AInput::native::isKeyDown(Key k) {
-    if (CommonRenderingContext::ourDisplay == nullptr)
+    if (PlatformAbstractionX11::ourDisplay == nullptr)
         return false;
     if (k == Key::LBUTTON || k == Key::RBUTTON) {
         return isMouseKeyDown(k);
@@ -676,11 +676,11 @@ bool AInput::native::isKeyDown(Key k) {
     auto keysym = (KeySym) toNative(k);
 
     // Convert to keycode
-    KeyCode keycode = XKeysymToKeycode(CommonRenderingContext::ourDisplay, keysym);
+    KeyCode keycode = XKeysymToKeycode(PlatformAbstractionX11::ourDisplay, keysym);
     if (keycode != 0) {
         // Get the whole keyboard state
         char keys[32];
-        XQueryKeymap(CommonRenderingContext::ourDisplay, keys);
+        XQueryKeymap(PlatformAbstractionX11::ourDisplay, keys);
 
         // Check our keycode
         return (keys[keycode / 8] & (1 << (keycode % 8))) != 0;

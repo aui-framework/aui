@@ -15,13 +15,15 @@
 
 #pragma once
 
+#include <cassert>
+
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
 using AWindowNativePtr = HWND;
 
 #elif AUI_PLATFORM_LINUX
 
-using AWindowNativePtr = unsigned long;
+using AWindowNativePtr = std::uintptr_t;
 
 #elif AUI_PLATFORM_APPLE
 

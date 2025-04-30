@@ -24,9 +24,6 @@ class AWindow;
  */
 class API_AUI_VIEWS ACursor
 {
-private:
-    struct Custom;
-
 public:
     enum System {
         /**
@@ -73,7 +70,7 @@ public:
     };
 
     ACursor(System systemCursor): mValue(systemCursor) {}
-    explicit ACursor(aui::no_escape<AImage> image, int size = 16);
+    explicit ACursor(AImageView image, int size = 16);
     explicit ACursor(aui::non_null<_<IDrawable>> drawable, int size = 16);
     explicit ACursor(AUrl imageUrl, int size = 16);
 
@@ -82,6 +79,8 @@ public:
     void applyNativeCursor(AWindow* pWindow) const;
 
 private:
+    struct Custom;
+    friend class IPlatformAbstraction;
     std::variant<System, _<Custom>, _<IDrawable>> mValue;
     int mSize;
 };
