@@ -106,8 +106,12 @@ endif()
 if (ANDROID)
     auib_use_system_libs_begin()
     find_library(log-lib log)
+    add_library(aui::android_log IMPORTED SHARED)
+    set_target_properties(aui::android_log PROPERTIES
+            IMPORTED_LOCATION "${log-lib}")
     auib_use_system_libs_end()
-    aui_link(aui.core PRIVATE ${log-lib})
+
+    aui_link(aui.core PRIVATE aui::android_log)
 endif()
 
 aui_link(aui.core PRIVATE ZLIB::ZLIB)
