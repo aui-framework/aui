@@ -6,6 +6,8 @@
 
 # CMake AUI building functions
 
+include_guard(GLOBAL)
+
 define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
         BRIEF_DOCS "Global list of test include dirs"
         FULL_DOCS "Global list of test include dirs")
@@ -1707,8 +1709,19 @@ endif()
 
 
 if (AUI_BUILD_FOR STREQUAL "android")
+    # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)
     _aui_find_root()
     include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
+endif()
+
+if (ANDROID)
+    # cmake -> gradle -> [cmake(x86|mips|arm|arm64)]
+    auib_use_system_libs_begin()
+    find_library(log-lib log)
+    add_library(aui::android_log IMPORTED SHARED)
+    set_target_properties(aui::android_log PROPERTIES
+            IMPORTED_LOCATION "${log-lib}")
+    auib_use_system_libs_end()
 endif()
 
 if (AUI_BUILD_FOR STREQUAL "ios")
