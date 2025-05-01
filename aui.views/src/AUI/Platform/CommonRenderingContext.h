@@ -16,20 +16,17 @@
 #include "AUI/Traits/values.h"
 #include "ARenderingContextOptions.h"
 
-#if AUI_PLATFORM_LINUX
-
-#endif
-
 class CommonRenderingContext: public IRenderingContext {
 public:
-#if AUI_PLATFORM_LINUX
-
-#endif
 #if AUI_PLATFORM_MACOS
     void requestFrame();
 #endif
 
+#if !AUI_PLATFORM_LINUX
+    // to be implemented by IPlatformAbstraction
     void init(const Init& init) override;
+    void destroyNativeWindow(AWindowBase& window) override;
+#endif
 
     void beginPaint(AWindowBase& window) override;
 
@@ -37,7 +34,6 @@ public:
 
     ~CommonRenderingContext() override = default;
 
-    void destroyNativeWindow(AWindowBase& window) override;
 
 protected:
 #if AUI_PLATFORM_WIN
@@ -55,9 +51,6 @@ protected:
     HDC mPainterDC = nullptr;
 
     PAINTSTRUCT mPaintstruct;
-#endif
-#if AUI_PLATFORM_LINUX
-    void initX11Window(const Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
 #endif
 #if AUI_PLATFORM_MACOS
     AWindow* mWindow;

@@ -24,12 +24,16 @@ class OpenGLRenderingContext: public CommonRenderingContext {
 public:
     OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
 
-    void init(const Init& init) override;
     ~OpenGLRenderingContext() override;
 
     AImage makeScreenshot() override;
 
+#if !AUI_PLATFORM_LINUX
+    // to be implemented by IPlatformAbstraction
+    void init(const Init& init) override;
     void destroyNativeWindow(AWindowBase& window) override;
+#endif
+
     void beginPaint(AWindowBase& window) override;
     void endPaint(AWindowBase& window) override;
     void beginResize(AWindowBase& window) override;
@@ -62,12 +66,8 @@ public:
 
     static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
 
-private:
-    ARenderingContextOptions::OpenGL mConfig;
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
+protected:
     _<OpenGLRenderer> mRenderer;
-    glm::uvec2 mViewportSize;
-
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
         if (auto v = g.lock()) {
@@ -78,6 +78,12 @@ private:
         return temp;
     }
 
+
+private:
+    ARenderingContextOptions::OpenGL mConfig;
+    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
+    glm::uvec2 mViewportSize;
+
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     void beginFramebuffer(glm::uvec2 windowSize);
     void endFramebuffer();
@@ -85,9 +91,6 @@ private:
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;
     static void makeCurrent(HDC hdc) noexcept;
-#endif
-#if AUI_PLATFORM_LINUX
-    static GLXContext ourContext;
 #endif
 #if AUI_PLATFORM_MACOS
     static void* ourContext;

@@ -16,6 +16,7 @@
 #pragma once
 
 #include <cassert>
+#include <cstdint>
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>

@@ -21,7 +21,7 @@ namespace {
     public:
         void init(const Init& init) override {
             IRenderingContext::init(init);
-            reallocateImageBuffers(init.window);
+            reallocate(init.window);
         }
 
         ~StubRenderingContext() override = default;
@@ -37,7 +37,6 @@ namespace {
         void endPaint(AWindowBase& window) override {
 
         }
-
     };
 }
 

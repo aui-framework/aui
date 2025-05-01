@@ -44,6 +44,7 @@ class AWindowManager;
 class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
+    friend class IPlatformAbstraction;
     friend class CommonRenderingContext;
     friend class SoftwareRenderingContext;
     friend class AWindowManager;
@@ -80,6 +81,7 @@ public:
     void quit();
 
     void setWindowStyle(WindowStyle ws);
+    WindowStyle windowStyle() const { return mWindowStyle; }
 
     /**
      * @brief Minimizes window (hide window to the taskbar, iconifies)

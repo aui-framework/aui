@@ -9,10 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Platform/linux/x11/PlatformAbstractionX11.h>
+
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-
-#include <AUI/Platform/linux/x11/PlatformAbstractionX11.h>
 
 static bool isMouseKeyDown(AInput::Key button) {
     if (PlatformAbstractionX11::ourDisplay == nullptr)
@@ -669,7 +669,7 @@ int PlatformAbstractionX11::inputToNative(AInput::Key key) {
     return keysym;
 }
 
-bool PlatformAbstractionX11::inputFromNative(AInput::Key k) {
+bool PlatformAbstractionX11::inputIsKeyDown(AInput::Key k) {
     if (PlatformAbstractionX11::ourDisplay == nullptr)
         return false;
     if (k == AInput::Key::LBUTTON || k == AInput::Key::RBUTTON) {

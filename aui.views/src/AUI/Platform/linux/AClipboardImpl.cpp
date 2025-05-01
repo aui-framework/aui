@@ -14,8 +14,6 @@
 //
 
 #include "AUI/Platform/AClipboard.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AWindowManager.h"
 #include "IPlatformAbstraction.h"
 
 bool AClipboard::isEmpty() {

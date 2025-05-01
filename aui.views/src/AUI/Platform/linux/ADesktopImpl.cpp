@@ -12,9 +12,6 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/ARaiiHelper.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Platform/ADesktop.h>

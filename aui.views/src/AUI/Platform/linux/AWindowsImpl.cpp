@@ -9,44 +9,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <X11/Xlib.h>
-#include <unistd.h>
-#include <poll.h>
-#include <fcntl.h>
-
-#include "AUI/GL/gl.h"
-#include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
-#include "AUI/Platform/ErrorToException.h"
-#include "AUI/Render/IRenderer.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-
-
-#include "AUI/Util/ARandom.h"
-#include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/APlatform.h"
-#include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
-#include "AUI/UITestState.h"
 #include "IPlatformAbstraction.h"
-
-#include <chrono>
-#include <AUI/Logging/ALogger.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Traits/memory.h>
-#include <AUI/Traits/strings.h>
-
-#include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-
-#include <X11/extensions/sync.h>
-
-
 
 AWindow::~AWindow() {
     mRenderingContext->destroyNativeWindow(*this);
@@ -84,12 +55,12 @@ void AWindow::minimize() {
 }
 
 bool AWindow::isMinimized() const {
-    return IPlatformAbstraction::current().windowIsMinimized(*this);
+    return IPlatformAbstraction::current().windowIsMinimized(const_cast<AWindow&>(*this));
 }
 
 
 bool AWindow::isMaximized() const {
-    return IPlatformAbstraction::current().windowIsMaximized(*this);
+    return IPlatformAbstraction::current().windowIsMaximized(const_cast<AWindow&>(*this));
 }
 
 void AWindow::maximize() {
@@ -97,7 +68,7 @@ void AWindow::maximize() {
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
-    return IPlatformAbstraction::current().windowGetPosition(*this);
+    return IPlatformAbstraction::current().windowGetPosition(const_cast<AWindow&>(*this));
 }
 
 void AWindow::flagRedraw() {
@@ -119,10 +90,14 @@ void AWindow::show() {
 }
 
 void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
     IPlatformAbstraction::current().windowSetSize(*this, size);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
+    AViewContainer::setPosition({ x, y });
+    AViewContainer::setSize({ width, height });
+
     IPlatformAbstraction::current().windowSetGeometry(*this, x, y, width, height);
 }
 
@@ -143,7 +118,10 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-    IPlatformAbstraction::current().notifyProcessMessages();
+    if (mWindows.empty()) {
+        return;
+    }
+    IPlatformAbstraction::current().windowManagerNotifyProcessMessages();
 }
 
 void AWindowManager::loop() {
@@ -155,7 +133,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
 }
 
 void AWindow::allowDragNDrop() {
-    IPlatformAbstraction::current().allowDragNDrop(*this);
+    IPlatformAbstraction::current().windowAllowDragNDrop(*this);
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
