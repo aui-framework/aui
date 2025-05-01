@@ -30,7 +30,7 @@ AImage aui::win32::iconToImage(HICON hIcon) {
     return bitmapToImage(hBitmap);
 }
 
-aui::win32::Bitmap aui::win32::imageRgbToBitmap(const AImage& image, BitmapMode mode) {
+aui::win32::Bitmap aui::win32::imageRgbToBitmap(AImageView image, BitmapMode mode) {
     aui::win32::DeviceContext hdcScreen = GetDC(nullptr);
 
     aui::win32::DeviceContext hdcMemColor = CreateCompatibleDC(hdcScreen);
