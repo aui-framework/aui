@@ -15,12 +15,6 @@
 #include "AUI/Platform/AWindow.h"
 
 
-struct ACursor::Custom {
-public:
-
-private:
-};
-
 ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<ACursor::Custom>()), mSize(size) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
