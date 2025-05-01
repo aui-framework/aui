@@ -22,25 +22,16 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ADBus.h"
+#include "IPlatformAbstraction.h"
 
 #undef signals
 
 glm::ivec2 ADesktop::getMousePosition() {
-    glm::ivec2 p;
-    Window w;
-    int unused1;
-    unsigned unused2;
-    XQueryPointer(
-        PlatformAbstractionX11::ourDisplay, XRootWindow(PlatformAbstractionX11::ourDisplay, 0), &w, &w, &p.x, &p.y,
-        &unused1, &unused1, &unused2);
-    return p;
+    return IPlatformAbstraction::current().desktopGetMousePosition();
 }
 
 void ADesktop::setMousePos(const glm::ivec2 &pos) {
-    auto rootWindow = XRootWindow(PlatformAbstractionX11::ourDisplay, 0);
-    XSelectInput(PlatformAbstractionX11::ourDisplay, rootWindow, KeyReleaseMask);
-    XWarpPointer(PlatformAbstractionX11::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
-    XFlush(PlatformAbstractionX11::ourDisplay);
+    IPlatformAbstraction::current().desktopSetMousePosition(pos);
 }
 
 AFuture<APath>

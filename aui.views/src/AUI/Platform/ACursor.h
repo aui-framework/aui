@@ -78,9 +78,13 @@ public:
 
     void applyNativeCursor(AWindow* pWindow) const;
 
+    struct Custom {
+        virtual ~Custom() = default;
+    };
+    const std::variant<System, _<Custom>, _<IDrawable>>& value() const { return mValue; }
+    int size() const { return mSize; }
+
 private:
-    struct Custom;
-    friend class IPlatformAbstraction;
     std::variant<System, _<Custom>, _<IDrawable>> mValue;
     int mSize;
 };

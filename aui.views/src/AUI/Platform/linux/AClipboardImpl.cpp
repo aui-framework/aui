@@ -16,14 +16,16 @@
 #include "AUI/Platform/AClipboard.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/AWindowManager.h"
-
+#include "IPlatformAbstraction.h"
 
 bool AClipboard::isEmpty() {
     return pasteFromClipboard().empty();
 }
+
 void AClipboard::copyToClipboard(const AString& text) {
-    AWindow::current()->getWindowManager().xClipboardCopyImpl(text);
+    IPlatformAbstraction::current().copyToClipboard(text);
 }
+
 AString AClipboard::pasteFromClipboard() {
-    return AWindow::current()->getWindowManager().xClipboardPasteImpl();
+    return IPlatformAbstraction::current().pasteFromClipboard();
 }

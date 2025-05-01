@@ -10,16 +10,10 @@
  */
 
 #include <AUI/Platform/ACursor.h>
-#include "AUI/Traits/callables.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
-#include "AUI/Util/kAUI.h"
-#include "AUI/Util/ACleanup.h"
 #include "IPlatformAbstraction.h"
-#include <AUI/Util/ARaiiHelper.h>
-#include <AUI/Logging/ALogger.h>
-
 
 ACursor::ACursor(AImageView image, int size) : mValue(IPlatformAbstraction::current().createCustomCursor(image)), mSize(size) {}
 

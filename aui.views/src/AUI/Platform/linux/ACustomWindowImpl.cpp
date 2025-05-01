@@ -25,6 +25,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
     if (event.position.y < mTitleHeight && event.asButton == AInput::LBUTTON) {
         if (isCaptionAt(event.position)) {
+            /*
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
             XUngrabPointer(PlatformAbstractionX11::ourDisplay, 0);
@@ -40,7 +41,7 @@ void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
             xclient.data.l[3] = 0;
             xclient.data.l[4] = 0;
             XSendEvent(PlatformAbstractionX11::ourDisplay, XRootWindow(PlatformAbstractionX11::ourDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
-                       (XEvent*) &xclient);
+                       (XEvent*) &xclient);*/
 
             mDragging = true;
             mDragPos = event.position;

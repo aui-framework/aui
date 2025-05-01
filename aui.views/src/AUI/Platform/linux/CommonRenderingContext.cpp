@@ -21,59 +21,6 @@
 #include "AUI/Logging/ALogger.h"
 #include <AUI/UITestState.h>
 
-aui::assert_not_used_when_null<Display*> PlatformAbstractionX11::ourDisplay = nullptr;
-Screen* PlatformAbstractionX11::ourScreen = nullptr;
-CommonRenderingContext::Atoms PlatformAbstractionX11::ourAtoms;
-
-
-int xerrorhandler(Display* dsp, XErrorEvent* error) {
-    if (PlatformAbstractionX11::ourDisplay == dsp) {
-        char errorstring[0x100];
-        XGetErrorText(dsp, error->error_code, errorstring, sizeof(errorstring));
-        ALogger::info("X11") << "Error: " << errorstring << "\n" << AStacktrace::capture(2);
-    }
-    return 0;
-}
-
-void CommonRenderingContext::ensureXLibInitialized() {
-    if (UITestState::isTesting()) {
-        return;
-    }
-    struct DisplayInstance {
-
-    public:
-        DisplayInstance() {
-            auto d = PlatformAbstractionX11::ourDisplay = XOpenDisplay(nullptr);
-            if (d == nullptr) return;
-            XSetErrorHandler(xerrorhandler);
-            PlatformAbstractionX11::ourScreen = DefaultScreenOfDisplay(PlatformAbstractionX11::ourDisplay);
-
-            PlatformAbstractionX11::ourAtoms.wmProtocols = XInternAtom(d, "WM_PROTOCOLS", False);
-            PlatformAbstractionX11::ourAtoms.wmDeleteWindow = XInternAtom(d, "WM_DELETE_WINDOW", False);
-            PlatformAbstractionX11::ourAtoms.wmHints = XInternAtom(d, "_MOTIF_WM_HINTS", true);
-            PlatformAbstractionX11::ourAtoms.wmState = XInternAtom(d, "WM_STATE", true);
-            PlatformAbstractionX11::ourAtoms.netWmState = XInternAtom(d, "_NET_WM_STATE", false);
-            PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert = XInternAtom(d, "_NET_WM_STATE_MAXIMIZED_VERT", false);
-            PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz = XInternAtom(d, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
-            PlatformAbstractionX11::ourAtoms.clipboard = XInternAtom(d, "CLIPBOARD", False);
-            PlatformAbstractionX11::ourAtoms.utf8String = XInternAtom(d, "UTF8_STRING", False);
-            PlatformAbstractionX11::ourAtoms.textPlain = XInternAtom(d, "text/plain", False);
-            PlatformAbstractionX11::ourAtoms.textPlainUtf8 = XInternAtom(d, "text/plain;charset=utf-8", False);
-            PlatformAbstractionX11::ourAtoms.auiClipboard = XInternAtom(d, "AUI_CLIPBOARD", False);
-            PlatformAbstractionX11::ourAtoms.incr = XInternAtom(d, "INCR", False);
-            PlatformAbstractionX11::ourAtoms.targets = XInternAtom(d, "TARGETS", False);
-            PlatformAbstractionX11::ourAtoms.netWmSyncRequest = XInternAtom(d, "_NET_WM_SYNC_REQUEST", False);
-            PlatformAbstractionX11::ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
-        }
-
-        ~DisplayInstance() {
-            //XCloseDisplay(ourDisplay);
-            //XFree(ourScreen);
-
-        }
-    };
-    static DisplayInstance display;
-}
 
 void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, XSetWindowAttributes& swa, XVisualInfo* vi) {
     do_once {

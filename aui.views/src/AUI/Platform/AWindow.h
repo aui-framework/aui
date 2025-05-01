@@ -292,17 +292,7 @@ private:
 
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
-    /**
-     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
-     */
-    struct {
-        uint32_t lo = 0;
-        uint32_t hi = 0;
-        /* XID */ unsigned long counter;
-    } mXsyncRequestCounter;
     bool mWasMaximized = false;
-
-    void* mIC = nullptr; // input context
 #endif
 #ifdef AUI_PLATFORM_MACOS
     bool mRedrawFlag = false;

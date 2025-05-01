@@ -10,7 +10,13 @@
  */
 
 #include "IPlatformAbstraction.h"
+#include "AUI/Platform/linux/x11/PlatformAbstractionX11.h"
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
+    static PlatformAbstractionX11 x11;
+    return x11;
+}
 
+void IPlatformAbstraction::setCurrentWindow(AWindow* window) {
+    AWindow::currentWindowStorage() = window;
 }
