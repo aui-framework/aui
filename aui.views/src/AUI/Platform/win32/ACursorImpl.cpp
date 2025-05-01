@@ -48,7 +48,7 @@ private:
     HCURSOR mCursor;
 };
 
-ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
+ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
     std::visit(aui::lambda_overloaded {

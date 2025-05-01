@@ -71,7 +71,9 @@ protected:
         return window.mRedrawFlag;
     }
 
+#if AUI_PLATFORM_LINUX
     static bool& wasMaximized(AWindow& window) {
         return window.mWasMaximized;
     }
+#endif
 };

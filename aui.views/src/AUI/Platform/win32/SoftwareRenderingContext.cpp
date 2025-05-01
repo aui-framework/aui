@@ -74,6 +74,10 @@ void SoftwareRenderingContext::reallocate(const AWindowBase &window) {
     mBitmapInfo->bmiHeader.biHeight = -int(mBitmapSize.y); // negative means top-down bitmap
 }
 
+void SoftwareRenderingContext::reallocate() {
+
+}
+
 AImage SoftwareRenderingContext::makeScreenshot() {
     AByteBuffer data;
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;

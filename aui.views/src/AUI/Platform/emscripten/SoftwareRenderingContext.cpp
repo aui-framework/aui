@@ -52,6 +52,10 @@ void SoftwareRenderingContext::reallocate(const AWindowBase& window) {
     mBitmapSize = window.getSize();
 }
 
+void SoftwareRenderingContext::reallocate() {
+
+}
+
 IRenderer& SoftwareRenderingContext::renderer() {
     static SoftwareRenderer r;
     return r;
