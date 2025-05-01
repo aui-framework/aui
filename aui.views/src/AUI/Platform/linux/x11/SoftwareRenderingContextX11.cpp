@@ -14,8 +14,10 @@
 static XVisualInfo* vi = nullptr;
 
 SoftwareRenderingContextX11::~SoftwareRenderingContextX11() {
-    if (mBitmapBlob && !mXImage)
+    if (mBitmapBlob && !mXImage) {
         free(mBitmapBlob);
+        mBitmapBlob = nullptr;
+    }
 }
 
 void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {

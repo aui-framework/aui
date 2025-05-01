@@ -17,7 +17,10 @@ SoftwareRenderingContext::SoftwareRenderingContext()
 }
 
 SoftwareRenderingContext::~SoftwareRenderingContext() {
-
+    if (mBitmapBlob) {
+        free(mBitmapBlob);
+        mBitmapBlob = nullptr;
+    }
 }
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
