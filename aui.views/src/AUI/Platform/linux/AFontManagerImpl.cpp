@@ -11,8 +11,6 @@
 
 #include <AUI/Platform/AFontManager.h>
 
-#include <X11/Xlib.h>
-#include <X11/Xatom.h>
 #include <fontconfig/fontconfig.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Logging/ALogger.h>

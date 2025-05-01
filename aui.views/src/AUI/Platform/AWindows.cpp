@@ -31,6 +31,10 @@
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
+#ifdef AUI_PLATFORM_LINUX
+#include <AUI/Platform/linux/IPlatformAbstraction.h>
+#endif
+
 
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
@@ -104,15 +108,7 @@ void AWindow::redraw() {
             applyGeometryToChildrenIfNecessary();
             mMarkedMinContentSizeInvalid = false;
 #if AUI_PLATFORM_LINUX
-            if (CommonRenderingContext::ourDisplay != nullptr) {
-                auto sizeHints = aui::ptr::make_unique_with_deleter(XAllocSizeHints(), XFree);
-                sizeHints->flags = PMinSize | PMaxSize;
-                sizeHints->min_width = getMinimumWidth();
-                sizeHints->min_height = getMinimumHeight();
-                sizeHints->max_width = getMaxSize().x;
-                sizeHints->max_height = getMaxSize().y;
-                XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizeHints.get());
-            }
+            IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
 #endif
         }
 #if AUI_PLATFORM_WIN
@@ -311,6 +307,9 @@ void AWindow::forceUpdateCursor() {
 }
 
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
+#if AUI_PLATFORM_LINUX
+    IPlatformAbstraction::current().windowManagerInitNativeWindow(init);
+#else
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
             std::visit(aui::lambda_overloaded{
@@ -334,6 +333,7 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
         }
     }
     throw AException("unable to initialize graphics");
+#endif
 }
 
 bool AWindow::isClosed() const noexcept {

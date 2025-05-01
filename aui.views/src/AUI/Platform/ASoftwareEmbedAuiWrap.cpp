@@ -16,8 +16,16 @@
 #include "ASoftwareEmbedAuiWrap.h"
 #include <AUI/Software/SoftwareRenderer.h>
 
+#if AUI_PLATFORM_LINUX
+#include "AUI/Platform/linux/x11/SoftwareRenderingContextX11.h"
+#endif
+
 ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
+#if AUI_PLATFORM_LINUX
+    windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContextX11));
+#else
     windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContext));
+#endif
 }
 
 AImage ASoftwareEmbedAuiWrap::render(ARenderContext context) {
