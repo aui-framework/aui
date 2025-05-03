@@ -9,14 +9,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "IPlatformAbstraction.h"
+#include "AUI/Platform/linux/gtk/PlatformAbstractionGtk.h"
 #include "AUI/Platform/linux/x11/PlatformAbstractionX11.h"
+#include "IPlatformAbstraction.h"
+
+static constexpr auto LOG_TAG = "IPlatformAbstraction";
+
+IPlatformAbstraction::IPlatformAbstraction() {
+    ALogger::info(LOG_TAG) << "Desktop Environment: " << std::getenv("XDG_CURRENT_DESKTOP");
+}
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
+    std::string_view auiPa;
+    if (auto value = std::getenv("AUI_PA")) {
+        auiPa = value;
+    }
+    if (auiPa == "gtk") {
+        static PlatformAbstractionGtk result;
+        return result;
+    }
+
     static PlatformAbstractionX11 x11;
     return x11;
 }
 
-void IPlatformAbstraction::setCurrentWindow(AWindow* window) {
+void IPlatformAbstraction::setCurrentWindow(AWindowBase* window) {
     AWindow::currentWindowStorage() = window;
+}
+
+float IPlatformAbstraction::windowGetDpiRatio(AWindow& window) {
+    return platformGetDpiRatio();
 }

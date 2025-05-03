@@ -13,6 +13,10 @@
 
 static gl::Framebuffer* gFramebufferCurrent = nullptr;
 
+#if AUI_PLATFORM_LINUX
+int gl::Framebuffer::DEFAULT_FB = 0;
+#endif
+
 gl::Framebuffer::Framebuffer() {
     glGenFramebuffers(1, &mHandle);
 }

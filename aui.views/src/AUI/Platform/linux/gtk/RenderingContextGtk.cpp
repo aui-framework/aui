@@ -9,18 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#pragma once
+//
+// Created by alex2772 on 5/2/25.
+//
 
-namespace aui::detail::gtk {
-
-/**
- * @brief Initializes gtk if didn't.
- */
-void requires_gtk();
-
-/**
- * @brief Processes all pending gtk events.
- */
-void main_iterations();
-
-}
+#include "RenderingContextGtk.h"

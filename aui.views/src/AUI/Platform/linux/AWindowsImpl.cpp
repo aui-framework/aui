@@ -43,7 +43,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return IPlatformAbstraction::current().windowGetDpiRatio(const_cast<AWindow&>(*this));
 }
 
 void AWindow::restore() {
@@ -73,6 +73,7 @@ glm::ivec2 AWindow::getWindowPosition() const {
 
 void AWindow::flagRedraw() {
     mRedrawFlag = true;
+    IPlatformAbstraction::current().windowFlagRedraw(*this);
 }
 
 void AWindow::show() {

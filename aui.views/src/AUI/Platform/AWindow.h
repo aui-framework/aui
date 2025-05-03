@@ -60,7 +60,7 @@ public:
         return mFrameMillis;
     }
 
-    void redraw();
+    void redraw() override;
 
     void blockUserInput(bool blockUserInput = true) override;
 

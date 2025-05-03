@@ -10,6 +10,7 @@
  */
 class IPlatformAbstraction {
 public:
+    IPlatformAbstraction();
     static IPlatformAbstraction& current();
     virtual ~IPlatformAbstraction() = default;
 
@@ -58,19 +59,18 @@ public:
     virtual void windowQuit(AWindow& window) = 0;
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
+    virtual float windowGetDpiRatio(AWindow& window);
 
-protected:
     // some helper functions to pass through visibility.
-    static void setCurrentWindow(AWindow* window);
-
-    static AWindowNativePtr& nativeHandle(AWindow& window) {
-        return window.mHandle;
-    }
+    static void setCurrentWindow(AWindowBase* window);
 
     static bool& redrawFlag(AWindow& window) {
         return window.mRedrawFlag;
     }
 
+    static AWindowNativePtr& nativeHandle(AWindow& window) {
+        return window.mHandle;
+    }
 #if AUI_PLATFORM_LINUX
     static bool& wasMaximized(AWindow& window) {
         return window.mWasMaximized;

@@ -11,28 +11,32 @@
 
 #pragma once
 
-
 #include <cassert>
 
 /**
- * @brief Takes care of AddRef and Release() reference counting mechanism of COM objects.
+ * @brief Takes care of g_object_ref and g_object_unref() reference counting mechanism of Glib objects.
  * @ingroup core
  * @tparam T
  * @details
- * @exclusivefor{windows}
+ * @exclusivefor{linux}
  */
 template<typename T>
-class AComPtr {
+class AGlibPtr {
 public:
-
-    AComPtr() {
+    AGlibPtr() {
         mValue = nullptr;
     }
 
-    ~AComPtr() {
-        if (mValue) {
-            mValue->Release();
+    ~AGlibPtr() {
+        release();
+    }
+
+    void release() {
+        if (!mValue) {
+            return;
         }
+        g_object_unref(mValue);
+        mValue = nullptr;
     }
 
     T** operator&() noexcept {
@@ -40,14 +44,20 @@ public:
         return &mValue;
     }
 
-    AComPtr(T* value): mValue(value) {}
-    AComPtr(const AComPtr<T>& rhs): mValue(rhs.mValue) {
+    AGlibPtr(T* value): mValue(value) {}
+    AGlibPtr(const AGlibPtr<T>& rhs): mValue(rhs.mValue) {
         if (mValue) {
-            mValue->AddRef();
+            g_object_ref(mValue);
         }
     }
 
-    AComPtr(AComPtr<T>&& rhs): mValue(rhs.mValue) {
+    AGlibPtr& operator=(T* value) {
+        release();
+        mValue = value;
+        return *this;
+    }
+
+    AGlibPtr(AGlibPtr<T>&& rhs): mValue(rhs.mValue) {
         rhs.mValue = nullptr;
     }
 

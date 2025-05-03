@@ -28,6 +28,8 @@ namespace gl {
         
 #if AUI_PLATFORM_IOS
         static constexpr auto DEFAULT_FB = 1;
+#elif AUI_PLATFORM_LINUX
+        static int DEFAULT_FB;
 #else
         static constexpr auto DEFAULT_FB = 0;
 #endif
