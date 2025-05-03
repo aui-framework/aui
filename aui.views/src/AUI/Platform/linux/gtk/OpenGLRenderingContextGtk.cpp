@@ -16,6 +16,20 @@
 #include "OpenGLRenderingContextGtk.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 
+namespace {
+auto contextScope(GdkGLContext* ctx) {
+    auto prev = gdk_gl_context_get_current();
+    if (ctx != nullptr) {
+        AUI_ASSERT(prev != ctx);
+        gdk_gl_context_make_current(ctx);
+    }
+    return aui::ptr::make_unique_with_deleter(ctx, [prev](GdkGLContext*) {
+      gdk_gl_context_clear_current();
+      gdk_gl_context_make_current(prev);
+    });
+}
+}
+
 OpenGLRenderingContextGtk::Texture::~Texture() {
     if (gl_texture) {
         gdk_gl_texture_release(GDK_GL_TEXTURE(gl_texture));
@@ -41,7 +55,7 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     realCreateContext(widget);
     mNeedsResize = true;
 
-    makeCurrent();
+    auto acquired = contextScope(mContext);
     if (!glewExperimental) {
         glewExperimental = true;
         switch (auto s = glewInit()) {
@@ -65,28 +79,30 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
     if (mContext == nullptr) {
         return;
     }
-    makeCurrent();
-    attachBuffers(widget);
-    if (mFramebufferForGtk == 0) {
-        return;
-    }
-    glViewport(
-        0, 0, gdk_gl_texture_builder_get_width(mTexture->builder),
-        gdk_gl_texture_builder_get_height(mTexture->builder));
-
-    IPlatformAbstraction::setCurrentWindow(&mWindow);
-
-    gl::Framebuffer::DEFAULT_FB = mFramebufferForGtk;
-    AWindow::getWindowManager().watchdog().runOperation([&] {
-        if (auto w = dynamic_cast<AWindow*>(&mWindow)) {
-            IPlatformAbstraction::redrawFlag(*w) = false;
+    {
+        auto acquired = contextScope(mContext);
+        attachBuffers(widget);
+        if (mFramebufferForGtk == 0) {
+            return;
         }
-        mWindow.redraw();
-    });
+        glViewport(
+            0, 0, gdk_gl_texture_builder_get_width(mTexture->builder),
+            gdk_gl_texture_builder_get_height(mTexture->builder));
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glUseProgram(0);
+        IPlatformAbstraction::setCurrentWindow(&mWindow);
+
+        gl::Framebuffer::DEFAULT_FB = mFramebufferForGtk;
+        AWindow::getWindowManager().watchdog().runOperation([&] {
+            if (auto w = dynamic_cast<AWindow*>(&mWindow)) {
+                IPlatformAbstraction::redrawFlag(*w) = false;
+            }
+            mWindow.redraw();
+        });
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glUseProgram(0);
+    }
 
     gtk_snapshot_save(snapshot);
     {
@@ -147,18 +163,12 @@ void OpenGLRenderingContextGtk::realCreateContext(GtkWidget* widget) {
     }
 }
 
-void OpenGLRenderingContextGtk::makeCurrent() {
-    if (mContext == nullptr) {
-        return;
-    }
-    gdk_gl_context_make_current(mContext);
-}
-
 void OpenGLRenderingContextGtk::ensureTexture(GtkWidget* widget) {
     gtk_widget_realize(widget);
     if (mContext == nullptr) {
         return;
     }
+    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
     if (!mTexture) {
         mTexture.emplace();
 
@@ -181,6 +191,7 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
     if (mContext == nullptr) {
         return;
     }
+    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
     if (!mTexture) {
         return;
     }
@@ -246,6 +257,7 @@ void OpenGLRenderingContextGtk::ensureBuffers(GtkWidget* widget) {
     if (mHaveBuffers) {
         return;
     }
+    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
     mHaveBuffers = true;
     glGenFramebuffers(1, &mFramebufferForGtk);
 
@@ -268,7 +280,7 @@ void OpenGLRenderingContextGtk::attachBuffers(GtkWidget* widget) {
     if (mContext == nullptr) {
         return;
     }
-    makeCurrent();
+    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
 
     if (!mTexture) {
         ensureTexture(widget);

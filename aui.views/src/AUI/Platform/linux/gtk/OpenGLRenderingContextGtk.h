@@ -42,7 +42,6 @@ private:
     GdkGLAPI mAllowedApis = static_cast<GdkGLAPI>(GDK_GL_API_GL | GDK_GL_API_GLES);
 
     void realCreateContext(GtkWidget* widget);
-    void makeCurrent();
     void ensureTexture(GtkWidget* widget);
     void allocateTexture(GtkWidget* widget);
     void ensureBuffers(GtkWidget* widget);
