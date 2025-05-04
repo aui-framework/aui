@@ -491,7 +491,7 @@ void OpenGLRenderer::string(glm::vec2 position,
 }
 
 void OpenGLRenderer::setBlending(Blending blending) {
-    if (mRenderToTextureTarget && glBlendFuncSeparate) {
+    if (glBlendFuncSeparate) {
         switch (blending) {
             case Blending::NORMAL: {
                 glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
@@ -1327,6 +1327,8 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                         result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
+precision highp float;
+precision highp int;
 varying vec2 SL_inter_uv;
 uniform vec2 SL_uniform_m2;
 uniform vec2 SL_uniform_pixel_to_uv;

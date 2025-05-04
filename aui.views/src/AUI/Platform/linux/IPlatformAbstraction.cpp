@@ -21,7 +21,7 @@ IPlatformAbstraction::IPlatformAbstraction() {
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
     static IPlatformAbstraction& value = []() -> IPlatformAbstraction& {
-        std::string_view auiPa = "gtk";
+        std::string_view auiPa;
         if (auto value = std::getenv("AUI_PA")) {
             auiPa = value;
         }
