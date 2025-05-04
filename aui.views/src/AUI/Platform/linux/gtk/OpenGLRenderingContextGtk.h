@@ -40,7 +40,7 @@ public:
             gdk_gl_context_make_current(prev);
         });
     }
-    void gtkScaleFactorChanged() override;
+    void gtkDoUnderContext(const std::function<void()>& callback) override; // this is soo bad
 
 private:
     struct Texture {

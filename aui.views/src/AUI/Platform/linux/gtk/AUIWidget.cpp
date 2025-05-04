@@ -71,7 +71,10 @@ static void aui_widget_class_init (AUIWidgetClass* klass)
         auto name = std::string_view(pspec->name);
         if (name == "scale-factor") {
             auto widget = AUI_WIDGET_WIDGET(object);
-            widget->renderingContext->gtkScaleFactorChanged();
+
+            widget->renderingContext->gtkDoUnderContext([&] {
+                widget->renderingContext->window().updateDpi();
+            });
             gtk_widget_queue_draw(GTK_WIDGET(widget));
         }
     };
@@ -85,6 +88,6 @@ AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext)
     return widget;
 }
 
-void RenderingContextGtk::gtkScaleFactorChanged() {
-    window().updateDpi();
+void RenderingContextGtk::gtkDoUnderContext(const std::function<void()>& callback) {
+    callback();
 }
