@@ -16,6 +16,8 @@
 #include "OpenGLRenderingContextGtk.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 
+GdkGLContext* OpenGLRenderingContextGtk::ourContext = nullptr;
+
 OpenGLRenderingContextGtk::Texture::~Texture() {
     if (gl_texture) {
         gdk_gl_texture_release(GDK_GL_TEXTURE(gl_texture));
@@ -62,7 +64,7 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
 }
 
 void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) {
-    if (mContext == nullptr) {
+    if (ourContext == nullptr) {
         return;
     }
     auto acquired = contextScope();
@@ -137,39 +139,42 @@ void OpenGLRenderingContextGtk::gtkUnrealize(GtkWidget* widget) {
 }
 
 void OpenGLRenderingContextGtk::realCreateContext(GtkWidget* widget) {
+    if (ourContext) {
+        return;
+    }
     GError* error = nullptr;
-    mContext =
+    ourContext =
         gdk_surface_create_gl_context(gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(widget))), &error);
     if (error != nullptr) {
         g_warning("Failed to create GL context: %s", error->message);
-        g_clear_object(&mContext);
-        mContext = nullptr;
+        g_clear_object(&ourContext);
+        ourContext = nullptr;
         g_clear_error(&error);
         return;
     }
-    gdk_gl_context_set_allowed_apis(mContext, mAllowedApis);
-    gdk_gl_context_set_required_version(mContext, 3, 0);
-    gdk_gl_context_realize(mContext, &error);
+    gdk_gl_context_set_allowed_apis(ourContext, mAllowedApis);
+    gdk_gl_context_set_required_version(ourContext, 3, 0);
+    gdk_gl_context_realize(ourContext, &error);
     if (error != nullptr) {
         g_warning("Failed to create GL context: %s", error->message);
-        g_clear_object(&mContext);
-        mContext = nullptr;
+        g_clear_object(&ourContext);
+        ourContext = nullptr;
         g_clear_error(&error);
     }
 }
 
 void OpenGLRenderingContextGtk::ensureTexture(GtkWidget* widget) {
     gtk_widget_realize(widget);
-    if (mContext == nullptr) {
+    if (ourContext == nullptr) {
         return;
     }
-    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
+    AUI_ASSERT(gdk_gl_context_get_current() == ourContext);
     if (!mTexture) {
         mTexture.emplace();
 
         mTexture->builder = gdk_gl_texture_builder_new();
-        gdk_gl_texture_builder_set_context(mTexture->builder, mContext);
-        if (gdk_gl_context_get_api(mContext) == GDK_GL_API_GLES) {
+        gdk_gl_texture_builder_set_context(mTexture->builder, ourContext);
+        if (gdk_gl_context_get_api(ourContext) == GDK_GL_API_GLES) {
             gdk_gl_texture_builder_set_format(mTexture->builder, GDK_MEMORY_R8G8B8A8_PREMULTIPLIED);
         } else {
             gdk_gl_texture_builder_set_format(mTexture->builder, GDK_MEMORY_B8G8R8A8_PREMULTIPLIED);
@@ -183,10 +188,10 @@ void OpenGLRenderingContextGtk::ensureTexture(GtkWidget* widget) {
 }
 
 void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
-    if (mContext == nullptr) {
+    if (ourContext == nullptr) {
         return;
     }
-    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
+    AUI_ASSERT(gdk_gl_context_get_current() == ourContext);
     if (!mTexture) {
         return;
     }
@@ -213,7 +218,7 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        if (gdk_gl_context_get_api(mContext) == GDK_GL_API_GLES)
+        if (gdk_gl_context_get_api(ourContext) == GDK_GL_API_GLES)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         else
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
@@ -234,13 +239,13 @@ void OpenGLRenderingContextGtk::endResize(AWindowBase& window) {
 
 void OpenGLRenderingContextGtk::ensureBuffers(GtkWidget* widget) {
     gtk_widget_realize(widget);
-    if (mContext == nullptr) {
+    if (ourContext == nullptr) {
         return;
     }
     if (mHaveBuffers) {
         return;
     }
-    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
+    AUI_ASSERT(gdk_gl_context_get_current() == ourContext);
     mHaveBuffers = true;
     glGenFramebuffers(1, &mFramebufferForGtk);
 
@@ -260,10 +265,10 @@ void OpenGLRenderingContextGtk::ensureBuffers(GtkWidget* widget) {
 }
 
 void OpenGLRenderingContextGtk::attachBuffers(GtkWidget* widget) {
-    if (mContext == nullptr) {
+    if (ourContext == nullptr) {
         return;
     }
-    AUI_ASSERT(gdk_gl_context_get_current() == mContext);
+    AUI_ASSERT(gdk_gl_context_get_current() == ourContext);
 
     if (!mTexture) {
         ensureTexture(widget);

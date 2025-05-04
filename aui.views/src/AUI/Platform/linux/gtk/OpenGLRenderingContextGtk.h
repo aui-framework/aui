@@ -30,7 +30,7 @@ public:
 
     auto contextScope() {
         auto prev = gdk_gl_context_get_current();
-        auto ctx = mContext;
+        auto ctx = ourContext;
         if (ctx != nullptr) {
             AUI_ASSERT(prev != ctx);
             gdk_gl_context_make_current(ctx);
@@ -51,7 +51,7 @@ private:
         ~Texture();
     };
     AOptional<Texture> mTexture;
-    GdkGLContext* mContext = nullptr;
+    static GdkGLContext* ourContext;
     GLuint mFramebufferForGtk = 0;
     bool mNeedsResize = false;
     bool mHaveBuffers = false;
