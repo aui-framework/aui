@@ -101,5 +101,9 @@ void PlatformAbstractionGtk::windowQuit(AWindow &window) {}
 void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {}
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
-    return gdk_surface_get_scale(gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window)))));;
+    auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
+    if (surface == nullptr) {
+        return 1.0;
+    }
+    return gdk_surface_get_scale(surface);
 }

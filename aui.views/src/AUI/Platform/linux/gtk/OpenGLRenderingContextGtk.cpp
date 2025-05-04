@@ -79,30 +79,39 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
     if (mContext == nullptr) {
         return;
     }
-    {
-        auto acquired = contextScope(mContext);
-        attachBuffers(widget);
-        if (mFramebufferForGtk == 0) {
-            return;
-        }
-        glViewport(
-            0, 0, gdk_gl_texture_builder_get_width(mTexture->builder),
-            gdk_gl_texture_builder_get_height(mTexture->builder));
-
-        IPlatformAbstraction::setCurrentWindow(&mWindow);
-
-        gl::Framebuffer::DEFAULT_FB = mFramebufferForGtk;
-        AWindow::getWindowManager().watchdog().runOperation([&] {
-            if (auto w = dynamic_cast<AWindow*>(&mWindow)) {
-                IPlatformAbstraction::redrawFlag(*w) = false;
-            }
-            mWindow.redraw();
-        });
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glUseProgram(0);
+    auto acquired = contextScope(mContext);
+    attachBuffers(widget);
+    if (mFramebufferForGtk == 0) {
+        return;
     }
+    glViewport(
+        0, 0, gdk_gl_texture_builder_get_width(mTexture->builder),
+        gdk_gl_texture_builder_get_height(mTexture->builder));
+
+    IPlatformAbstraction::setCurrentWindow(&mWindow);
+
+    gl::Framebuffer::DEFAULT_FB = mFramebufferForGtk;
+    AWindow::getWindowManager().watchdog().runOperation([&] {
+        if (auto w = dynamic_cast<AWindow*>(&mWindow)) {
+            IPlatformAbstraction::redrawFlag(*w) = false;
+        }
+        mWindow.redraw();
+    });
+
+    auto sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+    gdk_gl_texture_builder_set_sync(mTexture->builder, sync);
+    mTexture->gl_texture = gdk_gl_texture_builder_build(
+            mTexture->builder,
+            [](gpointer data) {
+                auto texture = reinterpret_cast<Texture*>(data);
+                auto sync = (GLsync) gdk_gl_texture_builder_get_sync(texture->builder);
+                if (sync != nullptr) {
+                    glDeleteSync(sync);
+                    gdk_gl_texture_builder_set_sync(texture->builder, nullptr);
+                }
+                texture->gl_texture = nullptr;
+            },
+            &*mTexture);
 
     gtk_snapshot_save(snapshot);
     {
@@ -225,23 +234,6 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
 
         gdk_gl_texture_builder_set_width(mTexture->builder, width);
         gdk_gl_texture_builder_set_height(mTexture->builder, height);
-
-        if (mTexture->gl_texture == nullptr) {
-            auto sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-            gdk_gl_texture_builder_set_sync(mTexture->builder, sync);
-            mTexture->gl_texture = gdk_gl_texture_builder_build(
-                mTexture->builder,
-                [](gpointer data) {
-                  auto texture = reinterpret_cast<Texture*>(data);
-                  auto sync = (GLsync) gdk_gl_texture_builder_get_sync(texture->builder);
-                  if (sync != nullptr) {
-                      glDeleteSync(sync);
-                      gdk_gl_texture_builder_set_sync(texture->builder, nullptr);
-                  }
-                  texture->gl_texture = nullptr;
-                },
-                &*mTexture);
-        }
 
         AUI_NULLSAFE(mWindow.getRenderingContext())->beginResize(mWindow);
         mWindow.AViewContainer::setSize({width, height});
