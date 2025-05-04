@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/AInput.h>
+#include <AUI/Platform/detail/key_to_native.h>
 
 /*
  * Mac virtual key code to SDL scancode mapping table
