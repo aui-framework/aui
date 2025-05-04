@@ -325,7 +325,7 @@ jobs:
     steps:
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install libglew-dev
+        run: sudo apt-get update && sudo apt-get install libglew-dev libadwaita-1-dev
 
       - name: Download artifact
         uses: actions/download-artifact@v4
