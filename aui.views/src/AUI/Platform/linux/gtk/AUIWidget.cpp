@@ -16,31 +16,123 @@
 #include <optional>
 #include <AUI/Platform/linux/gtk/RenderingContextGtk.h>
 
-
 struct _AUIWidget {
     GtkWidget parent;
     RenderingContextGtk* renderingContext = nullptr;
-
-
-    void render() {
-
-
-    }
 };
 
 G_DEFINE_TYPE(AUIWidget, aui_widget, GTK_TYPE_WIDGET);
 
-static void aui_widget_init (AUIWidget* myWidget)
-{
+static GtkWidget* getEventWidget(GdkEvent* event) {
+    auto surface = gdk_event_get_surface(event);
+    if (surface && !gdk_surface_is_destroyed(surface))
+        return GTK_WIDGET(gtk_native_get_for_surface(surface));
+
+    return nullptr;
+}
+
+static glm::vec2 getEventPosition(GdkEvent* event, GtkWidget* widget) {
+    double eventX, eventY;
+    if (!gdk_event_get_position(event, &eventX, &eventY))
+        return {};
+
+    auto eventWidget = getEventWidget(event);
+    auto native = gtk_widget_get_native(eventWidget);
+    double nx, ny;
+    gtk_native_get_surface_transform(native, &nx, &ny);
+    eventX -= nx;
+    eventY -= ny;
+
+    auto out = GRAPHENE_POINT_INIT(0, 0);
+    if (auto p = GRAPHENE_POINT_INIT(float(eventX), float(eventY));
+        !gtk_widget_compute_point(eventWidget, widget, &p, &out))
+        return {};
+
+    return glm::vec2 { out.x, out.y } * float(gdk_surface_get_scale(gtk_native_get_surface(native)));
+}
+
+static void aui_widget_init(AUIWidget* myWidget) {
+    if (auto legacyController = gtk_event_controller_legacy_new()) {
+        auto handler = [](GtkEventControllerLegacy* sender, GdkEvent* event, gpointer user_data) {
+            auto* widget = AUI_WIDGET_WIDGET(user_data);
+            auto mouseButton = [&] {
+                auto index = gdk_button_event_get_button(event);
+                switch (index) {
+                    default:
+                    case 1: return AInput::LBUTTON;
+                    case 3: return AInput::RBUTTON;
+                    case 2: return AInput::CBUTTON;
+                }
+            };
+
+            switch (gdk_event_get_event_type(event)) {
+                case GDK_MOTION_NOTIFY: {
+                    auto position = getEventPosition(event, GTK_WIDGET(widget));
+                    widget->renderingContext->window().onPointerMove(
+                        position,
+                        APointerMoveEvent {});
+                    return true;
+                }
+
+                case GDK_BUTTON_PRESS: {
+                    auto position = getEventPosition(event, GTK_WIDGET(widget));
 
 
-    auto motion_controller = gtk_event_controller_motion_new();
-    g_signal_connect(motion_controller, "motion", G_CALLBACK(+[](GtkEventControllerMotion* motion, double x, double y, gpointer user_data) {
-                         auto* widget = AUI_WIDGET_WIDGET(user_data);
+                    widget->renderingContext->window().onPointerPressed(APointerPressedEvent {
+                      .position = position,
+                      .pointerIndex = APointerIndex::button(mouseButton()),
+                    });
+                    return true;
+                }
 
-                     }),
-                     myWidget);
-    gtk_widget_add_controller(GTK_WIDGET(myWidget), motion_controller);
+                case GDK_BUTTON_RELEASE: {
+                    auto position = getEventPosition(event, GTK_WIDGET(widget));
+                    widget->renderingContext->window().onPointerReleased(APointerReleasedEvent {
+                      .position = position,
+                      .pointerIndex = APointerIndex::button(mouseButton()),
+                    });
+                    return true;
+                }
+
+                case GDK_ENTER_NOTIFY: {
+                    widget->renderingContext->window().onMouseEnter();
+                    return true;
+                }
+
+                case GDK_LEAVE_NOTIFY: {
+                    widget->renderingContext->window().onMouseLeave();
+                    return true;
+                }
+
+                case GDK_SCROLL: {
+                    auto delta = [&] {
+                        double dx, dy;
+                        gdk_scroll_event_get_deltas(event, &dx, &dy);
+                        return glm::vec2{ dx, dy };
+                    }();
+                    if (gdk_scroll_event_get_unit(event) == GDK_SCROLL_UNIT_WHEEL) {
+                        delta *= 120;
+                    }
+                    widget->renderingContext->window().onScroll({
+                      .origin = widget->renderingContext->window().getMousePos(),
+                      .delta = delta,
+                      .kinetic = false,
+                      .pointerIndex = APointerIndex::button(AInput::LBUTTON),
+                    });
+                    return true;
+                }
+
+                case GDK_KEY_PRESS: {
+                    return true;
+                }
+
+                default:
+                    return false;
+            }
+        };
+        g_signal_connect(legacyController, "event", G_CALLBACK(+handler), myWidget);
+        gtk_widget_add_controller(GTK_WIDGET(myWidget), legacyController);
+    }
 
     /*
    gtk_widget_add_tick_callback(GTK_WIDGET(myWidget),
@@ -52,42 +144,36 @@ static void aui_widget_init (AUIWidget* myWidget)
    // */
 }
 
-static void aui_widget_class_init (AUIWidgetClass* klass)
-{
-    GTK_WIDGET_CLASS(klass)->realize = [](GtkWidget *widget) {
-      GTK_WIDGET_CLASS(aui_widget_parent_class)->realize(widget);
-      AUI_WIDGET_WIDGET(widget)->renderingContext->gtkRealize(widget);
+static void aui_widget_class_init(AUIWidgetClass* klass) {
+    GTK_WIDGET_CLASS(klass)->realize = [](GtkWidget* widget) {
+        GTK_WIDGET_CLASS(aui_widget_parent_class)->realize(widget);
+        AUI_WIDGET_WIDGET(widget)->renderingContext->gtkRealize(widget);
     };
-    GTK_WIDGET_CLASS(klass)->unrealize = [](GtkWidget *widget) {
-      GTK_WIDGET_CLASS(aui_widget_parent_class)->unrealize(widget);
-      AUI_WIDGET_WIDGET(widget)->renderingContext->gtkUnrealize(widget);
+    GTK_WIDGET_CLASS(klass)->unrealize = [](GtkWidget* widget) {
+        GTK_WIDGET_CLASS(aui_widget_parent_class)->unrealize(widget);
+        AUI_WIDGET_WIDGET(widget)->renderingContext->gtkUnrealize(widget);
     };
-    GTK_WIDGET_CLASS(klass)->snapshot = [](GtkWidget *widget, GtkSnapshot *snapshot) {
-      GTK_WIDGET_CLASS(aui_widget_parent_class)->snapshot(widget, snapshot);
-      AUI_WIDGET_WIDGET(widget)->renderingContext->gtkSnapshot(widget, snapshot);
+    GTK_WIDGET_CLASS(klass)->snapshot = [](GtkWidget* widget, GtkSnapshot* snapshot) {
+        GTK_WIDGET_CLASS(aui_widget_parent_class)->snapshot(widget, snapshot);
+        AUI_WIDGET_WIDGET(widget)->renderingContext->gtkSnapshot(widget, snapshot);
     };
 
-    G_OBJECT_CLASS (klass)->notify = [](GObject *object, GParamSpec *pspec) {
+    G_OBJECT_CLASS(klass)->notify = [](GObject* object, GParamSpec* pspec) {
         auto name = std::string_view(pspec->name);
         if (name == "scale-factor") {
             auto widget = AUI_WIDGET_WIDGET(object);
 
-            widget->renderingContext->gtkDoUnderContext([&] {
-                widget->renderingContext->window().updateDpi();
-            });
+            widget->renderingContext->gtkDoUnderContext([&] { widget->renderingContext->window().updateDpi(); });
             gtk_widget_queue_draw(GTK_WIDGET(widget));
         }
     };
 }
 
-AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext)
-{
+AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext) {
     auto widget = AUI_WIDGET_WIDGET(g_object_new(AUI_WIDGET_TYPE, nullptr));
     widget->renderingContext = &renderingContext;
     renderingContext.mAUIWidget = widget;
     return widget;
 }
 
-void RenderingContextGtk::gtkDoUnderContext(const std::function<void()>& callback) {
-    callback();
-}
+void RenderingContextGtk::gtkDoUnderContext(const std::function<void()>& callback) { callback(); }
