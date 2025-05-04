@@ -71,6 +71,10 @@ public:
     static AWindowNativePtr& nativeHandle(AWindow& window) {
         return window.mHandle;
     }
+
+    static AWindow*& parentWindow(AWindow& window) {
+        return window.mParentWindow;
+    }
 #if AUI_PLATFORM_LINUX
     static bool& wasMaximized(AWindow& window) {
         return window.mWasMaximized;

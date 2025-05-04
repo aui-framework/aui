@@ -67,7 +67,15 @@ void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {}
 float PlatformAbstractionGtk::platformGetDpiRatio() {
     return 1.f;
 }
-void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {}
+void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
+    gtk_window_set_resizable(nativeHandle(window), !bool(ws & WindowStyle::NO_RESIZE));
+    gtk_window_set_modal(nativeHandle(window), bool(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE));
+    if (bool(ws & WindowStyle::MODAL) && parentWindow(window)) {
+        gtk_window_set_transient_for(nativeHandle(window), nativeHandle(*parentWindow(window)));
+    } else {
+        gtk_window_set_transient_for(nativeHandle(window), nullptr);
+    }
+}
 float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) { return 0; }
 void PlatformAbstractionGtk::windowRestore(AWindow &window) {}
 void PlatformAbstractionGtk::windowMinimize(AWindow &window) {}
@@ -96,7 +104,9 @@ void PlatformAbstractionGtk::windowAllowDragNDrop(AWindow &window) {}
 void PlatformAbstractionGtk::windowShowTouchscreenKeyboardImpl(AWindow &window) {}
 void PlatformAbstractionGtk::windowHideTouchscreenKeyboardImpl(AWindow &window) {}
 void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {}
-void PlatformAbstractionGtk::windowQuit(AWindow &window) {}
+void PlatformAbstractionGtk::windowQuit(AWindow &window) {
+    gtk_window_close(nativeHandle(window));
+}
 void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {}
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {

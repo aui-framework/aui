@@ -39,6 +39,8 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
     gtk_widget_set_margin_bottom(box, 0);
     gtk_box_set_spacing(GTK_BOX(box), 6);
 
+    windowSetStyle(init.window, init.ws);
+
     if (USE_ADWAITA) {
         auto toolbar = adw_toolbar_view_new();
         auto header = adw_header_bar_new();

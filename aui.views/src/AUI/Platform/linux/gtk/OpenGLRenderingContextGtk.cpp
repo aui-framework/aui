@@ -15,6 +15,7 @@
 
 #include "OpenGLRenderingContextGtk.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
+#include "PlatformAbstractionGtk.h"
 
 GdkGLContext* OpenGLRenderingContextGtk::ourContext = nullptr;
 
@@ -36,6 +37,9 @@ void OpenGLRenderingContextGtk::init(const IRenderingContext::Init& init) {
 }
 
 void OpenGLRenderingContextGtk::destroyNativeWindow(AWindowBase& window) {
+    if (auto c = dynamic_cast<AWindow*>(&window)) {
+        gtk_window_destroy(PlatformAbstractionGtk::nativeHandle(*c));
+    }
 }
 
 
