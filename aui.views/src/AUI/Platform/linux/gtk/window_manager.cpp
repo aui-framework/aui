@@ -39,6 +39,11 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
     gtk_widget_set_margin_bottom(box, 0);
     gtk_box_set_spacing(GTK_BOX(box), 6);
 
+    g_signal_connect(window, "close-request", G_CALLBACK(+[](GtkWindow* self, AWindow* window) -> gboolean {
+                         window->onCloseButtonClicked();
+                         return true;
+                     }), &init.window);
+
     windowSetStyle(init.window, init.ws);
 
     if (USE_ADWAITA) {

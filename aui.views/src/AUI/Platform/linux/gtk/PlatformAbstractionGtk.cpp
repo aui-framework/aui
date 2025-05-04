@@ -51,7 +51,6 @@ PlatformAbstractionGtk::PlatformAbstractionGtk()
 }
 
 PlatformAbstractionGtk::~PlatformAbstractionGtk() {
-    g_signal_emit_by_name(mApplication, "quit");
     while (g_main_context_iteration (mMainContext, false));
     mApplication = nullptr;
     while (g_main_context_iteration (mMainContext, false));
