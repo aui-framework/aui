@@ -322,3 +322,39 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
 
 // # Non-const operators {#PropertyTest_Write_operators}
 // Refer to @ref aui::PropertyModifier.
+
+TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1
+    // Assuming you have an AVector wrapped with AProperty:
+    // AUI_DOCS_CODE_BEGIN
+    AProperty<AVector<int>> ints = AVector<int>{1, 2, 3};
+    // AUI_DOCS_CODE_END
+
+    // You can use square brackets to access items transparently:
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(ints[0], 1);
+    EXPECT_EQ(ints[1], 2);
+    EXPECT_EQ(ints[2], 3);
+    // AUI_DOCS_CODE_END
+
+    // For *ranged for loop*, you need to dereference `ints`:
+    // AUI_DOCS_CODE_BEGIN
+    for (int i : *ints) {
+        // i = 1, 2, 3...
+    }
+    // AUI_DOCS_CODE_BEGIN
+}
+
+TEST_F(PropertyTest, AProperty_and_AVector_modifying) {
+    AProperty<AVector<int>> ints;
+    // To modify the vector, you need to use `writeScope()`:
+    // AUI_DOCS_CODE_BEGIN
+    ints.writeScope()->push_back(2);
+    // or
+    ints.writeScope() << 2;
+    // or
+    ints << 2; // implies writeScope()
+    // AUI_DOCS_CODE_BEGIN
+    EXPECT_EQ(ints[0], 2);
+    EXPECT_EQ(ints[1], 2);
+    EXPECT_EQ(ints[2], 2);
+}

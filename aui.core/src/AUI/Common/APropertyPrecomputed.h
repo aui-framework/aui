@@ -85,7 +85,7 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
         }
     }
 
-    AObjectBase* boundObject() {
+    const AObjectBase* boundObject() const {
         return this;
     }
 
