@@ -703,6 +703,7 @@ function(auib_import AUI_MODULE_NAME URL)
             LIBRARY_DEBUG
             LIBRARY_RELEASE
             ROOT
+            ROOT_DIR # OPENSSL_ROOT_DIR
             DIR)
         foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
             unset(${_v1}_${_v2} PARENT_SCOPE)
