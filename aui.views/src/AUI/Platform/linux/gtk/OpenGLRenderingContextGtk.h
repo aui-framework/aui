@@ -25,6 +25,21 @@ public:
     void gtkRealize(GtkWidget* widget) override;
     void gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) override;
     void gtkUnrealize(GtkWidget* widget) override;
+    void beginResize(AWindowBase& window) override;
+    void endResize(AWindowBase& window) override;
+
+    auto contextScope() {
+        auto prev = gdk_gl_context_get_current();
+        auto ctx = mContext;
+        if (ctx != nullptr) {
+            AUI_ASSERT(prev != ctx);
+            gdk_gl_context_make_current(ctx);
+        }
+        return aui::ptr::make_unique_with_deleter(ctx, [prev](GdkGLContext*) {
+            gdk_gl_context_clear_current();
+            gdk_gl_context_make_current(prev);
+        });
+    }
 
 private:
     struct Texture {

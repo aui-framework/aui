@@ -16,20 +16,6 @@
 #include "OpenGLRenderingContextGtk.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 
-namespace {
-auto contextScope(GdkGLContext* ctx) {
-    auto prev = gdk_gl_context_get_current();
-    if (ctx != nullptr) {
-        AUI_ASSERT(prev != ctx);
-        gdk_gl_context_make_current(ctx);
-    }
-    return aui::ptr::make_unique_with_deleter(ctx, [prev](GdkGLContext*) {
-      gdk_gl_context_clear_current();
-      gdk_gl_context_make_current(prev);
-    });
-}
-}
-
 OpenGLRenderingContextGtk::Texture::~Texture() {
     if (gl_texture) {
         gdk_gl_texture_release(GDK_GL_TEXTURE(gl_texture));
@@ -55,7 +41,7 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     realCreateContext(widget);
     mNeedsResize = true;
 
-    auto acquired = contextScope(mContext);
+    auto acquired = contextScope();
     if (!glewExperimental) {
         glewExperimental = true;
         switch (auto s = glewInit()) {
@@ -79,7 +65,7 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
     if (mContext == nullptr) {
         return;
     }
-    auto acquired = contextScope(mContext);
+    auto acquired = contextScope();
     attachBuffers(widget);
     if (mFramebufferForGtk == 0) {
         return;
@@ -235,10 +221,15 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
         gdk_gl_texture_builder_set_width(mTexture->builder, width);
         gdk_gl_texture_builder_set_height(mTexture->builder, height);
 
-        AUI_NULLSAFE(mWindow.getRenderingContext())->beginResize(mWindow);
         mWindow.AViewContainer::setSize({width, height});
-        AUI_NULLSAFE(mWindow.getRenderingContext())->endResize(mWindow);
     }
+}
+
+void OpenGLRenderingContextGtk::beginResize(AWindowBase& window) {
+
+}
+void OpenGLRenderingContextGtk::endResize(AWindowBase& window) {
+
 }
 
 void OpenGLRenderingContextGtk::ensureBuffers(GtkWidget* widget) {

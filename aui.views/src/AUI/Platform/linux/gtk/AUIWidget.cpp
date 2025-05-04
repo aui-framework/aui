@@ -75,7 +75,11 @@ static void aui_widget_class_init (AUIWidgetClass* klass)
         auto name = std::string_view(pspec->name);
         if (name == "scale-factor") {
             auto widget = AUI_WIDGET_WIDGET(object);
-            widget->renderingContext->window().updateDpi();
+            auto& w = widget->renderingContext->window();
+            w.getThread()->enqueue([&w] {
+                w.updateDpi();
+            });
+            gtk_widget_queue_draw(GTK_WIDGET(widget));
         }
     };
 }

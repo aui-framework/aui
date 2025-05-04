@@ -96,7 +96,16 @@ void PlatformAbstractionGtk::windowManagerLoop() {
     auto& wm = AWindow::getWindowManager();
     wm.start();
     while (wm.isLoopRunning() && !wm.getWindows().empty()) {
-        AThread::processMessages();
+        if (!AThread::current()->messageQueueEmpty()) {
+            // this is so bad
+            if (auto ctx =
+                    dynamic_cast<OpenGLRenderingContextGtk*>(wm.getWindows().first()->getRenderingContext().get())) {
+                auto scope = ctx->contextScope();
+                AThread::processMessages();
+            } else {
+                AThread::processMessages();
+            }
+        }
         g_main_context_iteration(mMainContext, true);
     }
 }
