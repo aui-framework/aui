@@ -251,9 +251,11 @@ macro(aui_enable_tests AUI_MODULE_NAME)
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
     #include <gmock/gmock.h>
     int main(int argc, char **argv) {
+#ifdef __linux
 #ifdef AUI_CATCH_UNHANDLED
     extern void aui_init_signal_handler();
     aui_init_signal_handler();
+#endif
 #endif
     // Since Google Mock depends on Google Test, InitGoogleMock() is
     // also responsible for initializing Google Test.  Therefore there's

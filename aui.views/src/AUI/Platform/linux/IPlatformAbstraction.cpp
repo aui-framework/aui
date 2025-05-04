@@ -16,7 +16,8 @@
 static constexpr auto LOG_TAG = "IPlatformAbstraction";
 
 IPlatformAbstraction::IPlatformAbstraction() {
-    ALogger::info(LOG_TAG) << "Desktop Environment: " << std::getenv("XDG_CURRENT_DESKTOP");
+    auto e = std::getenv("XDG_CURRENT_DESKTOP");
+    ALogger::info(LOG_TAG) << "Desktop Environment: " << (e ? e : "none");
 }
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
