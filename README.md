@@ -26,7 +26,7 @@ sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
+sudo dnf install fontconfig-devel gtk4-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
 ```
 
 ## AUI App Template
