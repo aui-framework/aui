@@ -77,7 +77,7 @@ TEST_F(PropertyDefTest, Declaration) {
     {
         // AUI_DOCS_CODE_BEGIN
         User u;
-        u.name() = "Hello";
+        u.name() = "Hello"; // calls setName implicitly
         EXPECT_EQ(u.name(), "Hello");
         // AUI_DOCS_CODE_END
     }

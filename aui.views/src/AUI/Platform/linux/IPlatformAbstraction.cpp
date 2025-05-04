@@ -9,21 +9,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
-
-#include "AUI/Platform/AClipboard.h"
 #include "IPlatformAbstraction.h"
+#include "AUI/Platform/linux/x11/PlatformAbstractionX11.h"
 
-bool AClipboard::isEmpty() {
-    return pasteFromClipboard().empty();
+IPlatformAbstraction& IPlatformAbstraction::current() {
+    static PlatformAbstractionX11 x11;
+    return x11;
 }
 
-void AClipboard::copyToClipboard(const AString& text) {
-    IPlatformAbstraction::current().copyToClipboard(text);
-}
-
-AString AClipboard::pasteFromClipboard() {
-    return IPlatformAbstraction::current().pasteFromClipboard();
+void IPlatformAbstraction::setCurrentWindow(AWindow* window) {
+    AWindow::currentWindowStorage() = window;
 }

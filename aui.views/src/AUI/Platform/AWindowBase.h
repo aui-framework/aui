@@ -32,6 +32,7 @@ namespace testing {
 
 class API_AUI_VIEWS AWindowBase: public AViewContainer {
     friend class SoftwareRenderer;
+    friend class IPlatformAbstraction;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
 

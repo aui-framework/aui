@@ -29,7 +29,7 @@ DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
 
     tabs->addTab(_new<DevtoolsLayoutTab>(targetWindow), "Layout");
     tabs->addTab(_new<DevtoolsPerformanceTab>(targetWindow), "Performance");
-    tabs->addTab(_new<DevtoolsProfilingOptions>(targetWindow), "Profiling");
+    tabs->addTab(_new<DevtoolsProfilingOptions>(targetWindow), "Other");
     tabs->addTab(_new<DevtoolsPointerInspect>(targetWindow), "Pointer inspect");
     tabs->addTab(_new<DevtoolsThreadsTab>(AThreadPool::global()), "Task queues");
 

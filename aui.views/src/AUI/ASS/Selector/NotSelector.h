@@ -23,11 +23,11 @@ namespace ass {
         NotSelector(L l) : l(std::move(l)) {}
 
         bool isPossiblyApplicable(AView* view) override {
-            return l.isPossiblyApplicable(view);
+            return !l.isPossiblyApplicable(view);
         }
 
         bool isStateApplicable(AView* view) override {
-            return !l.isStateApplicable(view);
+            return l.isStateApplicable(view);
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {

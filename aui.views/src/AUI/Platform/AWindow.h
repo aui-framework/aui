@@ -44,6 +44,7 @@ class AWindowManager;
 class API_AUI_VIEWS AWindow: public AWindowBase
 {
     friend class OpenGLRenderingContext;
+    friend class IPlatformAbstraction;
     friend class CommonRenderingContext;
     friend class SoftwareRenderingContext;
     friend class AWindowManager;
@@ -80,6 +81,7 @@ public:
     void quit();
 
     void setWindowStyle(WindowStyle ws);
+    WindowStyle windowStyle() const { return mWindowStyle; }
 
     /**
      * @brief Minimizes window (hide window to the taskbar, iconifies)
@@ -292,17 +294,7 @@ private:
 
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
-    /**
-     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
-     */
-    struct {
-        uint32_t lo = 0;
-        uint32_t hi = 0;
-        /* XID */ unsigned long counter;
-    } mXsyncRequestCounter;
     bool mWasMaximized = false;
-
-    void* mIC = nullptr; // input context
 #endif
 #ifdef AUI_PLATFORM_MACOS
     bool mRedrawFlag = false;

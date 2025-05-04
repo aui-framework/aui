@@ -150,7 +150,7 @@ TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
     AOptional<APropertyPrecomputed<int>> v1 ,v2;
     v1.emplace([&]{ return **v2; });
     v2.emplace([&]{ return **v1; });
-    EXPECT_THROW({**v1;}, AEvaluationLoopException);
+    EXPECT_THROW({ [[maybe_unused]] auto unused = **v1;}, AEvaluationLoopException);
 }
 
 // # Copying and moving APropertyPrecomputed

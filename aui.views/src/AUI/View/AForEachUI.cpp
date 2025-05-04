@@ -130,6 +130,10 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     if (getPosition() == prevPosition) {
         return;
     }
+    if (mViewport.lock() == nullptr) {
+        mCache.reset();
+        return;
+    }
     if (!mCache) {
         return;
     }

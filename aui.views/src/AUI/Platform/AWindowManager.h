@@ -17,8 +17,6 @@
 #include "IRenderingContext.h"
 
 class AWindow;
-typedef union _XEvent XEvent;
-
 
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AWindow;
@@ -32,16 +30,6 @@ protected:
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
 
-#if AUI_PLATFORM_LINUX
-    Pipe mNotifyPipe;
-    std::atomic_bool mFastPathNotify = false;
-    std::string mXClipboardText;
-
-    void xProcessEvent(XEvent& ev);
-    void xClipboardCopyImpl(const AString& text);
-    AString xClipboardPasteImpl();
-#endif
-
 public:
     AWindowManager();
     ~AWindowManager() override;
@@ -49,6 +37,8 @@ public:
     AWatchdog& watchdog() noexcept {
         return mWatchdog;
     }
+
+    bool isLoopRunning() const { return mLoopRunning; }
 
     void removeAllWindows() {
         auto windows = std::move(mWindows); // keeping it safe

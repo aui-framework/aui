@@ -21,6 +21,18 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
+        BRIEF_DOCS "Global list of imported targets"
+        FULL_DOCS "Global list of imported targets (since CMake 3.21)")
+
+define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
+        BRIEF_DOCS "Global list of forwarded vars"
+        FULL_DOCS "Global list of forwarded vars")
+
+macro(auib_mark_var_forwardable VAR)
+    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
+endmacro()
+
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
@@ -28,6 +40,12 @@ option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" 
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 set(AUIB_VALIDATION_LEVEL 1 CACHE STRING "Package validation level")
 
+auib_mark_var_forwardable(AUIB_NO_PRECOMPILED)
+auib_mark_var_forwardable(AUIB_FORCE_PRECOMPILED)
+auib_mark_var_forwardable(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
+auib_mark_var_forwardable(AUIB_DISABLE)
+auib_mark_var_forwardable(AUIB_LOCAL_CACHE)
+auib_mark_var_forwardable(AUIB_VALIDATION_LEVEL)
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
     message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")
@@ -69,14 +87,6 @@ endfunction()
 # cmake_policy fires an error if an unknown policy is passed
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
 set(CMAKE_POLICY_DEFAULT_CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
-
-define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
-        BRIEF_DOCS "Global list of imported targets"
-        FULL_DOCS "Global list of imported targets (since CMake 3.21)")
-
-define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
-        BRIEF_DOCS "Global list of forwarded vars"
-        FULL_DOCS "Global list of forwarded vars")
 
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -507,6 +517,7 @@ endfunction()
 
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
@@ -1194,9 +1205,4 @@ _auib_copy_runtime_dependencies(${_aui_boot_current_list_file})
     set(CPACK_VERBATIM_VARIABLES YES)
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
     include(CPack)
-endmacro()
-
-
-macro(auib_mark_var_forwardable VAR)
-    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()
