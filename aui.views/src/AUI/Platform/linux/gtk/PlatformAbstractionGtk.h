@@ -59,6 +59,8 @@ public:
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
     float windowGetDpiRatio(AWindow &window) override;
 
+    static AInput::Key inputFromNative2(unsigned key);
+
 private:
     AGlibPtr<GApplication> mApplication;
     GMainContext* mMainContext;

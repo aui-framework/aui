@@ -67,9 +67,6 @@ void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {}
 float PlatformAbstractionGtk::platformGetDpiRatio() {
     return 1.f;
 }
-AInput::Key PlatformAbstractionGtk::inputFromNative(int k) { return AInput::B; }
-int PlatformAbstractionGtk::inputToNative(AInput::Key key) { return 0; }
-bool PlatformAbstractionGtk::inputIsKeyDown(AInput::Key k) { return false; }
 void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {}
 float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) { return 0; }
 void PlatformAbstractionGtk::windowRestore(AWindow &window) {}
@@ -109,3 +106,4 @@ float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
     }
     return gdk_surface_get_scale(surface);
 }
+

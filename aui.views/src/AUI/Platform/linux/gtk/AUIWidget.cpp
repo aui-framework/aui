@@ -15,10 +15,16 @@
 #include <numeric>
 #include <optional>
 #include <AUI/Platform/linux/gtk/RenderingContextGtk.h>
+#include <AUI/Platform/linux/gtk/PlatformAbstractionGtk.h>
+
+extern bool gKeyStates[AInput::KEYCOUNT + 1];
 
 struct _AUIWidget {
     GtkWidget parent;
     RenderingContextGtk* renderingContext = nullptr;
+    GtkIMContext* imContext = nullptr;
+
+    ~_AUIWidget() { g_clear_object(&imContext); }
 };
 
 G_DEFINE_TYPE(AUIWidget, aui_widget, GTK_TYPE_WIDGET);
@@ -52,6 +58,39 @@ static glm::vec2 getEventPosition(GdkEvent* event, GtkWidget* widget) {
 }
 
 static void aui_widget_init(AUIWidget* myWidget) {
+    gtk_widget_set_focusable(GTK_WIDGET(myWidget), true);
+    myWidget->imContext = gtk_im_multicontext_new();
+    g_signal_connect(
+        myWidget->imContext, "commit", G_CALLBACK(+[](GtkIMContext* im, const char* str, AUIWidget* widget) {
+            for (auto c : AString(str)) {
+                widget->renderingContext->window().onCharEntered(c);
+            }
+        }),
+        myWidget);
+
+    if (auto keyController = gtk_event_controller_key_new()) {
+        auto keyPressed =
+            [](GtkEventController* controller, guint keyval, guint keycode, GdkModifierType modifiers,
+               AUIWidget* widget) -> gboolean {
+            auto key = PlatformAbstractionGtk::inputFromNative2(keyval);
+            gKeyStates[key] = true;
+            widget->renderingContext->window().onKeyDown(key);
+            return true;
+        };
+        auto keyReleased =
+            [](GtkEventController* controller, guint keyval, guint keycode, GdkModifierType modifiers,
+               AUIWidget* widget) -> gboolean {
+            auto key = PlatformAbstractionGtk::inputFromNative2(keyval);
+            gKeyStates[key] = false;
+            widget->renderingContext->window().onKeyUp(key);
+            return true;
+        };
+        g_signal_connect(keyController, "key-pressed", G_CALLBACK(+keyPressed), myWidget);
+        g_signal_connect(keyController, "key-released", G_CALLBACK(+keyReleased), myWidget);
+        gtk_event_controller_key_set_im_context(GTK_EVENT_CONTROLLER_KEY(keyController), myWidget->imContext);
+        gtk_widget_add_controller(GTK_WIDGET(myWidget), keyController);
+    }
+
     if (auto legacyController = gtk_event_controller_legacy_new()) {
         auto handler = [](GtkEventControllerLegacy* sender, GdkEvent* event, gpointer user_data) {
             auto* widget = AUI_WIDGET_WIDGET(user_data);
@@ -59,24 +98,24 @@ static void aui_widget_init(AUIWidget* myWidget) {
                 auto index = gdk_button_event_get_button(event);
                 switch (index) {
                     default:
-                    case 1: return AInput::LBUTTON;
-                    case 3: return AInput::RBUTTON;
-                    case 2: return AInput::CBUTTON;
+                    case 1:
+                        return AInput::LBUTTON;
+                    case 3:
+                        return AInput::RBUTTON;
+                    case 2:
+                        return AInput::CBUTTON;
                 }
             };
 
             switch (gdk_event_get_event_type(event)) {
                 case GDK_MOTION_NOTIFY: {
                     auto position = getEventPosition(event, GTK_WIDGET(widget));
-                    widget->renderingContext->window().onPointerMove(
-                        position,
-                        APointerMoveEvent {});
+                    widget->renderingContext->window().onPointerMove(position, APointerMoveEvent {});
                     return true;
                 }
 
                 case GDK_BUTTON_PRESS: {
                     auto position = getEventPosition(event, GTK_WIDGET(widget));
-
 
                     widget->renderingContext->window().onPointerPressed(APointerPressedEvent {
                       .position = position,
@@ -108,7 +147,7 @@ static void aui_widget_init(AUIWidget* myWidget) {
                     auto delta = [&] {
                         double dx, dy;
                         gdk_scroll_event_get_deltas(event, &dx, &dy);
-                        return glm::vec2{ dx, dy };
+                        return glm::vec2 { dx, dy };
                     }();
                     if (gdk_scroll_event_get_unit(event) == GDK_SCROLL_UNIT_WHEEL) {
                         delta *= 120;
@@ -119,10 +158,6 @@ static void aui_widget_init(AUIWidget* myWidget) {
                       .kinetic = false,
                       .pointerIndex = APointerIndex::button(AInput::LBUTTON),
                     });
-                    return true;
-                }
-
-                case GDK_KEY_PRESS: {
                     return true;
                 }
 
@@ -156,6 +191,12 @@ static void aui_widget_class_init(AUIWidgetClass* klass) {
     GTK_WIDGET_CLASS(klass)->snapshot = [](GtkWidget* widget, GtkSnapshot* snapshot) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->snapshot(widget, snapshot);
         AUI_WIDGET_WIDGET(widget)->renderingContext->gtkSnapshot(widget, snapshot);
+    };
+
+    G_OBJECT_CLASS(klass)->dispose = [](GObject* object) {
+        auto widget = AUI_WIDGET_WIDGET(object);
+        widget->~AUIWidget();
+        G_OBJECT_CLASS(aui_widget_parent_class)->dispose(object);
     };
 
     G_OBJECT_CLASS(klass)->notify = [](GObject* object, GParamSpec* pspec) {
