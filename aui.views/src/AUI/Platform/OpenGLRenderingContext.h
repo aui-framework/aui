@@ -68,6 +68,8 @@ public:
 
 protected:
     _<OpenGLRenderer> mRenderer;
+    glm::uvec2 mViewportSize;
+    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
         if (auto v = g.lock()) {
@@ -78,15 +80,13 @@ protected:
         return temp;
     }
 
+    virtual void endFramebuffer();
 
 private:
     ARenderingContextOptions::OpenGL mConfig;
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
-    glm::uvec2 mViewportSize;
 
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     void beginFramebuffer(glm::uvec2 windowSize);
-    void endFramebuffer();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

@@ -655,7 +655,8 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     # [[BUILD_SPECIFIER]]
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
+    string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
     string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
@@ -703,6 +704,7 @@ function(auib_import AUI_MODULE_NAME URL)
             LIBRARY_DEBUG
             LIBRARY_RELEASE
             ROOT
+            ROOT_DIR # OPENSSL_ROOT_DIR
             DIR)
         foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
             unset(${_v1}_${_v2} PARENT_SCOPE)

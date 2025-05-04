@@ -360,6 +360,7 @@ void AWindowBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     if (auto c = mShowTouches.contains(event.pointerIndex)) {
         c->second.moves << pos;
     }
+    flagRedraw();
 #endif
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
@@ -476,15 +477,15 @@ void AWindowBase::render(ARenderContext context) {
             if (data.release) {
                 lines << *data.release;
             }
-            ctx.render.lines(ASolidBrush{AColor::BLUE}, lines);
+            context.render.lines(ASolidBrush{AColor::BLUE}, lines);
         }
-        ctx.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
+        context.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
         glm::vec2 p[1] = { data.press };
-        ctx.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
+        context.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
 
         if (data.release) {
             glm::vec2 p[1] = { *data.release };
-            ctx.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
+            context.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
         }
     }
 #endif

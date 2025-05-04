@@ -9,22 +9,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#pragma once
+
 #include <gtk/gtk.h>
 
-#include "Gtk.h"
-#include "AUI/Util/kAUI.h"
+class RenderingContextGtk;
 
-namespace aui::detail {
-extern int argc;
-extern char** argv;
-}
+#define AUI_WIDGET_TYPE (aui_widget_get_type ())
+G_DECLARE_FINAL_TYPE (AUIWidget, aui_widget, AUI_WIDGET, WIDGET, GtkWidget)
 
-void aui::detail::gtk::requires_gtk() {
-    do_once { gtk_init(&aui::detail::argc, &aui::detail::argv); }
-}
+// Gtk world representation of AUI.
+// Implementation is based on gtkglarea and https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/8503
+AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext);
 
-void aui::detail::gtk::main_iterations() {
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
-    }
-}
+

@@ -150,7 +150,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
 
     if (!glewExperimental) {
         glewExperimental = true;
-        if (glewInit() != GLEW_OK) {
+        if (auto s = glewInit(); s != GLEW_OK) {
             throw AException("glewInit failed");
         }
         ALogger::info("OpenGL context is ready");
