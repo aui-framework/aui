@@ -50,7 +50,7 @@ public:
                                 }
                                 return searchQueryList();
                             }),
-                            Label { AUI_REACT("{}"_format(mContactCount)) }
+                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) }
                                 & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
                                  with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
                           } with_style { Padding(0, 8_dp) })
