@@ -72,6 +72,9 @@ glm::ivec2 AWindow::getWindowPosition() const {
 }
 
 void AWindow::flagRedraw() {
+    if (mRedrawFlag) {
+        return;
+    }
     mRedrawFlag = true;
     IPlatformAbstraction::current().windowFlagRedraw(*this);
 }

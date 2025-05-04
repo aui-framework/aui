@@ -24,9 +24,11 @@ public:
     virtual void gtkRealize(GtkWidget* widget) = 0;
     virtual void gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) = 0;
     virtual void gtkUnrealize(GtkWidget* widget) = 0;
+    virtual void gtkScaleFactorChanged();
 
     AWindowBase& window() const { return mWindow; }
     AUIWidget* auiWidget() const { return mAUIWidget; }
+
 
 protected:
     AWindowBase& mWindow;

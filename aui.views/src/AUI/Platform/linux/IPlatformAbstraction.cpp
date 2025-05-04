@@ -20,17 +20,20 @@ IPlatformAbstraction::IPlatformAbstraction() {
 }
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
-    std::string_view auiPa = "gtk";
-    if (auto value = std::getenv("AUI_PA")) {
-        auiPa = value;
-    }
-    if (auiPa == "gtk") {
-        static PlatformAbstractionGtk result;
-        return result;
-    }
+    static IPlatformAbstraction& value = []() -> IPlatformAbstraction& {
+        std::string_view auiPa = "gtk";
+        if (auto value = std::getenv("AUI_PA")) {
+            auiPa = value;
+        }
+        if (auiPa == "gtk") {
+            static PlatformAbstractionGtk result;
+            return result;
+        }
 
-    static PlatformAbstractionX11 x11;
-    return x11;
+        static PlatformAbstractionX11 x11;
+        return x11;
+    }();
+    return value;
 }
 
 void IPlatformAbstraction::setCurrentWindow(AWindowBase* window) {

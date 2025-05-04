@@ -287,4 +287,7 @@ void OpenGLRenderingContextGtk::deleteBuffers() {
 }
 
 void OpenGLRenderingContextGtk::deleteTextures() { mTexture.reset(); }
-
+void OpenGLRenderingContextGtk::gtkScaleFactorChanged() {
+    auto scope = contextScope();
+    RenderingContextGtk::gtkScaleFactorChanged();
+}

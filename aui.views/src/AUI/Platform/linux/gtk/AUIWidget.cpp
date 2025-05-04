@@ -33,18 +33,14 @@ G_DEFINE_TYPE(AUIWidget, aui_widget, GTK_TYPE_WIDGET);
 static void aui_widget_init (AUIWidget* myWidget)
 {
 
-    /*
+
     auto motion_controller = gtk_event_controller_motion_new();
     g_signal_connect(motion_controller, "motion", G_CALLBACK(+[](GtkEventControllerMotion* motion, double x, double y, gpointer user_data) {
                          auto* widget = AUI_WIDGET_WIDGET(user_data);
-                         widget->cursor_x = x / 3000.0;
-                         widget->cursor_y = 0; // y / 100.0 - 5;
-                         printf("cursor_x=%f cursor_y=%f\n", widget->cursor_x, widget->cursor_y);
-                         gtk_widget_queue_draw(GTK_WIDGET(widget));
+
                      }),
                      myWidget);
     gtk_widget_add_controller(GTK_WIDGET(myWidget), motion_controller);
-    // */
 
     /*
    gtk_widget_add_tick_callback(GTK_WIDGET(myWidget),
@@ -75,10 +71,7 @@ static void aui_widget_class_init (AUIWidgetClass* klass)
         auto name = std::string_view(pspec->name);
         if (name == "scale-factor") {
             auto widget = AUI_WIDGET_WIDGET(object);
-            auto& w = widget->renderingContext->window();
-            w.getThread()->enqueue([&w] {
-                w.updateDpi();
-            });
+            widget->renderingContext->gtkScaleFactorChanged();
             gtk_widget_queue_draw(GTK_WIDGET(widget));
         }
     };
@@ -90,4 +83,8 @@ AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext)
     widget->renderingContext = &renderingContext;
     renderingContext.mAUIWidget = widget;
     return widget;
+}
+
+void RenderingContextGtk::gtkScaleFactorChanged() {
+    window().updateDpi();
 }

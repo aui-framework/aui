@@ -79,9 +79,11 @@ bool PlatformAbstractionGtk::windowIsMaximized(AWindow &window) const { return f
 void PlatformAbstractionGtk::windowMaximize(AWindow &window) {}
 glm::ivec2 PlatformAbstractionGtk::windowGetPosition(AWindow &window) const { return glm::ivec2(); }
 void PlatformAbstractionGtk::windowFlagRedraw(AWindow &window) {
-    if (auto ctx = dynamic_cast<RenderingContextGtk*>(window.getRenderingContext().get())) {
-        gtk_widget_queue_draw(GTK_WIDGET(ctx->auiWidget()));
-    }
+    window.getThread()->enqueue([&window] {
+      if (auto ctx = dynamic_cast<RenderingContextGtk*>(window.getRenderingContext().get())) {
+          gtk_widget_queue_draw(GTK_WIDGET(ctx->auiWidget()));
+      }
+    });
 }
 
 void PlatformAbstractionGtk::windowShow(AWindow &window) {
