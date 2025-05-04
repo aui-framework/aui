@@ -115,4 +115,3 @@ float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
     }
     return gdk_surface_get_scale(surface);
 }
-

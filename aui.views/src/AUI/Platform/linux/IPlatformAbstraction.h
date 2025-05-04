@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/AMessageBox.h"
 /**
  * @brief Platform Abstraction Layer
  * @details
@@ -60,6 +61,11 @@ public:
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
+
+    // MESSAGE BOXES
+    virtual AMessageBox::ResultButton messageBoxShow(
+        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
+        AMessageBox::Button b) = 0;
 
     // some helper functions to pass through visibility.
     static void setCurrentWindow(AWindowBase* window);

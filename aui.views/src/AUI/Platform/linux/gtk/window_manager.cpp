@@ -99,21 +99,26 @@ void PlatformAbstractionGtk::windowManagerNotifyProcessMessages() {
     g_main_context_wakeup(mMainContext);
 }
 
+void PlatformAbstractionGtk::windowManagerIteration() {
+    auto& wm = AWindow::getWindowManager();
+    if (!AThread::current()->messageQueueEmpty()) {
+        // this is so bad
+        if (auto ctx =
+            dynamic_cast<RenderingContextGtk*>(wm.getWindows().first()->getRenderingContext().get())) {
+            ctx->gtkDoUnderContext([] {
+              AThread::processMessages();
+            });
+        } else {
+            AThread::processMessages();
+        }
+    }
+    g_main_context_iteration(mMainContext, true);
+}
+
 void PlatformAbstractionGtk::windowManagerLoop() {
     auto& wm = AWindow::getWindowManager();
     wm.start();
     while (wm.isLoopRunning() && !wm.getWindows().empty()) {
-        if (!AThread::current()->messageQueueEmpty()) {
-            // this is so bad
-            if (auto ctx =
-                    dynamic_cast<RenderingContextGtk*>(wm.getWindows().first()->getRenderingContext().get())) {
-                ctx->gtkDoUnderContext([] {
-                    AThread::processMessages();
-                });
-            } else {
-                AThread::processMessages();
-            }
-        }
-        g_main_context_iteration(mMainContext, true);
+        windowManagerIteration();
     }
 }

@@ -280,11 +280,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         .connect(&AView::clicked, this,
                                  [&] {
                                      /// [AMessageBox]
-                                     AMessageBox::show(this,
+                                     auto response = AMessageBox::show(this,
                                                        "Title",
                                                        "Message",
                                                        AMessageBox::Icon::NONE,
                                                        AMessageBox::Button::OK);
+                                     ALogger::info("Example") << "Response: " << int(response);
                                      /// [AMessageBox]
                                  }),
                     _new<AButton>("Cause assertion fail")

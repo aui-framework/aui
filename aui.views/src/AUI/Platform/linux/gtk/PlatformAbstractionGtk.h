@@ -49,6 +49,7 @@ public:
     void windowHide(AWindow &window) override;
     void windowManagerNotifyProcessMessages() override;
     void windowManagerLoop() override;
+    void windowManagerIteration();
     void windowBlockUserInput(AWindow &window, bool blockUserInput) override;
     void windowAllowDragNDrop(AWindow &window) override;
     void windowShowTouchscreenKeyboardImpl(AWindow &window) override;
@@ -58,6 +59,9 @@ public:
     void windowAnnounceMinMaxSize(AWindow &window) override;
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
     float windowGetDpiRatio(AWindow &window) override;
+    AMessageBox::ResultButton messageBoxShow(
+        AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
+        AMessageBox::Button b) override;
 
     static AInput::Key inputFromNative2(unsigned key);
 
