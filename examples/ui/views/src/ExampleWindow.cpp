@@ -219,10 +219,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show window")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                     auto w = _new<AWindow>("Basic window", 400_dp, 300_dp);
+                                     auto w = _new<AWindow>("Basic window", 400_dp, 300_dp, this, WindowStyle::MODAL);
                                      fillWindow(w);
                                      w->show();
-                                     w->setWindowStyle(WindowStyle::MODAL);
                                      mWindows << w;
                                  }),
                     _new<AButton>("Show window without caption")
@@ -231,7 +230,6 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                      auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                                      fillWindow(w);
                                      w->show();
-                                     w->setWindowStyle(WindowStyle::MODAL);
                                      mWindows << w;
                                  }),
                     _new<AButton>("Show window custom caption")
