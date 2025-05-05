@@ -25,9 +25,9 @@ static auto toC(const std::string(&rawArray)[N]) {
 AMessageBox::ResultButton PlatformAbstractionGtk::messageBoxShow(
     AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
 
-    auto dialog = AGlibPtr(gtk_alert_dialog_new("%s", message.toStdString().c_str()));
+    auto dialog = AGlibPtr(gtk_alert_dialog_new("%s", title.toStdString().c_str()));
     gtk_alert_dialog_set_modal(dialog, true);
-    gtk_alert_dialog_set_detail(dialog, title.toStdString().c_str());
+    gtk_alert_dialog_set_detail(dialog, message.toStdString().c_str());
 
     std::array<AMessageBox::ResultButton, 4> responses{};
 
