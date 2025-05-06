@@ -32,10 +32,14 @@ namespace aui::audio::impl {
 
     template<int shift, typename T>
     constexpr T logicalShift(T value) {
-        if constexpr (shift > 0) {
-            return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) << shift);
+        if constexpr (std::is_floating_point_v<T>) {
+            return value;
         } else {
-            return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) >> -shift);
+            if constexpr (shift > 0) {
+                return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) << shift);
+            } else {
+                return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) >> -shift);
+            }
         }
     }
 
@@ -60,6 +64,12 @@ namespace aui::audio::impl {
         constexpr static int size_bits = 32;
     };
 
+    template<>
+    struct sample_type<ASampleFormat::F32> {
+        using type = float;
+        constexpr static int size_bits = 32;
+    };
+
     template<ASampleFormat f>
     constexpr int size_bytes() {
         return sample_type<f>::size_bits / 8;
@@ -80,11 +90,16 @@ namespace aui::audio::impl {
 
     template<ASampleFormat to, ASampleFormat from>
     constexpr sample_type_t<to> sample_cast(sample_type_t<from> sample) {
-        if constexpr (type_size<to>() > type_size<from>()) {
-            return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(
+        using FromT = sample_type_t<from>;
+        if constexpr (std::is_floating_point_v<FromT>) {
+            return glm::mix(FromT(std::numeric_limits<sample_type_t<to>>::min()), FromT(std::numeric_limits<sample_type_t<to>>::max()), (sample + 1) / 2.f);
+        } else {
+            if constexpr (type_size<to>() > type_size<from>()) {
+                return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(
                     static_cast<sample_type_t<to>>(sample));
+            }
+            return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(sample);
         }
-        return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(sample);
     }
 
 #pragma pack(push, 1)
@@ -95,9 +110,10 @@ namespace aui::audio::impl {
     };
 #pragma pack(pop)
 
-    template<>
-    struct packed_accessor<ASampleFormat::I32> {
-        sample_type_t<ASampleFormat::I32> value: sample_type<ASampleFormat::I32>::size_bits;
+    template<ASampleFormat f>
+    requires requires{ sample_type<f>::size_bits >= 32; }
+    struct packed_accessor<f> {
+        sample_type_t<f> value;
     };
 
     template<ASampleFormat f>
@@ -152,20 +168,28 @@ public:
     }
 
     inline void commitAllSamples() {
+        int deadbeef1 = 0xdeadbeef;
         std::byte buf[BUFFER_SIZE];
+        int deadbeef2 = 0xdeadbeef;
         while (auto remSampleCount = remainingSampleCount()) {
             size_t samplesToRead = canReadSamples(remainingSampleCount());
             size_t r;
             if (mInputSampleRate == aui::audio::platform::requested_sample_rate) {
                 std::span dst(buf, std::min(aui::audio::impl::size_bytes<sample_in>() * samplesToRead, sizeof(buf)));
                 r = mSource->read(dst);
+                AUI_ASSERTX(r <= dst.size(), "result larger than supplied buffer?");
+                AUI_ASSERTX(deadbeef1 == 0xdeadbeef, "stack corruption");
+                AUI_ASSERTX(deadbeef2 == 0xdeadbeef, "stack corruption");
                 iterateOverBuffer<sample_in>(buf, buf + r);
             }
             else {
                 static constexpr auto conv_sample_format = ASampleRateConverter::outputSampleFormat();
                 std::span dst(buf, std::min(aui::audio::impl::size_bytes<conv_sample_format>() * samplesToRead, sizeof(buf)));
                 r = mConverter.convert(dst);
+                AUI_ASSERTX(r <= dst.size(), "result larger than supplied buffer?");
                 iterateOverBuffer<conv_sample_format>(buf, buf + r);
+                AUI_ASSERTX(deadbeef1 == 0xdeadbeef, "stack corruption");
+                AUI_ASSERTX(deadbeef2 == 0xdeadbeef, "stack corruption");
             }
 
             if (r == 0) {

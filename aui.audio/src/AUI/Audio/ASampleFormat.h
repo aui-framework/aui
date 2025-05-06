@@ -23,7 +23,12 @@ enum class ASampleFormat {
     /**
      * @brief Signed 32-bit integer.
      */
-    I32
+    I32,
+
+    /**
+     * @brief 32-bit IEEE floating point.
+     */
+    F32,
 };
 
 namespace aui::audio {
