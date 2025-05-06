@@ -116,6 +116,7 @@ jobs:
         os: [macos-15]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        generator: ["Ninja"]
     steps:
       - uses: actions/checkout@v4
         with:
