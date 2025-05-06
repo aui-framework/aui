@@ -107,7 +107,11 @@ jobs:
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-check:
-    # some additional build checks on specific platforms
+    # check if a build passes:
+    # - no build cache
+    # - on specific OS configurations or versions
+    # - prevent software rot
+    # - these builds are not to be published
     name: Check build ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -121,21 +125,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: true
-
-      - name: Cache AUI.BOOT deps
-        id: cache-aui-boot
-        uses: actions/cache@v3
-        env:
-          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.debug_or_release }}-${{ matrix.arch }}
-        with:
-          path: |
-            ~/.aui
-
-          key: ${{ matrix.os }}-check-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
-          restore-keys: |
-            ${{ matrix.os }}-check-${{ env.cache-name }}-
-            ${{ matrix.os }}-check-
-            ${{ matrix.os }}-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
