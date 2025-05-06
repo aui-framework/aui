@@ -181,9 +181,6 @@ jobs:
           - os: macos-14
             generator: "Ninja"
 
-          - os: macos-15
-            generator: "Ninja"
-
           - os: ubuntu-latest
             generator: "Ninja"
             additional_cmake_flags: ''
