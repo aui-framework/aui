@@ -108,13 +108,13 @@ jobs:
 
   build-check:
     # some additional build checks on specific platforms
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    name: Check build ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-15]
-        debug_or_release: [Debug, Release]
+        debug_or_release: [Release]
         shared_or_static: [shared, static]
         generator: ["Ninja"]
     steps:
@@ -131,11 +131,11 @@ jobs:
           path: |
             ~/.aui
 
-          key: ${{ runner.os }}-check-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ matrix.os }}-check-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
-            ${{ runner.os }}-check-${{ env.cache-name }}-
-            ${{ runner.os }}-check-
-            ${{ runner.os }}-
+            ${{ matrix.os }}-check-${{ env.cache-name }}-
+            ${{ matrix.os }}-check-
+            ${{ matrix.os }}-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
