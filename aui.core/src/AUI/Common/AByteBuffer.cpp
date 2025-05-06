@@ -14,6 +14,7 @@
 #include "AByteBuffer.h"
 
 #include <glm/glm.hpp>
+#include <AUI/Util/kAUI.h>
 
 
 #include "AUI/Common/AException.h"
@@ -166,7 +167,17 @@ void AByteBuffer::write(IInputStream& stream, size_t size) {
     if (avail < size) {
         reserve(mCapacity + size);
     }
-    stream.readExact(end(), size);
-    mSize += size;
+    char* begin = end();
+    char* end = this->end() + size;
+    AUI_DEFER {
+        mSize = begin - this->begin();
+    };
+    while (begin != end) {
+        size_t r = stream.read(begin, end - begin);
+        if (r == 0) {
+            throw AEOFException();
+        }
+        begin += r;
+    }
 }
 
