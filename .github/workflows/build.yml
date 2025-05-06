@@ -112,7 +112,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest, macos-latest]
+        os: [windows-2019, ubuntu-latest, macos-14, macos-15]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
@@ -131,7 +131,10 @@ jobs:
             generator: "Ninja"
             additional_cmake_flags: ''
 
-          - os: macos-latest
+          - os: macos-14
+            generator: "Ninja"
+
+          - os: macos-15
             generator: "Ninja"
 
           - os: ubuntu-latest
