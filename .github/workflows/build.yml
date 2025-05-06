@@ -106,6 +106,63 @@ jobs:
          path: ${{github.workspace}}/build/app_project/bin/Debug/*.tar.gz
          name: aui.example.views-debug-unsigned.app.tar.gz 
 
+  build-check:
+    # some additional build checks on specific platforms
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-15]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Cache AUI.BOOT deps
+        id: cache-aui-boot
+        uses: actions/cache@v3
+        env:
+          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.debug_or_release }}-${{ matrix.arch }}
+        with:
+          path: |
+            ~/.aui
+
+          key: ${{ runner.os }}-check-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-check-${{ env.cache-name }}-
+            ${{ runner.os }}-check-
+            ${{ runner.os }}-
+
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-4-dev libadwaita-1-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+
+      - name: Install macos dependencies
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Configure CMake
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+
+      - name: Build project
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
+
+      - name: Build AUI tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
+
+      - name: Run AUI tests
+        if: runner.os == 'Windows'
+        working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
+        run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
+
+      - name: Run AUI tests
+        if: runner.os == 'Linux'
+        working-directory: ${{github.workspace}}/build/bin
+        run: ${{github.workspace}}/build/bin/Tests
+
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
