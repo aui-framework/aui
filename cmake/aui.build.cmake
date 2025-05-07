@@ -794,7 +794,12 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
+    set(_generator ${CMAKE_GENERATOR})
+    if (APPLE)
+        # Xcode build requires signing
+        set(_generator Ninja)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
@@ -1457,6 +1462,8 @@ macro(aui_app)
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_VERSION       "${MACOSX_BUNDLE_BUNDLE_VERSION}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_COPYRIGHT            "${MACOSX_BUNDLE_COPYRIGHT}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_DEPLOYMENT_TARGET           "${MACOSX_DEPLOYMENT_TARGET}")
+
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
     endif()
 
     # MACOS ============================================================================================================
@@ -1495,7 +1502,6 @@ macro(aui_app)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_ds_store_setup.scpt ${_current_app_build_files}/dmg_ds_store_setup.scpt)
         _auib_weak_set(CPACK_DMG_DS_STORE_SETUP_SCRIPT ${_current_app_build_files}/dmg_ds_store_setup.scpt) # rearranges icons in DMG
 
-        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
         install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
     endif()
 
@@ -1602,12 +1608,12 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
                 if ${CMAKE_COMMAND} -E make_directory
-                \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks
+                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
@@ -1625,13 +1631,13 @@ macro(aui_app)
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E copy_directory
                 ${_current_app_build_files}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
                 if ${CMAKE_COMMAND} -E copy_directory
                 \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
-                \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
@@ -1648,13 +1654,13 @@ macro(aui_app)
                     POST_BUILD COMMAND /bin/sh -c
                     \"COMMAND_DONE=0 \;
                     if codesign --force --verbose
-                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                     --sign ${APP_APPLE_SIGN_IDENTITY}
                     \&\>/dev/null \; then
                     COMMAND_DONE=1 \;
                     fi \;
                     if codesign --force --verbose
-                    \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                     --sign ${APP_APPLE_SIGN_IDENTITY}
                     \&\>/dev/null \; then
                     COMMAND_DONE=1 \;
