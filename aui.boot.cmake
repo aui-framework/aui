@@ -21,6 +21,18 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
+        BRIEF_DOCS "Global list of imported targets"
+        FULL_DOCS "Global list of imported targets (since CMake 3.21)")
+
+define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
+        BRIEF_DOCS "Global list of forwarded vars"
+        FULL_DOCS "Global list of forwarded vars")
+
+macro(auib_mark_var_forwardable VAR)
+    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
+endmacro()
+
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
@@ -28,6 +40,12 @@ option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" 
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 set(AUIB_VALIDATION_LEVEL 1 CACHE STRING "Package validation level")
 
+auib_mark_var_forwardable(AUIB_NO_PRECOMPILED)
+auib_mark_var_forwardable(AUIB_FORCE_PRECOMPILED)
+auib_mark_var_forwardable(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
+auib_mark_var_forwardable(AUIB_DISABLE)
+auib_mark_var_forwardable(AUIB_LOCAL_CACHE)
+auib_mark_var_forwardable(AUIB_VALIDATION_LEVEL)
 
 if (AUIB_NO_PRECOMPILED AND AUIB_FORCE_PRECOMPILED)
     message(FATAL_ERROR "AUIB_NO_PRECOMPILED and AUIB_FORCE_PRECOMPILED are exclusive.")
@@ -69,14 +87,6 @@ endfunction()
 # cmake_policy fires an error if an unknown policy is passed
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
 set(CMAKE_POLICY_DEFAULT_CMP0135 NEW) # avoid warning about DOWNLOAD_EXTRACT_TIMESTAMP in CMake 3.24:
-
-define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
-        BRIEF_DOCS "Global list of imported targets"
-        FULL_DOCS "Global list of imported targets (since CMake 3.21)")
-
-define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
-        BRIEF_DOCS "Global list of forwarded vars"
-        FULL_DOCS "Global list of forwarded vars")
 
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -507,6 +517,7 @@ endfunction()
 
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
+    list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
@@ -555,7 +566,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -642,10 +653,14 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SHARED_OR_STATIC static)
         set(CMAKE_POSITION_INDEPENDENT_CODE ON) # -fPIC required on linux
     endif()
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}")
+
+    # [[BUILD_SPECIFIER]]
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
+    string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
     string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+    # [[BUILD_SPECIFIER]]
 
     # append module name to build specifier in order to distinguish modules in prefix/ dir
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
@@ -670,12 +685,17 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     if (DEP_ADD_SUBDIRECTORY)
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
+
+        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
+        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
+        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
     else()
         set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     endif()
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -684,6 +704,7 @@ function(auib_import AUI_MODULE_NAME URL)
             LIBRARY_DEBUG
             LIBRARY_RELEASE
             ROOT
+            ROOT_DIR # OPENSSL_ROOT_DIR
             DIR)
         foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
             unset(${_v1}_${_v2} PARENT_SCOPE)
@@ -722,35 +743,14 @@ function(auib_import AUI_MODULE_NAME URL)
                 BINARY_DIR ${DEP_BINARY_DIR})
     endif()
 
-    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-        # validate the CMAKELISTS_CUSTOM param
-        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
-            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
-        endif()
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
-        endif()
-    endif()
-
-    if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-        # validate the CMAKELISTS_CUSTOM param
-        set(_tmp "${CMAKE_CURRENT_LIST_DIR}/${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}" AND EXISTS "${_tmp}")
-            set(AUIB_IMPORT_CMAKELISTS_CUSTOM "${_tmp}")
-        endif()
-        if (NOT EXISTS "${AUIB_IMPORT_CMAKELISTS_CUSTOM}")
-            message(FATAL_ERROR "CMAKELISTS_CUSTOM does not exist (tried: ${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${_tmp})")
-        endif()
-    endif()
-
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
             _auib_try_find()
         endif()
     endif()
-    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
+
+    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_FETCHED_FLAG}) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -846,6 +846,7 @@ function(auib_import AUI_MODULE_NAME URL)
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                    file(TOUCH ${DEP_FETCHED_FLAG})
                 endif ()
             endif()
         endif()
@@ -856,10 +857,6 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
             if (NOT DEP_ADD_SUBDIRECTORY)
-                if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-                    configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
-                endif()
-
                 message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
                 get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
@@ -1042,6 +1039,10 @@ function(auib_import AUI_MODULE_NAME URL)
 
             endif()
         endif()
+    else()
+        if (DEP_ADD_SUBDIRECTORY AND AUIB_IMPORT_CMAKE_WORKING_DIR)
+            set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
+        endif()
     endif()
     if (_locked)
         set(_locked FALSE)
@@ -1049,9 +1050,6 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
-        if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
-            configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
-        endif()
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     elseif(NOT ${AUI_MODULE_NAME}_FOUND)
@@ -1209,9 +1207,4 @@ _auib_copy_runtime_dependencies(${_aui_boot_current_list_file})
     set(CPACK_VERBATIM_VARIABLES YES)
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
     include(CPack)
-endmacro()
-
-
-macro(auib_mark_var_forwardable VAR)
-    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()
