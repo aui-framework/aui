@@ -26,9 +26,9 @@ static constexpr auto EDITOR_CONTENT_MAX_WIDTH = 400_dp;
 namespace {
 _<AView> profilePhoto(const _<Contact>& contact) {
     return Centered {
-        Label {} & contact->displayName.readProjected([](const AString& s) {
-            return s.empty() ? "?" : AString(1, s.first()).uppercase();
-        }) with_style { Opacity(0.5f), FontSize { 32_dp } },
+        Label {
+          AUI_REACT(contact->displayName->empty() ? "?" : AString(1, contact->displayName->first()).uppercase())
+        } with_style { Opacity(0.5f), FontSize { 32_dp } },
     } with_style {
         FixedSize { 64_dp },
         BorderRadius { 32_dp },
@@ -38,7 +38,7 @@ _<AView> profilePhoto(const _<Contact>& contact) {
 
 template <typename T>
 _<AView> viewer(AProperty<T>& property) {
-    return Label {} & property.readProjected([](const T& v) { return "{}"_format(v); });
+    return Label { AUI_REACT("{}"_format(*property)) };
 }
 
 template <typename T>
@@ -93,8 +93,8 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),
-              Button { mEditorMode ? "Discard" : "Delete" } let { connect(it->clicked, me::drop); },
-              Button { mEditorMode ? "Done" : "Edit" } let { connect(it->clicked, me::toggleEdit); },
+              Button { .text = mEditorMode ? "Discard" : "Delete", .onClick = {me::drop} },
+              Button { .text = mEditorMode ? "Done" : "Edit", .onClick = {me::toggleEdit} },
             } with_style { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
           },
         });
