@@ -21,7 +21,7 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libgtk-4-dev libadwaita-1-dev libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev libglew-dev libstdc++-static libpulse-dev libdbus-1-dev
+sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-4-dev libadwaita-1-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
 ```
 
 ### Fedora
