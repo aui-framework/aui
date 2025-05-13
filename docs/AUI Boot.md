@@ -187,6 +187,8 @@ And try again.
 This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
 this scenario will be forking the library and append their `CMakeLists.txt` on your own.
 
+Alternatively, you can specify @ref AUIB_ADD_SUBDIRECTORY option.
+
 ### "did you mean PACKAGE_NAME?" {#AKJFHJ}
 
 You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
@@ -240,17 +242,7 @@ target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 # Importing project as a subdirectory
 
-Useful for library developers. They can use consumer's project to develop their library.
-
-```
--DAUIB_LIB_AS=ON
-```
-, where 'LIB' is external project name. For example, to import AUI as a subdirectory:
-```
--DAUIB_AUI_AS=ON
-```
-
-This action disables usage of precompiled binary and validation.
+See @ref AUIB_ADD_SUBDIRECTORY
 
 # CMake commands
 
@@ -284,7 +276,24 @@ URL to the git repository of the project you want to import.
 
 ### ADD_SUBDIRECTORY {#AUIB_ADD_SUBDIRECTORY}
 
-Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
+Uses `add_subdirectory` instead of `find_package` as project importing mechanism. If `AUIB_<PackageName>_AS` evaluates
+to true, `ADD_SUBDIRECTORY` is implied.
+
+This action disables usage of precompiled binary and validation.
+
+`AUIB_<PackageName>_AS` Useful for library developers. They can use consumer's project to develop their library.
+
+```
+-DAUIB_LIB_AS=ON
+```
+, where 'LIB' is external project name. For example, to import AUI as a subdirectory:
+```
+-DAUIB_AUI_AS=ON
+```
+
+Another use case is when the dependency fails to provide proper CMake install, making `find_package` unusable. If you
+don't care polluting your own build tree with dependency's targets - it is a good alternative to fixing their CMake
+install on your own, which is a challenging task.
 
 ### ARCHIVE
 
