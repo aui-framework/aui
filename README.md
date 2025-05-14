@@ -131,9 +131,10 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 - `aui.xml` - XML parser
 
 ## Feature support
+ - ` ` equals this feature is unusable on given platform
  - `-` equals unsupported
  - `?` equals planned
- - `+` equals almost completely supported
+ - `+` equals has naive implementation that may contain issues
  - `#` equals fully supported
 
 | Feature or module | Windows Vista+ | Windows XP | Linux | Android | MacOS | iOS |
@@ -144,18 +145,29 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 | aui.image         | #              |     #      |   #   |    #    |   #   |  #  |
 | aui.json          | #              |     #      |   #   |    #    |   #   |  #  |
 | aui.network       | #              |     #      |   #   |    #    |   +   |  +  |
-| aui.toolbox       | #              |     #      |   #   |    -    |   #   |  -  |
+| aui.toolbox       | #              |     #      |   #   |         |   #   |     |
 | aui.views         | #              |     ?      |   +   |    +    |   +   |  +  |
 | aui.xml           | #              |     #      |   #   |    #    |   #   |  #  |
-| Assets            | #              |     #      |   #   |    #    |   +   |  +  |
+| Assets            | #              |     #      |   #   |    #    |   #   |  #  |
+| App packaging     | #              |     #      |   #   |    #    |   #   |  #  |
+| HiDPI             | #              |     #      |   #   |    #    |   #   |  #  |
 | Filesystem        | #              |     #      |   #   |    #    |   +   |  +  |
-| Process creation  | #              |     #      |   #   |    -    |   ?   |  -  |
+| Prebuilt binaries | #              |     -      |   #   |    ?    |   ?   |  ?  |
+| Process creation  | #              |     #      |   #   |         |   ?   |     |
+| AUI Devtools      | #              |     #      |   #   |    -    |   #   |  -  |
+| Custom window     | #              |     #      |   #   |    ?    |   ?   |  ?  |
+| IME               | -              |     -      |   +   |    -    |   +   |  -  |
+| Touch             | -              |     -      |   -   |    #    |   -   |  #  |
+| Drag n drop       | +              |     -      |   -   |         |   -   |  -  |
+| Global menu       |                |            |   ?   |         |   ?   |     |
+| OpenGL renderer   | #              |     #      |   #   |    #    |   #   |  #  |
+| Software renderer | #              |     #      |   #   |         |   ?   |     |
 
 | Compiler                     | Support       |
 |------------------------------|---------------|
 | MSVC 19+ (Visual Studio 20+) | Full          |
-| gcc (8+)                     | Full          |
-| MinGW (8+)                   | Won't compile |
+| gcc (13+)                    | Full          |
+| MinGW (13+)                  | Won't compile |
 | Cross-compile MinGW          | Won't compile |
 | clang                        | Full          |
 
