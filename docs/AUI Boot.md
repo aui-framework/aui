@@ -173,6 +173,7 @@ AUI_ENTRY {
 };
 ```
 
+For more libraries, please visit https://github.com/aui-framework/boot.
 ## How to fix "Could not resolve dependency" error
 
 Common scenario:
@@ -187,7 +188,9 @@ And try again.
 This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
 this scenario will be forking the library and append their `CMakeLists.txt` on your own.
 
-Alternatively, you can specify @ref AUIB_ADD_SUBDIRECTORY option.
+You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
 
 ### "did you mean PACKAGE_NAME?" {#AKJFHJ}
 
@@ -197,7 +200,10 @@ You have mispelled the package name (the first argument to `auib_import`). Pleas
 ### "Imported target ... depends on an out-of-tree file" {#AFKJNJKAN}
 
 The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
-library by forking it.
+library by forking it. You can consult with
+[Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
 
 ## Fixing 3rdparty library's CMakeLists.txt
 

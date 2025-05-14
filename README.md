@@ -1,6 +1,5 @@
 # AUI (Advanced Universal Interface)
-![build badge](https://github.com/Alex2772/aui/actions/workflows/build.yml/badge.svg)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/9b8d9c80909a49ad8f171bb13a3bc675)](https://www.codacy.com/gh/Alex2772/aui/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Alex2772/aui&amp;utm_campaign=Badge_Grade)
+![build badge](https://github.com/aui-framework/aui/actions/workflows/build.yml/badge.svg)
 
 ![logo](https://raw.githubusercontent.com/aui-framework/aui/master/logo.svg)
 
@@ -11,7 +10,7 @@ The project is inspired by Qt and aims to provide developers with the best possi
 to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
 programming languages and external compilers.
 
-[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
+[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -29,14 +28,19 @@ sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev
 sudo dnf install fontconfig-devel gtk4-devel libadwaita-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
 ```
 
-## AUI App Template
+## AUI App Template ⚡
 
-Use our [app template](https://github.com/aui-framework/example_app) to create a GitHub-hosted app project with CI/CD building, testing, releasing, auto
-updating, code quality checking and more.
+Use our setup-free repository templates for quick start:
 
-## Your project CMake script
+1. [Minimal UI](https://github.com/aui-framework/example_minimal_ui) - an absolute minimum to start a graphical UI application, without any boilerplate.
+2. [Minimal UI with assets](https://github.com/aui-framework/example_assets_ui) - same as above but with assets.
+3. [Full-fledged App Template](https://aui-framework.github.io/develop/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
+   testing, releasing, auto updating, code quality checking and more.
 
-To link AUI to your project, use the following CMake script:
+## Integrating AUI to existing CMake project
+
+To link AUI to your project, use the following CMake script. This script is self sufficient and does not require additional setup, AUI is imported to your project thanks to
+[AUI.Boot](https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html).
 
 `CMakeLists.txt`:
 ```cmake
