@@ -31,7 +31,7 @@ Things to note:
 
 On mobile platforms, the build process is overcomplicated by:
 
-- Need to support multiple architextures (ARM, x86, etc)
+- Need to support multiple architectures (ARM, x86, etc)
 - Platform specific packaging requirements (APK, IPA)
 - Integrating with platform-specific build systems (Gradle, Xcode)
 - Interfacing to Kotlin/Swift (Java/Objective-C) from/to C++
