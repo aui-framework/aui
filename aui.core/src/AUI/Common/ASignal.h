@@ -539,12 +539,17 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
             receiverPtr = std::move(sharedPtr);
         }
 
-        if constexpr (std::tuple_size_v<decltype(args)> > 0) {
-            using FirstType = decltype(std::get<0>(args));
-            static_assert(
-                std::is_reference_v<FirstType>,
-                "when performing a non-threading call, args is expected to hold const references"
-                "instead of values");
+        if constexpr (std::tuple_size_v<std::remove_cvref_t<decltype(args)>> > 0) {
+            auto check_and_assert_lambda =
+              []<typename TupleType>(TupleType&& nonEmptyTupleArgs) {
+                using FirstType = decltype(std::get<0>(std::forward<TupleType>(nonEmptyTupleArgs)));
+                static_assert(
+                    std::is_reference_v<FirstType> && std::is_const_v<std::remove_reference_t<FirstType>>,
+                    "when performing a non-threading call, args is expected to hold const references "
+                    "instead of values");
+            };
+
+            check_and_assert_lambda(args);
         }
         lock.unlock();
         try {
