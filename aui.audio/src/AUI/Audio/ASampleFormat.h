@@ -40,6 +40,7 @@ namespace aui::audio {
             case ASampleFormat::I24:
                 return 3;
 
+            case ASampleFormat::F32:
             case ASampleFormat::I32:
                 return 4;
         }
