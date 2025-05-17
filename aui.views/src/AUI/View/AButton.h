@@ -18,6 +18,7 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
  * @brief Button with text, which can be pushed to make some action.
@@ -68,44 +69,31 @@ namespace declarative {
 /**
  * @declarativeformof{AButton}
  */
-struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButtonEx> {
-    /**
-     * @brief Basic label initializer.
-     * @details
-     * @code{cpp}
-     * Button { "Action label" }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * @endcode
-     */
-    Button(AString text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { std::move(text) } }) {}
+struct Button {
+    contract::In<AString> text;
+    contract::Slot<> onClick;
 
-    /**
-     * @brief Basic label initializer.
-     * @details
-     * @code{cpp}
-     * Button { "Action label" }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * @endcode
-     */
-    Button(const char* text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { text } }) {}
+    _<AButton> operator()() {
+        auto view = _new<AButton>();
+        text.bindTo(view->text());
+        onClick.bindTo(view->clicked);
+        return view;
+    }
+};
 
-    /**
-     * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
-     * @details
-     * @code{cpp}
-     * Button {
-     *   Icon { ":img/cart.svg" },
-     *   Label { "Cart" },
-     * }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * @endcode
-     */
-    template <typename... Views>
-    Button(Views&&... views)
-        : layouted_container_factory<AHorizontalLayout, AButtonEx>(std::forward<Views>(views)...) {}
+/**
+ * @declarativeformof{AButtonEx}
+ */
+struct ButtonEx {
+    aui::ui_building::ViewGroup contents;
+    contract::Slot<> onClick;
+
+    _<AButtonEx> operator()() {
+        auto view = _new<AButtonEx>();
+        view->setContents(Horizontal { std::move(contents) });
+        onClick.bindTo(view->clicked);
+        return view;
+    }
 };
 }   // namespace declarative
 

@@ -22,7 +22,6 @@
 #include "AUI/Font/IFontView.h"
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Common/IStringable.h>
-#include <AUI/Util/Declarative.h>
 
 /**
  * @brief Represents an abstract text display view.
