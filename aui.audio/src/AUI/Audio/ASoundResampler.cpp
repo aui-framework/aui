@@ -10,9 +10,7 @@ namespace aui::audio::impl {
         }
 
         size_t resample(std::span<std::byte> dst, aui::audio::VolumeLevel volume) override {
-            if (volume != aui::audio::VolumeLevel::MAX) {
-                mResampler.setVolume(volume);
-            }
+            mResampler.setVolume(volume);
             mResampler.setDestination(dst);
             mResampler.commitAllSamples();
             return mResampler.writtenSize();
