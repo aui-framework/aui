@@ -10,10 +10,14 @@ namespace aui::audio::impl {
         }
 
         size_t resample(std::span<std::byte> dst, aui::audio::VolumeLevel volume) override {
-            mResampler.setVolume(volume);
-            mResampler.setDestination(dst);
-            mResampler.commitAllSamples();
-            return mResampler.writtenSize();
+            Transaction transaction {
+                .destinationBufferBegin = dst.data(),
+                .destinationBufferEnd = dst.data() + dst.size(),
+                .destinationBufferIt = dst.data(),
+                .volumeLevel = volume,
+            };
+            mResampler.commitAllSamples(transaction);
+            return transaction.writtenSize();
         }
 
     private:
