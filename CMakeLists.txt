@@ -14,6 +14,16 @@ set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location"
 # raise aui.boot validation level.
 set(AUIB_VALIDATION_LEVEL 2 CACHE STRING "Package validation level")
 
+if (CMAKE_GENERATOR STREQUAL "Unix Makefiles" AND NOT AUI_UNIX_MAKE_FILES_DONT_CARE)
+    message(WARNING
+            "Please don't use Unix Makefiles otherwise your PC might struggle to build!\n"
+            "\n"
+            "Use Ninja generator:\n"
+            "cmake -GNinja ..\n"
+            "Or specify -DAUI_UNIX_MAKE_FILES_DONT_CARE=TRUE:\n"
+            "cmake -DAUI_UNIX_MAKE_FILES_DONT_CARE=TRUE ..")
+endif ()
+
 if(AUIB_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUIB_COMPONENTS core)
