@@ -25,6 +25,8 @@
 #include "AUI/Model/AListModel.h"
 #include "AUI/View/ANumberPicker.h"
 
+using namespace declarative;
+
 class UIDataBindingTest : public testing::UITest {
 };
 

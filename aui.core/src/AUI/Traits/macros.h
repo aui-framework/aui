@@ -49,4 +49,13 @@
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
 
+
+/**
+ * @brief Explicitly denotes a @ref reactive expression.
+ * @ingroup useful_macros
+ * @details
+ * Consists of a lambda syntax with forced [=] capture and explicit `decltype(auto)` return type.
+ */
+#define AUI_REACT(expression) [=]() -> decltype(auto) { return (expression); }
+
 //NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
