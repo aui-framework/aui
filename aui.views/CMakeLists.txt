@@ -47,6 +47,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         )
 
         file(GLOB_RECURSE sigs src/ *.sigs)
+        _aui_check_toolbox()
         foreach (sig ${sigs})
             get_filename_component(_out ${sig} NAME)
             set(_out "${CMAKE_CURRENT_BINARY_DIR}/${_out}.cpp")
