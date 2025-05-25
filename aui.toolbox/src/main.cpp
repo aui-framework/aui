@@ -47,10 +47,11 @@
 #include "Toolbox.h"
 #include "Command/Svg2png.h"
 #include "Command/Auisl.h"
+#include "Command/GenerateDlStubs.h"
 
 Toolbox toolbox;
 
-template<typename T>
+template <typename T>
 void registerCommand() {
     ICommand* t = new T;
     toolbox.commands[t->getName()] = t;
@@ -64,6 +65,7 @@ Toolbox::Toolbox() {
     registerCommand<Svg2ico>();
     registerCommand<Auisl>();
     registerCommand<ConvertImage>();
+    registerCommand<GenerateDlStubs>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {
@@ -78,22 +80,17 @@ void printAllCommands() {
     }
 }
 
-AUI_ENTRY
-{
-	std::cout << "Advanced Universal Interface toolbox" << std::endl;
-	if (args.size() <= 1)
-	{
-		printAllCommands();
-	}
-	else
-	{
-		for (int i = 2; i < args.size(); ++i)
-		{
-			toolbox.args << args[i];
-		}
+AUI_ENTRY {
+    std::cout << "Advanced Universal Interface toolbox" << std::endl;
+    if (args.size() <= 1) {
+        printAllCommands();
+    } else {
+        for (int i = 2; i < args.size(); ++i) {
+            toolbox.args << args[i];
+        }
 
-		ICommand* command;
-		try {
+        ICommand* command;
+        try {
             if (auto c = toolbox.commands.contains(args[1])) {
                 command = c->second;
                 command->run(toolbox);
@@ -102,16 +99,16 @@ AUI_ENTRY
                 return -1;
             }
         } catch (const IllegalArgumentsException& e) {
-		    std::cerr << std::endl << e.getMessage() << std::endl;
-		    command->printHelp();
-		    return -1;
+            std::cerr << std::endl << e.getMessage() << std::endl;
+            command->printHelp();
+            return -1;
         } catch (const AException& e) {
-		    std::cerr << std::endl << e.getMessage() << std::endl;
-		    return -1;
+            std::cerr << std::endl << e.getMessage() << std::endl;
+            return -1;
         } catch (...) {
-		    return -1;
+            return -1;
         }
-	}
+    }
 
-	return 0;
+    return 0;
 }

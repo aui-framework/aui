@@ -9,8 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 5/2/25.
-//
+#pragma once
 
-#include "RenderingContextGtk.h"
+#include "gtk_functions.h"
+
+namespace aui::gtk4_fake {
+extern "C" {
+#include "gtk.sigs"
+}
+}

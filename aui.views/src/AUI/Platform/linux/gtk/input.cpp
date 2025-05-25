@@ -11,6 +11,7 @@
 
 #include "PlatformAbstractionGtk.h"
 #include "AUI/Platform/detail/key_to_native.h"
+#include <AUI/Platform/linux/gtk/gdkkeysyms.h>
 
 static constexpr AInput::Key fromNativeImpl(unsigned int w) {
     switch (w) {

@@ -13,9 +13,9 @@
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "OpenGLRenderingContextGtk.h"
 #include "AUIWidget.h"
-#include <adwaita.h>
+//#include <adwaita.h>
 
-static constexpr auto USE_ADWAITA = true;
+using namespace aui::gtk4_fake;
 
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "LocalValueEscapesScope"
@@ -25,14 +25,13 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
         g_object_set_data_full (G_OBJECT (display), "gsk-renderer", g_strdup("ngl"), g_free);
     }
 
-    auto window =
-        USE_ADWAITA ? GTK_WINDOW(adw_application_window_new(GTK_APPLICATION(*mApplication)))
-                    : GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
+//    GTK_WINDOW(adw_application_window_new(GTK_APPLICATION(*mApplication)))
+    auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
     nativeHandle(init.window) = window;
     gtk_window_set_default_size(window, init.width, init.height);
     gtk_window_set_title(window, init.name.toStdString().c_str());
 
-    auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, FALSE);
+    auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
     gtk_widget_set_margin_start(box, 0);
     gtk_widget_set_margin_end(box, 0);
     gtk_widget_set_margin_top(box, 0);
@@ -46,6 +45,7 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
 
     windowSetStyle(init.window, init.ws);
 
+    /*
     if (USE_ADWAITA) {
         auto toolbar = adw_toolbar_view_new();
         auto header = adw_header_bar_new();
@@ -57,6 +57,9 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
     } else {
         // TODO
     }
+    */
+
+    gtk_window_set_child(window, box);
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
             auto context = std::visit(
@@ -83,7 +86,7 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
                   },
                 },
                 graphicsApi);
-            auto auiWidget = GTK_WIDGET(aui_widget_new(*context));
+            auto auiWidget = aui_widget_new(*context);
             gtk_widget_set_hexpand(auiWidget, true);
             gtk_widget_set_vexpand(auiWidget, true);
             gtk_box_append(GTK_BOX(box), auiWidget);

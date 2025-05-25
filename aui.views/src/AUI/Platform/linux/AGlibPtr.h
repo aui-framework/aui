@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cassert>
+#include <glib-object.h>
 
 /**
  * @brief Takes care of g_object_ref and g_object_unref() reference counting mechanism of Glib objects.

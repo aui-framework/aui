@@ -11,13 +11,13 @@
 
 #pragma once
 
-#include <glib-object.h>
-#include "gtk_types.h"
+#include "ICommand.h"
 
-class RenderingContextGtk;
-
-// Gtk world representation of AUI.
-// Implementation is based on gtkglarea and https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/8503
-aui::gtk4_fake::GtkWidget* aui_widget_new(RenderingContextGtk& renderingContext);
-
-
+class GenerateDlStubs : public ICommand  {
+public:
+    ~GenerateDlStubs() override = default;
+    AString getName() override;
+    AString getSignature() override;
+    AString getDescription() override;
+    void run(Toolbox& t) override;
+};

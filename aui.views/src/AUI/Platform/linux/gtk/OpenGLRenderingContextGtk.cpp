@@ -16,6 +16,9 @@
 #include "OpenGLRenderingContextGtk.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 #include "PlatformAbstractionGtk.h"
+#include "gtk_functions.h"
+
+using namespace aui::gtk4_fake;
 
 GdkGLContext* OpenGLRenderingContextGtk::ourContext = nullptr;
 
@@ -114,9 +117,10 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
         auto physicalHeight = gdk_gl_texture_builder_get_height(mTexture->builder);
 
         gtk_snapshot_scale(snapshot, 1.f / scale, 1.f / scale);
-        auto rect = GRAPHENE_RECT_INIT(
-            0.375f, 0.375f, // from opengl red book
-            float(physicalWidth), float(physicalHeight));
+        graphene_rect_t rect {
+            .origin = { 0.375f, 0.375f },  // from opengl red book
+            .size = { float(physicalWidth), float(physicalHeight) },
+        };
         gtk_snapshot_append_scaled_texture(snapshot, mTexture->gl_texture, GSK_SCALING_FILTER_NEAREST, &rect);
     }
     gtk_snapshot_restore(snapshot);

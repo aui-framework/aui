@@ -9,9 +9,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <dlfcn.h>
+#include <bits/dlfcn.h>
 #include "PlatformAbstractionGtk.h"
 #include "RenderingContextGtk.h"
-#include <adwaita.h>
+#include "gtk_functions.h"
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -22,10 +24,20 @@
 // - releasing acquired context in destructor
 // See https://github.com/aui-framework/aui/issues/468
 
+namespace aui::gtk4_fake {
+void* handle = nullptr;
+}
+
+using namespace aui::gtk4_fake;
+
 PlatformAbstractionGtk::PlatformAbstractionGtk()
   : mApplication([] {
+      handle = dlopen("libgtk-4.so.1", RTLD_LAZY | RTLD_GLOBAL);
+      if (!handle) {
+          throw AException("failed to load libgtk-4.so.1: {}"_format(dlerror()));
+      }
       gtk_init();
-      return G_APPLICATION(adw_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS));
+      return G_APPLICATION(gtk_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS));
   }()), mMainContext(g_main_context_default()) {
     g_signal_connect(
         mApplication, "activate",
@@ -45,9 +57,10 @@ PlatformAbstractionGtk::PlatformAbstractionGtk()
     // maybe we might want to delegate command line handling to GApplication
     while (g_main_context_iteration (mMainContext, false));
 
+    /*
     // TODO at the moment aui does not really support colors schemes, so we force light mode
     adw_style_manager_set_color_scheme(adw_application_get_style_manager(ADW_APPLICATION(mApplication)),
-                                       ADW_COLOR_SCHEME_FORCE_LIGHT);
+                                       ADW_COLOR_SCHEME_FORCE_LIGHT);*/
 }
 
 PlatformAbstractionGtk::~PlatformAbstractionGtk() {
