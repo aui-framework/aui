@@ -63,7 +63,7 @@ GtkIconTheme* gtk_icon_theme_get_for_display(GdkDisplay* display);
 GtkIconTheme* gtk_icon_theme_get_default(void);
 gboolean gtk_widget_path_iter_has_class(const GtkWidgetPath* path, gint pos, const gchar* name);
 GdkWindow* gtk_widget_get_window(GtkWidget* widget);
-void gtk_main_do_event(GdkEvent *event);
+void gtk_main_do_event(GdkEvent* event);
 guint gtk_get_major_version(void);
 guint gtk_get_minor_version(void);
 guint gtk_get_micro_version(void);
@@ -310,7 +310,7 @@ void gdk_gl_texture_builder_set_context(GdkGLTextureBuilder* self, GdkGLContext*
 void gdk_gl_texture_release(GdkGLTexture* self);
 gpointer gdk_gl_texture_builder_get_sync(GdkGLTextureBuilder* self);
 void gdk_gl_texture_builder_set_sync(GdkGLTextureBuilder* self, gpointer sync);
-GdkTexture* gdk_gl_texture_builder_build(GdkGLTextureBuilder *self, GDestroyNotify destroy, gpointer data);
+GdkTexture* gdk_gl_texture_builder_build(GdkGLTextureBuilder* self, GDestroyNotify destroy, gpointer data);
 int gdk_gl_texture_builder_get_width(GdkGLTextureBuilder* self);
 int gdk_gl_texture_builder_get_height(GdkGLTextureBuilder* self);
 void gdk_gl_texture_builder_set_width(GdkGLTextureBuilder* self, int width);
@@ -323,5 +323,15 @@ void gtk_window_close(GtkWindow* window);
 GObject* gdk_display_get_default();
 
 GtkWidget* gtk_application_window_new(GtkApplication* application);
+GType gtk_event_controller_key_get_type();
+void gtk_widget_add_controller(GtkWidget* widget, GtkEventController* controller);
+GtkEventController* gtk_event_controller_legacy_new();
+GtkEventController* gtk_event_controller_key_new();
+void gtk_event_controller_key_set_im_context(GtkEventControllerKey* controller, GtkIMContext* im_context);
+GType gdk_scroll_event_get_type();
+guint gdk_button_event_get_button(GdkEvent* event);
+void gdk_scroll_event_get_deltas(GdkEvent* event, double* delta_x, double* delta_y);
+GdkScrollUnit gdk_scroll_event_get_unit(GdkEvent* event);
+GdkEventType gdk_event_get_event_type(GdkEvent* event);
 
 // aui.toolbox: }

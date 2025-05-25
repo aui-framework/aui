@@ -21,9 +21,7 @@ namespace aui::gtk4_fake {
 extern "C" {
 enum GtkWidgetHelpType : int;
 enum GtkWindowType : int;
-enum GdkEventType : int;
 enum GtkStateFlags : int;
-typedef enum { GTK_ORIENTATION_HORIZONTAL, GTK_ORIENTATION_VERTICAL } GtkOrientation;
 enum GdkModifierType : int;
 enum GtkIconLookupFlags : int;
 enum GtkPageOrientation : int;
@@ -31,112 +29,14 @@ enum GtkTextDirection : int;
 enum GtkSizeRequestMode : int;
 enum GtkDirectionType : int;
 
-using GtkWidgetPath = struct _GtkWidgetPath;
-using GtkContainer = struct _GtkContainer;
-using GdkEventKey = struct _GdkEventKey;
-using GdkWindow = struct _GdkWindow;
-using GdkKeymap = struct _GdkKeymap;
-using GdkGLTexture = struct _GdkGLTexture;
-using GtkApplication = struct _GtkApplication;
-using GtkWindow = struct _GtkWindow;
-using GtkBox = struct _GtkBox;
-using GtkWidget = struct _GtkWidget {
-    GInitiallyUnowned parent_instance;
+typedef enum { GSK_SCALING_FILTER_LINEAR, GSK_SCALING_FILTER_NEAREST, GSK_SCALING_FILTER_TRILINEAR } GskScalingFilter;
+typedef enum { GTK_ORIENTATION_HORIZONTAL, GTK_ORIENTATION_VERTICAL } GtkOrientation;
 
-    /*< private >*/
-
-    void *priv;
-};
-using GtkSnapshot = struct _GtkSnapshot;
-using GtkIconInfo = struct _GtkIconInfo;
-using GdkScreen = struct _GdkScreen;
-using GdkColor = struct _GdkColor;
-using GdkEvent = struct _GdkEvent;
-using GdkKeymapKey = struct _GdkKeymapKey;
-using GdkTexture = struct _GdkTexture;
-using GdkGLTextureBuilder = struct _GdkGLTextureBuilder;
-using GtkSettings = struct _GtkSettings;
-using GtkStyleContext = struct _GtkStyleContext;
-using GskRenderNode = struct _GskRenderNode;
-using GtkIMContext = struct _GtkIMContext;
-using GtkNative = struct _GtkNative;
-using GdkDevice = struct _GdkDevice;
-using GdkSurface = struct _GdkSurface;
-using GtkFileChooser = struct _GtkFileChooser;
-using GtkIconTheme = struct _GtkIconTheme;
-using GdkDisplay = struct _GdkDisplay;
-using GdkPixbuf = struct _GdkPixbuf;
-using GtkTreeModel = struct _GtkTreeModel;
-using GtkCssProvider = struct _GtkCssProvider;
-using GtkStyleProvider = struct _GtkStyleProvider;
-using GtkImage = struct _GtkImage;
-using GtkFileFilter = struct _GtkFileFilter;
-using GtkPrinter = struct _GtkPrinter;
-using GtkPrintBackend = struct _GtkPrintBackend;
-using GdkRectangle = struct _GdkRectangle;
-using GtkIMMulticontext = struct _GtkIMMulticontext;
-using GtkPageSetup = struct _GtkPageSetup;
-using GtkPaperSize = struct _GtkPaperSize;
-using GtkPrintJob = struct _GtkPrintJob;
-using GtkPrintSettings = struct _GtkPrintSettings;
-using GtkPageRange = struct _GtkPageRange;
-using GtkPrintUnixDialog = struct _GtkPrintUnixDialog;
-using PangoContext = struct _PangoContext;
-using GtkRequisition = struct _GtkRequisition;
-using GdkPaintable = struct _GdkPaintable;
-using GdkSnapshot = struct _GdkSnapshot;
-using GdkSeat = struct _GdkSeat;
-using GdkToplevel = struct _GdkToplevel;
-using GdkMonitor = struct _GdkMonitor;
-using GtkTooltip = struct _GtkTooltip;
-using GtkAlertDialog = struct _GtkAlertDialog;
-using GtkCssStyleChange = struct _GtkCssStyleChange;
-using GtkWidgetClassPrivate = struct _GtkWidgetClassPrivate;
-
-using graphene_point_t = struct _graphene_point_t {
-    float x;
-    float y;
-};
-
-using graphene_size_t = struct _graphene_size_t {
-    float width;
-    float height;
-};
-
-using graphene_rect_t = struct _graphene_rect_t {
-    graphene_point_t origin;
-    graphene_size_t size;
-};
-
-using GdkGLContext = struct _GdkGLContext;
-using GtkPrinterFunc = void *;
-using PangoAttrList = void *;
-using GtkPrintJobCompleteFunc = void *;
-using GdkEventFunc = void (*)(GdkEvent *event, gpointer data);
-
-using cairo_t = struct _cairo;
-using cairo_surface_t = struct _cairo_surface;
-
-struct _GdkEventKey {
-    GdkEventType type;
-    GdkWindow *window;
-    gint8 send_event;
-    guint32 time;
-    guint state;
-    guint keyval;
-    gint length;
-    gchar *string;
-    guint16 hardware_keycode;
-    guint8 group;
-    guint is_modifier : 1;
-};
-
-struct _GdkColor {
-    guint32 pixel;
-    guint16 red;
-    guint16 green;
-    guint16 blue;
-};
+typedef enum
+{
+    GDK_SCROLL_UNIT_WHEEL,
+    GDK_SCROLL_UNIT_SURFACE
+} GdkScrollUnit;
 
 typedef enum {
     GSK_NOT_A_RENDER_NODE = 0,
@@ -242,7 +142,149 @@ typedef enum {
     GTK_SYSTEM_SETTING_ICON_THEME
 } GtkSystemSetting;
 
-typedef enum { GSK_SCALING_FILTER_LINEAR, GSK_SCALING_FILTER_NEAREST, GSK_SCALING_FILTER_TRILINEAR } GskScalingFilter;
+typedef enum
+{
+    GDK_DELETE,
+    GDK_MOTION_NOTIFY,
+    GDK_BUTTON_PRESS,
+    GDK_BUTTON_RELEASE,
+    GDK_KEY_PRESS,
+    GDK_KEY_RELEASE,
+    GDK_ENTER_NOTIFY,
+    GDK_LEAVE_NOTIFY,
+    GDK_FOCUS_CHANGE,
+    GDK_PROXIMITY_IN,
+    GDK_PROXIMITY_OUT,
+    GDK_DRAG_ENTER,
+    GDK_DRAG_LEAVE,
+    GDK_DRAG_MOTION,
+    GDK_DROP_START,
+    GDK_SCROLL,
+    GDK_GRAB_BROKEN,
+    GDK_TOUCH_BEGIN,
+    GDK_TOUCH_UPDATE,
+    GDK_TOUCH_END,
+    GDK_TOUCH_CANCEL,
+    GDK_TOUCHPAD_SWIPE,
+    GDK_TOUCHPAD_PINCH,
+    GDK_PAD_BUTTON_PRESS,
+    GDK_PAD_BUTTON_RELEASE,
+    GDK_PAD_RING,
+    GDK_PAD_STRIP,
+    GDK_PAD_GROUP_MODE,
+    GDK_TOUCHPAD_HOLD,
+    GDK_EVENT_LAST        /* helper variable for decls */
+} GdkEventType;
+
+using GtkWidgetPath = struct _GtkWidgetPath;
+using GtkContainer = struct _GtkContainer;
+using GdkEventKey = struct _GdkEventKey;
+using GdkWindow = struct _GdkWindow;
+using GdkKeymap = struct _GdkKeymap;
+using GdkGLTexture = struct _GdkGLTexture;
+using GtkApplication = struct _GtkApplication;
+using GtkWindow = struct _GtkWindow;
+using GtkEventController = struct _GtkEventController;
+using GtkEventControllerKey = struct _GtkEventControllerKey;
+using GtkEventControllerLegacy = struct _GtkEventControllerLehacy;
+using GtkBox = struct _GtkBox;
+using GtkWidget = struct _GtkWidget {
+    GInitiallyUnowned parent_instance;
+
+    /*< private >*/
+
+    void *priv;
+};
+using GtkSnapshot = struct _GtkSnapshot;
+using GtkIconInfo = struct _GtkIconInfo;
+using GdkScreen = struct _GdkScreen;
+using GdkColor = struct _GdkColor;
+using GdkEvent = struct _GdkEvent;
+using GdkKeymapKey = struct _GdkKeymapKey;
+using GdkTexture = struct _GdkTexture;
+using GdkGLTextureBuilder = struct _GdkGLTextureBuilder;
+using GtkSettings = struct _GtkSettings;
+using GtkStyleContext = struct _GtkStyleContext;
+using GskRenderNode = struct _GskRenderNode;
+using GtkIMContext = struct _GtkIMContext;
+using GtkNative = struct _GtkNative;
+using GdkDevice = struct _GdkDevice;
+using GdkSurface = struct _GdkSurface;
+using GtkFileChooser = struct _GtkFileChooser;
+using GtkIconTheme = struct _GtkIconTheme;
+using GdkDisplay = struct _GdkDisplay;
+using GdkPixbuf = struct _GdkPixbuf;
+using GtkTreeModel = struct _GtkTreeModel;
+using GtkCssProvider = struct _GtkCssProvider;
+using GtkStyleProvider = struct _GtkStyleProvider;
+using GtkImage = struct _GtkImage;
+using GtkFileFilter = struct _GtkFileFilter;
+using GtkPrinter = struct _GtkPrinter;
+using GtkPrintBackend = struct _GtkPrintBackend;
+using GdkRectangle = struct _GdkRectangle;
+using GtkIMMulticontext = struct _GtkIMMulticontext;
+using GtkPageSetup = struct _GtkPageSetup;
+using GtkPaperSize = struct _GtkPaperSize;
+using GtkPrintJob = struct _GtkPrintJob;
+using GtkPrintSettings = struct _GtkPrintSettings;
+using GtkPageRange = struct _GtkPageRange;
+using GtkPrintUnixDialog = struct _GtkPrintUnixDialog;
+using PangoContext = struct _PangoContext;
+using GtkRequisition = struct _GtkRequisition;
+using GdkPaintable = struct _GdkPaintable;
+using GdkSnapshot = struct _GdkSnapshot;
+using GdkSeat = struct _GdkSeat;
+using GdkToplevel = struct _GdkToplevel;
+using GdkMonitor = struct _GdkMonitor;
+using GtkTooltip = struct _GtkTooltip;
+using GtkAlertDialog = struct _GtkAlertDialog;
+using GtkCssStyleChange = struct _GtkCssStyleChange;
+using GtkWidgetClassPrivate = struct _GtkWidgetClassPrivate;
+
+using graphene_point_t = struct _graphene_point_t {
+    float x;
+    float y;
+};
+
+using graphene_size_t = struct _graphene_size_t {
+    float width;
+    float height;
+};
+
+using graphene_rect_t = struct _graphene_rect_t {
+    graphene_point_t origin;
+    graphene_size_t size;
+};
+
+using GdkGLContext = struct _GdkGLContext;
+using GtkPrinterFunc = void *;
+using PangoAttrList = void *;
+using GtkPrintJobCompleteFunc = void *;
+using GdkEventFunc = void (*)(GdkEvent *event, gpointer data);
+
+using cairo_t = struct _cairo;
+using cairo_surface_t = struct _cairo_surface;
+
+struct _GdkEventKey {
+    GdkEventType type;
+    GdkWindow *window;
+    gint8 send_event;
+    guint32 time;
+    guint state;
+    guint keyval;
+    gint length;
+    gchar *string;
+    guint16 hardware_keycode;
+    guint8 group;
+    guint is_modifier : 1;
+};
+
+struct _GdkColor {
+    guint32 pixel;
+    guint16 red;
+    guint16 green;
+    guint16 blue;
+};
 
 // Not defined in GTK.
 constexpr int GSK_RENDER_NODE_MAX_VALUE = GSK_SUBSURFACE_NODE;
@@ -340,6 +382,16 @@ using GtkWidgetClass = struct _GtkWidgetClass {
 #define GTK_IS_BOX(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GTK_TYPE_BOX))
 #define GTK_IS_BOX_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass), GTK_TYPE_BOX))
 #define GTK_BOX_GET_CLASS(obj)  (G_TYPE_INSTANCE_GET_CLASS((obj), GTK_TYPE_BOX, GtkBoxClass))
+
+#define GTK_TYPE_EVENT_CONTROLLER_KEY (gtk_event_controller_key_get_type())
+#define GTK_EVENT_CONTROLLER_KEY(o) \
+    (G_TYPE_CHECK_INSTANCE_CAST((o), GTK_TYPE_EVENT_CONTROLLER_KEY, GtkEventControllerKey))
+#define GTK_EVENT_CONTROLLER_KEY_CLASS(k) \
+    (G_TYPE_CHECK_CLASS_CAST((k), GTK_TYPE_EVENT_CONTROLLER_KEY, GtkEventControllerKeyClass))
+#define GTK_IS_EVENT_CONTROLLER_KEY(o)       (G_TYPE_CHECK_INSTANCE_TYPE((o), GTK_TYPE_EVENT_CONTROLLER_KEY))
+#define GTK_IS_EVENT_CONTROLLER_KEY_CLASS(k) (G_TYPE_CHECK_CLASS_TYPE((k), GTK_TYPE_EVENT_CONTROLLER_KEY))
+#define GTK_EVENT_CONTROLLER_KEY_GET_CLASS(o) \
+    (G_TYPE_INSTANCE_GET_CLASS((o), GTK_TYPE_EVENT_CONTROLLER_KEY, GtkEventControllerKeyClass))
 
 #endif
 }

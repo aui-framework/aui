@@ -73,7 +73,6 @@ static void aui_widget_init(AUIWidget* myWidget) {
             }
         }),
         myWidget);
-    /*
 
     if (auto keyController = gtk_event_controller_key_new()) {
         auto keyPressed =
@@ -175,7 +174,6 @@ static void aui_widget_init(AUIWidget* myWidget) {
         g_signal_connect(legacyController, "event", G_CALLBACK(+handler), myWidget);
         gtk_widget_add_controller(GTK_WIDGET(myWidget), legacyController);
     }
-    */
 
     /*
    gtk_widget_add_tick_callback(GTK_WIDGET(myWidget),
