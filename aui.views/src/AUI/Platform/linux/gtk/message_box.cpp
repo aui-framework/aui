@@ -11,6 +11,9 @@
 
 #include "PlatformAbstractionGtk.h"
 #include <AUI/i18n/AI18n.h>
+#include "gtk_functions.h"
+
+using namespace aui::gtk4_fake;
 
 template<std::size_t N>
 static auto toC(const std::string(&rawArray)[N]) {
@@ -93,7 +96,7 @@ AMessageBox::ResultButton PlatformAbstractionGtk::messageBoxShow(
         dialog, parent ? nativeHandle(*parent) : nullptr, nullptr,
         (GAsyncReadyCallback) +
             [](GtkAlertDialog* source_object, GAsyncResult* res, State* data) {
-                data->button = gtk_alert_dialog_choose_finish (GTK_ALERT_DIALOG(data->dialog), res, nullptr);
+                // TODO data->button = gtk_alert_dialog_choose_finish (GTK_ALERT_DIALOG(data->dialog), res, nullptr);
                 data->isComplete = true;
             },
         &state);

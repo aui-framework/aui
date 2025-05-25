@@ -11,14 +11,15 @@
 
 #pragma once
 
-#include <gtk/gtk.h>
+#include <gio/gio.h>
+#include "gtk_types.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 #include "AUI/Platform/linux/AGlibPtr.h"
 
 class PlatformAbstractionGtk: public IPlatformAbstraction {
 public:
-    static GtkWindow*& nativeHandle(AWindow& window) {
-        return reinterpret_cast<GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
+    static aui::gtk4_fake::GtkWindow*& nativeHandle(AWindow& window) {
+        return reinterpret_cast<aui::gtk4_fake::GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
     }
 
     PlatformAbstractionGtk();

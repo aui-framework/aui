@@ -33,8 +33,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         find_package(PkgConfig REQUIRED)
 
         pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
-        pkg_check_modules(GTK4 REQUIRED IMPORTED_TARGET gtk4)
-        pkg_check_modules(ADWAITA REQUIRED IMPORTED_TARGET libadwaita-1)
+        pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+        pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
 
         auib_use_system_libs_end()
 
@@ -42,8 +42,22 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
                 X11::X11 X11::Xrandr X11::Xcursor X11::Xi
                 Fontconfig::Fontconfig
                 PkgConfig::DBUS
-                PkgConfig::GTK4
-                PkgConfig::ADWAITA)
+                PkgConfig::GLIB
+                PkgConfig::GIO
+        )
+
+        file(GLOB_RECURSE sigs src/ *.sigs)
+        foreach (sig ${sigs})
+            get_filename_component(_out ${sig} NAME)
+            set(_out "${CMAKE_CURRENT_BINARY_DIR}/${_out}.cpp")
+            add_custom_command(
+                    DEPENDS ${sig}
+                    OUTPUT ${_out}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS generate_dl_stubs ${sig} ${_out}
+            )
+            target_sources(aui.views PRIVATE ${_out})
+        endforeach ()
     endif ()
 
     if (NOT AUI_PLATFORM_WINDOWS)

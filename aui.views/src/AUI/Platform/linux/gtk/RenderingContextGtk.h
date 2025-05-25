@@ -11,26 +11,26 @@
 
 #pragma once
 
-#include <gtk/gtk.h>
+#include "gtk_types.h"
 #include "AUI/Platform/AWindowBase.h"
 #include "AUIWidget.h"
 
 class RenderingContextGtk {
 public:
-    friend AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext);
+    friend aui::gtk4_fake::GtkWidget* aui_widget_new(RenderingContextGtk& renderingContext);
     explicit RenderingContextGtk(AWindowBase& window) : mWindow(window) {}
     virtual ~RenderingContextGtk() = default;
 
-    virtual void gtkRealize(GtkWidget* widget) = 0;
-    virtual void gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) = 0;
-    virtual void gtkUnrealize(GtkWidget* widget) = 0;
+    virtual void gtkRealize(aui::gtk4_fake::GtkWidget* widget) = 0;
+    virtual void gtkSnapshot(aui::gtk4_fake::GtkWidget* widget, aui::gtk4_fake::GtkSnapshot* snapshot) = 0;
+    virtual void gtkUnrealize(aui::gtk4_fake::GtkWidget* widget) = 0;
     virtual void gtkDoUnderContext(const std::function<void()>& callback);
 
     AWindowBase& window() const { return mWindow; }
-    AUIWidget* auiWidget() const { return mAUIWidget; }
+    aui::gtk4_fake::GtkWidget* auiWidget() const { return mAUIWidget; }
 
 
 protected:
     AWindowBase& mWindow;
-    AUIWidget* mAUIWidget = nullptr;
+    aui::gtk4_fake::GtkWidget* mAUIWidget = nullptr;
 };
