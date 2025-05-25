@@ -25,6 +25,9 @@ public:
         return aui::platform::current::is_mobile() ? ASampleFormat::I16 : ASampleFormat::I32;
     }
 
+    [[nodiscard]]
+    const _<ISoundInputStream>& source() const { return mSource; }
+
     ~ASampleRateConverter();
 
 private:
