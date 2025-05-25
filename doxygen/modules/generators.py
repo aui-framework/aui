@@ -277,7 +277,7 @@ def docs_examples():
                   "cd aui\n"
                   "mkdir build\n"
                   "cd build\n"
-                  "cmake .. -DAUI_BUILD_EXAMPLES=TRUE\n"
+                  "cmake .. -DAUI_BUILD_EXAMPLES=TRUE -GNinja\n"
                   "cmake --build . --parallel\n"
                   "```\n"
                   "Some of these examples are located outside of AUI's build tree; such examples should be compiled as "

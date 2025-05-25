@@ -1,0 +1,26 @@
+// signatures to dynamically use functions
+// aui.toolbox: #include <dlfcn.h>
+// aui.toolbox: #include <gio/gio.h>
+// aui.toolbox: #include <AUI/Platform/linux/adw/adw_types.h>
+// aui.toolbox: #include <AUI/Platform/linux/adw/adw_functions.h>
+// aui.toolbox: namespace aui::adw1_fake {
+// aui.toolbox: void* handle = nullptr;
+
+GType adw_application_get_type();
+AdwApplication* adw_application_new(const char* application_id, GApplicationFlags flags);
+AdwStyleManager* adw_application_get_style_manager(AdwApplication* self);
+void adw_style_manager_set_color_scheme(AdwStyleManager* self, AdwColorScheme color_scheme);
+GtkWidget* adw_application_window_new(GtkApplication* app);
+GtkWidget* adw_toolbar_view_new();
+
+GType adw_toolbar_view_get_type();
+GtkWidget* adw_header_bar_new();
+void adw_toolbar_view_add_top_bar(AdwToolbarView* self, GtkWidget* widget);
+void adw_toolbar_view_set_top_bar_style(AdwToolbarView* self, AdwToolbarStyle style);
+void adw_toolbar_view_set_extend_content_to_top_edge(AdwToolbarView* self, gboolean extend);
+void adw_toolbar_view_set_content(AdwToolbarView* self, GtkWidget* content);
+void adw_application_window_set_content(AdwApplicationWindow* self, GtkWidget* content);
+
+GType adw_application_window_get_type();
+
+// aui.toolbox: }

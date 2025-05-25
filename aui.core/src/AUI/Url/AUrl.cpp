@@ -23,7 +23,7 @@
 
 AUrl::AUrl(AString full) {
     auto posColon = full.find(':');
-    if (posColon == AString::NPOS) {
+    if (posColon == AString::NPOS || posColon == 1 /* C:/Users/... */) {
         mPath = std::move(full);
         if (mPath.startsWith("./")) {
             mPath = mPath.substr(2);

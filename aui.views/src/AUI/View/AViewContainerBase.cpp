@@ -529,6 +529,7 @@ void AViewContainerBase::removeAllViews() {
 
 void AViewContainerBase::onDpiChanged() {
     AView::onDpiChanged();
+    mWantsLayoutUpdate = true;
     for (auto& v: mViews) {
         v->onDpiChanged();
     }

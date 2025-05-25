@@ -16,6 +16,8 @@ std::uint32_t AAudioFormat::bitsPerSample() const {
     switch (sampleFormat) {
         case ASampleFormat::I16: return aui::audio::impl::sample_type<ASampleFormat::I16>::size_bits;
         case ASampleFormat::I24: return aui::audio::impl::sample_type<ASampleFormat::I24>::size_bits;
+        case ASampleFormat::I32: return aui::audio::impl::sample_type<ASampleFormat::I32>::size_bits;
+        case ASampleFormat::F32: return aui::audio::impl::sample_type<ASampleFormat::F32>::size_bits;
         default: break;
     }
     throw AException("unable to find appropriate sample format");

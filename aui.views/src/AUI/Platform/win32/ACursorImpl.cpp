@@ -16,9 +16,9 @@
 #include "AUI/Platform/AWindow.h"
 
 
-struct ACursor::Custom {
+struct CursorCustomImpl: ACursor::Custom {
 public:
-    Custom(const AImage& img) {
+    CursorCustomImpl(AImageView img) {
         const auto color = aui::win32::imageRgbToBitmap(img, aui::win32::BitmapMode::RGB);
 
         AImage white(img.size(), APixelFormat::RGBA | APixelFormat::BYTE);
@@ -36,7 +36,7 @@ public:
         mCursor = ::CreateIconIndirect(&iconinfo);
     }
 
-    ~Custom() {
+    ~CursorCustomImpl() {
         DestroyIcon(mCursor);
     }
 
@@ -48,7 +48,7 @@ private:
     HCURSOR mCursor;
 };
 
-ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
+ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<CursorCustomImpl>(image)), mSize(size) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
     std::visit(aui::lambda_overloaded {
@@ -87,13 +87,15 @@ void ACursor::applyNativeCursor(AWindow* pWindow) const {
                 }
             },
             [](const _<Custom>& custom) {
-                SetCursor(custom->cursor());
+                if (auto impl = dynamic_cast<CursorCustomImpl*>(custom.get())) {
+                    SetCursor(impl->cursor());
+                }
             },
             [&](const _<IDrawable>& drawable) {
-                static AMap<_<IDrawable>, AMap<int, _<Custom>>> cache;
+                static AMap<_<IDrawable>, AMap<int, _<CursorCustomImpl>>> cache;
 
                 auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
-                    return _new<Custom>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));
+                    return _new<CursorCustomImpl>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));
                 });
 
                 SetCursor(custom->cursor());

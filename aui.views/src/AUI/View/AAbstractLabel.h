@@ -67,8 +67,6 @@ public:
 
     void doPrerender(IRenderer& render);
 
-    bool consumesClick(const glm::ivec2& pos) override;
-
     void onDpiChanged() override;
 
     void setText(AString newText);

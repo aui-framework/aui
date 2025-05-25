@@ -32,6 +32,7 @@ namespace testing {
 
 class API_AUI_VIEWS AWindowBase: public AViewContainer {
     friend class SoftwareRenderer;
+    friend class IPlatformAbstraction;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
 
@@ -191,6 +192,12 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "HidingNonVirtualFunction"
+    virtual void redraw() {
+        AView::redraw();
+    }
+#pragma clang diagnostic pop
 
     virtual void focusNextView();
     virtual void flagRedraw();

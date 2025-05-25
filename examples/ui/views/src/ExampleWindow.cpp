@@ -219,10 +219,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show window")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                     auto w = _new<AWindow>("Basic window", 400_dp, 300_dp);
+                                     auto w = _new<AWindow>("Basic window", 400_dp, 300_dp, this, WindowStyle::MODAL);
                                      fillWindow(w);
                                      w->show();
-                                     w->setWindowStyle(WindowStyle::MODAL);
                                      mWindows << w;
                                  }),
                     _new<AButton>("Show window without caption")
@@ -231,7 +230,6 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                      auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                                      fillWindow(w);
                                      w->show();
-                                     w->setWindowStyle(WindowStyle::MODAL);
                                      mWindows << w;
                                  }),
                     _new<AButton>("Show window custom caption")
@@ -282,11 +280,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         .connect(&AView::clicked, this,
                                  [&] {
                                      /// [AMessageBox]
-                                     AMessageBox::show(this,
+                                     auto response = AMessageBox::show(this,
                                                        "Title",
                                                        "Message",
                                                        AMessageBox::Icon::NONE,
                                                        AMessageBox::Button::OK);
+                                     ALogger::info("Example") << "Response: " << int(response);
                                      /// [AMessageBox]
                                  }),
                     _new<AButton>("Cause assertion fail")

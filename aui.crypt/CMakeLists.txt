@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 
+unset(OPENSSL_CRYPTO_LIBRARY CACHE)
+unset(OPENSSL_SSL_LIBRARY CACHE)
 auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/56ee19b7e11b418e0f29825414abdca96ff6b83e.zip ARCHIVE)
 
 aui_module(aui.crypt EXPORT aui)

@@ -80,7 +80,7 @@ namespace aui::win32 {
         }
     };
 
-    API_AUI_VIEWS Bitmap imageRgbToBitmap(const AImage& image, BitmapMode mode = BitmapMode::RGB);
+    API_AUI_VIEWS Bitmap imageRgbToBitmap(AImageView image, BitmapMode mode = BitmapMode::RGB);
 }
 
 

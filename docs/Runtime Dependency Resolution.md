@@ -31,7 +31,7 @@ Windows runtime linking process is simple. The dll lookup is performed as follow
    was not found is actually a rare case, Windows often displays an error with confusing text such as
    "error code 0xc000007b").
 
-On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BUILD_DIR}/bin`
+On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BINARY_DIR}/bin`
 directory alongside exe files by @ref "docs/AUI Boot.md".
 ```sh
 tree build/
@@ -45,7 +45,7 @@ bin/aui.views.dll
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
 installations (for compatibility reasons), hence @ref "docs/AUI Boot.md" copies imported shared objects to
-`${CMAKE_BUILD_DIR}/lib`.
+`${CMAKE_BINARY_DIR}/lib`.
 
 These libraries are picked up by targets defined via [aui_module](@ref docs/aui_module.md) and
 [aui_executable](@ref docs/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables

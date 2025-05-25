@@ -37,6 +37,7 @@ namespace aui::audio::impl {
     using I16Helper = SampleFormatHelper<ASampleFormat::I16>;
     using I24Helper = SampleFormatHelper<ASampleFormat::I24>;
     using I32Helper = SampleFormatHelper<ASampleFormat::I32>;
+    using F32Helper = SampleFormatHelper<ASampleFormat::F32>;
     using MonoHelper = ChannelFormatHelper<AChannelFormat::MONO>;
     using StereoHelper = ChannelFormatHelper<AChannelFormat::STEREO>;
 
@@ -56,6 +57,8 @@ namespace aui::audio::impl {
                     return resolveResampler<Args..., I24Helper>(std::move(source));
                 case ASampleFormat::I32:
                     return resolveResampler<Args..., I32Helper>(std::move(source));
+                case ASampleFormat::F32:
+                    return resolveResampler<Args..., F32Helper>(std::move(source));
             }
             throw AException("invalid input sample format = {}"_format(int(source->info().sampleFormat)));
         }

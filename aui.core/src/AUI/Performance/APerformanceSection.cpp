@@ -22,7 +22,7 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-static constexpr auto THRESHOLD = 50us;
+static constexpr auto THRESHOLD = 3us;
 
 APerformanceSection::APerformanceSection(const char* name, AOptional<AColor> color, std::string verboseInfo)
     : mName(name),

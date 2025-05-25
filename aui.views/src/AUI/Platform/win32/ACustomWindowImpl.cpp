@@ -158,10 +158,10 @@ void ACustomWindow::doDrawWindow()
     AWindow::doDrawWindow();
 }
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(nullptr)
+ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent): AWindow(nullptr)
 {
     // init here to be sure vtable for wndProc for WM_CREATE is initialized
-    windowNativePreInit(name, width, height, nullptr, WindowStyle::DEFAULT);
+    windowNativePreInit(name, width, height, parent, WindowStyle::DEFAULT);
 }
 
 void ACustomWindow::setSize(glm::ivec2 size)

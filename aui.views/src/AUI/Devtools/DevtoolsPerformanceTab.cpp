@@ -238,7 +238,7 @@ namespace {
 
     class PerformanceSectionsTreeView: public AViewContainerBase {
     public:
-        static constexpr auto MAX_DEPTH = 20;
+        static constexpr auto MAX_DEPTH = 30;
         PerformanceSectionsTreeView() {
         }
 
@@ -334,9 +334,11 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
     setContents(Centered { 
         Centered::Expanding {
             graphView,
-            Vertical::Expanding {
-                treeView,
-            },
+            AScrollArea::Builder().withContents(
+                Vertical::Expanding {
+                    treeView,
+                }
+            ),
         } let {
             mModel.addObserver(&Model::state, [it](const Model::State& state) {
                 using namespace ass;

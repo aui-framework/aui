@@ -145,3 +145,88 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 }
 }
 
+
+#define AUI_DETAIL_BINARY_OP(op)                                                       \
+template<AAnyProperty T, typename Rhs>                                                 \
+inline decltype(auto) operator op (T&& lhs, Rhs&& rhs) { /* property forwarding op */  \
+    /* try const operator first */                                                     \
+    if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                      \
+        return *lhs op std::forward<Rhs>(rhs);                                         \
+    } else {                                                                           \
+        /* fallback to a non-const version, involving writeScope() */                  \
+        return *lhs.writeScope() op std::forward<Rhs>(rhs);                            \
+    }                                                                                  \
+}                                                                                      \
+// note: sync this PropertyModifier.h
+
+// comparison
+AUI_DETAIL_BINARY_OP(==)
+AUI_DETAIL_BINARY_OP(!=)
+AUI_DETAIL_BINARY_OP(<=)
+AUI_DETAIL_BINARY_OP(>=)
+AUI_DETAIL_BINARY_OP(<)
+AUI_DETAIL_BINARY_OP(>)
+
+// arithmetic/logical
+AUI_DETAIL_BINARY_OP(+)
+AUI_DETAIL_BINARY_OP(-)
+AUI_DETAIL_BINARY_OP(*)
+AUI_DETAIL_BINARY_OP(/)
+AUI_DETAIL_BINARY_OP(&)
+AUI_DETAIL_BINARY_OP(&&)
+AUI_DETAIL_BINARY_OP(|)
+AUI_DETAIL_BINARY_OP(||)
+AUI_DETAIL_BINARY_OP(<<)
+AUI_DETAIL_BINARY_OP(>>)
+
+// assignment
+AUI_DETAIL_BINARY_OP(+=)
+AUI_DETAIL_BINARY_OP(-=)
+AUI_DETAIL_BINARY_OP(*=)
+AUI_DETAIL_BINARY_OP(/=)
+AUI_DETAIL_BINARY_OP(&=)
+AUI_DETAIL_BINARY_OP(|=)
+AUI_DETAIL_BINARY_OP(<<=)
+AUI_DETAIL_BINARY_OP(>>=)
+
+#undef AUI_DETAIL_BINARY_OP
+
+
+
+/*
+// UNCOMMENT THIS to test biProjected
+static_assert(requires (AProperty<int>& intProperty) {
+    { intProperty.biProjected(aui::lambda_overloaded {
+      [](int) -> AString { return ""; },
+      [](const AString&) -> int { return 0; },
+    }).value() } -> aui::convertible_to<AString>;
+
+    { intProperty.biProjected(aui::lambda_overloaded {
+        [](int) -> AString { return ""; },
+        [](const AString&) -> int { return 0; },
+    }) = "AString" };
+
+
+    { intProperty.biProjected(aui::lambda_overloaded {
+        [](int) -> AString { return ""; },
+        [](const AString&) -> int { return 0; },
+    }) };
+
+    { intProperty.biProjected(aui::lambda_overloaded {
+        [](int) -> AString { return ""; },
+        [](const AString&) -> int { return 0; },
+    }).assignment() } -> aui::invocable<AString>;
+});
+*/
+
+template <APropertyReadable T> struct fmt::formatter<T> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(T& c, format_context& ctx) const {
+        return fmt::format_to(ctx.out(), "{}", *c);
+    }
+};

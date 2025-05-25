@@ -19,11 +19,15 @@ public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
 
+#if !AUI_PLATFORM_LINUX
+    // to be implemented by IPlatformAbstraction
+    void init(const Init& init) override;
     void destroyNativeWindow(AWindowBase& window) override;
+#endif
+
     void beginPaint(AWindowBase& window) override;
     void endPaint(AWindowBase& window) override;
     void beginResize(AWindowBase& window) override;
-    void init(const Init& init) override;
 
     IRenderer& renderer() override;
 
@@ -88,20 +92,17 @@ public:
 protected:
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
+#if AUI_PLATFORM_LINUX
+    std::uint8_t* mBitmapBlob = nullptr;
+#endif
 
-    void reallocateImageBuffers(const AWindowBase& window);
+    void reallocate(const AWindowBase& window);
+    virtual void reallocate();
 
 private:
 #if AUI_PLATFORM_WIN
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
-#endif
-#if AUI_PLATFORM_LINUX
-    std::uint8_t* mBitmapBlob = nullptr;
-    _<XImage> mXImage;
-    std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
-
-    void reallocate();
 #endif
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE || AUI_PLATFORM_EMSCRIPTEN
     std::uint8_t* mBitmapBlob = nullptr;

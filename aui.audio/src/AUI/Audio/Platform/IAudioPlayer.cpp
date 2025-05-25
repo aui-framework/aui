@@ -23,12 +23,25 @@ _<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {
     return _new<DefaultSystemPlayer>(std::move(url));
 }
 
+_<IAudioPlayer> IAudioPlayer::fromStream(_<ISoundInputStream> stream) {
+    return _new<DefaultSystemPlayer>(std::move(stream));
+}
+
 IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
     initialize();
 }
 
+IAudioPlayer::IAudioPlayer(_<ISoundInputStream> stream) {
+    mSourceStream = std::move(stream);
+    mResampledStream = _new<ASoundResampler>(mSourceStream);
+    mResampledStream->setVolume(mVolume);
+}
+
 void IAudioPlayer::initialize() {
-    mSourceStream = ISoundInputStream::fromUrl(mUrl);
+    if (!mUrl) {
+        throw AException("url is empty");
+    }
+    mSourceStream = ISoundInputStream::fromUrl(*mUrl);
     mResampledStream = _new<ASoundResampler>(mSourceStream);
     mResampledStream->setVolume(mVolume);
 }

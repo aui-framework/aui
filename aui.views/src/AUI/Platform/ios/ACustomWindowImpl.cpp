@@ -14,12 +14,10 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
-        AWindow(name, width, height) {
-
-
-    setWindowStyle(WindowStyle::NO_DECORATORS);
+ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
+    AWindow(name, width, height, parent) {
 }
+
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
     if (event.position.y < mTitleHeight) {
         if (isCaptionAt(event.position)) {
