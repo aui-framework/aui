@@ -25,7 +25,7 @@
 // See https://github.com/aui-framework/aui/issues/468
 
 namespace aui::gtk4_fake {
-void* handle = nullptr;
+extern void* handle = nullptr;
 }
 
 using namespace aui::gtk4_fake;
