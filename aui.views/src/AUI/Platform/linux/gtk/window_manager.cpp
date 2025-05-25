@@ -20,46 +20,32 @@ using namespace aui::gtk4_fake;
 #pragma clang diagnostic push
 #pragma ide diagnostic ignored "LocalValueEscapesScope"
 void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingContext::Init& init) {
-    if (auto display = gdk_display_get_default()) {
-        // vulkan? no thanks
-        g_object_set_data_full (G_OBJECT (display), "gsk-renderer", g_strdup("ngl"), g_free);
-    }
-
-//    GTK_WINDOW(adw_application_window_new(GTK_APPLICATION(*mApplication)))
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
+    windowManagerInitCommon(init, window);
+    gtk_window_set_child(window, windowManagerInitGtkBox(init));
+}
+
+void PlatformAbstractionGtk::windowManagerInitCommon(const IRenderingContext::Init& init, GtkWindow* window) {
     nativeHandle(init.window) = window;
     gtk_window_set_default_size(window, init.width, init.height);
     gtk_window_set_title(window, init.name.toStdString().c_str());
+    windowSetStyle(init.window, init.ws);
 
+    g_signal_connect(
+        window, "close-request", G_CALLBACK(+[](GtkWindow* self, AWindow* window) -> gboolean {
+            window->onCloseButtonClicked();
+            return true;
+        }),
+        &init.window);
+}
+
+GtkWidget* PlatformAbstractionGtk::windowManagerInitGtkBox(const IRenderingContext::Init& init) const {
     auto box = gtk_box_new(GTK_ORIENTATION_VERTICAL, false);
     gtk_widget_set_margin_start(box, 0);
     gtk_widget_set_margin_end(box, 0);
     gtk_widget_set_margin_top(box, 0);
     gtk_widget_set_margin_bottom(box, 0);
     gtk_box_set_spacing(GTK_BOX(box), 6);
-
-    g_signal_connect(window, "close-request", G_CALLBACK(+[](GtkWindow* self, AWindow* window) -> gboolean {
-                         window->onCloseButtonClicked();
-                         return true;
-                     }), &init.window);
-
-    windowSetStyle(init.window, init.ws);
-
-    /*
-    if (USE_ADWAITA) {
-        auto toolbar = adw_toolbar_view_new();
-        auto header = adw_header_bar_new();
-        adw_toolbar_view_add_top_bar(ADW_TOOLBAR_VIEW(toolbar), header);
-        adw_toolbar_view_set_top_bar_style(ADW_TOOLBAR_VIEW(toolbar), ADW_TOOLBAR_RAISED_BORDER);
-        adw_toolbar_view_set_extend_content_to_top_edge(ADW_TOOLBAR_VIEW(toolbar), false);
-        adw_toolbar_view_set_content(ADW_TOOLBAR_VIEW(toolbar), box);
-        adw_application_window_set_content(ADW_APPLICATION_WINDOW(window), toolbar);
-    } else {
-        // TODO
-    }
-    */
-
-    gtk_window_set_child(window, box);
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
             auto context = std::visit(
@@ -90,11 +76,12 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
             gtk_widget_set_hexpand(auiWidget, true);
             gtk_widget_set_vexpand(auiWidget, true);
             gtk_box_append(GTK_BOX(box), auiWidget);
-            return;
+            return box;
         } catch (const AException& e) {
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
         }
     }
+    return box;
 }
 #pragma clang diagnostic pop
 

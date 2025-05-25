@@ -15,6 +15,8 @@ public:
     static IPlatformAbstraction& current();
     virtual ~IPlatformAbstraction() = default;
 
+    virtual void init() = 0;
+
     // CURSOR
     virtual _<ACursor::Custom> createCustomCursor(AImageView image) = 0;
     virtual void applyNativeCursor(const ACursor& cursor, AWindow* pWindow) = 0;

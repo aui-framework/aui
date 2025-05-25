@@ -182,12 +182,6 @@ using GdkEventKey = struct _GdkEventKey;
 using GdkWindow = struct _GdkWindow;
 using GdkKeymap = struct _GdkKeymap;
 using GdkGLTexture = struct _GdkGLTexture;
-using GtkApplication = struct _GtkApplication;
-using GtkWindow = struct _GtkWindow;
-using GtkEventController = struct _GtkEventController;
-using GtkEventControllerKey = struct _GtkEventControllerKey;
-using GtkEventControllerLegacy = struct _GtkEventControllerLehacy;
-using GtkBox = struct _GtkBox;
 using GtkWidget = struct _GtkWidget {
     GInitiallyUnowned parent_instance;
 
@@ -195,6 +189,19 @@ using GtkWidget = struct _GtkWidget {
 
     void *priv;
 };
+using GtkApplication = struct _GtkApplication {
+    GApplication parent_instance;
+};
+using GtkWindow = struct _GtkWindow {
+    GtkWidget parent_instance;
+};
+using GtkApplicationWindow = struct _GtkApplicationWindow {
+    GtkWindow parent_instance;
+};
+using GtkEventController = struct _GtkEventController;
+using GtkEventControllerKey = struct _GtkEventControllerKey;
+using GtkEventControllerLegacy = struct _GtkEventControllerLehacy;
+using GtkBox = struct _GtkBox;
 using GtkSnapshot = struct _GtkSnapshot;
 using GtkIconInfo = struct _GtkIconInfo;
 using GdkScreen = struct _GdkScreen;

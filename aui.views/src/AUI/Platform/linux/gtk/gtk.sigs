@@ -297,6 +297,8 @@ void gdk_gl_context_make_current(GdkGLContext* context);
 void gdk_gl_context_clear_current();
 double gdk_surface_get_scale(GdkSurface* surface);
 void glib_autoptr_clear_GtkWidget(GtkWidget* ptr);
+void glib_autoptr_clear_GtkApplication(GtkApplication* ptr);
+void glib_autoptr_clear_GtkApplicationWindow(GtkApplicationWindow* ptr);
 void gtk_widget_set_focusable(GtkWidget* widget, gboolean focusable);
 void gtk_widget_queue_draw(GtkWidget* widget);
 void gtk_init();
@@ -333,5 +335,6 @@ guint gdk_button_event_get_button(GdkEvent* event);
 void gdk_scroll_event_get_deltas(GdkEvent* event, double* delta_x, double* delta_y);
 GdkScrollUnit gdk_scroll_event_get_unit(GdkEvent* event);
 GdkEventType gdk_event_get_event_type(GdkEvent* event);
+
 
 // aui.toolbox: }
