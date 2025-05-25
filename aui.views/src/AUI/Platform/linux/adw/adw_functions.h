@@ -11,13 +11,10 @@
 
 #pragma once
 
-#include <glib-object.h>
-#include "gtk_types.h"
+#include "adw_functions.h"
 
-class RenderingContextGtk;
-
-// Gtk world representation of AUI.
-// Implementation is based on gtkglarea and https://gitlab.gnome.org/GNOME/gtk/-/merge_requests/8503
-aui::gtk4_fake::GtkWidget* aui_widget_new(RenderingContextGtk& renderingContext);
-
-
+namespace aui::adw1_fake {
+extern "C" {
+#include "adw.sigs"
+}
+}

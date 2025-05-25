@@ -9,8 +9,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 5/2/25.
-//
+#pragma once
 
-#include "RenderingContextGtk.h"
+#include <AUI/Platform/linux/gtk/PlatformAbstractionGtk.h>
+#include "adw_types.h"
+
+class PlatformAbstractionAdw: public PlatformAbstractionGtk {
+public:
+    PlatformAbstractionAdw();
+    ~PlatformAbstractionAdw() override = default;
+    void init() override;
+    void windowManagerInitNativeWindow(const IRenderingContext::Init& init) override;
+};

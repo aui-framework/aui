@@ -11,18 +11,20 @@
 
 #pragma once
 
-#include <gtk/gtk.h>
+#include <gio/gio.h>
+#include "gtk_types.h"
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 #include "AUI/Platform/linux/AGlibPtr.h"
 
 class PlatformAbstractionGtk: public IPlatformAbstraction {
 public:
-    static GtkWindow*& nativeHandle(AWindow& window) {
-        return reinterpret_cast<GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
+    static aui::gtk4_fake::GtkWindow*& nativeHandle(AWindow& window) {
+        return reinterpret_cast<aui::gtk4_fake::GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
     }
 
     PlatformAbstractionGtk();
     ~PlatformAbstractionGtk() override;
+    void init() override;
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
     void applyNativeCursor(const ACursor &cursor, AWindow *pWindow) override;
     void copyToClipboard(const AString &text) override;
@@ -65,7 +67,11 @@ public:
 
     static AInput::Key inputFromNative2(unsigned key);
 
-private:
+protected:
     AGlibPtr<GApplication> mApplication;
+    aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
+    void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
+
+private:
     GMainContext* mMainContext;
 };

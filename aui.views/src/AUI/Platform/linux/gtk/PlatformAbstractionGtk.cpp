@@ -9,9 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <dlfcn.h>
 #include "PlatformAbstractionGtk.h"
 #include "RenderingContextGtk.h"
-#include <adwaita.h>
+#include "gtk_functions.h"
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -22,15 +23,33 @@
 // - releasing acquired context in destructor
 // See https://github.com/aui-framework/aui/issues/468
 
-PlatformAbstractionGtk::PlatformAbstractionGtk()
-  : mApplication([] {
-      gtk_init();
-      return G_APPLICATION(adw_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS));
-  }()), mMainContext(g_main_context_default()) {
+namespace aui::gtk4_fake {
+extern void* handle;
+}
+
+using namespace aui::gtk4_fake;
+
+PlatformAbstractionGtk::PlatformAbstractionGtk() : mMainContext(g_main_context_default()) {
+    handle = dlopen("libgtk-4.so.1", RTLD_LAZY | RTLD_GLOBAL);
+    if (!handle) {
+        throw AException("failed to load libgtk-4.so.1: {}"_format(dlerror()));
+    }
+    gtk_init();
+
+    if (auto display = gdk_display_get_default()) {
+        // vulkan? no thanks
+        g_object_set_data_full(G_OBJECT(display), "gsk-renderer", g_strdup("ngl"), g_free);
+    }
+}
+
+void PlatformAbstractionGtk::init() {
+    if (!mApplication) {
+        mApplication = G_APPLICATION(gtk_application_new(nullptr, static_cast<GApplicationFlags>(0)));
+    }
     g_signal_connect(
         mApplication, "activate",
         [] {
-            /* just a stub to silence warning */
+          /* just a stub to silence warning */
         },
         nullptr);
 
@@ -44,10 +63,6 @@ PlatformAbstractionGtk::PlatformAbstractionGtk()
     }
     // maybe we might want to delegate command line handling to GApplication
     while (g_main_context_iteration (mMainContext, false));
-
-    // TODO at the moment aui does not really support colors schemes, so we force light mode
-    adw_style_manager_set_color_scheme(adw_application_get_style_manager(ADW_APPLICATION(mApplication)),
-                                       ADW_COLOR_SCHEME_FORCE_LIGHT);
 }
 
 PlatformAbstractionGtk::~PlatformAbstractionGtk() {

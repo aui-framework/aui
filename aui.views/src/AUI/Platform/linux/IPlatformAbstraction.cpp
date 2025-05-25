@@ -9,9 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/linux/gtk/PlatformAbstractionGtk.h"
-#include "AUI/Platform/linux/x11/PlatformAbstractionX11.h"
 #include "IPlatformAbstraction.h"
+#include "APlatformAbstractionOptions.h"
 
 static constexpr auto LOG_TAG = "IPlatformAbstraction";
 
@@ -21,20 +20,21 @@ IPlatformAbstraction::IPlatformAbstraction() {
 }
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
-    static IPlatformAbstraction& value = []() -> IPlatformAbstraction& {
-        std::string_view auiPa;
-        if (auto value = std::getenv("AUI_PA")) {
-            auiPa = value;
+    static auto value = []() -> _unique<IPlatformAbstraction> {
+        for (const auto& option : APlatformAbstractionOptions::get().initializationOrder) {
+            auto name = option.target_type().name();
+            try {
+                auto value = option();
+                value->init();
+                ALogger::info(LOG_TAG) << "Using \"" << name << "\"";
+                return value;
+            } catch (const AException& e) {
+                ALogger::info(LOG_TAG) << "\"" << name << "\" failed to initialize: " << e.getMessage();
+            }
         }
-        if (auiPa == "gtk") {
-            static PlatformAbstractionGtk result;
-            return result;
-        }
-
-        static PlatformAbstractionX11 x11;
-        return x11;
+        throw AException("can't find a suitable platform abstraction (maybe check AUI_PA environment variable?)");
     }();
-    return value;
+    return *value;
 }
 
 void IPlatformAbstraction::setCurrentWindow(AWindowBase* window) {

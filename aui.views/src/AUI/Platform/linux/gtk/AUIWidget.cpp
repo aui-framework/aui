@@ -10,12 +10,18 @@
  */
 
 #include "AUIWidget.h"
+#include "gtk_functions.h"
 #include <AUI/GL/gl.h>
 #include <cassert>
 #include <numeric>
 #include <optional>
 #include <AUI/Platform/linux/gtk/RenderingContextGtk.h>
 #include <AUI/Platform/linux/gtk/PlatformAbstractionGtk.h>
+
+using namespace aui::gtk4_fake;
+
+#define AUI_WIDGET_TYPE (aui_widget_get_type ())
+G_DECLARE_FINAL_TYPE (AUIWidget, aui_widget, AUI_WIDGET, WIDGET, GtkWidget)
 
 extern bool gKeyStates[AInput::KEYCOUNT + 1];
 
@@ -49,8 +55,8 @@ static glm::vec2 getEventPosition(GdkEvent* event, GtkWidget* widget) {
     eventX -= nx;
     eventY -= ny;
 
-    auto out = GRAPHENE_POINT_INIT(0, 0);
-    if (auto p = GRAPHENE_POINT_INIT(float(eventX), float(eventY));
+    graphene_point_t out { .x = 0, .y = 0 };
+    if (auto p = graphene_point_t{ .x = float(eventX), .y = float(eventY) };
         !gtk_widget_compute_point(eventWidget, widget, &p, &out))
         return {};
 
@@ -210,11 +216,11 @@ static void aui_widget_class_init(AUIWidgetClass* klass) {
     };
 }
 
-AUIWidget* aui_widget_new(RenderingContextGtk& renderingContext) {
+GtkWidget* aui_widget_new(RenderingContextGtk& renderingContext) {
     auto widget = AUI_WIDGET_WIDGET(g_object_new(AUI_WIDGET_TYPE, nullptr));
     widget->renderingContext = &renderingContext;
-    renderingContext.mAUIWidget = widget;
-    return widget;
+    renderingContext.mAUIWidget = reinterpret_cast<GtkWidget*>(widget);
+    return GTK_WIDGET(widget);
 }
 
 void RenderingContextGtk::gtkDoUnderContext(const std::function<void()>& callback) { callback(); }

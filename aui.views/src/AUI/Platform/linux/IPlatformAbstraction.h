@@ -8,12 +8,41 @@
  * Runtime layer for switching between multiple displaying options (i.e, Linux = X11 or Wayland).
  *
  * This is a direct equivalent of Qt's Platform Abstraction.
+ *
+ * @exclusivefor{linux} Platform Abstraction Layer is used to choose appropriate core platform UI APIs in runtime.
+ *
+ * AUI framework is designed to be flexible and adaptable to different desktop environments and UI toolkits. This is
+ * achieved through a platform abstraction layer that isolates the core application logic from the specifics of the
+ * underlying UI implementation.
+ *
+ * # Supported UI Backends
+ *
+ * Currently, the framework supports the following UI backends:
+ * - **Adwaita:** modern UI toolkit based on GTK, commonly used in GNOME.
+ * - **GTK:** widely available widget toolkit.
+ * - **X11:** legacy windowing system (used as a fallback).
+ *
+ * # API Selection and Prioritization
+ *
+ * The framework determines the preferred UI backend based on an `initializationOrder` defined within
+ * @ref APlatformAbstractionOptions. The order prioritizes backends, attempting to initialize them sequentially.
+ *
+ * # Dynamic Loading
+ *
+ * To minimize dependencies and enhance compatibility, the framework utilizes dynamic loading for certain UI backends.
+ * For example, the Adwaita backend loads the `libadwaita-1.so` library at runtime using `dlopen`.
+ *
+ * The `generate_dl_subs` function from `aui.toolbox` is used to automatically generate `dlsym`-based function
+ * implementations based on a list of signatures (`*.sigs`) that need to be exported from the dynamically loaded
+ * libraries. This allows the framework to call functions within the loaded library without requiring explicit linking.
  */
 class IPlatformAbstraction {
 public:
     IPlatformAbstraction();
     static IPlatformAbstraction& current();
     virtual ~IPlatformAbstraction() = default;
+
+    virtual void init() = 0;
 
     // CURSOR
     virtual _<ACursor::Custom> createCustomCursor(AImageView image) = 0;

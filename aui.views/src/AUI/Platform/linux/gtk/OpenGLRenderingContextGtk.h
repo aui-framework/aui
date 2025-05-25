@@ -13,6 +13,7 @@
 
 #include "RenderingContextGtk.h"
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#include "gtk_functions.h"
 
 class OpenGLRenderingContextGtk: public OpenGLRenderingContext, public RenderingContextGtk {
 public:
@@ -22,13 +23,14 @@ public:
     ~OpenGLRenderingContextGtk() override = default;
     void init(const Init& init) override;
     void destroyNativeWindow(AWindowBase& window) override;
-    void gtkRealize(GtkWidget* widget) override;
-    void gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) override;
-    void gtkUnrealize(GtkWidget* widget) override;
+    void gtkRealize(aui::gtk4_fake::GtkWidget* widget) override;
+    void gtkSnapshot(aui::gtk4_fake::GtkWidget* widget, aui::gtk4_fake::GtkSnapshot* snapshot) override;
+    void gtkUnrealize(aui::gtk4_fake::GtkWidget* widget) override;
     void beginResize(AWindowBase& window) override;
     void endResize(AWindowBase& window) override;
 
     auto contextScope() {
+        using namespace aui::gtk4_fake;
         auto prev = gdk_gl_context_get_current();
         auto ctx = ourContext;
         if (ctx != nullptr) {
@@ -44,24 +46,24 @@ public:
 
 private:
     struct Texture {
-        GdkGLTextureBuilder* builder {};
-        GdkTexture* gl_texture {};
-        GdkTexture* dmabuf_texture {};
+        aui::gtk4_fake::GdkGLTextureBuilder* builder {};
+        aui::gtk4_fake::GdkTexture* gl_texture {};
+        aui::gtk4_fake::GdkTexture* dmabuf_texture {};
 
         ~Texture();
     };
     AOptional<Texture> mTexture;
-    static GdkGLContext* ourContext;
+    static aui::gtk4_fake::GdkGLContext* ourContext;
     GLuint mFramebufferForGtk = 0;
     bool mNeedsResize = false;
     bool mHaveBuffers = false;
-    GdkGLAPI mAllowedApis = static_cast<GdkGLAPI>(GDK_GL_API_GL | GDK_GL_API_GLES);
+    aui::gtk4_fake::GdkGLAPI mAllowedApis = static_cast<aui::gtk4_fake::GdkGLAPI>(aui::gtk4_fake::GDK_GL_API_GL | aui::gtk4_fake::GDK_GL_API_GLES);
 
-    void realCreateContext(GtkWidget* widget);
-    void ensureTexture(GtkWidget* widget);
-    void allocateTexture(GtkWidget* widget);
-    void ensureBuffers(GtkWidget* widget);
-    void attachBuffers(GtkWidget* widget);
+    void realCreateContext(aui::gtk4_fake::GtkWidget* widget);
+    void ensureTexture(aui::gtk4_fake::GtkWidget* widget);
+    void allocateTexture(aui::gtk4_fake::GtkWidget* widget);
+    void ensureBuffers(aui::gtk4_fake::GtkWidget* widget);
+    void attachBuffers(aui::gtk4_fake::GtkWidget* widget);
     void deleteBuffers();
     void deleteTextures();
 

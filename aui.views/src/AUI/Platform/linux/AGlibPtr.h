@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cassert>
+#include <glib-object.h>
 
 /**
  * @brief Takes care of g_object_ref and g_object_unref() reference counting mechanism of Glib objects.
@@ -23,9 +24,7 @@
 template<typename T>
 class AGlibPtr {
 public:
-    AGlibPtr() {
-        mValue = nullptr;
-    }
+    AGlibPtr() = default;
 
     ~AGlibPtr() {
         release();
@@ -89,5 +88,5 @@ public:
     }
 
 private:
-    T* mValue;
+    T* mValue = nullptr;
 };

@@ -105,6 +105,13 @@ struct ASerializable<std::string> {
     }
 };
 
+template<>
+struct ASerializable<std::string_view> {
+    static void write(IOutputStream& os, std::string_view value) {
+        os.write(value.data(), value.length());
+    }
+};
+
 // input stream
 template<typename T>
 struct ASerializable<T, std::enable_if_t<std::is_base_of_v<IInputStream, T>>> {
