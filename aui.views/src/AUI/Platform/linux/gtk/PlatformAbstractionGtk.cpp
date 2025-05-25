@@ -44,7 +44,7 @@ PlatformAbstractionGtk::PlatformAbstractionGtk() : mMainContext(g_main_context_d
 
 void PlatformAbstractionGtk::init() {
     if (!mApplication) {
-        mApplication = G_APPLICATION(gtk_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS));
+        mApplication = G_APPLICATION(gtk_application_new(nullptr, static_cast<GApplicationFlags>(0)));
     }
     g_signal_connect(
         mApplication, "activate",

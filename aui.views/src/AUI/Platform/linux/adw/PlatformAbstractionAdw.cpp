@@ -27,7 +27,7 @@ PlatformAbstractionAdw::PlatformAbstractionAdw() {
 }
 
 void PlatformAbstractionAdw::init() {
-    mApplication = G_APPLICATION(adw_application_new(nullptr, G_APPLICATION_DEFAULT_FLAGS));
+    mApplication = G_APPLICATION(adw_application_new(nullptr, static_cast<GApplicationFlags>(0)));
     PlatformAbstractionGtk::init();
 
     // TODO at the moment aui does not really support colors schemes, so we force light mode
