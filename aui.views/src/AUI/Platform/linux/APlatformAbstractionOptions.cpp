@@ -31,6 +31,10 @@ AVector<APlatformAbstractionOptions::InitializationVariant> APlatformAbstraction
         }
         ALogger::err("APlatformAbstractionOptions") << "Unknown AUI_PA \"" << auiPa << "\", ignoring";
     }
+    // TODO at the moment, lets deploy gtk/libadwaita support as an experimental feature, which can be enabled with AUI_PA.
+    return { X11{} };
+    /*
+    Future order:
     AVector<APlatformAbstractionOptions::InitializationVariant> defaultOrder = {
         Gtk4{},
         X11{},
@@ -43,6 +47,7 @@ AVector<APlatformAbstractionOptions::InitializationVariant> APlatformAbstraction
     }
 
     return defaultOrder;
+     */
     /// [APlatformAbstractionOptions::defaultInitializationOrder]
 }
 
