@@ -14,10 +14,9 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
-        AWindow(name, width, height) {
 
-
+ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
+    AWindow(name, width, height, parent) {
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 

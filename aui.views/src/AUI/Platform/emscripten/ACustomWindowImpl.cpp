@@ -19,8 +19,9 @@ void ACustomWindow::handleXConfigureNotify() {
 
 }
 
-ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 
+ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
+    AWindow(name, width, height, parent) {
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {

@@ -11,16 +11,13 @@
 
 #pragma once
 
-namespace aui::detail::gtk {
+#include <AUI/Platform/linux/gtk/PlatformAbstractionGtk.h>
+#include "adw_types.h"
 
-/**
- * @brief Initializes gtk if didn't.
- */
-void requires_gtk();
-
-/**
- * @brief Processes all pending gtk events.
- */
-void main_iterations();
-
-}
+class PlatformAbstractionAdw: public PlatformAbstractionGtk {
+public:
+    PlatformAbstractionAdw();
+    ~PlatformAbstractionAdw() override = default;
+    void init() override;
+    void windowManagerInitNativeWindow(const IRenderingContext::Init& init) override;
+};

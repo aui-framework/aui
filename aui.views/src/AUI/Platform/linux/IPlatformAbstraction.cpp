@@ -10,13 +10,37 @@
  */
 
 #include "IPlatformAbstraction.h"
-#include "AUI/Platform/linux/x11/PlatformAbstractionX11.h"
+#include "APlatformAbstractionOptions.h"
 
-IPlatformAbstraction& IPlatformAbstraction::current() {
-    static PlatformAbstractionX11 x11;
-    return x11;
+static constexpr auto LOG_TAG = "IPlatformAbstraction";
+
+IPlatformAbstraction::IPlatformAbstraction() {
+    auto e = std::getenv("XDG_CURRENT_DESKTOP");
+    ALogger::info(LOG_TAG) << "Desktop Environment: " << (e ? e : "none");
 }
 
-void IPlatformAbstraction::setCurrentWindow(AWindow* window) {
+IPlatformAbstraction& IPlatformAbstraction::current() {
+    static auto value = []() -> _unique<IPlatformAbstraction> {
+        for (const auto& option : APlatformAbstractionOptions::get().initializationOrder) {
+            auto name = option.target_type().name();
+            try {
+                auto value = option();
+                value->init();
+                ALogger::info(LOG_TAG) << "Using \"" << name << "\"";
+                return value;
+            } catch (const AException& e) {
+                ALogger::info(LOG_TAG) << "\"" << name << "\" failed to initialize: " << e.getMessage();
+            }
+        }
+        throw AException("can't find a suitable platform abstraction (maybe check AUI_PA environment variable?)");
+    }();
+    return *value;
+}
+
+void IPlatformAbstraction::setCurrentWindow(AWindowBase* window) {
     AWindow::currentWindowStorage() = window;
+}
+
+float IPlatformAbstraction::windowGetDpiRatio(AWindow& window) {
+    return platformGetDpiRatio();
 }

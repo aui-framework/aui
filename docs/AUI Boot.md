@@ -173,6 +173,7 @@ AUI_ENTRY {
 };
 ```
 
+For more libraries, please visit https://github.com/aui-framework/boot.
 ## How to fix "Could not resolve dependency" error
 
 Common scenario:
@@ -187,6 +188,10 @@ And try again.
 This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
 this scenario will be forking the library and append their `CMakeLists.txt` on your own.
 
+You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
+
 ### "did you mean PACKAGE_NAME?" {#AKJFHJ}
 
 You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
@@ -195,7 +200,10 @@ You have mispelled the package name (the first argument to `auib_import`). Pleas
 ### "Imported target ... depends on an out-of-tree file" {#AFKJNJKAN}
 
 The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
-library by forking it.
+library by forking it. You can consult with
+[Conan Recipes](https://github.com/conan-io/conan-center-index/tree/master/recipes/) or
+[Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
+`CMakeLists.txt` of the library.
 
 ## Fixing 3rdparty library's CMakeLists.txt
 
@@ -240,17 +248,7 @@ target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 # Importing project as a subdirectory
 
-Useful for library developers. They can use consumer's project to develop their library.
-
-```
--DAUIB_LIB_AS=ON
-```
-, where 'LIB' is external project name. For example, to import AUI as a subdirectory:
-```
--DAUIB_AUI_AS=ON
-```
-
-This action disables usage of precompiled binary and validation.
+See @ref AUIB_ADD_SUBDIRECTORY
 
 # CMake commands
 
@@ -284,7 +282,24 @@ URL to the git repository of the project you want to import.
 
 ### ADD_SUBDIRECTORY {#AUIB_ADD_SUBDIRECTORY}
 
-Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
+Uses `add_subdirectory` instead of `find_package` as project importing mechanism. If `AUIB_<PackageName>_AS` evaluates
+to true, `ADD_SUBDIRECTORY` is implied.
+
+This action disables usage of precompiled binary and validation.
+
+`AUIB_<PackageName>_AS` Useful for library developers. They can use consumer's project to develop their library.
+
+```
+-DAUIB_LIB_AS=ON
+```
+, where 'LIB' is external project name. For example, to import AUI as a subdirectory:
+```
+-DAUIB_AUI_AS=ON
+```
+
+Another use case is when the dependency fails to provide proper CMake install, making `find_package` unusable. If you
+don't care polluting your own build tree with dependency's targets - it is a good alternative to fixing their CMake
+install on your own, which is a challenging task.
 
 ### ARCHIVE
 

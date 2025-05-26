@@ -12,5 +12,5 @@
 #include <AUI/Traits/values.h>
 
 namespace aui::audio {
-    using VolumeLevel = aui::ranged_number<uint32_t, 0, 256>;
+using VolumeLevel = aui::ranged_number<uint32_t, 0, 256 /* easier to divide by power of 2 */>;
 }

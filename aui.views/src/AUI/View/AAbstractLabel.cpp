@@ -242,10 +242,6 @@ glm::ivec2 AAbstractLabel::getIconSize() const {
     return {};
 }
 
-bool AAbstractLabel::consumesClick(const glm::ivec2& pos) {
-    return false;
-}
-
 AString AAbstractLabel::toString() const {
     return mText;
 }

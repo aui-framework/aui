@@ -26,3 +26,15 @@ In CLion, click "4 spaces" button in bottom right corner (near `UTF-8`) and sele
 
 We recommend to use this `.clang-format` in your projects as well, so you wont struggle with indentation while building
 UIs.
+
+## AI
+
+We'd happily accept your AI-assisted work, as soon as you have complete responsibility and understading of the changes
+you propose and they don't not violate someone's copyright. Please manually review and adjust AI generated
+code/documentation. We won't merge changes if they contain obvious AI traces:
+
+- hallucinations
+- AI assistant-specific unnecessary statements: "I'm happy to help", "Please let me know if have questions", etc
+- overexplanation, repetitive points, fluff writing
+
+Please treat AI as a tool, not as a complete replacement of a software engineer.

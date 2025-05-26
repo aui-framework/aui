@@ -22,7 +22,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 {
     friend class AWindowManager;
 public:
-    ACustomWindow(const AString& name, int width, int height);
+    ACustomWindow(const AString& name, int width, int height, AWindow* parent = nullptr);
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
 

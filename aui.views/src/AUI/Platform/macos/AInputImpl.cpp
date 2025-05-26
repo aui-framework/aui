@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/AInput.h>
+#include <AUI/Platform/detail/key_to_native.h>
 
 /*
  * Mac virtual key code to SDL scancode mapping table
@@ -281,17 +282,7 @@ static constexpr AInput::Key fromNativeImpl(int w) {
     }
 }
 
-static constexpr auto KEY_TO_NATIVE = []() consteval {
-    std::array<int, AInput::KEYCOUNT> result{};
-    for (int i = 0; i < AInput::KEYCOUNT; ++i) {
-        auto mapped = fromNativeImpl(i);
-        if (mapped >= result.size()) {
-            continue;
-        }
-        result[mapped] = i;
-    }
-    return result;
-}();
+static constexpr auto KEY_TO_NATIVE = aui::detail::keyToNative(fromNativeImpl);
 
 AInput::Key AInput::fromNative(int w) {
     return fromNativeImpl(w);

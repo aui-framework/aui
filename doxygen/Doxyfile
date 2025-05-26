@@ -307,6 +307,7 @@ ALIASES                = pythongen{1}="@includedoc doxygen/intermediate/\1.md" \
                          exclusivefor{1}="@specificto{\1} This API is available on @ref \1 only."\
                          auisourcemarker="<b aui-src='@fileinfo#L@lineinfo'></b>"\
                          declarativeformof{1}="@brief Declarative form of @ref \1." \
+                         mermaid{1}="@htmlonly <div class=\"mermaid\"> @endhtmlonly @htmlinclude \"\1.mmd\" @htmlonly </div> @endhtmlonly" \
 
 # Set the OPTIMIZE_OUTPUT_FOR_C tag to YES if your project consists of C sources
 # only. Doxygen will then generate output that is more tailored for C. For

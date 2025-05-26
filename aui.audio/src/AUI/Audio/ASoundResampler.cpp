@@ -10,12 +10,14 @@ namespace aui::audio::impl {
         }
 
         size_t resample(std::span<std::byte> dst, aui::audio::VolumeLevel volume) override {
-            if (volume != aui::audio::VolumeLevel::MAX) {
-                mResampler.setVolume(volume);
-            }
-            mResampler.setDestination(dst);
-            mResampler.commitAllSamples();
-            return mResampler.writtenSize();
+            Transaction transaction {
+                .destinationBufferBegin = dst.data(),
+                .destinationBufferEnd = dst.data() + dst.size(),
+                .destinationBufferIt = dst.data(),
+                .volumeLevel = volume,
+            };
+            mResampler.commitAllSamples(transaction);
+            return transaction.writtenSize();
         }
 
     private:
@@ -35,6 +37,7 @@ namespace aui::audio::impl {
     using I16Helper = SampleFormatHelper<ASampleFormat::I16>;
     using I24Helper = SampleFormatHelper<ASampleFormat::I24>;
     using I32Helper = SampleFormatHelper<ASampleFormat::I32>;
+    using F32Helper = SampleFormatHelper<ASampleFormat::F32>;
     using MonoHelper = ChannelFormatHelper<AChannelFormat::MONO>;
     using StereoHelper = ChannelFormatHelper<AChannelFormat::STEREO>;
 
@@ -54,6 +57,8 @@ namespace aui::audio::impl {
                     return resolveResampler<Args..., I24Helper>(std::move(source));
                 case ASampleFormat::I32:
                     return resolveResampler<Args..., I32Helper>(std::move(source));
+                case ASampleFormat::F32:
+                    return resolveResampler<Args..., F32Helper>(std::move(source));
             }
             throw AException("invalid input sample format = {}"_format(int(source->info().sampleFormat)));
         }

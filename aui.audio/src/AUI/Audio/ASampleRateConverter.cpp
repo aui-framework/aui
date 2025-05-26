@@ -27,6 +27,9 @@ ASampleRateConverter::ASampleRateConverter(size_t requestedSampleRate, _<ISoundI
         case ASampleFormat::I32:
             spec.itype = SOXR_INT32_I;
             break;
+        case ASampleFormat::F32:
+            spec.itype = SOXR_FLOAT32_I;
+            break;
     }
     spec.otype = aui::platform::current::is_mobile() ? SOXR_INT16_I : SOXR_INT32_I;
     spec.scale = 1;

@@ -608,3 +608,5 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
     }
 }
+
+void PlatformAbstractionX11::init() {}

@@ -15,8 +15,11 @@
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
     explicit IAudioPlayer(AUrl url);
+    explicit IAudioPlayer(_<ISoundInputStream> stream);
 
     static _<IAudioPlayer> fromUrl(AUrl url);
+    static _<IAudioPlayer> fromStream(_<ISoundInputStream> stream);
+
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
      */
@@ -93,7 +96,7 @@ public:
     void onFinished();
 
     const AUrl& url() const noexcept {
-        return mUrl;
+        return *mUrl;
     }
 
     void rewind();
@@ -126,7 +129,7 @@ protected:
 
 private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
-    AUrl mUrl;
+    AOptional<AUrl> mUrl;
     _<ISoundInputStream> mSourceStream;
     _<ASoundResampler> mResampledStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;

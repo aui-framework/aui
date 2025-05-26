@@ -22,7 +22,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     if (AUI_PLATFORM_WIN OR AUI_PLATFORM_LINUX OR AUI_PLATFORM_MACOS)
         auib_import(GLEW https://github.com/aui-framework/glew-cmake
                 CMAKE_WORKING_DIR "build/cmake"
-                VERSION a80a1dc)
+                VERSION a369771e17c2b18fef91597c6a9050077c77dbef)
     endif ()
 
     aui_module(aui.views EXPORT aui)
@@ -32,17 +32,33 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
 
-        pkg_check_modules(DBUS REQUIRED dbus-1)
-        include_directories(${DBUS_INCLUDE_DIRS})
-        link_directories(${DBUS_LIBRARY_DIRS})
-
-        pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
-        include_directories(${GTK3_INCLUDE_DIRS})
-        link_directories(${GTK3_LIBRARY_DIRS})
+        pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
+        pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+        pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
 
         auib_use_system_libs_end()
 
-        aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${GTK3_LIBRARIES} Fontconfig::Fontconfig)
+        aui_link(aui.views PRIVATE
+                X11::X11 X11::Xrandr X11::Xcursor X11::Xi
+                Fontconfig::Fontconfig
+                PkgConfig::DBUS
+                PkgConfig::GLIB
+                PkgConfig::GIO
+        )
+
+        file(GLOB_RECURSE sigs src/ *.sigs)
+        _aui_check_toolbox()
+        foreach (sig ${sigs})
+            get_filename_component(_out ${sig} NAME)
+            set(_out "${CMAKE_CURRENT_BINARY_DIR}/${_out}.cpp")
+            add_custom_command(
+                    DEPENDS ${sig}
+                    OUTPUT ${_out}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS generate_dl_stubs ${sig} ${_out}
+            )
+            target_sources(aui.views PRIVATE ${_out})
+        endforeach ()
     endif ()
 
     if (NOT AUI_PLATFORM_WINDOWS)

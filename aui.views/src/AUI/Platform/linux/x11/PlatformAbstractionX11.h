@@ -17,6 +17,7 @@ public:
     static void ensureXLibInitialized();
     static aui::assert_not_used_when_null<Display*> ourDisplay;
     static Screen* ourScreen;
+    void init() override;
 
     static Window nativeHandle(AWindow& window) {
         return static_cast<Window>(window.getNativeHandle());
@@ -91,6 +92,9 @@ public:
     void windowQuit(AWindow& window) override;
     void windowAnnounceMinMaxSize(AWindow& window) override;
     void windowManagerInitNativeWindow(const IRenderingContext::Init& init) override;
+    AMessageBox::ResultButton messageBoxShow(
+        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
+        AMessageBox::Button b) override;
 
 private:
     void xProcessEvent(XEvent& ev);

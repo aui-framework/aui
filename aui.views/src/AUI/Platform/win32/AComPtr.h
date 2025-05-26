@@ -81,5 +81,3 @@ public:
 private:
     T* mValue;
 };
-
-
