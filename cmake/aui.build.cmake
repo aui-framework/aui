@@ -6,6 +6,8 @@
 
 # CMake AUI building functions
 
+include_guard(GLOBAL)
+
 define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
         BRIEF_DOCS "Global list of test include dirs"
         FULL_DOCS "Global list of test include dirs")
@@ -249,6 +251,12 @@ macro(aui_enable_tests AUI_MODULE_NAME)
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
     #include <gmock/gmock.h>
     int main(int argc, char **argv) {
+#ifdef __linux
+#ifdef AUI_CATCH_UNHANDLED
+    extern void aui_init_signal_handler();
+    aui_init_signal_handler();
+#endif
+#endif
     // Since Google Mock depends on Google Test, InitGoogleMock() is
     // also responsible for initializing Google Test.  Therefore there's
     testing::InitGoogleMock(&argc, argv);
@@ -765,7 +773,7 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
-set(AUI_VERSION b8b8558bfd39f52be46b3fb3182fd244d588932d)
+set(AUI_VERSION v7.1.1)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
@@ -786,11 +794,18 @@ auib_import(aui https://github.com/aui-framework/aui
     unset(ENV{CXX})
 
     # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
+    set(_generator ${CMAKE_GENERATOR})
+    if (APPLE)
+        # Xcode build requires signing
+        set(_generator Ninja)
+    endif()
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
                     ERROR_FILE ${_build_log})
+
+    _auib_dump_with_prefix("[aui.toolbox_provider]" ${_build_log})
 
     set(ENV{CC} ${_old_CC})
     set(ENV{CXX} ${_old_CXX})
@@ -962,12 +977,12 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                     # adding target's interface include directories and definitions keeping original visibility.
                     get_target_property(_dep_includes ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
                     if (_dep_includes)
-                        target_include_directories(${AUI_MODULE_NAME} ${_visibility} ${_dep_includes})
+                        target_include_directories(${AUI_MODULE_NAME} ${_visibility} $<BUILD_INTERFACE:${_dep_includes}>)
                     endif()
 
                     get_target_property(_dep_defs ${_dep} INTERFACE_COMPILE_DEFINITIONS)
                     if (_dep_defs)
-                        target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
+                        target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} $<BUILD_INTERFACE:${_dep_defs}>)
                     endif()
                 endif()
             endforeach()
@@ -1063,6 +1078,7 @@ function(aui_module AUI_MODULE_NAME)
                 PATTERN "*.hpp"
 
         )
+        target_include_directories(${AUI_MODULE_NAME} INTERFACE $<INSTALL_INTERFACE:${AUI_MODULE_NAME}/include/>)
     endif()
     if (NOT BUILD_AS_IMPORTED_NAME STREQUAL ${AUI_MODULE_NAME})
         add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
@@ -1448,6 +1464,8 @@ macro(aui_app)
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_BUNDLE_VERSION       "${MACOSX_BUNDLE_BUNDLE_VERSION}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_COPYRIGHT            "${MACOSX_BUNDLE_COPYRIGHT}")
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_DEPLOYMENT_TARGET           "${MACOSX_DEPLOYMENT_TARGET}")
+
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
     endif()
 
     # MACOS ============================================================================================================
@@ -1486,7 +1504,6 @@ macro(aui_app)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/dmg_ds_store_setup.scpt ${_current_app_build_files}/dmg_ds_store_setup.scpt)
         _auib_weak_set(CPACK_DMG_DS_STORE_SETUP_SCRIPT ${_current_app_build_files}/dmg_ds_store_setup.scpt) # rearranges icons in DMG
 
-        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
         install(TARGETS ${APP_TARGET} BUNDLE DESTINATION ".")
     endif()
 
@@ -1514,7 +1531,7 @@ macro(aui_app)
 
         set(RESOURCES
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
-                )
+        )
 
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
@@ -1565,7 +1582,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
                 XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
-                )
+        )
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
         # build product output directory.
@@ -1593,19 +1610,19 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if ${CMAKE_COMMAND} -E make_directory
-        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Failed to create Frameworks directory in app bundle \;
-        exit 1 \;
-        fi\"
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if ${CMAKE_COMMAND} -E make_directory
+                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks
+                \&\>/dev/null \; then
+                COMMAND_DONE=1 \;
+                fi \;
+                if [ \\$$COMMAND_DONE -eq 0 ] \; then
+                echo Failed to create Frameworks directory in app bundle \;
+                exit 1 \;
+                fi\"
         )
 
         # Copy the framework into the app bundle
@@ -1616,13 +1633,13 @@ macro(aui_app)
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E copy_directory
                 ${_current_app_build_files}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
                 if ${CMAKE_COMMAND} -E copy_directory
                 \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
-                \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                 \&\>/dev/null \; then
                 COMMAND_DONE=1 \;
                 fi \;
@@ -1639,13 +1656,13 @@ macro(aui_app)
                     POST_BUILD COMMAND /bin/sh -c
                     \"COMMAND_DONE=0 \;
                     if codesign --force --verbose
-                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                     --sign ${APP_APPLE_SIGN_IDENTITY}
                     \&\>/dev/null \; then
                     COMMAND_DONE=1 \;
                     fi \;
                     if codesign --force --verbose
-                    \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
                     --sign ${APP_APPLE_SIGN_IDENTITY}
                     \&\>/dev/null \; then
                     COMMAND_DONE=1 \;
@@ -1706,8 +1723,19 @@ endif()
 
 
 if (AUI_BUILD_FOR STREQUAL "android")
+    # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)
     _aui_find_root()
     include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
+endif()
+
+if (ANDROID)
+    # cmake -> gradle -> [cmake(x86|mips|arm|arm64)]
+    auib_use_system_libs_begin()
+    find_library(log-lib log)
+    add_library(aui::android_log IMPORTED SHARED)
+    set_target_properties(aui::android_log PROPERTIES
+            IMPORTED_LOCATION "${log-lib}")
+    auib_use_system_libs_end()
 endif()
 
 if (AUI_BUILD_FOR STREQUAL "ios")
