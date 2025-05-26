@@ -799,7 +799,12 @@ auib_import(aui https://github.com/aui-framework/aui
         # Xcode build requires signing
         set(_generator Ninja)
     endif()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host
+    unset(_forwarded_args)
+    foreach(_name AUIB_NO_PRECOMPILED
+                  AUIB_FORCE_PRECOMPILED)
+        list(APPEND _forwarded_args "-D${_name}=${${_name}}")
+    endforeach()
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host ${_forwarded_args}
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
