@@ -93,6 +93,8 @@ struct Slot {
         "signal."
         "Consider removing const and reference modifiers.");
 
+    Slot() = default;
+
     template <aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
     Slot(ObjectPtr receiverObject, Invocable&& receiverSlot)
       : mSetup([slotDef = ASlotDef { receiverObject, std::forward<Invocable>(receiverSlot) }](emits<Args...>& signal) {
@@ -105,7 +107,12 @@ struct Slot {
           AObject::connect(signal, AObject::GENERIC_OBSERVER, std::move(invocable));
       }) {}
 
-    void bindTo(emits<Args...>& signal) { mSetup(signal); }
+    void bindTo(emits<Args...>& signal) {
+        if (!mSetup) {
+            return;
+        }
+        mSetup(signal);
+    }
 
 private:
     std::function<void(emits<Args...>& signal)> mSetup;
