@@ -16,10 +16,10 @@
 namespace declarative::contract {
 
 /**
- * @brief Denotes a potentially reactive value in declarative contracts.
+ * @brief Denotes a potentially @ref aui::react "reactive" value in declarative contracts.
  * @tparam T Type of the value.
  * @details
- * A helper class that allows you to declare a value that can be either a constant or a @ref reactive expression.
+ * A helper class that allows you to declare a value that can be either a constant or a @ref aui::react "reactive".
  */
 template <typename T>
 struct In {
@@ -40,9 +40,9 @@ private:
     };
 
     /**
-     * @brief Stores @ref reactive expression.
+     * @brief Stores @ref aui::react "reactive" expression.
      * @details
-     * A reactive expression which are typically created by @ref AUI_REACT macro.
+     * A @ref aui::react "reactive" expression which are typically created by @ref AUI_REACT macro.
      */
     struct ReactiveExpression {
         _<APropertyPrecomputed<T>> value;

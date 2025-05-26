@@ -51,7 +51,7 @@
 
 
 /**
- * @brief Explicitly denotes a @ref reactive expression.
+ * @brief Explicitly denotes a @ref aui::react "reactive" expression.
  * @ingroup useful_macros
  * @details
  * Consists of a lambda syntax with forced [=] capture and explicit `decltype(auto)` return type.
