@@ -98,13 +98,13 @@ jobs:
 
      - name: Pack app
        working-directory: ${{github.workspace}}/build/app_project/bin/Debug
-       run: tar -cvf app.tar.gz aui.example.views.app 
+       run: tar -cvf aui.example.views_ios.app.tar.gz *.app
 
      - name: Upload app
        uses: actions/upload-artifact@v4
        with:
          path: ${{github.workspace}}/build/app_project/bin/Debug/*.tar.gz
-         name: aui.example.views-debug-unsigned.app.tar.gz 
+         name: aui.example.views_ios.app.tar.gz
 
   build-check:
     # check if a build passes:
