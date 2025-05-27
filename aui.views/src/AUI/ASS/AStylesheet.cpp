@@ -51,6 +51,10 @@ AStylesheet::AStylesheet() {
     using namespace ass;
     using namespace std::chrono_literals;
 
+    static auto getOsThemeColorLighter = [&]() -> AColor {
+        return glm::mix(glm::vec4(getOsThemeColor()), glm::vec4(AColor::WHITE), 0.1f);
+    };
+
     addRules({
         // COMMON VIEWS ======================================
         // AView
@@ -181,8 +185,8 @@ AStylesheet::AStylesheet() {
             { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
-                            {0.f, getOsThemeColor().lighter(0.15f)},
-                            {0.f, getOsThemeColor().darker(0.15f)},
+                            {0.f, getOsThemeColorLighter()},
+                            {0.f, getOsThemeColor()},
                     },
             } },
         },
@@ -271,27 +275,31 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },
-        },
-        {
-            t<ACheckBox>::hover(),
-            Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage { {}, 0x0078d7_rgb },
+            BorderRadius { 3_dp },
         },
         {
             t<ACheckBox>::active(),
-            BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_dp, 0x005499_rgb },
-            BackgroundImage { {}, 0x005499_rgb },
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
             Selected(t<ACheckBox>()),
-            BackgroundImage {":uni/svg/checkbox.svg" },
+            BackgroundImage { ":uni/svg/checkbox.svg", getOsThemeColor().readableBlackOrWhite() },
+            Border { nullptr },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
+        },
+        {
+          t<ACheckBox>::active() && Selected(t<ACheckBox>()),
+          BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
+          BackgroundGradient { getOsThemeColorLighter().lighter(0.3f), getOsThemeColor(), 180_deg },
         },
         {
             t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
+        },
+        {
+            Selected(t<ACheckBox>()) && t<ACheckBox>::disabled(),
+            BackgroundGradient { getOsThemeColorLighter().transparentize(0.5f), getOsThemeColor().transparentize(0.5f), 180_deg },
         },
 
         // ARulerView
@@ -336,29 +344,28 @@ AStylesheet::AStylesheet() {
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
-            t<ARadioButtonInner>::hover(),
-            Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage { {}, 0x0078d7_rgb },
-        },
-        {
-            t<ARadioButtonInner>::hover(),
-            BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_dp, 0x005499_rgb },
-            BackgroundImage { {}, 0x005499_rgb },
+            t<ARadioButton>::active() > t<ARadioButtonInner>(),
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
             Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
-            BackgroundImage {":uni/svg/radio.svg" },
+            BackgroundImage { ":uni/svg/radio.svg", getOsThemeColor().readableBlackOrWhite() },
+            Border { nullptr },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            t<ARadioButton>::disabled() > t<AAbstractLabel>(),
-            TextColor { 0xa0a0a0_rgb },
+            Selected(t<ARadioButtonInner>::active()) > t<ARadioButtonInner>(),
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            t<ARadioButton>::disabled() > t<ARadioButtonInner>(),
+            { t<ARadioButtonInner>::disabled(), (t<ARadioButton>::disabled() > t<ARadioButtonInner>()) },
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { {}, 0xa0a0a0_rgb },
-            Border { 1_dp, 0xa0a0a0_rgb },
+            Border { 1_px, 0xa0a0a0_rgb },
+        },
+        {
+            { (Selected(t<ARadioButton>::disabled()) > t<ARadioButtonInner>()) },
+            BackgroundGradient { getOsThemeColorLighter().transparentize(0.5f), getOsThemeColor().transparentize(0.5f), 180_deg },
         },
 
         // ADropdownList
@@ -437,7 +444,8 @@ AStylesheet::AStylesheet() {
             class_of(".window-title") >> class_of(".title"),
             Margin { 0 },
             Padding { 7_dp },
-            TextColor { 0xffffff_rgb }
+            TextColor { 0xffffff_rgb },
+            FontSize { 9_pt },
         },
         {
             class_of(".window-title") >> class_of(".default"),
@@ -705,8 +713,12 @@ AColor AStylesheet::getOsThemeColor() {
     static AColor osThemeColor = impl();
 
     return osThemeColor;
+#elif AUI_PLATFORM_LINUX
+    return 0x1a6acb_rgb;
+#elif AUI_PLATFORM_APPLE
+    return 0x3980F6_rgb;
 #else
-    return 0x3e3e3e_rgb;
+    return 0x1a6acb_rgb;
 #endif
 }
 
