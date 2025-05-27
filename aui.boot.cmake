@@ -38,6 +38,7 @@ option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages o
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
+option(CMAKE_POSITION_INDEPENDENT_CODE "Use position independent code (-fPIC). Enabled by default for compatibility and security reasons." ON)
 set(AUIB_VALIDATION_LEVEL 1 CACHE STRING "Package validation level")
 
 auib_mark_var_forwardable(AUIB_NO_PRECOMPILED)
@@ -846,7 +847,9 @@ function(auib_import AUI_MODULE_NAME URL)
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
                     message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                    file(TOUCH ${DEP_FETCHED_FLAG})
+                    if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                        file(TOUCH ${DEP_FETCHED_FLAG})
+                    endif()
                 endif ()
             endif()
         endif()
