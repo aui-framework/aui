@@ -45,6 +45,7 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/View/ATextArea.h"
 #include "AUI/View/ASpinnerV2.h"
+#include "AUI/View/ATextField.h"
 
 AStylesheet::AStylesheet() {
     using namespace ass;
@@ -56,7 +57,7 @@ AStylesheet::AStylesheet() {
         {
             t<AView>(),
             TextColor { 0x0_rgb },
-            FontSize {9_pt},
+            FontSize {10_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
             MaxSize {99999999_dp, 99999999_dp },
@@ -128,12 +129,12 @@ AStylesheet::AStylesheet() {
         // AButton
         {
             { t<AButton>(), c(".btn")},
-                BackgroundSolid {0xffffff_rgb},
-            Padding {3_dp, 6_dp},
+            BackgroundSolid {0xffffff_rgb},
+            Padding {3_dp, 5_dp},
             Margin {2_dp, 4_dp},
-            MinSize {60_dp, {} },
+            MinSize {60_dp, 22_dp },
             Border { 1_dp, 0xcacaca_rgb },
-            BorderRadius {4_dp},
+            BorderRadius {5_dp},
             ATextAlign::CENTER,
             VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
@@ -149,7 +150,6 @@ AStylesheet::AStylesheet() {
         {
             t<AButtonEx>(),
             LayoutSpacing { 2_dp },
-            MinSize { 2_dp },
         },
         {
             t<AButtonEx>() > t<ALabel>(),
@@ -211,7 +211,7 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0xa0a0a0_rgb },
             BorderRadius { 4_dp },
             Margin { 2_dp, 4_dp },
-            MinSize { 100_dp, 17_dp },
+            MinSize { 100_dp, 22_dp },
             AOverflow::HIDDEN,
         },
         {
@@ -233,7 +233,7 @@ AStylesheet::AStylesheet() {
         // ANumberPicker
         {
             c(".number-picker"),
-            MinSize { 60_dp, {} },
+            MinSize { 60_dp, 22_dp },
             AOverflow::HIDDEN,
         },
         {
@@ -267,9 +267,9 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp, 1_dp, 1_dp, 0 },
+            Margin { 1_dp },
             Border { 1_dp, 0x333333_rgb },
-            FixedSize { 13_dp, 13_dp },
+            FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
@@ -331,8 +331,8 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xffffff_rgb },
             Margin { 3_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
-            FixedSize { 13_dp, 13_dp },
-            BorderRadius { 6_dp },
+            FixedSize { 14_dp, 14_dp },
+            BorderRadius { 7_dp },
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
@@ -661,7 +661,7 @@ AStylesheet::AStylesheet() {
             c(".agroupbox-inner"),
             Border { 2_dp, 0x30808080_argb },
             BorderRadius { 4_dp },
-            Padding { 8_dp, 6_dp },
+            Padding { 10_dp, 8_dp },
             Margin { 0, 4_dp},
             AOverflow::HIDDEN,
         },
