@@ -44,7 +44,7 @@ endif()
 
 auib_import(soxr https://github.com/aui-framework/soxr
             ADD_SUBDIRECTORY
-            VERSION adacc686124ac3568432f3dca388878963a005ee
+            VERSION 8049dcb
             )
 
 aui_link(aui.audio PRIVATE soxr)

@@ -19,14 +19,14 @@ programming languages and external compilers.
 
 If you are using Linux, install following dependencies:
 
-### Ubuntu
+### Debian/Ubuntu
 ```bash
-sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
 ```
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
+sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel git cmake g++
 ```
 
 ## AUI App Template ⚡
