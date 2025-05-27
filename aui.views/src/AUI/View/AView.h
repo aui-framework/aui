@@ -1047,14 +1047,14 @@ protected:
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
      * @details
-     * See @ref "docs/ASS Box Model.md".
+     * See @ref "AUI Box Model".
      */
     ABoxFields mMargin;
 
     /**
      * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
      * @details
-     * See @ref "docs/ASS Box Model.md".
+     * See @ref "AUI Box Model".
      */
     ABoxFields mPadding;
 

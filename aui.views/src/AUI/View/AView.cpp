@@ -266,12 +266,12 @@ bool AView::hasFocus() const
 
 int AView::getMinimumWidth() {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x, mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x + mPadding.horizontal(), mMinSize.x, mMaxSize.x)) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight() {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y, mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y + mPadding.vertical(), mMinSize.y, mMaxSize.y)) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
