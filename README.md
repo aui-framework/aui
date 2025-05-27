@@ -1,5 +1,6 @@
 # AUI (Advanced Universal Interface)
 ![build badge](https://github.com/aui-framework/aui/actions/workflows/build.yml/badge.svg)
+[![discord badge](https://dcbadge.limes.pink/api/server/https://discord.gg/jq2WySpg6m?style=flat)](https://discord.gg/jq2WySpg6m)
 
 ![logo](https://raw.githubusercontent.com/aui-framework/aui/master/logo.svg)
 
