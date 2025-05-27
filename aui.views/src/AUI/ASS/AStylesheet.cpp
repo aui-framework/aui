@@ -299,7 +299,7 @@ AStylesheet::AStylesheet() {
         },
         {
             Selected(t<ACheckBox>()) && t<ACheckBox>::disabled(),
-            BackgroundGradient { getOsThemeColorLighter().transparentize(0.5f), getOsThemeColor().transparentize(0.5f), 180_deg },
+            BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
 
         // ARulerView
@@ -365,7 +365,7 @@ AStylesheet::AStylesheet() {
         },
         {
             { (Selected(t<ARadioButton>::disabled()) > t<ARadioButtonInner>()) },
-            BackgroundGradient { getOsThemeColorLighter().transparentize(0.5f), getOsThemeColor().transparentize(0.5f), 180_deg },
+            BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
 
         // ADropdownList

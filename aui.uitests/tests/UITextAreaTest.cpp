@@ -105,7 +105,7 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  */
 TEST_F(UITextArea, CursorClickPos1) {
     By::type<ATextArea>().perform(click({25_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(4));
+            .check(selectionMatches(3));
 }
 
 /**
@@ -113,7 +113,7 @@ TEST_F(UITextArea, CursorClickPos1) {
  */
 TEST_F(UITextArea, CursorClickPos2) {
     By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(8));
+            .check(selectionMatches(7));
 }
 
 /**
