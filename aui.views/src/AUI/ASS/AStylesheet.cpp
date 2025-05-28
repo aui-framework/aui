@@ -52,7 +52,7 @@ AStylesheet::AStylesheet() {
     using namespace std::chrono_literals;
 
     static auto getOsThemeColorLighter = [&]() -> AColor {
-        return glm::mix(glm::vec4(getOsThemeColor()), glm::vec4(AColor::WHITE), 0.1f);
+        return glm::mix(glm::vec4(getOsThemeColor()), glm::vec4(AColor::WHITE), 0.17f);
     };
 
     addRules({
@@ -165,8 +165,8 @@ AStylesheet::AStylesheet() {
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
-                            {0.f, getOsThemeColor().lighter(0.15f)},
-                            {0.f, getOsThemeColor().darker(0.15f)},
+                            {0.f, getOsThemeColorLighter()},
+                            {0.f, getOsThemeColor()},
                     },
             } },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
@@ -186,7 +186,7 @@ AStylesheet::AStylesheet() {
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
                             {0.f, getOsThemeColorLighter()},
-                            {0.f, getOsThemeColor()},
+                            {1.f, getOsThemeColor()},
                     },
             } },
         },
@@ -714,9 +714,9 @@ AColor AStylesheet::getOsThemeColor() {
 
     return osThemeColor;
 #elif AUI_PLATFORM_LINUX
-    return 0x1a6acb_rgb;
+    return 0x1a6acb_rgb; // adwaita accent color
 #elif AUI_PLATFORM_APPLE
-    return 0x3980F6_rgb;
+    return 0x057aff_rgb;
 #else
     return 0x1a6acb_rgb;
 #endif
