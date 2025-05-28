@@ -101,11 +101,11 @@ void AView::drawStencilMask(ARenderContext ctx)
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
-            if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
+            if (mBorderRadius > 0) {
                 ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     mBorderRadius);
+                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
                 ctx.render.rectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},

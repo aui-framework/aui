@@ -238,11 +238,11 @@ AStylesheet::AStylesheet() {
         {
             c(".number-picker"),
             MinSize { 60_dp, 22_dp },
+            Padding { 1_px },
             AOverflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
-            Padding { 1_px },
             Margin { 0 },
             LayoutSpacing { 1_px },
             //BackgroundSolid { 0xf0f0f0_rgb }
