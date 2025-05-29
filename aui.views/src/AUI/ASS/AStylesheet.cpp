@@ -152,7 +152,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            t<AButtonEx>(),
+            t<AButtonEx>() > t<AViewContainer>(),
             LayoutSpacing { 2_dp },
         },
         {
