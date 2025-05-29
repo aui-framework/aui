@@ -156,7 +156,7 @@ AStylesheet::AStylesheet() {
             LayoutSpacing { 2_dp },
         },
         {
-            t<AButtonEx>() > t<ALabel>(),
+            t<AButtonEx>() >> t<ALabel>(),
             Margin { 0 },
             Padding { 0 },
         },
