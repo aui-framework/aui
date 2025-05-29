@@ -37,7 +37,7 @@ enum class AOverflow {
     /**
      * @brief Like HIDDEN, but view's ASS-styled background is also affected by mask.
      */
-    HIDDEN_FROM_THIS
+    HIDDEN_FROM_THIS,
 };
 
 /**

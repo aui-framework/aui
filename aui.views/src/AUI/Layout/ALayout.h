@@ -100,7 +100,7 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * # Expanding
+ * # Expanding {#EXPANDING}
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
