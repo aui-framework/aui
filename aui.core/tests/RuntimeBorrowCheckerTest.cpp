@@ -58,6 +58,11 @@ TEST_F(RuntimeBorrowChecker, Principle) {   // HEADER_H1
         throw AException("can't write to shared resource");
     }
     // AUI_DOCS_CODE_END
+    if (auto write = sharedResource.writeScope()) { // ok
+        write->data = "hell";
+    } else {
+        throw AException("can't write to shared resource");
+    }
     //
     // Always check if scope acquisition succeeded and handle just in case.
     //

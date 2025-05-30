@@ -79,7 +79,7 @@ public:
     struct MutRef {
     public:
         explicit MutRef(ARuntimeBorrowChecker* underlying) {
-            if (underlying->try_lock_shared()) {
+            if (underlying->try_lock()) {
                 mUnderlying = underlying;
             }
         }
@@ -118,7 +118,7 @@ public:
 
         ~MutRef() {
             if (mUnderlying) {
-                mUnderlying->unlock_shared();
+                mUnderlying->unlock();
             }
         }
 
