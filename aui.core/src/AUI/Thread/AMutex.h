@@ -14,7 +14,8 @@
 #include <mutex>
 #include <shared_mutex>
 #include <thread>
-
+#include <AUI/Util/Assert.h>
+#include <utility>
 
 namespace aui::detail {
     template<typename T>
@@ -91,6 +92,106 @@ public:
 private:
     enum State { UNLOCKED, LOCKED };
     std::atomic<State> mState = UNLOCKED;
+};
+
+/**
+ * @brief A class that provides exclusive access to a resource in a single threaded context.
+ * @details
+ * Although this object implements mutex-like interface, it is intended to use in a single threaded context.
+ * See @ref AExclusiveAccess.
+ *
+ * With AExclusiveAccessLockable, @ref AExclusiveAccess class can be reused in a single threaded context. This example
+ * implements Rust-like behaviour that enforces either one or more readers or a single writer (but in runtime):
+ *
+ * @code{cpp}
+ * // pseudocode
+ * struct SharedResource {
+ *   AVector<AString> users;
+ * };
+ * AExclusiveAccess<SharedResource, AMutex> sharedResource = { ... };
+ *
+ * void aReadOnlyHandler(const AString& user) {
+ *     std::shared_lock lock(sharedResource);
+ *     ...
+ *     bool doSomeWork = sharedResource.contains(user);
+ * }
+ *
+ * void aWriteHandler(const AString& user) {
+ *     std::unique_lock lock(sharedResource); // exception: an attempt to acquire writing access
+ *     sharedResource.remove(user);           // this would break all in progress for each loops anyway
+ * }
+ *
+ * void broadcast(std::function<void(const AString&)> handler) {
+ *     std::shared_lock lock(sharedResource);
+ *     for (const auto& user : sharedResource->users) {
+ *         handler(user); // we have a for each loop running in progress; an attempt to add/remove elements
+ *                        // to users will break it
+ *     }
+ * }
+ * @endcode
+ */
+class AExclusiveAccessLockable {
+public:
+    /**
+     * @brief Tries to acquire the lock without blocking for shared readonly access.
+     * @return true if the lockable is successfully acquired, false otherwise.
+     */
+    [[nodiscard]]
+    bool try_lock_shared() noexcept {
+        if (std::holds_alternative<std::monostate>(mState)) {
+            mState = SharedLock { .count = 1 };
+            return true;
+        }
+        if (auto shared = std::get_if<SharedLock>(&mState)) {
+            shared->count++;
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @brief Tries to acquire the lock without blocking for exclusive writeable access.
+     * @return true if the lockable is successfully acquired, false otherwise.
+     */
+    [[nodiscard]]
+    bool try_lock() noexcept {
+        if (std::holds_alternative<std::monostate>(mState)) {
+            mState = ExclusiveLock{};
+            return true;
+        }
+        return false;
+    }
+
+    void unlock() noexcept {
+#if AUI_DEBUG
+        AUI_ASSERT(std::holds_alternative<ExclusiveLock>(mState));
+#endif
+        mState = std::monostate{};
+    }
+
+    void unlock_shared() noexcept {
+#if AUI_DEBUG
+        AUI_ASSERT(std::holds_alternative<SharedLock>(mState));
+#endif
+        if (auto shared = std::get_if<SharedLock>(&mState)) {
+            if (--shared->count != 0) {
+                return;
+            }
+        }
+        mState = std::monostate{};
+    }
+
+    [[nodiscard]]
+    bool is_locked() const noexcept {
+        return !std::holds_alternative<std::monostate>(mState);
+    }
+
+private:
+    struct SharedLock {
+        std::uint32_t count{};
+    };
+    struct ExclusiveLock {};
+    std::variant<std::monostate, SharedLock, ExclusiveLock> mState{};
 };
 
 /**

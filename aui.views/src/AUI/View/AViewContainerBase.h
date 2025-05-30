@@ -334,8 +334,7 @@ protected:
             // making a copy of shared_ptr to lock lifetime of the view; apparently, view->render may remove itself from
             // container, i.e., as a result of custom animation implemented within render
             // NOLINTNEXTLINE(*-unnecessary-copy-initialization)
-            auto view = *i;
-            drawView(view, contextPassedToContainer);
+            drawView(*i, contextPassedToContainer);
         }
     }
 

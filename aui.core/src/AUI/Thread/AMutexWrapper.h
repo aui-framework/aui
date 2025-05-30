@@ -11,65 +11,11 @@
 
 #pragma once
 
-#include <AUI/Traits/values.h>
-#include <AUI/Traits/memory.h>
+#include "AExclusiveAccess.h"
 
 /**
- * @brief Wraps the object with mutex, providing thread-safety layer and a runtime check.
+ * @brief Wraps the object with mutex, providing thread-safety layer and a runtime check, see @ref AExclusiveAccess.
  * @ingroup core
  */
 template<typename T>
-class AMutexWrapper: public aui::noncopyable {
-public:
-    AMutexWrapper(T value = T()) noexcept: mValue(std::move(value)) {}
-
-
-    void lock() {
-        mMutex.lock();
-
-#if AUI_DEBUG
-        mOwnerThread = AThread::current();
-#endif
-    }
-
-    AMutexWrapper& operator=(const T& rhs) {
-        value() = rhs;
-        return *this;
-    }
-
-    AMutexWrapper& operator=(T&& rhs) noexcept {
-        value() = std::move(rhs);
-        return *this;
-    }
-
-    template<typename U, std::enable_if_t<std::is_constructible_v<U, T>>* = 0>
-    operator U() noexcept {
-        return { value() };
-    }
-
-    void unlock() {
-#if AUI_DEBUG
-        mOwnerThread = nullptr;
-#endif
-        mMutex.unlock();
-    }
-
-    T& value() noexcept {
-#if AUI_DEBUG
-        AUI_ASSERTX(mOwnerThread == AThread::current(), "AMutexWrapper should be locked by this thread in order to get access to the underlying object");
-#endif
-        return mValue;
-    }
-
-    T* operator->() noexcept {
-        return &value();
-    }
-
-private:
-    T mValue;
-    AMutex mMutex;
-
-#if AUI_DEBUG
-    _<AAbstractThread> mOwnerThread;
-#endif
-};
+using AMutexWrapper = AExclusiveAccess<T, AMutex>;
