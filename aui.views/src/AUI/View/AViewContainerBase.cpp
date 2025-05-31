@@ -128,7 +128,7 @@ AViewContainerBase::~AViewContainerBase() {
 void AViewContainerBase::addViews(AVector<_<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     for (const auto& view: views) {
         view->mParent = this;
@@ -164,7 +164,7 @@ void AViewContainerBase::addView(const _<AView>& view) {
 void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addViewCustomLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     mViews << view;
     view->mParent = this;
@@ -210,7 +210,7 @@ void AViewContainerBase::setLayout(_unique<ALayout> layout) {
 void AViewContainerBase::removeView(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     if (view->mParent == this) {
         view->mParent = nullptr;
@@ -226,7 +226,7 @@ void AViewContainerBase::removeView(const _<AView>& view) {
 void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     if (views.empty()) {
         return;
@@ -245,7 +245,7 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> vie
 void AViewContainerBase::removeView(AView* view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     if (view->mParent == this) {
         view->mParent = nullptr;
@@ -271,7 +271,7 @@ void AViewContainerBase::removeView(AView* view) {
 void AViewContainerBase::removeView(size_t index) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     auto view = std::move(mViews[index]);
     view->mParent = nullptr;
