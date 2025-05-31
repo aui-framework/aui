@@ -15,10 +15,41 @@
 #include <AUI/Traits/memory.h>
 
 /**
- * @brief Wraps the object with mutex, providing thread-safety layer and a runtime check.
+ * @brief Wraps the object with a Lockable, providing exclusive access layer, i.e., for thread-safety.
  * @ingroup core
+ * @tparam T The type of the value to be protected.
+ * @tparam Lockable A lockable type which manages locking behaviour, i.e, AMutex.
+ * @details
+ * On debug builds, provides a runtime check for better diagnostics.
+ *
+ * Aka `boost::synchronized_value`.
+ *
+ * # Implementing thread safety
+ *
+ * @code{cpp}
+ * struct SharedResource {
+ *   AString data;
+ * };
+ * AMutexWrapper<SharedResource, AMutex> sharedResource;
+ * sharedResource->data = "test"; // bad, will crash
+ *
+ * ...
+ * // thread 1
+ * std::unique_lock lock(sharedResource); //
+ * sharedResource->data = "hello";        // ok
+ * ...
+ *
+ * // thread 2
+ * std::unique_lock lock(sharedResource); //
+ * sharedResource->data = "world";        // ok, will be done before or after "hello", but not simultaneously
+ * ...
+ * @endcode
+ *
+ * # Exclusive Access
+ * See @ref ARuntimeBorrowChecker
+ *
  */
-template<typename T>
+template<typename T, typename Lockable = AMutex>
 class AMutexWrapper: public aui::noncopyable {
 public:
     AMutexWrapper(T value = T()) noexcept: mValue(std::move(value)) {}
@@ -67,7 +98,7 @@ public:
 
 private:
     T mValue;
-    AMutex mMutex;
+    Lockable mMutex;
 
 #if AUI_DEBUG
     _<AAbstractThread> mOwnerThread;
