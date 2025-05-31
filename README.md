@@ -1,5 +1,6 @@
 # AUI (Advanced Universal Interface)
 ![build badge](https://github.com/aui-framework/aui/actions/workflows/build.yml/badge.svg)
+[![discord badge](https://dcbadge.limes.pink/api/server/https://discord.gg/jq2WySpg6m?style=flat)](https://discord.gg/jq2WySpg6m)
 
 ![logo](https://raw.githubusercontent.com/aui-framework/aui/master/logo.svg)
 
@@ -18,14 +19,14 @@ programming languages and external compilers.
 
 If you are using Linux, install following dependencies:
 
-### Ubuntu
+### Debian/Ubuntu
 ```bash
-sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
 ```
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
+sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel git cmake g++
 ```
 
 ## AUI App Template ⚡
@@ -48,7 +49,7 @@ To link AUI to your project, use the following CMake script. This script is self
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION v7.1.1)
+set(AUI_VERSION v7.1.2)
 
 # Use AUI.Boot
 file(
