@@ -31,7 +31,7 @@ template<typename T>
 class ARuntimeBorrowChecker {
 public:
     template <typename F>
-    explicit ARuntimeBorrowChecker(F&& f) : mValue(std::forward<F>(f)()) {}
+    explicit ARuntimeBorrowChecker(F&& f) : mValue(std::forward<F>(f)) {}
     ARuntimeBorrowChecker() = default;
     ~ARuntimeBorrowChecker() {
         AUI_ASSERT(!is_locked());

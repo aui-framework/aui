@@ -67,21 +67,63 @@ TEST_F(RuntimeBorrowChecker, Principle) {   // HEADER_H1
     // Always check if scope acquisition succeeded and handle just in case.
     //
     // Use the appropriate scope type (read/write) for intended operations. Prefer read scopes when write access isn't
-    // necessarily needed.
+    // necessarily needed. `readScope()` wont allow non-const access.
 }
 
-/*
-TEST_F(RuntimeBorrowChecker, Usage) {   // HEADER_H1
+TEST_F(RuntimeBorrowChecker, Shorter_form) { // HEADER_H1
+    struct SharedResource {
+        AString data;
+    };
+    ARuntimeBorrowChecker<SharedResource> sharedResource;
+    // If you don't want to check/create a separate scope, you can try this:
+    // AUI_DOCS_CODE_BEGIN
+    [[maybe_unused]] auto l = sharedResource.readScope()->data.length();
+    // AUI_DOCS_CODE_END
+    //
+    // In this case, calling `operator->` on a failed to lock read scope will cause an assertion error.
+}
 
+TEST_F(RuntimeBorrowChecker, Rationale) {   // HEADER_H1
+    // Enforcing Rust-like memory model may prevent logic errors is code. A real world example is to honor integrity of
+    // a for each loop:
+    //
+    // @code{cpp}
+    // for (const auto& user : users) {
+    //   if (...) {
+    //     after rhis line, the loop will be broken
+    //     users.remove(user);
+    //   }
+    // }
+    // @endcode
+    //
+    // The idea is to catch the issue.
+    //
     // In this example, we are ensuring the integrity of for each loop iteration:
     // AUI_DOCS_CODE_BEGIN
     struct SharedResource {
         AVector<AString> users;
     };
-    ARuntimeBorrowChecker<SharedResource> sharedResource;
+    ARuntimeBorrowChecker<SharedResource> sharedResource(SharedResource{
+        .users = { "Hello", "World" },
+    });
 
-    auto goodFunction = [] {
+    auto goodFunction = [&](const AString&) {
+        // just a read, ok
+        if (auto sharedResourceRead = sharedResource.readScope()) {
+            [[maybe_unused]] auto l = sharedResourceRead->users.size();
+            // ...
+        } else {
+            throw AException("cannot read shared resource");
+        }
+    };
 
+    auto breakingFunction = [&](const AString& user) {
+        if (auto sharedResourceWrite = sharedResource.writeScope()) {
+            sharedResourceWrite->users.removeAll(user);
+            // ...
+        } else {
+            throw AException("cannot write to shared resource");
+        }
     };
 
     auto handleUsers = [&](const std::function<void(const AString&)>& handler) {
@@ -95,8 +137,14 @@ TEST_F(RuntimeBorrowChecker, Usage) {   // HEADER_H1
         }
     };
 
-    handleUsers(goodFunction);
-
+    handleUsers(goodFunction); // ok
+    EXPECT_ANY_THROW(handleUsers(breakingFunction)); // exception
+    // AUI_DOCS_CODE_END
+    //
+    // Althrough `breakingFunction` can't be used from within `handleUsers`, it is not totally useless - you can use
+    // it if there's no lock:
+    // AUI_DOCS_CODE_BEGIN
+    auto first = sharedResource.readScope()->users.first(); // ok
+    breakingFunction(first); // ok, read scope was closed immediately on prev line
     // AUI_DOCS_CODE_END
 }
-*/
