@@ -329,13 +329,16 @@ protected:
                     .p2 = getSize(),
                 });
         }
-        
+
+        std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+        if (!lock) {
+            throw AException("drawViews: can't ensure safe iteration");
+        }
         for (auto i = begin; i != end; ++i) {
             // making a copy of shared_ptr to lock lifetime of the view; apparently, view->render may remove itself from
             // container, i.e., as a result of custom animation implemented within render
             // NOLINTNEXTLINE(*-unnecessary-copy-initialization)
-            auto view = *i;
-            drawView(view, contextPassedToContainer);
+            drawView(*i, contextPassedToContainer);
         }
     }
 
@@ -422,6 +425,7 @@ signals:
 
 private:
     _unique<ALayout> mLayout;
+    ASpinlockMutex mViewsSafeIteration;
     bool mSizeSet = false;
 
 
