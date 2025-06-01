@@ -458,6 +458,17 @@ public:
     virtual int getMinimumWidth();
     virtual int getMinimumHeight();
 
+    /**
+     * @brief Returns the minimum size required for this view.
+     * @return Minimum size (width, height) this view requires in pixels, excluding margins.
+     * @details
+     * The minimum size includes:
+     * - Minimum content size
+     * - Padding
+     *
+     * This value represents the absolute minimum dimensions the view needs to properly display its content. It's used
+     * by layout managers to ensure views aren't sized smaller than what they require to be functional.
+     */
     glm::ivec2 getMinimumSize() {
         return { getMinimumWidth(), getMinimumHeight() };
     }

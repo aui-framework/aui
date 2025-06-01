@@ -29,6 +29,50 @@ class AViewContainer;
  * beyond the border of the @ref AViewContainer "container". A @ref AViewContainer "container" can be a child of an
  * another @ref AViewContainer "container" i.e., nesting is allowed.
  *
+ * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
+ *
+ * - Positioning child views within their container
+ * - Calculating minimum sizes
+ * - Handling view additions and removals
+ * - Managing spacing between views
+ * - Respecting view margins and alignment
+ * - Supporting expanding/stretching of views
+ *
+ * Common layout managers include:
+ *
+ * - **AHorizontalLayout** - Arranges views in a horizontal row
+ * - **AVerticalLayout** - Arranges views in a vertical column
+ * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
+ * - **AStackedLayout** - Centeres views, displaying them on top of each other
+ *
+ * Key concepts:
+  *
+  * 1. **Minimum Size** - Layout managers calculate minimum size requirements by:
+  *    - Considering minimum sizes of child views
+  *    - Adding margins and spacing
+  *    - Respecting fixed size constraints
+  *
+  * 2. **@ref EXPANDING "Expanding Views"** - Children can expand to fill available space of their parent:
+  *    - Set via @ref AView::setExpanding or @ref ass::Expanding on a child
+  *    - Requires parent to have @ref ass::FixedSize or @ref ass::MinSize or @ref EXPANDING set to take effect
+  *    - Independent for horizontal/vertical directions
+  *    - Ignored if @ref ass::FixedSize is set
+  *
+  * 3. **Spacing** - Configurable gaps between views:
+  *    - Set via @ref ALayout::setSpacing() or @ref ass::LayoutSpacing of the parent view
+  *    - Part of minimum size calculations of the parent view
+  *    - Applied uniformly between its child views
+  *
+  * 4. **Margins** - Space around individual views:
+  *    - Set per-view via ASS or margins property
+  *    - Respected during layout
+  *    - Part of minimum size calculations of the parent view
+  *
+  * 5. **Layout Direction** - Overall flow direction:
+  *    - Horizontal layouts flow left-to-right
+  *    - Vertical layouts flow top-to-bottom
+  *    - Grid layouts use both directions
+ *
  * # Layout Examples
  *
  * @ref AHorizontalLayout "Horizontal" layout:
@@ -100,7 +144,7 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * # Expanding
+ * # Expanding {#EXPANDING}
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
