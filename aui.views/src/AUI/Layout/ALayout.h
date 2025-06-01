@@ -73,7 +73,11 @@ class AViewContainer;
  *    - Vertical layouts flow top-to-bottom
  *    - Grid layouts use both directions
  *
- * 6. **Relativeness** - children position is relative to parent's position, not an absolute position within window.
+ * 6. **Relativeness** - children position is relative to parent's position, not an absolute position within a window.
+ *
+ * 7. **Nesting** - you can nest containers into containers, and so on. When we say "container", it means a
+ *    @ref AViewContainer. When we say "Vertical", we imply a @ref AViewContainer with @ref AVerticalLayout as the
+ *    layout manager.
  *
  * # Layout Examples
  *
