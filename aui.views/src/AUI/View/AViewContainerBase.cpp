@@ -191,6 +191,10 @@ void AViewContainerBase::addView(size_t index, const _<AView>& view) {
 }
 
 void AViewContainerBase::setLayout(_unique<ALayout> layout) {
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    if (!lock) {
+        throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+    }
     for (const auto& v : mViews) {
         v->mParent = nullptr;
     }
@@ -549,6 +553,10 @@ void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
 }
 
 void AViewContainerBase::removeAllViews() {
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    if (!lock) {
+        throw AException("can't use removeAllViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+    }
     if (mLayout) {
         // using reverse iterator wrap here as vector is not efficient in removing first elements
         std::size_t i = getViews().size();
@@ -573,6 +581,10 @@ void AViewContainerBase::onDpiChanged() {
 }
 
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    if (!lock) {
+        throw AException("can't use setContents when render/applyGeometryToChildren is in progress; please enqueue such operation");
+    }
     // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
                 "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
@@ -676,6 +688,10 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
 }
 
 void AViewContainerBase::setViews(AVector<_<AView>> views) {
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    if (!lock) {
+        throw AException("can't use setViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+    }
     removeAllViews();
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
     mViews = std::move(views);
