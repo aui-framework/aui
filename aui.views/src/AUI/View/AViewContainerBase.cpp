@@ -147,10 +147,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
 }
 
 void AViewContainerBase::addView(const _<AView>& view) {
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
-    }
+    // removeView performs a lock of mViewsSafeIteration
     AUI_NULLSAFE(view->mParent)->removeView(view);
     view->mSkipUntilLayoutUpdate = true;
     mViews << view;
@@ -581,10 +578,7 @@ void AViewContainerBase::onDpiChanged() {
 }
 
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("can't use setContents when render/applyGeometryToChildren is in progress; please enqueue such operation");
-    }
+    // setLayout performs a lock of mViewsSafeIteration
     // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
                 "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
@@ -688,10 +682,7 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
 }
 
 void AViewContainerBase::setViews(AVector<_<AView>> views) {
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("can't use setViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
-    }
+    // removeAllViews performs a lock of mViewsSafeIteration
     removeAllViews();
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
     mViews = std::move(views);
