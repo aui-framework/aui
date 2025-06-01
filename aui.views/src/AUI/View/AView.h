@@ -230,6 +230,11 @@ public:
         mMinSize = minSize;
     }
 
+    /**
+     * @brief Marks this view it requires a layout update.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void markMinContentSizeInvalid();
 
     /**
@@ -574,6 +579,12 @@ public:
         mSize = size;
     }
     virtual void setSize(glm::ivec2 size);
+
+    /**
+     * @brief Sets position and size of the view.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
         setGeometry(position.x, position.y, size.x, size.y);

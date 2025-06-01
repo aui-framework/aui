@@ -287,6 +287,11 @@ public:
     }
 
 
+    /**
+     * @brief Applies geometry to all children if needed.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     void applyGeometryToChildrenIfNecessary();
 
     void onKeyDown(AInput::Key key) override;
@@ -415,6 +420,11 @@ protected:
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
+    /**
+     * @brief Applies geometry to all children with no preconditions.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void applyGeometryToChildren();
 
 signals:
