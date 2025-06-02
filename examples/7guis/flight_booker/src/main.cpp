@@ -27,9 +27,7 @@ struct DateTextFieldState {
     AProperty<AOptional<system_clock::time_point>> parsed;
 };
 
-auto formatDate(system_clock::time_point date) {
-    return "{0:%d}.{0:%m}.{0:%G}"_format(date);
-}
+auto formatDate(system_clock::time_point date) { return "{0:%d}.{0:%m}.{0:%G}"_format(date); }
 
 auto dateTextField(DateTextFieldState& state) {
     return _new<ATextField>() let {
@@ -47,10 +45,13 @@ auto dateTextField(DateTextFieldState& state) {
                   if (!match) {
                       return std::nullopt;
                   }
-
-                  return sys_days(year_month_day(
+                  year_month_day ymd(
                       year(std::stoi(match.get<3>().str())), month(std::stoi(match.get<2>().str())),
-                      day(std::stoi(match.get<1>().str()))));
+                      day(std::stoi(match.get<1>().str())));
+                  if (!ymd.ok()) {
+                      return std::nullopt;
+                  }
+                  return sys_days(ymd);
               },
             }),
             it->text());
@@ -115,32 +116,3 @@ AUI_ENTRY {
     _new<FlightBookerWindow>()->show();
     return 0;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
