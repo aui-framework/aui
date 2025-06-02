@@ -1,5 +1,5 @@
 AUI Boot is yet another package manager based on CMake. If a library uses CMake with
-[good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases 
+[good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
 it in @ref AUIB_CACHE folder for future reuse.
 
@@ -105,7 +105,7 @@ import the library to your project. So, valid library name should be specified. 
 following places:
 
 - In common, CMake package matches repository name on GitHub.
-- From library's `README`. 
+- From library's `README`.
 - If library name is incorrect, AUI.Boot prints the following message:
   ```
   Make Error at /home/.../.aui/repo/aui/as/0337639/aui/aui.boot.cmake:1019 (message):
@@ -118,7 +118,7 @@ following places:
 
   note: did you mean "sentry"?
   ```
-  
+
   Take a look on the last line:
   ```
   note: did you mean "sentry"?
@@ -137,7 +137,7 @@ The optional `CMAKE_ARGS` argument is arguments passed to library's CMake config
 AUI.Boot. These arguments are library specific; their documentation can be found on library's respective documentation
 pages. You won't need to use that unless you want an advanced tinkering of the library.
 
-After library is imported to the project, its *imported target* should be linked to your executable/library. As with 
+After library is imported to the project, its *imported target* should be linked to your executable/library. As with
 library's name, the name of the imported target probably can be found in library's `README`. Additionally, starting from
 CMake version `3.21`, AUI.Boot prints a handy line on configure time when a library is imported:
 
@@ -282,24 +282,15 @@ URL to the git repository of the project you want to import.
 
 ### ADD_SUBDIRECTORY {#AUIB_ADD_SUBDIRECTORY}
 
-Uses `add_subdirectory` instead of `find_package` as project importing mechanism. If `AUIB_<PackageName>_AS` evaluates
-to true, `ADD_SUBDIRECTORY` is implied.
+See also: @ref AUIB_LIB_AS.
+
+Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. 
+
+Potential use case of this is when the dependency fails to provide proper CMake install, making `find_package` unusable.
+If you don't care about polluting your own build tree with dependency's targets - it is a good alternative to fixing
+their CMake install on your own, which is a challenging task.
 
 This action disables usage of precompiled binary and validation.
-
-`AUIB_<PackageName>_AS` Useful for library developers. They can use consumer's project to develop their library.
-
-```
--DAUIB_LIB_AS=ON
-```
-, where 'LIB' is external project name. For example, to import AUI as a subdirectory:
-```
--DAUIB_AUI_AS=ON
-```
-
-Another use case is when the dependency fails to provide proper CMake install, making `find_package` unusable. If you
-don't care polluting your own build tree with dependency's targets - it is a good alternative to fixing their CMake
-install on your own, which is a challenging task.
 
 ### ARCHIVE
 
@@ -353,31 +344,112 @@ thus does not forward.
 
 See @ref "docs/AUI configure flags.md" on how to set variables.
 
-## AUIB_ALL_AS (=NO)
+## AUIB_ALL_AS (=FALSE|TRUE) {#AUIB_ALL_AS}
 
-All dependencies will be imported with `add_subdirectory` command instead of `find_package`. It is useful if you want
-to work on the dependency along with your project.
+Equivalent of setting @ref AUIB_LIB_AS for every single library present in the project.
 
-This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NAME_UPPER}_AS` flag, where
-`${AUI_MODULE_NAME_UPPER}` is the dependency name (i.e. for AUI it's `-DAUIB_AUI_AS=ON`).
+## AUIB_<PackageName>_AS (=FALSE|TRUE) {#AUIB_LIB_AS}
 
-## AUIB_DISABLE (=NO) {#AUIB_DISABLE}
+Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. This means that the library
+becomes a part of your project, within your `build/` directory. This allows changing the library's code seamlessly.
+
+It is useful for library developers. They can use consumer's project to change something in their library, without
+changing `CMakeLists.txt` of the consumer's project. Setting `AUIB_<PackageName>_AS` is an equivalent of passing
+@ref AUIB_ADD_SUBDIRECTORY to `auib_import`.
+
+This action disables usage of precompiled binary and validation.
+
+Usage:
+
+```
+cd build
+cmake .. -DAUIB_LIB_AS=ON
+```
+Where 'LIB' is library project name. For example, to import AUI as a subdirectory:
+
+```
+cd build
+cmake .. -DAUIB_AUI_AS=ON
+```
+
+You can switch `AUIB_AUI_AS` on an existing build tree, AUI.Boot is capable of switching on-the-fly.
+
+During the execution of the command above, the location of the LIB is printed:
+
+```
+Imported: aui () (/home/user/.aui/repo/aui/as/v8.0.0-rc.1/aui) (version v8.0.0-rc.1)
+```
+
+Which points to the LIB's source tree used to build the consumer's project. You can change anything in that
+directory as part of your development workflow, and these changes will reflect immediately on the consumer's
+project.
+
+Your changes will not be overridden by further CMake invocations.
+
+You can `cd` and commit changes right from that directory as you complete your work on the library:
+
+```bash
+cd /home/user/.aui/repo/aui/as/v8.0.0-rc.1/aui
+# don't forget to checkout, we are in detached HEAD state
+git checkout -b feat/a-new-feature
+git commit -m "a new feature"
+git remote set-url origin git@github.com/your-name/your-aui-fork
+git push
+```
+
+@note
+To have write access to the library's repository, it's likely you'll need to make a fork. Optionally, you can upstream
+your changes in the future.
+
+Since you have updated the library, you may want to share your own version of the library within your project. To do
+this, you need to:
+
+1. Acquire the **commit hash**:
+    ```bash
+    /home/user/.aui/repo/aui/as/v8.0.0-rc.1/aui $ git log
+    commit 8b0e838b8cd6274210f4c05ac096e2862c36f25e (HEAD -> feat/a-new-feature, origin/feat/a-new-feature)
+    Author: smol boi <uwu@uwu.uwu>
+    Date:   Sun Jun 1 21:49:31 2025 +0300
+
+        Never Gonna Give You Up
+    ...
+    ```
+2. In your `CMakeLists.txt`, make sure the **URL** points to your fork, if any:
+    ```cmake
+    auib_import(aui https://github.com/your-name/your-aui-fork
+                VERSION v7.0.0
+    )
+    ```
+3. Specify **commit hash** in `VERSION` field:
+    ```cmake
+    auib_import(aui https://github.com/your-name/your-aui-fork
+                VERSION 8b0e838b8cd6274210f4c05ac096e2862c36f25e
+    )
+    ```
+4. Commit and push to your project
+
+@note
+It is common to delete a feature branch after merging. Be careful: AUI.Boot can't find a commit if it was deleted from
+a repository.
+
+
+## AUIB_DISABLE (=FALSE|TRUE) {#AUIB_DISABLE}
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
-## AUIB_SKIP_REPOSITORY_WAIT (=NO) {#AUIB_SKIP_REPOSITORY_WAIT}
+## AUIB_SKIP_REPOSITORY_WAIT (=FALSE|TRUE) {#AUIB_SKIP_REPOSITORY_WAIT}
 
 Disables "Waiting for repository" @ref REPO_LOCK "lock".
 
-## AUIB_NO_PRECOMPILED (=NO) {#AUIB_NO_PRECOMPILED}
+## AUIB_NO_PRECOMPILED (=FALSE|TRUE) {#AUIB_NO_PRECOMPILED}
 
 Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
 
-## AUIB_FORCE_PRECOMPILED (=NO) {#AUIB_FORCE_PRECOMPILED}
+## AUIB_FORCE_PRECOMPILED (=FALSE|TRUE) {#AUIB_FORCE_PRECOMPILED}
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
-## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=NO) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
+## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=FALSE|TRUE) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
 
 The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
