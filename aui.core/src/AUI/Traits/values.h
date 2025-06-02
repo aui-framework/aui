@@ -433,6 +433,8 @@ public:
         return value;
     }
 
+    auto operator<=>(const ranged_number&) const = default;
+
 private:
     UnderlyingType value;
 };
