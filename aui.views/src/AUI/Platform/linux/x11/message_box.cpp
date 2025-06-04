@@ -25,19 +25,19 @@ public:
             Centered {
                 [&]() -> _<AView> {
                   switch (b) {
-                      case AMessageBox::Button::OK: return Button { "OK"_i18n } let { AObject::connect(it->clicked, me::onOk); };
+                      case AMessageBox::Button::OK: return Button { .text = "OK"_i18n, .onClick = {me::onOk} };
                       case AMessageBox::Button::OK_CANCEL: return Horizontal {
-                              Button { "OK"_i18n } let { AObject::connect(it->clicked, me::onOk); },
-                              Button { "Cancel"_i18n } let { AObject::connect(it->clicked, me::onCancel); },
+                              Button { .text = "OK"_i18n, .onClick = {me::onOk} },
+                              Button { .text = "Cancel"_i18n, .onClick = {me::onCancel} },
                           };
                       case AMessageBox::Button::YES_NO: return Horizontal {
-                              Button { "Yes"_i18n } let { AObject::connect(it->clicked, me::onYes); },
-                              Button { "No"_i18n }let { AObject::connect(it->clicked, me::onNo); },
+                              Button { .text = "Yes"_i18n, .onClick = {me::onYes} },
+                              Button { .text = "No"_i18n, .onClick = {me::onNo} },
                           };
                       case AMessageBox::Button::YES_NO_CANCEL: return Horizontal {
-                              Button { "Yes"_i18n } let { AObject::connect(it->clicked, me::onYes); },
-                              Button { "No"_i18n }let { AObject::connect(it->clicked, me::onNo); },
-                              Button { "Cancel"_i18n } let { AObject::connect(it->clicked, me::onCancel); },
+                              Button { .text = "Yes"_i18n, .onClick = {me::onYes} },
+                              Button { .text = "No"_i18n, .onClick = {me::onNo} },
+                              Button { .text = "Cancel"_i18n, .onClick = {me::onCancel} },
                           };
                       default: throw AException("invalid AMessageBox::Button");
                   }
