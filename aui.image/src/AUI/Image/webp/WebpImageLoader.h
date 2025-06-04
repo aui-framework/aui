@@ -20,4 +20,6 @@ public:
     _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
 
     _<AImage> getRasterImage(AByteBufferView buffer) override;
+
+    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, aui::ranged_number<float, 0, 100> quality = 50);
 };
