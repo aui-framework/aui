@@ -195,7 +195,9 @@ auib_precompiled_binary()
 # [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
-add_subdirectory(test/)
+if (NOT AUIB_DISABLE)
+    add_subdirectory(test/)
+endif ()
 
 # [configure file example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
