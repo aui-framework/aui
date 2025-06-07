@@ -1,7 +1,7 @@
 # Minimal UI Template with Assets
 
 @auiexample{ui}
-Minimal UI boilerplate template with assets.
+Minimal UI boilerplate template with @ref assets.
 
 # Source Files
 

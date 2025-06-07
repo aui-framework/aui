@@ -66,6 +66,7 @@
             <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
             <tab type="user" url="@ref docs/Runtime Dependency Resolution.md" title="Runtime Dependency Resolution" />
             <tab type="user" url="@ref docs/Forking AUI.md" title="Forking AUI" />
+            <tab type="user" url="@ref docs/AUI Assets.md" title="AUI Assets" />
         </tab>
     </navindex>
 

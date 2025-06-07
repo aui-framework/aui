@@ -6,6 +6,8 @@ If neither of these suggestions helped and you think you encountered an AUI's is
 
 # Assets
 
+See also: @ref assets
+
 1. Ensure you have called `aui_compile_assets()` in your `CMakeLists.txt`.
 2. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
 3. If you are `aui_link`'ing asset-containing modules (i.e. `aui::views`) against static library, consider link them
