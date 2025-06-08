@@ -105,6 +105,7 @@ void AWindow::redraw() {
 
         if (mMarkedMinContentSizeInvalid) {
             ensureAssUpdated();
+            setSize(glm::clamp(getSize(), getMinimumSize(), getMaxSize()));
             applyGeometryToChildrenIfNecessary();
             mMarkedMinContentSizeInvalid = false;
 #if AUI_PLATFORM_LINUX
