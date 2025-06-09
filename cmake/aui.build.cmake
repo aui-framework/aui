@@ -1192,9 +1192,6 @@ macro(aui_app)
             ICON
             VENDOR
 
-            # android
-            ANDROID_PACKAGE
-
             # linux
             LINUX_DESKTOP
 
@@ -1270,10 +1267,22 @@ macro(aui_app)
         endif()
     endif()
 
-    if (AUI_PLATFORM_ANDROID OR AUI_BUILD_FOR STREQUAL "android")
-        if (NOT APP_ANDROID_PACKAGE)
-            list(APPEND _error_msg "ANDROID_PACKAGE which is android app package name.")
-        endif()
+    if (AUI_PLATFORM_ANDROID)
+        if (NOT AUI_GRADLE_BUILD_DIR)
+            message(FATAL_ERROR "AUI_GRADLE_BUILD_DIR is not specified - please refer to AUI Android Build documentation.")
+        endif ()
+        get_target_property(_t ${APP_TARGET} TYPE)
+        if (NOT _t STREQUAL SHARED_LIBRARY)
+            message(FATAL_ERROR "On Android, TARGET is expected to be a shared library.")
+        endif ()
+        # On Android, we load the application with `System.loadLibrary("app")`. Hardcoding the binary name to "app"
+        # frees us from propagating the library name to the Java code.
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "app")
+
+        file(INSTALL ${AUI_BUILD_AUI_ROOT}/platform/android
+             DESTINATION ${AUI_GRADLE_BUILD_DIR}/aui_gradle
+        )
+        message(STATUS "Installed gradle part to ${AUI_GRADLE_BUILD_DIR}/aui_gradle")
     endif()
 
     if (_error_msg)

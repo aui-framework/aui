@@ -12,21 +12,17 @@ package com.github.aui.android
 
 import android.content.Context
 import android.opengl.GLSurfaceView
-import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
-import android.view.View
-import android.view.View.OnTouchListener
-import android.widget.Scroller
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class AuiView(context: Context) : GLSurfaceView(context) {
+class AUIView(context: Context) : GLSurfaceView(context) {
     private val mGestureDetector: GestureDetector
     private var mRenderer: Renderer? = null
 
     companion object {
-        var ourCurrentSurface: AuiView? = null
+        var ourCurrentSurface: AUIView? = null
 
 
         @JvmStatic

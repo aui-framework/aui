@@ -33,7 +33,7 @@ const ACommandLineArgs& aui::args() noexcept {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstring internalStoragePathR) {
+Java_com_github_aui_android_AUIView_handleInit__Ljava_lang_String_2(JNIEnv *env, jclass clazz, jstring internalStoragePathR) {
     jboolean isCopy;
     auto internalStoragePath = env->GetStringUTFChars(internalStoragePathR, &isCopy);
     chdir(internalStoragePath);
