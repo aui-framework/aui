@@ -38,15 +38,10 @@ message(STATUS "CMake Version: ${CMAKE_VERSION}")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
-set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
-
-if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
-    message(FATAL_ERROR "CMAKE_CROSSCOMPILING and AUI_BUILD_FOR are exclusive vars.")
-endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -1712,12 +1707,6 @@ macro(aui_app)
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
     endif()
-
-    if (AUI_BUILD_FOR STREQUAL "android")
-        _aui_android_app()
-    elseif (AUI_BUILD_FOR STREQUAL "ios")
-        _aui_ios_app()
-    endif()
 endmacro()
 
 if (MINGW OR UNIX)
@@ -1735,13 +1724,6 @@ endif()
 #    endif()
 #endif()
 
-
-if (AUI_BUILD_FOR STREQUAL "android")
-    # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)
-    _aui_find_root()
-    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
-endif()
-
 if (ANDROID)
     # cmake -> gradle -> [cmake(x86|mips|arm|arm64)]
     auib_use_system_libs_begin()
@@ -1750,9 +1732,4 @@ if (ANDROID)
     set_target_properties(aui::android_log PROPERTIES
             IMPORTED_LOCATION "${log-lib}")
     auib_use_system_libs_end()
-endif()
-
-if (AUI_BUILD_FOR STREQUAL "ios")
-    _aui_find_root()
-    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.ios.cmake)
 endif()

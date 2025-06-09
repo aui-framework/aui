@@ -37,9 +37,6 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 ## AUI_BUILD_EXAMPLES
 Whether build examples or not.
 
-## AUI_BUILD_FOR {#AUI_BUILD_FOR}
-Specifies target platform for cross-compilation (see [cross-compiling](@ref docs/Crosscompiling.md)).
-
 ## AUIB_CACHE_DIR {#AUIB_CACHE_DIR}
 Changes @ref AUIB_CACHE.
 
@@ -63,9 +60,6 @@ Adds `printAllInstances()` to AUI's shared pointer type (`_`) which prints stack
 
 ## BUILD_SHARED_LIBS
 When evaluates to `true`, libraries are built as shared, as static otherwise.
-
-When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false` 
-(see [cross-compiling](docs/Crosscompiling.md))
 
 ## AUI_IOS_CODE_SIGNING_REQUIRED
 Disables code signing step on iOS.
