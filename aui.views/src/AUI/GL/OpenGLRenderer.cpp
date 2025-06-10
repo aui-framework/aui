@@ -1341,7 +1341,7 @@ uniform vec2 SL_uniform_uvScale;
 uniform sampler2D SL_uniform_albedo;
 uniform sampler2D uvmap;
 void main() {
- vec2 px = SL_inter_vertex;
+ vec2 px = SL_inter_vertex.xy;
  vec4 uvmap_sample = texture2D(uvmap, SL_inter_uv);
  px += (uvmap_sample.xy * 2.0 - 1.0) * 30.0;
  vec2 base_uv = (vec2(SL_uniform_m2 * vec4(px, 0.0, 1.0)) + vec2(1.0)) * vec2(0.5);

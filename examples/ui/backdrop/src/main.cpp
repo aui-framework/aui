@@ -40,10 +40,10 @@ static auto headerWithContents(_<AView> content) {
                      ); },
         Vertical::Expanding {
           Centered {
-            Horizontal {
+            Vertical {
                   Label { "boll" } with_style {
                       FixedSize { 60_dp },
-                      BorderRadius { 60_dp / 2 },
+                      BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
                       ATextAlign::CENTER,
                       Backdrop {
@@ -54,7 +54,7 @@ static auto headerWithContents(_<AView> content) {
                   },
                   Label { "boll" } with_style {
                       FixedSize { 60_dp },
-                      BorderRadius { 60_dp / 2 },
+                      BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
                       ATextAlign::CENTER,
                       AOverflow::HIDDEN_FROM_THIS,
@@ -65,9 +65,10 @@ static auto headerWithContents(_<AView> content) {
                       },
                       Border { 1_dp, AColor::GRAY.transparentize(0.6f) },
                       BoxShadow { 0, 16_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
+                      BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                   },
               }
-          } with_style { Padding { 10_dp } },
+          } with_style { Padding { 50_dp } },
         },
     };
     return result;
@@ -96,9 +97,6 @@ AUI_ENTRY {
                 "первого приехавшего на ее вечер. Анна Павловна кашляла несколько дней, у нее был грипп, "
                 "как она говорила (грипп был тогда новое слово, употреблявшееся только редкими). В "
                 "записочках, разосланных утром с красным лакеем, было написано без различия во всех:"),
-            Centered {
-              Icon { ":1.jpg" } with_style { Margin { 16_dp }, MinSize { 500_dp } },
-            },
             AText::fromString(
                 "    «Si vous n'avez rien de mieux à faire, Monsieur le comte (или mon prince), et si la "
                 "perspective de passer la soirée chez une pauvre malade ne vous effraye pas trop, je "
