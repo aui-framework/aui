@@ -49,8 +49,8 @@ static auto headerWithContents(_<AView> content) {
                       Backdrop {
                           Backdrop::LiquidFluid {},
                       },
-                      Border { 1_dp, AColor::GRAY.transparentize(0.7f) },
-                      BoxShadow { 0, 16_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
+//                      Border { 1_dp, AColor::GRAY.transparentize(0.7f) },
+                      BoxShadow { 0, 32_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
                   },
                   Label { "boll" } with_style {
                       FixedSize { 60_dp },
@@ -63,8 +63,8 @@ static auto headerWithContents(_<AView> content) {
                           Backdrop::LiquidFluid {},
                           Backdrop::GaussianBlur { 3_dp },
                       },
-                      Border { 1_dp, AColor::GRAY.transparentize(0.6f) },
-                      BoxShadow { 0, 16_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
+//                      Border { 1_dp, AColor::GRAY.transparentize(0.6f) },
+                      BoxShadow { 0, 32_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
                       BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                   },
               }
@@ -82,7 +82,7 @@ AUI_ENTRY {
           Vertical::Expanding {
             Centered {
               Icon { ":logo.svg" } with_style { FixedSize { 128_dp } },
-            },
+            } with_style { FixedSize { 500_dp, {} } },
             AText::fromString(
                 "    — Eh bien, mon prince. Gênes et Lucques ne sont plus que des apanages, des "
                 "поместья, de la famille Buonaparte. Non, je vous préviens que si vous ne me dites pas "

@@ -1294,7 +1294,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                           throw AException("LiquidGlass must be the first effect in backdrop list.");
                       }
                       areaOfInterest = [&] {
-                          auto targetSize = source->size() / 2u;
+                          auto targetSize = source->size();
                           auto fb = getFramebufferForMultiPassEffect(targetSize);
                           source->bindForRead();
                           fb->framebuffer.bindForWrite();
@@ -1341,10 +1341,8 @@ uniform vec2 SL_uniform_uvScale;
 uniform sampler2D SL_uniform_albedo;
 uniform sampler2D uvmap;
 void main() {
- vec2 px = SL_inter_vertex.xy;
- vec4 uvmap_sample = texture2D(uvmap, SL_inter_uv);
- px += (uvmap_sample.xy * 2.0 - 1.0) * 30.0;
- vec2 base_uv = (vec2(SL_uniform_m2 * vec4(px, 0.0, 1.0)) + vec2(1.0)) * vec2(0.5);
+ vec4 uvmap_sample = texture2D(uvmap, SL_inter_uv.xy);
+ vec2 base_uv = (vec2(SL_uniform_m2 * vec4(mix(vec2(-1.0), vec2(2.0), uvmap_sample.xy), 0.0, 1.0)) + vec2(1.0)) * vec2(0.5);
  base_uv = clamp(base_uv, vec2(0.0), vec2(1.0));
  base_uv = base_uv * SL_uniform_uvScale;
  vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
@@ -1371,6 +1369,8 @@ void main() {
                           auto m = mTransform;
                           m = glm::translate(m, glm::vec3(0, size.y, 0));
                           m = glm::scale(m, glm::vec3(1, -1, 1));
+                          m = glm::translate(m, glm::vec3(position, 0.f));
+                          m = glm::scale(m, glm::vec3(size, 1.f));
                           shader->set(aui::ShaderUniforms::M2, m);
 
                           // source framebuffer is slightly smaller than the framebuffer in area of interest, adjust it
