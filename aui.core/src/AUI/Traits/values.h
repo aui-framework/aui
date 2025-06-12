@@ -200,7 +200,12 @@ public:
         }
         if (std::holds_alternative<std::nullopt_t>(value)) {
             setEvaluationLoopTrap();
-            value = initializer();
+            try {
+                value = initializer();
+            } catch (...) {
+                value = std::nullopt;
+                throw;
+            }
             return std::get<T>(value);
         }
         detail::evaluationLoop();
