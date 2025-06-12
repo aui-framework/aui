@@ -40,7 +40,7 @@ static auto headerWithContents(_<AView> content) {
                      ); },
         Vertical::Expanding {
           Centered {
-            Vertical {
+            Horizontal {
                   Label { "boll" } with_style {
                       FixedSize { 60_dp },
                       BorderRadius { 60_dp / 2.f },
