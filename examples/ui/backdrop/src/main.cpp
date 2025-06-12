@@ -61,7 +61,7 @@ static auto headerWithContents(_<AView> content) {
                       AOverflowMask::ROUNDED_RECT,
                       Backdrop {
                           Backdrop::LiquidFluid {},
-                          Backdrop::GaussianBlur { 3_dp },
+                          Backdrop::GaussianBlur { 5_dp },
                       },
 //                      Border { 1_dp, AColor::GRAY.transparentize(0.6f) },
                       BoxShadow { 0, 32_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
