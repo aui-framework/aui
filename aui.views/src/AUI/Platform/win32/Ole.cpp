@@ -45,7 +45,7 @@ Ole::~Ole() {
 }
 
 Ole& Ole::inst() {
-    static Ole ole;
+    thread_local Ole ole;
     return ole;
 }
 
