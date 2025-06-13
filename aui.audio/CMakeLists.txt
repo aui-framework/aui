@@ -42,9 +42,14 @@ if (AUI_PLATFORM_MACOS)
 					   "-framework QuartzCore")
 endif()
 
-auib_import(soxr https://github.com/aui-framework/soxr
+if (AUIB_DISABLE)
+    find_package(soxr REQUIRED)
+    aui_link(aui.audio PRIVATE soxr::soxr)
+else ()
+    auib_import(soxr https://github.com/aui-framework/soxr
             ADD_SUBDIRECTORY
             VERSION 8049dcb
-            )
+    )
 
-aui_link(aui.audio PRIVATE soxr)
+    aui_link(aui.audio PRIVATE soxr)
+endif ()
