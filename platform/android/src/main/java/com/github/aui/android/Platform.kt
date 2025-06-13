@@ -32,7 +32,7 @@ object Platform {
 
     @JvmStatic
     private fun requestRedraw() {
-        AuiView.ourCurrentSurface?.requestRender()
+        AUIView.ourCurrentSurface?.requestRender()
     }
 
     @JvmStatic
@@ -66,7 +66,7 @@ object Platform {
     @JvmStatic
     private fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        AuiView.ourCurrentSurface?.context?.startActivity(intent)
+        AUIView.ourCurrentSurface?.context?.startActivity(intent)
     }
 
     @JvmStatic
