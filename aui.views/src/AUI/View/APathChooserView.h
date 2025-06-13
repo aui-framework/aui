@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/Platform/ADesktop.h>
+#include <AUI/Thread/AAsyncHolder.h>
 #include "AViewContainer.h"
 #include "ATextField.h"
 
@@ -27,9 +28,10 @@
 class API_AUI_VIEWS AFileChooserView: public AViewContainerBase {
 private:
     _<ATextField> mPathField;
+    AAsyncHolder mAsync;
 
 public:
-    explicit AFileChooserView(const APath& defaultPath = "", const AVector<ADesktop::FileExtension>& extensions = { {"All", "*"} });
+    explicit AFileChooserView(const APath& defaultPath = "", AVector<ADesktop::FileExtension> extensions = { {"All", "*"} });
 
     void setPath(const APath& path);
     APath getPath() const;
@@ -73,6 +75,7 @@ public:
 class API_AUI_VIEWS ADirChooserView: public AViewContainerBase {
 private:
     _<ATextField> mPathField;
+    AAsyncHolder mAsync;
 
 public:
     explicit ADirChooserView(const APath& defaultPath = "");

@@ -26,7 +26,7 @@ ADirChooserView::ADirChooserView(const APath& defaultPath) {
     mPathField->setExpanding({ 2, 0 });
     addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {
         auto c = mPathField;
-        ADesktop::browseForDir(getWindow(), *mPathField->text()).onSuccess([&, c](const AString& path) {
+        mAsync << ADesktop::browseForDir(getWindow(), *mPathField->text()).onSuccess([&, c](const AString& path) {
             c->getThread()->enqueue([path, c]() {
                 if (!path.empty()) {
                     c->setText(path);
@@ -44,13 +44,13 @@ void ADirChooserView::setPath(const APath& path) { mPathField->setText(path); }
 
 APath ADirChooserView::getPath() const { return *mPathField->text(); }
 
-AFileChooserView::AFileChooserView(const APath& defaultPath, const AVector<ADesktop::FileExtension>& extensions) {
+AFileChooserView::AFileChooserView(const APath& defaultPath, AVector<ADesktop::FileExtension> extensions) {
     setLayout(std::make_unique<AHorizontalLayout>());
     addView(mPathField = _new<ATextField>());
     mPathField->setExpanding({ 2, 0 });
-    addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {
+    addView(_new<AButton>("...").connect(&AButton::clicked, this, [&, extensions = std::move(extensions)]() {
         auto c = mPathField;
-        ADesktop::browseForFile(getWindow(), *mPathField->text(), extensions).onSuccess([&, c](const AString& path) {
+        mAsync << ADesktop::browseForFile(getWindow(), *mPathField->text(), extensions).onSuccess([&, c](const AString& path) {
             c->getThread()->enqueue([path, c]() {
                 if (!path.empty()) {
                     c->setText(path);
