@@ -150,6 +150,14 @@ void AView::render(ARenderContext ctx)
 
     ensureAssUpdated();
 
+    // draw list
+    for (unsigned i = 0; i <= int(ass::prop::PropertySlot::SHADOW); ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+        if (auto w = mAss[i]) {
+            w->renderFor(this, ctx);
+        }
+    }
+
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
@@ -159,8 +167,10 @@ void AView::render(ARenderContext ctx)
     }
 
     // draw list
-    for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
-        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+    for (unsigned i = unsigned(ass::prop::PropertySlot::SHADOW) + 1u; i < unsigned(ass::prop::PropertySlot::COUNT);
+         ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT))
+            continue;
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
         }
