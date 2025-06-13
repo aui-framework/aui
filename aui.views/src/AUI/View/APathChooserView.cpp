@@ -13,7 +13,6 @@
 // Created by alex2 on 15.04.2021.
 //
 
-
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Platform/ADesktop.h>
 #include "APathChooserView.h"
@@ -21,10 +20,10 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/ASS/ASS.h>
 
-APathChooserView::APathChooserView(const APath& defaultPath) {
+ADirChooserView::ADirChooserView(const APath& defaultPath) {
     setLayout(std::make_unique<AHorizontalLayout>());
     addView(mPathField = _new<ATextField>());
-    mPathField->setExpanding({2, 0});
+    mPathField->setExpanding({ 2, 0 });
     addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {
         auto c = mPathField;
         ADesktop::browseForDir(getWindow(), *mPathField->text()).onSuccess([&, c](const AString& path) {
@@ -34,23 +33,37 @@ APathChooserView::APathChooserView(const APath& defaultPath) {
                 }
             });
         });
-    }) let {
-        it->setCustomStyle({
-            ass::MinSize { 15_dp, {} }
-        });
-    });
+    }) let { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
 
     setPath(defaultPath);
 
-    connect(mPathField->textChanged, this, [&](const AString& t) {
-        emit changed(APath(t));
-    });
+    connect(mPathField->textChanged, this, [&](const AString& t) { emit changed(APath(t)); });
 }
 
-void APathChooserView::setPath(const APath& path) {
-    mPathField->setText(path);
+void ADirChooserView::setPath(const APath& path) { mPathField->setText(path); }
+
+APath ADirChooserView::getPath() const { return *mPathField->text(); }
+
+AFileChooserView::AFileChooserView(const APath& defaultPath, const AVector<ADesktop::FileExtension>& extensions) {
+    setLayout(std::make_unique<AHorizontalLayout>());
+    addView(mPathField = _new<ATextField>());
+    mPathField->setExpanding({ 2, 0 });
+    addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {
+        auto c = mPathField;
+        ADesktop::browseForFile(getWindow(), *mPathField->text(), extensions).onSuccess([&, c](const AString& path) {
+            c->getThread()->enqueue([path, c]() {
+                if (!path.empty()) {
+                    c->setText(path);
+                }
+            });
+        });
+    }) let { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
+
+    setPath(defaultPath);
+
+    connect(mPathField->textChanged, this, [&](const AString& t) { emit changed(APath(t)); });
 }
 
-APath APathChooserView::getPath() const {
-    return *mPathField->text();
-}
+void AFileChooserView::setPath(const APath& path) { mPathField->setText(path); }
+
+APath AFileChooserView::getPath() const { return *mPathField->text(); }

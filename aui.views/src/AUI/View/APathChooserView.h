@@ -16,20 +16,20 @@
 
 #pragma once
 
-
+#include <AUI/Platform/ADesktop.h>
 #include "AViewContainer.h"
 #include "ATextField.h"
 
 /**
- * @brief A text field with "..." button prompting path.
+ * @brief A text field with "..." button prompting path to a file.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS APathChooserView: public AViewContainerBase {
+class API_AUI_VIEWS AFileChooserView: public AViewContainerBase {
 private:
     _<ATextField> mPathField;
 
 public:
-    explicit APathChooserView(const APath& defaultPath = "");
+    explicit AFileChooserView(const APath& defaultPath = "", const AVector<ADesktop::FileExtension>& extensions = { {"All", "*"} });
 
     void setPath(const APath& path);
     APath getPath() const;
@@ -37,8 +37,8 @@ public:
     auto path() {
         return APropertyDef {
             this,
-            &APathChooserView::getPath,
-            &APathChooserView::setPath,
+            &AFileChooserView::getPath,
+            &AFileChooserView::setPath,
             changed,
         };
     }
@@ -50,18 +50,66 @@ signals:
 
 
 template<>
-struct ADataBindingDefault<APathChooserView, APath> {
+struct ADataBindingDefault<AFileChooserView, APath> {
 public:
-    static auto setup(const _<APathChooserView>& v) {}
+    static auto setup(const _<AFileChooserView>& v) {}
 
-    static auto property(const _<APathChooserView>& v) {
+    static auto property(const _<AFileChooserView>& v) {
         return v->path();
     }
 
     static auto getGetter() {
-        return &APathChooserView::changed;
+        return &AFileChooserView::changed;
     }
     static auto getSetter() {
-        return &APathChooserView::setPath;
+        return &AFileChooserView::setPath;
     }
 };
+
+/**
+ * @brief A text field with "..." button prompting path to a dir.
+ * @ingroup useful_views
+ */
+class API_AUI_VIEWS ADirChooserView: public AViewContainerBase {
+private:
+    _<ATextField> mPathField;
+
+public:
+    explicit ADirChooserView(const APath& defaultPath = "");
+
+    void setPath(const APath& path);
+    APath getPath() const;
+
+    auto path() {
+        return APropertyDef {
+            this,
+            &ADirChooserView::getPath,
+            &ADirChooserView::setPath,
+            changed,
+        };
+    }
+
+signals:
+    emits<APath> changed;
+};
+
+
+
+template<>
+struct ADataBindingDefault<ADirChooserView, APath> {
+public:
+    static auto setup(const _<ADirChooserView>& v) {}
+
+    static auto property(const _<ADirChooserView>& v) {
+        return v->path();
+    }
+
+    static auto getGetter() {
+        return &ADirChooserView::changed;
+    }
+    static auto getSetter() {
+        return &ADirChooserView::setPath;
+    }
+};
+
+using APathChooserView [[deprecated("APathChooserView was renamed to ADirChooserView")]] = ADirChooserView;
