@@ -18,6 +18,8 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
+#include "AUI/Layout/AStackedLayout.h"
+#include "AUI/Util/UIBuildingHelpers.h"
 
 /**
  * @brief Button with text, which can be pushed to make some action.
@@ -68,7 +70,7 @@ namespace declarative {
 /**
  * @declarativeformof{AButton}
  */
-struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButtonEx> {
+struct Button : aui::ui_building::view_container_layout<AStackedLayout, AButtonEx> {
     /**
      * @brief Basic label initializer.
      * @details
@@ -78,7 +80,7 @@ struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButt
      * }),
      * @endcode
      */
-    Button(AString text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { std::move(text) } }) {}
+    Button(AString text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { std::move(text) } }) {}
 
     /**
      * @brief Basic label initializer.
@@ -89,7 +91,7 @@ struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButt
      * }),
      * @endcode
      */
-    Button(const char* text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { text } }) {}
+    Button(const char* text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { text } }) {}
 
     /**
      * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
@@ -105,7 +107,7 @@ struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButt
      */
     template <typename... Views>
     Button(Views&&... views)
-        : layouted_container_factory<AHorizontalLayout, AButtonEx>(std::forward<Views>(views)...) {}
+        : layouted_container_factory<AStackedLayout, AButtonEx>(Horizontal { std::forward<Views>(views)... } ) {}
 };
 }   // namespace declarative
 
