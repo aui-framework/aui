@@ -268,7 +268,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 void AWindow::quit() {
 
     getWindowManager().mWindows.removeFirst(mSelfHolder);
-    mViews.clear();
     setLayout(nullptr);
 
     // parent window should be activated BEFORE child is closed.
