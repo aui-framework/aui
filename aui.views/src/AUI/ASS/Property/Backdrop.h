@@ -88,8 +88,11 @@ namespace ass {
             API_AUI_VIEWS GaussianBlurCustom findOptimalParams() const;
         };
 
-        using Any = std::variant<GaussianBlur, GaussianBlurCustom>;
-        using Preprocessed = std::variant<GaussianBlurCustom>;
+        struct LiquidFluid {
+        };
+
+        using Any = std::variant<GaussianBlur, GaussianBlurCustom, LiquidFluid>;
+        using Preprocessed = std::variant<GaussianBlurCustom, LiquidFluid>;
         AVector<Any> effects;
 
         Backdrop(std::initializer_list<Any> effects): effects(std::move(effects)) {}
