@@ -40,7 +40,11 @@ public:
     }
 
     void applyGeometryToChildren() override;
-  
+
+    bool consumesClick(const glm::ivec2& position) override {
+        return true;
+    }
+
     void setScroll(glm::uvec2 scroll) {
         if (mScroll == scroll) [[unlikely]] {
             return;

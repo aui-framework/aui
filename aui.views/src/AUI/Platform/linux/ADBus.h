@@ -252,7 +252,7 @@ namespace aui::dbus {
             dbus_message_iter_recurse(iter, &sub);
 
             AMap<K, V> result;
-            for (;;) {
+            do {
                 AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
                 DBusMessageIter item;
                 dbus_message_iter_recurse(&sub, &item);
@@ -260,10 +260,12 @@ namespace aui::dbus {
                 if (!dbus_message_iter_next(&item)) {
                     throw AException("bad dict");
                 }
+                if (k == "current_filter") { // TODO dirty hack of OpenFile
+                    continue;
+                }
                 auto v = aui::dbus::iter_get<V>(&item);
                 result[k] = v;
-                if (!dbus_message_iter_next(&sub)) break;
-            }
+            } while (dbus_message_iter_next(&sub));
 
             return result;
         }

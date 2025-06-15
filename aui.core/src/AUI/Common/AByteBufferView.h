@@ -54,12 +54,12 @@ public:
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
+    AByteBufferView slice(std::size_t offset /* to end */) const {
         return slice(offset, size() - offset);
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
+    AByteBufferView slice(std::size_t offset, std::size_t size) const {
         AUI_ASSERTX(offset + size <= mSize, "out of bounds");
         return { mBuffer + offset, size };
     }

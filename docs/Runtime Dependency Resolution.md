@@ -3,7 +3,7 @@ program modules such as `*.dll`, `*.so` or `*.dylib`.
 
 @note
 Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons, images,
-sounds and other resources consider using AUI assets to embed them right into your binary.
+sounds and other resources consider using @ref assets to embed them right into your binary.
 
 # Build-time shared library resolution
 

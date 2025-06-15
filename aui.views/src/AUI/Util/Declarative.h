@@ -154,10 +154,10 @@ public:
     struct Expanding : view_helper<Expanding>, layouted_container_factory_impl<Layout, Container> {
     public:
         template <typename... Views>
-        Expanding(Views&&... views) : layouted_container_factory_impl<Layout>(std::forward<Views>(views)...) {}
+        Expanding(Views&&... views) : layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...) {}
 
         _<Container> operator()() {
-            return layouted_container_factory_impl<Layout>::operator()() let { it->setExpanding(); };
+            return layouted_container_factory_impl<Layout, Container>::operator()() let { it->setExpanding(); };
         }
     };
 };
