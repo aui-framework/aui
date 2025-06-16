@@ -123,6 +123,8 @@ AViewContainerBase::~AViewContainerBase() {
         view->mParent = nullptr;
     }
     //Stylesheet::inst().invalidateCache();
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    AUI_ASSERTX(bool(lock), "destroying container while it's rendering?");
 }
 
 void AViewContainerBase::addViews(AVector<_<AView>> views) {
