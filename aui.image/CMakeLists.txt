@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 auib_import(lunasvg https://github.com/sammycage/lunasvg
             VERSION v3.3.0
-            CMAKE_ARGS -DLUNASVG_BUILD_EXAMPLES=OFF
+            CMAKE_ARGS -DLUNASVG_BUILD_EXAMPLES=OFF -DPLUTOVG_BUILD_EXAMPLES=OFF
 )
 
 
