@@ -127,13 +127,11 @@ if (APPLE)
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-    else()
-        # [RPATH linux]
-        set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
-        set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-        # [RPATH linux]
     endif()
+    # [RPATH linux]
+    set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
+    # [RPATH linux]
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
