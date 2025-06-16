@@ -339,9 +339,6 @@ protected:
             throw AException("drawViews: can't ensure safe iteration");
         }
         for (auto i = begin; i != end; ++i) {
-            // making a copy of shared_ptr to lock lifetime of the view; apparently, view->render may remove itself from
-            // container, i.e., as a result of custom animation implemented within render
-            // NOLINTNEXTLINE(*-unnecessary-copy-initialization)
             drawView(*i, contextPassedToContainer);
         }
     }
@@ -478,4 +475,8 @@ private:
      * @see mPointerEventsMapping
      */
     _<AView> pointerEventsMapping(APointerIndex index);
+
+    void removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
+    void setLayoutImpl(_unique<ALayout> layout, std::unique_lock<ASpinlockMutex>& lock);
+    void removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lock);
 };
