@@ -224,7 +224,7 @@ void AViewContainerBase::removeView(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> views) {
+void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use removeViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -232,7 +232,7 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::iterator> vie
     if (views.empty()) {
         return;
     }
-    auto idx = std::distance(mViews.begin(), views.begin());
+    auto idx = std::distance(mViews.cbegin(), views.begin());
     for (const auto& view: views) {
         view->mParent = nullptr;
         AUI_NULLSAFE(mLayout)->removeView(view, idx);

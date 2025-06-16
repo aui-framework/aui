@@ -317,7 +317,6 @@ public:
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    AVector<_<AView>> mViews;
     bool mWantsLayoutUpdate = true;
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
@@ -383,7 +382,7 @@ protected:
     /**
      * @brief Remove views from the container.
      */
-    void removeViews(aui::range<AVector<_<AView>>::iterator> views);
+    void removeViews(aui::range<AVector<_<AView>>::const_iterator> views);
 
     /**
      * @brief Remove view from the container.
@@ -436,6 +435,7 @@ signals:
 private:
     _unique<ALayout> mLayout;
     ASpinlockMutex mViewsSafeIteration;
+    AVector<_<AView>> mViews;
     bool mSizeSet = false;
 
 
