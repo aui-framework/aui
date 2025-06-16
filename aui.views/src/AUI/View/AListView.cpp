@@ -34,7 +34,7 @@ class AListViewContainer : public AViewContainer {
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
-        switch (mViews.size()) {
+        switch (getViews().size()) {
             case 0:
                 return nullptr;
             case 1: {
@@ -45,9 +45,9 @@ class AListViewContainer : public AViewContainer {
             default: {
                 mIndex = -1;
                 pos.y += mScrollY;
-                pos.y /= mViews[1]->getPosition().y - mViews[0]->getPosition().y;
-                if (pos.y >= 0 && pos.y < mViews.size()) {
-                    return mViews[mIndex = pos.y];
+                pos.y /= getViews()[1]->getPosition().y - getViews()[0]->getPosition().y;
+                if (pos.y >= 0 && pos.y < getViews().size()) {
+                    return getViews()[mIndex = pos.y];
                 }
                 return nullptr;
             }

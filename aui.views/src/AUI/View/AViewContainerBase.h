@@ -317,7 +317,6 @@ public:
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    AVector<_<AView>> mViews;
     bool mWantsLayoutUpdate = true;
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
@@ -340,9 +339,6 @@ protected:
             throw AException("drawViews: can't ensure safe iteration");
         }
         for (auto i = begin; i != end; ++i) {
-            // making a copy of shared_ptr to lock lifetime of the view; apparently, view->render may remove itself from
-            // container, i.e., as a result of custom animation implemented within render
-            // NOLINTNEXTLINE(*-unnecessary-copy-initialization)
             drawView(*i, contextPassedToContainer);
         }
     }
@@ -383,7 +379,7 @@ protected:
     /**
      * @brief Remove views from the container.
      */
-    void removeViews(aui::range<AVector<_<AView>>::iterator> views);
+    void removeViews(aui::range<AVector<_<AView>>::const_iterator> views);
 
     /**
      * @brief Remove view from the container.
@@ -436,6 +432,7 @@ signals:
 private:
     _unique<ALayout> mLayout;
     ASpinlockMutex mViewsSafeIteration;
+    AVector<_<AView>> mViews;
     bool mSizeSet = false;
 
 
@@ -478,4 +475,8 @@ private:
      * @see mPointerEventsMapping
      */
     _<AView> pointerEventsMapping(APointerIndex index);
+
+    void removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
+    void setLayoutImpl(_unique<ALayout> layout, std::unique_lock<ASpinlockMutex>& lock);
+    void removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lock);
 };
