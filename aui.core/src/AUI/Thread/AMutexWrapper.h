@@ -44,10 +44,6 @@
  * sharedResource->data = "world";        // ok, will be done before or after "hello", but not simultaneously
  * ...
  * @endcode
- *
- * # Exclusive Access
- * See @ref ARuntimeBorrowChecker
- *
  */
 template<typename T, typename Lockable = AMutex>
 class AMutexWrapper: public aui::noncopyable {

@@ -67,6 +67,7 @@
             <tab type="user" url="@ref docs/Runtime Dependency Resolution.md" title="Runtime Dependency Resolution" />
             <tab type="user" url="@ref docs/Forking AUI.md" title="Forking AUI" />
             <tab type="user" url="@ref docs/AUI Assets.md" title="AUI Assets" />
+            <tab type="user" url="@ref docs/Contributing to AUI.md" title="Contributing to AUI" />
         </tab>
     </navindex>
 
