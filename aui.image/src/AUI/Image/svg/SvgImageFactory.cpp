@@ -20,6 +20,9 @@
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
     mImpl = lunasvg::Document::loadFromData(buf.data(), buf.size());
+    if (!mImpl) {
+        throw AException("could not parse svg");
+    }
 }
 
 SvgImageFactory::~SvgImageFactory() {
