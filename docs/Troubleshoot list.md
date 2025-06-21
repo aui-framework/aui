@@ -14,12 +14,31 @@ See also: @ref assets
    also with the final executable (`PUBLIC` linking does not solve this issue on Linux).
 4. Try using @ref WHOLEARCHIVE flag.
 
-# Build cache invalidation
+# Build cache invalidation {#BUILD_CACHE_INVALIDATION}
+
+Symptoms:
+
+1. Linking problems
+2. Newly added/removed files not being recognized by the build system
+3. Changes in CMake scripts are not "visible" in IDE
+4. Other weird issues
 
 Cache invalidation is one of the software engineering problems (along with naming). There's cheatsheet on how to
 invalidate caches: 
 
-1. Delete `CMakeCache.txt` from your CMake binary dir (`cmake-build-debug` or `cmake-build-release` in CLion).
-2. Delete your CMake binary dir.
-3. Change AUI version (also may need `CMakeCache.txt` to be deleted)
-4. Delete aui.boot cache dir (@ref AUIB_CACHE unless otherwise specified)
+1. Reload CMake cache
+  - In **CLion**: File > Reload CMake Project
+  - In **Visual Studio Code**: `F1` > `CMake: Configure`
+  - In CLI:
+    ```bash
+    cd <YOUR_BUILD_DIR>
+    cmake ..
+    ```
+    or
+    ```bash
+    cmake --build <YOUR_BUILD_DIR>
+    ```
+2. Delete `CMakeCache.txt` from your CMake binary dir (`cmake-build-debug` or `cmake-build-release` in CLion).
+3. Delete your CMake binary dir.
+4. Change AUI version (also may need `CMakeCache.txt` to be deleted)
+5. Delete aui.boot cache dir (@ref AUIB_CACHE unless otherwise specified)

@@ -28,7 +28,7 @@ Put your files to that dir:
 cp test.txt assets/test.txt
 ```
 
-Please invoke CMake configure to apply changes in `assets/`:
+Please invoke CMake configure to apply changes in `assets/` (see @ref BUILD_CACHE_INVALIDATION):
 
 ```bash
 cd build
