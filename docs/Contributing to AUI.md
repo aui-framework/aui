@@ -98,6 +98,11 @@ These commands are not tested on Windows.
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
+
+# only for the first time
+python3 -m pip install -r doxygen/requirements.txt 
+
+# generate docs
 python3 doxygen/docs.py
 ```
 
