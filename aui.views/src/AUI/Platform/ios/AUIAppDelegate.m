@@ -9,20 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-//  AppDelegate.m
-//  test
-//
-//  Created by Alexey Titov on 02.12.2021.
-//
+#import "AUIAppDelegate.h"
 
-#import "AppDelegate.h"
-
-@interface AppDelegate ()
+@interface AUIAppDelegate ()
 
 @end
 
-@implementation AppDelegate
+@implementation AUIAppDelegate
 
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {

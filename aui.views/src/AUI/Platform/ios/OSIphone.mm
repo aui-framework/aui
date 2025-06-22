@@ -14,7 +14,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
 #import <UIKit/UIKit.h>
-#import "AppDelegate.h"
+#import "AUIAppDelegate.h"
 
 int(* _gEntry)(const AStringVector&);
 
@@ -26,7 +26,7 @@ const ACommandLineArgs& aui::args() noexcept {
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     _gEntry = aui_entry;
     //AThread::setThreadName("UI thread");
-    NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AppDelegate class]);;
+    NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AUIAppDelegate class]);;
 
     {
         [[maybe_unused]] auto mainThread = AThread::main();

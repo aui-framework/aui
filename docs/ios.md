@@ -13,3 +13,13 @@ iOS shares its XNU kernel and codebase with @ref macos.
 
 - iOS is easier to support than @ref android due to limited number of devices and OS versions
 - You'd need a @ref macos machine to build and run an iOS app
+
+# Building an AUI app for iOS
+
+iOS apps are created and built with Xcode projects on macOS machines.
+
+- Use template Xcode project
+ 
+  Since Xcode has no builtin CMake support, the template Xcode project invokes CMake configure and build as an external
+  CMake script, setting appropriate `CMAKE_TOOLCHAIN_FILE`. The target passed to @ref aui_app is built as XCframework
+  (i.e., as a shared library). @ref aui_app puts headers.
