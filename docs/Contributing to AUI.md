@@ -32,13 +32,14 @@ work happens. When we consider `develop` branch stable enough, we merge `develop
 
 # AI
 
-We'd happily accept your AI-assisted work, as soon as you have complete responsibility and understading of the changes
-you propose and they don't not violate someone's copyright. Please manually review and adjust AI generated
-code/documentation. We won't merge changes if they contain obvious AI traces:
+We'd happily accept your AI-assisted work, as soon as you take complete responsibility thereof, and you have complete
+understanding of the changes you propose. Make sure your AI-assisted work does not violate someone's copyright. Please
+manually review and adjust AI-generated code/documentation. We won't merge changes if they contain obvious AI traces:
 
 - hallucinations
-- AI assistant-specific unnecessary statements: "I'm happy to help", "Please let me know if have questions", etc
+- AI assistant-specific unnecessary statements: "I'm happy to help", "Please let me know if you have questions", etc
 - overexplanation, repetitive points, fluff writing
+- excessive usage of bullet points: nobody writes a page filled with bullet points entirely but AI
 
 Please treat AI as a tool, not as a complete replacement of a software engineer.
 
