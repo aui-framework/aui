@@ -43,9 +43,10 @@ public:
 //   label's text); control it by implementing @ref AView::getContentMinimumWidth() and
 //   @ref AView::getContentMinimumHeight().
 // - **View's box**: the area whose size is defined by AView::size(). Use @ref ass::FixedSize, @ref ass::MinSize and
-//   @ref ass::MaxSize to control it.
+//   @ref ass::MaxSize to define an acceptable size range. Use @ref ass::Padding to add a blank space between view's box
+//   and view's context box.
 //
-//   Views are responsible to handle its padding properly. As an AUI user, you wouldn't need to bother about that unless
+//   A view is responsible to handle its padding properly. As an AUI user, you wouldn't need to bother about that unless
 //   you are implementing custom @ref AView::render().
 //
 //   @ref ass::BackgroundSolid "BackgroundSolid" and similar @ref ass properties are fit into this box.

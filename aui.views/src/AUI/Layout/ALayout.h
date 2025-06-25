@@ -42,8 +42,8 @@ class AViewContainer;
  *
  * - **AHorizontalLayout** - Arranges views in a horizontal row
  * - **AVerticalLayout** - Arranges views in a vertical column
- * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
  * - **AStackedLayout** - Centers views, displaying them on top of each other
+ * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
  *
  * Key concepts:
  *
@@ -51,6 +51,7 @@ class AViewContainer;
  *    - Considering minimum sizes of child views
  *    - Adding margins and spacing
  *    - Respecting fixed size constraints
+ *    - Following @ref "AUI Box Model".
  *
  * 2. **@ref EXPANDING "Expanding Views"** - Children can expand to fill available space of their parent:
  *    - Set via @ref AView::setExpanding or @ref ass::Expanding on a child
@@ -309,9 +310,10 @@ class AViewContainer;
  *
  * - Layout manager queries **Minimum size** which is determined with @ref AView::getMinimumSize and cached until the
  *   view or its children call @ref AView::markMinContentSizeInvalid. It considers:
- *     - Children minimum sizes (if any)
- *     - Padding
- *     - @ref ass::LayoutSpacing
+ *     - Children's minimum sizes (if any). A child includes its @ref ass::Padding to its minimum size.
+ *     - Children's @ref ass::Margin
+ *     - Container's @ref ass::Padding
+ *     - Container's @ref ass::LayoutSpacing
  *     - Other constraints such as @ref ass::FixedSize
  * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
  *   views a share of free space if available. Unlike minimum size, @ref EXPANDING ratio does not depend on children's
