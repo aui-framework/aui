@@ -28,8 +28,9 @@ Put your files to that dir:
 cp test.txt assets/test.txt
 ```
 
-Please invoke CMake configure to apply changes in `assets/` (see @ref BUILD_CACHE_INVALIDATION):
-
+@note
+Please invoke @ref BUILD_CACHE_INVALIDATION "CMake configure" each time you add/remove files in `assets/`! Otherwise,
+these files will not appear in your program.
 ```bash
 cd build
 cmake .. # no need to pass arguments in existing build dir
