@@ -38,6 +38,10 @@ class AViewContainer;
  * - Respecting view margins and alignment
  * - Supporting expanding/stretching of views
  *
+ * @note
+ * You can use @ref docs/Devtools.md "AUI Devtools" to play around with layouts, especially with
+ * @ref EXPANDING "Expanding" property, to get better understanding on how does layout work in AUI.
+ *
  * Common layout managers include:
  *
  * - **AHorizontalLayout** - Arranges views in a horizontal row
@@ -178,6 +182,10 @@ class AViewContainer;
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
+ *
+ * @note
+ * You can use @ref docs/Devtools.md "AUI Devtools" to play around with layouts, especially with
+ * @ref EXPANDING "Expanding" property, to get better understanding on how does layout work in AUI.
  *
  * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
  *
