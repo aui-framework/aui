@@ -197,7 +197,7 @@ public:
             },
           },
           Centered {
-            _new<CellsView>(aui::ptr::fake(&mCells)) with_style {
+            _new<CellsView>(aui::ptr::fake_shared(&mCells)) with_style {
                   Expanding(),
                   BackgroundSolid(AColor::BLACK),
                 },

@@ -53,7 +53,7 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
         case ALayoutDirection::NONE:
             break;
     }
-    mHandle = aui::ptr::manage(new AScrollbarHandle(*this));
+    mHandle = aui::ptr::manage_shared(new AScrollbarHandle(*this));
 
     addView(mBackwardButton);
     addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>());

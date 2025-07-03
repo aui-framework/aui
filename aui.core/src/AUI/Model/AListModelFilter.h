@@ -99,7 +99,7 @@ public:
 namespace AModels {
     template <typename Container, typename Filter>
     auto filter(const _<Container>& other, Filter&& filter) -> _<AListModelFilter<typename Container::value_type, Filter>> {
-        return aui::ptr::manage(new AListModelFilter<typename Container::value_type, Filter>(other, std::forward<Filter>(filter)));
+        return aui::ptr::manage_shared(new AListModelFilter<typename Container::value_type, Filter>(other, std::forward<Filter>(filter)));
     }
 }
 

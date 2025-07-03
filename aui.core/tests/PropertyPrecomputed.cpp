@@ -65,7 +65,7 @@ TEST_F(PropertyPrecomputedTest, APropertyPrecomputed) {
 
     // Usage:
     // AUI_DOCS_CODE_BEGIN
-    auto u = aui::ptr::manage(new User {
+    auto u = aui::ptr::manage_shared(new User {
         .name = "Emma",
         .surname = "Watson",
     });

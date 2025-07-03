@@ -34,7 +34,7 @@ private:
             mQueue.pop();
         }
         if constexpr (std::is_same_v<Ptr, _<T>>) {
-            return aui::ptr::manage(t.release(), APoolDeleter(this));
+            return aui::ptr::manage_shared(t.release(), APoolDeleter(this));
         } else {
             return std::unique_ptr<T, APoolDeleter>(t.release(), APoolDeleter(this));
         }

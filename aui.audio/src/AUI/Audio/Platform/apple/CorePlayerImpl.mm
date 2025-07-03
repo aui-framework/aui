@@ -127,18 +127,18 @@ static CoreAudioInstance& coreAudio() {
 
 void CoreAudioPlayer::playImpl() {
     initializeIfNeeded();
-    ::loop().addSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().addSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
     coreAudio().thread()->enqueue([this] {
         coreAudio().enqueueIfNot();
     });
 }
 
 void CoreAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void CoreAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
     release();
 }
 

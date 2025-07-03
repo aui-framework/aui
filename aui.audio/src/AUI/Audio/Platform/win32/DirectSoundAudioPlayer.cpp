@@ -173,15 +173,15 @@ private:
 void DirectSoundAudioPlayer::playImpl() {
     initializeIfNeeded();
     DirectSound::instance();
-    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
+    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
     release();
 }
 

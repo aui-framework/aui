@@ -89,7 +89,7 @@ private:
     APropertyPrecomputed<bool> mUpdateEnabled = [this] { return mCreateEnabled && mDeleteEnabled; };
 
     void createClicked() {
-        mUsers.writeScope() << aui::ptr::manage(new User {
+        mUsers.writeScope() << aui::ptr::manage_shared(new User {
           .name = std::exchange(mEditedUser.name, {}), .surname = std::exchange(mEditedUser.surname, {}) });
     }
 

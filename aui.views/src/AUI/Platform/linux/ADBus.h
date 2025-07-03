@@ -352,7 +352,7 @@ public:
                         const AString& interface,
                         const AString& method,
                         const Args&... args) {
-        auto msg = aui::ptr::make_unique_with_deleter(dbus_message_new_method_call(bus.toStdString().c_str(),
+        auto msg = aui::ptr::manage_unique(dbus_message_new_method_call(bus.toStdString().c_str(),
                                                                                    path.toStdString().c_str(),
                                                                                    interface.toStdString().c_str(),
                                                                                    method.toStdString().c_str()),
@@ -373,7 +373,7 @@ public:
             aui::dbus::iter_append(&dbusArgs, v);
         }, args...);
 
-        auto pending = aui::ptr::make_unique_with_deleter([&] {
+        auto pending = aui::ptr::manage_unique([&] {
             DBusPendingCall* pending;
             if (!dbus_connection_send_with_reply(mConnection, msg.get(), &pending, -1)) { // -1 is default timeout
                 throw ADBus::Exception(formatError("dbus_connection_send_with_reply failed"));

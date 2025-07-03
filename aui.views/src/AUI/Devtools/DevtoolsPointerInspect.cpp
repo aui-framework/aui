@@ -187,7 +187,7 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     mResultView->setLayout(std::make_unique<AVerticalLayout>());
     mResultView->addView(Horizontal { Label { "AReflect::name = " }, Label { AReflect::name(ptr) } });
     mResultView->addView(Horizontal { Label { "Ass names = " }, Label { AStringVector(ptr->getAssNames()).join(", ") } });
-    auto fake = _new<FakeContainer>(ptr->sharedPtr());
+    auto fake = _new<FakeContainer>(aui::ptr::shared_from_this(ptr));
     auto parentHelper = _new<ParentHelper>(fake);
     connect(parentHelper->reinflate, [this](AView* ptr) {
         mAddress->setText("{}"_format((void*)ptr));

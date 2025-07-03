@@ -124,16 +124,16 @@ static PulseAudioInstance& pulse() {
 
 void PulseAudioPlayer::playImpl() {
     initializeIfNeeded();
-    ::loop().addSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
+    ::loop().addSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
     pulse();
 }
 
 void PulseAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void PulseAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
     release();
 }
 

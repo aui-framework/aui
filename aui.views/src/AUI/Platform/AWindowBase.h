@@ -280,7 +280,7 @@ public:
         return tmp;
     }
     void closeOverlappingSurface(AOverlappingSurface* surface) {
-        if (mOverlappingSurfaces.erase(aui::ptr::fake(surface)) > 0) {
+        if (mOverlappingSurfaces.erase(aui::ptr::fake_shared(surface)) > 0) {
             closeOverlappingSurfaceImpl(surface);
         }
     }

@@ -1163,7 +1163,7 @@ AString Parser::parseTypename() {
 }
 
 _<INode> Parser::parseEntry() {
-    return aui::ptr::manage(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
+    return aui::ptr::manage_shared(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
 }
 
 _<INode> Parser::parseImportStatement() {
