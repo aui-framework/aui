@@ -21,9 +21,9 @@ public:
 
     AAudioFormat info() override {
         return AAudioFormat {
-            .sampleFormat = ASampleFormat::I16,
             .channelCount = AChannelFormat::STEREO,
             .sampleRate = 44100,
+            .sampleFormat = ASampleFormat::I16,
         };
     }
 
