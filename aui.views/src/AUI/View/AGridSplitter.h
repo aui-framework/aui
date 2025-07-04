@@ -44,7 +44,7 @@ public:
         }
 
         _<AView> build() {
-            auto splitter = aui::ptr::manage(new AGridSplitter);
+            auto splitter = aui::ptr::manage_shared(new AGridSplitter);
             if (mAddSpacers) {
                 for (auto& row: mItems) {
                     row.push_back(_new<ASpacerExpanding>());

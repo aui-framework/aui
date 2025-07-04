@@ -1551,7 +1551,7 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
     minRequiredSize.x = aui::bit_ceil(minRequiredSize.x);
     minRequiredSize.y = aui::bit_ceil(minRequiredSize.y);
 
-    return aui::ptr::make_unique_with_deleter(
+    return aui::ptr::manage_unique(
         [&]() -> FramebufferWithTextureRT* {
           auto applicableSizeOnly =
               mFramebuffersForMultiPassEffectsPool | ranges::views::filter([&](const auto& fb) {

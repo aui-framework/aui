@@ -377,7 +377,7 @@ void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
                     break;
                 }
                 view->setFocusChainTarget(childView);
-                childView = view->sharedPtr();
+                childView = aui::ptr::shared_from_this(view);
             }
         }
         auto copy = event;

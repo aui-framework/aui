@@ -37,7 +37,7 @@ public:
             AUI_ASSERT(prev != ctx);
             gdk_gl_context_make_current(ctx);
         }
-        return aui::ptr::make_unique_with_deleter(ctx, [prev](GdkGLContext*) {
+        return aui::ptr::manage_unique(ctx, [prev](GdkGLContext*) {
             gdk_gl_context_clear_current();
             gdk_gl_context_make_current(prev);
         });

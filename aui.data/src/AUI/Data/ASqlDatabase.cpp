@@ -27,7 +27,7 @@ ASqlDatabase::~ASqlDatabase() = default;
 
 _<ASqlQueryResult> ASqlDatabase::query(const AString& query, const AVector<AVariant>& params)
 {
-	return aui::ptr::manage(new ASqlQueryResult(mDriverInterface->query(query, params)));
+	return aui::ptr::manage_shared(new ASqlQueryResult(mDriverInterface->query(query, params)));
 }
 
 int ASqlDatabase::execute(const AString& query, const AVector<AVariant>& params)
@@ -41,7 +41,7 @@ _<ASqlDatabase> ASqlDatabase::connect(const AString& driverName, const AString& 
 	for (int i = 0; i < 2; ++i) {
 		if (auto c = getDrivers().contains(driverName))
 		{
-			return aui::ptr::manage(new ASqlDatabase(c->second->openDriverConnection(address, port, databaseName, username, password), driverName));
+			return aui::ptr::manage_shared(new ASqlDatabase(c->second->openDriverConnection(address, port, databaseName, username, password), driverName));
 		}
 		else if (i == 0)
 		{

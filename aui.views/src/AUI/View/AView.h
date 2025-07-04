@@ -752,16 +752,6 @@ public:
 
     void ensureAssUpdated();
 
-    [[nodiscard]]
-    _<AView> sharedPtr() {
-        return _cast<AView>(AObject::sharedPtr());
-    }
-
-    [[nodiscard]]
-    _weak<AView> weakPtr() {
-        return _weak<AView>(sharedPtr());
-    }
-
     /**
      * Handles touch screen gesture event.
      * @param origin position where the event(s) started to occur from.

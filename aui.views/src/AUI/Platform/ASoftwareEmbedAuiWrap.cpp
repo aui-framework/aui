@@ -22,9 +22,9 @@
 
 ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
 #if AUI_PLATFORM_LINUX
-    windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContextX11));
+    windowInit(aui::ptr::manage_unique(mContext = new SoftwareRenderingContextX11));
 #else
-    windowInit(aui::ptr::unique(mContext = new SoftwareRenderingContext));
+    windowInit(aui::ptr::manage_unique(mContext = new SoftwareRenderingContext));
 #endif
 }
 

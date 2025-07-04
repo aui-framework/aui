@@ -113,7 +113,7 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         // Example usage:
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
+        auto u = aui::ptr::manage_shared(new User { .name = "Chloe" });
         AObject::connect(u->name.changed, slot(observer)::log);
         // AUI_DOCS_CODE_END
         EXPECT_CALL(*observer, log(AString("Marinette")));
@@ -136,7 +136,7 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         // asking for `changed`:
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        auto u = aui::ptr::manage(new User { .name = "Chloe" });
+        auto u = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
         AObject::connect(u->name, slot(observer)::log);
@@ -180,7 +180,7 @@ TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        auto original = aui::ptr::manage(new User { .name = "Chloe" });
+        auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
         AObject::connect(original->name, slot(observer)::log);
@@ -227,7 +227,7 @@ TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
     // it notifies the observers.
     // AUI_DOCS_CODE_BEGIN
     auto observer = _new<LogObserver>();
-    auto original = aui::ptr::manage(new User { .name = "Chloe" });
+    auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
     EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
     AObject::connect(original->name, slot(observer)::log);
@@ -267,7 +267,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
-        auto original = aui::ptr::manage(new User { .name = "Chloe" });
+        auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
         AObject::connect(original->name, slot(observer)::log);
@@ -303,7 +303,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     // Move assignment work in a similar way to copy assignment:
     // AUI_DOCS_CODE_BEGIN
     auto observer = _new<LogObserver>();
-    auto original = aui::ptr::manage(new User { .name = "Chloe" });
+    auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
     EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
     AObject::connect(original->name, slot(observer)::log);

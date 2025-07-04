@@ -570,7 +570,7 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
 
 void AView::focus(bool needFocusChainUpdate) {
     // holding reference here
-    auto mySharedPtr = sharedPtr();
+    auto mySharedPtr = aui::ptr::shared_from_this(this);
 
     notifyParentChildFocused(mySharedPtr);
 
@@ -747,7 +747,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
             if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
                 // dead interface?
                 return;

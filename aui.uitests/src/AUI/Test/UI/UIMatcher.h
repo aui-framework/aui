@@ -189,7 +189,7 @@ public:
             ChildMatcher(const _<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
 
             bool matches(const _<AView>& view) override {
-                return childMatcher->matches(aui::ptr::fake(view->getParent()));
+                return childMatcher->matches(aui::ptr::fake_shared(view->getParent()));
             }
         };
 

@@ -53,7 +53,7 @@ int AWordWrappingLayout::getMinimumHeight() {
 void AWordWrappingLayout::onResize(int x, int y, int width, int height) {
     AVector<_<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
-        entries << aui::ptr::fake(&v);
+        entries << aui::ptr::fake_shared(&v);
     }
     AWordWrappingEngine we;
     we.setEntries(std::move(entries));

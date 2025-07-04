@@ -100,7 +100,7 @@ private:
 
 template <typename Layout>
 _<AView> ASplitter::Builder<Layout>::build() {
-    auto splitter = aui::ptr::manage(new ASplitter);
+    auto splitter = aui::ptr::manage_shared(new ASplitter);
     splitter->setExpanding(mExpanding);
     splitter->mHelper.setDirection(Layout::DIRECTION);
 

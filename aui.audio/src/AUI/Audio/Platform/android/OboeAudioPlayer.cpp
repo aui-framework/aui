@@ -52,15 +52,15 @@ private:
 
 void OboeAudioPlayer::playImpl() {
     initializeIfNeeded();
-    OboeSoundOutput::instance().addSource(_cast<OboeAudioPlayer>(sharedPtr()));
+    OboeSoundOutput::instance().addSource(_cast<OboeAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void OboeAudioPlayer::pauseImpl() {
-    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
+    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void OboeAudioPlayer::stopImpl() {
-    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
+    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(aui::ptr::shared_from_this(this)));
     release();
 }
 

@@ -49,7 +49,7 @@ _<AView> myLazyList(_<State> state) {
 
             // aka "loaded" from backend storage of some kind
             auto loadedItems = AVector<_<Item>>::generate(20, [&](size_t i) {
-                return aui::ptr::manage(new Item { .value = "Item {}"_format(loadFrom + i) });
+                return aui::ptr::manage_shared(new Item { .value = "Item {}"_format(loadFrom + i) });
             });
 
             ui_thread { // back to main thread.

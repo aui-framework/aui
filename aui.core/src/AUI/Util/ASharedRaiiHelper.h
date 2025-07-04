@@ -47,7 +47,7 @@
 class ASharedRaiiHelper {
 public:
     static _<ASharedRaiiHelper> make(std::function<void()> callback) {
-        return aui::ptr::manage(new ASharedRaiiHelper(std::move(callback)));
+        return aui::ptr::manage_shared(new ASharedRaiiHelper(std::move(callback)));
     }
 
     ~ASharedRaiiHelper() {

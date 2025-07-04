@@ -33,4 +33,10 @@ void AAbstractSignal::removeIngoingConnectionIn(aui::no_escape<AObjectBase> obje
     c.reset();
 }
 
-_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { return object->weakPtr(); }
+_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) {
+    try {
+        return aui::ptr::weak_from_this(object);
+    } catch (const std::bad_weak_ptr&) {
+        return {};
+    }
+}

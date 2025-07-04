@@ -231,7 +231,7 @@ public:
               },
             },
           },
-          _new<CircleDrawArea>(aui::ptr::fake(&mState)),
+          _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
         });
     }
 

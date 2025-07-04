@@ -56,19 +56,19 @@ public:
     }
 
     static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {}) {
-        auto v = aui::ptr::manage(new AText());
+        auto v = aui::ptr::manage_shared(new AText());
         v->setItems(init, flags);
         return v;
     }
 
     static _<AText> fromHtml(const AString& html, const Flags& flags = {}) {
-        auto v = aui::ptr::manage(new AText());
+        auto v = aui::ptr::manage_shared(new AText());
         v->setHtml(html, flags);
         return v;
     }
 
     static _<AText> fromString(const AString& string, const Flags& flags = {}) {
-        auto v = aui::ptr::manage(new AText());
+        auto v = aui::ptr::manage_shared(new AText());
         v->setString(string, flags);
         return v;
     }
