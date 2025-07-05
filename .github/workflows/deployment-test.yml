@@ -28,14 +28,14 @@ jobs:
         arch: [x86_64]
         include:
           - os: windows-latest
-            generator: "Visual Studio 16 2019"
+            generator: "Visual Studio 16 2022"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
             shared_or_static: shared
             arch: x86
 
           - os: windows-latest
-            generator: "Visual Studio 16 2019"
+            generator: "Visual Studio 16 2022"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -49,7 +49,7 @@ jobs:
             shared_or_static: static
 
           - os: windows-latest
-            generator: "Visual Studio 16 2019"
+            generator: "Visual Studio 16 2022"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
