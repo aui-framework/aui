@@ -91,7 +91,7 @@ struct ButtonEx {
 
     _<AButtonEx> operator()() {
         auto view = _new<AButtonEx>();
-        view->setContents(Centered { std::move(contents) });
+        view->setContents(Centered { Horizontal { std::move(contents) } });
         onClick.bindTo(view->clicked);
         return view;
     }
