@@ -47,7 +47,7 @@ void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {
     XGCValues gcv {
         .graphics_exposures = false,
     };
-    mGC = aui::ptr::make_unique_with_deleter(
+    mGC = aui::ptr::manage_unique(
         XCreateGC(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(init.window), GCGraphicsExposures, &gcv),
         [](GC c) { XFreeGC(PlatformAbstractionX11::ourDisplay, c); });
     reallocate();
@@ -81,7 +81,7 @@ void SoftwareRenderingContextX11::reallocate() {
     if (!PlatformAbstractionX11::ourDisplay.value() || !vi) {
         return;
     }
-    mXImage = aui::ptr::make_unique_with_deleter(
+    mXImage = aui::ptr::manage_unique(
         XCreateImage(
             PlatformAbstractionX11::ourDisplay, vi->visual, vi->depth, ZPixmap, 0, reinterpret_cast<char *>(mBitmapBlob), mBitmapSize.x,
             mBitmapSize.y, 32, 0),

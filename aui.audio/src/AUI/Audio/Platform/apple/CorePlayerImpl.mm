@@ -30,7 +30,7 @@ struct CoreAudioInstance {
         strdesc.mChannelsPerFrame = 2;
         strdesc.mSampleRate = 44100;
         strdesc.mFramesPerPacket = 1;
-        strdesc.mBitsPerChannel = 16;
+        strdesc.mBitsPerChannel = aui::audio::impl::sample_type<aui::audio::platform::requested_sample_format>::size_bits;
         strdesc.mBytesPerFrame = strdesc.mChannelsPerFrame * strdesc.mBitsPerChannel / 8;
         strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 
@@ -127,18 +127,18 @@ static CoreAudioInstance& coreAudio() {
 
 void CoreAudioPlayer::playImpl() {
     initializeIfNeeded();
-    ::loop().addSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().addSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
     coreAudio().thread()->enqueue([this] {
         coreAudio().enqueueIfNot();
     });
 }
 
 void CoreAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
 }
 
 void CoreAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
     release();
 }
 

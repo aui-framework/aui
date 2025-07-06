@@ -33,8 +33,8 @@ namespace aui::detail {
  * @details
  * AObject is required to use @ref signal_slot "signal-slot system".
  *
- * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with sharedPtr() and weakPtr()
- * functions.
+ * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with
+ * aui::ptr::shared_from_this().
  */
 class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject>, public aui::noncopyable {
     friend class AAbstractSignal;
@@ -64,10 +64,6 @@ public:
     virtual ~AObject() = default;
 
     static void disconnect();
-
-    [[nodiscard]] _<AObject> sharedPtr() { return std::enable_shared_from_this<AObject>::shared_from_this(); }
-
-    [[nodiscard]] _weak<AObject> weakPtr() { return std::enable_shared_from_this<AObject>::weak_from_this(); }
 
     /**
      * @brief Connects signal to the slot of the specified object.

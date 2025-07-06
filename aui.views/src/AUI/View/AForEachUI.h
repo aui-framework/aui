@@ -109,7 +109,7 @@ private:
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
-    void removeViews(aui::range<AVector<_<AView>>::iterator> iterators);
+    void removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators);
 
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();

@@ -159,7 +159,7 @@ public:
         }
 
         _<AScrollArea> build() {
-            return aui::ptr::manage(new AScrollArea(*this));
+            return aui::ptr::manage_shared(new AScrollArea(*this));
         }
 
         operator _<AView>() {

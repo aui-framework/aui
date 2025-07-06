@@ -230,6 +230,11 @@ public:
         mMinSize = minSize;
     }
 
+    /**
+     * @brief Marks this view it requires a layout update.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void markMinContentSizeInvalid();
 
     /**
@@ -458,6 +463,17 @@ public:
     virtual int getMinimumWidth();
     virtual int getMinimumHeight();
 
+    /**
+     * @brief Returns the minimum size required for this view.
+     * @return Minimum size (width, height) this view requires in pixels, excluding margins.
+     * @details
+     * The minimum size includes:
+     * - Minimum content size
+     * - Padding
+     *
+     * This value represents the absolute minimum dimensions the view needs to properly display its content. It's used
+     * by layout managers to ensure views aren't sized smaller than what they require to be functional.
+     */
     glm::ivec2 getMinimumSize() {
         return { getMinimumWidth(), getMinimumHeight() };
     }
@@ -563,6 +579,12 @@ public:
         mSize = size;
     }
     virtual void setSize(glm::ivec2 size);
+
+    /**
+     * @brief Sets position and size of the view.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
         setGeometry(position.x, position.y, size.x, size.y);
@@ -729,16 +751,6 @@ public:
     void setCustomStyle(ass::PropertyListRecursive rule);
 
     void ensureAssUpdated();
-
-    [[nodiscard]]
-    _<AView> sharedPtr() {
-        return _cast<AView>(AObject::sharedPtr());
-    }
-
-    [[nodiscard]]
-    _weak<AView> weakPtr() {
-        return _weak<AView>(sharedPtr());
-    }
 
     /**
      * Handles touch screen gesture event.
@@ -1047,14 +1059,14 @@ protected:
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
      * @details
-     * See @ref "docs/ASS Box Model.md".
+     * See @ref "AUI Box Model".
      */
     ABoxFields mMargin;
 
     /**
      * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
      * @details
-     * See @ref "docs/ASS Box Model.md".
+     * See @ref "AUI Box Model".
      */
     ABoxFields mPadding;
 

@@ -287,6 +287,11 @@ public:
     }
 
 
+    /**
+     * @brief Applies geometry to all children if needed.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     void applyGeometryToChildrenIfNecessary();
 
     void onKeyDown(AInput::Key key) override;
@@ -312,7 +317,6 @@ public:
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    AVector<_<AView>> mViews;
     bool mWantsLayoutUpdate = true;
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
@@ -329,13 +333,13 @@ protected:
                     .p2 = getSize(),
                 });
         }
-        
+
+        std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+        if (!lock) {
+            throw AException("drawViews: can't ensure safe iteration");
+        }
         for (auto i = begin; i != end; ++i) {
-            // making a copy of shared_ptr to lock lifetime of the view; apparently, view->render may remove itself from
-            // container, i.e., as a result of custom animation implemented within render
-            // NOLINTNEXTLINE(*-unnecessary-copy-initialization)
-            auto view = *i;
-            drawView(view, contextPassedToContainer);
+            drawView(*i, contextPassedToContainer);
         }
     }
 
@@ -375,7 +379,7 @@ protected:
     /**
      * @brief Remove views from the container.
      */
-    void removeViews(aui::range<AVector<_<AView>>::iterator> views);
+    void removeViews(aui::range<AVector<_<AView>>::const_iterator> views);
 
     /**
      * @brief Remove view from the container.
@@ -412,6 +416,11 @@ protected:
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
+    /**
+     * @brief Applies geometry to all children with no preconditions.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void applyGeometryToChildren();
 
 signals:
@@ -422,6 +431,8 @@ signals:
 
 private:
     _unique<ALayout> mLayout;
+    ASpinlockMutex mViewsSafeIteration;
+    AVector<_<AView>> mViews;
     bool mSizeSet = false;
 
 
@@ -464,4 +475,8 @@ private:
      * @see mPointerEventsMapping
      */
     _<AView> pointerEventsMapping(APointerIndex index);
+
+    void removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
+    void setLayoutImpl(_unique<ALayout> layout, std::unique_lock<ASpinlockMutex>& lock);
+    void removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lock);
 };

@@ -599,7 +599,7 @@ void PlatformAbstractionX11::windowMoveToCenter(AWindow& window) {}
 
 void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     if (PlatformAbstractionX11::ourDisplay != nullptr) {
-        auto sizeHints = aui::ptr::make_unique_with_deleter(XAllocSizeHints(), XFree);
+        auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
         sizeHints->flags = PMinSize | PMaxSize;
         sizeHints->min_width = window.getMinimumWidth();
         sizeHints->min_height = window.getMinimumHeight();

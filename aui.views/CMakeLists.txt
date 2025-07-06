@@ -92,7 +92,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
     aui_link(aui.views PUBLIC aui::core aui::image)
     aui_link(aui.views PRIVATE aui::xml)
-    set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
+
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
+        set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
+    endif ()
     if (AUI_PLATFORM_ANDROID)
         aui_link(aui.views PRIVATE EGL GLESv2 GLESv3)
         aui_link(aui.views PRIVATE Freetype::Freetype)

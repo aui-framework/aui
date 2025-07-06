@@ -140,7 +140,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
 
         hr = pFileOpen->SetFileTypes(filter.size(), filter.data());
-        AUI_ASSERT(SUCCEEDED(hr));
+        AUI_ASSERTX(SUCCEEDED(hr), "SetFileTypes failed, please validate extensions list.");
 
         {
             IShellItem* psiFolder = nullptr;

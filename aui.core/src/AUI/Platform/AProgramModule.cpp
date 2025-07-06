@@ -29,7 +29,7 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
-            return aui::ptr::manage(new AProgramModule(lib));
+            return aui::ptr::manage_shared(new AProgramModule(lib));
         }
         return nullptr;
     };
@@ -45,14 +45,14 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
         throw LoadException(
             "Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
     }
-    return aui::ptr::manage(new AProgramModule(lib));
+    return aui::ptr::manage_shared(new AProgramModule(lib));
 #elif AUI_PLATFORM_ANDROID
     auto name = ("lib" + fullname).toStdString();
     auto lib = dlopen(name.c_str(), RTLD_LAZY);
     if (!lib) {
         throw LoadException("Could not load shared library: " + fullname + ": " + dlerror());
     }
-    return aui::ptr::manage(new AProgramModule(lib));
+    return aui::ptr::manage_shared(new AProgramModule(lib));
 #else
     char buf[0x1000];
     getcwd(buf, sizeof(buf));
@@ -114,8 +114,8 @@ AProgramModule::ProcRawPtr AProgramModule::getProcAddressRawPtr(const AString& n
 
 _<AProgramModule> AProgramModule::self() {
 #if AUI_PLATFORM_WIN
-    return aui::ptr::manage(new AProgramModule(GetModuleHandle(nullptr)));
+    return aui::ptr::manage_shared(new AProgramModule(GetModuleHandle(nullptr)));
 #else
-    return aui::ptr::manage(new AProgramModule(nullptr));
+    return aui::ptr::manage_shared(new AProgramModule(nullptr));
 #endif
 }

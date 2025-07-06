@@ -114,7 +114,7 @@ void AWindowBase::updateFocusChain() {
 
         for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
             target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = target->weakPtr();
+            focusChainTarget = _weak<AView>(aui::ptr::weak_from_this(target));
         }
     }
 }

@@ -15,11 +15,14 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-#include <lunasvg/lunasvg.h>
+#include <lunasvg.h>
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
     mImpl = lunasvg::Document::loadFromData(buf.data(), buf.size());
+    if (!mImpl) {
+        throw AException("could not parse svg");
+    }
 }
 
 SvgImageFactory::~SvgImageFactory() {

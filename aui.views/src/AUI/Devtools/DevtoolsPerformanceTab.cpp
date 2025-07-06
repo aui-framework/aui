@@ -51,6 +51,7 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 using namespace ass;
+using namespace declarative;
 
 namespace {
 #if AUI_PROFILING
@@ -257,11 +258,15 @@ namespace {
 
         _<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
-                _new<ALabel>(i.name) with_style {
+                Label { i.name } with_style {
                     TextColor { i.color.readableBlackOrWhite() },
                 },
+                Label { "{}μs"_format(duration_cast<microseconds>(i.duration).count()) } with_style {
+                    TextColor { AColor::WHITE.transparentize(0.3f) },
+                    BackgroundSolid { AColor::BLACK },
+                },
                 mVerboseMode ? _new<ALabel>(i.verboseInfo) with_style {
-                    TextColor { i.color.readableBlackOrWhite().transparentize(0.3f) },
+                    TextColor { AColor::WHITE.transparentize(0.3f) },
                     BackgroundSolid { AColor::BLACK },
                 } : nullptr,
             } with_style {
@@ -303,7 +308,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
 
 #if AUI_PROFILING
     connect(targetWindow->performanceFrameComplete, [this](const APerformanceSection::Datas& frame) {
-        if (!std::holds_alternative<Model::Running>(mModel->state)) {
+        if (!std::holds_alternative<Running>(*mState)) {
             return;
         }
         emit nextFrame(frame);
@@ -325,14 +330,23 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
     }); 
     connect(graphView->selectionChanged, slot(treeView)::onPerformanceFrame);
 
-    mModel.addObserver(&Model::state, [graphView, treeView](const Model::State& state) {
-        bool isPaused = std::holds_alternative<Model::Paused>(state);
-        graphView->setSelectionMode(isPaused);
-        treeView->setVerboseMode(isPaused);
+    connect(mState, [=](const State& state) {
+      bool isPaused = std::holds_alternative<Paused>(state);
+      graphView->setSelectionMode(isPaused);
+      treeView->setVerboseMode(isPaused);
     });
 
-    setContents(Centered { 
-        Centered::Expanding {
+    struct ScrollPassthroughImpl: public AViewContainer {
+    public:
+        void onScroll(const AScrollEvent& e) override {
+            getViews().last()->onScroll(e);
+        }
+    };
+
+    using ScrollPassthrough = aui::ui_building::view_container_layout<AStackedLayout, ScrollPassthroughImpl>;
+
+    setContents(Centered {
+        ScrollPassthrough::Expanding {
             graphView,
             AScrollArea::Builder().withContents(
                 Vertical::Expanding {
@@ -340,9 +354,9 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                 }
             ),
         } let {
-            mModel.addObserver(&Model::state, [it](const Model::State& state) {
+            connect(mState, [=](const State& state) {
                 using namespace ass;
-                if (std::holds_alternative<Model::Running>(state)) {
+                if (std::holds_alternative<Running>(state)) {
                     it->setCustomStyle({
                         Opacity { 0.7f },
                         Visibility::UNREACHABLE,
@@ -351,6 +365,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                     it->setCustomStyle({
                         Opacity { 1.f },
                         Visibility::VISIBLE,
+                        BackgroundSolid { AColor::BLACK.transparentize(0.5f) },
                     });
                 }
             });
@@ -358,19 +373,18 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
         Vertical::Expanding {
             Centered {
                 _new<AButton>(/* pause */) let {
-                    mModel.addObserver(&Model::state, [it](const Model::State& state) {
-                        if (std::holds_alternative<Model::Running>(state)) {
-                            it->setText("Pause");
-                        } else {
-                            it->setText("Resume");
-                        }
+                    connect(mState, [=](const State& state) {
+                      if (std::holds_alternative<Running>(state)) {
+                          it->setText("Pause");
+                      } else {
+                          it->setText("Resume");
+                      }
                     });
                     connect(it->clicked, me::toggleRunPause);
                 },
             },
         },
     });  
-    mModel.setModel(Model{});
 #else
     setContents(Centered {
         Label { "Please set -DAUI_PROFILING=TRUE in CMake configure." }

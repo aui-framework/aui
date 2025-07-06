@@ -23,8 +23,14 @@
  * |-------------|-------------------------------|
  * | Declarative notation | `Stacked { }`<br/> `Centered { }` |
  *
- * Stacked layout manager places views stacking them onto each other. If the @ref AView "view" is not expanding,
- * the @ref AView "view" is centered.
+ * Stacked layout manager places views stacking them onto each other. If the @ref AView "view" is expanding, then it
+ * uses all space available. Otherwise, the @ref AView "view" is centered.
+ *
+ * AStackedLayout has two declarative notations - `Stacked` and `Centered`. They are equivalent, so you can express
+ * your intentions more clearly by specifying `Stacked` to stack views and `Centered` to center them.
+ *
+ * First view appears below the second one, and so on. The last view is above all other views within this Stacked
+ * layout.
  *
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  */

@@ -29,6 +29,61 @@ class AViewContainer;
  * beyond the border of the @ref AViewContainer "container". A @ref AViewContainer "container" can be a child of an
  * another @ref AViewContainer "container" i.e., nesting is allowed.
  *
+ * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
+ *
+ * - Positioning child views within their container
+ * - Calculating minimum sizes
+ * - Handling view additions and removals
+ * - Managing spacing between views
+ * - Respecting view margins and alignment
+ * - Supporting expanding/stretching of views
+ *
+ * @note
+ * You can use @ref docs/Devtools.md "AUI Devtools" to play around with layouts, especially with
+ * @ref EXPANDING "Expanding" property, to get better understanding on how does layout work in AUI.
+ *
+ * Common layout managers include:
+ *
+ * - **AHorizontalLayout** - Arranges views in a horizontal row
+ * - **AVerticalLayout** - Arranges views in a vertical column
+ * - **AStackedLayout** - Centers views, displaying them on top of each other
+ * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
+ *
+ * Key concepts:
+ *
+ * 1. **Minimum Size** - Layout managers calculate minimum size requirements by:
+ *    - Considering minimum sizes of child views
+ *    - Adding margins and spacing
+ *    - Respecting fixed size constraints
+ *    - Following @ref "AUI Box Model".
+ *
+ * 2. **@ref EXPANDING "Expanding Views"** - Children can expand to fill available space of their parent:
+ *    - Set via @ref AView::setExpanding or @ref ass::Expanding on a child
+ *    - Requires parent to have @ref ass::FixedSize or @ref ass::MinSize or @ref EXPANDING set to take effect
+ *    - Independent for horizontal/vertical directions
+ *    - Ignored if @ref ass::FixedSize is set
+ *
+ * 3. **Spacing** - Configurable gaps between views:
+ *    - Set via @ref ALayout::setSpacing() or @ref ass::LayoutSpacing of the parent view
+ *    - Part of minimum size calculations of the parent view
+ *    - Applied uniformly between its child views
+ *
+ * 4. **Margins** - Space around individual views:
+ *    - Set per-view via ASS or margins property
+ *    - Respected during layout
+ *    - Part of minimum size calculations of the parent view
+ *
+ * 5. **Layout Direction** - Overall flow direction:
+ *    - Horizontal layouts flow left-to-right
+ *    - Vertical layouts flow top-to-bottom
+ *    - Grid layouts use both directions
+ *
+ * 6. **Relativeness** - children position is relative to parent's position, not an absolute position within a window.
+ *
+ * 7. **Nesting** - you can nest containers into containers, and so on. When we say "container", it means a
+ *    @ref AViewContainer. When we say "Vertical", we imply a @ref AViewContainer with @ref AVerticalLayout as the
+ *    layout manager.
+ *
  * # Layout Examples
  *
  * @ref AHorizontalLayout "Horizontal" layout:
@@ -100,10 +155,37 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * # Expanding
+ * @ref AStackedLayout "Stacked" layout:
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Stacked {
+ *           _new<AView>() with_style { BackgroundSolid(0xff0000_rgb), Expanding() },
+ *           Label { "Test" },
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td>
+ *     @image html docs/imgs/Screenshot_20250625_011101.png
+ *     </td>
+ *   </tr>
+ * </table>
+ *
+ * # Expanding {#EXPANDING}
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
+ *
+ * @note
+ * You can use @ref docs/Devtools.md "AUI Devtools" to play around with layouts, especially with
+ * @ref EXPANDING "Expanding" property, to get better understanding on how does layout work in AUI.
  *
  * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
  *
@@ -141,7 +223,7 @@ class AViewContainer;
  *                  // alias to it->setExpanding(2) ^^^^^^
  *           },
  *           _new<AButton>("Down"),
- *         }
+ *         } with_style { MinSize { 300_dp, {} } },
  *       );
  *       @endcode
  *     </td>
@@ -167,7 +249,7 @@ class AViewContainer;
  *               _new<AButton>("Right"),
  *           },
  *           _new<AButton>("Down"),
- *         }
+ *         } with_style { MinSize { 300_dp, {} } },
  *       );
  *       @endcode
  *     </td>
@@ -198,6 +280,58 @@ class AViewContainer;
  * @note
  * FixedSize nullifies Expanding's action (on per axis basic).
  *
+ * # Implementation details
+ *
+ * The process of applying position and size involves several key functions:
+ * ```
+ * AWindow::redraw()
+ * └─> AWindow::applyGeometryToChildrenIfNecessary()
+ *     └─> AWindow::applyGeometryToChildren()
+ *         └─> ALayout::onResize()                                                  ┐
+ *             └─> AViewContainerBase::getMinimumSize()              ┐              │
+ *                 └─> AViewContainerBase::getContentMinimumWidth()  │              │
+ *                     └─> ALayout::getMinimumWidth()                │              │
+ *                         └─> AView::getMinimumWidth()              │ cached       │
+ *                 └─> AViewContainerBase::getContentMinimumHeight() │              │ potentially
+ *                     └─> ALayout::getMinimumHeight()               │              │ recursive
+ *                         └─> AView::getMinimumHeight()             ┘              │
+ *             └─> AViewContainerBase::setGeometry()                                │
+ *                 └─> AViewContainerBase::setSize()                                │
+ *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
+ *                         └─> AViewContainerBase::applyGeometryToChildren()        │
+ *                             └─> ALayout::onResize()                              ┘
+ *                                 └─> AView::setGeometry()
+ * ```
+ *
+ * ## Applying size
+ *
+ * - Size of each view in tree is @ref SIZE_CALCULATION "calculated" on this phase
+ * - @ref AView::redraw "AWindow::redraw" - geometry is applied before rendering
+ * - @ref AViewContainerBase::applyGeometryToChildrenIfNecessary "applyGeometryToChildrenIfNecessary" - applies geometry
+ *   only if really needed (i.e., if there were a resize event, or views were added or removed)
+ * - @ref AViewContainerBase::applyGeometryToChildren "applyGeometryToChildren" - applies geometry to its children with
+ *   no preconditions
+ * - @ref ALayout::onResize - implemented by layout manager, whose have their own algorithms of arranging views
+ * - @ref AView::setGeometry "setGeometry" - sets geometry of a view (which might be a container)
+ *
+ * ## Size calculation {#SIZE_CALCULATION}
+ *
+ * - Layout manager queries **Minimum size** which is determined with @ref AView::getMinimumSize and cached until the
+ *   view or its children call @ref AView::markMinContentSizeInvalid. It considers:
+ *     - Children's minimum sizes (if any). A child includes its @ref ass::Padding to its minimum size.
+ *     - Children's @ref ass::Margin
+ *     - Container's @ref ass::Padding
+ *     - Container's @ref ass::LayoutSpacing
+ *     - Other constraints such as @ref ass::FixedSize
+ * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
+ *   views a share of free space if available. Unlike minimum size, @ref EXPANDING ratio does not depend on children's
+ *   @ref EXPANDING ratios.
+ *
+ * ## Special cases
+ *
+ * - **@ref AScrollArea**: requires special handling for viewport positioning and size compensation
+ * - **@ref AForEachUI**: manages view inflation/deflation based on visibility
+ * - **Performance Optimizations**: Views outside viewport may be left unupdated to improve performance
  */
 
 /**
@@ -208,6 +342,16 @@ class API_AUI_VIEWS ALayout : public AObject {
 public:
     ALayout() = default;
     virtual ~ALayout() = default;
+
+    /**
+     * @brief Applies geometry to children.
+     * @param x x coordinate in container's coordinate space, add padding if necessary.
+     * @param y y coordinate in container's coordinate space, add padding if necessary.
+     * @param width width of the container, add padding if necessary.
+     * @param height height of the container, add padding if necessary.
+     * @details
+     * See @ref layout_managers for more info.
+     */
     virtual void onResize(int x, int y, int width, int height) = 0;
 
     /**

@@ -24,8 +24,8 @@ Things to note:
 
 - @ref "docs/AUI Boot.md" is downloaded in your `CMakeLists.txt`, which downloads AUI itself and all its dependencies.
 - Among with AUI libraries, there's `aui.toolbox`, which participates in the build process. In particular, it converts
-  assets to cpp files, compressing them, making them available in the application, effectively embedding them to the
-  application binary.
+  @ref assets to cpp files, compressing them, making them available in the application, effectively embedding them to
+  the application binary.
 
 # Mobile scenario
 

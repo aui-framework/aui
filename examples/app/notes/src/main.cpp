@@ -191,7 +191,7 @@ public:
 
     /// [newNote]
     void newNote() {
-        auto note = aui::ptr::manage(new Note { .title = "Untitled" });
+        auto note = aui::ptr::manage_shared(new Note { .title = "Untitled" });
         mNotes.writeScope()->push_back(note);
         mCurrentNote = std::move(note);
     }

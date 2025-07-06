@@ -135,7 +135,7 @@ public:
     {
         if (selected) {
             AUI_NULLSAFE(mTreeView->mPrevSelection.lock())->setSelected(false);
-            mTreeView->mPrevSelection = _cast<ItemView>(AView::sharedPtr());
+            mTreeView->mPrevSelection = aui::ptr::shared_from_this(this);
             mTreeView->handleSelected(this);
         } else {
             mTreeView->mPrevSelection.reset();

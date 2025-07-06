@@ -25,11 +25,11 @@ void AText::pushWord(Entries& entries,
                      const ParsedFlags& flags) {
     if (flags.wordBreak == WordBreak::NORMAL) {
         mWordEntries.emplace_back(this, std::move(word));
-        entries << aui::ptr::fake(&mWordEntries.last());
+        entries << aui::ptr::fake_shared(&mWordEntries.last());
     } else {
         for (const auto& c: word) {
             mCharEntries.emplace_back(this, c);
-            entries << aui::ptr::fake(&mCharEntries.last());
+            entries << aui::ptr::fake_shared(&mCharEntries.last());
         }
     }
 }
@@ -75,11 +75,11 @@ void AText::processString(const AString& string, const AText::ParsedFlags& parse
                 break;
             case ' ':
                 commitWord();
-                entries << aui::ptr::fake(&mWhitespaceEntry);
+                entries << aui::ptr::fake_shared(&mWhitespaceEntry);
                 break;
             case '\n':
                 commitWord();
-                entries << aui::ptr::fake(&mNextLineEntry);
+                entries << aui::ptr::fake_shared(&mNextLineEntry);
                 break;
 
             default:
@@ -167,7 +167,7 @@ void AText::setHtml(const AString& html, const Flags& flags) {
         };
 
     } entityVisitor(*this, parsedFlags);
-    AXml::read(aui::ptr::fake(&stringStream), aui::ptr::fake(&entityVisitor));
+    AXml::read(aui::ptr::fake_shared(&stringStream), aui::ptr::fake_shared(&entityVisitor));
 
     mParsedFlags = parsedFlags;
     mEngine.setEntries(std::move(entityVisitor.entries));

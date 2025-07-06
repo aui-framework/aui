@@ -1289,6 +1289,109 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
             RenderHints::PushState s(*this);
             std::visit(
                 aui::lambda_overloaded {
+                    [&](const ass::Backdrop::LiquidFluid& liquidFluid) {
+                      if (areaOfInterest) {
+                          throw AException("LiquidGlass must be the first effect in backdrop list.");
+                      }
+                      areaOfInterest = [&] {
+                          auto targetSize = source->size();
+                          auto fb = getFramebufferForMultiPassEffect(targetSize);
+                          source->bindForRead();
+                          fb->framebuffer.bindForWrite();
+                          glBlitFramebuffer(
+                              0, 0,                                                         // src
+                              source->supersampledSize().x, source->supersampledSize().y,   //
+                              0, 0,                                                         // dst
+                              targetSize.x, targetSize.y,                                   //
+                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                          return AreaOfInterest {
+                              .framebuffer = std::move(fb),
+                              .size = targetSize,
+                          };
+                      }();
+
+                      areaOfInterest->framebuffer->rendertarget->texture().bind();
+                      static auto uvMap = [] {
+                          auto result = std::make_unique<gl::Texture2D>();
+                          result->tex2D(*AImage::fromUrl(":uni/liquid_glass1.png"));
+                          return result;
+                      }();
+                      uvMap->bind(1);
+                      areaOfInterest->framebuffer->rendertarget->texture().setupNearest();
+//                      areaOfInterest->framebuffer->rendertarget->texture().setupMirroredRepeat();
+                      areaOfInterest->framebuffer->rendertarget->texture().setupClampToEdge();
+
+                      auto offscreen1 = getFramebufferForMultiPassEffect(size);
+                      offscreen1->framebuffer.bind();
+                      offscreen1->framebuffer.bindViewport();
+
+                      static auto shader = [&] {
+                        auto shader = std::make_unique<gl::Program>();
+
+                        shader->loadVertexShader(
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                        shader->loadFragmentShader(
+                            R"(
+precision highp float;
+precision highp int;
+varying vec4 SL_inter_vertex;
+varying vec2 SL_inter_uv;
+uniform mat4 SL_uniform_m2;
+uniform vec2 SL_uniform_uvScale;
+uniform sampler2D SL_uniform_albedo;
+uniform sampler2D uvmap;
+void main() {
+ vec4 uvmap_sample = texture2D(uvmap, SL_inter_uv.xy);
+ vec2 base_uv = (vec2(SL_uniform_m2 * vec4(mix(vec2(-1.0), vec2(2.0), uvmap_sample.xy), 0.0, 1.0)) + vec2(1.0)) * vec2(0.5);
+ base_uv = clamp(base_uv, vec2(0.0), vec2(1.0));
+ base_uv = base_uv * SL_uniform_uvScale;
+ vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
+ gl_FragColor = vec4(accumulator.xyz, uvmap_sample.a);
+}
+)",
+                            false);
+
+                        aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(shader->handle());
+                        shader->compile();
+                        shader->use();
+                        shader->set(gl::Program::Uniform("uvmap"), 1);
+
+                        return shader;
+                      }();
+
+                      if (!shader) {
+                          // can't compile shader; actually, it would result in blur like behaviour
+                          return;
+                      }
+
+                      shader->use();
+                      {
+                          auto m = mTransform;
+                          m = glm::translate(m, glm::vec3(0, size.y, 0));
+                          m = glm::scale(m, glm::vec3(1, -1, 1));
+                          m = glm::translate(m, glm::vec3(position, 0.f));
+                          m = glm::scale(m, glm::vec3(size, 1.f));
+                          shader->set(aui::ShaderUniforms::M2, m);
+
+                          // source framebuffer is slightly smaller than the framebuffer in area of interest, adjust it
+                          shader->set(aui::ShaderUniforms::UV_SCALE, glm::vec2(areaOfInterest->size) / glm::vec2(areaOfInterest->framebuffer->framebuffer.size()));
+                      }
+
+                      setTransformForced(glm::ortho(
+                          0.0f, static_cast<float>(offscreen1->framebuffer.size().x) - 0.0f,
+                          0.f, static_cast<float>(offscreen1->framebuffer.size().y) - 0.0f, -1.f, 1.f));
+                      uploadToShaderCommon();
+                      identityUv();
+
+                      glDisable(GL_BLEND);
+                      drawRectImpl({}, size);
+                      glEnable(GL_BLEND);
+
+                      areaOfInterest = AreaOfInterest {
+                          .framebuffer = std::move(offscreen1),
+                          .size = size,
+                      };
+                    },
                     [&](const ass::Backdrop::GaussianBlurCustom& gaussianBlur) {
                       const auto radius = int(gaussianBlur.radius.getValuePx());
                       if (radius <= 1) {
@@ -1448,7 +1551,7 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
     minRequiredSize.x = aui::bit_ceil(minRequiredSize.x);
     minRequiredSize.y = aui::bit_ceil(minRequiredSize.y);
 
-    return aui::ptr::make_unique_with_deleter(
+    return aui::ptr::manage_unique(
         [&]() -> FramebufferWithTextureRT* {
           auto applicableSizeOnly =
               mFramebuffersForMultiPassEffectsPool | ranges::views::filter([&](const auto& fb) {

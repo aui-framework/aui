@@ -121,7 +121,7 @@ TEST_F(UIDataBindingTest, TextField1) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Robert" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Robert" });
     auto tf = _new<ATextField>();
     AObject::biConnect(user->name, tf->text());
     auto window = _new<AWindow>();
@@ -205,7 +205,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -264,7 +264,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -329,7 +329,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -471,7 +471,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     //
     // It is all what we need to set up bidirectional transformations. Inside AUI_ENTRY:
     // AUI_DOCS_CODE_BEGIN
-    auto user = aui::ptr::manage(new User { .gender = Gender::MALE });
+    auto user = aui::ptr::manage_shared(new User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:
@@ -549,7 +549,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -620,7 +620,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -706,7 +706,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // that has constraints encoded inside its type.
 
 
-    auto user = aui::ptr::manage(new User { .age = 18 });
+    auto user = aui::ptr::manage_shared(new User { .age = 18 });
 
     class MyWindow: public AWindow {
     public:
@@ -750,7 +750,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -791,7 +791,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -822,7 +822,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -851,7 +851,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -887,7 +887,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
         AProperty<AString> name;
     };
 
-    auto user = aui::ptr::manage(new User { .name = "Roza" });
+    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
 
     class MyWindow: public AWindow {
     public:
@@ -950,7 +950,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
         [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
         [](int i) -> Gender { return GENDERS[i]; },
     };
-    auto user = aui::ptr::manage(new User { .gender = Gender::MALE });
+    auto user = aui::ptr::manage_shared(new User { .gender = Gender::MALE });
 
     class MyWindow: public AWindow {
     public:

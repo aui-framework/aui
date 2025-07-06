@@ -18,6 +18,7 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
+#include "AUI/Layout/AStackedLayout.h"
 #include <AUI/Util/Declarative/Containers.h>
 
 /**
@@ -90,7 +91,7 @@ struct ButtonEx {
 
     _<AButtonEx> operator()() {
         auto view = _new<AButtonEx>();
-        view->setContents(Horizontal { std::move(contents) });
+        view->setContents(Centered { std::move(contents) });
         onClick.bindTo(view->clicked);
         return view;
     }

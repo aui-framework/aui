@@ -56,12 +56,12 @@ public:
 
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
+    AByteBufferView slice(std::size_t offset, std::size_t size) const {
         return operator AByteBufferView().slice(offset, size);
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
+    AByteBufferView slice(std::size_t offset /* to end */) const {
         return operator AByteBufferView().slice(offset);
     }
 
