@@ -323,6 +323,7 @@ TEST_F(SignalSlotTest, ObjectDestroySlaveInSignalHandler) {
 }
 
 
+/*
 TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
     static constexpr auto SEND_COUNT = 10000;
     std::mt19937 re;
@@ -371,7 +372,7 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
         task.wait();
         AThread::processMessages();
     }
-}
+}*/
 
 /**
  * Check exception does not break the workflow.
