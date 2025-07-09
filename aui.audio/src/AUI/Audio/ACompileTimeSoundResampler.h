@@ -181,29 +181,38 @@ public:
         return (canPushSamples / size_t(channels_out)) * size_t(channels_in);
     }
 
-    inline void commitAllSamples(Transaction& transaction) {
+    void commitAllSamples(Transaction& transaction) {
         int deadbeef1 = 0xdeadbeef;
         std::byte buf[BUFFER_SIZE];
         int deadbeef2 = 0xdeadbeef;
         while (auto remSampleCount = transaction.remainingSampleCount<sample_out>()) {
-            size_t samplesToRead = canReadSamples(transaction.remainingSampleCount<sample_out>());
+            size_t samplesToRead = canReadSamples(remSampleCount);
+            if (samplesToRead == 0) {
+                break;
+            }
             size_t r;
             if (mInputSampleRate == aui::audio::platform::requested_sample_rate) {
                 std::span dst(buf, std::min(aui::audio::impl::size_bytes<sample_in>() * samplesToRead, sizeof(buf)));
                 r = mConverter.source()->read(dst);
+#if AUI_DEBUG
                 AUI_ASSERTX(r <= dst.size(), "result larger than supplied buffer?");
                 AUI_ASSERTX(deadbeef1 == 0xdeadbeef, "stack corruption");
                 AUI_ASSERTX(deadbeef2 == 0xdeadbeef, "stack corruption");
+#endif
                 iterateOverBuffer<sample_in>(transaction, buf, buf + r);
             } else {
                 static constexpr auto conv_sample_format = ASampleRateConverter::outputSampleFormat();
                 std::span dst(
                     buf, std::min(aui::audio::impl::size_bytes<conv_sample_format>() * samplesToRead, sizeof(buf)));
                 r = mConverter.convert(dst);
+#if AUI_DEBUG
                 AUI_ASSERTX(r <= dst.size(), "result larger than supplied buffer?");
+#endif
                 iterateOverBuffer<conv_sample_format>(transaction, buf, buf + r);
+#if AUI_DEBUG
                 AUI_ASSERTX(deadbeef1 == 0xdeadbeef, "stack corruption");
                 AUI_ASSERTX(deadbeef2 == 0xdeadbeef, "stack corruption");
+#endif
             }
 
             if (r == 0) {
