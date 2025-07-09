@@ -134,7 +134,7 @@ void PulseAudioPlayer::pauseImpl() {
 
 void PulseAudioPlayer::stopImpl() {
     ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    reset();
 }
 
 void PulseAudioPlayer::onLoopSet() {

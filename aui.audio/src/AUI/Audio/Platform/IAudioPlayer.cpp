@@ -67,7 +67,7 @@ void IAudioPlayer::stop() {
     }
 }
 
-void IAudioPlayer::release() {
+void IAudioPlayer::reset() {
     mResampledStream.reset();
     mSourceStream.reset();
 }
@@ -84,7 +84,7 @@ void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
 }
 
 void IAudioPlayer::onFinished() {
-    release();
+    reset();
     mPlaybackStatus = PlaybackStatus::STOPPED;
     getThread()->enqueue([this, self = _cast<IAudioPlayer>(aui::ptr::shared_from_this(this))]() {
         emit finished;
@@ -92,6 +92,6 @@ void IAudioPlayer::onFinished() {
 }
 
 void IAudioPlayer::rewind() {
-    release();
+    reset();
     initialize();
 }

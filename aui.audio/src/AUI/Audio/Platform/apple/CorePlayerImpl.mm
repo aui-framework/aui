@@ -139,7 +139,7 @@ void CoreAudioPlayer::pauseImpl() {
 
 void CoreAudioPlayer::stopImpl() {
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    reset();
 }
 
 void CoreAudioPlayer::onVolumeSet() {

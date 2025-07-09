@@ -182,7 +182,7 @@ void DirectSoundAudioPlayer::pauseImpl() {
 
 void DirectSoundAudioPlayer::stopImpl() {
     ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    reset();
 }
 
 void DirectSoundAudioPlayer::onLoopSet() {

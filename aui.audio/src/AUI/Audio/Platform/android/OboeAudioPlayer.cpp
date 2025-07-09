@@ -61,7 +61,7 @@ void OboeAudioPlayer::pauseImpl() {
 
 void OboeAudioPlayer::stopImpl() {
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    reset();
 }
 
 void OboeAudioPlayer::onLoopSet() {
