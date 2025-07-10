@@ -124,17 +124,22 @@ static PulseAudioInstance& pulse() {
 
 void PulseAudioPlayer::playImpl() {
     initializeIfNeeded();
-    ::loop().addSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
-    pulse();
+    thread().enqueue([] {
+      ::loop().addSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+    });
 }
 
 void PulseAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+    thread().enqueue([] {
+        ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+    });
 }
 
 void PulseAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
-    reset();
+    thread().enqueue([] {
+        ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+        reset();
+    });
 }
 
 void PulseAudioPlayer::onLoopSet() {
