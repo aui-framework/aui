@@ -45,14 +45,16 @@ private:
         ASSERT_OK mSoundBufferInterface->Stop();
 
         while (mThreadIsActive) {
-            for (int i = 0; i < EVENTS_CNT; i++)
+            for (int i = 0; i < EVENTS_CNT; i++) {
                 ResetEvent(mEvents[i]);
+            }
             SetEvent(mEvents[EVENTS_CNT]);
         }
 
         for (auto& mEvent : mEvents)
             CloseHandle(mEvent);
-        CloseHandle(mThread);
+        mThread->join();
+        mThread = nullptr;
         clearBuffer();
         AUI_NULLSAFE(mDirectSound)->Release();
     }
@@ -70,21 +72,14 @@ private:
     }
 
     void setupBufferThread() {
-        DWORD threadId;
-        mThread = CreateThread(nullptr,
-                               0,
-                               (LPTHREAD_START_ROUTINE) bufferThread,
-                               (void *) this,
-                               0,
-                               &threadId);
-    }
-
-    [[noreturn]]
-    static DWORD WINAPI bufferThread(void *lpParameter) {
-        auto audio = reinterpret_cast<DirectSound*>(lpParameter);
-        while (true) {
-            audio->onAudioReachCallbackPoint();
-        }
+        mThread = _new<AThread>([this] {
+            AThread::setName("aui.audio");
+            mThreadIsActive = true;
+            while (mThreadIsActive) {
+                onAudioReachCallbackPoint();
+            }
+        });
+        mThread->start();
     }
 
     void uploadBlock(DWORD blockIndex) {
@@ -109,13 +104,13 @@ private:
             DWORD eventIndex = waitResult - WAIT_OBJECT_0;
             if (eventIndex != EVENTS_CNT) {
                 uploadBlock((eventIndex + 1) % EVENTS_CNT);
-                waitResult = WaitForMultipleObjects(EVENTS_CNT, mEvents, FALSE, INFINITE);
+                waitResult = WaitForMultipleObjects(EVENTS_CNT + 1, mEvents, FALSE, INFINITE);
                 continue;
             }
 
             mIsPlaying = false;
             mThreadIsActive = false;
-            ExitThread(0);
+            return;
         }
     }
 
@@ -164,7 +159,7 @@ private:
     IDirectSoundNotify8* mNotifyInterface = nullptr;
     DSBPOSITIONNOTIFY mNotifyPositions[EVENTS_CNT];
     HANDLE mEvents[EVENTS_CNT + 1];
-    HANDLE mThread;
+    _<AThread> mThread;
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
     DWORD mBytesPerSecond;
