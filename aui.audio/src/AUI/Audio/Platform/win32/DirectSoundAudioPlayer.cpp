@@ -6,11 +6,6 @@
 #include <dsound.h>
 
 
-static AAudioMixer& loop() {
-    static AAudioMixer l;
-    return l;
-}
-
 #define ASSERT_OK AssertOkHelper{} +
 struct AssertOkHelper {
     void operator+(HRESULT r) const {
@@ -23,6 +18,14 @@ public:
     static DirectSound& instance() {
         static DirectSound ds;
         return ds;
+    }
+
+    const auto& thread() {
+        return mThread;
+    }
+
+    auto& mixer() {
+        return mMixer;
     }
 
 private:
@@ -93,7 +96,7 @@ private:
             ASSERT_OK mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
         }
 
-        bufferSize = ::loop().readSoundData(std::span(reinterpret_cast<std::byte*>(buffer), bufferSize));
+        bufferSize = mixer().readSoundData(std::span(reinterpret_cast<std::byte*>(buffer), bufferSize));
         ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
     }
 
@@ -163,21 +166,27 @@ private:
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
     DWORD mBytesPerSecond;
+    AAudioMixer mMixer;
 };
 
 void DirectSoundAudioPlayer::playImpl() {
     initializeIfNeeded();
-    DirectSound::instance();
-    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+        DirectSound::instance().mixer().addSoundSource(std::move(self));
+    });
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() {
+        DirectSound::instance().mixer().removeSoundSource(self);
+    });
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
-    reset();
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() {
+        DirectSound::instance().mixer().removeSoundSource(self);
+        self->reset();
+    });
 }
 
 void DirectSoundAudioPlayer::onLoopSet() {
