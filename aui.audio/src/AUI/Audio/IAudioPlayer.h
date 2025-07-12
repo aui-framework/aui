@@ -125,7 +125,7 @@ protected:
         }
     }
 
-    void release();
+    void reset();
 
 private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;

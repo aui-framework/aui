@@ -19,13 +19,13 @@ public:
      * @brief Add new sound source for mixing
      * @param s New sound source
      */
-    void addSoundSource(_<IAudioPlayer> s);
+    void addSoundSource(aui::non_null<_<IAudioPlayer>> s);
 
     /**
      * @brief Remove sound source if it is represented in list of added sound sources, otherwise do nothing
      * @param s Sound source to remove
      */
-    void removeSoundSource(const _<IAudioPlayer>& s);
+    void removeSoundSource(aui::non_null<_<IAudioPlayer>> s);
 
     /**
      * @brief Write mixed audio data into buffer.
@@ -34,8 +34,10 @@ public:
      */
     std::size_t readSoundData(std::span<std::byte> destination);
 
+    ~AAudioMixer();
+
 private:
-    AMutex mMutex;
+    ASpinlockMutex mConcurrentAccessCheck;
     std::list<_<IAudioPlayer>> mPlayers;
 };
 
