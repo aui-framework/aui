@@ -25,9 +25,12 @@ class AString;
 class AConditionVariable;
 
 /**
- * @brief Represents an abstract thread. Not all threads are created through AThread - these are interfaced with
- *        AAbstractThread.
+ * @brief Represents an abstract thread which might be not created with AThread.
  * @ingroup core
+ * @details
+ * Not all threads are created through AThread - these are interfaced with AAbstractThread.
+ *
+ * @see AThread::current()
  */
 class API_AUI_CORE AAbstractThread {
     friend class IEventLoop;
