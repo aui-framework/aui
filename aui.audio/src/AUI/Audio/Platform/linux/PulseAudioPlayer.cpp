@@ -12,7 +12,13 @@ static AAudioMixer& loop() {
     return l;
 }
 
+static _<AAbstractThread> gPulseThread;
+
 static void stream_request_cb(pa_stream *s, size_t length, void *userdata) {
+    if (gPulseThread == nullptr) {
+        gPulseThread = AThread::current();
+    }
+    AThread::processMessages();
     pa_usec_t usec;
     int neg;
     pa_stream_get_latency(s,&usec,&neg);
@@ -95,6 +101,7 @@ struct PulseAudioInstance {
             } while (state != PA_STREAM_READY);
         }
 
+        while (gPulseThread == nullptr);
         ALogger::info(LOG_TAG) << "Finally initialized pulseaudio";
 
         mAvailable = true;
@@ -124,21 +131,23 @@ static PulseAudioInstance& pulse() {
 
 void PulseAudioPlayer::playImpl() {
     initializeIfNeeded();
-    thread().enqueue([] {
-      ::loop().addSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+    pulse();
+    gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+      ::loop().addSoundSource(std::move(self));
     });
+    pa_threaded_mainloop_signal(pulse().mMainLoop, false);
 }
 
 void PulseAudioPlayer::pauseImpl() {
-    thread().enqueue([] {
-        ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
+    gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)] {
+      ::loop().removeSoundSource(self);
     });
 }
 
 void PulseAudioPlayer::stopImpl() {
-    thread().enqueue([] {
-        ::loop().removeSoundSource(_cast<PulseAudioPlayer>(aui::ptr::shared_from_this(this)));
-        reset();
+    gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)] {
+      ::loop().removeSoundSource(self);
+      self->reset();
     });
 }
 
