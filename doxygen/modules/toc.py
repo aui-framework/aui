@@ -107,10 +107,7 @@ def run():
                     a = header.find_next("a")
                     href = ""
                     if a:
-                        parent = a.parent
-                        if not 'class' in parent.attrs:
-                            continue
-                        if parent.attrs['class'] is not "groupheader":
+                        if a.parent.name not in ["h1", "h2", "h3"]:
                             continue
 
                         a.unwrap()
