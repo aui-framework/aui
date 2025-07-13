@@ -13,7 +13,11 @@ src
 └── main.cpp
 ```
 
-Here's the example of basic hello work application, which every AUI project starts with.
+Here's the example of a basic hello work application, which every AUI project starts with.
+
+@note
+**You do not need to install AUI manually!** An AUI application build is easily reproducible thanks to CMake and
+@ref "docs/AUI Boot.md" magic done below in `CMakeLists.txt`.
 
 `CMakeLists.txt`
 
