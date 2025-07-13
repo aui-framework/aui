@@ -48,7 +48,7 @@ def patch(target: str = None, matcher = None, mode: Mode = None, value = None, u
 
     if type(matcher) is str:
         matcher_str = matcher
-        matcher = lambda x: matcher_str in x
+        matcher = lambda x, **kwargs: matcher_str in x
 
 
     def process():
@@ -57,7 +57,7 @@ def patch(target: str = None, matcher = None, mode: Mode = None, value = None, u
             if found and unique:
                 yield line
                 continue
-            matcher_result = matcher(line)
+            matcher_result = matcher(line, target_path=target_path)
             if matcher_result:
                 found = True
                 if type(matcher_result) is str:

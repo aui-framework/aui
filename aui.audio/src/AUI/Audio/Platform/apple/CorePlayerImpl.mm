@@ -15,7 +15,7 @@
 static constexpr auto LOG_TAG = "CoreAudio";
 
 namespace {
-static AAudioMixer& loop() {
+static AAudioMixer& mixer() {
     static AAudioMixer l;
     return l;
 }
@@ -85,12 +85,14 @@ struct CoreAudioInstance {
     CoreAudioInstance(const CoreAudioInstance&) = delete;
     
     ~CoreAudioInstance() {
+        thread()->interrupt();
+        thread()->join();
     }
     
     void enqueueIfNot() {
         while (!mEmptyBuffers.empty()) {
             auto buffer = mEmptyBuffers.front();
-            buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
+            buffer->mAudioDataByteSize = mixer().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
             if (buffer->mAudioDataByteSize == 0) {
                 break;
             }
@@ -108,7 +110,7 @@ private:
     
     static void myQueueOutputCallback(void* userdata, AudioQueueRef aq, AudioQueueBufferRef buffer) {
         auto thiz = reinterpret_cast<CoreAudioInstance*>(userdata);
-        buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
+        buffer->mAudioDataByteSize = mixer().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
         if (buffer->mAudioDataByteSize > 0) {
             AudioQueueEnqueueBuffer(thiz->mAudioQueue, buffer, 0, nullptr);
             thiz->enqueueIfNot();
@@ -119,6 +121,7 @@ private:
 };
 
 static CoreAudioInstance& coreAudio() {
+    mixer(); // init order
     static CoreAudioInstance p;
     return p;
 }
@@ -127,19 +130,23 @@ static CoreAudioInstance& coreAudio() {
 
 void CoreAudioPlayer::playImpl() {
     initializeIfNeeded();
-    ::loop().addSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
-    coreAudio().thread()->enqueue([this] {
+    coreAudio().thread()->enqueue([self = aui::ptr::shared_from_this(this)] {
+        ::mixer().addSoundSource(self);
         coreAudio().enqueueIfNot();
     });
 }
 
 void CoreAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
+    coreAudio().thread()->enqueue([self = aui::ptr::shared_from_this(this)] {
+        ::mixer().removeSoundSource(self);
+    });
 }
 
 void CoreAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    coreAudio().thread()->enqueue([self = aui::ptr::shared_from_this(this)] {
+        ::mixer().removeSoundSource(self);
+        self->reset();
+    });
 }
 
 void CoreAudioPlayer::onVolumeSet() {

@@ -6,11 +6,6 @@
 #include <dsound.h>
 
 
-static AAudioMixer& loop() {
-    static AAudioMixer l;
-    return l;
-}
-
 #define ASSERT_OK AssertOkHelper{} +
 struct AssertOkHelper {
     void operator+(HRESULT r) const {
@@ -23,6 +18,14 @@ public:
     static DirectSound& instance() {
         static DirectSound ds;
         return ds;
+    }
+
+    const auto& thread() {
+        return mThread;
+    }
+
+    auto& mixer() {
+        return mMixer;
     }
 
 private:
@@ -45,14 +48,16 @@ private:
         ASSERT_OK mSoundBufferInterface->Stop();
 
         while (mThreadIsActive) {
-            for (int i = 0; i < EVENTS_CNT; i++)
+            for (int i = 0; i < EVENTS_CNT; i++) {
                 ResetEvent(mEvents[i]);
+            }
             SetEvent(mEvents[EVENTS_CNT]);
         }
 
         for (auto& mEvent : mEvents)
             CloseHandle(mEvent);
-        CloseHandle(mThread);
+        mThread->join();
+        mThread = nullptr;
         clearBuffer();
         AUI_NULLSAFE(mDirectSound)->Release();
     }
@@ -70,21 +75,14 @@ private:
     }
 
     void setupBufferThread() {
-        DWORD threadId;
-        mThread = CreateThread(nullptr,
-                               0,
-                               (LPTHREAD_START_ROUTINE) bufferThread,
-                               (void *) this,
-                               0,
-                               &threadId);
-    }
-
-    [[noreturn]]
-    static DWORD WINAPI bufferThread(void *lpParameter) {
-        auto audio = reinterpret_cast<DirectSound*>(lpParameter);
-        while (true) {
-            audio->onAudioReachCallbackPoint();
-        }
+        mThread = _new<AThread>([this] {
+            AThread::setName("aui.audio");
+            mThreadIsActive = true;
+            while (mThreadIsActive) {
+                onAudioReachCallbackPoint();
+            }
+        });
+        mThread->start();
     }
 
     void uploadBlock(DWORD blockIndex) {
@@ -98,7 +96,7 @@ private:
             ASSERT_OK mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
         }
 
-        bufferSize = ::loop().readSoundData(std::span(reinterpret_cast<std::byte*>(buffer), bufferSize));
+        bufferSize = mixer().readSoundData(std::span(reinterpret_cast<std::byte*>(buffer), bufferSize));
         ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
     }
 
@@ -109,13 +107,13 @@ private:
             DWORD eventIndex = waitResult - WAIT_OBJECT_0;
             if (eventIndex != EVENTS_CNT) {
                 uploadBlock((eventIndex + 1) % EVENTS_CNT);
-                waitResult = WaitForMultipleObjects(EVENTS_CNT, mEvents, FALSE, INFINITE);
+                waitResult = WaitForMultipleObjects(EVENTS_CNT + 1, mEvents, FALSE, INFINITE);
                 continue;
             }
 
             mIsPlaying = false;
             mThreadIsActive = false;
-            ExitThread(0);
+            return;
         }
     }
 
@@ -164,25 +162,31 @@ private:
     IDirectSoundNotify8* mNotifyInterface = nullptr;
     DSBPOSITIONNOTIFY mNotifyPositions[EVENTS_CNT];
     HANDLE mEvents[EVENTS_CNT + 1];
-    HANDLE mThread;
+    _<AThread> mThread;
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
     DWORD mBytesPerSecond;
+    AAudioMixer mMixer;
 };
 
 void DirectSoundAudioPlayer::playImpl() {
     initializeIfNeeded();
-    DirectSound::instance();
-    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+        DirectSound::instance().mixer().addSoundSource(std::move(self));
+    });
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() {
+        DirectSound::instance().mixer().removeSoundSource(self);
+    });
 }
 
 void DirectSoundAudioPlayer::stopImpl() {
-    ::loop().removeSoundSource(_cast<DirectSoundAudioPlayer>(aui::ptr::shared_from_this(this)));
-    release();
+    DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() {
+        DirectSound::instance().mixer().removeSoundSource(self);
+        self->reset();
+    });
 }
 
 void DirectSoundAudioPlayer::onLoopSet() {

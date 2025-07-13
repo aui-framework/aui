@@ -23,9 +23,23 @@
 
 /**
  * @brief Button with text, which can be pushed to make some action.
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
  * @ingroup useful_views
  * @details
+ * Button is a fundamental view which can be pushed to make some action.
+ *
+ * @image html docs/imgs/AButton.gif "The button view being pressed."
+ *
+ * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
+ * disappears, making an illusion of pressing.
+ *
+ * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
+ * user presses `Enter`, the button is pushed automatically.
+ *
+ * Button usually contains text only, but in practice any view can be put in it.
+ *
+ * @include examples/ui/button/src/main.cpp
+ *
+ *
  * See @ref declarative::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AAbstractLabel {

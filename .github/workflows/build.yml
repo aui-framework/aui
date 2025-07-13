@@ -163,19 +163,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest, macos-14]
+        os: [windows-latest, ubuntu-latest, macos-14]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         compiler: ["default", "clang"]
         exclude:
-          - os: windows-2019
+          - os: windows-latest
             compiler: "clang"
           - os: macos-latest
             compiler: "clang" # default only
         include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -191,8 +191,8 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
@@ -283,13 +283,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -384,7 +384,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, windows-2019]
+        os: [windows-latest, ubuntu-latest, windows-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
 
