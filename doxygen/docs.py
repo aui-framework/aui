@@ -40,6 +40,15 @@ def fix_platform_names():
         patching.patch(target='*.html', matcher=f'{k}-specific', mode=patching.Mode.REPLACE, value=f'{v}-specific')
 
 
+def insert_link_to_members(line, target_path=Path(), **kwargs):
+    if "Member Function Documentation" not in line:
+        return False
+    members = Path(f'{target_path.parent / target_path.stem}-members.html')
+    if not members.is_file():
+        return False
+
+    return f'{line}\n<p><a href="{members.name}">&gt; All members, including inherited</a></p>\n'
+
 
 
 if __name__ == '__main__':
@@ -62,11 +71,11 @@ if __name__ == '__main__':
 
     # remove useless AUI Framework root element.
     patching.patch(target='navtreedata.js', matcher='[ "AUI Framework", "index.html", [', value='', mode=patching.Mode.DELETE_LINE)
-    patching.patch(target='navtreedata.js', matcher=lambda x: x == '  ] ]\n', value='', mode=patching.Mode.DELETE_LINE)
+    patching.patch(target='navtreedata.js', matcher=lambda x, **kwargs: x == '  ] ]\n', value='', mode=patching.Mode.DELETE_LINE)
     patching.patch(target='navtree.js', matcher='o.breadcrumbs.unshift', mode=patching.Mode.DELETE_LINE)
 
     # remove links from groups and instead make them toggle collapse/expand.
-    def remove_link_from_group(line):
+    def remove_link_from_group(line, **kwargs):
         # "usergroup0.html", [
         words = line.split(', ')
         if len(words) != 3:
@@ -95,6 +104,8 @@ if __name__ == '__main__':
     ROBOT_NOINDEX = '<meta name="robots" content="noindex">\n'
     for target in ['*_source.html', '*-members.html', 'dir_*.html', '*2intermediate*', '*2runner*']:
         patching.patch(target=target, matcher='<meta', mode=patching.Mode.INSERT_AFTER, value=ROBOT_NOINDEX, unique=True)
+
+    patching.patch(target='class*.html', matcher=insert_link_to_members, unique=True)
 
     toc.run()
 

@@ -28,9 +28,9 @@
                 <tab type="user" url="@ref docs/App Build Overview.md" title="App Build Overview" />
             </tab>
         </tab>
-        <tab type="usergroup" title="Getting started" visible="yes">
+        <tab type="user" url="@ref examples" title="Examples" />
+        <tab type="usergroup" title="Introduction" visible="yes">
             <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI" />
-            <tab type="user" url="@ref examples" title="Examples" />
             <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot" />
             <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
             <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />
@@ -39,15 +39,19 @@
             <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list" />
             <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)" />
         </tab>
-
-        <tab type="usergroup" title="UI Building" visible="yes">
+        <tab type="usergroup" title="UI Architecture" visible="yes">
             <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview" />
             <tab type="user" url="@ref layout_managers" title="Layout Managers" />
-            <tab type="user" url="@ref ass" title="Styling" />
             <tab type="user" url="@ref signal_slot" title="Signal-slot" />
             <tab type="user" url="@ref property_system" title="Data Binding" />
             <tab type="user" url="@ref docs/Devtools.md" title="Devtools" />
+        </tab>
+        <tab type="usergroup" title="Views" visible="yes">
+<!--            <tab type="user" url="@ref AButton" title="Button" />-->
             <tab type="user" url="@ref useful_views" title="All Views" />
+        </tab>
+        <tab type="usergroup" title="Styling" visible="yes">
+            <tab type="user" url="@ref ass" title="Overview" />
             <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
         </tab>
         <tab type="usergroup" title="Preparing to Production" visible="yes">
@@ -76,31 +80,31 @@
         <briefdescription visible="yes"/>
         <includes visible="$SHOW_INCLUDE_FILES"/>
         <memberdecl>
-            <nestedclasses visible="yes" title=""/>
-            <publictypes title=""/>
-            <services title=""/>
-            <interfaces title=""/>
-            <publicslots title=""/>
-            <signals title=""/>
-            <publicmethods title=""/>
-            <publicstaticmethods title=""/>
-            <publicattributes title="Signals and public fields"/>
-            <publicstaticattributes title=""/>
-            <protectedtypes title=""/>
-            <protectedslots title=""/>
-            <protectedmethods title=""/>
-            <protectedstaticmethods title=""/>
-            <protectedattributes title=""/>
-            <protectedstaticattributes title=""/>
-            <packagetypes title=""/>
-            <packagemethods title=""/>
-            <packagestaticmethods title=""/>
-            <packageattributes title=""/>
-            <packagestaticattributes title=""/>
-            <properties title=""/>
-            <events title=""/>
-            <related title="" subtitle=""/>
-            <membergroups visible="yes"/>
+<!--            <nestedclasses visible="yes" title=""/>-->
+<!--            <publictypes title=""/>-->
+<!--            <services title=""/>-->
+<!--            <interfaces title=""/>-->
+<!--            <publicslots title=""/>-->
+<!--            <signals title=""/>-->
+<!--            <publicmethods title=""/>-->
+<!--            <publicstaticmethods title=""/>-->
+<!--            <publicattributes title="Signals and public fields"/>-->
+<!--            <publicstaticattributes title=""/>-->
+<!--            <protectedtypes title=""/>-->
+<!--            <protectedslots title=""/>-->
+<!--            <protectedmethods title=""/>-->
+<!--            <protectedstaticmethods title=""/>-->
+<!--            <protectedattributes title=""/>-->
+<!--            <protectedstaticattributes title=""/>-->
+<!--            <packagetypes title=""/>-->
+<!--            <packagemethods title=""/>-->
+<!--            <packagestaticmethods title=""/>-->
+<!--            <packageattributes title=""/>-->
+<!--            <packagestaticattributes title=""/>-->
+<!--            <properties title=""/>-->
+<!--            <events title=""/>-->
+<!--            <related title="" subtitle=""/>-->
+<!--            <membergroups visible="yes"/>-->
         </memberdecl>
         <detaileddescription title=""/>
         <memberdef>
@@ -116,7 +120,6 @@
             <properties title=""/>
             <events title=""/>
         </memberdef>
-        <allmemberslink visible="yes"/>
 <!--        <usedfiles visible="$SHOW_USED_FILES"/>-->
 <!--        <inheritancegraph visible="$CLASS_GRAPH"/>-->
 <!--        <collaborationgraph visible="$COLLABORATION_GRAPH"/>-->

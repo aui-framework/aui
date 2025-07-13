@@ -107,6 +107,12 @@ def run():
                     a = header.find_next("a")
                     href = ""
                     if a:
+                        parent = a.parent
+                        if not 'class' in parent.attrs:
+                            continue
+                        if parent.attrs['class'] is not "groupheader":
+                            continue
+
                         a.unwrap()
                         a.append("#")
                         a.attrs['class'] = "aui-toc-hash"
