@@ -43,8 +43,10 @@
             <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview" />
             <tab type="user" url="@ref layout_managers" title="Layout Managers" />
             <tab type="user" url="@ref signal_slot" title="Signal-slot" />
-            <tab type="user" url="@ref property_system" title="Data Binding" />
+            <tab type="user" url="@ref property_system" title="Data Binding (single values)" />
+            <tab type="user" url="@ref AForEachUI" title="Data Binding (lists)" />
             <tab type="user" url="@ref docs/Devtools.md" title="Devtools" />
+            <tab type="user" url="@ref docs/retained_immediate_ui.md" title="Retained/immediate UI philosophy" />
         </tab>
         <tab type="usergroup" title="Views" visible="yes">
 <!--            <tab type="user" url="@ref AButton" title="Button" />-->
@@ -57,6 +59,7 @@
         <tab type="usergroup" title="Preparing to Production" visible="yes">
             <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
             <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
+            <tab type="user" url="@ref updater" title="Auto-updating" />
         </tab>
         <tab type="usergroup" title="Platform Specifics" visible="yes">
             <tab type="user" url="@ref windows" title="Windows" />

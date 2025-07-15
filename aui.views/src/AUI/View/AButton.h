@@ -32,15 +32,30 @@
  * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
  * disappears, making an illusion of pressing.
  *
+ * # Button with a lambda
+ *
+ * This button executes the lambda upon click.
+ *
+ * @snippet examples/ui/button1/src/main.cpp AButton example
+ *
+ * @image html docs/imgs/Screenshot_20250715_091801.png "Button with a lambda."
+ *
+ * # Button with a signal-slot
+ *
+ * This button executes the member function upon click.
+ *
+ * @snippet examples/ui/button2/src/main.cpp AButton example
+ *
+ * @image html docs/imgs/Screenshot_20250715_091801.png "Button with a signal-slot."
+ *
+ * # Default button
+ *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
  * user presses `Enter`, the button is pushed automatically.
  *
+ * # Button with icon
+ *
  * Button usually contains text only, but in practice any view can be put in it.
- *
- * @include examples/ui/button/src/main.cpp
- *
- *
- * See @ref declarative::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AAbstractLabel {
 public:
