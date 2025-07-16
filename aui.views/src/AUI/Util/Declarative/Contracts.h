@@ -55,7 +55,7 @@ public:
             !AAnyProperty<F>,
             "====================> contract::In: An attempt to use a property as a value in a declarative contract.\n"
             "1. Explicitly express an intention to use a reactive value by using AUI_REACT macro, or\n"
-            "2. Dereference the property via asterisk * to obtain immediate value.\n");
+            "2. Dereference the property via asterisk * to obtain current property value.\n");
     }
 
     In(aui::factory<T> auto&& t) : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(t)) }) {}
@@ -71,7 +71,7 @@ public:
                   AObject::connect(
                       sourceProperty, destinationProperty.boundObject(),
                       [keepAlive = std::move(c.value),
-                       // You can use a tuple to store args... and decide whether to store a value or a reference
+                       // Using a tuple here to store args... and decide whether to store a value or a reference
                        // depending on whether the args... are lvalue or rvalue.
                        destinationProperty = std::tuple<DestinationProperty>(std::forward<DestinationProperty>(
                            destinationProperty))](const T& v) { std::get<0>(destinationProperty) = v; });

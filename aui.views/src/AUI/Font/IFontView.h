@@ -25,22 +25,12 @@ public:
         return mFontStyle;
     }
 
-    [[nodiscard]]
-    const AColor& getTextColor() const {
-        return mColor;
-    }
-
     virtual void invalidateFont() = 0;
-
-    void setTextColor(AColor color) {
-        mColor = color;
-    }
 
 protected:
     void invalidateAllStylesFont();
     void commitStyleFont();
 
 private:
-    AColor mColor;
     AFontStyle mFontStyle, mPrevFontStyle { .font = nullptr };
 };

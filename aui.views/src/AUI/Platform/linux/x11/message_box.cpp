@@ -25,19 +25,19 @@ public:
             Centered {
                 [&]() -> _<AView> {
                   switch (b) {
-                      case AMessageBox::Button::OK: return Button { .text = "OK"_i18n, .onClick = {me::onOk} };
+                      case AMessageBox::Button::OK: return Button { .content = "OK"_i18n, .onClick = {me::onOk} };
                       case AMessageBox::Button::OK_CANCEL: return Horizontal {
-                              Button { .text = "OK"_i18n, .onClick = {me::onOk} },
-                              Button { .text = "Cancel"_i18n, .onClick = {me::onCancel} },
+                              Button { .content = "OK"_i18n, .onClick = {me::onOk} },
+                              Button { .content = "Cancel"_i18n, .onClick = {me::onCancel} },
                           };
                       case AMessageBox::Button::YES_NO: return Horizontal {
-                              Button { .text = "Yes"_i18n, .onClick = {me::onYes} },
-                              Button { .text = "No"_i18n, .onClick = {me::onNo} },
+                              Button { .content = "Yes"_i18n, .onClick = {me::onYes} },
+                              Button { .content = "No"_i18n, .onClick = {me::onNo} },
                           };
                       case AMessageBox::Button::YES_NO_CANCEL: return Horizontal {
-                              Button { .text = "Yes"_i18n, .onClick = {me::onYes} },
-                              Button { .text = "No"_i18n, .onClick = {me::onNo} },
-                              Button { .text = "Cancel"_i18n, .onClick = {me::onCancel} },
+                              Button { .content = "Yes"_i18n, .onClick = {me::onYes} },
+                              Button { .content = "No"_i18n, .onClick = {me::onNo} },
+                              Button { .content = "Cancel"_i18n, .onClick = {me::onCancel} },
                           };
                       default: throw AException("invalid AMessageBox::Button");
                   }

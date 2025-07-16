@@ -17,26 +17,28 @@
 using namespace ass;
 using namespace declarative;
 
-class MainWindow: public AWindow {
+class MainWindow : public AWindow {
 public:
-    MainWindow(): AWindow("Button", 600_dp, 300_dp) {
+    MainWindow() : AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
-            /// [AButton example]
-            ButtonEx {
-                .contents = {
-                  Icon { ":img/save.svg" },
-                  Label { "Save" },
-                },
-                .onClick = {me::onClick},
+          /// [AButton example]
+          Horizontal {
+            Label { "SaveyI,kKa" },
+            Button {
+              .content =
+                  Horizontal {
+                    Icon { ":img/save.svg" },
+                    Label { "SaveyI,kKa" },
+                  },
+              .onClick = { me::onClick },
             },
-            /// [AButton example]
+          },
+          /// [AButton example]
         });
     }
 
 private:
-    void onClick() {
-        ALogger::info("Test") << "Hello world!";
-    }
+    void onClick() { ALogger::info("Test") << "Hello world!"; }
 };
 
 AUI_ENTRY {

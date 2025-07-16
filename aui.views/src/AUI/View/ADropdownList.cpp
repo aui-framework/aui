@@ -66,8 +66,9 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
+
 void ADropdownList::render(ARenderContext context) {
-    AAbstractLabel::render(context);
+    AButton::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
@@ -78,7 +79,7 @@ void ADropdownList::render(ARenderContext context) {
 }
 
 int ADropdownList::getContentMinimumWidth() {
-    return AAbstractLabel::getContentMinimumWidth() + 20;
+    return AButton::getContentMinimumWidth() + 20;
 }
 
 void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {

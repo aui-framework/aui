@@ -62,3 +62,11 @@ namespace ass::prop {
     template<typename PropertyStruct>
     struct Property;
 }
+
+namespace ass {
+    /**
+     * @brief Indicates that the value for this property should be inherited from parent view.
+     * @ingroup ass
+     */
+    static constexpr struct inherit_t {} inherit;
+}

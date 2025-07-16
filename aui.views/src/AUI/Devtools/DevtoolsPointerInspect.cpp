@@ -153,14 +153,12 @@ private:
 using namespace declarative;
 
 DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
-
-
     setContents(Vertical {
         Centered {
           Horizontal {
             Label { "Address (AView*):" },
             mAddress,
-            Button { .text = "Inspect", .onClick = [this] {
+            Button { .content = "Inspect", .onClick = [this] {
                 try {
                     auto ptr = [&] {
                         auto ptr = mAddress->text()->toStdString();

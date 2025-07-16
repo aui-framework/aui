@@ -160,8 +160,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Common button"),
                     _new<AButton>("Default button") let { it->setDefault(); },
                     _new<AButton>("Disabled button") let { it->setDisabled(); },
-                    ButtonEx {
-                      .contents = { Icon { ":img/logo.svg" }, Label { "Button with icon" }, },
+                    Button {
+                      .content = Horizontal { Icon { ":img/logo.svg" }, Label { "Button with icon" }, },
                       .onClick = [this] {
                         AMessageBox::show(this, "Title", "Message");
                       },
@@ -190,19 +190,19 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   },
                 },
 
-                // comboboxes
+                // dropdown lists
                 GroupBox {
-                  Label { "Comboboxes" },
+                  Label { "Dropdown lists" },
                   Vertical {
                     _new<ADropdownList>(AListModel<AString>::make({
-                      "Combobox 1",
-                      "Combobox 2",
-                      "Combobox 3",
-                      "Combobox 4",
-                      "Combobox 5",
-                      "Combobox 6",
+                      "Dropdown list 1",
+                      "Dropdown list 2",
+                      "Dropdown list 3",
+                      "Dropdown list 4",
+                      "Dropdown list 5",
+                      "Dropdown list 6",
                     })),
-                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) let { it->setDisabled(); },
+                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown list" })) let { it->setDisabled(); },
                   },
                 },
                 GroupBox {
@@ -680,7 +680,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") with_style { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { .text = "OK", .onClick = [surface] { surface->close(); } } },
+        Centered { Button { .content = "OK", .onClick = [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

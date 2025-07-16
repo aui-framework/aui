@@ -23,7 +23,7 @@ public:
         setContents(Centered {
           Horizontal {
             Label { AUI_REACT("{}"_format(mCounter)) },
-            Button { .text = "Count", .onClick = [this] { mCounter += 1; } },
+            Button { .content = "Count", .onClick = [this] { mCounter += 1; } },
           },
         });
     }

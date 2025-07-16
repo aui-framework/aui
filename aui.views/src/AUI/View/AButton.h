@@ -57,11 +57,22 @@
  *
  * Button usually contains text only, but in practice any view can be put in it.
  */
-class API_AUI_VIEWS AButton : public AAbstractLabel {
+class API_AUI_VIEWS AButton : public AViewContainer {
 public:
     AButton();
 
-    explicit AButton(AString text) noexcept: AAbstractLabel(std::move(text)) {}
+    explicit AButton(AString text) {
+        setText(std::move(text));
+    }
+
+    /**
+     * @brief Inflates a label with a text.
+     * @details
+     * Left for compatibility.
+     *
+     * This setter would override any of existing content within button.
+     */
+    void setText(AString text);
 
     virtual ~AButton() = default;
 
@@ -83,46 +94,26 @@ private:
     AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
-/**
- * @brief Unlike AButton, AButtonEx is a container which looks like a button.
- */
-class AButtonEx : public AViewContainer {
-public:
-    AButtonEx() {
-        addAssName(".btn");
-    }
-
-    ~AButtonEx() override = default;
-};
-
 namespace declarative {
 /**
  * @declarativeformof{AButton}
  */
 struct Button {
-    contract::In<AString> text;
+    std::variant<contract::In<AString>, _<AView>> content;
     contract::Slot<> onClick;
 
     _<AButton> operator()() {
-        auto view = _new<AButton>();
-        text.bindTo(view->text());
-        onClick.bindTo(view->clicked);
-        return view;
-    }
-};
-
-/**
- * @declarativeformof{AButtonEx}
- */
-struct ButtonEx {
-    aui::ui_building::ViewGroup contents;
-    contract::Slot<> onClick;
-
-    _<AButtonEx> operator()() {
-        auto view = _new<AButtonEx>();
-        view->setContents(Centered { Horizontal { std::move(contents) } });
-        onClick.bindTo(view->clicked);
-        return view;
+        auto button = _new<AButton>();
+        onClick.bindTo(button->clicked);
+        if (auto* s = std::get_if<contract::In<AString>>(&content)) {
+            // if .content = "some text", compose a label for it.
+            auto label = _new<ALabel>();
+            s->bindTo(label->text());
+            button->setContents(Centered { std::move(label) });
+            return button;
+        }
+        button->setContents(Centered { std::move(std::get<_<AView>>(content)) });
+        return button;
     }
 };
 }   // namespace declarative

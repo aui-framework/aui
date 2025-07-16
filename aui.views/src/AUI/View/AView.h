@@ -653,6 +653,16 @@ public:
         setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
     }
 
+
+    [[nodiscard]]
+    const AColor& textColor() const {
+        return mTextColor;
+    }
+
+    void setTextColor(AColor color) {
+        mTextColor = color;
+    }
+
     [[nodiscard]]
     MouseCollisionPolicy getMouseCollisionPolicy() const {
         return mMouseCollisionPolicy;
@@ -1148,6 +1158,8 @@ private:
      */
     Visibility mVisibility = Visibility::VISIBLE;
     emits<Visibility> mVisibilityChanged;
+
+    AColor mTextColor;
 
     /**
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)

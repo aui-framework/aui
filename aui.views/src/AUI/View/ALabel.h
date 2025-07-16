@@ -42,6 +42,19 @@ struct Label {
        return label;
    }
 };
+
+/**
+ * @declarativeformof{ALabel}
+ */
+struct Text {
+    AOptional<contract::In<AString>> text;
+
+    _<ALabel> operator()() {
+        auto label = _new<ALabel>();
+        AUI_NULLSAFE(text)->bindTo(label->text());
+        return label;
+    }
+};
 }
 
 template<>

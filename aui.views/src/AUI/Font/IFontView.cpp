@@ -14,7 +14,6 @@
 IFontView::~IFontView() = default;
 
 void IFontView::invalidateAllStylesFont() {
-    mColor = AColor::BLACK;
     mFontStyle = {};
 }
 

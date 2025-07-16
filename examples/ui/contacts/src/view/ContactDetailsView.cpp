@@ -93,8 +93,8 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),
-              Button { .text = mEditorMode ? "Discard" : "Delete", .onClick = {me::drop} },
-              Button { .text = mEditorMode ? "Done" : "Edit", .onClick = {me::toggleEdit} },
+              Button { .content = mEditorMode ? "Discard" : "Delete", .onClick = {me::drop} },
+              Button { .content = mEditorMode ? "Done" : "Edit", .onClick = {me::toggleEdit} },
             } with_style { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
           },
         });
