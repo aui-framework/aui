@@ -71,19 +71,9 @@ _<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
 
     return nullptr;
 }
-
-void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image, aui::ranged_number<float, 0, 100> quality) {
-    // Setup a config, starting form a preset and tuning some additional
-    // parameters
-    WebPConfig config;
-    if (!WebPConfigPreset(&config, WEBP_PRESET_PHOTO, quality)) {
-        throw AException("WebPConfigPreset failed");
-    }
-    // ... additional tuning
-    config.sns_strength = 90;
-    config.filter_sharpness = 6;
+void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image, const WebPConfig& config) {
 #if AUI_DEBUG
-    auto configError = WebPValidateConfig(&config);  // not mandatory, but useful
+    auto configError = WebPValidateConfig(&config);   // not mandatory, but useful
 #endif
 
     // Setup the input data
@@ -93,9 +83,20 @@ void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageVie
     }
     pic.width = image.width();
     pic.height = image.height();
-    // allocated picture of dimension width x height
-    if (!WebPPictureAlloc(&pic)) {
-        throw AException("WebPPictureAlloc failed");
+    bool bUseRGBA = image.format() == APixelFormat::RGBA_BYTE;
+    if (!bUseRGBA && image.format() != APixelFormat::RGB_BYTE)
+        throw AException("WebPSave unsupported type");
+    const uint8_t* data = reinterpret_cast<const uint8_t*>(image.data());
+    int stride = image.width() * (bUseRGBA ? 4 : 3);   // RGB|RGBA
+
+    if (bUseRGBA) {
+        if (!WebPPictureImportRGBA(&pic, data, stride)) {
+            throw AException("WebPPictureImportRGB failed");
+        }
+    } else {
+        if (!WebPPictureImportRGB(&pic, data, stride)) {
+            throw AException("WebPPictureImportRGB failed");
+        }
     }
     // at this point, 'pic' has been initialized as a container,
     // and can receive the Y/U/V samples.
@@ -107,10 +108,9 @@ void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageVie
 
     // Set up a byte-output write method. WebPMemoryWriter, for instance.
     WebPMemoryWriter wrt;
-    WebPMemoryWriterInit(&wrt);     // initialize 'wrt'
-
-    pic.writer = [](const uint8_t* data, size_t dataSize,
-                    const WebPPicture* picture) -> int {
+    WebPMemoryWriterInit(&wrt);   // initialize 'wrt'
+    // WebPPictureImportRGB()
+    pic.writer = [](const uint8_t* data, size_t dataSize, const WebPPicture* picture) -> int {
         try {
             static_cast<IOutputStream*>(picture->custom_ptr)->write(reinterpret_cast<const char*>(data), dataSize);
         } catch (const AException& e) {
@@ -120,11 +120,11 @@ void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageVie
         return dataSize;
     };
     pic.custom_ptr = outputStream.ptr();
-
+    pic.use_argb = (bUseRGBA ? 1 : 0);
     // Compress!
     int ok = WebPEncode(&config, &pic);   // ok = 0 => error occurred!
     AUI_DEFER { WebPMemoryWriterClear(&wrt); };
     if (!ok) {
-        throw AException("encoding failed");
+        throw AException("WebP encoding failed");
     }
 }
