@@ -24,6 +24,5 @@ public:
 
     _<AImage> getRasterImage(AByteBufferView buffer) override;
 
-    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, aui::ranged_number<float, 0, 100> quality = 50);
-    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, std::shared_ptr<WebPConfig> config, bool bUseRGBA);
+    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, const WebPConfig& config);
 };
