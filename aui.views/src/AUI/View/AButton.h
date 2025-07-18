@@ -29,6 +29,11 @@
  *
  * @image html docs/imgs/AButton.gif "The button view being pressed."
  *
+ * Starting from AUI 8.0.0, AButton itself does not render text; instead, it's a styled container, which is populated
+ * with any views by the user, i.e., ALabel. `Button { .content = "Text" }` does exactly this. AButton used to have
+ * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
+ * options of customization.
+ *
  * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
  * disappears, making an illusion of pressing.
  *
