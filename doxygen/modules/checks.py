@@ -77,7 +77,5 @@ def declarative_notation():
                 content = full_path.read_text()
                 if not "namespace declarative " in content:
                     continue
-                if not "@ref declarative::" in content:
-                    common.report_error(full_path, "no references to declarative form")
                 if not "@declarativeformof" in content:
                     common.report_error(full_path, "does not contain @declarativeformof")

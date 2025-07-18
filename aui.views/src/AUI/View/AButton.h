@@ -56,6 +56,12 @@
  * # Button with icon
  *
  * Button usually contains text only, but in practice any view can be put in it.
+ *
+ * # Styling a button
+ *
+ * AButton is styled as follows:
+ *
+ * @snippet aui.views/src/AUI/ASS/AStylesheet.cpp AButton
  */
 class API_AUI_VIEWS AButton : public AViewContainer {
 public:

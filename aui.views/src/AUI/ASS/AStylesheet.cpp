@@ -122,7 +122,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0x444444_rgb },
         },
 
-        // AButton
+        /// [AButton]
         {
             t<AButton>(),
             BackgroundSolid {0xffffff_rgb},
@@ -184,6 +184,7 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0xbfbfbf_rgb },
             TextColor { 0x838383_rgb }
         },
+        /// [AButton]
 
         // Text fields
         {
