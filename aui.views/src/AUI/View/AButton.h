@@ -37,7 +37,7 @@
  * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
  * disappears, making an illusion of pressing.
  *
- * # Button with a lambda
+ * # Button with a lambda handler
  *
  * This button executes the lambda upon click.
  *
@@ -45,7 +45,7 @@
  *
  * @image html docs/imgs/Screenshot_20250715_091801.png "Button with a lambda."
  *
- * # Button with a signal-slot
+ * # Button with a signal-slot handler
  *
  * This button executes the member function upon click.
  *
@@ -58,9 +58,17 @@
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
  * user presses `Enter`, the button is pushed automatically.
  *
+ * @snippet examples/ui/button_default/src/main.cpp AButton example
+ *
+ * @image html docs/imgs/Screenshot_20250719_130434.png A default button.
+ *
  * # Button with icon
  *
  * Button usually contains text only, but in practice any view can be put in it.
+ *
+ * @snippet examples/ui/button_icon/src/main.cpp AButton example
+ *
+ * @image html docs/imgs/Screenshot_20250719_130034.png Button with an icon.
  *
  * # Styling a button
  *
@@ -112,10 +120,14 @@ namespace declarative {
 struct Button {
     std::variant<contract::In<AString>, _<AView>> content;
     contract::Slot<> onClick;
+    bool isDefault = false;
 
     _<AButton> operator()() {
         auto button = _new<AButton>();
         onClick.bindTo(button->clicked);
+        if (isDefault) {
+            button->setDefault();
+        }
         if (auto* s = std::get_if<contract::In<AString>>(&content)) {
             // if .content = "some text", compose a label for it.
             auto label = _new<ALabel>();

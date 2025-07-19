@@ -8,7 +8,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-/// [AButton example]
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -21,10 +20,13 @@ class MainWindow: public AWindow {
 public:
     MainWindow(): AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
+            /// [AButton example]
             Button {
                 .content = "Click me",
                 .onClick = {me::onClick},
+                .isDefault = true,
             },
+            /// [AButton example]
         });
     }
 
@@ -38,4 +40,3 @@ AUI_ENTRY {
     _new<MainWindow>()->show();
     return 0;
 }
-/// [AButton example]

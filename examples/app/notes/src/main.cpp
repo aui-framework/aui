@@ -123,9 +123,9 @@ public:
                     Vertical {
                       Centered {
                         Horizontal {
-                          ButtonEx { { Icon { ":img/save.svg" }, Label { "Save" } }, {me::save} }
+                          Button { Horizontal { Icon { ":img/save.svg" }, Label { "Save" } }, {me::save} }
                               & mDirty > &AView::setEnabled,
-                          ButtonEx { { Icon { ":img/new.svg" }, Label { "New Note" } }, {me::newNote} },
+                          Button { Horizontal { Icon { ":img/new.svg" }, Label { "New Note" } }, {me::newNote} },
                         },
                       },
                       /// [scrollarea]
@@ -147,7 +147,7 @@ public:
 
                     Vertical::Expanding {
                       Centered {
-                        ButtonEx { { Icon { ":img/trash.svg" }, Label { "Delete" } }, {me::deleteCurrentNote} } &
+                        Button { Horizontal { Icon { ":img/trash.svg" }, Label { "Delete" } }, {me::deleteCurrentNote} } &
                             mCurrentNote.readProjected([](const _<Note>& n) {
                                 return n != nullptr;
                             }) > &AView::setEnabled,

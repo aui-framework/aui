@@ -13,6 +13,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ADrawableView.h>
+#include "AUI/View/ASpacerFixed.h"
 
 using namespace ass;
 using namespace declarative;
@@ -21,19 +22,19 @@ class MainWindow : public AWindow {
 public:
     MainWindow() : AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
-          /// [AButton example]
           Horizontal {
-            Label { "SaveyI,kKa" },
+            /// [AButton example]
             Button {
               .content =
                   Horizontal {
                     Icon { ":img/save.svg" },
-                    Label { "SaveyI,kKa" },
+                    SpacerFixed { 2_dp },
+                    Label { "Button with icon" },
                   },
               .onClick = { me::onClick },
             },
+            /// [AButton example]
           },
-          /// [AButton example]
         });
     }
 
