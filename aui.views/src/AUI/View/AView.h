@@ -72,6 +72,25 @@ class AStylesheet;
  *
  * Analogue to Qt's QWidget, Android's View.
  *
+ * Every view has a position and size. Also, almost every view has parent, in exception to toplevel view, @ref AWindow.
+ * Parent view is @ref AViewContainerBase "container" which is responsible for layout of all views inside.
+ *
+ * @image html Screenshot_20241212_064400.png Devtools demonstrating view hierarchy.
+ *
+ * AView by itself does not provide much functionality. There are many implementations of the functionality (so called
+ * "UI kit"): @ref AButton, @ref ATextField, @ref ACheckBox. An implementation view can be a container, e.g.
+ * @ref ANumberPicker, which consists of a text field and buttons.
+ *
+ * You can implement your view by inheriting from AView and overriding some of its methods. Also, you can define
+ * @ref docs/retained_immediate_ui.md "declarative contract", which means you accept everything your view needs
+ * (including data), and return pure AView without subclassing.
+ *
+ * Every view can be @ref ass "styled". It means that it can have a set of properties which can be used to change
+ * background, border, text color, etc.
+ *
+ * The user interaction is driven by events. You can handle them by overriding respective methods in AView. Also, many
+ * events can be handled with signal-slot, see which signals is emitted by @ref AView.
+ *
  * @ingroup useful_views
  */
 class API_AUI_VIEWS AView: public AObject

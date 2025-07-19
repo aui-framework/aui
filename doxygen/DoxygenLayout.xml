@@ -49,6 +49,7 @@
             <tab type="user" url="@ref docs/retained_immediate_ui.md" title="Retained/immediate UI philosophy" />
         </tab>
         <tab type="usergroup" title="Views" visible="yes">
+            <tab type="user" url="@ref AView" title="Overview" />
             <tab type="user" url="@ref useful_views" title="All Views" />
             <tab type="user" url="@ref AButton" title="Button" />
         </tab>
