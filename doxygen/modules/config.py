@@ -14,7 +14,7 @@ CONFIG = {
     'doxygen_annoyances': [
         "Internal inconsistency: scope for class",
         "error: no uniquely matching class member found",
-
+        "Incomplete input: scope for class",
     ],
 }
 
