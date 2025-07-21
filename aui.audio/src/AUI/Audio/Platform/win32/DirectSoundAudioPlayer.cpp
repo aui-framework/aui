@@ -170,8 +170,8 @@ private:
 };
 
 void DirectSoundAudioPlayer::playImpl() {
-    initializeIfNeeded();
     DirectSound::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+        self->initializeIfNeeded();
         DirectSound::instance().mixer().addSoundSource(std::move(self));
     });
 }
