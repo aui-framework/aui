@@ -1,7 +1,6 @@
 #include "DirectSoundAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/AAudioMixer.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Traits/memory.h"
 #include <dsound.h>
 
