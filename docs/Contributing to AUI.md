@@ -30,6 +30,11 @@ and tests.
 Merges from `feat/` branch are allowed only to `develop` branch. `develop` is the branch were our actual development
 work happens. When we consider `develop` branch stable enough, we merge `develop` and `master` and create a release.
 
+If you are an external developer (i.e., have no write access to AUI's repository), you will need to create a fork of AUI
+and commit to it. Whilst you can commit to `master` and `develop` branches of your own repository, we still recommend to
+follow feature branch workflow. After you finished your work in your feature branch, open pull request from your feature
+branch to AUI's `develop` branch.
+
 # AI
 
 We'd happily accept your AI-assisted work, as soon as you take complete responsibility thereof, and you have complete
