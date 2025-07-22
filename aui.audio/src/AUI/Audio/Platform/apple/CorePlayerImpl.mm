@@ -129,8 +129,8 @@ static CoreAudioInstance& coreAudio() {
 
 
 void CoreAudioPlayer::playImpl() {
-    initializeIfNeeded();
     coreAudio().thread()->enqueue([self = aui::ptr::shared_from_this(this)] {
+        self->initializeIfNeeded();
         ::mixer().addSoundSource(self);
         coreAudio().enqueueIfNot();
     });

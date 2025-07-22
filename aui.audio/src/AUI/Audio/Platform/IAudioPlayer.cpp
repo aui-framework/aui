@@ -33,7 +33,7 @@ IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
 
 IAudioPlayer::IAudioPlayer(_<ISoundInputStream> stream) {
     mSourceStream = std::move(stream);
-    mResampledStream = _new<ASoundResampler>(mSourceStream);
+    mResampledStream.emplace(mSourceStream);
     mResampledStream->setVolume(mVolume);
 }
 
@@ -42,28 +42,28 @@ void IAudioPlayer::initialize() {
         throw AException("url is empty");
     }
     mSourceStream = ISoundInputStream::fromUrl(*mUrl);
-    mResampledStream = _new<ASoundResampler>(mSourceStream);
+    mResampledStream.emplace(mSourceStream);
     mResampledStream->setVolume(mVolume);
 }
 
 void IAudioPlayer::play() {
     if (mPlaybackStatus != PlaybackStatus::PLAYING) {
-        playImpl();
         mPlaybackStatus = PlaybackStatus::PLAYING;
+        playImpl();
     }
 }
 
 void IAudioPlayer::pause() {
     if (mPlaybackStatus == PlaybackStatus::PLAYING) {
-        pauseImpl();
         mPlaybackStatus = PlaybackStatus::PAUSED;
+        pauseImpl();
     }
 }
 
 void IAudioPlayer::stop() {
     if (mPlaybackStatus != PlaybackStatus::STOPPED) {
-        stopImpl();
         mPlaybackStatus = PlaybackStatus::STOPPED;
+        stopImpl();
     }
 }
 

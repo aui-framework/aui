@@ -130,9 +130,9 @@ static PulseAudioInstance& pulse() {
 }
 
 void PulseAudioPlayer::playImpl() {
-    initializeIfNeeded();
     pulse();
     gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+        self->initializeIfNeeded();
       ::loop().addSoundSource(std::move(self));
     });
     pa_threaded_mainloop_signal(pulse().mMainLoop, false);

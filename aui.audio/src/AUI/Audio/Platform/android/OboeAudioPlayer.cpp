@@ -58,10 +58,10 @@ private:
 };
 
 void OboeAudioPlayer::playImpl() {
-    initializeIfNeeded();
     while (OboeSoundOutput::instance().thread() == nullptr)
         ;
     OboeSoundOutput::instance().thread()->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
+        self->initializeIfNeeded();
         OboeSoundOutput::instance().mixer().addSoundSource(std::move(self));
     });
 }

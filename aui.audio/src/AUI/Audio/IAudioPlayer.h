@@ -55,8 +55,8 @@ public:
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    const _<ASoundResampler>& resampledStream() const noexcept {
-        return mResampledStream;
+    ASoundResampler& resampledStream() {
+        return *mResampledStream;
     }
 
     /**
@@ -114,7 +114,7 @@ signals:
 
 protected:
     bool isInitialized() const noexcept {
-        return mResampledStream != nullptr;
+        return mResampledStream != std::nullopt;
     }
 
     void initialize();
@@ -131,7 +131,7 @@ private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
     AOptional<AUrl> mUrl;
     _<ISoundInputStream> mSourceStream;
-    _<ASoundResampler> mResampledStream;
+    AOptional<ASoundResampler> mResampledStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
 
