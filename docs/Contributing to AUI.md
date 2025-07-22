@@ -75,7 +75,7 @@ compensation paid to the external developer who successfully resolves that issue
 
 For information about getting in touch regarding compensation, please refer to the contact details provided in
 our [README](https://github.com/aui-framework/aui/blob/master/README.md). Pick
-[a task](https://github.com/orgs/aui-framework/projects/4/views/1?filterQuery=is%3Aopen+no%3Aassignee) which you want to
+[a task](https://github.com/orgs/aui-framework/projects/4/views/1) which you want to
 resolve before contacting.
 
 ## 1 Point - Minimal Complexity
