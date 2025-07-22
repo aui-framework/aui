@@ -18,6 +18,8 @@ information.
 
    When you have finished your work, you should open a pull request from the `feat/feature-name` branch of your
    repository to the `develop` branch of the AUI's original repository.
+5. Contributing to AUI, you agree that your code will be released under
+   [AUI's license](https://github.com/aui-framework/aui/blob/master/LICENSE).
 
 # Workflow
 
