@@ -14,119 +14,56 @@
 #include "AStringVector.h"
 #include "AStaticVector.h"
 #include <AUI/Common/AByteBuffer.h>
+#include <simdutf.h>
 
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-inline static AStaticVector<char16_t, 4> toUtf16(char32_t i) {
-    if (i <= 0xffff) {
-        return { char16_t(i) };
+inline static AStaticVector<char, 4> toUtf8(char32_t i) {
+    if (i <= 0x7F) {
+        return { static_cast<char>(i) };
     }
-
-    i -= 0x10000;
-    return { char16_t((i >> 10) + 0xD800),
-             char16_t((i & 0x3FF) + 0xDC00) };
-}
-
-template<typename T>
-inline static char32_t fromUtf16(T& iterator, T last) {
-    auto c1 = *(iterator++);
-    if (iterator == last) {
-        // incomplete sequence?
-        return static_cast<char32_t >(c1);
+    if (i <= 0x7FF) {
+        return { static_cast<char>(0xC0 | (i >> 6)), static_cast<char>(0x80 | (i & 0x3F)) };
     }
-    if (*iterator < 0xD800) {
-        return static_cast<char32_t >(c1);
-    }
-    auto c2 = *(iterator++);
-
-    if (c2 < 0xDC00) {
-        // bad entity
-    }
-
-    c1 -= 0xD800;
-    c2 -= 0xDC00;
-
-    return (char32_t(c1) << 10 | char32_t(c2 & 0x3FF)) + 0x10000;
-}
-
-inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
-    destination.reserve(length);
-
-    // parse utf8
-    for (; length && *str; --length)
-    {
-        if ((*str & 0b1000'0000) == 0) {
-            // ascii symbol
-            destination.push_back(*(str++));
-            continue;
+    if (i <= 0xFFFF) {
+        if (i >= 0xD800 && i <= 0xDFFF) {
+            return {}; // Invalid Unicode code point
         }
-        // utf8 symbol
-
-        if ((*str & 0b1110'0000) == 0b1100'0000) {
-            // 2-byte symbol
-            char16_t t = *(str++) & 0b11111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            destination.push_back(t);
-            length -= 1;
-            continue;
-        }
-
-        if ((*str & 0b1111'0000) == 0b1110'0000) {
-            // 3-byte symbol
-            char16_t t = *(str++) & 0b1111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            destination.push_back(t);
-            length -= 2;
-            continue;
-        }
-
-        if ((*str & 0b1111'1000) == 0b1111'0000) {
-            // 4-byte symbol
-            char32_t t = *(str++) & 0b111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            t <<= 6;
-            t |= *(str++) & 0b111111;
-            destination.insertAll(toUtf16(t));
-            length -= 3;
-            continue;
-        }
-
-
-        str++; // bad entity?
+        return {
+            static_cast<char>(0xE0 | (i >> 12)),
+            static_cast<char>(0x80 | ((i >> 6) & 0x3F)),
+            static_cast<char>(0x80 | (i & 0x3F))
+        };
     }
+    if (i <= 0x10FFFF) {
+        return {
+            static_cast<char>(0xF0 | (i >> 18)),
+            static_cast<char>(0x80 | ((i >> 12) & 0x3F)),
+            static_cast<char>(0x80 | ((i >> 6) & 0x3F)),
+            static_cast<char>(0x80 | (i & 0x3F))
+        };
+    }
+    return {}; // Invalid Unicode code point
 }
 
-AString::AString(const char* utf8) noexcept
-{
-    fromUtf8_impl(*this, utf8, std::strlen(utf8));
-}
-
-AString::AString(std::string_view utf8) noexcept
-{
-    fromUtf8_impl(*this, utf8.data(), utf8.length());
-}
-
-AString::AString(const std::string& utf8) noexcept
-{
-    fromUtf8_impl(*this, utf8.c_str(), utf8.length());
+void AString::push_back(AChar c) noexcept {
+    insertAll(::toUtf8(c));
 }
 
 AString AString::fromUtf8(const AByteBufferView& buffer) {
-    return AString::fromUtf8(buffer.data(), buffer.size());
+    return AString(buffer.data(), buffer.size());
 }
 
 AString AString::fromUtf8(const char* buffer, size_t length) {
-    AString result;
-    fromUtf8_impl(result, buffer, length);
-    return result;
+    return AString(buffer, length);
+}
+
+AString AString::fromUtf16(const AByteBufferView& buffer) {
+
+}
+AString AString::fromUtf16(const char* buffer, size_t length) {
+
 }
 
 
@@ -179,6 +116,15 @@ AByteBuffer AString::toUtf8() const noexcept
         }
     }
     return buf;
+}
+
+AByteBuffer AString::toUtf16() const noexcept {
+    size_t expected_utf16words = simdutf::utf16_length_from_utf8(data(), size());
+    AByteBuffer utf16_output(expected_utf16words * 2);
+    if (simdutf::convert_utf8_to_utf16le(data(), size(), reinterpret_cast<char16_t*>(utf16_output.data())) == 0) {
+        return {};
+    }
+    return utf16_output;
 }
 
 AStringVector AString::split(char16_t c) const noexcept
@@ -1159,7 +1105,7 @@ AString AString::lowercase() const {
 }
 
 void AString::resizeToNullTerminator() {
-    char16_t* i = data();
+    char* i = data();
     for (; *i; ++i);
     resize(i - data());
 }
