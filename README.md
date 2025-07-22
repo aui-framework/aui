@@ -220,7 +220,8 @@ You are not obligated to disclose your own sources nor release your own project 
 # Maintaining
 
 The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)
-with contributions from many other people.
+with contributions from many other people. Join our [Discord community](https://discord.gg/jq2WySpg6m) for voice
+calls.
 
 Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
 
