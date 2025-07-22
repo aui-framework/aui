@@ -49,6 +49,8 @@ Story points are designed as relative measurements of work complexity, deliberat
 hours/days/weeks). They provide a general indication of effort required for task completion. It's important to note that
 story point comparisons across different teams, departments, or organizations are inherently invalid.
 
+@image html docs/imgs/Screenshot_20250722_041541.png
+
 For example, Team A's 100-point sprint delivery might represent more actual work than Team B's 200 points, as each team
 develops their own story point scale. While this guide isn't meant to standardize story points globally, it offers
 internal guidelines for consistent estimation.
@@ -56,7 +58,18 @@ internal guidelines for consistent estimation.
 Note: All stories include standard overhead for PR reviews, test verification, and deployment processes. This overhead
 should be factored into estimates and can sometimes exceed the time needed for the primary task.
 
-This section describes how the story points are determined for AUI tasks.
+This section explains how story points are assigned to tasks in the AUI framework project and their relationship to
+developer compensation.
+
+## Financial compensation
+
+The number of story points assigned to a GitHub issue in the AUI repository directly determines the financial
+compensation paid to the external developer who successfully resolves that issue.
+
+For information about getting in touch regarding compensation, please refer to the contact details provided in
+our [README](https://github.com/aui-framework/aui/blob/master/README.md). Pick
+[a task](https://github.com/orgs/aui-framework/projects/4/views/1?filterQuery=is%3Aopen+no%3Aassignee) which you want to
+resolve before contacting.
 
 ## 1 Point - Minimal Complexity
 
