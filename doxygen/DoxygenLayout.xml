@@ -43,10 +43,7 @@
             <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview"/>
             <tab type="user" url="@ref layout_managers" title="Layout Managers"/>
             <tab type="user" url="@ref signal_slot" title="Signal-slot"/>
-            <tab type="usergroup" title="Data Binding" visible="yes">
-                <tab type="user" url="@ref property_system" title="Properties"/>
-                <tab type="user" url="@ref AForEachUI" title="Lists"/>
-            </tab>
+            <tab type="user" url="@ref property_system" title="Data Binding"/>
             <tab type="user" url="@ref docs/Devtools.md" title="Devtools"/>
             <tab type="user" url="@ref docs/retained_immediate_ui.md" title="Retained/immediate UI philosophy"/>
         </tab>
@@ -56,6 +53,7 @@
             <tab type="user" url="@ref AButton" title="Button"/>
             <tab type="user" url="@ref ACheckBox" title="Check box"/>
             <tab type="user" url="@ref ALabel" title="Label"/>
+            <tab type="user" url="@ref AForEachUI" title="Lists"/>
             <tab type="user" url="@ref ARadioButton" title="Radio button"/>
             <tab type="user" url="@ref ATextField" title="Text field"/>
         </tab>
