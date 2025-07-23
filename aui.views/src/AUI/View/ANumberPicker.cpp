@@ -60,11 +60,11 @@ ANumberPicker::ANumberPicker() {
 
     auto c = _new<AViewContainer>();
     c->addAssName(".up-down-wrapper");
-    auto up = _new<AButton>() let {
+    auto up = _new<AButton>() AUI_LET {
         it->setDefault();
         it << ".up";
     };
-    auto down = _new<AButton>() let {
+    auto down = _new<AButton>() AUI_LET {
         it->setDefault();
         it << ".down";
     };

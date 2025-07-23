@@ -60,7 +60,7 @@ FractalWindow::FractalWindow() : AWindow("Mandelbrot set") {
             .connect(&AButton::clicked, this, [&, fractal]() { _new<JumpToCoordsWindow>(fractal, this)->show(); }),
         _new<ALabel>("Iterations:"),
         _new<ANumberPicker>().connect(
-            &ANumberPicker::valueChanged, this, [fractal](int v) { fractal->setIterations(v); }) let {
+            &ANumberPicker::valueChanged, this, [fractal](int v) { fractal->setIterations(v); }) AUI_LET {
                 it->setMax(1000);
                 it->setValue(350);
             },

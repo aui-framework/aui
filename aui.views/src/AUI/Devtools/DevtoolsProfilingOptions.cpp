@@ -75,7 +75,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
 
           header("Scale"),
           Vertical {
-            _new<ASlider>() let {
+            _new<ASlider>() AUI_LET {
                     it->value() = 1.f / 3.f;
                     connect(it->value(), [targetWindow, it](float v) {
                         it->value() = glm::round(v * 6) / 6.f;

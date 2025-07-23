@@ -62,7 +62,7 @@ _<AView> myLazyList(_<State> state) {
     return Vertical {
         AUI_DECLARATIVE_FOR(i, *state->items, AVerticalLayout) { return Label{} & i->value; },
         Centered {
-          _new<ASpinnerV2>() let {
+          _new<ASpinnerV2>() AUI_LET {
                   AObject::connect(it->redrawn, AObject::GENERIC_OBSERVER, [state] {
                       // when a spinner appears, we indicate that we need more items.
                       state->needMore = true;

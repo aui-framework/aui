@@ -39,8 +39,8 @@ static _<AView> uiBenchmarkScene() {
             Label { "Buttons" },
             Vertical {
               _new<AButton>("Common button"),
-              _new<AButton>("Default button") let { it->setDefault(); },
-              _new<AButton>("Disabled button") let { it->setDisabled(); },
+              _new<AButton>("Default button") AUI_LET { it->setDefault(); },
+              _new<AButton>("Disabled button") AUI_LET { it->setDisabled(); },
               Button {
                 Label { "Button with icon" },
               },
@@ -49,11 +49,11 @@ static _<AView> uiBenchmarkScene() {
 
           // checkboxes
           GroupBox {
-            CheckBoxWrapper { Label { "Checkboxes" } } let { it->checked() = true; },
+            CheckBoxWrapper { Label { "Checkboxes" } } AUI_LET { it->checked() = true; },
             Vertical {
               CheckBoxWrapper { Label { "Unchecked checkbox" } },
-              CheckBoxWrapper { Label { "Checked checkbox" } } let { it->checked() = true; },
-              CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
+              CheckBoxWrapper { Label { "Checked checkbox" } } AUI_LET { it->checked() = true; },
+              CheckBoxWrapper { Label { "Disabled checkbox" } } AUI_LET { it->setDisabled(); },
             },
           },
 
@@ -61,7 +61,7 @@ static _<AView> uiBenchmarkScene() {
           GroupBox {
             Label { "Radiobuttons" },
             RadioGroup {
-              RadioButton { "Radiobutton 1" } let { it->checked() = true; },
+              RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
               RadioButton { "Radiobutton 2" },
               RadioButton { "Radiobutton 3" },
               RadioButton { "Disabled radiobutton" } let { it->disable(); },

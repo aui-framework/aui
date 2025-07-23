@@ -57,9 +57,9 @@ protected:
                                             }
                                             mHelloLabel->text() = "Hello, {}!"_format(mTextField->getText());
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
-                                        }) let { it->setDefault(); },
+                                        }) AUI_LET { it->setDefault(); },
                                 },
-                                mHelloLabel = _new<ALabel>() let {
+                                mHelloLabel = _new<ALabel>() AUI_LET {
                                     it->setVisibility(Visibility::INVISIBLE);
                                     it << "#hello";
                                 }

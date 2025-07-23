@@ -86,7 +86,7 @@ _<AView> noteEditor(const _<Note>& note) {
     }
     return AScrollArea::Builder().withContents(
         Vertical {
-          _new<TitleTextArea>("Untitled") let {
+          _new<TitleTextArea>("Untitled") AUI_LET {
                   it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
                   AObject::biConnect(note->title, it->text());
                   if (note->content->empty()) {
@@ -134,7 +134,7 @@ public:
                           .withContents(
                           AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
                               observeChangesForDirty(note);
-                              return notePreview(note) let {
+                              return notePreview(note) AUI_LET {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });
                                   it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
                                       ALOG_DEBUG(LOG_TAG) << "currentNote == note " << currentNote << " == " << note;

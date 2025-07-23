@@ -249,17 +249,17 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref let "let" syntax to set up connections:
+ * Let's make things more declarative and use @ref let "AUI_LET" syntax to set up connections:
  * @code{cpp}
  * MyApp() {
  *   using namespace declarative;
  *   setContents(Vertical {
- *     _new<ALabel>("-") let {
+ *     _new<ALabel>("-") AUI_LET {
  *       connect(counter->valueChanged, label, [label = it.get()](int value) {
  *         label->setText("{}"_format(value));
  *       });
  *     },
- *     _new<AButton>("Increase") let {
+ *     _new<AButton>("Increase") AUI_LET {
  *       connect(it->clicked, slot(mCounter)::increase);
  *     },
  *   });

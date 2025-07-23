@@ -93,8 +93,8 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),
-              Button { mEditorMode ? "Discard" : "Delete" } let { connect(it->clicked, me::drop); },
-              Button { mEditorMode ? "Done" : "Edit" } let { connect(it->clicked, me::toggleEdit); },
+              Button { mEditorMode ? "Discard" : "Delete" } AUI_LET { connect(it->clicked, me::drop); },
+              Button { mEditorMode ? "Done" : "Edit" } AUI_LET { connect(it->clicked, me::toggleEdit); },
             } with_style { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
           },
         });

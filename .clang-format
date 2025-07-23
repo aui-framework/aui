@@ -22,7 +22,7 @@ EmptyLineAfterAccessModifier: Never
 NamespaceIndentation: None
 BreakConstructorInitializers: BeforeComma
 
-# we have some problems with ranges-v3 and AUI's let, so keep it disabled
+# we have some problems with ranges-v3 and AUI's AUI_LET, so keep it disabled
 SortIncludes: Never
 
 
@@ -32,14 +32,14 @@ SortIncludes: Never
 BracedInitializerIndentWidth: 2
 ConstructorInitializerIndentWidth: 2
 
-# better spacing around with_style and let.
+# better spacing around with_style and AUI_LET.
 # before:
 # view with_style{Expanding()},
-# view let{printf("Hello");},
+# view AUI_LET{printf("Hello");},
 #
 # after:
 # view with_style { Expanding() },
-# view let { printf("Hello"); },
+# view AUI_LET { printf("Hello"); },
 Cpp11BracedListStyle: false
 SpaceBeforeCpp11BracedList: true
 

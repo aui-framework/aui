@@ -68,7 +68,7 @@ private:
                   MinSize { 0 },
                   Margin { 0 },
                   BorderRadius { 0 },
-                } let {
+                } AUI_LET {
                     it && mState->currentExpression;
                     it->focus();
                     connect(it->focusLost, me::commitExpression);

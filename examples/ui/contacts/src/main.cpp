@@ -137,7 +137,7 @@ private:
         return Vertical {
             Label {} & contact->displayName with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
-        } let {
+        } AUI_LET {
             connect(it->clicked, [this, contact] { mSelectedContact = contact; });
         };
     }

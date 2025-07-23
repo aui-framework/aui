@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
+#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's AUI_LET, lol so forward it
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -204,7 +204,7 @@ namespace aui::impl::slot {
  * @param lambda code executed in the context of an object (as its member function)
  * @note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * @details
- * `let` allows to call methods of newly created objects right in place. For example:
+ * `AUI_LET` allows to call methods of newly created objects right in place. For example:
  *
  * <table>
  *   <tr>
@@ -220,7 +220,7 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       auto tf = _new<ATextField>() let { it->setText("Hello!"); };
+ *       auto tf = _new<ATextField>() AUI_LET { it->setText("Hello!"); };
  *       @endcode
  *     </td>
  *   </tr>
@@ -251,15 +251,15 @@ namespace aui::impl::slot {
  *       @code{cpp}
  *       // clean, less code and easy to understand
  *       setContents(Vertical {
- *           _new<ATextField>() let { it->setText("Hello!") },
- *           _new<ATextField>() let { it->setText("World!") },
+ *           _new<ATextField>() AUI_LET { it->setText("Hello!") },
+ *           _new<ATextField>() AUI_LET { it->setText("World!") },
  *       });
  *       @endcode
  *     </td>
  *   </tr>
  * </table>
  */
-#define let ^ [&](const auto& it)
+#define AUI_LET ^ [&](const auto& it)
 
 /**
  * @brief Allows to define a style to the view right in place.

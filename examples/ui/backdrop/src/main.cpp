@@ -30,7 +30,7 @@ static auto headerWithContents(_<AView> content) {
         AScrollArea::Builder().withContents(content).build() with_style {
               Expanding(),
               Padding { 80_dp, 0, 0 },
-            } let { it->setExtraStylesheet(
+            } AUI_LET { it->setExtraStylesheet(
                      AStylesheet {
                          {
                              t<AScrollAreaViewport>(),

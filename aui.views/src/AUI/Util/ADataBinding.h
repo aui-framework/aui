@@ -173,7 +173,7 @@ public:
  *
  *         setContents(Centered {
  *             Vertical {
- *                 Label { } let {
+ *                 Label { } AUI_LET {
  *                     data->addObserver(&Model::value, [it](int v) {
  *                         it->setText("{}"_format(v));
  *                     });

@@ -353,7 +353,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                     treeView,
                 }
             ),
-        } let {
+        } AUI_LET {
             connect(mState, [=](const State& state) {
                 using namespace ass;
                 if (std::holds_alternative<Running>(state)) {
@@ -372,7 +372,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
         },
         Vertical::Expanding {
             Centered {
-                _new<AButton>(/* pause */) let {
+                _new<AButton>(/* pause */) AUI_LET {
                     connect(mState, [=](const State& state) {
                       if (std::holds_alternative<Running>(state)) {
                           it->setText("Pause");

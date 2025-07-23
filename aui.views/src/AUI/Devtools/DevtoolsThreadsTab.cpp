@@ -102,7 +102,7 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
           _new<ALabel>(thread->threadName()),
           _new<WatcherView>([thread] {
               return thread->messageQueue().messages().size();
-          }) let { connect(mUpdateTimer->fired, slot(it)::update); },
+          }) AUI_LET { connect(mUpdateTimer->fired, slot(it)::update); },
         });
     };
 
@@ -111,7 +111,7 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
       _new<ALabel>("Thread Pool"),
       _new<WatcherView>([&targetThreadPool] {
         return targetThreadPool.getTotalTaskCount();
-      }) let { connect(mUpdateTimer->fired, slot(it)::update); },
+      }) AUI_LET { connect(mUpdateTimer->fired, slot(it)::update); },
     });
 
     setContents(Stacked { AScrollArea::Builder().withContents(Vertical {

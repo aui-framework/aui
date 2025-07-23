@@ -185,10 +185,10 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              _new<AButton>("Randomize") let {
+              _new<AButton>("Randomize") AUI_LET {
                       connect(it->clicked, slot(mCells)::randomize);
                   },
-              _new<AButton>() let {
+              _new<AButton>() AUI_LET {
                       it & mCells.isRunning > [](AButton& b, bool isRunning) {
                           b.setText(isRunning ? "Pause" : "Run");
                       };

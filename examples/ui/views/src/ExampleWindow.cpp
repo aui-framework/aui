@@ -90,7 +90,7 @@ public:
                   Vertical {
                     Centered { _new<ALabel>("ALabel") },
                     Centered { _new<AButton>("AButton") },
-                    Centered { _new<ATextField>() let { it->setText("ATextField"); } },
+                    Centered { _new<ATextField>() AUI_LET { it->setText("ATextField"); } },
                   }
                   << ".all_views_wrap")
               .withExpanding() });
@@ -116,7 +116,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style {
             Expanding(1, 0),
           },
-      Horizontal {} let {
+      Horizontal {} AUI_LET {
               mAsync << async {
                   auto drawable = IDrawable::fromUrl(
                       "https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
@@ -140,7 +140,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     _<AProgressBar> progressBar = _new<AProgressBar>();
     _<ACircleProgressBar> circleProgressBar = _new<ACircleProgressBar>();
 
-    addView(tabView = _new<ATabView>() let {
+    addView(tabView = _new<ATabView>() AUI_LET {
         it->addTab(
             AScrollArea::Builder().withContents(std::conditional_t<
                                                 aui::platform::current::is_mobile(), Vertical, Horizontal> {
@@ -150,8 +150,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   Label { "Buttons" },
                   Vertical {
                     _new<AButton>("Common button"),
-                    _new<AButton>("Default button") let { it->setDefault(); },
-                    _new<AButton>("Disabled button") let { it->setDisabled(); },
+                    _new<AButton>("Default button") AUI_LET { it->setDefault(); },
+                    _new<AButton>("Disabled button") AUI_LET { it->setDisabled(); },
                     Button {
                       Icon { ":img/logo.svg" },
                       Label { "Button with icon" },
@@ -164,11 +164,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
                 // checkboxes
                 GroupBox {
-                  CheckBoxWrapper { Label { "Checkboxes" } } let { it->checked() = true; },
+                  CheckBoxWrapper { Label { "Checkboxes" } } AUI_LET { it->checked() = true; },
                   Vertical {
                     CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Checked checkbox" } } let { it->checked() = true; },
-                    CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
+                    CheckBoxWrapper { Label { "Checked checkbox" } } AUI_LET { it->checked() = true; },
+                    CheckBoxWrapper { Label { "Disabled checkbox" } } AUI_LET { it->setDisabled(); },
                   },
                 },
 
@@ -176,10 +176,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Radiobuttons" },
                   RadioGroup {
-                    RadioButton { "Radiobutton 1" } let { it->checked() = true; },
+                    RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
                     RadioButton { "Radiobutton 2" },
                     RadioButton { "Radiobutton 3" },
-                    RadioButton { "Disabled radiobutton" } let { it->disable(); },
+                    RadioButton { "Disabled radiobutton" } AUI_LET { it->disable(); },
                   },
                 },
 
@@ -195,13 +195,13 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       "Combobox 5",
                       "Combobox 6",
                     })),
-                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) let { it->setDisabled(); },
+                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
                   },
                 },
                 GroupBox {
                   Label { "Drag area" },
 
-                  _new<ADragArea>() let {
+                  _new<ADragArea>() AUI_LET {
                           it with_style {
                               MinSize { 100_dp },
                               Border { 1_px, 0x0_rgb },
@@ -415,7 +415,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                                       AWindow::current()->setScalingParams(
                                                           { .scalingFactor = x * 0.25f,
                                                             .minimalWindowSizeDp = std::nullopt });
-                                                  }) let {
+                                                  }) AUI_LET {
                             it->setMin(1);
                             it->setMax(12);
                             it->setValue(4);
@@ -425,7 +425,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   Label { "Fields" },
                   Vertical::Expanding {
                     Label { "Text field" },
-                    _new<ATextField>() let { it->focus(); },
+                    _new<ATextField>() AUI_LET { it->focus(); },
                     Label { "Number picker" },
                     _new<ANumberPicker>(),
                     _new<ADoubleNumberPicker>(),
@@ -441,7 +441,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "Public License, v. 2.0. If a copy of the MPL was not distributed with this "
                                 "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                             .build()
-                        << ".input-field" let { it->setExpanding(); },
+                        << ".input-field" AUI_LET { it->setExpanding(); },
                   } }
     with_style { Expanding {} } } }),
             "Common");
@@ -516,7 +516,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
               ASplitter::Vertical()
                       .withItems({ _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"),
                                    _new<AButton>("Four"), _new<AButton>("Five") })
-                      .build() let { it->setExpanding(); },
+                      .build() AUI_LET { it->setExpanding(); },
               _new<ALabel>("Grid splitter"),
               AGridSplitter::Builder()
                       .withItems(AVector<AVector<_<AView>>>::generate(
@@ -526,7 +526,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                   return _new<AButton>("{}x{}"_format(x, y));
                               });
                           }))
-                      .build() let { it->setExpanding(); },
+                      .build() AUI_LET { it->setExpanding(); },
             },
             "Splitters");
 
@@ -569,12 +569,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       }
                       return Horizontal { v1, v2 };
                   }(),
-                } let { it->setExpanding(); }),
+                } AUI_LET { it->setExpanding(); }),
             "Text");
 
         it->addTab(
             Vertical {
-              _new<A2FingerTransformArea>() let {
+              _new<A2FingerTransformArea>() AUI_LET {
                       it->setCustomStyle({
                         MinSize { 256_dp },
                         Border { 1_px, AColor::BLACK },
@@ -630,7 +630,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       },
                 },
               },
-            } let { it->setExpanding(); },
+            } AUI_LET { it->setExpanding(); },
             "Others");
 
         it->setExpanding();
@@ -644,11 +644,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       _new<ASpinnerV2>(),
       CheckBoxWrapper {
         Label { "Enabled" },
-      } let {
+      } AUI_LET {
               it->check();
               connect(it->checked().changed, slot(tabView)::setEnabled);
           },
-      _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
+      _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") AUI_LET {
               it << "#copyright";
               it->setEnabled(false);
           },

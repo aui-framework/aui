@@ -80,7 +80,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             CheckBoxWrapper { Label { "Enabled" } } && targetView->enabled(),
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             Horizontal {
-              Button { "Add \"DevtoolsTest\" stylesheet name" } let {
+              Button { "Add \"DevtoolsTest\" stylesheet name" } AUI_LET {
                       it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
                       connect(it->clicked, [=] {
                           targetView->addAssName("DevtoolsTest");
@@ -100,7 +100,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                  }),
             GroupBox {
               Label { "Visibility" },
-              _new<ARadioGroup>() let {
+              _new<ARadioGroup>() AUI_LET {
                   static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
                       POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
