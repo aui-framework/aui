@@ -4,6 +4,7 @@
 #include "AUI/Common/ASmallVector.h"
 #include "AUI/Logging/ALogger.h"
 #include "Platform/RequestedAudioFormat.h"
+#include "Util.h"
 
 void AAudioMixer::addSoundSource(aui::non_null<_<IAudioPlayer>> s) {
 #if AUI_DEBUG
@@ -26,7 +27,8 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
     size_t samples_requested = destination.size() / aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
     ASmallVector<_<IAudioPlayer>, 8> itemsToRemove;
     size_t result = 0;
-    std::vector<float> mixBuffer(samples_requested, 0.0f);
+    aui::reserveVector(mMixBuffer, samples_requested);
+    std::memset(mMixBuffer.data(), 0, samples_requested * sizeof(float));
     {
         std::unique_lock lock(mConcurrentAccessCheck, std::try_to_lock);
         AUI_ASSERTX(lock.owns_lock(), "concurrent access to AAudioMixer is not allowed");
@@ -36,8 +38,9 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                 mPlayers.begin(), mPlayers.end(),
                 [&](_<IAudioPlayer>& player) {
                     try {
-                        std::vector<float> readBuffer(samples_requested, 0.0f);
-                        size_t r = player->resamplerStream().read({reinterpret_cast<std::byte*>(readBuffer.data()), samples_requested * sizeof(float)});
+                        aui::reserveVector(mReadBuffer, samples_requested);
+                        std::memset(mReadBuffer.data(), 0, samples_requested * sizeof(float));
+                        size_t r = player->resamplerStream().read({reinterpret_cast<std::byte*>(mReadBuffer.data()), samples_requested * sizeof(float)});
                         AUI_EMIT_FOREIGN(player, read);
                         if (r == 0) {
                             if (player->loop()) {
@@ -49,7 +52,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                         }
                         size_t samplesRead = r / sizeof(float);
                         for (size_t i = 0; i < samplesRead; ++i) {
-                            mixBuffer[i] += readBuffer[i];
+                            mMixBuffer[i] += mReadBuffer[i];
                         }
                         result = std::max(r, result);
                         return false;
@@ -70,9 +73,9 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
         player->onFinished();
     }
     for (size_t i = 0; i < samples_requested; ++i) {
-        mixBuffer[i] = std::clamp(mixBuffer[i], -1.0f, 1.0f);
+        mMixBuffer[i] = std::clamp(mMixBuffer[i], -1.0f, 1.0f);
     }
-    aui::audio::convertSampleFormat(ASampleFormat::F32, aui::audio::platform::requested_sample_format, reinterpret_cast<const char*>(mixBuffer.data()), reinterpret_cast<char*>(destination.data()), samples_requested);
+    aui::audio::convertSampleFormat(ASampleFormat::F32, aui::audio::platform::requested_sample_format, reinterpret_cast<const char*>(mMixBuffer.data()), reinterpret_cast<char*>(destination.data()), samples_requested);
 
     return (result / sizeof(float)) * aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
 }

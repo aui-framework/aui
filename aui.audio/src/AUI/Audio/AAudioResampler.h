@@ -39,8 +39,10 @@ private:
     size_t mRequestFrames;
     ASmallVector<std::unique_ptr<media::SincResampler>, 2> mChannels;
     std::vector<std::vector<float>> mChannelBuffers;
-    std::vector<char> mInterleavedInputBuffer;
-    std::vector<float> mCachedInputData;
+    std::vector<char> mReadBuffer;
+    std::vector<char> mConvertedBuffer;
+    std::vector<float> mResamplingBuffer;
+    std::vector<char> mMixingBuffer;
     _<ISoundInputStream> mSource;
     AAudioFormat mInputFormat;
     AAudioFormat mOutputFormat;
