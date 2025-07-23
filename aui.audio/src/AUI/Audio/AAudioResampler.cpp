@@ -13,6 +13,7 @@ namespace {
 }
 
 AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream> source) : mSource(std::move(source)) {
+    if (!mSource) return;
     mInputFormat = mSource->info();
     mOutputFormat.sampleRate = requestedSampleRate;
     mOutputFormat.channelCount = mInputFormat.channelCount;
@@ -43,6 +44,8 @@ AAudioResampler::~AAudioResampler() {
 }
 
 size_t AAudioResampler::read(std::span<std::byte> dst) {
+    if (!mSource) return 0;
+
     size_t samples_requested = dst.size() / aui::audio::bytesPerSample(outputSampleFormat());
     size_t frames_requested = samples_requested / mOutputFormat.channelCount;
 
