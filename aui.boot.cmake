@@ -21,6 +21,11 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+find_program(GIT_EXECUTABLE NAMES git git.cmd)
+if (NOT GIT_EXECUTABLE)
+    message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
+endif ()
+
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
         FULL_DOCS "Global list of imported targets (since CMake 3.21)")
