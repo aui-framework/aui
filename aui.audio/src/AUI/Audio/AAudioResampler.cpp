@@ -107,6 +107,20 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
 
         return output_samples * aui::audio::bytesPerSample(mOutputFormat.sampleFormat);
     } else {
+        bool hasData = false;
+        for (auto &buffer : mChannelBuffers) {
+            if (!buffer.empty()) {
+                hasData = true;
+                break;
+            }
+        }
+        if (!hasData) {
+            readFrame();
+            bool stillEmpty = std::all_of(mChannelBuffers.begin(), mChannelBuffers.end(),
+                                          [](auto &b) { return b.empty(); });
+            if (stillEmpty) return 0;
+        }
+
         std::vector<float> resampled_buffer(frames_requested * mInputFormat.channelCount);
         for (size_t i = 0; i < mInputFormat.channelCount; ++i) {
             mChannels[i]->Resample(static_cast<int>(frames_requested),
@@ -161,7 +175,6 @@ void AAudioResampler::readCallback(size_t channel, int frames, float* destinatio
         if (channelBuffer.empty()) {
             readFrame();
             if (channelBuffer.empty()) {
-                std::memset(destination + offset, 0, framesToRead * sizeof(float));
                 break;
             }
         }
@@ -180,7 +193,11 @@ void AAudioResampler::readCallback(size_t channel, int frames, float* destinatio
 void AAudioResampler::readFrame() {
     size_t bytesCount = mRequestFrames * aui::audio::bytesPerSample(mInputFormat.sampleFormat) * mInputFormat.channelCount;
     std::vector<char> readBuffer(bytesCount, 0);
-    mSource->read(readBuffer.data(), bytesCount);
+    size_t bytesRead = mSource->read(readBuffer.data(), bytesCount);
+
+    if (bytesRead == 0) {
+        return;
+    }
 
     size_t sampleCount = bytesCount / aui::audio::bytesPerSample(mInputFormat.sampleFormat);
     if (mInputFormat.sampleFormat != ASampleFormat::F32) {
