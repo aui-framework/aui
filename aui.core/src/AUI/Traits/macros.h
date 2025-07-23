@@ -54,7 +54,39 @@
  * @brief Explicitly denotes a @ref aui::react "reactive" expression.
  * @ingroup useful_macros
  * @details
- * Consists of a lambda syntax with forced [=] capture and explicit `decltype(auto)` return type.
+ * AUI_REACT is a core component of AUI Framework's @ref aui::react "reactive" reactive programming model. It's used to
+ * create @ref aui::react "reactive" expressions that automatically update UI elements when their dependent values
+ * change.
+ *
+ * The expression is a C++ expression that depends on AProperty values:
+ *
+ * @code{cpp}
+ * AUI_REACT(expression)
+ * @endcode
+ *
+ * # Basic example
+ *
+ * This creates a label that automatically updates when property `mCounter` changes:
+ *
+ * @dontinclude examples/7guis/counter/src/main.cpp
+ * @skip setContent
+ * @until );
+ *
+ * # Formatted label example
+ *
+ * @dontinclude examples/7guis/timer/src/main.cpp
+ * @skipline AUI_REACT
+ *
+ * # Implementation details
+ *
+ * When used in declarative UI building, `AUI_REACT` creates an instance of `APropertyPrecomputed<T>` behind the scenes,
+ * which:
+ *
+ * 1. Evaluates the expression initially.
+ * 2. Sets up observers for all dependent properties.
+ * 3. Re-evaluates when dependencies change.
+ *
+ * The macros itself consists of a lambda syntax with forced [=] capture and explicit `decltype(auto)` return type.
  */
 #define AUI_REACT(expression) [=]() -> decltype(auto) { return (expression); }
 

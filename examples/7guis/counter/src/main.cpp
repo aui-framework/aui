@@ -17,6 +17,7 @@
 
 using namespace declarative;
 
+/// [counter]
 class CounterWindow : public AWindow {
 public:
     CounterWindow() : AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
@@ -31,6 +32,7 @@ public:
 private:
     AProperty<int> mCounter;
 };
+/// [counter]
 
 AUI_ENTRY {
     _new<CounterWindow>()->show();

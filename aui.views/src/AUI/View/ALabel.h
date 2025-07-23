@@ -16,12 +16,33 @@
 
 /**
  * @brief Represents a simple single-line text display view.
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
  * @ingroup useful_views
  * @details
- * ALabel is used for displaying nonformatted single-line text.
+ * Label is a fundamental view for displaying single line text.
  *
- * See @ref declarative::Label for a declarative form and examples.
+ * @image html docs/imgs/ALabel.png A label.
+ *
+ * @snippet examples/7guis/temperature_converter/src/main.cpp window
+ * @ref example_7guis_temperature_converter "Full example"
+ *
+ * Labels can be used to populate AButton (which is a bare container):
+ *
+ * @snippet examples/ui/button_icon/src/main.cpp AButton example
+ *
+ * # Coloring a label
+ *
+ * @snippet examples/ui/views/src/ExampleWindow.cpp label coloring
+ *
+ * # Dynamic text in a label
+ *
+ * You can use @ref property_system "properties" to bind a label to a variable:
+ *
+ * @snippet examples/7guis/counter/src/main.cpp counter
+ *
+ * @ref example_7guis_counter "Full example"
+ *
+ * @image html docs/imgs/Screenshot_20250401_081123.png
+ *
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {
 public:

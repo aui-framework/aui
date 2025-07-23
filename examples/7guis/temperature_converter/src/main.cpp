@@ -25,6 +25,7 @@ auto myPicker() {
     };
 }
 
+/// [window]
 class TemperatureConverterWindow : public AWindow {
 public:
     TemperatureConverterWindow() : AWindow("AUI - 7GUIs - TempConv", 300_dp, 50_dp) {
@@ -48,6 +49,7 @@ public:
 private:
     AProperty<int> mCelsius, mFahrenheit;
 };
+/// [window]
 
 AUI_ENTRY {
     _new<TemperatureConverterWindow>()->show();

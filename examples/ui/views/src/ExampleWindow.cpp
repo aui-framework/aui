@@ -97,6 +97,7 @@ public:
     }
 };
 
+/// [label coloring]
 static _<AView> link(const AString& url) {
     return Label { url } with_style {
                TextColor { AColor::BLUE },
@@ -104,6 +105,7 @@ static _<AView> link(const AString& url) {
                ACursor::POINTER,
            } let { AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [url] { APlatform::openUrl(url); }); };
 }
+/// [label coloring]
 
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();

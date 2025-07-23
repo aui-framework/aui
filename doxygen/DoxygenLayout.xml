@@ -15,67 +15,73 @@
     <navindex>
         <tab type="mainpage" visible="yes" title="Main page"/>
         <tab type="usergroup" title="Reference" visible="yes">
-            <tab type="user" url="index.html" title="All AUI Modules" />
-<!--            <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>-->
-            <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes" />
+            <tab type="user" url="index.html" title="All AUI Modules"/>
+            <!--            <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>-->
+            <tab type="classindex" visible="$ALPHABETICAL_INDEX" title="All AUI Classes"/>
             <tab type="namespacelist" visible="yes" title="All Namespaces" intro=""/>
             <tab type="usergroup" title="CMake Overview">
-                <tab type="user" title="aui_app" url="@ref docs/aui_app.md" />
-                <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md" />
-                <tab type="user" title="aui_link" url="@ref docs/aui_link.md" />
-                <tab type="user" title="aui_module" url="@ref docs/aui_module.md" />
-                <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags" />
-                <tab type="user" url="@ref docs/App Build Overview.md" title="App Build Overview" />
+                <tab type="user" title="aui_app" url="@ref docs/aui_app.md"/>
+                <tab type="user" title="aui_executable" url="@ref docs/aui_executable.md"/>
+                <tab type="user" title="aui_link" url="@ref docs/aui_link.md"/>
+                <tab type="user" title="aui_module" url="@ref docs/aui_module.md"/>
+                <tab type="user" url="@ref docs/AUI configure flags.md" title="AUI configure flags"/>
+                <tab type="user" url="@ref docs/App Build Overview.md" title="App Build Overview"/>
             </tab>
         </tab>
-        <tab type="user" url="@ref examples" title="Examples" />
+        <tab type="user" url="@ref examples" title="Examples"/>
         <tab type="usergroup" title="Introduction" visible="yes">
-            <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI" />
-            <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot" />
-            <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests" />
-            <tab type="user" url="@ref docs/Macros.md" title="Build-time macros" />
-            <tab type="user" url="@ref docs/Code style and recommendations.md" title="Code style and recommendations" />
-            <tab type="user" url="@ref docs/clang-format.md" title="clang-format" />
-            <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list" />
-            <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)" />
+            <tab type="user" url="@ref docs/Getting started with AUI.md" title="Getting started with AUI"/>
+            <tab type="user" url="@ref docs/AUI Boot.md" title="AUI Boot"/>
+            <tab type="user" url="@ref docs/Writing tests.md" title="Writing tests"/>
+            <tab type="user" url="@ref docs/Macros.md" title="Build-time macros"/>
+            <tab type="user" url="@ref docs/Code style and recommendations.md" title="Code style and recommendations"/>
+            <tab type="user" url="@ref docs/clang-format.md" title="clang-format"/>
+            <tab type="user" url="@ref docs/Troubleshoot list.md" title="Troubleshoot list"/>
+            <tab type="user" url="@ref docs/Crosscompiling.md" title="Crosscompiling (Android and iOS)"/>
         </tab>
         <tab type="usergroup" title="UI Architecture" visible="yes">
-            <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview" />
-            <tab type="user" url="@ref layout_managers" title="Layout Managers" />
-            <tab type="user" url="@ref signal_slot" title="Signal-slot" />
-            <tab type="user" url="@ref property_system" title="Data Binding (single values)" />
-            <tab type="user" url="@ref AForEachUI" title="Data Binding (lists)" />
-            <tab type="user" url="@ref docs/Devtools.md" title="Devtools" />
-            <tab type="user" url="@ref docs/retained_immediate_ui.md" title="Retained/immediate UI philosophy" />
+            <tab type="user" url="@ref docs/UI Building Overview.md" title="Overview"/>
+            <tab type="user" url="@ref layout_managers" title="Layout Managers"/>
+            <tab type="user" url="@ref signal_slot" title="Signal-slot"/>
+            <tab type="usergroup" title="Data Binding" visible="yes">
+                <tab type="user" url="@ref property_system" title="Properties"/>
+                <tab type="user" url="@ref AForEachUI" title="Lists"/>
+            </tab>
+            <tab type="user" url="@ref docs/Devtools.md" title="Devtools"/>
+            <tab type="user" url="@ref docs/retained_immediate_ui.md" title="Retained/immediate UI philosophy"/>
         </tab>
         <tab type="usergroup" title="Views" visible="yes">
-            <tab type="user" url="@ref AView" title="Overview" />
-            <tab type="user" url="@ref useful_views" title="All Views" />
-            <tab type="user" url="@ref AButton" title="Button" />
+            <tab type="user" url="@ref AView" title="Overview"/>
+            <tab type="user" url="@ref useful_views" title="All views"/>
+            <tab type="user" url="@ref AButton" title="Button"/>
+            <tab type="user" url="@ref ACheckBox" title="Check box"/>
+            <tab type="user" url="@ref ALabel" title="Label"/>
+            <tab type="user" url="@ref ARadioButton" title="Radio button"/>
+            <tab type="user" url="@ref ATextField" title="Text field"/>
         </tab>
         <tab type="usergroup" title="Styling" visible="yes">
-            <tab type="user" url="@ref ass" title="Overview" />
-            <tab type="user" url="@ref ass_properties" title="All ASS Properties" />
+            <tab type="user" url="@ref ass" title="Overview"/>
+            <tab type="user" url="@ref ass_properties" title="All ASS Properties"/>
         </tab>
         <tab type="usergroup" title="Preparing to Production" visible="yes">
-            <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon" />
-            <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App" />
-            <tab type="user" url="@ref updater" title="Auto-updating" />
+            <tab type="user" url="@ref docs/Setting App Icon.md" title="Setting App Icon"/>
+            <tab type="user" url="@ref docs/Packaging Your App.md" title="Packaging Your App"/>
+            <tab type="user" url="@ref updater" title="Auto-updating"/>
         </tab>
         <tab type="usergroup" title="Platform Specifics" visible="yes">
-            <tab type="user" url="@ref windows" title="Windows" />
-            <tab type="user" url="@ref linux" title="Linux" />
-            <tab type="user" url="@ref macos" title="macOS" />
-            <tab type="user" url="@ref android" title="Android" />
-            <tab type="user" url="@ref ios" title="iOS" />
-            <tab type="user" url="@ref emscripten" title="WebAssembly" />
+            <tab type="user" url="@ref windows" title="Windows"/>
+            <tab type="user" url="@ref linux" title="Linux"/>
+            <tab type="user" url="@ref macos" title="macOS"/>
+            <tab type="user" url="@ref android" title="Android"/>
+            <tab type="user" url="@ref ios" title="iOS"/>
+            <tab type="user" url="@ref emscripten" title="WebAssembly"/>
         </tab>
         <tab type="usergroup" title="Other" visible="yes">
-            <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments" />
-            <tab type="user" url="@ref docs/Runtime Dependency Resolution.md" title="Runtime Dependency Resolution" />
-            <tab type="user" url="@ref docs/Forking AUI.md" title="Forking AUI" />
-            <tab type="user" url="@ref docs/AUI Assets.md" title="AUI Assets" />
-            <tab type="user" url="@ref docs/Contributing to AUI.md" title="Contributing to AUI" />
+            <tab type="user" url="@ref docs/AUI command line arguments.md" title="AUI command line arguments"/>
+            <tab type="user" url="@ref docs/Runtime Dependency Resolution.md" title="Runtime Dependency Resolution"/>
+            <tab type="user" url="@ref docs/Forking AUI.md" title="Forking AUI"/>
+            <tab type="user" url="@ref docs/AUI Assets.md" title="AUI Assets"/>
+            <tab type="user" url="@ref docs/Contributing to AUI.md" title="Contributing to AUI"/>
         </tab>
     </navindex>
 
@@ -84,31 +90,31 @@
         <briefdescription visible="yes"/>
         <includes visible="$SHOW_INCLUDE_FILES"/>
         <memberdecl>
-<!--            <nestedclasses visible="yes" title=""/>-->
-<!--            <publictypes title=""/>-->
-<!--            <services title=""/>-->
-<!--            <interfaces title=""/>-->
-<!--            <publicslots title=""/>-->
-<!--            <signals title=""/>-->
-<!--            <publicmethods title=""/>-->
-<!--            <publicstaticmethods title=""/>-->
-<!--            <publicattributes title="Signals and public fields"/>-->
-<!--            <publicstaticattributes title=""/>-->
-<!--            <protectedtypes title=""/>-->
-<!--            <protectedslots title=""/>-->
-<!--            <protectedmethods title=""/>-->
-<!--            <protectedstaticmethods title=""/>-->
-<!--            <protectedattributes title=""/>-->
-<!--            <protectedstaticattributes title=""/>-->
-<!--            <packagetypes title=""/>-->
-<!--            <packagemethods title=""/>-->
-<!--            <packagestaticmethods title=""/>-->
-<!--            <packageattributes title=""/>-->
-<!--            <packagestaticattributes title=""/>-->
-<!--            <properties title=""/>-->
-<!--            <events title=""/>-->
-<!--            <related title="" subtitle=""/>-->
-<!--            <membergroups visible="yes"/>-->
+            <!--            <nestedclasses visible="yes" title=""/>-->
+            <!--            <publictypes title=""/>-->
+            <!--            <services title=""/>-->
+            <!--            <interfaces title=""/>-->
+            <!--            <publicslots title=""/>-->
+            <!--            <signals title=""/>-->
+            <!--            <publicmethods title=""/>-->
+            <!--            <publicstaticmethods title=""/>-->
+            <!--            <publicattributes title="Signals and public fields"/>-->
+            <!--            <publicstaticattributes title=""/>-->
+            <!--            <protectedtypes title=""/>-->
+            <!--            <protectedslots title=""/>-->
+            <!--            <protectedmethods title=""/>-->
+            <!--            <protectedstaticmethods title=""/>-->
+            <!--            <protectedattributes title=""/>-->
+            <!--            <protectedstaticattributes title=""/>-->
+            <!--            <packagetypes title=""/>-->
+            <!--            <packagemethods title=""/>-->
+            <!--            <packagestaticmethods title=""/>-->
+            <!--            <packageattributes title=""/>-->
+            <!--            <packagestaticattributes title=""/>-->
+            <!--            <properties title=""/>-->
+            <!--            <events title=""/>-->
+            <!--            <related title="" subtitle=""/>-->
+            <!--            <membergroups visible="yes"/>-->
         </memberdecl>
         <detaileddescription title=""/>
         <memberdef>
@@ -124,9 +130,9 @@
             <properties title=""/>
             <events title=""/>
         </memberdef>
-<!--        <usedfiles visible="$SHOW_USED_FILES"/>-->
-<!--        <inheritancegraph visible="$CLASS_GRAPH"/>-->
-<!--        <collaborationgraph visible="$COLLABORATION_GRAPH"/>-->
+        <!--        <usedfiles visible="$SHOW_USED_FILES"/>-->
+        <!--        <inheritancegraph visible="$CLASS_GRAPH"/>-->
+        <!--        <collaborationgraph visible="$COLLABORATION_GRAPH"/>-->
         <authorsection visible="yes"/>
     </class>
 
@@ -166,7 +172,7 @@
         <memberdecl>
             <nestedgroups visible="yes" title=""/>
         </memberdecl>
-        <detaileddescription visible="yes" title="Detailed Description" />
+        <detaileddescription visible="yes" title="Detailed Description"/>
         <memberdecl>
             <dirs visible="yes" title=""/>
             <files visible="yes" title=""/>
@@ -207,7 +213,7 @@
             <properties title=""/>
             <friends title=""/>
         </memberdef>
-<!--        <groupgraph visible="$GROUP_GRAPHS"/>-->
+        <!--        <groupgraph visible="$GROUP_GRAPHS"/>-->
         <authorsection visible="yes"/>
     </group>
 
