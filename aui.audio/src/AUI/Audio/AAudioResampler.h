@@ -24,11 +24,6 @@ public:
      */
     size_t read(std::span<std::byte> dst);
 
-    /**
-     * @return Sample format that will be used in process()
-     */
-    ASampleFormat outputSampleFormat();
-
     void setVolume(aui::audio::VolumeLevel volume) noexcept;
 
     [[nodiscard]]

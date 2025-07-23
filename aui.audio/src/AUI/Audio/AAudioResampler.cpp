@@ -17,7 +17,7 @@ AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream
     mInputFormat = mSource->info();
     mOutputFormat.sampleRate = requestedSampleRate;
     mOutputFormat.channelCount = mInputFormat.channelCount;
-    mOutputFormat.sampleFormat = outputSampleFormat();
+    mOutputFormat.sampleFormat = ASampleFormat::F32;
 
     if (mInputFormat.sampleRate != mOutputFormat.sampleRate) {
         double ratio = static_cast<double>(mInputFormat.sampleRate) / static_cast<double>(requestedSampleRate);
@@ -40,12 +40,13 @@ AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream
 }
 
 AAudioResampler::~AAudioResampler() {
+    mChannelBuffers.clear();
 }
 
 size_t AAudioResampler::read(std::span<std::byte> dst) {
     if (!mSource) return 0;
 
-    size_t samples_requested = dst.size() / aui::audio::bytesPerSample(outputSampleFormat());
+    size_t samples_requested = dst.size() / sizeof(float);
     size_t frames_requested = samples_requested / mOutputFormat.channelCount;
 
     if (mChannels.empty()) {
@@ -140,10 +141,6 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
 
         return frames_requested * mOutputFormat.channelCount * aui::audio::bytesPerSample(mOutputFormat.sampleFormat);
     }
-}
-
-ASampleFormat AAudioResampler::outputSampleFormat() {
-    return aui::audio::platform::requested_sample_format;
 }
 
 void AAudioResampler::setVolume(aui::audio::VolumeLevel volume) noexcept {
