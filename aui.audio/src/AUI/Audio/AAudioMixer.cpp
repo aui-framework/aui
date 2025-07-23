@@ -33,7 +33,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                 mPlayers.begin(), mPlayers.end(),
                 [&](_<IAudioPlayer>& player) {
                     try {
-                        size_t r = player->resampledStream().read(destination);
+                        size_t r = player->resamplerStream().read(destination);
                         AUI_EMIT_FOREIGN(player, read);
                         if (r == 0) {
                             if (player->loop()) {

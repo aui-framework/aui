@@ -69,6 +69,7 @@ constexpr size_t bytesPerSample(ASampleFormat format) {
 
     throw AException("Wrong sample format");
 }
+void convertSampleFormat(ASampleFormat inF, ASampleFormat outF, const char* inB, char* outB, size_t samples);
 }
 
 /**

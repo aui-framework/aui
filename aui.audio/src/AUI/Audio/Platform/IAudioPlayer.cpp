@@ -1,4 +1,6 @@
 #include "AUI/Audio/IAudioPlayer.h"
+
+#include "RequestedAudioFormat.h"
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/StubAudioPlayer.h"
 #include "AUI/Url/AUrl.h"
@@ -33,7 +35,7 @@ IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
 
 IAudioPlayer::IAudioPlayer(_<ISoundInputStream> stream) {
     mSourceStream = std::move(stream);
-    mResamplerStream.emplace(mSourceStream);
+    mResamplerStream.emplace(aui::audio::platform::requested_sample_rate, mSourceStream);
     mResamplerStream->setVolume(mVolume);
 }
 
@@ -42,7 +44,7 @@ void IAudioPlayer::initialize() {
         throw AException("url is empty");
     }
     mSourceStream = ISoundInputStream::fromUrl(*mUrl);
-    mResamplerStream.emplace(mSourceStream);
+    mResamplerStream.emplace(aui::audio::platform::requested_sample_rate, mSourceStream);
     mResamplerStream->setVolume(mVolume);
 }
 

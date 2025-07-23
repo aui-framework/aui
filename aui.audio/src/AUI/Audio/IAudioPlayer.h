@@ -55,7 +55,7 @@ public:
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    AAudioResampler& resampledStream() {
+    AAudioResampler& resamplerStream() {
         return *mResamplerStream;
     }
 
