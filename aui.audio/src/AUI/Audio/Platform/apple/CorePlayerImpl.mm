@@ -9,6 +9,7 @@
 #include "CoreAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Audio/AAudioMixer.h"
+#include "AUI/Audio/Platform/RequestedAudioFormat.h"
 
 
 static constexpr auto LOG_TAG = "CoreAudio";

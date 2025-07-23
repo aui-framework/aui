@@ -252,14 +252,17 @@ void SincResampler::InitializeKernel() {
     for (int i = 0; i < kernel_size_; ++i) {
       const int idx = i + offset_idx * kernel_size_;
       const float pre_sinc =
-          std::numbers::pi_v<float> * (i - kernel_size_ / 2 - subsample_offset);
+          3.141592653589793f * (i - kernel_size_ / 2 - subsample_offset);
+//          std::numbers::pi_v<float> * (i - kernel_size_ / 2 - subsample_offset);
       kernel_pre_sinc_storage_[idx] = pre_sinc;
 
       // Compute Blackman window, matching the offset of the sinc().
       const float x = (i - subsample_offset) / kernel_size_;
       const float window =
-          static_cast<float>(kA0 - kA1 * cos(2.0 * std::numbers::pi * x) +
-                             kA2 * cos(4.0 * std::numbers::pi * x));
+          //static_cast<float>(kA0 - kA1 * cos(2.0 * std::numbers::pi * x) +
+          //                   kA2 * cos(4.0 * std::numbers::pi * x));
+          static_cast<float>(kA0 - kA1 * cos(2.0 * 3.1415926593 * x) +
+                             kA2 * cos(4.0 * 3.1415926593 * x));
       kernel_window_storage_[idx] = window;
 
       // Compute the sinc with offset, then window the sinc() function and store
