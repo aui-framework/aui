@@ -82,7 +82,7 @@
 #include "SincResampler.h"
 
 #include <limits>
-#include <numbers>
+//#include <numbers>
 
 #include <cmath>
 #include <cstring>
