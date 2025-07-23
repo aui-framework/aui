@@ -8,7 +8,6 @@
 #include "AUI/Common/AQueue.h"
 #include "CoreAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Audio/AAudioMixer.h"
 
 
