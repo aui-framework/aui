@@ -24,5 +24,5 @@ namespace aui::app_info {
 /**
  * @brief application display name
  */
-    extern API_AUI_CORE AString name;
+extern API_AUI_CORE AString name;
 }

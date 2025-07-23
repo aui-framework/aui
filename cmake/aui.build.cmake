@@ -1211,14 +1211,12 @@ macro(aui_app)
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
-    #target_compile_definitions(${APP_TARGET} PUBLIC NAME_AUIMUSIC=\"${APP_NAME}\")
-
     file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
-    struct Appinfo{
-        Appinfo() {
+    struct AUIAppInfo {
+        AUIAppInfo() {
             aui::app_info::name = \"${APP_NAME}\";
         }
-    }; Appinfo info69;")
+    }; AUIAppInfo auiAppInfo;")
 
     target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
 
