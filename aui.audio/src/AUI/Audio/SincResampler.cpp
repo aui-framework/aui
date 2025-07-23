@@ -106,9 +106,11 @@
 // Including these headers directly should generally be avoided. Since
 // Chrome is compiled with -msse3 (the minimal requirement), we include the
 // headers directly to make the intrinsics available.
+#if defined(ARCH_CPU_X86_HAS_SSE3)
 #include <avx2intrin.h>
 #include <avxintrin.h>
 #include <fmaintrin.h>
+#endif
 #elif defined(ARCH_CPU_ARM_FAMILY) && defined(USE_NEON)
 #include <arm_neon.h>
 #endif
@@ -141,9 +143,9 @@ void SincResampler::InitializeCPUSpecificFeatures() {
   convolve_proc_ = Convolve_NEON;
 #elif defined(ARCH_CPU_X86_FAMILY)
 
-#if defined(__AVX2__) && defined(USE_FMA)
+#if defined(USE_AVX2)
   convolve_proc_ = Convolve_AVX2;
-#elif defined(__SSE2__)
+#elif defined(USE_SSE3)
   convolve_proc_ = Convolve_SSE;
 #else
   convolve_proc_ = Convolve_C;
@@ -425,6 +427,7 @@ float SincResampler::Convolve_C(const int kernel_size,
 }
 
 #if defined(ARCH_CPU_X86_FAMILY)
+#if defined(USE_SSE3)
 float SincResampler::Convolve_SSE(const int kernel_size,
                                   const float* input_ptr,
                                   const float* k1,
@@ -466,8 +469,12 @@ float SincResampler::Convolve_SSE(const int kernel_size,
 
   return result;
 }
-
-__attribute__((target("avx2,fma"))) float SincResampler::Convolve_AVX2(
+#endif
+#if defined(USE_AVX2)
+#if !defined(_MSC_VER)
+__attribute__((target("avx2,fma")))
+#endif
+float SincResampler::Convolve_AVX2(
     const int kernel_size,
     const float* input_ptr,
     const float* k1,
@@ -514,6 +521,7 @@ __attribute__((target("avx2,fma"))) float SincResampler::Convolve_AVX2(
 
   return result;
 }
+#endif
 #elif defined(ARCH_CPU_ARM_FAMILY) && defined(USE_NEON)
 float SincResampler::Convolve_NEON(const int kernel_size,
                                    const float* input_ptr,

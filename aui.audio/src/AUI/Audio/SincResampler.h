@@ -9,6 +9,14 @@
 #define ARCH_CPU_X86_FAMILY
 #endif
 
+#if defined(__AVX2__) && defined(USE_FMA)
+#define USE_AVX2
+#endif
+
+#if defined(__SSE3__) || (defined(_MSC_VER) && defined(__AVX__))
+#define USE_SSE3
+#endif
+
 #if defined(__arm__) || defined(__thumb__) || defined(_M_ARM) || defined(__aarch64__) || defined(_M_ARM64)
 #define ARCH_CPU_ARM_FAMILY
 #endif
@@ -231,16 +239,20 @@ private:
                           const float* k2,
                           double kernel_interpolation_factor);
 #if defined(ARCH_CPU_X86_FAMILY)
+#if defined(USE_SSE3)
   static float Convolve_SSE(const int kernel_size,
                             const float* input_ptr,
                             const float* k1,
                             const float* k2,
                             double kernel_interpolation_factor);
+#endif
+//#if defined(USE_AVX2)
   static float Convolve_AVX2(const int kernel_size,
                              const float* input_ptr,
                              const float* k1,
                              const float* k2,
                              double kernel_interpolation_factor);
+//#endif
 #elif defined(ARCH_CPU_ARM_FAMILY) && defined(USE_NEON)
   static float Convolve_NEON(const int kernel_size,
                              const float* input_ptr,
