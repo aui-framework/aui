@@ -55,7 +55,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
         size_t input_samples_to_read = input_frames_to_read * mInputFormat.channelCount;
         size_t bytes_to_read = input_samples_to_read * aui::audio::bytesPerSample(mInputFormat.sampleFormat);
 
-        aui::reserveVector(mReadBuffer, bytes_to_read);
+        aui::impl::reserveVector(mReadBuffer, bytes_to_read);
         size_t bytes_read = mSource->read(mReadBuffer.data(), bytes_to_read);
 
         if (bytes_read == 0) {
@@ -68,7 +68,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
         float* processing_data;
 
         if (mInputFormat.sampleFormat != ASampleFormat::F32) {
-            aui::reserveVector(mConvertedBuffer, input_samples_read * sizeof(float));
+            aui::impl::reserveVector(mConvertedBuffer, input_samples_read * sizeof(float));
             aui::audio::convertSampleFormat(mInputFormat.sampleFormat, ASampleFormat::F32,
                                           mReadBuffer.data(), mConvertedBuffer.data(), input_samples_read);
             processing_data = reinterpret_cast<float*>(mConvertedBuffer.data());
@@ -83,7 +83,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
 
         if (mInputFormat.channelCount != mOutputFormat.channelCount) {
             output_samples = input_frames_read * mOutputFormat.channelCount;
-            aui::reserveVector(mMixingBuffer, output_samples * sizeof(float));
+            aui::impl::reserveVector(mMixingBuffer, output_samples * sizeof(float));
 
             mixChannels(processing_data, input_frames_read,
                           mInputFormat.channelCount,
@@ -113,7 +113,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
             if (stillEmpty) return 0;
         }
 
-        aui::reserveVector(mResamplingBuffer, frames_requested * mInputFormat.channelCount);
+        aui::impl::reserveVector(mResamplingBuffer, frames_requested * mInputFormat.channelCount);
         for (size_t i = 0; i < mInputFormat.channelCount; ++i) {
             mChannels[i]->Resample(static_cast<int>(frames_requested),
                                    mResamplingBuffer.data() + i * frames_requested);
@@ -122,7 +122,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
         mGainFilter.process(mResamplingBuffer.data(), frames_requested * mInputFormat.channelCount);
 
         size_t mixing_bytes = frames_requested * mOutputFormat.channelCount * sizeof(float);
-        aui::reserveVector(mMixingBuffer, mixing_bytes);
+        aui::impl::reserveVector(mMixingBuffer, mixing_bytes);
 
         if (mInputFormat.channelCount != mOutputFormat.channelCount) {
             mixChannels(mResamplingBuffer.data(), frames_requested,
@@ -179,7 +179,7 @@ void AAudioResampler::readCallback(size_t channel, int frames, float* destinatio
 
 void AAudioResampler::readFrame() {
     size_t bytesCount = mRequestFrames * aui::audio::bytesPerSample(mInputFormat.sampleFormat) * mInputFormat.channelCount;
-    aui::reserveVector(mReadBuffer, bytesCount);
+    aui::impl::reserveVector(mReadBuffer, bytesCount);
     size_t bytesRead = mSource->read(mReadBuffer.data(), bytesCount);
 
     if (bytesRead == 0) {
@@ -190,7 +190,7 @@ void AAudioResampler::readFrame() {
 
     size_t sampleCount = bytesCount / aui::audio::bytesPerSample(mInputFormat.sampleFormat);
     if (mInputFormat.sampleFormat != ASampleFormat::F32) {
-        aui::reserveVector(mConvertedBuffer, sampleCount * sizeof(float));
+        aui::impl::reserveVector(mConvertedBuffer, sampleCount * sizeof(float));
         aui::audio::convertSampleFormat(mInputFormat.sampleFormat, ASampleFormat::F32,
                                       mReadBuffer.data(), mConvertedBuffer.data(), sampleCount);
         samplesBytes = mConvertedBuffer.data();

@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace aui {
+namespace aui::impl {
 template<class T>
 void reserveVector(std::vector<T>& vec, size_t count) {
     if (vec.size() < count) {

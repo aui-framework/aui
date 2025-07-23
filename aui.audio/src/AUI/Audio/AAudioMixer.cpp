@@ -27,7 +27,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
     size_t samples_requested = destination.size() / aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
     ASmallVector<_<IAudioPlayer>, 8> itemsToRemove;
     size_t result = 0;
-    aui::reserveVector(mMixBuffer, samples_requested);
+    aui::impl::reserveVector(mMixBuffer, samples_requested);
     std::memset(mMixBuffer.data(), 0, samples_requested * sizeof(float));
     {
         std::unique_lock lock(mConcurrentAccessCheck, std::try_to_lock);
@@ -38,7 +38,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
                 mPlayers.begin(), mPlayers.end(),
                 [&](_<IAudioPlayer>& player) {
                     try {
-                        aui::reserveVector(mReadBuffer, samples_requested);
+                        aui::impl::reserveVector(mReadBuffer, samples_requested);
                         std::memset(mReadBuffer.data(), 0, samples_requested * sizeof(float));
                         size_t r = player->resamplerStream().read({reinterpret_cast<std::byte*>(mReadBuffer.data()), samples_requested * sizeof(float)});
                         AUI_EMIT_FOREIGN(player, read);
