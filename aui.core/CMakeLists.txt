@@ -49,9 +49,16 @@ if (NOT WIN32)
     endif()
 
     if (AUI_PLATFORM_LINUX)
-        auib_import(backtrace https://github.com/aui-framework/libbacktrace
+        if (AUIB_DISABLE)
+            find_package(libbacktrace REQUIRED CONFIG)
+            aui_link(aui.core PRIVATE libbacktrace::libbacktrace)
+        else ()
+            auib_import(backtrace https://github.com/aui-framework/libbacktrace
                     VERSION a5a32e3cc8e22a9fc40689a884b032c52ee3f88e)
-        set(_use_backtrace TRUE)
+            aui_link(aui.core PRIVATE backtrace)
+        endif ()
+        target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
+        message(STATUS "Stacktrace backend: backtrace")
     else()
 
         # probe for unwind
@@ -82,11 +89,7 @@ return 0;
     endif ()
 endif()
 
-if(_use_backtrace)
-    message(STATUS "Stacktrace backend: backtrace")
-    aui_link(aui.core PRIVATE backtrace)
-    target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
-elseif(_use_unwind)
+if(_use_unwind)
     message(STATUS "Stacktrace backend: unwind")
     target_compile_definitions(aui.core PRIVATE AUI_USE_UNWIND=1)
 elseif(WIN32)
@@ -153,7 +156,7 @@ auib_import(range-v3 https://github.com/ericniebler/range-v3
         CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
 # [auib_import examples]
 
-aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
+aui_link(aui.core PUBLIC fmt::fmt range-v3::range-v3)
 
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)
