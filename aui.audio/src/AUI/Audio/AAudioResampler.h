@@ -35,12 +35,17 @@ public:
     const _<ISoundInputStream>& source() const { return mSource; }
 
 private:
-    void readCallback(int channel, int frames, float* destination);
+    void readCallback(size_t channel, int frames, float* destination);
+    void readFrame();
+    static void mixChannels(const float* input, size_t inputFrames, size_t inChannels,
+                          float* output, size_t outChannels);
 
     AGainFilter mGainFilter;
+    size_t mRequestFrames;
     ASmallVector<std::unique_ptr<media::SincResampler>, 2> mChannels;
-    std::vector<char> mInterleavedInputBuffer;
     std::vector<std::vector<float>> mChannelBuffers;
+    std::vector<char> mInterleavedInputBuffer;
+    std::vector<float> mCachedInputData;
     _<ISoundInputStream> mSource;
     AAudioFormat mInputFormat;
     AAudioFormat mOutputFormat;

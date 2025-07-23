@@ -21,21 +21,20 @@ AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream
 
     if (mInputFormat.sampleRate != mOutputFormat.sampleRate) {
         double ratio = static_cast<double>(mInputFormat.sampleRate) / static_cast<double>(requestedSampleRate);
-        uint32_t request_frames = 512 * static_cast<uint32_t>(std::ceil(ratio));
+        mRequestFrames = 512 * static_cast<uint32_t>(std::ceil(ratio));
 
         for (size_t i = 0; i < mInputFormat.channelCount; ++i) {
             media::SincResampler::ReadCB read_cb{[this, i](int frames, float* destination) {
                 readCallback(i, frames, destination);
             }};
 
-            auto resampler = std::make_unique<media::SincResampler>(ratio, request_frames, read_cb);
+            auto resampler = std::make_unique<media::SincResampler>(ratio, mRequestFrames, read_cb);
             mChannels.push_back(std::move(resampler));
         }
 
-        mInterleavedInputBuffer.reserve(request_frames * mInputFormat.channelCount * 2);
-        mChannelBuffers.resize(mOutputFormat.channelCount);
+        mChannelBuffers.resize(mInputFormat.channelCount);
         for (auto& buffer : mChannelBuffers) {
-            buffer.reserve(request_frames * 2);
+            buffer.reserve(mRequestFrames * 2);
         }
     }
 }
@@ -86,32 +85,11 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
             output_samples = input_frames_read * mOutputFormat.channelCount;
             channel_converted_buffer.resize(output_samples);
 
-            if (mInputFormat.channelCount == 1 && mOutputFormat.channelCount == 2) {
-                for (size_t frame = 0; frame < input_frames_read; ++frame) {
-                    float sample = processing_data[frame];
-                    channel_converted_buffer[frame * 2] = sample;
-                    channel_converted_buffer[frame * 2 + 1] = sample;
-                }
-            } else if (mInputFormat.channelCount == 2 && mOutputFormat.channelCount == 1) {
-                for (size_t frame = 0; frame < input_frames_read; ++frame) {
-                    float left = processing_data[frame * 2];
-                    float right = processing_data[frame * 2 + 1];
-                    channel_converted_buffer[frame] = (left + right) * 0.5f;
-                }
-            } else {
-                size_t min_channels = std::min(mInputFormat.channelCount, mOutputFormat.channelCount);
-                for (size_t frame = 0; frame < input_frames_read; ++frame) {
-                    for (size_t ch = 0; ch < mOutputFormat.channelCount; ++ch) {
-                        if (ch < min_channels) {
-                            channel_converted_buffer[frame * mOutputFormat.channelCount + ch] =
-                                processing_data[frame * mInputFormat.channelCount + ch];
-                        } else {
-                            channel_converted_buffer[frame * mOutputFormat.channelCount + ch] =
-                                processing_data[frame * mInputFormat.channelCount + (min_channels - 1)];
-                        }
-                    }
-                }
-            }
+            mixChannels(processing_data, input_frames_read,
+                          mInputFormat.channelCount,
+                          channel_converted_buffer.data(),
+                          mOutputFormat.channelCount);
+
             output_data = channel_converted_buffer.data();
         } else {
             output_data = processing_data;
@@ -127,33 +105,40 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
         }
 
         return output_samples * aui::audio::bytesPerSample(mOutputFormat.sampleFormat);
-
     } else {
-        std::vector<float> output_buffer(samples_requested);
-
-        for (size_t i = 0; i < mOutputFormat.channelCount; ++i) {
-            mChannels[i]->Resample(frames_requested, output_buffer.data() + i * frames_requested);
+        std::vector<float> resampled_buffer(frames_requested * mInputFormat.channelCount);
+        for (size_t i = 0; i < mInputFormat.channelCount; ++i) {
+            mChannels[i]->Resample(static_cast<int>(frames_requested),
+                                   resampled_buffer.data() + i * frames_requested);
         }
 
-        std::vector<float> interleaved_output(samples_requested);
-        for (size_t frame = 0; frame < frames_requested; ++frame) {
-            for (size_t channel = 0; channel < mOutputFormat.channelCount; ++channel) {
-                interleaved_output[frame * mOutputFormat.channelCount + channel] =
-                    output_buffer[channel * frames_requested + frame];
+        mGainFilter.process(resampled_buffer.data(), resampled_buffer.size());
+
+        std::vector<float> interleaved_output(frames_requested * mOutputFormat.channelCount);
+
+        if (mInputFormat.channelCount != mOutputFormat.channelCount) {
+            mixChannels(resampled_buffer.data(), frames_requested,
+                        mInputFormat.channelCount,
+                        interleaved_output.data(),
+                        mOutputFormat.channelCount);
+        } else {
+            for (size_t frame = 0; frame < frames_requested; ++frame) {
+                for (size_t ch = 0; ch < mOutputFormat.channelCount; ++ch) {
+                    interleaved_output[frame * mOutputFormat.channelCount + ch] =
+                        resampled_buffer[ch * frames_requested + frame];
+                }
             }
         }
 
-        mGainFilter.process(interleaved_output.data(), samples_requested);
-
         if (mOutputFormat.sampleFormat != ASampleFormat::F32) {
             aui::audio::convertSampleFormat(ASampleFormat::F32, mOutputFormat.sampleFormat,
-                                          reinterpret_cast<char*>(interleaved_output.data()),
-                                          reinterpret_cast<char*>(dst.data()), samples_requested);
+                                            reinterpret_cast<const char*>(interleaved_output.data()),
+                                            reinterpret_cast<char*>(dst.data()), frames_requested * mOutputFormat.channelCount);
         } else {
-            std::memcpy(dst.data(), interleaved_output.data(), samples_requested * sizeof(float));
+            std::memcpy(dst.data(), interleaved_output.data(), frames_requested * mOutputFormat.channelCount * sizeof(float));
         }
 
-        return dst.size();
+        return frames_requested * mOutputFormat.channelCount * aui::audio::bytesPerSample(mOutputFormat.sampleFormat);
     }
 }
 
@@ -165,36 +150,95 @@ void AAudioResampler::setVolume(aui::audio::VolumeLevel volume) noexcept {
     mGainFilter.setVolume(volume);
 }
 
-void AAudioResampler::readCallback(int channel, int frames, float* destination) {
-    size_t samples_to_read = frames * mInputFormat.channelCount;
-    size_t bytes_to_read = samples_to_read * aui::audio::bytesPerSample(mInputFormat.sampleFormat);
-
-    if (mInterleavedInputBuffer.size() < bytes_to_read) {
-        mInterleavedInputBuffer.resize(bytes_to_read);
+void AAudioResampler::readCallback(size_t channel, int frames, float* destination) {
+    if (channel >= mChannelBuffers.size()) {
+        std::memset(destination, 0, frames * sizeof(float));
+        return;
     }
 
-    size_t bytes_read = mSource->read(mInterleavedInputBuffer.data(), bytes_to_read);
-    size_t samples_read = bytes_read / aui::audio::bytesPerSample(mInputFormat.sampleFormat);
-    size_t frames_read = samples_read / mInputFormat.channelCount;
+    auto& channelBuffer = mChannelBuffers[channel];
+    size_t framesToRead = frames;
+    size_t offset = 0;
 
-    std::vector<float> float_buffer;
-    float* source_data;
+    while (framesToRead > 0) {
+        if (channelBuffer.empty()) {
+            readFrame();
+            if (channelBuffer.empty()) {
+                std::memset(destination + offset, 0, framesToRead * sizeof(float));
+                break;
+            }
+        }
 
+        size_t available = channelBuffer.size();
+        size_t toCopy = std::min(available, framesToRead);
+
+        std::memcpy(destination + offset, channelBuffer.data(), toCopy * sizeof(float));
+        channelBuffer.erase(channelBuffer.begin(), channelBuffer.begin() + toCopy);
+
+        framesToRead -= toCopy;
+        offset += toCopy;
+    }
+}
+
+void AAudioResampler::readFrame() {
+    size_t bytesCount = mRequestFrames * aui::audio::bytesPerSample(mInputFormat.sampleFormat) * mInputFormat.channelCount;
+    std::vector<char> readBuffer(bytesCount, 0);
+    mSource->read(readBuffer.data(), bytesCount);
+
+    size_t sampleCount = bytesCount / aui::audio::bytesPerSample(mInputFormat.sampleFormat);
     if (mInputFormat.sampleFormat != ASampleFormat::F32) {
-        float_buffer.resize(samples_read);
+        std::vector<char> floatBuffer(sampleCount * sizeof(float));
         aui::audio::convertSampleFormat(mInputFormat.sampleFormat, ASampleFormat::F32,
-                                      reinterpret_cast<char*>(mInterleavedInputBuffer.data()),
-                                      reinterpret_cast<char*>(float_buffer.data()), samples_read);
-        source_data = float_buffer.data();
+                                      readBuffer.data(), floatBuffer.data(), sampleCount);
+        readBuffer = std::move(floatBuffer);
+    }
+
+    const float* samples = reinterpret_cast<const float*>(readBuffer.data());
+    size_t frames = sampleCount / mInputFormat.channelCount;
+    if (mChannelBuffers.size() < mInputFormat.channelCount) {
+        mChannelBuffers.resize(mInputFormat.channelCount);
+    }
+
+    for (size_t channel = 0; channel < mInputFormat.channelCount; ++channel) {
+        auto& buffer = mChannelBuffers[channel];
+        buffer.reserve(buffer.size() + frames);
+        for (size_t i = 0; i < frames; ++i) {
+            buffer.push_back(samples[i * mInputFormat.channelCount + channel]);
+        }
+    }
+}
+
+void AAudioResampler::mixChannels(const float* input, size_t inputFrames, size_t inChannels,
+                                    float* output, size_t outChannels) {
+    if (inChannels == outChannels) {
+        std::memcpy(output, input, inputFrames * inChannels * sizeof(float));
+        return;
+    }
+
+    if (inChannels == 1 && outChannels == 2) {
+        for (size_t frame = 0; frame < inputFrames; ++frame) {
+            float sample = input[frame];
+            output[frame * 2] = sample;
+            output[frame * 2 + 1] = sample;
+        }
+    } else if (inChannels == 2 && outChannels == 1) {
+        for (size_t frame = 0; frame < inputFrames; ++frame) {
+            float left = input[frame * 2];
+            float right = input[frame * 2 + 1];
+            output[frame] = (left + right) * 0.5f;
+        }
     } else {
-        source_data = reinterpret_cast<float*>(mInterleavedInputBuffer.data());
-    }
-
-    for (size_t frame = 0; frame < frames_read; ++frame) {
-        destination[frame] = source_data[frame * mInputFormat.channelCount + channel];
-    }
-
-    if (frames_read < static_cast<size_t>(frames)) {
-        std::memset(destination + frames_read, 0, (frames - frames_read) * sizeof(float));
+        size_t minChannels = std::min(inChannels, outChannels);
+        for (size_t frame = 0; frame < inputFrames; ++frame) {
+            for (size_t ch = 0; ch < outChannels; ++ch) {
+                if (ch < minChannels) {
+                    output[frame * outChannels + ch] =
+                        input[frame * inChannels + ch];
+                } else {
+                    output[frame * outChannels + ch] =
+                        input[frame * inChannels + (minChannels - 1)];
+                }
+            }
+        }
     }
 }
