@@ -5,6 +5,18 @@
 #ifndef MEDIA_BASE_SINC_RESAMPLER_H_
 #define MEDIA_BASE_SINC_RESAMPLER_H_
 
+#if defined(__i386__) || defined(_M_IX86) || defined(__x86_64__) || defined(_M_X64)
+#define ARCH_CPU_X86_FAMILY
+#endif
+
+#if defined(__arm__) || defined(__thumb__) || defined(_M_ARM) || defined(__aarch64__) || defined(_M_ARM64)
+#define ARCH_CPU_ARM_FAMILY
+#endif
+
+#if defined(__ARM_NEON) || defined(__ARM_NEON__)
+#define USE_NEON
+#endif
+
 #include <memory>
 
 #include <functional>
