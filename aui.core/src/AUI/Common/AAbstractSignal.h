@@ -249,7 +249,7 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref let "AUI_LET" syntax to set up connections:
+ * Let's make things more declarative and use @ref g"AUI_LET" syntax to set up connections:
  * @code{cpp}
  * MyApp() {
  *   using namespace declarative;
