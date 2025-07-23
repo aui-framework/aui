@@ -11,5 +11,5 @@ void AGainFilter::process(float* samples, size_t num_samples) {
 void AGainFilter::setVolume(aui::audio::VolumeLevel volume) noexcept {
     constexpr float DB_RATIO = 60.0f;
     mVolume = volume;
-    mGain = (std::exp(std::log(DB_RATIO) * (volume / static_cast<float>(aui::audio::VolumeLevel::MAX))) - 1.0f) / (DB_RATIO - 1.0f);
+    //mGain = (std::exp(std::log(DB_RATIO) * (volume / static_cast<float>(aui::audio::VolumeLevel::MAX))) - 1.0f) / (DB_RATIO - 1.0f);
 }
