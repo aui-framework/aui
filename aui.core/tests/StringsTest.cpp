@@ -94,7 +94,13 @@ TEST(Strings, ReplaceAll8) {
     EXPECT_EQ("abcdef"_as.replaceAll("bcd", ""), "aef");
 }
 
-TEST(Strings, Utf8) {
+TEST(Strings, Clown) {
     EXPECT_EQ("🤡"_as, "🤡");
     EXPECT_EQ("🤡"_as.toStdString(), "🤡");
+}
+
+TEST(Strings, Chinese) {
+    EXPECT_EQ("嗨"_as, "嗨");
+    EXPECT_EQ("嗨"_as.length(), 1);
+    EXPECT_EQ("嗨"_as.toStdString(), "嗨");
 }
