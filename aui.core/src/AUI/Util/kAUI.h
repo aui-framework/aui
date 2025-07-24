@@ -85,7 +85,7 @@ namespace aui::impl::slot {
  *
  * @note If you are intended to reference this-> object, consider using @ref #me instead.
  */
-#define AUI_SLOT(v) v, &aui::impl::AUI_SLOT::decode_type_t<std::decay_t<decltype(v)>>
+#define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name.
