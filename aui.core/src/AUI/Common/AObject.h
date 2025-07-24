@@ -31,7 +31,7 @@ namespace aui::detail {
  * @brief A base object class.
  * @ingroup core signal_slot
  * @details
- * AObject is required to use @ref signal_slot "signal-AUI_SLOT system".
+ * AObject is required to use @ref signal_slot "signal-slot system".
  *
  * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with
  * aui::ptr::shared_from_this().

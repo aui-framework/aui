@@ -72,16 +72,16 @@ class AObject;
  *
  * The slots connected to a signal are generaly executed immediately when the signal is emitted like a regular function
  * call. \c emit returns control after all slots are called. If receiver has AObject::setSlotsCallsOnlyOnMyThread set to
- * true and \c emit was called on a different thread, \c emit queues AUI_SLOT execution to the AEventLoop associated with
+ * true and \c emit was called on a different thread, \c emit queues slot execution to the AEventLoop associated with
  * receiver's thread. All AView have this behaviour enabled by default.
  *
  * # Slots
- * A AUI_SLOT is triggered by the emission of a related signal. Slot is no more than a regular class method with a signal
+ * A slot is triggered by the emission of a related signal. Slot is no more than a regular class method with a signal
  * connected to it.
  *
- * When called directly, slots follow standard C++ rules and syntax. However, through a signal-AUI_SLOT connection, any
- * component can invoke a AUI_SLOT regardless of its accessibility level. Visibility scope matters only when creating
- * connection (AObject::connect). This means a signal from one class can call a private AUI_SLOT in another unrelated class
+ * When called directly, slots follow standard C++ rules and syntax. However, through a signal-slot connection, any
+ * component can invoke a slot regardless of its accessibility level. Visibility scope matters only when creating
+ * connection (AObject::connect). This means a signal from one class can call a private slot in another unrelated class
  * if connection is created within class itself (with access to its private/protected methods).
  *
  * Furthermore, slots can be defined as virtual functions, which have been found to be beneficial in practical
@@ -149,7 +149,7 @@ class AObject;
  * connect(mCounter->valueChanged, me::printCounter);
  * @endcode
  *
- * Lambda can be used as a AUI_SLOT either:
+ * Lambda can be used as a slot either:
  * @code{cpp}
  * connect(mCounter->valueChanged, this, [](int value) {
  *   ALogger::info("MyApp") << value;
@@ -194,7 +194,7 @@ class AObject;
  * @endcode
  *
  * ## Going further
- * Let's take our previous example with `Counter` and make an UI app. Signal AUI_SLOT reveals it's power when your objects
+ * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects
  * have small handy functions, so lets add `increase` method to our counter:
  *
  * @code{cpp}
@@ -249,7 +249,7 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref "AUI_LET" syntax to set up connections:
+ * Let's make things more declarative and use @ref AUI_LET "AUI_LET" syntax to set up connections:
  * @code{cpp}
  * MyApp() {
  *   using namespace declarative;
@@ -279,7 +279,7 @@ class AObject;
  * @endcode
  *
  * The signals and slots mechanism is type safe: The signature of a signal must match the signature of the receiving
- * AUI_SLOT. Also, a AUI_SLOT may have a shorter signature than the signal it receives because it can ignore extra arguments:
+ * slot. Also, a slot may have a shorter signature than the signal it receives because it can ignore extra arguments:
  * @code{cpp}
  * view = _new<ATextField>();
  * ...
@@ -290,7 +290,7 @@ class AObject;
  *
  * # Differences between Qt and AUI implementation
  * Suppose we want to emit <code>statusChanged</code> signal with a string argument and connect it with
- * <code>showMessage</code> AUI_SLOT:
+ * <code>showMessage</code> slot:
  * <table>
  *   <tr>
  *     <th></th>

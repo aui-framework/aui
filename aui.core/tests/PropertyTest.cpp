@@ -176,7 +176,7 @@ TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
     }
 
     // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
-    // that `AProperty` copies it's underlying data field only, the **signal-AUI_SLOT relations are not borrowed**.
+    // that `AProperty` copies it's underlying data field only, the **signal-slot relations are not borrowed**.
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
@@ -220,10 +220,10 @@ TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
     }
     // The situation with copy assigning `auto copy = _new<User>(); *copy = *original;` is similar to copy
     // construction `auto copy = _new<User>(*original);`, except that we are copying to some pre-existing
-    // data structure that potentially have signal-AUI_SLOT relations already. So, not only **connections should be kept
+    // data structure that potentially have signal-skit relations already. So, not only **connections should be kept
     // as is** but a notification for copy destination's observers is needed.
     //
-    // As with copy construction, copy operation of `AProperty` does not affect signal-AUI_SLOT relations. Moreover,
+    // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
     // it notifies the observers.
     // AUI_DOCS_CODE_BEGIN
     auto observer = _new<LogObserver>();

@@ -167,7 +167,7 @@ TEST_F(SignalSlotTest, StackAllocatedObject) {
 TEST_F(SignalSlotTest, ObjectRemoval1) {
     slave = _new<Slave>();
 
-    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-AUI_SLOT relations
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-slot relations
     EXPECT_EQ(connections(master->message).size(), 1);
 
     testing::InSequence s;
@@ -188,7 +188,7 @@ TEST_F(SignalSlotTest, ObjectRemoval1) {
 TEST_F(SignalSlotTest, ObjectRemoval2) {
     slave = _new<Slave>();
 
-    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-AUI_SLOT relations
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-slot relations
     EXPECT_EQ(connections(master->message).size(), 1);
 
     testing::InSequence s;

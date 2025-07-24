@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's AUI_LET, lol so forward it
+#include <range/v3/range_fwd.hpp>
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -43,7 +43,7 @@
  */
 #define me this, &std::remove_reference_t<decltype(*this)>
 
-namespace aui::impl::AUI_SLOT {
+namespace aui::impl::slot {
     template<typename T>
     struct decode_type {
         using type = T;
@@ -81,7 +81,7 @@ namespace aui::impl::AUI_SLOT {
  *       @endcode
  *     </td>
  *   </tr>
- * </table> AUI_SLOT
+ * </table>
  *
  * @note If you are intended to reference this-> object, consider using @ref #me instead.
  */
@@ -282,7 +282,7 @@ namespace aui::impl::AUI_SLOT {
  * setContents(Centered {
  *   Label { "Red text!" } AUI_WITH_STYLE { TextColor { AColor::RED } },
  * });
- * @endcode AUI_WITH_STYLE
+ * @endcode
  */
 #define AUI_WITH_STYLE & ass::PropertyListRecursive
 
@@ -384,7 +384,7 @@ namespace aui::impl::AUI_SLOT {
  *           std::printf("Only once!");
  *       }
  *       @endcode
- *     </td> AUI_DO_ONCE
+ *     </td>
  *   </tr>
  * </table>
  */
