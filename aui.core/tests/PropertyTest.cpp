@@ -263,7 +263,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     }
     // Similary to copy, AProperty is both move assignable and constructible except that underlying value is moved
     // instead of copying. Also, the observers of the source object receive notification that the value was emptied. The
-    // **signal-AUI_SLOT relations are left unchanged.**
+    // **signal-slot relations are left unchanged.**
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();

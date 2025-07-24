@@ -60,9 +60,9 @@ class AObject;
  * emit valueChanged(mValue);
  * @endcode
  *
- * Any member function of a class can be used as a AUI_SLOT.
+ * Any member function of a class can be used as a slot.
  *
- * You can connect as many signals as you want to a single AUI_SLOT, and a signal can be connected to as many slots as you
+ * You can connect as many signals as you want to a single slot, and a signal can be connected to as many slots as you
  * need.
  *
  * # Signals

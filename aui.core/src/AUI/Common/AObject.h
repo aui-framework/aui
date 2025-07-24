@@ -50,7 +50,7 @@ public:
      * need the connection to be broken if receiver dies, or you don't have a receiver AObject either. In such case, the
      * connection is breaks only when the sender (signal) dies.
      *
-     * This can be useful in situations when you don't want to introduce some receiver AObject and when AUI_SLOT just to
+     * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
      * observe @ref property_system "property" or @ref signal_slot "signal", i.e., you just want to make a
      * _generic observer_.
      *
@@ -66,16 +66,16 @@ public:
     static void disconnect();
 
     /**
-     * @brief Connects signal to the AUI_SLOT of the specified object.
+     * @brief Connects signal to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
      * @endcode
      * @param signal signal
      * @param object instance of <code>AObject</code>
-     * @param function AUI_SLOT. Can be lambda
+     * @param function slot. Can be lambda
      * @return Connection instance
      */
     template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
@@ -84,19 +84,19 @@ public:
     }
 
     /**
-     * @brief Connects property to the AUI_SLOT of the specified object.
+     * @brief Connects property to the slot of the specified object.
      * @ingroup property_system
      * @details
      * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
      * property (pre-fire).
      *
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
      * @endcode
      * @param property property
      * @param object instance of <code>AObject</code>
-     * @param function AUI_SLOT. Can be lambda
+     * @param function slot. Can be lambda
      */
     template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function>
     static decltype(auto) connect(const Property& property, Object* object, Function&& function) {
@@ -115,7 +115,7 @@ public:
      *
      * connect pulls AObject from \c propertyDestination to maintain the connection.
      *
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
@@ -144,7 +144,7 @@ public:
      *
      * biConnect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
      *
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
@@ -161,16 +161,16 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to the AUI_SLOT of the specified object.
+     * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
      * @endcode
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
-     * @param function AUI_SLOT. Can be lambda
+     * @param function slot. Can be lambda
      * @return Connection instance
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
@@ -181,16 +181,16 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to AUI_SLOT of \c "this" object.
+     * @brief Connects signal or property to slot of \c "this" object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
      * @endcode
      * @param connectable signal or property
-     * @param function AUI_SLOT. Can be lambda
+     * @param function slot. Can be lambda
      * @return Connection instance
      */
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
@@ -199,10 +199,10 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to the AUI_SLOT of the specified object.
+     * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
@@ -213,7 +213,7 @@ public:
      *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
-     * @param function AUI_SLOT. Can be lambda
+     * @param function slot. Can be lambda
      * @return Connection instance
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
@@ -223,13 +223,13 @@ public:
     }
 
     /**
-     * @brief Connects signal to the AUI_SLOT of the specified object. Slot is packed to single argument.
+     * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
      * @param connectable signal or property
-     * @param slotDef instance of <code>AObject</code> + AUI_SLOT
+     * @param slotDef instance of <code>AObject</code> + slot
      * @return Connection instance
      *
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
@@ -248,10 +248,10 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to the AUI_SLOT of the specified non-AObject type.
+     * @brief Connects signal or property to the slot of the specified non-AObject type.
      * @ingroup property_system
      * @details
-     * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+     * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
@@ -262,7 +262,7 @@ public:
      *
      * @param property source property.
      * @param object instance of `AObject`.
-     * @param function AUI_SLOT. Can be lambda.
+     * @param function slot. Can be lambda.
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
     static void
@@ -335,7 +335,7 @@ private:
  * emit keyPressed(AInput::LCTRL);
  * @endcode
  *
- * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+ * See @ref signal_slot "signal-slot system" for more info.
  */
 #define emit (*this) ^
 
@@ -362,7 +362,7 @@ private:
  * AUI_EMIT_FOREIGN(view, keyPressed, AInput::LCTRL);
  * @endcode
  *
- * See @ref signal_slot "signal-AUI_SLOT system" for more info.
+ * See @ref signal_slot "signal-slot system" for more info.
  */
 #define AUI_EMIT_FOREIGN(object, signal, ...) (*object) ^ object->signal(__VA_ARGS__)
 

@@ -94,9 +94,9 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // 2. many-to-many relationships between objects
 // 3. optional data modification when passing values between objects (like STL projections)
 // 4. emitter can be either signal or property
-// 5. AUI_SLOT can be either lambda, method or property
+// 5. slot can be either lambda, method or property
 // 6. for the latter case, system must set up backward connection as well (including projection support)
-// 7. again, for the latter case, there's an option to make property-to-slot connection, where the "AUI_SLOT" is property's
+// 7. again, for the latter case, there's an option to make property-to-slot connection, where the "slot" is property's
 //    assignment operation
 // 8. 2 syntax variants: procedural (straightforward) and declarative
 // 9. three property variants: simple field (AProperty), custom getter/setter (APropertyDef) and custom evaluation
