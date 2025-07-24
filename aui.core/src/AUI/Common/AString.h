@@ -26,6 +26,13 @@ class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
+enum class AStringEncoding {
+    UTF8,
+    UTF16,
+    UTF32,
+    LATIN1,
+};
+
 /**
  * @brief Represents a Unicode character string.
  * @ingroup core
