@@ -42,7 +42,7 @@ _<AView> myLazyList(_<State> state) {
             return;
         }
         auto loadFrom = state->items->size(); // base index to load from.
-        state->AUI_THREADPOOLTasks << AUI_THREADPOOL {
+        state->asyncTasks << AUI_THREADPOOL {
             // perform "loading" task on a worker thread.
 
             AThread::sleep(500ms); // imitate hard work here
