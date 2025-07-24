@@ -64,14 +64,14 @@ _<AView> notePreview(const _<Note>& note) {
     };
 
     return Vertical {
-        Label {} with_style { FontSize { 10_pt }, ATextOverflow::ELLIPSIS } &
+        Label {} AUI_WITH_STYLE { FontSize { 10_pt }, ATextOverflow::ELLIPSIS } &
             note->title.readProjected(StringOneLinePreview {}),
-        Label {} with_style {
+        Label {} AUI_WITH_STYLE {
                   ATextOverflow::ELLIPSIS,
                   Opacity { 0.7f },
                 } &
             note->content.readProjected(StringOneLinePreview {}),
-    } with_style {
+    } AUI_WITH_STYLE {
         Padding { 4_dp, 8_dp },
         BorderRadius { 8_dp },
         Margin { 4_dp, 8_dp },
@@ -93,8 +93,8 @@ _<AView> noteEditor(const _<Note>& note) {
                       it->focus();
                   }
               },
-          _new<ATextArea>("Text") with_style { Expanding() } && note->content,
-        } with_style {
+          _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
+        } AUI_WITH_STYLE {
           Padding { 8_dp, 16_dp },
         });
 }
@@ -144,7 +144,7 @@ public:
                           })
                           .build(),
                         /// [scrollarea]
-                    } with_style { MinSize { 200_dp } },
+                    } AUI_WITH_STYLE { MinSize { 200_dp } },
 
                     Vertical::Expanding {
                       Centered {
@@ -155,9 +155,9 @@ public:
                             }) > &AView::setEnabled,
                       },
                       CustomLayout::Expanding {} & mCurrentNote.readProjected(noteEditor),
-                    }<< ".plain_bg" with_style { MinSize { 200_dp } },
+                    }<< ".plain_bg" AUI_WITH_STYLE { MinSize { 200_dp } },
                   })
-                  .build() with_style { Expanding() },
+                  .build() AUI_WITH_STYLE { Expanding() },
         });
 
         if (mNotes->empty()) {

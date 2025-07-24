@@ -157,7 +157,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *     AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
  *       return Label { fmt::format("{}", user) };
  *     }
- *   ).build() with_style { FixedSize { 150_dp, 200_dp } },
+ *   ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
  * });
  * @endcode
  *

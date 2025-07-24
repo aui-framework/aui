@@ -64,7 +64,7 @@ public:
         _<ABasicListEditor> buildContainer() {
             auto c = _new<ABasicListEditor>();
             auto list = _new<AListView>(mModel);
-            list with_style { ass::MinSize { 200_dp, {} } };
+            list AUI_WITH_STYLE { ass::MinSize { 200_dp, {} } };
 
             auto modifyButton = mModifyCallback ? _new<AButton>("Modify...").connect(&AView::clicked, c, [callback = mModifyCallback, list] {
                 callback(list->getSelectionModel().first());

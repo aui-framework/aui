@@ -79,11 +79,11 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/properties.h
 // @defgroup property_system Property System
 // @ingroup core
-// @brief Property System is a data binding mechanism based on @ref signal_slot "signal-slot system".
+// @brief Property System is a data binding mechanism based on @ref signal_slot "signal-AUI_SLOT system".
 // @details
 // @experimental
 // AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
-// @ref signal_slot "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
+// @ref signal_slot "signal-AUI_SLOT system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
 // involve external tools (like `moc`). They are written in pure C++.
 //
 // @note
@@ -94,9 +94,9 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // 2. many-to-many relationships between objects
 // 3. optional data modification when passing values between objects (like STL projections)
 // 4. emitter can be either signal or property
-// 5. slot can be either lambda, method or property
+// 5. AUI_SLOT can be either lambda, method or property
 // 6. for the latter case, system must set up backward connection as well (including projection support)
-// 7. again, for the latter case, there's an option to make property-to-slot connection, where the "slot" is property's
+// 7. again, for the latter case, there's an option to make property-to-AUI_SLOT connection, where the "AUI_SLOT" is property's
 //    assignment operation
 // 8. 2 syntax variants: procedural (straightforward) and declarative
 // 9. three property variants: simple field (AProperty), custom getter/setter (APropertyDef) and custom evaluation
@@ -217,7 +217,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
                   //                ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the
                   // same as
-                  // AObject::connect(user->name, slot(it)::setText);
+                  // AObject::connect(user->name, AUI_SLOT(it)::setText);
                   //
                   // if you want user->name to be aware or it->text()
                   // changes (i.e., if it were an editable view
@@ -278,7 +278,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
                   AObject::connect(user->name.readProjected(&AString::uppercase), it->text());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
-                  // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
+                  // AObject::connect(user->name.projected(&AString::uppercase), AUI_SLOT(it)::setText);
 
                   // if view's property gets changed (i.e., by user or by occasional
                   // ALabel::setText), these changes DO NOT reflect on model
@@ -535,7 +535,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 // - `&` sets up one-directional connection (`AObject::connect`).
 // - `&&` sets up bidirectional connection (`AObject::biConnect`).
 //
-// Also, `>` operator (resembles arrow) is used to specify the destination slot.
+// Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
 //
 // The example below is essentially the same as @ref "UIDataBindingTest_Label_via_let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
@@ -797,7 +797,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
             _<ALabel> label;
             setContents(Centered {
                 _new<ALabel>() & user->name > [](ALabel& label, const AString& s) {
-                  label.setText("custom slot! {}"_format(s));
+                  label.setText("custom AUI_SLOT! {}"_format(s));
                 }
             });
         }
@@ -809,9 +809,9 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
     user->name = "Vasil";
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "custom slot! Vasil");
+    EXPECT_EQ(label->text(), "custom AUI_SLOT! Vasil");
     user->name = "World";
-    EXPECT_EQ(label->text(), "custom slot! World");
+    EXPECT_EQ(label->text(), "custom AUI_SLOT! World");
 }
 
 TEST_F(UIDataBindingTest, Declarative_custom_slot2) {

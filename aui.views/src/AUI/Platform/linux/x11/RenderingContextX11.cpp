@@ -18,7 +18,7 @@
 
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
-    do_once {
+    AUI_DO_ONCE {
         if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == nullptr) {
             throw AException("Your X server does not support locales.");
         }

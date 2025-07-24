@@ -61,7 +61,7 @@ protected:
     void clearAllIngoingConnections() noexcept;
 
     /**
-     * @brief Called then an exception has thrown during slot processing of the signal emitted by this object.
+     * @brief Called then an exception has thrown during AUI_SLOT processing of the signal emitted by this object.
      */
     virtual void handleSlotException(std::exception_ptr exception);
 

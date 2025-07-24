@@ -69,7 +69,7 @@ TEST_F(PropertyTest, Declaration) {
         EXPECT_CALL(mock, log(testing::_)).Times(1);
         // AUI_DOCS_CODE_BEGIN
         User u;
-        AObject::connect(u.name.changed, slot(mock)::log); // HIDE
+        AObject::connect(u.name.changed, AUI_SLOT(mock)::log); // HIDE
         u.name = "Hello";
         AString helloWorld = u.name + " world";
         EXPECT_EQ(helloWorld, "Hello world");
@@ -114,7 +114,7 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
         auto u = aui::ptr::manage_shared(new User { .name = "Chloe" });
-        AObject::connect(u->name.changed, slot(observer)::log);
+        AObject::connect(u->name.changed, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         EXPECT_CALL(*observer, log(AString("Marinette")));
         //
@@ -139,7 +139,7 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         auto u = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(u->name, slot(observer)::log);
+        AObject::connect(u->name, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
         // @code
@@ -176,14 +176,14 @@ TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
     }
 
     // Copying `AProperty` is considered as a valid operation as it's a data holder. However, it's worth to note
-    // that `AProperty` copies it's underlying data field only, the **signal-slot relations are not borrowed**.
+    // that `AProperty` copies it's underlying data field only, the **signal-AUI_SLOT relations are not borrowed**.
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
         auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(original->name, slot(observer)::log);
+        AObject::connect(original->name, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // This part is similar to previous examples, nothing new. Let's introduce a copy:
         // AUI_DOCS_CODE_BEGIN
@@ -220,17 +220,17 @@ TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
     }
     // The situation with copy assigning `auto copy = _new<User>(); *copy = *original;` is similar to copy
     // construction `auto copy = _new<User>(*original);`, except that we are copying to some pre-existing
-    // data structure that potentially have signal-slot relations already. So, not only **connections should be kept
+    // data structure that potentially have signal-AUI_SLOT relations already. So, not only **connections should be kept
     // as is** but a notification for copy destination's observers is needed.
     //
-    // As with copy construction, copy operation of `AProperty` does not affect signal-slot relations. Moreover,
+    // As with copy construction, copy operation of `AProperty` does not affect signal-AUI_SLOT relations. Moreover,
     // it notifies the observers.
     // AUI_DOCS_CODE_BEGIN
     auto observer = _new<LogObserver>();
     auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
     EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-    AObject::connect(original->name, slot(observer)::log);
+    AObject::connect(original->name, AUI_SLOT(observer)::log);
     // AUI_DOCS_CODE_END
     // This part is similar to previous examples, nothing new. Let's perform copy-assignment:
     // AUI_DOCS_CODE_BEGIN
@@ -263,14 +263,14 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     }
     // Similary to copy, AProperty is both move assignable and constructible except that underlying value is moved
     // instead of copying. Also, the observers of the source object receive notification that the value was emptied. The
-    // **signal-slot relations are left unchanged.**
+    // **signal-AUI_SLOT relations are left unchanged.**
     {
         // AUI_DOCS_CODE_BEGIN
         auto observer = _new<LogObserver>();
         auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
         EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-        AObject::connect(original->name, slot(observer)::log);
+        AObject::connect(original->name, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // This part is similar to previous examples, nothing new. Let's introduce a move:
         // AUI_DOCS_CODE_BEGIN
@@ -306,7 +306,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     auto original = aui::ptr::manage_shared(new User { .name = "Chloe" });
 
     EXPECT_CALL(*observer, log(AString("Chloe"))).Times(1);
-    AObject::connect(original->name, slot(observer)::log);
+    AObject::connect(original->name, AUI_SLOT(observer)::log);
     // AUI_DOCS_CODE_END
     // This part is similar to previous examples, nothing new. Let's perform move-assignment:
     // AUI_DOCS_CODE_BEGIN

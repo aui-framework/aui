@@ -366,7 +366,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             return APath::workingDir() / "__aui_appdata";
         case TEMP: {
             auto dir = APath::workingDir() / "__aui_tmp";
-            do_once {
+            AUI_DO_ONCE {
                 // we have to clean up it by ourselves.
                 dir.removeFileRecursive();
             }

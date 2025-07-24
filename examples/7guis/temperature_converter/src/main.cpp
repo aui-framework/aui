@@ -35,7 +35,7 @@ public:
                 it->focus();
             },
             Label { "°C" },
-            Label { "=" } with_style { Margin { {}, 16_dp } },
+            Label { "=" } AUI_WITH_STYLE { Margin { {}, 16_dp } },
             myPicker() AUI_LET { biConnect(it->value(), mFahrenheit); },
             Label { "°F" },
           },

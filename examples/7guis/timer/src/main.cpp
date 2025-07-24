@@ -54,7 +54,7 @@ public:
                       it->setCustomStyle({ Expanding {} });
                   },
             },
-            _new<AButton>("Reset Timer") with_style {
+            _new<AButton>("Reset Timer") AUI_WITH_STYLE {
                   Expanding { 1, 0 },
                 } AUI_LET { connect(it->clicked, me::reset); },
           },

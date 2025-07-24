@@ -88,7 +88,7 @@ TEST_F(ProcessTest, FinishedSignal) {
         auto p = AProcess::create(i);
         auto receiver = _new<ProcessSignalReceiver>();
         EXPECT_CALL(*receiver, slotMock()).Times(1);
-        AObject::connect(p->finished, slot(receiver)::slotMock);
+        AObject::connect(p->finished, AUI_SLOT(receiver)::slotMock);
         p->run();
         p->waitForExitCode();
 
@@ -106,7 +106,7 @@ TEST_F(ProcessTest, StdoutSignal) {
         auto p = AProcess::create(i);
         auto receiver = _new<ProcessSignalReceiver>();
         EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
-        AObject::connect(p->stdOut, slot(receiver)::slotMock);
+        AObject::connect(p->stdOut, AUI_SLOT(receiver)::slotMock);
         p->run();
         p->waitForExitCode();
 

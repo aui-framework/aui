@@ -27,7 +27,7 @@ using namespace ass;
 
 static auto headerWithContents(_<AView> content) {
     auto result = Stacked {
-        AScrollArea::Builder().withContents(content).build() with_style {
+        AScrollArea::Builder().withContents(content).build() AUI_WITH_STYLE {
               Expanding(),
               Padding { 80_dp, 0, 0 },
             } AUI_LET { it->setExtraStylesheet(
@@ -41,7 +41,7 @@ static auto headerWithContents(_<AView> content) {
         Vertical::Expanding {
           Centered {
             Horizontal {
-                  Label { "boll" } with_style {
+                  Label { "boll" } AUI_WITH_STYLE {
                       FixedSize { 60_dp },
                       BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
@@ -52,7 +52,7 @@ static auto headerWithContents(_<AView> content) {
 //                      Border { 1_dp, AColor::GRAY.transparentize(0.7f) },
                       BoxShadow { 0, 32_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
                   },
-                  Label { "boll" } with_style {
+                  Label { "boll" } AUI_WITH_STYLE {
                       FixedSize { 60_dp },
                       BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
@@ -68,7 +68,7 @@ static auto headerWithContents(_<AView> content) {
                       BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                   },
               }
-          } with_style { Padding { 50_dp } },
+          } AUI_WITH_STYLE { Padding { 50_dp } },
         },
     };
     return result;
@@ -81,8 +81,8 @@ AUI_ENTRY {
         Centered {
           Vertical::Expanding {
             Centered {
-              Icon { ":logo.svg" } with_style { FixedSize { 128_dp } },
-            } with_style { FixedSize { 500_dp, {} } },
+              Icon { ":logo.svg" } AUI_WITH_STYLE { FixedSize { 128_dp } },
+            } AUI_WITH_STYLE { FixedSize { 500_dp, {} } },
             AText::fromString(
                 "    — Eh bien, mon prince. Gênes et Lucques ne sont plus que des apanages, des "
                 "поместья, de la famille Buonaparte. Non, je vous préviens que si vous ne me dites pas "

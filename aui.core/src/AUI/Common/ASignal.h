@@ -571,7 +571,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
  * @brief A signal declaration.
  * @tparam Args signal arguments
  * @ingroup signal_slot
- * See @ref signal_slot "signal-slot system" for more info.
+ * See @ref signal_slot "signal-AUI_SLOT system" for more info.
  */
 template <typename... Args>
 using emits = ASignal<Args...>;

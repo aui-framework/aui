@@ -55,7 +55,7 @@ FractalWindow::FractalWindow() : AWindow("Mandelbrot set") {
         },
       },
       Vertical {
-        _new<AButton>("Identity").connect(&AButton::clicked, slot(fractal)::reset),
+        _new<AButton>("Identity").connect(&AButton::clicked, AUI_SLOT(fractal)::reset),
         _new<AButton>("Jump to coords...")
             .connect(&AButton::clicked, this, [&, fractal]() { _new<JumpToCoordsWindow>(fractal, this)->show(); }),
         _new<ALabel>("Iterations:"),

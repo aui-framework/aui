@@ -75,10 +75,10 @@ public:
                             mIsReturnFlight);
                 },
             dateTextField(mDepartureDate),
-            dateTextField(mReturnDate) AUI_LET { connect(mIsReturnFlight, slot(it)::setEnabled); },
+            dateTextField(mReturnDate) AUI_LET { connect(mIsReturnFlight, AUI_SLOT(it)::setEnabled); },
             _new<AButton>("Book") AUI_LET {
                     connect(it->clicked, me::book);
-                    connect(mIsValid, slot(it)::setEnabled);
+                    connect(mIsValid, AUI_SLOT(it)::setEnabled);
                 },
           },
         });
