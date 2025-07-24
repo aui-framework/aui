@@ -169,7 +169,7 @@ namespace {
 }
 
 void AWindowManager::loop() {
-    do_once {
+    AUI_DO_ONCE {
         emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onResize);
         emscripten_set_mousemove_callback("#canvas", nullptr, false, onMouseMove);
         emscripten_set_mousedown_callback("#canvas", nullptr, false, onMousePressed);

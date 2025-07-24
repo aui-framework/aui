@@ -83,7 +83,7 @@ void setCursor(AWindow* window, Cursor cursorHandle) {
 
 void setFontCursor(AWindow* window, int cursor) {
     static std::unordered_map<int, NativeCursorHandle> nativeCursors;
-    do_once {
+    AUI_DO_ONCE {
         ACleanup::afterEntry([&] { nativeCursors.clear(); });
     }
 

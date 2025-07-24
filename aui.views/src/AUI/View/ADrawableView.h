@@ -33,7 +33,7 @@
  * applied to ADrawableView:
  * @code{cpp}
  * auto drawable = IDrawable::fromUrl(":animation.webp");
- * _new<ADrawableView>(drawable) with_style {
+ * _new<ADrawableView>(drawable) AUI_WITH_STYLE {
  *   BackgroundImage({}, {}, {}, Sizing::COVER), // <- drawable is sized and positioned as with COVER.
  * };
  * @endcode

@@ -39,7 +39,7 @@ public:
     void setupConnections(AView* view, const _<AAssHelper>& helper) override {
         IAssSubSelector::setupConnections(view, helper);
         view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
-        AObject::connect(view->customCssPropertyChanged, slot(helper)::onInvalidateStateAss);
+        AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);
     }
 };
 /// [CellSelector]
@@ -62,7 +62,7 @@ public:
     void setupConnections(AView* view, const _<AAssHelper>& helper) override {
         IAssSubSelector::setupConnections(view, helper);
         view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
-        AObject::connect(view->customCssPropertyChanged, slot(helper)::onInvalidateStateAss);
+        AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);
     }
 };
 /// [RevealSelector]

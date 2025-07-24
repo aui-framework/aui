@@ -70,7 +70,7 @@ TEST_F(UpdaterStatusTest, Test1) {
       // AUI_DOCS_CODE_BEGIN
       CustomLayout {} & mUpdater->status.readProjected([&updater = mUpdater](const std::any& status) -> _<AView> {
           if (std::any_cast<AUpdater::StatusIdle>(&status)) {
-              return _new<AButton>("Check for updates").connect(&AView::clicked, slot(updater)::checkForUpdates);
+              return _new<AButton>("Check for updates").connect(&AView::clicked, AUI_SLOT(updater)::checkForUpdates);
           }
           if (std::any_cast<AUpdater::StatusCheckingForUpdates>(&status)) {
               return Label { "Checking for updates..." };
@@ -83,7 +83,7 @@ TEST_F(UpdaterStatusTest, Test1) {
           }
           if (std::any_cast<AUpdater::StatusWaitingForApplyAndRestart>(&status)) {
               return _new<AButton>("Apply update and restart")
-                  .connect(&AView::clicked, slot(updater)::applyUpdateAndRestart);
+                  .connect(&AView::clicked, AUI_SLOT(updater)::applyUpdateAndRestart);
           }
           return nullptr;
       }),

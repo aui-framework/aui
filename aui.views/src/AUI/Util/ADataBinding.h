@@ -173,7 +173,7 @@ public:
  *
  *         setContents(Centered {
  *             Vertical {
- *                 Label { } let {
+ *                 Label { } AUI_LET {
  *                     data->addObserver(&Model::value, [it](int v) {
  *                         it->setText("{}"_format(v));
  *                     });
@@ -194,7 +194,7 @@ public:
  * };
  * @endcode
  * <p>Here, we use getEditableModel() in order to change data in our model and notifyUpdate() to notify.</p>
- * <p>Also, we use @ref #let construction to define custom format for label.</p>
+ * <p>Also, we use @ref #AUI_LET construction to define custom format for label.</p>
  *
  */
 template <typename Model>

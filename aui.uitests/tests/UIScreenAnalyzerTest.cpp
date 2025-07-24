@@ -43,9 +43,9 @@ protected:
                                             }
                                             mHelloLabel->text() = "Hello, {}!"_format(*mTextField->text());
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
-                                        }) with_style { BackgroundSolid { 0xff0000_rgb } } let { it->setDefault(); },
+                                        }) AUI_WITH_STYLE { BackgroundSolid { 0xff0000_rgb } } AUI_LET { it->setDefault(); },
                                 },
-                                mHelloLabel = _new<ALabel>() let {
+                                mHelloLabel = _new<ALabel>() AUI_LET {
                                     it->setVisibility(Visibility::INVISIBLE);
                                     it << "#hello";
                                 },

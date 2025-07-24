@@ -89,7 +89,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
         auto parentWindow = getWindow();
         if (!parentWindow) return;
 
-        auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
+        auto list = _new<AListView>(mModel) AUI_WITH_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
         int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
         auto comboBoxPos = getPositionInWindow();
@@ -113,12 +113,12 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
         // when list floats up from below, we should apply only size animation
         if (usedPositionIndex == 0) {
             list->setAnimator(_new<ASizeAnimator>(
-                    glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); });
+                    glm::ivec2{list->getWidth(), 0}) AUI_LET { it->setDuration(0.15f); });
         } else {
             // when list floats up from above, we should apply both position and size animations
             list->setAnimator(AAnimator::combine({
-                                                         _new<ATranslationAnimator>(glm::ivec2(0, listHeight)) let { it->setDuration(0.15f); },
-                                                         _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
+                                                         _new<ATranslationAnimator>(glm::ivec2(0, listHeight)) AUI_LET { it->setDuration(0.15f); },
+                                                         _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) AUI_LET { it->setDuration(0.15f); }
                                                  }));
         }
         connect(list->selectionChanged, this, [&](const AListModelSelection<AString>& s) {

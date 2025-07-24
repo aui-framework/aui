@@ -22,7 +22,7 @@ EmptyLineAfterAccessModifier: Never
 NamespaceIndentation: None
 BreakConstructorInitializers: BeforeComma
 
-# we have some problems with ranges-v3 and AUI's let, so keep it disabled
+# we have some problems with ranges-v3 and AUI's AUI_LET, so keep it disabled
 SortIncludes: Never
 
 
@@ -32,14 +32,14 @@ SortIncludes: Never
 BracedInitializerIndentWidth: 2
 ConstructorInitializerIndentWidth: 2
 
-# better spacing around with_style and let.
+# better spacing around AUI_WITH_STYLE and AUI_LET.
 # before:
-# view with_style{Expanding()},
-# view let{printf("Hello");},
+# view AUI_WITH_STYLE{Expanding()},
+# view AUI_LET{printf("Hello");},
 #
 # after:
-# view with_style { Expanding() },
-# view let { printf("Hello"); },
+# view AUI_WITH_STYLE { Expanding() },
+# view AUI_LET { printf("Hello"); },
 Cpp11BracedListStyle: false
 SpaceBeforeCpp11BracedList: true
 
@@ -60,8 +60,8 @@ StatementAttributeLikeMacros:
 
 # fix AUI's scary macros.
 Macros:
-  - let=+[]
-  - async=[]
+  - AUI_LET=+[]
+  - AUI_THREADPOOL=[]
   - AUI_DECLARATIVE_FOR(a,b,c)=[v2=b,v3=c](a)
   - AUI_DECLARATIVE_FOR_EX(a,b,c,d)=[d,v2=b,v3=c](a)
-  - with_style=+std::vector
+  - AUI_WITH_STYLE=+std::vector

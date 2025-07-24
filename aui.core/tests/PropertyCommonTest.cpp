@@ -58,7 +58,7 @@ TEST(PropertyCommonTest, ValueOperatorArrow) {
 TEST(PropertyCommonTest, ChangedSignal) {
     auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
     auto receiver = _new<Receiver>();
-    AObject::connect(u->name.changed, slot(receiver)::receiveStr);
+    AObject::connect(u->name.changed, AUI_SLOT(receiver)::receiveStr);
 
     EXPECT_CALL(*receiver, receiveStr(AString("World")));
     u->name = "World";
@@ -69,7 +69,7 @@ TEST(PropertyCommonTest, PropertyConnection) {
     auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveStr(AString("Hello"))).Times(1);
-    AObject::connect(u->name, slot(receiver)::receiveStr);
+    AObject::connect(u->name, AUI_SLOT(receiver)::receiveStr);
 
     EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
     u->name = "World";
@@ -80,7 +80,7 @@ TEST(PropertyCommonTest, PropertyConnectionWithProjection1) {
     auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected(&AString::length), slot(receiver)::receiveInt);
+    AObject::connect(u->name.readProjected(&AString::length), AUI_SLOT(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";
@@ -91,7 +91,7 @@ TEST(PropertyCommonTest, PropertyConnectionWithProjection2) {
     auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), slot(receiver)::receiveInt);
+    AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), AUI_SLOT(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";
@@ -133,7 +133,7 @@ TEST(PropertyCommonTest, CustomSetter) {
     EXPECT_CALL(u, setName(AString("World")));
     EXPECT_CALL(receiver, receiveStr(AString("World")));
 
-    AObject::connect(u.name().changed, slot(receiver)::receiveStr);
+    AObject::connect(u.name().changed, AUI_SLOT(receiver)::receiveStr);
 
     u.name() = "World";
     EXPECT_EQ(AString(u.name()), "can't change");
@@ -147,7 +147,7 @@ TEST(PropertyCommonTest, CustomSetterProperty) {
     EXPECT_CALL(*receiver, receiveStr(AString("can't change"))).Times(1);
     EXPECT_CALL(*receiver, receiveStr(AString("World"))).Times(1);
 
-    AObject::connect(u.name(), slot(receiver)::receiveStr);
+    AObject::connect(u.name(), AUI_SLOT(receiver)::receiveStr);
 
     u.name() = "World";
     EXPECT_EQ(AString(u.name()), "can't change");

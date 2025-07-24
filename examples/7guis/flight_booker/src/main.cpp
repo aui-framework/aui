@@ -30,7 +30,7 @@ struct DateTextFieldState {
 auto formatDate(system_clock::time_point date) { return "{0:%d}.{0:%m}.{0:%G}"_format(date); }
 
 auto dateTextField(DateTextFieldState& state) {
-    return _new<ATextField>() let {
+    return _new<ATextField>() AUI_LET {
         AObject::biConnect(
             state.parsed.biProjected(aui::lambda_overloaded {
               [](const AOptional<system_clock::time_point>& v) -> AString {
@@ -70,15 +70,15 @@ public:
         } });
         setContents(Centered {
           Vertical {
-            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) let {
+            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {
                     connect(it->selectionId().readProjected([](int selectionId) { return selectionId == 1; }),
                             mIsReturnFlight);
                 },
             dateTextField(mDepartureDate),
-            dateTextField(mReturnDate) let { connect(mIsReturnFlight, slot(it)::setEnabled); },
-            _new<AButton>("Book") let {
+            dateTextField(mReturnDate) AUI_LET { connect(mIsReturnFlight, AUI_SLOT(it)::setEnabled); },
+            _new<AButton>("Book") AUI_LET {
                     connect(it->clicked, me::book);
-                    connect(mIsValid, slot(it)::setEnabled);
+                    connect(mIsValid, AUI_SLOT(it)::setEnabled);
                 },
           },
         });

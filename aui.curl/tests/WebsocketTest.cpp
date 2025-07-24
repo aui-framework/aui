@@ -46,7 +46,7 @@ static const auto PAYLOAD = AByteBuffer::fromHexString("817e00a67b2265223a227472
 TEST(WebsocketTest, Receive1) {
     auto r = _new<Receiver>();
     auto s = aui::ptr::manage_shared(new AWebsocket);
-    AObject::connect(s->received, slot(r)::receive);
+    AObject::connect(s->received, AUI_SLOT(r)::receive);
 
 
     testing::InSequence sequence;
@@ -62,7 +62,7 @@ TEST(WebsocketTest, Receive2) {
         // this test slices the payload
         auto r = _new<Receiver>();
         auto s = aui::ptr::manage_shared(new AWebsocket);
-        AObject::connect(s->received, slot(r)::receive);
+        AObject::connect(s->received, AUI_SLOT(r)::receive);
 
 
         testing::InSequence sequence;

@@ -39,7 +39,7 @@ protected:
             mWindow = _new<AWindow>();
             mWindow->show();
         } catch (const AException& e) {
-            do_once { ALogger::info("OpenGLRendererTest") << "GPU is not available; skipping test\n" << e; }
+            AUI_DO_ONCE { ALogger::info("OpenGLRendererTest") << "GPU is not available; skipping test\n" << e; }
             GTEST_SKIP() << "GPU is not available";
         }
     }
@@ -50,7 +50,7 @@ protected:
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {
     EXPECT_TRUE(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
     mWindow->setContents(Centered {
-      _new<AView>() << ".test" with_style {
+      _new<AView>() << ".test" AUI_WITH_STYLE {
         BackgroundSolid { AColor::RED },
         FixedSize { 32_dp },
       },
