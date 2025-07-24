@@ -2,7 +2,6 @@
 
 #include "AUI/AppInfo.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
