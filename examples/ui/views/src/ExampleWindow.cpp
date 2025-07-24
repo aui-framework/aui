@@ -117,7 +117,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             Expanding(1, 0),
           },
       Horizontal {} AUI_LET {
-              mAUI_THREADPOOL << AUI_THREADPOOL {
+              mAsync << AUI_THREADPOOL {
                   auto drawable = IDrawable::fromUrl(
                       "https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
                   AUI_UI_THREAD {
