@@ -47,6 +47,14 @@ inline static AStaticVector<char, 4> toUtf8(char32_t i) {
     return {}; // Invalid Unicode code point
 }
 
+AString::AString(std::span<std::byte> bytes, AStringEncoding encoding) noexcept {
+
+}
+
+AString::AString(AChar c) noexcept {
+    push_back(c);
+}
+
 void AString::push_back(AChar c) noexcept {
     insertAll(::toUtf8(c));
 }
@@ -1147,6 +1155,11 @@ AString AString::processEscapes() const {
         }
     }
     return result;
+}
+
+AString& AString::removeAll(AChar c) noexcept {\
+
+    return *this;
 }
 
 AString AString::excessSpacesRemoved() const noexcept {
