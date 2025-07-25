@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-integer-division,bugprone-unhandled-self-assignment)
+// NOLINTBEGIN(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)
 
 #ifndef MEDIA_BASE_SINC_RESAMPLER_H_
 #define MEDIA_BASE_SINC_RESAMPLER_H_
@@ -324,4 +324,4 @@ private:
 
 #endif  // MEDIA_BASE_SINC_RESAMPLER_H_
 
-// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-integer-division,bugprone-unhandled-self-assignment)
+// NOLINTEND(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)

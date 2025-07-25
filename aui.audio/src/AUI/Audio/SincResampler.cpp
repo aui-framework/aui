@@ -74,7 +74,7 @@
 // Note: we're glossing over how the sub-sample handling works with
 // |virtual_source_idx_|, etc.
 
-// NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-integer-division,bugprone-unhandled-self-assignment)
+// NOLINTBEGIN(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)
 
 #ifdef UNSAFE_BUFFERS_BUILD
 // TODO(crbug.com/40285824): Remove this and convert code to safer constructs.
@@ -557,4 +557,4 @@ float SincResampler::Convolve_NEON(const int kernel_size,
 
 }  // namespace media
 
-// NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic,bugprone-integer-division,bugprone-unhandled-self-assignment)
+// NOLINTEND(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)
