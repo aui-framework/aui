@@ -1119,7 +1119,7 @@ void AString::resizeToNullTerminator() {
 }
 
 AString::size_type AString::size() const noexcept {
-    return 0;
+    return simdutf::count_utf8(super::data(), super::size());
 }
 
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
