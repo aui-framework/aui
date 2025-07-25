@@ -33,7 +33,7 @@ namespace ass {
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
             view->hoveredState.clearAllOutgoingConnectionsWith(helper.get());
-            AObject::connect(view->hoveredState, slot(helper)::onInvalidateStateAss);
+            AObject::connect(view->hoveredState, AUI_SLOT(helper)::onInvalidateStateAss);
         }
     };
 }

@@ -19,7 +19,7 @@ AUI's code should be kept with the following code style:
   for file names, struct name and its member functions.
 - Constructors and setters: move semantics. This allows caller to choose whether copy or move the passed object
 - Use `const`, `noexcept` and `[[nodiscard]]` whenever possible
-- Tend to not to use macros. `UPPER_SNAKE_CASE` prefixed with '`AUI_`'. If the macro is intended to efficiently reduce code size (i.e. `ui_thread` or `async`) it's allowed to consciously name it using `lower_snake_case` without prefix.
+- Tend to not to use macros. `UPPER_SNAKE_CASE` prefixed with '`AUI_`'
 - Use `#pragma once` instead of C-style include guards
 - Use Doxygen (`@`-style, not `\`)
 - Avoid global functions (at least put them to namespaces)

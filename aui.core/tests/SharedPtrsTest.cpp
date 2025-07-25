@@ -60,7 +60,7 @@ TEST(SharedPtrs, Builder1) {
 }
 
 TEST(SharedPtrs, Builder2) {
-    auto builder = _new<SomeBuilderClass>() let {
+    auto builder = _new<SomeBuilderClass>() AUI_LET {
         it->setUsername("John");
         it->setAge(23);
     };

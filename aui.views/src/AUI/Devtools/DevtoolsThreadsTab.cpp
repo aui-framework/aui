@@ -84,16 +84,16 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
 
     auto views = _form({
       {
-        Label { "Thread" } with_style {
+        Label { "Thread" } AUI_WITH_STYLE {
           FontSize { 10_pt },
           Expanding {},
         },
-        Label { "Task Count" } with_style {
+        Label { "Task Count" } AUI_WITH_STYLE {
           FontSize { 10_pt },
           FixedSize { 100_dp, {} },
         },
       },
-    }) with_style {
+    }) AUI_WITH_STYLE {
         LayoutSpacing { 1_px },
     };
 
@@ -102,7 +102,7 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
           _new<ALabel>(thread->threadName()),
           _new<WatcherView>([thread] {
               return thread->messageQueue().messages().size();
-          }) let { connect(mUpdateTimer->fired, slot(it)::update); },
+          }) AUI_LET { connect(mUpdateTimer->fired, AUI_SLOT(it)::update); },
         });
     };
 
@@ -111,7 +111,7 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
       _new<ALabel>("Thread Pool"),
       _new<WatcherView>([&targetThreadPool] {
         return targetThreadPool.getTotalTaskCount();
-      }) let { connect(mUpdateTimer->fired, slot(it)::update); },
+      }) AUI_LET { connect(mUpdateTimer->fired, AUI_SLOT(it)::update); },
     });
 
     setContents(Stacked { AScrollArea::Builder().withContents(Vertical {

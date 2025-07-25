@@ -1211,6 +1211,15 @@ macro(aui_app)
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
+    file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
+    struct AUIAppInfo {
+        AUIAppInfo() {
+            aui::app_info::name = \"${APP_NAME}\";
+        }
+    }; AUIAppInfo auiAppInfo;")
+
+    target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
+
     # defaults
     # ios
     if (NOT APP_IOS_VERSION)

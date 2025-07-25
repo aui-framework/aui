@@ -97,7 +97,7 @@ public:
 
 
 void testing::UITest::SetUp() {
-    do_once {
+    AUI_DO_ONCE {
         testing::UnitTest::GetInstance()->listeners().Append(new MyListener);
     }
     UITestState::beginUITest();

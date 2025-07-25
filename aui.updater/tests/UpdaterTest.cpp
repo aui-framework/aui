@@ -186,8 +186,8 @@ public:
 // AUI_DOCS_CODE_BEGIN
 class MyUpdater : public AUpdater {
 protected:
-    AFuture<void> checkForUpdatesImpl() override { return async { /* stub */ }; }
-    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return async { /* stub */ }; }
+    AFuture<void> checkForUpdatesImpl() override { return AUI_THREADPOOL { /* stub */ }; }
+    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return AUI_THREADPOOL { /* stub */ }; }
 };
 
 AUI_ENTRY {
@@ -322,7 +322,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
 
     protected:
         AFuture<void> checkForUpdatesImpl() override {
-            return async {
+            return AUI_THREADPOOL {
                 try {
                     auto githubLatestRelease = aui::updater::github::latestRelease("aui-framework", "example_app");
                     ALogger::info(LOG_TAG) << "Found latest release: " << githubLatestRelease.tag_name;
@@ -372,7 +372,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
         }
 
         AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override {
-            return async {
+            return AUI_THREADPOOL {
               try {
                   AUI_ASSERTX(!mDownloadUrl.empty(), "make a successful call to checkForUpdates first");
                   downloadAndUnpack(mDownloadUrl, unpackedUpdateDir);

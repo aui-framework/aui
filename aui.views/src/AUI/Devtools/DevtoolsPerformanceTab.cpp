@@ -258,18 +258,18 @@ namespace {
 
         _<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
-                Label { i.name } with_style {
+                Label { i.name } AUI_WITH_STYLE {
                     TextColor { i.color.readableBlackOrWhite() },
                 },
-                Label { "{}μs"_format(duration_cast<microseconds>(i.duration).count()) } with_style {
+                Label { "{}μs"_format(duration_cast<microseconds>(i.duration).count()) } AUI_WITH_STYLE {
                     TextColor { AColor::WHITE.transparentize(0.3f) },
                     BackgroundSolid { AColor::BLACK },
                 },
-                mVerboseMode ? _new<ALabel>(i.verboseInfo) with_style {
+                mVerboseMode ? _new<ALabel>(i.verboseInfo) AUI_WITH_STYLE {
                     TextColor { AColor::WHITE.transparentize(0.3f) },
                     BackgroundSolid { AColor::BLACK },
                 } : nullptr,
-            } with_style {
+            } AUI_WITH_STYLE {
                 BackgroundSolid { i.color },
                 BorderRadius { 6_pt },
                 Margin { 2_dp, 4_dp },
@@ -282,7 +282,7 @@ namespace {
                 return;
             }
             for (const auto& section : sections) {
-                _<AViewContainer> v = Vertical{} with_style {
+                _<AViewContainer> v = Vertical{} AUI_WITH_STYLE {
                     BorderLeft { 2_dp, section.color },
                 };
                 container.addView(v);
@@ -290,7 +290,7 @@ namespace {
                 if (section.children.empty()) {
                     continue;
                 }
-                _<AViewContainer> root = Vertical{} with_style {
+                _<AViewContainer> root = Vertical{} AUI_WITH_STYLE {
                     Padding { {}, {}, {}, 8_dp },
                 };
                 populate(*root, section.children, remainingDepth - 1);
@@ -317,7 +317,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
     auto graphView = _new<GraphView>();
     auto treeView = _new<PerformanceSectionsTreeView>();
 
-    connect(nextFrame, slot(graphView)::onPerformanceFrame);
+    connect(nextFrame, AUI_SLOT(graphView)::onPerformanceFrame);
     connect(nextFrame, treeView, [treeView = treeView.get()](const APerformanceSection::Datas& sections) {
         static high_resolution_clock::time_point lastTimeUpdated;
         auto now = high_resolution_clock::now();
@@ -328,7 +328,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
 
         treeView->onPerformanceFrame(sections);
     }); 
-    connect(graphView->selectionChanged, slot(treeView)::onPerformanceFrame);
+    connect(graphView->selectionChanged, AUI_SLOT(treeView)::onPerformanceFrame);
 
     connect(mState, [=](const State& state) {
       bool isPaused = std::holds_alternative<Paused>(state);
@@ -353,7 +353,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                     treeView,
                 }
             ),
-        } let {
+        } AUI_LET {
             connect(mState, [=](const State& state) {
                 using namespace ass;
                 if (std::holds_alternative<Running>(state)) {
@@ -372,7 +372,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
         },
         Vertical::Expanding {
             Centered {
-                _new<AButton>(/* pause */) let {
+                _new<AButton>(/* pause */) AUI_LET {
                     connect(mState, [=](const State& state) {
                       if (std::holds_alternative<Running>(state)) {
                           it->setText("Pause");

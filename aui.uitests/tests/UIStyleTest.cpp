@@ -37,14 +37,14 @@ protected:
         ALayoutInflater::inflate(
             mWindow,
             Vertical {
-              mView = _new<View>() with_style { MinSize { 10_dp } },
+              mView = _new<View>() AUI_WITH_STYLE { MinSize { 10_dp } },
               Label { "Some bullshit to complicate layout" },
             });
         mWindow->show();
     }
 
     void setupStateStyles() {
-        mView with_style {
+        mView AUI_WITH_STYLE {
             MinSize { 10_dp },
             BackgroundSolid { AColor::BLACK },
 
@@ -115,13 +115,13 @@ TEST_F(UIStyleTest, Opacity) {
     testing::InSequence s;
     using namespace ass;
 
-    mView with_style {
+    mView AUI_WITH_STYLE {
         FixedSize(50_dp),
         BackgroundSolid(AColor::RED),
         Opacity(0),
     };
     By::type<View>().check(averageColor(AColor::WHITE), "view should disappear");
-    mView with_style {
+    mView AUI_WITH_STYLE {
         FixedSize(50_dp),
         BackgroundSolid(AColor::RED),
         Opacity(1),

@@ -185,7 +185,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 //
 // Please check their respective documentation pages for an additional information.
 //
-// # UI data binding with let
+// # UI data binding with AUI_LET
 // @note
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
 // deeper understanding on how connections are made and what does declarative way do under the hood. This way may be
@@ -193,10 +193,10 @@ TEST_F(UIDataBindingTest, TextField1) {
 // @ref "UI_declarative_data_binding".
 //
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
-// a procedural way of setting up connections. As a downside, it requires "let" syntax clause which may seem as overkill
+// a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
 // for such a simple operation.
 TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
-    // Use \c let expression to connect the model's username property to the label's @ref ALabel::text "text()"
+    // Use \c AUI_LET expression to connect the model's username property to the label's @ref ALabel::text "text()"
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -211,7 +211,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
     public:
         MyWindow(const _<User>& user) {
             setContents(Centered {
-                _new<ALabel>() let {
+                _new<ALabel>() AUI_LET {
                   // Data goes from left to right:
                   // current value (pre fire) or changed event
                   // goes to assignment operation of it->text()
@@ -219,7 +219,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
                   //                ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the
                   // same as
-                  // AObject::connect(user->name, slot(it)::setText);
+                  // AObject::connect(user->name, AUI_SLOT(it)::setText);
                   //
                   // if you want user->name to be aware or it->text()
                   // changes (i.e., if it were an editable view
@@ -271,7 +271,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
         MyWindow(const _<User>& user) {
             setContents(Centered {
               // AUI_DOCS_CODE_BEGIN
-              _new<ALabel>() let {
+              _new<ALabel>() AUI_LET {
                   // Data goes from left to right:
                   // current value (pre fire) or changed event
                   // goes through projection (&AString::uppercase) first
@@ -280,7 +280,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
                   AObject::connect(user->name.readProjected(&AString::uppercase), it->text());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
-                  // AObject::connect(user->name.projected(&AString::uppercase), slot(it)::setText);
+                  // AObject::connect(user->name.projected(&AString::uppercase), AUI_SLOT(it)::setText);
 
                   // if view's property gets changed (i.e., by user or by occasional
                   // ALabel::setText), these changes DO NOT reflect on model
@@ -336,7 +336,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
         MyWindow(const _<User>& user) {
             setContents(Centered {
                 // AUI_DOCS_CODE_BEGIN
-                _new<ATextField>() let {
+                _new<ATextField>() AUI_LET {
                   // Data goes from left to right in the first place
                   // (i.e., user->name current value overrides it->text())
                   // if view's property gets changed (i.e., by user),
@@ -488,7 +488,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
             // ranges::views::transform argument.
 
             setContents(Centered {
-              _new<ADropdownList>(gendersStr) let {
+              _new<ADropdownList>(gendersStr) AUI_LET {
                   // AObject::connect(user->gender, it->selectionId());
                   //
                   // The code above would break, because Gender and int
@@ -526,7 +526,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 
 //
 // # UI declarative data binding {#UI_declarative_data_binding}
-// As said earlier, \c let syntax is a little bit clunky and requires extra boilerplate code to set up.
+// As said earlier, \c AUI_LET syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
 // `AObject::connect`/`AObject::biConnect` (for ease of replacement/understanding).
@@ -537,7 +537,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 // - `&` sets up one-directional connection (`AObject::connect`).
 // - `&&` sets up bidirectional connection (`AObject::biConnect`).
 //
-// Also, `>` operator (resembles arrow) is used to specify the destination slot.
+// Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
 //
 // The example below is essentially the same as @ref "UIDataBindingTest_Label_via_let" but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
@@ -588,7 +588,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // @ref "UIDataBindingTest_Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `let`
+    // @ref "UIDataBindingTest_Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
     // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
@@ -600,7 +600,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
 TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H2
     // In previous example we have explicitly specified ALabel's property to connect with.
     //
-    // One of notable features of declarative way (in comparison to procedural `let` way) is that we can omit the view's
+    // One of notable features of declarative way (in comparison to procedural `AUI_LET` way) is that we can omit the view's
     // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
     // type. Some views have already predefined such specialization for their underlying types. For instance, ALabel has
     // such specialization:
@@ -743,7 +743,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
 }
 
 TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
-    // We can use projections in the same way as with `let`.
+    // We can use projections in the same way as with `AUI_LET`.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
     struct User {
@@ -878,7 +878,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     // In some cases, you might want to use property-to-property as it's bidirectional. It's used for populating view
     // from model and obtaining data from view back to the model.
     //
-    // For this example, let's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
+    // For this example, AUI_LET's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
     // `&&` because we do want `user->name` to be aware of changes of the view.
 
     using namespace declarative;
@@ -937,7 +937,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
 }
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
-    // We can use projections in the same way as with `let`.
+    // We can use projections in the same way as with `AUI_LET`.
     //
     // Let's repeat the @ref "UIDataBindingTest_Bidirectional_projection" sample in declarative way:
     using namespace declarative;

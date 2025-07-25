@@ -18,6 +18,8 @@ information.
 
    When you have finished your work, you should open a pull request from the `feat/feature-name` branch of your
    repository to the `develop` branch of the AUI's original repository.
+5. Contributing to AUI, you agree that your code will be released under
+   [AUI's license](https://github.com/aui-framework/aui/blob/master/LICENSE).
 
 # Workflow
 
@@ -29,6 +31,11 @@ and tests.
 
 Merges from `feat/` branch are allowed only to `develop` branch. `develop` is the branch were our actual development
 work happens. When we consider `develop` branch stable enough, we merge `develop` and `master` and create a release.
+
+If you are an external developer (i.e., have no write access to AUI's repository), you will need to create a fork of AUI
+and commit to it. Whilst you can commit to `master` and `develop` branches of your own repository, we still recommend to
+follow feature branch workflow. After you finished your work in your feature branch, open pull request from your feature
+branch to AUI's `develop` branch.
 
 # AI
 
@@ -68,7 +75,7 @@ compensation paid to the external developer who successfully resolves that issue
 
 For information about getting in touch regarding compensation, please refer to the contact details provided in
 our [README](https://github.com/aui-framework/aui/blob/master/README.md). Pick
-[a task](https://github.com/orgs/aui-framework/projects/4/views/1?filterQuery=is%3Aopen+no%3Aassignee) which you want to
+[a task](https://github.com/orgs/aui-framework/projects/4/views/1) which you want to
 resolve before contacting.
 
 ## 1 Point - Minimal Complexity

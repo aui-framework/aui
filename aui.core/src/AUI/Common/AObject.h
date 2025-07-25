@@ -71,7 +71,7 @@ public:
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
-     * connect(view->clicked, slot(otherObjectRawPtr)::handleButtonClicked);
+     * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
      * @endcode
      * @param signal signal
      * @param object instance of <code>AObject</code>
@@ -92,7 +92,7 @@ public:
      *
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
-     * connect(textField->text(), slot(otherObjectRawPtr)::handleText);
+     * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
      * @endcode
      * @param property property
      * @param object instance of <code>AObject</code>
@@ -166,7 +166,7 @@ public:
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
-     * connect(view->clicked, slot(otherObjectRef)::handleButtonClicked);
+     * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
      * @endcode
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
@@ -204,8 +204,8 @@ public:
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
-     * connect(view->clicked, slot(otherObjectSharedPtr)::handleButtonClicked);
-     * connect(textField->text(), slot(otherObjectSharedPtr)::handleText);
+     * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
+     * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
      * @endcode
      * @note
      * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
@@ -231,14 +231,14 @@ public:
      * @details
      * See @ref signal_slot "signal-slot system" for more info.
      * @code{cpp}
-     * connect(view->clicked, ASlotDef { slot(otherObject)::handleButtonClicked });
-     * connect(textField->text(), ASlotDef { slot(otherObject)::handleText });
+     * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
+     * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
      * @endcode
      * @note
-     * This overload is applicable for cases when you NEED to pass object and its slot via single argument. If possible,
+     * This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If possible,
      * consider using shorter overload:
      * @code{cpp}
-     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
      * @endcode
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>

@@ -70,7 +70,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     _<AViewContainer> dst = Vertical {
         Horizontal {
           Vertical {
-            _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
+            _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
             Horizontal {
               Label { addressStr },
               Button { .content = "Copy", .onClick = [addressStr] { AClipboard::copyToClipboard(addressStr); } },
@@ -88,7 +88,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                         setTargetView(targetView);
                         targetView->addAssName("DevtoolsTest");
                     },
-              } let { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
+              } AUI_LET { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
             },
             CheckBoxWrapper {
               Label { "Expanding" },
@@ -102,7 +102,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                  }),
             GroupBox {
               Label { "Visibility" },
-              _new<ARadioGroup>() let {
+              _new<ARadioGroup>() AUI_LET {
                   static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
                       POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
@@ -153,12 +153,12 @@ void ViewPropertiesView::displayApplicableRule(
     const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style { Opacity { 0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_WITH_STYLE { Opacity { 0.7f } });
     }
     dst->addView(Horizontal {
       _new<ALabel>("},") << ".declaration_br",
     });
-    dst->addView(_new<AHDividerView>() with_style {
+    dst->addView(_new<AHDividerView>() AUI_WITH_STYLE {
       BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
 }
 

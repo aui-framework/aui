@@ -575,7 +575,7 @@ void AView::focus(bool needFocusChainUpdate) {
 
     notifyParentChildFocused(mySharedPtr);
 
-    ui_threadX [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+    AUI_UI_THREAD_X [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
         auto window = mySharedPtr->getWindow();
         if (!window) {
             return;
@@ -829,7 +829,7 @@ AString AView::debugString() const {
 }
 
 void AView::forceUpdateLayoutRecursively() {
-    do_once {
+    AUI_DO_ONCE {
         ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
     }
     mMarkedMinContentSizeInvalid = true;

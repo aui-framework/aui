@@ -55,7 +55,7 @@ protected:
         uitest::frame();
     }
 
-    _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} }, LineHeight { 1.f } } let {
+    _<ATextArea> mTextArea = _new<ATextArea>() AUI_WITH_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
         it->setText("hello world!\nsecond line");
     };
 
@@ -366,7 +366,7 @@ TEST_F(UITextArea, NextLineCursorPos) {
 
 TEST_F(UITextArea, ScrollAreaFollowsCursor) {
     AWindow::current()->setContents(Centered {
-        AScrollArea::Builder().withContents(mTextArea).build() with_style { FixedSize(200_dp, 100_dp) },
+        AScrollArea::Builder().withContents(mTextArea).build() AUI_WITH_STYLE { FixedSize(200_dp, 100_dp) },
     });
     mTextArea->setText("");
     By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));

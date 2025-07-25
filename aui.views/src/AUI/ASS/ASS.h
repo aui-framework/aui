@@ -113,25 +113,25 @@
  * });
  * @endcode
  *
- * ## Using with_style
+ * ## Using AUI_WITH_STYLE
  * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue
- * background, using with_style:
+ * background, using AUI_WITH_STYLE:
  *
  * @code{cpp}
  * using namespace ass;
  * setContents(Centered{
- *   Label { "Hello" } with_style {
+ *   Label { "Hello" } AUI_WITH_STYLE {
  *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
- *   Label { "World" } with_style {
+ *   Label { "World" } AUI_WITH_STYLE {
  *     BackgroundSolid { 0x0000ff_rgb },
  *   },
  * })
  * @endcode
  *
  * ## Using setCustomStyle
- * In case with_style is not applicable, you may use setCustomStyle instead.
+ * In case AUI_WITH_STYLE is not applicable, you may use setCustomStyle instead.
  *
  * @code{cpp}
  * using namespace ass;

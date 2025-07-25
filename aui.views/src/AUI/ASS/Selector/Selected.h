@@ -65,7 +65,7 @@ namespace ass {
             mWrapped->setupConnections(view, helper);
 
             view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
-            AObject::connect(view->customCssPropertyChanged, slot(helper)::onInvalidateStateAss);
+            AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);
         }
     };
 }

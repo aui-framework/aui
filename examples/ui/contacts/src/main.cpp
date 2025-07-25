@@ -42,7 +42,7 @@ public:
                       .withContents(
                           Vertical {
                             _new<ATextField>() && mSearchQuery,
-                            AText::fromString(predefined::DISCLAIMER) with_style { ATextAlign::CENTER },
+                            AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             CustomLayout {} & mSearchQuery.readProjected([&](const AString& q) {
                                 if (q.empty()) {
@@ -52,9 +52,9 @@ public:
                             }),
                             Label { AUI_REACT("{} contact(s)"_format(mContactCount)) }
                                 & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
-                                 with_style { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
-                          } with_style { Padding(0, 8_dp) })
-                      .build() with_style { Expanding(0, 1), MinSize(200_dp) },
+                                 AUI_WITH_STYLE { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
+                          } AUI_WITH_STYLE { Padding(0, 8_dp) })
+                      .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
               CustomLayout::Expanding {} & mSelectedContact.readProjected([this](const _<Contact>& selectedContact) -> _<AView> {
                   auto editor = contactDetails(selectedContact);
@@ -65,8 +65,8 @@ public:
                       connect(editor->deleteAction, me::deleteCurrentContact);
                   }
                   return editor;
-              }) with_style { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
-            } with_style {
+              }) AUI_WITH_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
+            } AUI_WITH_STYLE {
               Padding(0),
             });
     }
@@ -102,7 +102,7 @@ private:
             auto firstLetter = groupLetter(firstContact->displayName);
             ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
             return Vertical {
-                Label { firstLetter } with_style {
+                Label { firstLetter } AUI_WITH_STYLE {
                                         Opacity(0.5f),
                                         Padding { 12_dp, 0, 4_dp },
                                         Margin { 0 },
@@ -133,9 +133,9 @@ private:
 
     _<AView> contactPreview(const _<Contact>& contact) {
         return Vertical {
-            Label { AUI_REACT(contact->displayName) } with_style { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
+            Label { AUI_REACT(contact->displayName) } AUI_WITH_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
-        } let {
+        } AUI_LET {
             connect(it->clicked, [this, contact] { mSelectedContact = contact; });
         };
     }

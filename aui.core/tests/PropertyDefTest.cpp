@@ -93,7 +93,7 @@ TEST_F(PropertyDefTest, Declaration) {
         EXPECT_CALL(mock, log(testing::_)).Times(2);
         // AUI_DOCS_CODE_BEGIN
         User u;
-        AObject::connect(u.name().changed, slot(mock)::log); // HIDE
+        AObject::connect(u.name().changed, AUI_SLOT(mock)::log); // HIDE
         u.name() = "Hello";
         u.name() += " world!";
         EXPECT_EQ(u.name(), "Hello world!");
@@ -146,7 +146,7 @@ TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H1
         auto u = _new<User>();
         u->name() = "Chloe";
         // ...
-        AObject::connect(u->name().changed, slot(observer)::log);
+        AObject::connect(u->name().changed, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         EXPECT_CALL(*observer, log(AString("Marinette")));
         // AUI_DOCS_CODE_BEGIN
@@ -168,7 +168,7 @@ TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H1
         auto u = _new<User>();
         u->name() = "Chloe";
         // ...
-        AObject::connect(u->name(), slot(observer)::log);
+        AObject::connect(u->name(), AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
         // @code

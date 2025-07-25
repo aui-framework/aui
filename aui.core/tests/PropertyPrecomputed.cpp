@@ -72,7 +72,7 @@ TEST_F(PropertyPrecomputedTest, APropertyPrecomputed) {
 
     auto observer = _new<LogObserver>();
     EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1);
-    AObject::connect(u->fullName, slot(observer)::log);
+    AObject::connect(u->fullName, AUI_SLOT(observer)::log);
     // AUI_DOCS_CODE_END
     EXPECT_EQ(u->fullName, "Emma Watson");
     //
