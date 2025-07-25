@@ -1118,6 +1118,10 @@ void AString::resizeToNullTerminator() {
     resize(i - data());
 }
 
+AString::size_type AString::size() const noexcept {
+    return 0;
+}
+
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
         return substr(0, s) + stringAtEnd;

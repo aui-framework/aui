@@ -531,9 +531,7 @@ public:
     [[nodiscard]] bool empty() const noexcept {
         return super::empty();
     }
-    [[nodiscard]] size_type size() const noexcept {
-        return super::size();
-    }
+    [[nodiscard]] size_type size() const noexcept;
     char operator[](size_type index) const
     {
         return super::at(index);
@@ -656,6 +654,12 @@ public:
         return *this;
     }
 
+    [[nodiscard]]
+    size_t sizeInBytes() const noexcept
+    {
+        return size() * sizeof(super::value_type);
+    }
+
     AString& operator=(const AString& value) noexcept
     {
         super::operator=(value);
@@ -675,28 +679,14 @@ public:
         }
         return std::memcmp(data(), other.data(), sizeInBytes()) == 0;
     }
-    bool operator==(const char* other) const noexcept
-    {
-        return static_cast<super>(*this) == other;
-    }
-
-    [[nodiscard]]
-    size_t sizeInBytes() const noexcept {
-        return size() * sizeof(super::value_type);
-    }
-
     bool operator!=(const AString& other) const noexcept
     {
         return !operator==(other);
     }
-    bool operator!=(const char16_t* other) const noexcept
-    {
-        return !operator==(other);
-    }
 
     bool operator==(const char* other) const noexcept
     {
-        return *this == AString(other);
+        return static_cast<super>(*this) == other;
     }
 
     bool operator!=(const char* other) const noexcept
