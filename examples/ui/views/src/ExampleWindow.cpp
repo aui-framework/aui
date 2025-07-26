@@ -126,6 +126,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_WITH_STYLE {
             Expanding(1, 0),
           },
+      Label { "Pidori\nEbanie" },
       Horizontal {} AUI_LET {
               mAsync << AUI_THREADPOOL {
                   auto drawable = IDrawable::fromUrl(

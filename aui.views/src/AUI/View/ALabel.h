@@ -18,7 +18,9 @@
  * @brief Represents a simple single-line text display view.
  * @ingroup useful_views
  * @details
- * Label is a fundamental view for displaying single line text.
+ * Label is a basic UI component designed primarily for displaying text in a single line. While you can add line breaks
+ * using `\n` to create multi-line text, it's better to use @ref AText instead, which has proper line-breaking
+ * capabilities.
  *
  * @image html docs/imgs/ALabel.png A label.
  *

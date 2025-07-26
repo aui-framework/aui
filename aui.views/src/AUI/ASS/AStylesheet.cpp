@@ -255,7 +255,7 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp },
+            Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },

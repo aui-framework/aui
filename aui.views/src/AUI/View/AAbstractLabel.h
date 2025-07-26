@@ -55,11 +55,13 @@ public:
 
     AString toString() const override;
 
+    [[deprecated("rudimentary API")]]
     void setIcon(const _<IDrawable>& drawable) {
         mIcon = drawable;
         redraw();
     }
 
+    [[deprecated("rudimentary API")]]
     void setIconColor(const AColor& iconColor) {
         mIconColor = iconColor;
     }
@@ -121,6 +123,7 @@ private:
     _<IDrawable> mIcon;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
+
     AColor mIconColor = {1, 1, 1, 1};
 
     glm::ivec2 getIconSize() const;
