@@ -3,7 +3,7 @@
 @auiexample{ui}
 Minimal UI boilerplate template.
 
-![Minimal UI boilerplate template window](https://github.com/aui-framework/aui/blob/develop/examples/ui/minimal_ui/minimal-template.png?raw=true)
+@image html examples/ui/minimal_ui/minimal-template.png
 
 # Source Files
 ## Project Structure
