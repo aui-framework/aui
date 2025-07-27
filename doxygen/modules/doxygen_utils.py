@@ -9,6 +9,7 @@
 import subprocess
 
 from modules.config import CONFIG
+from modules import common
 
 
 def doxygen_is_interesting_error(line):
@@ -48,6 +49,6 @@ def invoke():
         print(i)
     if count > 0:
         print(f"Error: doxygen failed: {count} error(s).")
-        global error_flag
-        error_flag = True
+        common.error_flag = True
+
 
