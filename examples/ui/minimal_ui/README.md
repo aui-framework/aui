@@ -8,14 +8,26 @@ Minimal UI boilerplate template.
 # Source Files
 ## Project Structure
 
-```mermaid
-graph TD
-    A[project_template_ui/] --> B[CMakeLists.txt]
-    A --> C[src/]
-    C --> D[MainWindow.h]
-    C --> E[MainWindow.cpp]
-    C --> F[main.cpp]
-```
+\dot
+digraph project_structure {
+    rankdir=TD;
+    node [shape=box];
+
+    A [label="project_template_ui/"];
+    B [label="CMakeLists.txt"];
+    C [label="src/"];
+    D [label="MainWindow.h"];
+    E [label="MainWindow.cpp"];
+    F [label="main.cpp"];
+
+    A -> B;
+    A -> C;
+    C -> D;
+    C -> E;
+    C -> F;
+}
+\enddot
+
 ---
 ## CMakeLists.txt
 ```cmake
