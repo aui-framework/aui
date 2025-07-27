@@ -14,6 +14,8 @@ from pathlib import Path
 from modules import regexes
 from modules.config import CONFIG
 from bs4 import BeautifulSoup as soup
+from re import compile, escape, sub
+import json
 
 def tag(name, content=None, **kwargs):
     global s
@@ -31,18 +33,51 @@ def tag(name, content=None, **kwargs):
 def fa(name):
     return tag("i", **{"class": f"fa {name}"})
 
-def find_definition(contents):
-    for root, dirs, files in os.walk(Path.cwd()):
-        for file in files:
-            if not file.endswith(".h"):
-                continue
-            full_path = Path(root) / file
-            with open(full_path, 'r') as fis:
-                for line_number, line_contents in enumerate(fis.readlines()):
-                    if contents in line_contents:
-                        return f"{full_path.relative_to(Path.cwd())}#L{line_number+1}"
+_group_map = None  # module‐level cache
 
-    raise RuntimeError(f"can't find location of {contents}")
+def find_definition(contents: str, search_dirs=None):
+    repo_root = Path.cwd()
+    inter     = repo_root / "doxygen" / "intermediate"
+    dox_path  = inter / "groups.dox"
+    json_path = inter / "groups.json"
+
+    # 1) Try JSON lookup for @defgroup
+    if contents.startswith("@defgroup "):
+        gid = contents.split(None, 1)[1].strip()
+
+        global _group_map
+        if _group_map is None:
+            if not json_path.exists():
+                raise RuntimeError(f"{json_path} missing—regenerate your groups JSON")
+            _group_map = json.loads(json_path.read_text(encoding="utf-8"))
+
+        if gid in _group_map:
+            return f"{dox_path.relative_to(repo_root).as_posix()}#L{_group_map[gid]}"
+        else:
+            print(f"  ↪ '{gid}' not in JSON map, falling back to full scan")
+
+    # 2) Fallback: brute‐force scan .h/.hpp/.dox
+    pattern = compile(r'(?<!\w)' + escape(contents) + r'(?!\w)')
+    search_dirs = search_dirs or [repo_root, repo_root / "doxygen" / "intermediate"]
+
+    for base in search_dirs:
+        if not base.exists():
+            continue
+
+        for ext in ("*.h", "*.hpp", "*.dox"):
+            for path in base.rglob(ext):
+                try:
+                    lines = path.read_text(encoding="utf-8").splitlines()
+                except UnicodeDecodeError:
+                    continue
+
+                for idx, line in enumerate(lines, start=1):
+                    if pattern.search(line):
+                        rel = path.relative_to(repo_root).as_posix()
+                        print(f"found in {rel}#L{idx}")
+                        return f"{rel}#L{idx}"
+
+    raise RuntimeError(f"Can't find location of {contents}")
 
 
 def run():
@@ -67,13 +102,20 @@ def run():
 
             def aui_source_location():
                 stem = full_path.stem
+                if not (stem.startswith("UI") and stem.endswith("Test")):
+                    return None
+
                 if stem.startswith("md"):
                     possible_location = Path(stem[3:].replace('_01', ' ').replace('_2', '/').replace('_', '/') + ".md")
                     if possible_location.exists():
                         return possible_location
 
                 if stem.startswith("group__"):
-                    return find_definition("@defgroup " + stem[7:].replace("__", "_"))
+                    core = stem.removeprefix("UI").removesuffix("Test")
+                    # CamelCase → snake_case
+                    gid = sub(r"([a-z0-9])([A-Z])", r"\1_\2", core).lower()
+                    return find_definition(f"@defgroup {gid}")
+                    # return find_definition("@defgroup " + stem[7:].replace("__", "_"))
 
 
 

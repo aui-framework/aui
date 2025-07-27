@@ -9,11 +9,23 @@
 
 import re
 
-DIR = re.compile(r'.*(aui\..+)/tests')
+# Match any path containing aui.<module>/tests (or aui.<module>\tests)
+DIR = re.compile(
+    r'.*(aui\.[^/\\]+)[/\\]tests(?:[/\\]|$)',
+    re.IGNORECASE
+)
 assert DIR.match("/home/aui.views/tests")
+assert DIR.match(r"C:\projects\aui.core\tests\example.cpp")
 assert not DIR.match("/home/aui.views/src")
 
-AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
+# Match lines like: // AUI_DOCS_OUTPUT: path/to/output
+# Allow optional spaces, CRLF or LF, and find it anywhere in the file
+AUI_DOCS_OUTPUT = re.compile(
+    r'^\s*//\s*AUI_DOCS_OUTPUT:\s*(.+)$',
+    re.MULTILINE
+)
+assert AUI_DOCS_OUTPUT.search("// AUI_DOCS_OUTPUT: foo/bar.md\n")
+assert AUI_DOCS_OUTPUT.search("   //AUI_DOCS_OUTPUT: C:\\out\\file.txt\r\n")
 
 COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 assert COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")

@@ -9,8 +9,10 @@
 import os
 import subprocess
 from pathlib import Path
-
+from sys import executable
 from modules import regexes
+import re
+import json
 
 CATEGORIES = [
     ('app', "Application Examples", "These examples typically go beyond single-file projects and delve into more substantial applications that showcase how multiple techniques can be integrated to create nearly production-ready applications. Each example not only demonstrates specific features of the AUI Framework but also covers practical aspects such as dependency management, data binding and user interface customization."),
@@ -22,30 +24,53 @@ CATEGORIES = [
 
 def docs_from_gen():
     BASE_DIR = Path('doxygen/gen')
+    intermediate_dir = os.path.join("doxygen", "intermediate")
+    os.makedirs(intermediate_dir, exist_ok=True)
     for script_filename in os.listdir(BASE_DIR):
         if not script_filename.endswith('.py'):
             continue
         with open(f'doxygen/intermediate/{script_filename[:-3]}.md', 'wb') as fos:
-            process = subprocess.run(f'python3 {BASE_DIR / script_filename}', shell=True, capture_output=True)
+            process = subprocess.run([executable, BASE_DIR / script_filename], shell=True, capture_output=True)
             if process.returncode != 0:
                 raise RuntimeError(f'Python subprocess failed: {process.stderr.decode("utf-8")}')
             fos.write(process.stdout)
 
 
 
-def scan_cpp_files(path: Path):
+def scan_cpp_files(root_path):
     """
-    # scans aui.*/tests/**.cpp files for the following line:
-    #
-    # // AUI_DOCS_OUTPUT: <path>
+    Yields every .cpp under any aui.* /tests/** directory
+    that contains a line matching regexes.AUI_DOCS_OUTPUT.
+
+    Works seamlessly on Windows (backslashes) or Linux (slashes).
     """
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.endswith('.cpp') and regexes.DIR.match(root):
-                with open(Path(root) / file, 'r') as f:
-                    for line in f.readlines():
-                        if regexes.AUI_DOCS_OUTPUT.match(line):
-                            yield Path(root) / file
+    base = Path(root_path)
+    print(base)
+
+    # 1) Glob for all .cpp files
+    for cpp in base.rglob("*.cpp"):
+        parts = cpp.parts  # tuple of path components
+
+        # 2) Must live under tests/ and under an aui.* module
+        #    e.g.: .../aui.core/tests/... or ...\aui.views\tests\...
+        if "tests" not in parts:
+            continue
+
+        # module dir is the segment immediately before 'tests'
+        idx = parts.index("tests")
+        if idx == 0 or not parts[idx - 1].startswith("aui."):
+            continue
+        print(cpp)
+
+        # 3) Scan the file for your marker
+        try:
+            text = cpp.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            # skip binary or non-utf8 files
+            continue
+
+        if regexes.AUI_DOCS_OUTPUT.search(text):
+            yield cpp
 
 
 def process_code_begin(iter):
@@ -173,11 +198,105 @@ def docs_from_tests():
     from real tests.
     """
 
-    suitable_cpp_files = [i for i in scan_cpp_files(Path.cwd())]
-    print('Tests to generate docs from:', suitable_cpp_files)
-    for path in suitable_cpp_files:
+    root = Path.cwd()
+    print(root)
+    cpp_files = list(scan_cpp_files(root))
+    print("Tests to generate docs from:", cpp_files)
+    for path in cpp_files:
         process_cpp_file(path)
 
+def slugify(text: str) -> str:
+    """
+    Make a lowercase, underscore-separated ID:
+    "AUI Box Model" → "aui_box_model"
+    """
+    return re.sub(r'[^0-9a-z]+', '_', text.lower()).strip('_')
+
+def human_title(cat_id: str) -> str:
+    """
+    Turn 'property_system' → 'Property System'.
+    """
+    return ' '.join(part.capitalize() for part in cat_id.split('_'))
+
+
+def generic_desc(cat_id: str) -> str:
+    """
+    Stock description for each category.
+    """
+    return f"Examples demonstrating {human_title(cat_id)}."
+
+def write_groups_file_with_tests(
+    examples_dir: Path,
+    tests_dir: Path,
+    out_dir: Path
+) -> Path:
+    """
+    - Scan examples_dir for '@auiexample{Category}' to collect example_cats.
+    - Scan tests_dir for UI*Test classes to collect test_cats.
+    - Emit doxygen/intermediate/groups.dox with @defgroup for every category.
+    - Emit a JSON mapping groups.json: { group_id: line_number }.
+    """
+    # 1) Collect example categories from README.md files
+    example_cats = set()
+    for readme in examples_dir.rglob("README.md"):
+        for line in readme.read_text(encoding="utf-8").splitlines():
+            m = regexes.AUI_EXAMPLE.search(line)
+            if m:
+                example_cats.add(m.group(1).strip())
+
+    # 2) Collect test categories from .cpp filenames
+    test_cats = set()
+    for cpp in tests_dir.rglob("*.cpp"):
+        stem = cpp.stem
+        if stem.startswith("UI") and stem.endswith("Test"):
+            core = stem[len("UI") : -len("Test")]
+            # CamelCase → snake_case
+            snake = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", core).lower()
+            test_cats.add(snake)
+
+    # Merge both sets
+    all_cats = example_cats.union(test_cats)
+    if not all_cats:
+        raise RuntimeError("No categories found in examples or tests!")
+
+    # Prepare output files
+    out_dir.mkdir(parents=True, exist_ok=True)
+    groups_dox  = out_dir / "groups.dox"
+    groups_json = out_dir / "groups.json"
+
+    mapping = {}
+    line_no = 1
+
+    # Write the .dox file
+    with groups_dox.open("w", encoding="utf-8") as fos:
+        fos.write("/**\n")
+        fos.write(" * @file\n")
+        fos.write(" * @brief Auto-generated group definitions\n")
+        fos.write(" */\n\n")
+        line_no += 4
+
+        for cat in sorted(all_cats):
+            gid   = slugify(cat)
+            title = human_title(cat)
+            # Choose description based on origin
+            if cat in example_cats:
+                desc = generic_desc(cat)
+            else:
+                desc = f"Tests for {title}."
+            # Emit group block
+            fos.write("/**\n");            line_no += 1
+            fos.write(f" * @defgroup {gid} {title}\n")
+            mapping[gid] = line_no
+            line_no += 1
+
+            fos.write(f" * @brief {desc}\n"); line_no += 1
+            fos.write(" */\n\n");            line_no += 2
+
+    # Write the JSON map
+    with groups_json.open("w", encoding="utf-8") as jf:
+        json.dump(mapping, jf, indent=2)
+
+    return groups_dox
 
 def docs_examples():
     EXAMPLES_DIR = Path.cwd() / "examples"
@@ -188,8 +307,8 @@ def docs_examples():
         for file in files:
             if not file == "README.md":
                 continue
-            example_path = str(Path(root).relative_to(EXAMPLES_DIR))
-            if not "/" in example_path:
+            example_path = Path(root).relative_to(EXAMPLES_DIR).as_posix()
+            if example_path == ".":
                 continue
             example_path = example_path.replace("/", "_")
 
@@ -293,6 +412,10 @@ def docs_examples():
             for id, description in sorted(category_list, key=lambda x: x[0]):
                 fos.write(f"| @ref {id} | {description} |\n")
             fos.write("\n\n")
+        groups_file = write_groups_file_with_tests(
+        examples_dir=Path.cwd() / "examples",
+        tests_dir=Path.cwd() / "tests",
+        out_dir=Path.cwd() / "doxygen" / "intermediate")
 
 
 
