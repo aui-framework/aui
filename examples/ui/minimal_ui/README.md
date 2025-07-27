@@ -3,7 +3,7 @@
 @auiexample{ui}
 Minimal UI boilerplate template.
 
-@image html examples/ui/minimal_ui/minimal-template.png
+@image html docs/imgs/minimal-template.png
 
 # Source Files
 ## Project Structure
@@ -84,7 +84,7 @@ MainWindow::MainWindow(): AWindow("Project template app", 300_dp, 200_dp) {
 }
 ```
 
-## main.cpp
+## src/main.cpp
 ```cpp
 #include <AUI/Platform/Entry.h>
 #include "MainWindow.h"
