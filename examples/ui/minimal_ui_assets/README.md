@@ -9,9 +9,9 @@ Minimal UI boilerplate template with @ref assets.
 ## Project Structure
 
 @mermaid{project_structure_minimal_assets_example}
+
 ---
 ## CMakeLists.txt
-
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
