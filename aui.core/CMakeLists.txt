@@ -22,6 +22,7 @@ else()
     )
 endif()
 target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
+target_compile_definitions(aui.core PUBLIC GLM_ENABLE_EXPERIMENTAL=1)
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
