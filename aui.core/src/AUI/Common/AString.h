@@ -107,6 +107,11 @@ public:
 
     AString(AChar c) noexcept;
 
+    AString(const AByteBuffer& buffer, AStringEncoding encoding);
+    AString(const AByteBufferView& buffer, AStringEncoding encoding);
+    AString(const char* buffer, size_t length, AStringEncoding encoding);
+    AString(const char* buffer, AStringEncoding encoding);
+
     explicit AString(const std::allocator<value_type>& allocator) noexcept
             : super(allocator)
     {
@@ -403,13 +408,6 @@ public:
         return find(other) != npos;
     }
 
-    static AString fromLatin1(const AByteBuffer& buffer);
-    static AString fromUtf8(const AByteBufferView& buffer);
-    static AString fromUtf8(const char* buffer, size_t length);
-    static AString fromUtf16(const AByteBufferView& buffer);
-    static AString fromUtf16(const char* buffer, size_t length);
-    static AString fromLatin1(const char* buffer);
-
     static AString numberHex(int i) noexcept;
 
     template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
@@ -449,7 +447,6 @@ public:
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
     }
 
-
     /**
      * @return utf8-encoded std::string.
      */
@@ -477,9 +474,7 @@ public:
         return *this;
     }
 
-    AByteBuffer toUtf8() const noexcept;
-
-    AByteBuffer toUtf16() const noexcept;
+    AByteBuffer getBytes(AStringEncoding encoding = AStringEncoding::UTF8) const noexcept;
 
     void removeAt(unsigned at) noexcept
     {
@@ -691,7 +686,7 @@ public:
 
     bool operator!=(const char* other) const noexcept
     {
-        return *this != AString(other);
+        return !operator==(other);
     }
 
     template<typename... Args>

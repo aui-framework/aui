@@ -23,6 +23,8 @@ private:
 public:
     AChar(char c): mValue(c) {}
 
+    AChar(char32_t c): mValue(c) {}
+
     [[nodiscard]]
     bool digit() const {
         return mValue >= '0' && mValue <= '9';
@@ -40,7 +42,7 @@ public:
 
     [[nodiscard]]
     char asAscii() const {
-        return char(mValue);
+        return static_cast<char>(mValue);
     }
 
     operator char32_t() const {

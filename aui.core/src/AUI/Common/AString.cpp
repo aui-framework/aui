@@ -55,84 +55,25 @@ AString::AString(AChar c) noexcept {
     push_back(c);
 }
 
+AString::AString(const AByteBuffer& buffer, AStringEncoding encoding) {
+
+}
+AString::AString(const AByteBufferView& buffer, AStringEncoding encoding) {
+
+}
+AString::AString(const char* buffer, size_t length, AStringEncoding encoding) {
+
+}
+AString::AString(const char* buffer, AStringEncoding encoding) {
+
+}
+
 void AString::push_back(AChar c) noexcept {
     insertAll(::toUtf8(c));
 }
 
-AString AString::fromUtf8(const AByteBufferView& buffer) {
-    return AString(buffer.data(), buffer.size());
-}
-
-AString AString::fromUtf8(const char* buffer, size_t length) {
-    return AString(buffer, length);
-}
-
-AString AString::fromUtf16(const AByteBufferView& buffer) {
-
-}
-AString AString::fromUtf16(const char* buffer, size_t length) {
-
-}
-
-
-AByteBuffer AString::toUtf8() const noexcept
-{
-    AByteBuffer buf;
-    for (auto it = begin(); it != end();)
-    {
-        auto c = *it;
-        if (c < 0x80) {
-            buf << static_cast<char>(c);
-            ++it;
-            continue;
-        }
-
-        if (c < 0x800) {
-            char b[] = {
-                static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
-                static_cast<char>(0b10000000 | (c      & 0b111111)),
-                0,
-            };
-            buf << b;
-            ++it;
-            continue;
-        }
-
-        if (c < 0xD800) {
-            char b[] = {
-                static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
-                static_cast<char>(0b10000000 | (c >> 6  & 0b111111)),
-                static_cast<char>(0b10000000 | (c       & 0b111111)),
-                0,
-            };
-            buf << b;
-            ++it;
-            continue;
-        }
-
-        {
-            const auto c = fromUtf16(it, end());
-
-            char b[] = {
-                    static_cast<char>(0b11110000 | (c >> 18 & 0b111)),
-                    static_cast<char>(0b10000000 | (c >> 12 & 0b111111)),
-                    static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
-                    static_cast<char>(0b10000000 | (c & 0b111111)),
-                    0,
-            };
-            buf << b;
-        }
-    }
-    return buf;
-}
-
-AByteBuffer AString::toUtf16() const noexcept {
-    size_t expected_utf16words = simdutf::utf16_length_from_utf8(data(), size());
-    AByteBuffer utf16_output(expected_utf16words * 2);
-    if (simdutf::convert_utf8_to_utf16le(data(), size(), reinterpret_cast<char16_t*>(utf16_output.data())) == 0) {
-        return {};
-    }
-    return utf16_output;
+AByteBuffer AString::getBytes(AStringEncoding encoding) const noexcept {
+    return {};
 }
 
 AStringVector AString::split(char16_t c) const noexcept
@@ -246,21 +187,6 @@ AString AString::replacedAll(const AString& from, const AString& to) const
     return result;
 }
 
-AString AString::fromLatin1(const AByteBuffer& buffer)
-{
-    return {buffer.begin(), buffer.end() };
-}
-
-
-AString AString::fromLatin1(const char* buffer) {
-    AString s;
-    for (; *buffer; ++buffer)
-        s.push_back(*buffer);
-
-    return s;
-}
-
-
 AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
     int result = 0;
     const auto NUMBER_LAST = std::min(int('0' + int(base) - 1), int('9'));
@@ -291,12 +217,7 @@ AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noex
 
 std::string AString::toStdString() const noexcept
 {
-    auto encoded = toUtf8();
-    std::string dst;
-    dst.reserve(encoded.getSize());
-    dst.insert(0, encoded.data(), encoded.getSize());
-
-    return dst;
+    return *this;
 }
 
 AString AString::uppercase() const {
@@ -1161,7 +1082,7 @@ AString AString::processEscapes() const {
     return result;
 }
 
-AString& AString::removeAll(AChar c) noexcept {\
+AString& AString::removeAll(AChar c) noexcept {
 
     return *this;
 }
