@@ -39,7 +39,13 @@ namespace aui::enumerate::basic {
 
         AString result(begin, end);
 #else
+        #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
             AString s = __PRETTY_FUNCTION__;
+        #elif defined(__FUNCSIG__)
+            AString s = __FUNCSIG__;
+        #else
+            AString s = __FUNCTION__;
+        #endif
 #if AUI_COMPILER_CLANG
             auto end = s.rfind(']');
 #else
