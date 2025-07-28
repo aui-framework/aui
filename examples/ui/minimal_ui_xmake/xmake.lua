@@ -18,11 +18,12 @@ target("aui-minimal-example")
     add_includedirs("src")
     -- Add AUI package to target while linking only required components
     add_packages("aui", {components = {"core", "image", "views", "xml"}})
-    -- Add defines that point to your OS
+    -- Add defines that point to your OS and link against required syslinks/frameworks
     if is_plat("windows") then
         add_defines(
             "AUI_PLATFORM_WIN=1", "AUI_PLATFORM_LINUX=0", "AUI_PLATFORM_APPLE=0"
         )
+        add_syslinks("gdi32", "ole32")
     elseif is_plat("linux") then
         add_defines(
             "AUI_PLATFORM_WIN=0", "AUI_PLATFORM_LINUX=1", "AUI_PLATFORM_APPLE=0"
@@ -36,5 +37,3 @@ target("aui-minimal-example")
     add_defines(
         "API_AUI_VIEWS=AUI_IMPORT", "API_AUI_IMAGE=AUI_IMPORT"
     )
-    -- Link required syslinks
-    add_syslinks("gdi32", "ole32")
