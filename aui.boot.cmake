@@ -130,7 +130,7 @@ if (APPLE)
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
     # [RPATH apple]
 elseif(UNIX AND NOT ANDROID)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
     endif()
     # [RPATH linux]
@@ -155,8 +155,8 @@ else()
     set(HOME_DIR $ENV{HOME})
 endif()
 
-if (NOT CMAKE_CXX_COMPILER_ID)
-    message(FATAL_ERROR "CMAKE_CXX_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
+if (NOT CMAKE_C_COMPILER_ID)
+    message(FATAL_ERROR "CMAKE_C_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
 endif()
 
 if (ANDROID_ABI)
@@ -178,7 +178,7 @@ else()
     else ()
         set(AUI_TARGET_ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
     endif()
-    string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
+    string(TOLOWER "${CMAKE_C_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
