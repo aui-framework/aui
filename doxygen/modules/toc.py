@@ -52,7 +52,7 @@ def find_definition(contents: str, search_dirs=None):
         if _group_map is None:
             if not json_path.exists():
                 raise RuntimeError(f"{json_path} missing—regenerate your groups JSON")
-            _group_map = json.loads(json_path.read_text(encoding="utf-8"))
+            _group_map = loads(json_path.read_text(encoding="utf-8"))
 
         if gid in _group_map:
             return f"{dox_path.relative_to(repo_root).as_posix()}#L{_group_map[gid]}"
