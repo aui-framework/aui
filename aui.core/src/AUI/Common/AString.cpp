@@ -19,7 +19,7 @@
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-inline static AStaticVector<char, 4> toUtf8(char32_t i) {
+static AStaticVector<char, 4> toUtf8(char32_t i) {
     if (i <= 0x7F) {
         return { static_cast<char>(i) };
     }
@@ -45,6 +45,49 @@ inline static AStaticVector<char, 4> toUtf8(char32_t i) {
         };
     }
     return {}; // Invalid Unicode code point
+}
+
+static char32_t decodeUtf8(const char*& ptr, const char* end) {
+    if (ptr >= end) return 0;
+
+    unsigned char first = static_cast<unsigned char>(*ptr++);
+
+    if (first <= 0x7F) {
+        return first;
+    }
+
+    char32_t result = 0;
+    int continuation_bytes = 0;
+
+    if ((first & 0xE0) == 0xC0) {
+        result = first & 0x1F;
+        continuation_bytes = 1;
+    } else if ((first & 0xF0) == 0xE0) {
+        result = first & 0x0F;
+        continuation_bytes = 2;
+    } else if ((first & 0xF8) == 0xF0) {
+        result = first & 0x07;
+        continuation_bytes = 3;
+    } else {
+        return 0xFFFD;
+    }
+
+    for (int i = 0; i < continuation_bytes && ptr < end; ++i) {
+        unsigned char byte = static_cast<unsigned char>(*ptr);
+        if ((byte & 0xC0) != 0x80) {
+            return 0xFFFD;
+        }
+        result = (result << 6) | (byte & 0x3F);
+        ++ptr;
+    }
+
+    if (continuation_bytes == 1 && result < 0x80) return 0xFFFD;
+    if (continuation_bytes == 2 && result < 0x800) return 0xFFFD;
+    if (continuation_bytes == 3 && result < 0x10000) return 0xFFFD;
+    if (result > 0x10FFFF) return 0xFFFD;
+    if (result >= 0xD800 && result <= 0xDFFF) return 0xFFFD;
+
+    return result;
 }
 
 AString::AString(std::span<std::byte> bytes, AStringEncoding encoding) noexcept {

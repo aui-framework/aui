@@ -15,8 +15,8 @@
 #include <span>
 #include <string>
 #include <iostream>
-#include "AUI/Core.h"
-#include "AUI/Traits/values.h"
+#include <AUI/Core.h>
+#include <AUI/Traits/values.h>
 #include <AUI/Common/AChar.h>
 #include <AUI/Common/ASet.h>
 #include <optional>
