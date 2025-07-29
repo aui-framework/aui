@@ -57,7 +57,6 @@ def scan_cpp_files(root_path):
     that contains a line matching regexes.AUI_DOCS_OUTPUT.
     """
     base = Path(root_path)
-    print(base)
 
     # 1) Glob for all .cpp files
     for cpp in base.rglob("*.cpp"):
@@ -72,7 +71,6 @@ def scan_cpp_files(root_path):
         idx = parts.index("tests")
         if idx == 0 or not parts[idx - 1].startswith("aui."):
             continue
-        print(cpp)
 
         # 3) Scan the file for your marker
         try:
@@ -218,7 +216,6 @@ def docs_from_tests():
     """
 
     root = Path.cwd()
-    print(root)
     cpp_files = list(scan_cpp_files(root))
     print("Tests to generate docs from:", cpp_files)
     for path in cpp_files:
