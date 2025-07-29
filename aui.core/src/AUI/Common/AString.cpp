@@ -73,7 +73,23 @@ void AString::push_back(AChar c) noexcept {
 }
 
 AByteBuffer AString::getBytes(AStringEncoding encoding) const noexcept {
-    return {};
+    AByteBuffer bytes;
+    if (super::empty()) return bytes;
+    if (encoding == AStringEncoding::UTF8) {
+        bytes.reserve(super::size());
+        bytes.write(super::data(), super::size());
+    } else if (encoding == AStringEncoding::UTF16) {
+        size_t expected_words = simdutf::utf16_length_from_utf8(super::data(), super::size());
+        bytes.resize(expected_words * 2);
+        simdutf::convert_utf8_to_utf16le(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data()));
+    } else if (encoding == AStringEncoding::UTF32) {
+        size_t expected_words = simdutf::utf32_length_from_utf8(super::data(), super::size());
+        bytes.resize(expected_words * 4);
+        simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data()));
+    } else if (encoding == AStringEncoding::LATIN1) {
+
+    }
+    return std::move(bytes);
 }
 
 AStringVector AString::split(char16_t c) const noexcept
