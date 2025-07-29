@@ -36,7 +36,13 @@ public:
             name = name.substr(0, name.length() - 2);
         return name;
 #elif AUI_COMPILER_CLANG
-        AString s = __PRETTY_FUNCTION__;
+        #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
+            AString s = __PRETTY_FUNCTION__;
+        #elif defined(__FUNCSIG__)
+            AString s = __FUNCSIG__;
+        #else
+            AString s = __FUNCTION__;
+        #endif
         auto b = s.find("=") + 1;
         auto e = s.find("&", b);
         e = std::min(s.find("]", b), e);
@@ -44,7 +50,13 @@ public:
         result = result.trim();
         return result;
 #else
-        AString s = __PRETTY_FUNCTION__;
+        #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
+            AString s = __PRETTY_FUNCTION__;
+        #elif defined(__FUNCSIG__)
+            AString s = __FUNCSIG__;
+        #else
+            AString s = __FUNCTION__;
+        #endif
         auto b = s.find("with T = ") + 9;
         return { s.begin() + b, s.end() - 1 };
 #endif
