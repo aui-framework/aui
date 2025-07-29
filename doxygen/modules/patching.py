@@ -7,78 +7,111 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import enum
-import glob
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from enum import Enum, auto
+from functools import lru_cache
+from glob import iglob
 from pathlib import Path
 
 
-class Mode(enum.Enum):
-    INSERT_BEFORE = enum.auto()
-    INSERT_AFTER = enum.auto()
-    DELETE_LINE = enum.auto()
-    REPLACE = enum.auto()
+class Mode(Enum):
+    INSERT_BEFORE = auto()
+    INSERT_AFTER = auto()
+    DELETE_LINE = auto()
+    REPLACE = auto()
+
 
 class AnchorError(RuntimeError):
     pass
 
-def patch(target: str = None, matcher = None, mode: Mode = None, value = None, unique = False):
-    args = {**locals()}
-    PREFIX = 'doxygen/out/html'
 
-    patch_path = Path('doxygen/patches/') / target
-    if issubclass(type(value), Path):
-        value = value.read_bytes().decode("utf-8")
-    elif value is None and mode in [Mode.INSERT_AFTER, Mode.INSERT_BEFORE]:
-        value = patch_path.read_bytes().decode("utf-8")
+# 1. Cache patch file contents
+@lru_cache(maxsize=None)
+def load_patch_snippet(target: str) -> str:
+    patch_path = Path("doxygen/patches") / target
+    return patch_path.read_text(encoding="utf-8")
 
+
+def patch(
+    target: str,
+    matcher=None,
+    mode: Mode = None,
+    value: str = None,
+    unique: bool = False,
+):
+    PREFIX = Path("doxygen/out/html")
+
+    # 2. Handle wildcard targets in parallel
     if "*" in target:
-        args.pop('target')
-        # wildcard
-        for file in glob.iglob(f"doxygen/out/html/{target}"):
-            try:
-                patch(file[len(PREFIX)+1:], **args)
-            except AnchorError:
-                pass
-
-        return
-
-    target_path = Path(PREFIX) / target
-    with open(target_path, 'r') as fis:
-        contents = fis.readlines()
-
-    if type(matcher) is str:
-        matcher_str = matcher
-        matcher = lambda x, **kwargs: matcher_str in x
-
-
-    def process():
-        found = False
-        for line in contents:
-            if found and unique:
-                yield line
-                continue
-            matcher_result = matcher(line, target_path=target_path)
-            if matcher_result:
-                found = True
-                if type(matcher_result) is str:
-                    yield matcher_result
-                elif mode == Mode.INSERT_BEFORE:
-                    yield value
-                    yield line
-                elif mode == Mode.INSERT_AFTER:
-                    yield line
-                    yield value
-                elif mode == Mode.REPLACE:
-                    yield line.replace(matcher_str, value)
-                elif mode == Mode.DELETE_LINE:
+        pattern = str(PREFIX / target)
+        futures = []
+        results = []
+        with ThreadPoolExecutor() as pool:
+            for file_path in iglob(pattern):
+                rel_target = Path(file_path).relative_to(PREFIX).as_posix()
+                futures.append(
+                    pool.submit(patch, rel_target, matcher, mode, value, unique)
+                )
+            for f in as_completed(futures):
+                try:
+                    results.append(f.result())
+                except AnchorError:
                     pass
-            else:
-                yield line
+        return results
 
-        if not found:
-            raise AnchorError(f"{target_path} does not contain anchor")
+    target_path = PREFIX / target
+    if not target_path.exists():
+        raise FileNotFoundError(f"{target_path} not found")
 
-    with open(target_path, 'w') as out:
-        for i in process():
-            out.write(i)
+    # 3. Determine insertion value
+    if value is None and mode in (Mode.INSERT_BEFORE, Mode.INSERT_AFTER):
+        value = load_patch_snippet(target)
 
+    # 4. Prepare matcher
+    if isinstance(matcher, str):
+        needle = matcher
+
+        def matcher_fn(line, **_):
+            return needle in line
+
+    else:
+        matcher_fn = matcher
+
+    if isinstance(value, Path):
+        value = value.read_text(encoding="utf-8")
+    # 5. Read once
+    original = target_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    output = []
+    found = False
+
+    # 6. Process lines
+    for line in original:
+        if found and unique:
+            output.append(line)
+            continue
+
+        if matcher_fn(line, target_path=target_path):
+            found = True
+
+            if isinstance(matcher_fn(line), str):
+                output.append(matcher_fn(line))
+            elif mode == Mode.INSERT_BEFORE:
+                output.extend([value, line])
+            elif mode == Mode.INSERT_AFTER:
+                output.extend([line, value])
+            elif mode == Mode.REPLACE:
+                output.append(line.replace(needle, value))
+            elif mode == Mode.DELETE_LINE:
+                # skip line
+                continue
+        else:
+            output.append(line)
+
+    if not found:
+        raise AnchorError(f"No anchor in {target_path}")
+
+    # 7. Write back only if changed
+    if output != original:
+        target_path.write_text("".join(output), encoding="utf-8")
+
+    return True
