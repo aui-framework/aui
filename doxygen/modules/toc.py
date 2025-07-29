@@ -7,14 +7,13 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import os
-import urllib.parse
 from json import loads
 from pathlib import Path
-from re import compile, escape, sub
+from re import compile, escape
+from concurrent.futures import ProcessPoolExecutor
 
-from bs4 import BeautifulSoup as soup
-from modules import regexes
+from lxml import html, etree
+
 from modules.config import CONFIG
 
 
@@ -35,27 +34,24 @@ def fa(name):
     return tag("i", **{"class": f"fa {name}"})
 
 
-_group_map = None  # module‐level cache
-
-
 def find_definition(contents: str, search_dirs=None):
+    """
+    Locate @defgroup or literal definition in source.
+    """
     repo_root = Path.cwd()
     inter = repo_root / "doxygen" / "intermediate"
     dox_path = inter / "groups.dox"
     json_path = inter / "groups.json"
 
-    # 1) Try JSON lookup for @defgroup
     if contents.startswith("@defgroup "):
         gid = contents.split(None, 1)[1].strip()
-
-        global _group_map
-        if _group_map is None:
-            if not json_path.exists():
-                raise RuntimeError(f"{json_path} missing—regenerate your groups JSON")
-            _group_map = loads(json_path.read_text(encoding="utf-8"))
-
-        if gid in _group_map:
-            return f"{dox_path.relative_to(repo_root).as_posix()}#L{_group_map[gid]}"
+        if not json_path.exists():
+            raise RuntimeError(
+                f"{json_path} is missing! Please regenerate your groups JSON"
+            )
+        group_map = loads(json_path.read_text(encoding="utf-8"))
+        if gid in group_map:
+            return f"{dox_path.relative_to(repo_root).as_posix()}#L{group_map[gid]}"
         else:
             print(f"  ↪ '{gid}' not in JSON map, falling back to full scan")
 
@@ -77,170 +73,174 @@ def find_definition(contents: str, search_dirs=None):
                 for idx, line in enumerate(lines, start=1):
                     if pattern.search(line):
                         rel = path.relative_to(repo_root).as_posix()
-                        print(f"found in {rel}#L{idx}")
                         return f"{rel}#L{idx}"
 
     raise RuntimeError(f"Can't find location of {contents}")
 
 
+def process_file(full_path: Path):
+    parser = html.HTMLParser(encoding="utf-8", remove_comments=True)
+    tree = html.parse(str(full_path), parser)
+    root = tree.getroot()
+
+    # 1) Grab the original "contents" div
+    contents = root.xpath(
+        ".//div[contains(concat(' ', normalize-space(@class), ' '), ' contents ')]"
+    )
+    if not contents:
+        return
+    contents = contents[0]
+
+    # skip if already patched
+    if "contents-rails-left" in contents.get("class", ""):
+        return
+
+    # 2) Find the main content container
+    doc_content = root.xpath(".//div[@id='doc-content']")
+    if not doc_content:
+        doc_content = root.xpath(".//div[@id='container']")
+    if not doc_content:
+        return
+    doc_content = doc_content[0]
+
+    # 3) Prepare the right rail container
+    rails_right = etree.Element(
+        "div",
+        {
+            "class": "contents contents-rails-right",
+            "style": "position: fixed; right: 20px; top: 100px; width: 300px; z-index: 1000;",
+        },
+    )
+
+    # 4) Create the TOC container
+    toc = etree.SubElement(rails_right, "div", {"class": "aui-toc"})
+
+    # 5) Add "Contents" header to TOC
+    toc_header = etree.SubElement(toc, "p")
+    toc_header.text = "Contents"
+
+    toc_entries = 0
+
+    # 6) Build TOC from headers
+    for h in root.xpath("//h1|//h2|//h3"):
+        text = "".join(h.xpath(".//text()")).strip()
+        if not text or "Documentation" in text:
+            continue
+        if "memtitle" in h.get("class", ""):
+            continue
+
+        # find anchor inside the header
+        a = h.find(".//a")
+        if a is None or a.getparent() is not h:
+            continue
+
+        # normalize the ID
+        if "autotoc" in a.get("id", ""):
+            new_id = text.lower().replace(" ", "-")
+            a.set("id", new_id)
+
+        href = "#" + a.get("id")
+        a.text = "#"
+        a.set("class", "aui-toc-hash")
+        a.set("style", "color: var(--fragment-comment) !important")
+        h.append(a)
+
+        entry = etree.SubElement(toc, h.tag)
+        a2 = etree.SubElement(entry, "a", href=href)
+        a2.text = text
+        toc_entries += 1
+
+    # 7) Add source buttons if page has aui-src attribute
+    has_aui_src = root.xpath("//*[@aui-src]")
+    if has_aui_src:
+        # Create extras container
+        extras_div = etree.SubElement(toc, "div", {"class": "aui-toc-extras"})
+
+        # View Page Source button
+        view_link = etree.SubElement(
+            extras_div,
+            "a",
+            {
+                "href": "javascript:jumpToSource('view')",
+                "style": "display: block; margin-bottom: 8px;",
+            },
+        )
+        view_icon = etree.SubElement(view_link, "i", {"class": "fa fa-file"})
+        view_icon.text = " "  # Add space before text
+        view_link_text = etree.Element("span")
+        view_link_text.text = "View Page Source"
+        view_link.append(view_link_text)
+
+        # Edit Page Source button
+        edit_link = etree.SubElement(
+            extras_div,
+            "a",
+            {"href": "javascript:jumpToSource('edit')", "style": "display: block;"},
+        )
+        edit_icon = etree.SubElement(edit_link, "i", {"class": "fa fa-edit"})
+        edit_icon.text = " "  # Add space before text
+        edit_link_text = etree.Element("span")
+        edit_link_text.text = "Edit Page Source"
+        edit_link.append(edit_link_text)
+
+        # Add to summary section if exists
+        summary_divs = root.xpath('//div[@class="summary"]')
+        if summary_divs:
+            summary_div = summary_divs[0]
+
+            # Add separator
+            separator = etree.Element("span", text=" | ")
+            summary_div.insert(0, separator)
+
+            # Add Edit link
+            edit_summary = etree.SubElement(
+                summary_div, "a", {"href": "javascript:jumpToSource('edit')"}
+            )
+            edit_summary.text = "Edit Page Source"
+
+            # Add separator
+            separator = etree.Element("span", text=" | ")
+            summary_div.insert(0, separator)
+
+            # Add View link
+            view_summary = etree.SubElement(
+                summary_div, "a", {"href": "javascript:jumpToSource('view')"}
+            )
+            view_summary.text = "View Page Source"
+
+        script = etree.Element("script")
+        script.text = """
+        function jumpToSource(action) {
+            var auiSrc = document.querySelector('[aui-src]').getAttribute('aui-src');
+            if (auiSrc) {
+                var url;
+                if (action === 'view') {
+                    url = 'https://github.com/aui-framework/aui/blob/develop/' + auiSrc;
+                } else if (action === 'edit') {
+                    url = 'https://github.com/aui-framework/aui/edit/develop/' + auiSrc;
+                }
+                if (url) {
+                    window.open(url, '_blank');
+                }
+            }
+        }
+        """
+        body = root.find("body")
+        if body is not None:
+            body.append(script)
+
+    # 8) Only add right rail if we have content
+    if toc_entries > 0 or has_aui_src:
+        # Add the right rail to the body
+        body = root.find("body")
+        if body is not None:
+            body.append(rails_right)
+
+    tree.write(str(full_path), encoding="utf-8", method="html", pretty_print=False)
+
+
 def run():
-    for root, dirs, files in os.walk(CONFIG["output"]):
-        for file in files:
-            if not file.endswith(".html"):
-                continue
-
-            full_path = Path(root) / file
-            raw_contents = full_path.read_bytes().decode("utf-8")
-            if "contents-rails-left" in raw_contents:
-                continue
-            global s
-            s = soup(raw_contents, "lxml")
-            headers = s.find_all(["h1", "h2", "h3"])
-
-            contents = s.find(class_="contents")
-            if not contents:
-                continue
-
-            contents.attrs["class"] = "contents-rails-left"
-
-            def aui_source_location():
-                stem = full_path.stem
-                if not (stem.startswith("UI") and stem.endswith("Test")):
-                    return None
-
-                if stem.startswith("md"):
-                    possible_location = Path(
-                        stem[3:]
-                        .replace("_01", " ")
-                        .replace("_2", "/")
-                        .replace("_", "/")
-                        + ".md"
-                    )
-                    if possible_location.exists():
-                        return possible_location
-
-                if stem.startswith("group__"):
-                    core = stem.removeprefix("UI").removesuffix("Test")
-                    # CamelCase → snake_case
-                    gid = sub(r"([a-z0-9])([A-Z])", r"\1_\2", core).lower()
-                    return find_definition(f"@defgroup {gid}")
-                    # return find_definition("@defgroup " + stem[7:].replace("__", "_"))
-
-                corresponding_xml = f"{stem}.xml"
-                corresponding_xml = Path(CONFIG["xml"]) / corresponding_xml
-                if not corresponding_xml.exists():
-                    return None
-                location = None
-                with open(corresponding_xml, "r") as xml:
-                    for i in reversed(xml.readlines()):
-                        if m := regexes.LOCATION_FILE.match(i):
-                            location = f"{m.group(1)}#L{m.group(2)}"
-                            break
-
-                return location
-
-            if location := aui_source_location():
-                contents.insert(
-                    0,
-                    s.new_tag(
-                        "b",
-                        **{
-                            "aui-src": urllib.parse.quote(
-                                str(location), safe="/#", encoding=None, errors=None
-                            )
-                        },
-                    ),
-                )
-
-            contents = contents.wrap(s.new_tag("div"))
-            contents.attrs["class"] = "contents aui-toc-contents"
-            rails_right = s.new_tag("div", attrs={"class": "contents-rails-right"})
-            contents.append(rails_right)
-
-            toc = s.new_tag("div", attrs={"class": "aui-toc"})
-
-            if not file == "index.html":
-                for header in headers:
-                    text = header.text.strip("\n")
-
-                    a = header.find_next("a")
-                    href = ""
-                    if a:
-                        if a.parent.name not in ["h1", "h2", "h3"]:
-                            continue
-
-                        a.unwrap()
-                        a.append("#")
-                        a.attrs["class"] = "aui-toc-hash"
-                        a.attrs["style"] = "color: var(--fragment-comment) !important"
-
-                        if "autotoc" in a.attrs.get("id", "autotoc"):
-                            a.attrs["id"] = text.lower().replace(
-                                " ", "-"
-                            )  # generate betterid
-
-                        href = a.attrs["href"] = f"#{a.attrs['id']}"
-
-                        header.append(a)  # to the end
-
-                    if "Documentation" in text:
-                        continue
-                    if "memtitle" in header.attrs.get(
-                        "class", ""
-                    ):  # drops function descriptions
-                        continue
-
-                    tag_name = header.name
-                    is_doxygen_group_header = "groupheader" in header.attrs.get(
-                        "class", ""
-                    )
-                    if is_doxygen_group_header:
-                        tag_name = "h1"
-
-                    toc.append(tag(tag_name, content=tag("a", content=text, href=href)))
-
-            if s.find("b", attrs={"aui-src": True}):
-                toc.append(
-                    tag(
-                        "div",
-                        **{"class": "aui-toc-extras"},
-                        content=[
-                            tag(
-                                "a",
-                                content=[fa("fa-file"), "View Page Source"],
-                                href="javascript:jumpToSource('view')",
-                            ),
-                            tag(
-                                "a",
-                                content=[fa("fa-edit"), "Edit Page Source"],
-                                href="javascript:jumpToSource('edit')",
-                            ),
-                        ],
-                    )
-                )
-
-                if summary := s.find("div", **{"class": "summary"}):
-                    summary.insert(0, " | ")
-                    summary.insert(
-                        0,
-                        tag(
-                            "a",
-                            content=["Edit Page Source"],
-                            href="javascript:jumpToSource('edit')",
-                        ),
-                    )
-                    summary.insert(0, " | ")
-                    summary.insert(
-                        0,
-                        tag(
-                            "a",
-                            content=["View Page Source"],
-                            href="javascript:jumpToSource('view')",
-                        ),
-                    )
-
-            if toc.contents:
-                toc.insert(0, tag("p", content="Contents"))
-                rails_right.append(toc)
-
-            full_path.write_text(str(s))
+    root = Path(CONFIG["output"])
+    html_files = list(root.rglob("*.html"))
+    with ProcessPoolExecutor() as pool:
+        pool.map(process_file, html_files)
