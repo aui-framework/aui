@@ -193,7 +193,7 @@ if(AUIB_LOCAL_CACHE)
     set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
 endif()
 
-set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
+set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache" FORCE)
 message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 

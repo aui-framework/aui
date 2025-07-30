@@ -22,7 +22,7 @@ aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl)
 # [aui_app]
 aui_app(TARGET aui.example.views
         NAME "AUI Examples"
-        APPLE_BUNDLE_IDENTIFIER "aui.Examples"
+        MACOS_BUNDLE_IDENTIFIER "aui.Examples"
         APPLE_SIGN_IDENTITY "iPhone Developer"
         APPLE_TEAM_ID "98S256N2KJ"
         ANDROID_PACKAGE "com.github.aui.examples"
