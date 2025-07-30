@@ -51,6 +51,10 @@ public:
     void lock_shared() {
         MutexExtras::lock_shared();
     }
+
+    void unlock_shared() {
+        MutexExtras::unlock_shared();
+    }
 };
 
 
