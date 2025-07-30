@@ -27,7 +27,7 @@ namespace gl {
  * After creating a 2D texture array, you can use `update` to update a single texture in the array. You cannot update
  * dimensions of the texture array, so you should create a new one if you want to change the size of the texture array.
  */
-class API_AUI_VIEWS Texture2DArray : public Texture<gl::TEXTURE_2D_ARRAY> {
+class API_AUI_VIEWS Texture2DArray final: public Texture<gl::TEXTURE_2D_ARRAY> {
 public:
     /**
      * @brief Initializes the 2D texture array with empty data.
@@ -39,6 +39,8 @@ public:
      * It binds the texture and uses `glTexStorage3D` to allocate the storage.
      */
     Texture2DArray(glm::uvec2 textureSize, unsigned textureCount);
+
+    ~Texture2DArray() override = default;
 
     /**
      * @brief Updates a single texture of the 2D texture array.

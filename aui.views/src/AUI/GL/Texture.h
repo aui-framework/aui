@@ -23,7 +23,7 @@ template <unsigned TEXTURE_TARGET>
 class API_AUI_VIEWS Texture : public aui::noncopyable {
 public:
     Texture();
-    ~Texture();
+    virtual ~Texture();
     void setupNearest();
     void setupLinear();
     void setupClampToEdge();
