@@ -11,7 +11,7 @@ The project is inspired by Qt and aims to provide developers with the best possi
 to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
 programming languages and external compilers.
 
-[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
+[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -232,7 +232,8 @@ You are not obligated to disclose your own sources nor release your own project 
 # Maintaining
 
 The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)
-with contributions from many other people.
+with contributions from many other people. Join our [Discord community](https://discord.gg/jq2WySpg6m) for voice
+calls.
 
 Let us know if your contribution is not listed or mentioned incorrectly, and we'll make it right.
 

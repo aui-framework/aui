@@ -76,6 +76,8 @@ Specify main executable of the application which will be executed when your appl
 
 Specify application display name that would appear in system's UIs (i.e., start menu, launchpad, desktop, control panel).
 
+This argument assigns value to aui::app_info::name 
+
 |Platform|Required|Traits|
 |--------|--------|------|
 |Windows|+||

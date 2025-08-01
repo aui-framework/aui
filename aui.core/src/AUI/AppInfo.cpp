@@ -9,10 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#pragma once
+//
+// Created by mikle on 23.07.25.
+//
 
-#include <AUI/Traits/values.h>
+#include "AppInfo.h"
 
-namespace aui::audio {
-using VolumeLevel = aui::ranged_number<uint32_t, 0, 256 /* easier to divide by power of 2 */>;
-}
+AString aui::app_info::name = "unknown";

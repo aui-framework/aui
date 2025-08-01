@@ -9,10 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+//
+// Created by mikle on 23.07.25.
+//
+
+#include <AUI/Common/AString.h>
+
 #pragma once
 
-#include <AUI/Traits/values.h>
-
-namespace aui::audio {
-using VolumeLevel = aui::ranged_number<uint32_t, 0, 256 /* easier to divide by power of 2 */>;
+/**
+ * @brief general purpose application information defined by aui_app
+ */
+namespace aui::app_info {
+/**
+ * @brief application display name
+ */
+extern API_AUI_CORE AString name;
 }

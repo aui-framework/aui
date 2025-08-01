@@ -11,6 +11,8 @@
 *.sln.docstates
 
 build/
+# CLion build directory
+/cmake-**
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

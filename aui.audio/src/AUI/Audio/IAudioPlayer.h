@@ -3,7 +3,7 @@
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Url/AUrl.h>
-#include <AUI/Audio/ASoundResampler.h>
+#include <AUI/Audio/AAudioResampler.h>
 #include <AUI/Audio/VolumeLevel.h>
 
 /**
@@ -55,8 +55,8 @@ public:
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    ASoundResampler& resampledStream() {
-        return *mResampledStream;
+    AAudioResampler& resamplerStream() {
+        return *mResamplerStream;
     }
 
     /**
@@ -114,7 +114,7 @@ signals:
 
 protected:
     bool isInitialized() const noexcept {
-        return mResampledStream != std::nullopt;
+        return mResamplerStream != std::nullopt;
     }
 
     void initialize();
@@ -131,7 +131,7 @@ private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
     AOptional<AUrl> mUrl;
     _<ISoundInputStream> mSourceStream;
-    AOptional<ASoundResampler> mResampledStream;
+    AOptional<AAudioResampler> mResamplerStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
 

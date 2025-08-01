@@ -8,8 +8,8 @@
 #include "AUI/Common/AQueue.h"
 #include "CoreAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Audio/AAudioMixer.h"
+#include "AUI/Audio/Platform/RequestedAudioFormat.h"
 
 
 static constexpr auto LOG_TAG = "CoreAudio";
@@ -30,7 +30,7 @@ struct CoreAudioInstance {
         strdesc.mChannelsPerFrame = 2;
         strdesc.mSampleRate = 44100;
         strdesc.mFramesPerPacket = 1;
-        strdesc.mBitsPerChannel = aui::audio::impl::sample_type<aui::audio::platform::requested_sample_format>::size_bits;
+        strdesc.mBitsPerChannel = aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
         strdesc.mBytesPerFrame = strdesc.mChannelsPerFrame * strdesc.mBitsPerChannel / 8;
         strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 

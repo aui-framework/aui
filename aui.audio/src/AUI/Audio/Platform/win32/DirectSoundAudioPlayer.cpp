@@ -1,7 +1,7 @@
 #include "DirectSoundAudioPlayer.h"
+#include "AUI/Thread/IEventLoop.h"
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/AAudioMixer.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Traits/memory.h"
 #include <dsound.h>
 
@@ -30,7 +30,7 @@ public:
 
 private:
     static constexpr int BUFFER_DURATION_SEC = 2;
-    static constexpr int UPLOADS_PER_SEC = 10;
+    static constexpr int UPLOADS_PER_SEC = 20;
     static constexpr int EVENTS_CNT = BUFFER_DURATION_SEC * UPLOADS_PER_SEC;
     static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
 
@@ -65,6 +65,7 @@ private:
     void setupReachPointEvents() {
         ASSERT_OK mSoundBufferInterface->QueryInterface(IID_IDirectSoundNotify8, (void**) &mNotifyInterface);
         mEvents[EVENTS_CNT] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        mEvents[EVENTS_CNT + 1] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         for (int i = 0; i < EVENTS_CNT; i++) {
             mEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             mNotifyPositions[i].hEventNotify = mEvents[i];
@@ -78,9 +79,26 @@ private:
         mThread = _new<AThread>([this] {
             AThread::setName("aui.audio");
             mThreadIsActive = true;
-            while (mThreadIsActive) {
-                onAudioReachCallbackPoint();
-            }
+
+            class AudioEventLoop: public IEventLoop {
+            public:
+                AudioEventLoop(DirectSound& parent): mParent(parent) {}
+                void notifyProcessMessages() override {
+                    SetEvent(mParent.mEvents[EVENTS_CNT + 1]);
+                }
+
+                void loop() override {
+                    while (mParent.mThreadIsActive) {
+                        mParent.onAudioReachCallbackPoint();
+                    }
+                }
+
+            private:
+                DirectSound& mParent;
+            } eventLoop(*this);
+            IEventLoop::Handle h(&eventLoop);
+            eventLoop.loop();
+
         });
         mThread->start();
     }
@@ -102,18 +120,20 @@ private:
 
     void onAudioReachCallbackPoint() {
         DWORD waitResult;
-        waitResult = WaitForMultipleObjects(EVENTS_CNT, mEvents, FALSE, INFINITE);
+        waitResult = WaitForMultipleObjects(EVENTS_CNT + 1, mEvents, FALSE, INFINITE);
         while(waitResult != WAIT_FAILED) {
             DWORD eventIndex = waitResult - WAIT_OBJECT_0;
-            if (eventIndex != EVENTS_CNT) {
+            if (eventIndex == EVENTS_CNT) {
+                mIsPlaying = false;
+                mThreadIsActive = false;
+                return;
+            } else if (eventIndex == EVENTS_CNT + 1) {
+                ResetEvent(mEvents[EVENTS_CNT + 1]);
+                AThread::processMessages();
+            } else {
                 uploadBlock((eventIndex + 1) % EVENTS_CNT);
-                waitResult = WaitForMultipleObjects(EVENTS_CNT + 1, mEvents, FALSE, INFINITE);
-                continue;
             }
-
-            mIsPlaying = false;
-            mThreadIsActive = false;
-            return;
+            waitResult = WaitForMultipleObjects(EVENTS_CNT + 2, mEvents, FALSE, INFINITE);
         }
     }
 
@@ -161,7 +181,7 @@ private:
     IDirectSoundBuffer8* mSoundBufferInterface = nullptr;
     IDirectSoundNotify8* mNotifyInterface = nullptr;
     DSBPOSITIONNOTIFY mNotifyPositions[EVENTS_CNT];
-    HANDLE mEvents[EVENTS_CNT + 1];
+    HANDLE mEvents[EVENTS_CNT + 2];
     _<AThread> mThread;
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
