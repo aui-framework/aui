@@ -1157,6 +1157,16 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
+    _auib_find_git()
+    if (GIT_EXECUTABLE)
+        execute_process(COMMAND ${GIT_EXECUTABLE} status
+                WORKING_DIRECTORY ${DEP_SOURCE_DIR}
+                OUTPUT_VARIABLE git_status
+        )
+        if(NOT git_status MATCHES "HEAD")
+            message(WARNING "${AUIB_IMPORT_NAME} You are staying on a branch or did not specify the version control, please specify a tag or hash VERSION!\nSee https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html#version")
+        endif ()
+    endif ()
 endfunction()
 
 

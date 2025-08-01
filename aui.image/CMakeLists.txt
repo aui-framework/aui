@@ -12,7 +12,7 @@ foreach(_component ${WEBP_COMPONENTS_TO_DISABLE})
     list(APPEND WEBP_CMAKE_ARGS "-DWEBP_BUILD_${_component}=OFF")
 endforeach()
 
-auib_import(WebP https://github.com/webmproject/libwebp VERSION 1.3.1 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
+auib_import(WebP https://github.com/webmproject/libwebp VERSION v1.3.1 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
 
 aui_module(aui.image WHOLEARCHIVE EXPORT aui)
 add_subdirectory(3rdparty)

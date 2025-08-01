@@ -13,6 +13,7 @@
 
 #include "AUI/View/AView.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include "AUI/Util/kAUI.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/AButton.h"
 #include "AUI/View/ACheckBox.h"
@@ -64,7 +65,7 @@ static _<AView> uiBenchmarkScene() {
               RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
               RadioButton { "Radiobutton 2" },
               RadioButton { "Radiobutton 3" },
-              RadioButton { "Disabled radiobutton" } let { it->disable(); },
+              RadioButton { "Disabled radiobutton" } AUI_LET { it->disable(); },
             },
           },
 
@@ -80,13 +81,13 @@ static _<AView> uiBenchmarkScene() {
                 "Combobox 5",
                 "Combobox 6",
               })),
-              _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) let { it->setDisabled(); },
+              _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
             },
           },
           GroupBox {
             Label { "Drag area" },
 
-            _new<ADragArea>() let {
+            _new<ADragArea>() AUI_LET {
                     it AUI_WITH_STYLE {
                         MinSize { 100_dp },
                         Border { 1_px, 0x0_rgb },
@@ -145,7 +146,7 @@ static _<AView> uiBenchmarkScene() {
             Label { "Fields" },
             Vertical::Expanding {
               Label { "Text field" },
-              _new<ATextField>() let { it->focus(); },
+              _new<ATextField>() AUI_LET { it->focus(); },
               Label { "Number picker" },
               _new<ANumberPicker>(),
               _new<ADoubleNumberPicker>(),
@@ -161,7 +162,7 @@ static _<AView> uiBenchmarkScene() {
                           "Public License, v. 2.0. If a copy of the MPL was not distributed with this "
                           "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                       .build()
-                  << ".input-field" let { it->setExpanding(); },
+                  << ".input-field" AUI_LET { it->setExpanding(); },
             } },
         },
     };
