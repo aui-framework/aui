@@ -1158,7 +1158,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
     _auib_find_git()
-    if (GIT_EXECUTABLE)
+    if (GIT_EXECUTABLE AND NOT AUIB_IMPORT_ARCHIVE)
         execute_process(COMMAND ${GIT_EXECUTABLE} status
                 WORKING_DIRECTORY ${DEP_SOURCE_DIR}
                 OUTPUT_VARIABLE git_status
