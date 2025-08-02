@@ -189,7 +189,7 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 ## IDE Plugins
 
-[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_IDE_plugins)
+[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html)
 
 ## Projects using AUI
 
