@@ -12,10 +12,14 @@
 #include "AButton.h"
 #include <AUI/Platform/AWindow.h>
 
-AButton::AButton() {
+using namespace declarative;
 
+AButton::AButton() {
 }
 
+void AButton::setText(AString text) {
+    setContents(Centered { Label { std::move(text) } });
+}
 
 void AButton::setDefault(bool isDefault) {
     mDefault.set(this, isDefault);

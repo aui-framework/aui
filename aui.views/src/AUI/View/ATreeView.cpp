@@ -287,7 +287,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
 
 void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
     // always add wrapper (even if isGroup = false) to simplify view walkthrough
-    auto wrapper = _container<AVerticalLayout>({});
+    _<AViewContainer> wrapper = declarative::Vertical{};
     wrapper->setVisibility(Visibility::GONE);
     wrapper << ".list-item-group";
     container->addView(childIndex.row() * 2, wrapper);

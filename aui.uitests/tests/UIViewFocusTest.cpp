@@ -2,13 +2,11 @@
 // Created by dervisdev on 1/30/2023.
 //
 
-//
-// Created by dervisdev on 1/30/2023.
-//
-
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
+
+using namespace declarative;
 
 class UIViewFocus: public testing::UITest {
 protected:
