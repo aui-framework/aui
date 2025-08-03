@@ -1,0 +1,25 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+[data-md-color-scheme="slate"] {
+    /* footer bg is used in the notice - i don't like how the default grayish color combines with other grayish color of
+    the header. */
+    --md-footer-bg-color: #000;
+    --md-footer-bg-color--dark: #000;
+
+}
+
+/* i want the copyright notice and the social links on the same line. */
+@media screen and (min-width: 45em) {
+    .md-copyright {
+        width: 45em;
+    }
+}
