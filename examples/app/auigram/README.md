@@ -1,6 +1,6 @@
 # AUI Telegram Client (AUIgram)
 
-{{% example('app') %}}
+<!-- aui:example app -->
 Using AUI Framework from perspective of a Telegram client. This project shows how to solve typical problems of a UI
 application (i.e., dependency management, data binding, styling, asynchronous data loading, packaging, deploying).
 
@@ -19,7 +19,7 @@ Telegram Client is a great example:
   perfectly), asynchronous data loading, data binding, animations, assets, full support of Windows, macOS, Linux,
   Android, iOS.
 
-## Source Files
+## Source Code
 
 This example is located outside AUI's source tree. Checkout its
 [repository](https://github.com/aui-framework/telegram_client).

@@ -1,6 +1,6 @@
 # Game of Life
 
-{{% example('app') %}}
+<!-- aui:example app -->
 Game of Life implementation that uses advanced large dynamic data rendering techniques such as @ref ITexture,
 @ref AImage to be GPU friendly. The computation is performed in @ref AThreadPool.
 

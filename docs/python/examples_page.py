@@ -29,7 +29,7 @@ def examine():
             def collect_srcs(top):
                 for root, dirs, files in os.walk(top):
                     for f in files:
-                        if f.endswith(".h") or f.endswith(".cpp"):
+                        if any([f.endswith(i) for i in ['.h', 'cpp', 'CMakeLists.txt']]):
                             yield Path(root) / f
             srcs = [i for i in collect_srcs(root)]
 
@@ -78,11 +78,11 @@ def examine():
     return examples_lists
 
 
-def define_env(env):
-    examples_lists = examine()
-    if not examples_lists:
-        raise RuntimeError("no examples provided")
+examples_lists = examine()
+if not examples_lists:
+    raise RuntimeError("no examples provided")
 
+def define_env(env):
     @env.macro
     def examples(category: str):
         output  = "| Name | Description |\n"
@@ -97,25 +97,51 @@ def define_env(env):
 
         return output
 
-    @env.macro
-    def example(category: str):
-        return f"""
+def example(category: str):
+    return f"""
 !!! example "Example's page"
     
-    This page describes an example listed in [{category} category](examples.md#{category}).
+    This page describes an example listed in [{category}](examples.md#{category}) category.
 
 """
 
-
-
 def gen_pages():
     import mkdocs_gen_files
-    examples_list = examine()
-
-    for category_name, category in examples_list.items():
+    for category_name, category in examples_lists.items():
         for example in category:
             id = example['id']
             with mkdocs_gen_files.open(f"{id}.md", "w") as fos:
+                page_path = example['page_path']
                 with io.open(example['page_path'], 'r', encoding='utf-8') as fis:
-                    print(fis.read(), file=fos, end='')
+                    contents = fis.read()
+                    print(contents, file=fos, end='')
+
+                    if not example['srcs']:
+                        if "## Source Code" not in contents:
+                            raise RuntimeError(f'{page_path} contains neither "## Source Code" section nor source files.')
+                        continue
+                    print('\n## Source Code\n\n', file=fos)
+                    print(f'[ <!-- aui:icon octicons-link-external-16 --> Repository ](https://github.com/aui-framework/aui/tree/master/{page_path.relative_to(Path.cwd())})\n', file=fos)
+                    for f in example['srcs']:
+                        filename = f.relative_to(page_path.parent)
+                        print(f'\n### {filename}\n', file=fos)
+                        extension = f.suffix
+                        if extension == ".h":
+                            extension = "cpp"
+                        elif str(filename) == "CMakeLists.txt":
+                            extension = "cmake"
+
+                        print(f'```{extension} linenums="1"', file=fos)
+                        def skip_license(iterator):
+                            if "/*" in next(iterator):
+                                for line in iterator:
+                                    if "*/" in line:
+                                        break
+
+                            for line in iterator:
+                                yield line
+
+                        for line in skip_license(iter(f.read_text().splitlines())):
+                            print(f'{line}', file=fos)
+                        print(f'```', file=fos)
 

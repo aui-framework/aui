@@ -1,11 +1,11 @@
 # Minimal UI Template XMake
 
-{{% example('ui') %}}
+<!-- aui:example ui -->
 Minimal UI boilerplate template XMake.
 
 @image html docs/imgs/minimal-template.png
 
-# Source Files
+# Source Code
 ## Project Structure
 
 @mermaid{project_structure_minimal_example_xmake}

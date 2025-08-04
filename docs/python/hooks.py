@@ -15,6 +15,7 @@ from mkdocs.structure.files import File, Files
 from mkdocs.structure.pages import Page
 from re import Match
 
+from docs.python import examples_page
 
 log = logging.getLogger('mkdocs')
 
@@ -28,9 +29,15 @@ def on_page_markdown(
         args = args.strip()
         if type == "example-file-count":
             return _badge_for_file_count(args, page, files)
+        if type == "example":
+            return examples_page.example(args)
+        if type == "examples":
+            return examples_page.examples(args)
+        if type == "icon":
+            return _badge_for_icon(args)
 
         # Otherwise, raise an error
-        raise RuntimeError(f"Unknown shortcode: {type}")
+        raise RuntimeError(f"Unknown shortcode: {type} in {page}")
 
     # Find and replace all external asset URLs in current page
     return re.sub(
@@ -46,6 +53,11 @@ def _badge(icon: str, text: str = "", type: str = "", tooltip: str = ""):
         *([f"<span class=\"mdx-badge__text\">{text}</span>"] if text else []),
         f"</span>",
     ])
+
+def _badge_for_icon(icon: str):
+    return _badge(
+        icon = f":{icon}:",
+    )
 
 def _badge_for_file_count(text: str, page: Page, files: Files):
     if text == "0":

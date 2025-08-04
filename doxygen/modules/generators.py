@@ -250,7 +250,7 @@ def docs_examples():
 
                     if not srcs:
                         continue
-                    fos.write("\n\n# Source Files\n\n")
+                    fos.write("\n\n# Source Code\n\n")
                     fos.write(f" - [Repository](https://github.com/aui-framework/aui/tree/master/{Path(root).relative_to(Path.cwd())})\n")
                     for src in srcs:
                         fos.write(f' - @ref {src.relative_to(Path.cwd())} "{src.relative_to(root)}"\n')

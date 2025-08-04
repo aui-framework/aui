@@ -11,7 +11,7 @@ plugins:
   - search
   - gen-files:
       scripts:
-        - docs/python/gen-pages.py
+        - docs/python/gen_pages.py
   - macros:
       module_name: docs/python/mymodule
       include_dir: docs/python

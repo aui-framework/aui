@@ -1,6 +1,6 @@
 # Backdrop
 
-{{% example('ui') %}}
+<!-- aui:example ui -->
 Backdrop effects demo.
 
 @image html 454168224-491c728f-9bfd-40c5-b83a-281076b8292f.gif
