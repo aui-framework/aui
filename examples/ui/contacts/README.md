@@ -1,6 +1,6 @@
-# AUI Contacts {#example_contacts}
+# AUI Contacts
 
-@auiexample{ui}
+{{% example('ui') %}}
 Usage of @ref AUI_DECLARATIVE_FOR to make a contacts-like application.
 
 @image html docs/imgs/Screenshot_20250328_153702.png

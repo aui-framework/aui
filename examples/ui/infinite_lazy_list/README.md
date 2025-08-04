@@ -1,6 +1,6 @@
 # Infinite Lazy List
 
-@auiexample{ui}
+{{% example('ui') %}}
 Usage of AUI_DECLARATIVE_FOR to make an infinite lazy list.
 
 This example demonstrates making an optimal infinite list. That is, when you infinitely scroll down to load new items,

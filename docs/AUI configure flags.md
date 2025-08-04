@@ -11,7 +11,7 @@ cmake --build .
 
 # Common variables
 
-## AUI_APP_PACKAGING {#AUI_APP_PACKAGING}
+## AUI_APP_PACKAGING
 Specifies the desired packaging method. This variable accepts CPack generator or one of the packaging methods provided
 by AUI. See @ref "docs/Packaging Your App.md" for more info.
 
@@ -37,10 +37,10 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 ## AUI_BUILD_EXAMPLES
 Whether build examples or not.
 
-## AUI_BUILD_FOR {#AUI_BUILD_FOR}
+## AUI_BUILD_FOR
 Specifies target platform for cross-compilation (see [cross-compiling](@ref docs/Crosscompiling.md)).
 
-## AUIB_CACHE_DIR {#AUIB_CACHE_DIR}
+## AUIB_CACHE_DIR
 Changes @ref AUIB_CACHE.
 
 Can be defined as environment variable.

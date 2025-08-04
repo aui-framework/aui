@@ -14,7 +14,7 @@ See also: @ref assets
    also with the final executable (`PUBLIC` linking does not solve this issue on Linux).
 4. Try using @ref WHOLEARCHIVE flag.
 
-# Build cache invalidation {#BUILD_CACHE_INVALIDATION}
+# Build cache invalidation
 
 Symptoms:
 

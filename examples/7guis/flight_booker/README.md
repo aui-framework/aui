@@ -1,6 +1,6 @@
 # 7GUIs Flight Booker
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Flight Booker.
 
 @image html docs/imgs/wjhsdflksdnjv.webp

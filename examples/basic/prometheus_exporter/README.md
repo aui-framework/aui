@@ -1,6 +1,6 @@
 # Prometheus Exporter Template
 
-@auiexample{desktop}
+{{% example('desktop') %}}
 Example of using @ref "docs/AUI Boot.md" to pull Prometheus library.
 
 # Source Files

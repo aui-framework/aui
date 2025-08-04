@@ -1,6 +1,6 @@
 # 7GUIs CRUD
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Create/Read/Update/Delete example.
 
 @image html docs/imgs/Screenshot_20250401_074431.png

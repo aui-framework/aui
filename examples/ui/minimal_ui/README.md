@@ -1,6 +1,6 @@
 # Minimal UI Template
 
-@auiexample{ui}
+{{% example('ui') %}}
 Minimal UI boilerplate template.
 
 @image html docs/imgs/minimal-template.png

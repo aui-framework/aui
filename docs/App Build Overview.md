@@ -12,7 +12,7 @@ Other platforms and configurations follow the same principles but with different
 
 Also, on this page, the build system is demonstrated on @ref example_minimal_ui_template_with_assets.
 
-# Generic scenario {#BUILD_SCENARIO_GENERIC}
+# Generic scenario
 
 The most common and straightforward scenario. CMake handles everything.
 

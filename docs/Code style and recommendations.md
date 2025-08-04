@@ -109,7 +109,7 @@ examples when defining public API templates and macros.
 
 # Improving compiler error messages techniques
 
-## Try to break your templates {#TRY_TO_BREAK}
+## Try to break your templates
 
 After considering actions listed below, try your types/traits/concepts against various awkward types/arguments/use 
 cases.
@@ -155,7 +155,7 @@ constexpr std::size_t forEachKey(const T& value) { // ====================> spec
 
 Produces the following diagnostics:
 
-```
+```cpp
 .../AForEachUI.h:220:92: error: no matching function for call to ‘forEachKey(...)’
 220 |     return AForEachUIBase::Entry { .view = mFactory(t), .id = forEachKey(t) };
     |                                                               ~~~~~~~~~~^~~

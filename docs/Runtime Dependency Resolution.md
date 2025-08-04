@@ -41,7 +41,7 @@ bin/aui.views.dll
 ...
 ```
 
-## Other platforms (UNIX-like only) {#RPATH}
+## Other platforms (UNIX-like only)
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
 installations (for compatibility reasons), hence @ref "docs/AUI Boot.md" copies imported shared objects to
@@ -62,7 +62,7 @@ The hardcoded full path is suitable for the only machine where binary is built. 
 @ref CMAKE_INSTALL "--install" command clears these paths, opting to use an universal RPATH to make these binaries
 relocable. AUI.Boot populates RPATH on its own, see the section above.
 
-# Install-time shared library resolution {#CMAKE_INSTALL}
+# Install-time shared library resolution
 
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special

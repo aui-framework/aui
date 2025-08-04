@@ -1,6 +1,6 @@
 # Views Example
 
-@auiexample{ui}
+{{% example('ui') %}}
 All-in-one views building example.
 
 @image html docs/imgs/Screenshot_20250412_083751.png

@@ -35,7 +35,7 @@ This guide covers various packaging techniques for all supported platforms.
 @note
 This guide assumes you have already called @ref docs/aui_app.md inside your `CMakeLists.txt`.
 
-# Windows {#PACKAGING_FOR_WINDOWS}
+# Windows
 
 Historically, Windows has been associated with installers in the form of executable files (`exe`s) and Windows Installer
 files (`msi`s), often downloaded from the internet. This method can be considered unsecure.
@@ -47,7 +47,7 @@ developers still opt for traditional methods. This guide will cover the latter.
 Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
 preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
 
-## Inno Setup {#INNOSETUP}
+## Inno Setup
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
@@ -84,7 +84,7 @@ won't prompt a UAC dialog (leverage to _admin privileges_). This way the install
 perspective of the end user. Moreover, installation to user's directory allows @ref updater to work without prompting
 leverage to admin privileges during update installation.
 
-## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ {#PORTABLE_WINDOWS}
+## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
 
 @note
 This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
@@ -156,7 +156,7 @@ Guides about packaging for macOS assume you are running macOS with Xcode preinst
 
 The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
 
-## DragNDrop {#DragNDrop}
+## DragNDrop
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
 
@@ -192,7 +192,7 @@ The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, 
 
 @pythongen{aui_app_dmg}
 
-# Android and iOS {#PACKAGING_WITH_AUI_BUILD_FOR}
+# Android and iOS
 
 `-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
 

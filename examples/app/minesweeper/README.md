@@ -1,6 +1,6 @@
 # Minesweeper Game
 
-@auiexample{app}
+{{% example('app') %}}
 Minesweeper game implementation driven by @ref ass.
 
 @image html Screenshot_20250211_052511.png

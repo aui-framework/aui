@@ -88,7 +88,7 @@ This argument assigns value to aui::app_info::name
 
 @pythongen{aui_app_NAME}
 
-### ICON {#aui_app_ICON}
+### ICON
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 

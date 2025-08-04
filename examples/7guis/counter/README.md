@@ -1,6 +1,6 @@
 # 7GUIs Counter
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Simple counter.
 
 @image html docs/imgs/Screenshot_20250401_081123.png

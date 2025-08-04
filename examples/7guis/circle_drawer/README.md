@@ -1,6 +1,6 @@
 # 7GUIs Circle Drawer
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Undo, redo, dialog control.
 
 @image html docs/imgs/Screenshot_20250401_090701.png

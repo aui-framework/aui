@@ -1,4 +1,4 @@
-# AUI Assets {#assets}
+# AUI Assets
 
 Assets (resource compiler) is a platform-agnostic feature provided by `aui.toolbox` that embeds external files to the
 application's or library's binary, making them available from C++ regardless of file environment. You may want to use

@@ -1,4 +1,4 @@
 # Console Hello World Example
 
-@auiexample{desktop}
+{{% example('desktop') %}}
 Basic CLI Hello World application.

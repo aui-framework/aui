@@ -1,6 +1,6 @@
 # Minimal UI Template XMake
 
-@auiexample{ui}
+{{% example('ui') %}}
 Minimal UI boilerplate template XMake.
 
 @image html docs/imgs/minimal-template.png

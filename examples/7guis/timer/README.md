@@ -1,6 +1,6 @@
 # 7GUIs Timer
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Timer example.
 
 @image html docs/imgs/Screenshot_20250401_085438.png

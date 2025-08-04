@@ -1,6 +1,6 @@
 # 7GUIs Cells
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Spreadsheet processor (Excel).
 
 @image html docs/imgs/wankfdnfkjma.webp

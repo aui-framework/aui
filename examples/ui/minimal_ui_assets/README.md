@@ -1,6 +1,6 @@
 # Minimal UI Template with Assets
 
-@auiexample{ui}
+{{% example('ui') %}}
 Minimal UI boilerplate template with @ref assets.
 
 @image html docs/imgs/minimal-assets-template.png

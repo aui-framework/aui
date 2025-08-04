@@ -1,6 +1,6 @@
 # Notes App
 
-@auiexample{app}
+{{% example('app') %}}
 Note taking app that demonstrates usage of AListModel, AProperty, user data saving and loading.
 
 @image html Screenshot_20250228_133823.png

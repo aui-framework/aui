@@ -1,6 +1,6 @@
 # 7GUIs Temperature Converter
 
-@auiexample{7guis}
+{{% example('7guis') %}}
 Fahrenheit to Celsius and vice versa.
 
 @image html docs/imgs/wrjikjkedkncbjw.webp

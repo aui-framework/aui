@@ -1,9 +1,11 @@
+# aui.boot
+
 AUI Boot is yet another package manager based on CMake. If a library uses CMake with
 [good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
 it in @ref AUIB_CACHE folder for future reuse.
 
-# Importing AUI
+## Importing AUI
 
 See [AUI's repository](https://github.com/aui-framework/aui) to check out the import script with the latest version.
 
@@ -24,7 +26,7 @@ aui_link(YOUR_APP PUBLIC aui::core
                          aui::views)
 ```
 
-# Prebuilt packages {#PREBUILT_PACKAGES}
+## Prebuilt packages
 
 AUI Boot is a source-first package manager, however, it can pull precompiled packages instead of building them locally.
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
@@ -51,7 +53,7 @@ cmake .. -DAUIB_NO_PRECOMPILED=TRUE
 
 This way AUI Boot will never try to use precompiled binaries and will try to build then locally.
 
-# CI caching {#CI_CACHING}
+## CI caching
 
 No matter using precompiled binaries or building them locally, it's convenient to cache @ref AUIB_CACHE in
 your CIs:
@@ -71,7 +73,7 @@ Don't worry updating dependencies: GitHub `cache` action will restore the cache 
 fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
 occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
 
-# Importing 3rdparty libraries {#AUI_BOOT_3RDPARTY}
+## Importing 3rdparty libraries
 
 For a maintained list of `auib_import`ed libraries, please visit https://github.com/aui-framework/boot.
 
@@ -174,7 +176,7 @@ AUI_ENTRY {
 ```
 
 For more libraries, please visit https://github.com/aui-framework/boot.
-## How to fix "Could not resolve dependency" error
+### How to fix "Could not resolve dependency" error
 
 Common scenario:
 
@@ -183,7 +185,7 @@ Common scenario:
 
 And try again.
 
-### "looks like a config file does not exist for your project" {#AFJKLF}
+### "looks like a config file does not exist for your project"
 
 This means that library's maintainer didn't bother about handling `cmake --install` properly. The best option in
 this scenario will be forking the library and append their `CMakeLists.txt` on your own.
@@ -192,12 +194,12 @@ You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-in
 [Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
 `CMakeLists.txt` of the library.
 
-### "did you mean PACKAGE_NAME?" {#AKJFHJ}
+### "did you mean PACKAGE_NAME?"
 
 You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
 `auib_import` to `PACKAGE_NAME`.
 
-### "Imported target ... depends on an out-of-tree file" {#AFKJNJKAN}
+### "Imported target ... depends on an out-of-tree file"
 
 The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
 library by forking it. You can consult with
@@ -205,7 +207,7 @@ library by forking it. You can consult with
 [Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workarounded the broken
 `CMakeLists.txt` of the library.
 
-## Fixing 3rdparty library's CMakeLists.txt
+### Fixing 3rdparty library's CMakeLists.txt
 
 As was mentioned, AUI.Boot might fail to import a 3rdparty library. Reasons include:
 
@@ -228,7 +230,7 @@ Also, you can consult with [Conan Recipes](https://github.com/conan-io/conan-cen
 [Vcpkg Ports](https://github.com/microsoft/vcpkg/tree/master/ports) to see how they have workaround the broken
 `CMakeLists.txt` of the library.
 
-# Using AUI Boot without AUI
+## Using AUI Boot without AUI
 
 AUI Boot does not have any hard dependencies on AUI, so it can be used to manage dependencies on non-AUI projects.
 
@@ -246,17 +248,17 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 ```
 
-# Importing project as a subdirectory
+## Importing project as a subdirectory
 
 See @ref AUIB_ADD_SUBDIRECTORY
 
-# CMake commands
+## CMake commands
 
-## auib_import
+### auib_import
 
 If needed, downloads and compiles project. Adds an `IMPORTED` target. Built on top of `find_package`.
 
-### Signature
+#### Signature
 ```cmake
 auib_import(<PackageName> <URL>
             [ADD_SUBDIRECTORY]
@@ -274,13 +276,13 @@ auib_import(<PackageName> <URL>
 This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
 configure time. See @ref "docs/Runtime Dependency Resolution.md" for more info.
 
-### PackageName
+#### PackageName
 Specifies the package name which will be passed to `find_package`. See @ref AUI_BOOT_3RDPARTY.
 
-### URL
+#### URL
 URL to the git repository of the project you want to import.
 
-### ADD_SUBDIRECTORY {#AUIB_ADD_SUBDIRECTORY}
+#### ADD_SUBDIRECTORY
 
 See also: @ref AUIB_LIB_AS.
 
@@ -292,18 +294,18 @@ their CMake install on your own, which is a challenging task.
 
 This action disables usage of precompiled binary and validation.
 
-### ARCHIVE
+#### ARCHIVE
 
 The provided URL is pointing to zip archive instead of a git repository.
 
 For large dependencies, this might be faster than pulling whole repository.
 
-### CONFIG_ONLY
+#### CONFIG_ONLY
 
 Forces `find_package` to use the config mode only.
 
 
-### VERSION
+#### VERSION
 Commit hash, tag or branch name to `checkout`.
 
 When no version is specified, AUI.Boot defaults to using the latest version from the main branch. Once AUI.Boot
@@ -322,26 +324,21 @@ AUI.Boot will emit a warning encouraging the use of either:
 Despite this argument is optional, we still encourage you to use it, to "lock" the version. This makes your builds
 precisely reproducible on other machines.
 
-### COMPONENTS
+#### COMPONENTS
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
 dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
 
-### CMAKE_WORKING_DIR
+#### CMAKE_WORKING_DIR
 Run cmake in specified directory, in relation to the pulled repo's root directory.
 
-### PRECOMPILED_URL_PREFIX
+#### PRECOMPILED_URL_PREFIX
 Instead of building the dependency from sources, try to import the precompiled binaries first.
 
-#### PrecompiledUrlPrefix
-
-Specifies url prefix where the precompiled binaries downloaded from.
-
-
-### LINK
+#### LINK
 
 Overrides `BUILD_SHARED_LIBS` of the dependency, specifying `SHARED` or `STATIC` linking.
 
-### REQUIRES
+#### REQUIRES
 
 List of the package dependencies. Every dependency's root variable (${DEPENDENCY}_ROOT) is checked for existence and
 validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_ROOT).
@@ -349,15 +346,15 @@ validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_
 It is useful when some package root is implicitly defined in your project somewhere and aui.boot does not know about it,
 thus does not forward.
 
-# Variables {#AUIB_VARIABLES}
+## Variables
 
 See @ref "docs/AUI configure flags.md" on how to set variables.
 
-## AUIB_ALL_AS (=FALSE|TRUE) {#AUIB_ALL_AS}
+### AUIB_ALL_AS (=FALSE|TRUE)
 
 Equivalent of setting @ref AUIB_LIB_AS for every single library present in the project.
 
-## AUIB_<PackageName>_AS (=FALSE|TRUE) {#AUIB_LIB_AS}
+### AUIB_<PackageName>_AS (=FALSE|TRUE)
 
 Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. This means that the library
 becomes a part of your project, within your `build/` directory. This allows changing the library's code seamlessly.
@@ -442,23 +439,23 @@ It is common to delete a feature branch after merging. Be careful: AUI.Boot can'
 a repository.
 
 
-## AUIB_DISABLE (=FALSE|TRUE) {#AUIB_DISABLE}
+### AUIB_DISABLE (=FALSE|TRUE)
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
-## AUIB_SKIP_REPOSITORY_WAIT (=FALSE|TRUE) {#AUIB_SKIP_REPOSITORY_WAIT}
+### AUIB_SKIP_REPOSITORY_WAIT (=FALSE|TRUE)
 
 Disables "Waiting for repository" @ref REPO_LOCK "lock".
 
-## AUIB_NO_PRECOMPILED (=FALSE|TRUE) {#AUIB_NO_PRECOMPILED}
+### AUIB_NO_PRECOMPILED (=FALSE|TRUE)
 
 Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
 
-## AUIB_FORCE_PRECOMPILED (=FALSE|TRUE) {#AUIB_FORCE_PRECOMPILED}
+### AUIB_FORCE_PRECOMPILED (=FALSE|TRUE)
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
-## AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=FALSE|TRUE) {#AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT}
+### AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=FALSE|TRUE)
 
 The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
@@ -466,7 +463,7 @@ archive in the `deps/` dir.
 
 See @ref aui_boot_producing_packages
 
-## AUIB_VALIDATION_LEVEL
+### AUIB_VALIDATION_LEVEL
 
 Applies a set of checks on each *dependency* pulled by AUI.Boot. These checks verify that the *dependency* follows
 so-called [modern CMake practices](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake).
@@ -479,11 +476,11 @@ All AUI's dependencies are marked with the highest validation level.
 
 Defaults to `1`.
 
-### AUIB_VALIDATION_LEVEL 0
+#### AUIB_VALIDATION_LEVEL 0
 
 All checks are disabled.
 
-### AUIB_VALIDATION_LEVEL 1
+#### AUIB_VALIDATION_LEVEL 1
 
 *Covers scenario*: `cmake --install .` of *dependency* produces a valid local CMake package installation.
 
@@ -511,7 +508,7 @@ All checks are disabled.
    @skip auib_use
    @until auib_use_system_libs_end
 
-### AUIB_VALIDATION_LEVEL 2
+#### AUIB_VALIDATION_LEVEL 2
 
 *Covers scenario*: `cmake --install .` of *dependency* produces a @ref PREBUILT_PACKAGES "relocatable binary package".
 
@@ -533,8 +530,8 @@ All checks are disabled.
    legacy libraries.
 
 
-# Diamond Shape Graphs
-## Case 1
+## Diamond Shape Graphs
+### Case 1
 
 For example, your application uses `aui.core` module, which actually uses `ZLIB`:
 
@@ -554,7 +551,7 @@ When you also want to use `ZLIB`.
 
 ![image](https://user-images.githubusercontent.com/19491414/153878341-fa379cc6-b12d-4896-a535-4879b9d5640d.png)
 
-## Case 2
+### Case 2
 
 Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 
@@ -562,7 +559,7 @@ Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 
 Because `libcurl` is not a part of AUI, it uses standard CMake's function to find `OpenSSL` (`find_package`).
 
-# Producing packages with dependencies managed by AUI Boot {#aui_boot_producing_packages}
+## Producing packages with dependencies managed by AUI Boot
 
 AUI distributions [published on our GitHub releases page](https://github.com/aui-framework/aui/releases) are produced with help of AUI Boot.
 
@@ -588,19 +585,19 @@ At last, use `cpack` to produce a package.
 
 @snippet .github/workflows/build.yml cpack
 
-# Importing AUI without AUI Boot
+## Importing AUI without AUI Boot
 
 In some cases, AUI Boot might not cover your particular needs, and you would like to build without it. It is still not
 a recommended way of using AUI, as it is not fully covered with tests, and you're basically trying to complicate your
 life by hardcoding paths in your CMake lists and thus making hardly reproducible projects. Consider
 [asking questions](https://github.com/aui-framework/aui/issues) about AUI Boot on our GitHub page, and we'd help to adapt AUI Boot to your use case.
 
-## Building AUI without AUI Boot
+### Building AUI without AUI Boot
 
 @ref AUIB_DISABLE CMake configure flag can be used to replace `auib_import` calls to `find_package`. In this scenario
 you will need to resolve AUI's dependencies in some other way (i.e, by using Conan).
 
-## Using AUI distributions with `find_package`
+### Using AUI distributions with `find_package`
 
 AUI distributions [published on our GitHub releases page](https://github.com/aui-framework/aui/releases) are
 self-sufficient. That is, they have AUI's dependencies bundled, so they can be used by `find_package`, without even
@@ -608,7 +605,7 @@ requiring AUI Boot.
 
 @include test/aui.boot/Precompiled3/test_project/CMakeLists.txt
 
-# ~/.aui (AUI.Boot Cache Dir) {#AUIB_CACHE}
+## ~/.aui (AUI.Boot Cache Dir)
 
 It is a directory located in your home directory (can be changed with @ref AUIB_CACHE_DIR). This
 directory contains dependencies' source code and installation artifacts of each dependency. AUI.Boot looks up there
@@ -657,11 +654,11 @@ If the dependency imported as a @ref AUIB_ADD_SUBDIRECTORY "subdirectory", these
 
 In case of @ref docs/Crosscompiling.md, contains AUI.Boot sub cache for the host system.
 
-### ~/.aui/repo.lock {#REPO_LOCK}
+### ~/.aui/repo.lock
 
 Lock file of `auib_import` to forbid multiple parallel processes to modify `auib_import`.
 
-# Philosophy behind AUI Boot
+## Philosophy behind AUI Boot
 
 AUI Boot follows AUI Project philosophy, i.e, simplify developers' life and improve experience as far as possible. We
 were needed a CMake-only solution, so we skipped external generators (i.e., those that introduce additional building

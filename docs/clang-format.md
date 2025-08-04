@@ -75,7 +75,7 @@ In some scenarios clang-format may fight against you, especially with complicate
 
 @snippet aui.json/tests/JsonFieldsTest.cpp clang format toggle
 
-# AUI's .clang-format {#CLANG_FORMAT}
+# AUI's .clang-format
 
 Place this `.clang-format` file in root of your project.
 
