@@ -3,7 +3,7 @@
 <!-- aui:example ui -->
 Minimal UI boilerplate template with @ref assets.
 
-@image html docs/imgs/minimal-assets-template.png
+![](imgs/docs/imgs/minimal-assets-template.png)
 
 ## Source Code
 ### Project Structure

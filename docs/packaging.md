@@ -53,7 +53,7 @@ preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runn
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
-@image html innosetup.png Installer with AUI's patches applied
+![](imgs/innosetup.png) Installer with AUI's patches applied
 
 Inno Setup is a free installer framework for Windows program by Jordan Russell and Martijn Laan.
 
@@ -117,7 +117,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
 
-@image html wix.png
+![](imgs/wix.png)
 
 WIX is the installer framework that produces `msi` packages.
 
@@ -149,7 +149,7 @@ of @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @ref docs/aui_app.md generates some image assets for the installer from your icon.
 
-@image html wix_logo.png Installer with AUI's patches applied
+![](imgs/wix_logo.png) Installer with AUI's patches applied
 
 # macOS
 
@@ -173,7 +173,7 @@ Default DMG image produced by CPack is sparse: it's just a regular Finder window
 your application bundle and a symlink. @ref docs/aui_app.md configures CPack to rearrange icons and place a background
 image so no extra configuration by an AUI-based project is needed:
 
-@image html dmg.png
+![](imgs/dmg.png)
 
 ```python
 # standard CMake build process

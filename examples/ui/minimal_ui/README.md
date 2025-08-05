@@ -3,7 +3,7 @@
 <!-- aui:example ui -->
 Minimal UI boilerplate template.
 
-@image html docs/imgs/minimal-template.png
+![](imgs/docs/imgs/minimal-template.png)
 
 ## Source Code
 ### Project Structure

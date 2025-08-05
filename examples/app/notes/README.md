@@ -3,7 +3,7 @@
 <!-- aui:example app -->
 Note taking app that demonstrates usage of AListModel, AProperty, user data saving and loading.
 
-@image html Screenshot_20250228_133823.png
+![](imgs/Screenshot_20250228_133823.png)
 
 The functionality includes loading, saving, creating and deleting notes, as well as marking the UI state as dirty when
 changes are made.

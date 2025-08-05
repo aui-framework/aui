@@ -4,7 +4,7 @@
 GitHub-hosted app project with CI/CD building, @ref "docs/Writing tests.md" "testing", releasing,
 @ref updater "auto updating", code quality checking and more.
 
-@image html afljskfllkaf.gif
+![](imgs/afljskfllkaf.gif)
 
 ## Source Code
 

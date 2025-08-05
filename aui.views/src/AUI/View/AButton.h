@@ -27,7 +27,7 @@
  * @details
  * Button is a fundamental view which can be pushed to make some action.
  *
- * @image html docs/imgs/AButton.gif "The button view being pressed."
+ * ![](imgs/docs/imgs/AButton.gif) "The button view being pressed."
  *
  * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
  * disappears, making an illusion of pressing.

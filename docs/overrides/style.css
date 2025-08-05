@@ -101,3 +101,8 @@ th, td {
     box-shadow: 0 0 0 1px inset var(--md-accent-fg-color--transparent);
     padding: .2rem .3rem;
 }
+
+/* center images */
+.md-typeset p:has(> img) {
+    text-align: center;
+}

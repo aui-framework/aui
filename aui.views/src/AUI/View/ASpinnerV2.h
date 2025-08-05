@@ -19,7 +19,7 @@
  * @brief Circular infinite progress indicator.
  * @ingroup useful_views
  * @details
- * @image html Screenshot_20250205_061349.png
+ * ![](imgs/Screenshot_20250205_061349.png)
  *
  * Rotates its contents as it renders. Unlike ASpinner, ASpinnerV2 allows to take more control over the animation -
  * ASpinnerV2 draws at lower framerate which is better from perspective of resource usage. Generally, use ASpinnerV2

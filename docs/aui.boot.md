@@ -133,7 +133,7 @@ your web browser.
 The `VERSION` argument is tag name or hash name. You can copy&paste the latest release version name from GitHub Releases
 page of the library *(1)*, or discover their tags *(2,3,4)*:
 
-@image html Screenshot_20250311_045811.png
+![](imgs/Screenshot_20250311_045811.png)
 
 The optional `CMAKE_ARGS` argument is arguments passed to library's CMake configure, another point of customization by
 AUI.Boot. These arguments are library specific; their documentation can be found on library's respective documentation

@@ -173,7 +173,7 @@ class AViewContainer;
  *       @endcode
  *     </td>
  *     <td>
- *     @image html docs/imgs/Screenshot_20250625_011101.png
+ *     ![](imgs/docs/imgs/Screenshot_20250625_011101.png)
  *     </td>
  *   </tr>
  * </table>

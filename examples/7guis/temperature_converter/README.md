@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Fahrenheit to Celsius and vice versa.
 
-@image html docs/imgs/wrjikjkedkncbjw.webp
+![](imgs/docs/imgs/wrjikjkedkncbjw.webp)
 
 Challenges: bidirectional data flow, user-provided text input.
 

@@ -33,15 +33,15 @@ class AWindow;
  *
  * @specificto{windows}
  * Implemented with @ref MessageBox.
- * @image html ajkdhadkjfh.png
+ * ![](imgs/ajkdhadkjfh.png)
  *
  * @specificto{linux}
  * Implemented with @ref GtkDialog.
- * @image html wjkfnjkws.png
+ * ![](imgs/wjkfnjkws.png)
  *
  * @specificto{macos}
  * Implemented with @ref NSAlert.
- * @image html revierio.png
+ * ![](imgs/revierio.png)
  */
 namespace AMessageBox {
 

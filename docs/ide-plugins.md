@@ -5,7 +5,7 @@ applications.
 
 ## CLion
 
-@image html Screenshot_20241214_141311.png
+![](imgs/Screenshot_20241214_141311.png)
 
 - [JetBrains marketplace](https://plugins.jetbrains.com/plugin/26118-aui-framework-support)
 - [Releases](https://github.com/aui-framework/ide-plugin-clion/releases)

@@ -3,7 +3,7 @@
 <!-- aui:example app -->
 Minesweeper game implementation driven by @ref ass.
 
-@image html Screenshot_20250211_052511.png
+![](imgs/Screenshot_20250211_052511.png)
 
 # Game Logic
 
@@ -66,6 +66,6 @@ Also, for reveal game state (on win/lose) there's an additional selector:
 
 `RevealSelector` and `CellSelector` are used together to show game results:
 
-@image html Screenshot_20250211_051126.png
+![](imgs/Screenshot_20250211_051126.png)
 
 @snippet examples/app/minesweeper/src/Style.cpp reveal

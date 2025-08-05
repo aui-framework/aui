@@ -67,12 +67,12 @@ On the other hand, Windows and Linux applications tend to have non-uniform shape
 </tr>
 <tr>
 <td>Android</td>
-<td>@image html icons_android.png </td>
+<td>![](imgs/icons_android.png) </td>
 <td><a href="https://developer.android.com/distribute/google-play/resources/icon-design-specifications">Google</a></td>
 </tr>
 <tr>
 <td>iOS</td>
-<td rowspan="2">@image html icons_apple.png </td>
+<td rowspan="2">![](imgs/icons_apple.png) </td>
 <td rowspan="2">
   <a href="https://developer.apple.com/design/human-interface-guidelines/app-icons">Apple Developer</a><br/>
   <a href="https://developer.apple.com/design/resources/#macos-apps">Apple Design Resources</a>
@@ -86,14 +86,14 @@ On the other hand, Windows and Linux applications tend to have non-uniform shape
 </tr>
 <tr>
 <td>Windows</td>
-<td>@image html icons_win.png </td>
+<td>![](imgs/icons_win.png) </td>
 <td><a href="https://learn.microsoft.com/en-us/windows/apps/design/style/iconography/app-icon-design">Microsoft</a></td>
 </tr>
 <tr>
 <td rowspan="3">Linux</td>
 <td rowspan="3">
-@image html icons_gnome.png
-@image html icons_kde.png
+![](imgs/icons_gnome.png)
+![](imgs/icons_kde.png)
 </td>
 <td><a href="https://docs.flathub.org/docs/for-app-authors/metainfo-guidelines/quality-guidelines/">Flathub</a></td>
 </tr>
