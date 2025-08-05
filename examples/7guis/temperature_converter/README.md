@@ -17,7 +17,7 @@ Temperature Converter increases the complexity of Counter by having bidirectiona
 Fahrenheit inputs and the need to check the user input for validity. A good solution will make the bidirectional
 dependency very clear with minimal boilerplate code.
 
-@include examples/7guis/temperature_converter/src/main.cpp
+<!-- aui:include examples/7guis/temperature_converter/src/main.cpp -->
 
 # Comparison to Jetpack Compose
 

@@ -9,6 +9,7 @@
 import logging
 import posixpath
 import re
+from pathlib import Path
 
 import mkdocs
 from mkdocs.config.defaults import MkDocsConfig
@@ -17,8 +18,7 @@ from mkdocs.structure.nav import Navigation
 from mkdocs.structure.pages import Page
 from re import Match
 
-import examples_page
-import regexes
+from docs.python import common, regexes, examples_page
 
 log = logging.getLogger('mkdocs')
 
@@ -37,6 +37,8 @@ def on_page_markdown(
             return examples_page.examples(args)
         if type == "icon":
             return _badge_for_icon(args)
+        if type == "include":
+            return _include(args)
 
         # Otherwise, raise an error
         raise RuntimeError(f"Unknown shortcode: {type} in {page}")
@@ -87,6 +89,16 @@ def _badge_for_icon(icon: str):
     return _badge(
         icon = f":{icon}:",
     )
+
+def _include(args: str):
+    args = re.match(r"(\S+)(.*)", args)
+    file_path = Path(args.group(1))
+    return f"""
+```{common.determine_extension(file_path)} linenums="1"{args.group(2)}
+{Path(file_path).read_text()}
+```
+"""
+
 
 def _badge_for_file_count(text: str, page: Page, files: Files):
     if text == "0":

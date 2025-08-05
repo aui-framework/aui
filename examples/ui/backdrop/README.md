@@ -11,4 +11,4 @@ principles.
 In this example, a combination of @ref ass::Backdrop -enabled view and @ref AScrollArea is used. To raise the
 @ref ass::Backdrop above the @ref AScrollArea, @ref AStackedLayout layout is used.
 
-@include examples/ui/backdrop/src/main.cpp
+<!-- aui:include examples/ui/backdrop/src/main.cpp -->

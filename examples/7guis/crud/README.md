@@ -25,4 +25,4 @@ solution will have a good separation between the domain and presentation logic w
 of toolkit specific concepts or language/paradigm concepts), a mutation management that is fast but not error-prone and
 a natural representation of the layout (layout builders are allowed, of course, but would increase the overhead).
 
-@include examples/7guis/crud/src/main.cpp
+<!-- aui:include examples/7guis/crud/src/main.cpp -->

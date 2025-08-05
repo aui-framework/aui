@@ -33,7 +33,7 @@ and create `tests/` dir along with `src/` and `CMakeLists.txt`. Place your test 
 
 Suppose we want to test the `sum` function of the following program:
 
-```cpp
+```cpp linenums="1" title="main.cpp"
 #include <AUI/Platform/Entry.h>
 #include <AUI/Logging/ALogger.h>
 #include "main.h"
@@ -61,7 +61,7 @@ Possible output:
 To write a test, enable tests for your projects first. Add `aui_enable_tests(<target-name>)` to the end of your
 `CMakeLists.txt`:
 
-```cmake
+```cmake linenums="1" title="CMakeLists.txt"
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
 project(project_template)
@@ -91,7 +91,7 @@ aui_enable_tests(project_template) # <------------------------------------------
 
 and create the `tests/` dir along with `CMakeLists.txt` and `src/`. Inside `tests/`, create `MyTest.cpp`:
 
-```
+```bash title="tree"
 CMakeLists.txt
 src
 ├── main.cpp
@@ -104,7 +104,7 @@ tests
 Note the `main.h` file. Since we would like to access the `sum` function of `main.cpp`, we should put `sum`
 declaration to the `main.h` file:
 
-```cpp
+```cpp linenums="1" title="main.h"
 #pragma once
 
 int sum(int a, int b);
@@ -112,7 +112,7 @@ int sum(int a, int b);
 
 Put the basic test case to `MyTest.cpp`:
 
-```cpp
+```cpp linenums="1" title="MyTest.cpp"
 #include <gtest/gtest.h>
 #include "main.h"
 
@@ -123,7 +123,7 @@ TEST(MyTest, Sum) {
 
 Build `Tests` and run `bin/Tests`. Possible output:
 
-```
+``` title="Console"
 [==========] Running 1 test from 1 test suite.
 [----------] Global test environment set-up.
 [----------] 1 test from MyTest
@@ -152,7 +152,7 @@ Since AUI is a UI framework it is also capable of UI tests.
 
 In addition to the previous example, we'd create some window:
 
-```cpp
+```cpp linenums="1" title="UITest.cpp"
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>

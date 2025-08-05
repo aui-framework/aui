@@ -23,4 +23,4 @@ just comes out as a natural consequence of the language / toolkit / paradigm. Mo
 control, i.e. keeping the relevant context between several successive GUI interaction steps, is achieved in the source
 code. Last but not least, the ease of custom drawing is tested.
 
-@include examples/7guis/circle_drawer/src/main.cpp
+<!-- aui:include examples/7guis/circle_drawer/src/main.cpp -->

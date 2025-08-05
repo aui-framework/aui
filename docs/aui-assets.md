@@ -14,7 +14,7 @@ To refer to an asset file, prefix the path with colon character. See @ref AUrl f
 
 Assets can be enabled for your target with `aui_compile_assets` function in your `CMakeLists.txt`:
 
-@include examples/app/notes/CMakeLists.txt
+<!-- aui:include examples/app/notes/CMakeLists.txt title="CMakeLists.txt" -->
 
 Then, create `assets` directory alongside with `CMakeLists.txt`:
 
@@ -28,9 +28,12 @@ Put your files to that dir:
 cp test.txt assets/test.txt
 ```
 
-@note
-Please invoke @ref BUILD_CACHE_INVALIDATION "CMake configure" each time you add/remove files in `assets/`! Otherwise,
-these files will not appear in your program.
+!!! danger "Pitfall"
+    
+    Please invoke @ref BUILD_CACHE_INVALIDATION "CMake configure" each time you add/remove files in `assets/`!
+    Otherwise, these files will not appear in your program.
+
+
 ```bash
 cd build
 cmake .. # no need to pass arguments in existing build dir
@@ -48,7 +51,7 @@ _new<AView>() AUI_WITH_STYLE {
 },
 ```
 
-See also @ref example_minimal_ui_template_with_assets for a complete minimal example.
+See also [example_minimaluitemplatewithassets.md] for a complete minimal example.
 
 ## How does it work
 
@@ -58,13 +61,13 @@ byte array that is being registered automatically to AUI's @ref ABuiltinFiles fi
 
 `aui.toolbox` applies several transformations on a file before putting it into the `*.cpp`:
 
-1. Compresses the data. Although it may be redundant for already compressed file formats such as `*.png`, it provides a
-   decent compression ratio for textual files, such as `*.svg`.
+1.  Compresses the data. Although it may be redundant for already compressed file formats such as `*.png`, it provides a
+    decent compression ratio for textual files, such as `*.svg`.
 
-   Also, this makes it harder to reverse engineer asset files from your binary. This is not entirely impossible, but
-   thanks to the compression, textual files that appear in AUI assets can't be extracted with Windows Notepad.
+    Also, this makes it harder to reverse engineer asset files from your binary. This is not entirely impossible, but
+    thanks to the compression, textual files that appear in AUI assets can't be extracted with Windows Notepad.
 
-2. Converts data to HEX string.
+2.  Converts data to HEX string.
 
 
 ## Examples

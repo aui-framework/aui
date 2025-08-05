@@ -20,4 +20,4 @@ interactions is tested. The fact that slider adjustments must be reflected immed
 of the solution. A good solution will make it clear that the signal is a timer tick and, as always, has not much
 scaffolding.
 
-@include examples/7guis/timer/src/main.cpp
+<!-- aui:include examples/7guis/timer/src/main.cpp -->

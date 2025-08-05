@@ -37,7 +37,7 @@
  *
  * Button usually contains text only, but in practice any view can be put in it.
  *
- * @include examples/ui/button/src/main.cpp
+ * <!-- aui:include examples/ui/button/src/main.cpp -->
  *
  *
  * See @ref declarative::Button for a declarative form and examples.

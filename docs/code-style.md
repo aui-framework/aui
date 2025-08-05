@@ -234,4 +234,4 @@ In some scenarios clang-format may fight against you, especially with complicate
 
 Place this `.clang-format` file in root of your project.
 
-@include .clang-format
+<!-- aui:include .clang-format -->

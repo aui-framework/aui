@@ -603,7 +603,7 @@ AUI distributions [published on our GitHub releases page](https://github.com/aui
 self-sufficient. That is, they have AUI's dependencies bundled, so they can be used by `find_package`, without even
 requiring AUI Boot.
 
-@include test/aui.boot/Precompiled3/test_project/CMakeLists.txt
+<!-- aui:include test/aui.boot/Precompiled3/test_project/CMakeLists.txt -->
 
 ## ~/.aui (AUI.Boot Cache Dir)
 

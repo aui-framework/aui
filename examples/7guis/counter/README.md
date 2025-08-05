@@ -14,7 +14,7 @@ Counter serves as a gentle introduction to the basics of the language, paradigm 
 applications imaginable. Thus, Counter reveals the required scaffolding and how the very basic features work together to
 build a GUI application. A good solution will have almost no scaffolding.
 
-@include examples/7guis/counter/src/main.cpp
+<!-- aui:include examples/7guis/counter/src/main.cpp -->
 
 # Comparison to Jetpack Compose
 

@@ -9,7 +9,7 @@
 import io
 import os
 from pathlib import Path
-from docs.python import regexes
+from docs.python import regexes, common
 
 
 def examine():
@@ -125,11 +125,7 @@ def gen_pages():
                     for f in example['srcs']:
                         filename = f.relative_to(page_path.parent)
                         print(f'\n### {filename}\n', file=fos)
-                        extension = f.suffix
-                        if extension == ".h":
-                            extension = "cpp"
-                        elif str(filename) == "CMakeLists.txt":
-                            extension = "cmake"
+                        extension = common.determine_extension(f)
 
                         print(f'```{extension} linenums="1"', file=fos)
                         def skip_license(iterator):

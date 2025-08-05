@@ -20,7 +20,7 @@ within a widget on the other hand. Such constraints are very common in everyday 
 good solution for Flight Booker will make the constraints clear, succinct and explicit in the source code and not hidden
 behind a lot of scaffolding.
 
-@include examples/7guis/flight_booker/src/main.cpp
+<!-- aui:include examples/7guis/flight_booker/src/main.cpp -->
 
 # Regex Library
 
@@ -36,4 +36,4 @@ in order to pull awesome 3rdparty implementation of your choice that suits your 
 chosen [ctre](https://github.com/hanickadot/compile-time-regular-expressions), as it evaluates the regex expression at
 compile-time, emitting effective code, as if we were validating the string manually.
 
-@include examples/7guis/flight_booker/CMakeLists.txt
+<!-- aui:include examples/7guis/flight_booker/CMakeLists.txt -->

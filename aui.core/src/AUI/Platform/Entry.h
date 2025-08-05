@@ -34,10 +34,10 @@
  *
  * Minimal entrypoint of an UI application:
  *
- * @include examples/ui/views/src/main.cpp
+ * <!-- aui:include examples/ui/views/src/main.cpp -->
  *
  * Minimal entrypoint of a console application:
- * @include examples/basic/hello_world/src/main.cpp
+ * <!-- aui:include examples/basic/hello_world/src/main.cpp -->
  *
  * Prototype of `AUI_ENTRY` function you are actually implementing:
  * @code{cpp}

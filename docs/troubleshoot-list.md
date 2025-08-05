@@ -4,7 +4,13 @@ If neither of these suggestions helped and you think you encountered an AUI's is
 
 ## Linking problems
 
-1. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
+1.  Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
+2.  Try using static build instead of shared libraries.
+
+    ```bash
+    cd build
+    cmake .. -DBUILD_SHARED_LIBS=OFF
+    ```
 
 ## Assets
 
