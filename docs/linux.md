@@ -1,3 +1,5 @@
+# Linux
+
 @page linux Linux (-based desktop OSes)
 @details
 @auisourcemarker
@@ -15,7 +17,7 @@ hardware drivers. Additionally, due to extensive customizability options and low
 this platform is often left unsupported by software. And, even in such case, users of your application can use
 compatibility layers such as WINE to launch your application under Linux.
 
-# Key considerations
+## Key considerations
 
 - Linux OS comes in form of a distro, most notable are:
   - Ubuntu
@@ -46,4 +48,4 @@ compatibility layers such as WINE to launch your application under Linux.
   - Ubuntu Unity
 - There are distros designed for smartphones but they're considered unusable at the moment
 
-# AUI implementation specifics
+## AUI implementation specifics

@@ -1,7 +1,9 @@
+# IDE Plugins
+
 AUI project offers extensions for common IDEs to improve user experience and quality-of-live during development of AUI
 applications.
 
-# CLion
+## CLion
 
 @image html Screenshot_20241214_141311.png
 

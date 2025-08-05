@@ -2,7 +2,7 @@
 
 This page describes how an AUI application is built.
 
-# Trivia
+## Trivia
 
 On this page, libraries and executables are represented with @ref windows file name extensions with shared linking.
 Other platforms and configurations follow the same principles but with different file types.
@@ -12,7 +12,7 @@ Other platforms and configurations follow the same principles but with different
 
 Also, on this page, the build system is demonstrated on @ref example_minimal_ui_template_with_assets.
 
-# Generic scenario
+## Generic scenario
 
 The most common and straightforward scenario. CMake handles everything.
 
@@ -27,7 +27,7 @@ Things to note:
   @ref assets to cpp files, compressing them, making them available in the application, effectively embedding them to
   the application binary.
 
-# Mobile scenario
+## Mobile scenario
 
 On mobile platforms, the build process is overcomplicated by:
 

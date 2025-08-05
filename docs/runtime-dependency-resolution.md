@@ -1,3 +1,5 @@
+# Runtime dependency resolution
+
 Runtime dependencies are files that are required by your application during execution. Typically, those files are
 program modules such as `*.dll`, `*.so` or `*.dylib`.
 
@@ -5,7 +7,7 @@ program modules such as `*.dll`, `*.so` or `*.dylib`.
 Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons, images,
 sounds and other resources consider using @ref assets to embed them right into your binary.
 
-# Build-time shared library resolution
+## Build-time shared library resolution
 
 This section describes how runtime dependencies are resolved during build time (and development).
 
@@ -22,7 +24,7 @@ This section describes how runtime dependencies are resolved during build time (
 ...
 ```
 
-## DLL platforms (Windows only)
+### DLL platforms (Windows only)
 
 Windows runtime linking process is simple. The dll lookup is performed as follows (ordered by priority):
 1. Find dll in the same directory as exe or dll itself.
@@ -41,7 +43,7 @@ bin/aui.views.dll
 ...
 ```
 
-## Other platforms (UNIX-like only)
+### Other platforms (UNIX-like only)
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
 installations (for compatibility reasons), hence @ref "docs/AUI Boot.md" copies imported shared objects to
@@ -62,7 +64,7 @@ The hardcoded full path is suitable for the only machine where binary is built. 
 @ref CMAKE_INSTALL "--install" command clears these paths, opting to use an universal RPATH to make these binaries
 relocable. AUI.Boot populates RPATH on its own, see the section above.
 
-# Install-time shared library resolution
+## Install-time shared library resolution
 
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
@@ -95,7 +97,7 @@ installation, an install-time error is thrown.
 
 This behaviour can be disabled by setting `-DAUI_INSTALL_RUNTIME_DEPENDENCIES=OFF`.
 
-## DLL platforms (Windows only)
+### DLL platforms (Windows only)
 
 On Windows, dlls and exes are copied together to the same directory (`bin/`).
 ```sh
@@ -122,7 +124,7 @@ simply set the property back to "bin" after `aui_app` call.
 set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
 ```
 
-## Other platforms (UNIX-like only)
+### Other platforms (UNIX-like only)
 
 @ref "docs/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
 

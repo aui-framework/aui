@@ -36,7 +36,7 @@ For instance, let's see how to vectorize your image using Inkscape editor. Just 
 
 * AUI's SVG renderer does not show up SVG paths. The easiest solution is convert paths to polygons (shapes) in modern vector editor.
 
-# Shaping
+## Shaping
 
 Modern operating systems tend to enforce icon shape to unify their launchers. For example, iOS is known for its
 distinctive "squircle" shape, a unique combination of square and circle with subtle curvature that deviates from the

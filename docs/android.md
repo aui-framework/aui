@@ -16,7 +16,7 @@ electronics like TVs and wearables.
 
 Android shares its kernel with @ref linux, but is not treated by AUI exactly as Linux.
 
-# Key considerations
+## Key considerations
 
 - Like @ref linux, Android is customizable - core services and components tend to vary depending on device manufacturer.
   It's mostly AUI's responsibility and AUI-based applications are mostly immune to such specifics unless they use native
@@ -26,4 +26,4 @@ Android shares its kernel with @ref linux, but is not treated by AUI exactly as 
   in hardware, so they use software button/gesture instead
 
 
-# AUI implementation specifics
+## AUI implementation specifics

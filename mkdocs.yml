@@ -46,12 +46,13 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - admonition
+  - pymdownx.blocks.caption
+  - pymdownx.details
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
-  - pymdownx.blocks.caption
-  - pymdownx.details
-  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
   - attr_list
   - md_in_html
   - tables
@@ -72,7 +73,6 @@ theme:
     repo: fontawesome/brands/github
   features:
     - navigation.instant
-    - navigation.sections
     - navigation.tracking
     - navigation.top
     - navigation.footer
@@ -85,6 +85,7 @@ theme:
     - content.action.edit
     - content.code.copy
     - content.code.annotate # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
+
   palette:
     # Palette toggle for dark mode (which is by default)
     - scheme: slate
@@ -103,21 +104,52 @@ theme:
 
 nav:
   - Home: index.md
+  - getting-started.md
   - examples.md
-  - Reference:
-    - CMake:
-      - aui_app: aui_app.md
-      - aui_executable: docs/aui_executable.md
-      - aui_link: docs/aui_link.md"
-      - aui_module: docs/aui_module.md
-      - 'AUI configure flags': 'AUI configure flags.md'
-      - 'App Build Overview': 'App Build Overview.md'
 
   - Introduction:
-    - 'Getting started with AUI': Getting started with AUI.md
-    - 'AUI Boot': AUI Boot.md
-    - 'Writing Tests': Writing tests.md
-    - 'Build-time macros': Macros.md
-    - 'Code Style and Recommendations': 'Code style and recommendations.md'
-    - 'clang-format': clang-format.md
-    - 'Troubleshoot List': 'Troubleshoot list.md'
+    - aui-assets.md
+    - writing-tests.md
+    - code-style.md
+    - troubleshoot-list.md
+    - crosscompiling.md
+
+  - 'UI Architecture':
+    - ui-building-overview.md
+    - layout_managers.md
+    - signal_slot.md
+    - property_system.md
+    - devtools.md
+
+  - 'Views':
+    - 'useful_views.md'
+
+  - 'Styling':
+    - ass.md
+    - ass_properties.md
+
+  - 'Platform Specifics':
+    - windows.md
+    - linux.md
+    - macos.md
+    - android.md
+    - ios.md
+    - emscripten.md
+
+  - 'Other':
+      - aui-command-line-arguments.md
+      - runtime-dependency-resolution.md
+      - forking-aui.md
+      - contributing.md
+
+  - Reference:
+      - 'Installation methods':
+        - aui.boot.md
+      - macros.md
+      - CMake:
+          - aui_app.md
+          - aui_executable.md
+          - aui_link.md"
+          - aui_module.md
+          - aui-configure-flags.md
+          - app-build-overview.md

@@ -15,7 +15,7 @@ from mkdocs.structure.files import File, Files
 from mkdocs.structure.pages import Page
 from re import Match
 
-from docs.python import examples_page
+import examples_page
 
 log = logging.getLogger('mkdocs')
 

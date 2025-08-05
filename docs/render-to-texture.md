@@ -1,3 +1,5 @@
+# Render to texture
+
 Starting from 6.x.x, AUI supports render to texture optimization (experimental). That is, instead of redrawing
 every view each frame (known as immediate mode) framework redraws views that actually updated, copying persisting
 pixel data from the last frame. Sometimes this technique is referred as backbuffering.

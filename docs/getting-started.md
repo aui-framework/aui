@@ -1,7 +1,9 @@
+# Getting started with AUI
+
 AUI uses CMake as a build system. All CPP source files are placed in `src/` folder. See file structure in the examples
 below.
 
-#  Basic hello world
+## Basic hello world
 
 **Project:** `docs/projects/hello_world/basic`
 
@@ -79,7 +81,7 @@ Possible output:
 [13:24:02][UI Thread][Logger][INFO]: Hello world!
 ```
 
-# Introduction to UI building
+## Introduction to UI building
 
 **Project:** `docs/projects/hello_world/ui`
 

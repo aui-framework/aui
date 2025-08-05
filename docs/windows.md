@@ -1,3 +1,5 @@
+# Windows
+
 @page windows Windows (operating system)
 @details
 @auisourcemarker
@@ -7,7 +9,7 @@ most popular desktop operating system worldwide, with a market share of about 70
 and tablets is Windows 11, while certain older versions are still supported and maintained by Microsoft.
 
 
-# Key considerations
+## Key considerations
 
 - You'll need to @ref PACKAGING_FOR_WINDOWS "make an installer and potentially a portable package" with
   @ref updater "auto updating" to distribute your application despite Windows offers an "official" software repository
@@ -15,4 +17,4 @@ and tablets is Windows 11, while certain older versions are still supported and 
 - You might need to sign your executables, otherwise Windows would probably treat your application as a virus and make
   launching your executables a lot harder
 
-# AUI implementation specifics
+## AUI implementation specifics

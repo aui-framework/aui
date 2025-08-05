@@ -19,7 +19,7 @@ You can fork AUI to whatever source hosting provider you want, but in general, i
 2. As soon as you publish your project with modified version of AUI, you'll need to publish changes to AUI anyway
    (a requirement of MPL2).
 
-# Steps
+## Steps
 
 1. Mirror/clone/fork AUI's repo from https://github.com/aui-framework/aui.
 2. If you follow **zero trust policy**, you will need to fork all AUI's dependencies to your controlled zone as well.

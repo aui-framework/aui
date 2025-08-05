@@ -1,3 +1,5 @@
+# Writing tests
+
 AUI uses GTest as the tests framework and provides a simple way to use it in your application.
 
 It also includes GMock library.
@@ -27,7 +29,7 @@ the following contents:
 In order to enable tests for your project, call `aui_enable_tests(<target-name>)` in the end of your `CMakeLists.txt`
 and create `tests/` dir along with `src/` and `CMakeLists.txt`. Place your test suites inside the `tests/` directory.
 
-# Usage Example
+## Usage Example
 
 Suppose we want to test the `sum` function of the following program:
 
@@ -144,7 +146,7 @@ AUI does the following fundamental things for you:
    the `include` scope of the executable is copied to the `Tests` program (this is why we have easily accessed the
    `main.h` header)
 
-# Writing UI Tests
+## Writing UI Tests
 
 Since AUI is a UI framework it is also capable of UI tests.
 

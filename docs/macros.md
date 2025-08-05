@@ -1,3 +1,5 @@
+# Build-time macros
+
 @note
 This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
 @ref useful_macros.

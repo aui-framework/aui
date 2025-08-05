@@ -1,3 +1,5 @@
+# Emscripten (WebAssembly)
+
 @page emscripten Emscripten (WebAssembly)
 @details
 @auisourcemarker

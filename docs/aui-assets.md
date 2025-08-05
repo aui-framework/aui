@@ -10,7 +10,7 @@ can't be viewed or changed as easily as files lying around in user's filesystem.
 
 To refer to an asset file, prefix the path with colon character. See @ref AUrl for more info.
 
-# aui_compile_assets
+## aui_compile_assets
 
 Assets can be enabled for your target with `aui_compile_assets` function in your `CMakeLists.txt`:
 
@@ -50,7 +50,7 @@ _new<AView>() AUI_WITH_STYLE {
 
 See also @ref example_minimal_ui_template_with_assets for a complete minimal example.
 
-# How does it work
+## How does it work
 
 `aui_compile_assets` adds a build time dependency to the specified target on `aui.toolbox` that generates C++ files per
 each file found in `assets/` directory. Those `*.cpp` files are compiled along with your target. C++ files contain a

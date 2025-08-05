@@ -1,10 +1,12 @@
+# Troubleshoot list
+
 If neither of these suggestions helped and you think you encountered an AUI's issue, consider [reporting it on GitHub](https://github.com/aui-framework/aui/issues).
 
-# Linking problems
+## Linking problems
 
 1. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
 
-# Assets
+## Assets
 
 See also: @ref assets
 
@@ -14,7 +16,7 @@ See also: @ref assets
    also with the final executable (`PUBLIC` linking does not solve this issue on Linux).
 4. Try using @ref WHOLEARCHIVE flag.
 
-# Build cache invalidation
+## Build cache invalidation
 
 Symptoms:
 

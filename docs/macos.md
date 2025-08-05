@@ -1,3 +1,5 @@
+# macOS
+
 @page macos macOS (operating system)
 @auisourcemarker
 @details
@@ -19,7 +21,7 @@ development for all supported platforms at once:
 - @ref linux "Linux" - via VM
 - @ref emscripten - natively
 
-# Key considerations
+## Key considerations
 
 - You'd want to support both architectures - `x86_64` and Apple Silicon `arm64` by producing universal binaries
 - Application menu is located in system's top bar instead of being inside the window
@@ -27,4 +29,4 @@ development for all supported platforms at once:
   units such as @ref AMetric "_dp"
 - Apple laptops include high quality touchpads with high resolution scroll and possibility for multitouch gestures
 
-# AUI implementation specifics
+## AUI implementation specifics

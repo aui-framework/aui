@@ -1,3 +1,5 @@
+# App Packaging
+
 Cross-platform app packaging is a large topic that involves various build systems, platform-specific tools and
 techniques. AUI unifies package building process while still relying on `CMake` as the central build system.
 

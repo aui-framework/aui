@@ -1,3 +1,5 @@
+# iOS
+
 @page ios iOS (operating system)
 @details
 @auisourcemarker
@@ -9,7 +11,7 @@ At the moment, support of iOS in AUI Framework is in early stage and lacks a lot
 
 iOS shares its XNU kernel and codebase with @ref macos.
 
-# Key considerations
+## Key considerations
 
 - iOS is easier to support than @ref android due to limited number of devices and OS versions
 - You'd need a @ref macos machine to build and run an iOS app

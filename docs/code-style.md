@@ -1,4 +1,4 @@
-# Code style
+# Code Style and Recommendations
 
 See also: @ref docs/clang-format.md
 
@@ -62,7 +62,7 @@ struct User {
 It allows aggregate initialization: `User u { .username = "Test" };`
 
 
-# Assertions
+## Assertions
 
 The whole AUI framework's code filled with assertion checks so if you do something wrong the framework will tell you
 about it. Also in AUI almost every assertion contains a quick tip how to solve the problem. It is recommended to you to
@@ -80,7 +80,7 @@ Do not put algorithm-necessary code inside `assert()`, `AUI_ASSERT` or `AUI_ASSE
 release builds on some compilers, i.e. don't `assert(("someAction failed!", someObject->someAction() != 0))` since it
 leads to hard-to-find bugs.
 
-## Assert or exception?
+### Assert or exception?
 
 Assert is an enemy for the production application since it *terminates* program execution. Use it when it's condition relies only on the developer.
 Quick example:
@@ -93,12 +93,12 @@ void loginButtonClicked() {
 }
 ```
 
-# Code style exceptions
+## Code style exceptions
 
 Commonly, any iterator-based algorithm (i.e. `aui::binary_search`), global functions, trait structs are STL-like
 functionality. The final goal is to avoid mixed-style expressions like `AString::const_iterator` which hurts eyes.
 
-# Template metaprogramming and macros
+## Template metaprogramming and macros
 
 Both C++ template instantiation mechanism and macro preprocessor are Turing complete. However, writing and understanding
 C++ template metaprogramming (TMP) and macro preprocessor code requires expert knowledge of C++ and a lot of time to
@@ -107,25 +107,25 @@ understand. Use TMP deliberately.
 Since TMP and macros often evolve custom syntax and usage scenarios, consider writing especially well documentation with
 examples when defining public API templates and macros.
 
-# Improving compiler error messages techniques
+## Improving compiler error messages techniques
 
-## Try to break your templates
+### Try to break your templates
 
 After considering actions listed below, try your types/traits/concepts against various awkward types/arguments/use 
 cases.
 
-## Concepts are preferable
+### Concepts are preferable
 
 Use concepts instead of SFINAE were possible.
 
-## Raise static_assert messages
+### Raise static_assert messages
 
 With `static_assert` with potentially helpful message, use `====================>` prefix in your message to raise your
 message among a long list of compiler diagnostics.
 
 @snippet aui.core/src/AUI/Reflect/AClass.h ARROW_ERROR_MESSAGE_EXAMPLE
 
-## Single line comment error messages
+### Single line comment error messages
 
 You can exploit the fact that a compiler prints code lines in its diagnostics. Put a single line comment with long arrow
 prefix to put potentially helpful messages. Use @ref TRY_TO_BREAK technique to discover the lines to put the comments
@@ -164,3 +164,74 @@ Produces the following diagnostics:
 ```
 
 This makes it obvious what does this overload do.
+
+## .clang-format
+
+clang-format is a de facto standard tool to auto format (C++) code with style described by `.clang-format` file that
+typically located inside your project's root directory. AUI @ref CLANG_FORMAT "has such file".
+
+Since AUI abuses C++'s syntax, it's important to set up appropriate auto formatting, or you will often find yourself
+struggling with AUI's DSL especially in large portions of layout, despite the fact we recommend to decompose large
+AUI DSLs into smaller pieces (i.e., functions). For your project, we recommend to start with AUI's formatting
+configuration listed below. AUI's [App Template](https://github.com/aui-framework/example_app) has `.clang-format`
+already. Your IDE should pick up it without further configuration.
+
+### Always Use Trailing Comma in Initializer Lists
+
+When it comes to `clang-format` there's one an unobvious feature when using AUI's DSL. Consider the example:
+
+=== "With Trailing Comma"
+    
+    ```cpp
+    setContents(Vertical {
+      Button { "Up" },
+      Button { "Down" },
+    });
+    ```
+    
+=== "Without Trailing Comma"
+    
+    ```cpp
+    setContents(Vertical {
+      Button { "Up" },
+      Button { "Down" }
+    });
+    ```
+
+See the difference? The second example lacks one comma. If we try to trigger `clang-format`
+(<kbd>ALT</kbd>+<kbd>CTRL</kbd>+<kbd>L</kbd> in **CLion**), we'll get the following results (assuming AUI's
+@ref CLANG_FORMAT ".clang-format"):
+
+=== "With Trailing Comma"
+     
+    ```cpp
+    setContents(Vertical {
+      Button { "Up" },
+      Button { "Down" },
+    });
+    ```
+
+=== "Without Trailing Comma"
+    
+    ```cpp
+    setContents(Vertical {
+      Button { "Up" }, Button { "Down" } });
+    ```
+
+The first example left as is (correct), the second example formatted confusingly.
+
+When using any kind of AUI's DSL with initializer lists please always use trailing comma. Not only it helps with
+reordering, git diffs, etc..., but also `.clang-format` makes proper formatting for lists with trailing commas.
+
+### Use clang-format off/on
+
+In some scenarios clang-format may fight against you, especially with complicated syntax. You can use
+`// clang-format off` and `// clang-format on` to disable and enable clang-format, respectively.
+
+@snippet aui.json/tests/JsonFieldsTest.cpp clang format toggle
+
+### AUI's .clang-format
+
+Place this `.clang-format` file in root of your project.
+
+@include .clang-format
