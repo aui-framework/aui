@@ -10,21 +10,23 @@ import logging
 import posixpath
 import re
 
+import mkdocs
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.files import File, Files
+from mkdocs.structure.nav import Navigation
 from mkdocs.structure.pages import Page
 from re import Match
 
 import examples_page
+import regexes
 
 log = logging.getLogger('mkdocs')
-
 
 def on_page_markdown(
         markdown: str, *, page: Page, config: MkDocsConfig, files: Files
 ):
     # Replace callback
-    def replace(match: re.Match):
+    def replace_comment(match: re.Match):
         type, args = match.groups()
         args = args.strip()
         if type == "example-file-count":
@@ -39,11 +41,38 @@ def on_page_markdown(
         # Otherwise, raise an error
         raise RuntimeError(f"Unknown shortcode: {type} in {page}")
 
-    # Find and replace all external asset URLs in current page
-    return re.sub(
+    markdown = re.sub(
         r"<!-- aui:([\w\-]+)(.*?) -->",
-        replace, markdown, flags=re.I | re.M
+        replace_comment, markdown, flags=re.I | re.M
     )
+
+    def replace_url(match: re.Match):
+        referred_page_id = match.group(1)
+        referred_page = files.src_paths.get(referred_page_id)
+        if not referred_page:
+            line = markdown[:match.endpos].count('\n') + 1
+            raise RuntimeError(f"Unknown page: {referred_page_id} in {page.file.abs_src_path}:{line}")
+        title = regexes.PAGE_TITLE.match(referred_page.content_string).group(1)
+        return f"[{title}]({referred_page_id})"
+
+    def handle_lines(iterator: iter):
+        for line in iterator:
+            if "```" in line:
+                yield line
+                for line in iterator:
+                    yield line
+                    if "```" in line:
+                        break
+            else:
+                line = re.sub(
+                    r"\[(.+\.md)\](?![\(])",
+                    replace_url, line, flags=re.I | re.M
+                )
+                yield line
+
+    markdown = "\n".join([i for i in handle_lines(iter(markdown.splitlines()))])
+
+    return markdown
 
 def _badge(icon: str, text: str = "", type: str = "", tooltip: str = ""):
     classes = f"mdx-badge mdx-badge--{type}" if type else "mdx-badge"

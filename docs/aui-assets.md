@@ -65,3 +65,9 @@ byte array that is being registered automatically to AUI's @ref ABuiltinFiles fi
    thanks to the compression, textual files that appear in AUI assets can't be extracted with Windows Notepad.
 
 2. Converts data to HEX string.
+
+
+## Examples
+
+- [example_apptemplate.md]
+- [example_minimaluitemplatewithassets.md]
