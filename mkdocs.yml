@@ -4,6 +4,9 @@ site_url: https://aui-framework.github.io/
 site_author: Alex2772
 site_description: Cross-platform base for C++ UI apps
 use_directory_urls: true
+repo_url: https://github.com/aui-framework/aui
+repo_name: aui-framework/aui
+edit_uri: edit/develop/docs/
 copyright: >
   © 2025 AUI Framework Contributors. Documentation contributions included herein are the copyrights of their respective
   owners. The documentation provided herein is licensed under the terms of the GNU Free Documentation License version
@@ -34,10 +37,6 @@ extra:
 
 extra_css:
   - overrides/style.css
-
-repo_url: https://github.com/aui-framework/aui
-repo_name: aui-framework/aui
-edit_uri: edit/develop/
 
 markdown_extensions:
   - toc:

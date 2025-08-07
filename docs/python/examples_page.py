@@ -144,5 +144,5 @@ def gen_pages():
                         for line in skip_license(iter(f.read_text().splitlines())):
                             print(f'{line}', file=fos)
                         print(f'```', file=fos)
-            mkdocs_gen_files.set_edit_path(f"{id}.md", page_path.relative_to(Path.cwd()))
+            mkdocs_gen_files.set_edit_path(f"{id}.md", '..' / page_path.relative_to(Path.cwd()))
 
