@@ -21,8 +21,26 @@ assert CPP_CLASS_DEF.match('class API_AUI_CORE Test;').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test {').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test: Base {').group(2) == "Test"
 
+CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
+assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
+
+def parse_comment_lines(iterator):
+    output = []
+    for line in iterator:
+        if "*/" in line:
+            break
+        line = CPP_COMMENT_LINE.match(line).group(1)
+
+
+        # todo: things like # Platform support {#AFatalException_Platform_support} breaks markdown parser in mkdocs
+        line = line.replace('{', '').replace('}', '')
+
+        output.append(line)
+    return "\n".join(output)
+
+
 def gen_pages():
-    classes = []
+    classes = set()
     for root, dirs, files in os.walk('.'):
         for file in files:
             if not root.startswith('./aui.'):
@@ -32,9 +50,26 @@ def gen_pages():
             if "3rdparty" in root:
                 continue
             with open(Path(root) / file, 'r') as f:
-                for line in f.readlines():
+                iterator = iter(f.readlines())
+                last_comment_line = None
+                for line in iterator:
+                    if "/**" in line:
+                        last_comment_line = parse_comment_lines(iterator)
+                        continue
+
                     if m := CPP_CLASS_DEF.match(line):
-                        classes.append(m.group(2))
+                        if not last_comment_line:
+                            continue # non-documented class = non-existing class
+
+                        class_name = m.group(2)
+                        classes.add(class_name)
+                        with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
+                            print(f'# {class_name}', file=fos)
+                            print(f'', file=fos)
+                            print(last_comment_line, file=fos)
+
+                    last_comment_line = None
+
 
 
     with mkdocs_gen_files.open('classes.md', 'w') as f:
@@ -60,7 +95,7 @@ def gen_pages():
             print(f'<div class="letter" id="{letter.lower()}">{letter}</div>', file=f)
             print('<div class="list">', file=f)
             for c in sorted(classes2):
-                print('<div class="entry">', c, '</div>', file=f)
+                print('<div class="entry">', f'<a href="/reference/{c.lower()}">{c}</a>', '</div>', file=f)
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)
