@@ -8,6 +8,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import mkdocs_gen_files
-from docs.python import examples_page
+from docs.python import examples_page, doxygen
 
 examples_page.gen_pages()
+doxygen.gen_pages()

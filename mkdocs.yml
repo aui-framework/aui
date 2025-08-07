@@ -150,6 +150,7 @@ nav:
   - Reference:
       - 'Installation methods':
         - aui.boot.md
+      - classes.md
       - macros.md
       - CMake:
           - aui_app.md

@@ -106,3 +106,35 @@ th, td {
 .md-typeset p:has(> img) {
     text-align: center;
 }
+
+/* classes.md */
+.class-index .item {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: 20px;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.class-index .item .list {
+    column-width: 250px;
+    flex: 1 1 200px;
+    min-width: 350px;
+}
+
+.class-index > .item:nth-child(2n) {
+    background: var(--md-code-bg-color);
+}
+
+.class-index .item .letter {
+    font-size: 2em;
+    line-height: 1.2;
+}
+
+.class-index-title {
+    background: var(--md-accent-fg-color--transparent);
+    text-align: center;
+    padding: 8px;
+    font-size: 1.1em;
+}
