@@ -1,11 +1,11 @@
-@page android Android (operating system)
-@details
-@auisourcemarker
+# Android (operating system)
+
 Android is a mobile operating system primarily developed by Google. It's the most widely used operating system in the
 world with over three billion monthly active users.
 
-@warning
-At the moment, support of Android in AUI Framework is in early stage and lacks a lot of features.
+!!! bug "Early Access Feature"
+
+    At the moment, support of Android in AUI Framework is in early stage and lacks a lot of features.
 
 The core operating system, known as AOSP, is free and open-source, but most devices run Google's proprietary version of
 Android.

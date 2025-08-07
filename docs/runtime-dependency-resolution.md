@@ -27,6 +27,7 @@ This section describes how runtime dependencies are resolved during build time (
 ### DLL platforms (Windows only)
 
 Windows runtime linking process is simple. The dll lookup is performed as follows (ordered by priority):
+
 1. Find dll in the same directory as exe or dll itself.
 2. If _1._ is failed, find dll in `PATH` environment variable.
 3. If both _1._ and _2._ are failed, show an error message box. (A helpful message indicating that some specific dll

@@ -1,14 +1,12 @@
-# macOS
+# macOS (operating system)
 
-@page macos macOS (operating system)
-@auisourcemarker
-@details
 macOS is a series of proprietary operating systems developed by Apple for their own hardware. It's designed
 exclusively for the Apple ecosystem, providing users with a powerful and user-friendly platform to operate their
 devices.
 
-@warning
-At the moment, support of macOS in AUI Framework is in early stage and lacks a lot of features.
+!!! bug "Early Access Feature"
+    
+    At the moment, support of macOS in AUI Framework is in early stage and lacks a lot of features.
 
 macOS shares its XNU kernel and codebase with @ref ios.
 
