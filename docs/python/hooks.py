@@ -9,7 +9,10 @@
 import logging
 import posixpath
 import re
+import sys
 from pathlib import Path
+
+sys.path.append(str(Path.cwd()))
 
 import mkdocs
 from mkdocs.config.defaults import MkDocsConfig
@@ -19,6 +22,7 @@ from mkdocs.structure.pages import Page
 from re import Match
 
 from docs.python import common, regexes, examples_page
+
 
 log = logging.getLogger('mkdocs')
 
@@ -53,7 +57,7 @@ def on_page_markdown(
         referred_page = files.src_paths.get(referred_page_id)
         if not referred_page:
             line = markdown[:match.endpos].count('\n') + 1
-            log.warning(f"Unknown page: {referred_page_id} in {page.file.abs_src_path}:{line}")
+            log.warning(f"Doc file '{page.file.abs_src_path}' (line {line}) contains an unrecognized link to '{referred_page_id}'.")
             return f"==broken link to {referred_page_id}=="
         title = regexes.PAGE_TITLE.match(referred_page.content_string).group(1)
         return f"[{title}]({referred_page_id})"
