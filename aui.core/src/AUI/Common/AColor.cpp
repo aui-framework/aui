@@ -75,8 +75,12 @@ AColor::AColor(const AString& s) {
 
 AString AColor::toString() const {
     char buf[16];
-    sprintf(buf, "#%02x%02x%02x%02x", static_cast<unsigned char>(r * 255.f), static_cast<unsigned char>(g * 255.f),
-            static_cast<unsigned char>(b * 255.f), static_cast<unsigned char>(a * 255.f));
+    std::snprintf(buf, sizeof(buf), "#%02x%02x%02x%02x",
+        static_cast<unsigned>(static_cast<unsigned char>(r * 255.f)),
+        static_cast<unsigned>(static_cast<unsigned char>(g * 255.f)),
+        static_cast<unsigned>(static_cast<unsigned char>(b * 255.f)),
+        static_cast<unsigned>(static_cast<unsigned char>(a * 255.f))
+    );
     return buf;
 }
 
