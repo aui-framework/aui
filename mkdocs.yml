@@ -3,6 +3,7 @@ site_name: AUI Framework
 site_url: https://aui-framework.github.io/
 site_author: Alex2772
 site_description: Cross-platform base for C++ UI apps
+use_directory_urls: true
 copyright: >
   © 2025 AUI Framework Contributors. Documentation contributions included herein are the copyrights of their respective
   owners. The documentation provided herein is licensed under the terms of the GNU Free Documentation License version
@@ -36,7 +37,7 @@ extra_css:
 
 repo_url: https://github.com/aui-framework/aui
 repo_name: aui-framework/aui
-edit_uri: edit/master/docs/
+edit_uri: edit/develop/
 
 markdown_extensions:
   - toc:
@@ -51,6 +52,11 @@ markdown_extensions:
   - pymdownx.inlinehilite
   - pymdownx.snippets
   - pymdownx.superfences
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
   - pymdownx.tabbed:
       alternate_style: true
   - attr_list

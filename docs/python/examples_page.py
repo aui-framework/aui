@@ -42,8 +42,12 @@ def examine():
                     id = title[title.find("{#")+2:title.find("}")]
                     title= title[:title.find("{#")]
                 else:
-                    id = "example_" + title.lower()
-                    id = "".join(filter(lambda x: str.isalnum(x) or x in ['_'], id))
+                    id = title.lower()
+                    for i in [" ", "_"]:
+                        id = id.replace(i, "-")
+                    id = "".join(filter(lambda x: str.isalnum(x) or x == '-', id))
+                    id = id.strip('-')
+                    id = f"examples/{id}"
 
                 category = None
                 description = ""
@@ -101,7 +105,7 @@ def example(category: str):
     return f"""
 !!! example "Example's page"
     
-    This page describes an example listed in [{category}](examples.md#{category}) category.
+    This page describes an example listed in [{category}](../examples.md#{category}) category.
 
 """
 
@@ -112,7 +116,7 @@ def gen_pages():
             id = example['id']
             with mkdocs_gen_files.open(f"{id}.md", "w") as fos:
                 page_path = example['page_path']
-                with io.open(example['page_path'], 'r', encoding='utf-8') as fis:
+                with io.open(page_path, 'r', encoding='utf-8') as fis:
                     contents = fis.read()
                     print(contents, file=fos, end='')
 
@@ -140,4 +144,5 @@ def gen_pages():
                         for line in skip_license(iter(f.read_text().splitlines())):
                             print(f'{line}', file=fos)
                         print(f'```', file=fos)
+            mkdocs_gen_files.set_edit_path(f"{id}.md", page_path.relative_to(Path.cwd()))
 

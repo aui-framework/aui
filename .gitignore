@@ -345,3 +345,6 @@ ASALocalRun/
 healthchecksdb
 
 .run/
+
+# mkdocs output
+site/
