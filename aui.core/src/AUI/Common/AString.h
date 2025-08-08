@@ -839,10 +839,12 @@ namespace aui::win32 {
 }
 #endif
 
+#if defined(FMT_VERSION) && (FMT_VERSION < 100000)
 template <> struct fmt::detail::is_string<AString>: std::false_type {};
+#endif
 
 template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
-    auto format(const AString& s, format_context& ctx) const {
+    auto format(const AString& s, fmt::format_context& ctx) const {
         return fmt::formatter<std::string>::format(s.toStdString(), ctx);
     }
 };
