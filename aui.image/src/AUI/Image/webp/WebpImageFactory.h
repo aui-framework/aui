@@ -33,6 +33,15 @@ public:
 
     bool hasAnimationFinished() override;
 
+    enum class FrameSkipMode {
+        PAUSE,         // 0: pause, continue from the same frame
+        SKIP_FRAMES,   // 1: skip frames and loops (fast forward)
+        CATCH_UP       // 2: catch up one frame per call
+    };
+
+    void setFrameSkipMode(const FrameSkipMode mode) { mSkipMode = mode;}
+    FrameSkipMode getFrameSkipMode() const { return mSkipMode; }
+
 private:
     size_t mWidth;
     size_t mHeight;
@@ -47,6 +56,9 @@ private:
     size_t mLoopCount;
     bool mAnimationFinished = false;
     std::chrono::time_point<std::chrono::system_clock> mLastTimeFrameStarted;
+
+    FrameSkipMode mSkipMode = FrameSkipMode::PAUSE;
+    std::chrono::milliseconds mTotalDuration = std::chrono::milliseconds(0);
 
     static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
 
