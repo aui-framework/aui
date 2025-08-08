@@ -80,12 +80,12 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
             case FrameSkipMode::SKIP_FRAMES: {
                 // Skipping cycles
                 if (mTotalDuration.count() > 0 && mDurations.size() >= mFrameCount) {
-                    uint64_t fullCycles = elapsed / mTotalDuration;
+                    size_t fullCycles = elapsed / mTotalDuration;
                     if (fullCycles > 0) {
                         auto cyclesToSkip =
                             (mLoopCount == 0)
                                 ? fullCycles
-                                : std::min(fullCycles, static_cast<uint64_t>(mLoopCount - mLoopsPassed));
+                                : std::min(fullCycles, static_cast<size_t>(mLoopCount - mLoopsPassed));
 
                         mLoopsPassed += cyclesToSkip;
                         mLastTimeFrameStarted += mTotalDuration * cyclesToSkip;
