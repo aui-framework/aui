@@ -64,7 +64,7 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
 
         switch (mSkipMode) {
             case FrameSkipMode::PAUSE: {
-                // Долгая пауза: начинаем текущий кадр заново
+                // Long pause: start the current frame over
                 if (elapsed >= currentDuration * 5) {
                     mLastTimeFrameStarted = now;
                     elapsed = 0ms;
@@ -78,7 +78,7 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
             }
 
             case FrameSkipMode::SKIP_FRAMES: {
-                // Пропуск циклов
+                // Skipping cycles
                 if (mTotalDuration.count() > 0 && mDurations.size() >= mFrameCount) {
                     auto fullCycles = elapsed / mTotalDuration;
                     if (fullCycles > 0) {
@@ -98,7 +98,7 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
                     }
                 }
 
-                // Пропуск кадров в текущем цикле
+                // Skipping frames in the current cycle
                 while (!(mLoopCount > 0 && mLoopsPassed >= mLoopCount) && elapsed >= mDurations[mCurrentFrame]) {
                     loadNextFrame();
                     mLastTimeFrameStarted += mDurations[mCurrentFrame];

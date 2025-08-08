@@ -34,10 +34,13 @@ public:
     bool hasAnimationFinished() override;
 
     enum class FrameSkipMode {
-        PAUSE,         // 0: остановиться, продолжить с того же кадра
-        SKIP_FRAMES,   // 1: пропускать кадры и циклы (быстро вперед)
-        CATCH_UP       // 2: догонять по одному кадру за вызов
+        PAUSE,         // 0: pause, continue from the same frame
+        SKIP_FRAMES,   // 1: skip frames and loops (fast forward)
+        CATCH_UP       // 2: catch up one frame per call
     };
+
+    void SetFrameSkipMode(const FrameSkipMode mode) { mSkipMode = mode;}
+    FrameSkipMode GetFrameSkipMode() const { return mSkipMode; }
 
 private:
     size_t mWidth;
