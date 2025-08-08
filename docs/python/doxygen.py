@@ -136,6 +136,10 @@ def _parse(input: str):
             nonlocal token
             assert token[1] == '{'
 
+            if clazz.doc is None:
+                _skip_special_clause()
+                return
+
             visibility = 'private'
 
             for token in iterator:
@@ -143,8 +147,10 @@ def _parse(input: str):
                     continue
                 if token[1] == '}':
                     break
-                if token[1] in ['public', 'private', 'protected']:
+                if token[1] in ['public', 'private', 'protected', 'signals']:
                     visibility = token[1]
+                    if visibility == 'signals':
+                        visibility = 'public'
                     assert next(iterator)[1] == ':'
                     continue
                 if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
@@ -191,6 +197,11 @@ def _parse(input: str):
         if _parse_comment():
             continue
 
+        if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
+            token = next(iterator) # enum class???
+            continue
+
+
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
             token = next(iterator)
             if token[1].startswith("AUI_"):
@@ -229,7 +240,7 @@ def gen_pages():
                     break
                 include_dir = include_dir.parent
 
-            contents = _parse(full_path.read_text())
+            contents = [i for i in _parse(full_path.read_text())]
 
             for i in contents:
                 class_name = i.name
