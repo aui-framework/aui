@@ -30,7 +30,7 @@ assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
 assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
 assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
 
-log = logging.getLogger('mkdocs')
+log = logging.getLogger('doxygen')
 
 def parse_comment_lines(iterator):
     output = []
@@ -73,161 +73,159 @@ class CppClass:
         self.fields = []
 
 def _parse(input: str):
-    try:
-        tokens = cpp_tokenizer.tokenize(input)
-        iterator = iter(tokens)
-        last_doc = None
+    tokens = cpp_tokenizer.tokenize(input)
+    iterator = iter(tokens)
+    last_doc = None
 
-        for token in iterator:
-            def _parse_comment():
-                nonlocal last_doc
-                nonlocal token
-                if token[0] == cpp_tokenizer.Type.COMMENT:
-                    if not "/**" in token[1]:
-                        return True
-                    last_doc = parse_comment_lines(token[1].split('\n'))
+    for token in iterator:
+        def _parse_comment():
+            nonlocal last_doc
+            nonlocal token
+            if token[0] == cpp_tokenizer.Type.COMMENT:
+                if not "/**" in token[1]:
                     return True
-                return False
+                last_doc = parse_comment_lines(token[1].split('\n'))
+                return True
+            return False
 
-            def _consume_comment():
-                nonlocal last_doc
-                doc = last_doc
-                last_doc = None
-                return doc
+        def _consume_comment():
+            nonlocal last_doc
+            doc = last_doc
+            last_doc = None
+            return doc
 
-            def _skip_special_clause():
-                nonlocal token
-                nonlocal iterator
-                assert token[0] == cpp_tokenizer.Type.GENERIC_OPEN
-                special_open = 1
-                out = [ token ]
-                while special_open > 0:
-                    token = next(iterator)
-                    out.append(token)
-                    match token[0]:
-                        case cpp_tokenizer.Type.GENERIC_OPEN:
-                            special_open += 1
-                        case cpp_tokenizer.Type.GENERIC_CLOSE:
-                            special_open -= 1
-                return out
+        def _skip_special_clause(open = [ cpp_tokenizer.Type.GENERIC_OPEN ], close = [ cpp_tokenizer.Type.GENERIC_CLOSE ]):
+            nonlocal token
+            nonlocal iterator
+            assert token[0] in open
+            special_open = 1
+            out = [ token ]
+            while special_open > 0:
+                token = next(iterator)
+                out.append(token)
+                if token[0] in open:
+                    special_open += 1
+                elif token[0] in close:
+                    special_open -= 1
+            return out
 
-            def _parse_type():
-                nonlocal token
-                nonlocal iterator
-                out = token[1]
-                while token[1] in ['const', 'volatile']:
-                    token = next(iterator)
-                    out += " " + token[1]
+        def _parse_type():
+            nonlocal token
+            nonlocal iterator
+            out = token[1]
+            while token[1] in ['const', 'volatile']:
+                token = next(iterator)
+                out += " " + token[1]
 
+            token = next(iterator)
+
+            # handle namespace types
+            while token[1] == '::':
+                out += token[1]
+                token = next(iterator)
+                out += token[1]
                 token = next(iterator)
 
-                # handle namespace types
-                while token[1] == '::':
-                    out += token[1]
-                    token = next(iterator)
-                    out += token[1]
-                    token = next(iterator)
+            if token[0] in [ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ] and not token[1] == '(':
+                out += "".join([i[1] for i in _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])])
+                token = next(iterator)
+            while token[1] in '&*':
+                out += token[1]
+                token = next(iterator)
+            return out
+        def _parse_class_body(clazz: CppClass):
+            nonlocal iterator
+            nonlocal token
+            assert token[1] == '{'
 
-                if token[0] == cpp_tokenizer.Type.GENERIC_OPEN and not token[1] == '(':
-                    out += "".join([i[1] for i in _skip_special_clause()])
-                    token = next(iterator)
-                while token[1] in '&*':
-                    out += token[1]
-                    token = next(iterator)
-                return out
-            def _parse_class_body(clazz: CppClass):
-                nonlocal iterator
-                nonlocal token
-                assert token[1] == '{'
+            if clazz.doc is None:
+                _skip_special_clause()
+                return
 
-                if clazz.doc is None:
+            visibility = 'private'
+
+            for token in iterator:
+                # print(f'_parse_class_body iteration {token}')
+                if _parse_comment():
+                    continue
+                if token[1] == '}':
+                    break
+                if token[1] in ['public', 'private', 'protected', 'signals']:
+                    visibility = token[1]
+                    if visibility == 'signals':
+                        visibility = 'public'
+                    assert next(iterator)[1] == ':'
+                    continue
+                if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
                     _skip_special_clause()
-                    return
 
-                visibility = 'private'
-
-                for token in iterator:
-                    if _parse_comment():
+                if token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                    if token[1] == 'enum':
+                        while token[1] != ';':
+                            token = next(iterator)
                         continue
-                    if token[1] == '}':
+                    if token[1] == 'template':
+                        token = next(iterator)
+                        _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
+                        continue
+
+                    while True:
+                        type_str = _parse_type()
+                        if type_str in ["explicit", "static", "virtual"]:
+                            continue
                         break
-                    if token[1] in ['public', 'private', 'protected', 'signals']:
-                        visibility = token[1]
-                        if visibility == 'signals':
-                            visibility = 'public'
-                        assert next(iterator)[1] == ':'
+                    if token[1] == '(':
+                        # ctor
+                        clazz.methods.append(('', type_str, _consume_comment()))
+                        args = _skip_special_clause()
                         continue
-                    if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
-                        _skip_special_clause()
-
-                    if token[0] == cpp_tokenizer.Type.IDENTIFIER:
-                        if token[1] == 'enum':
-                            while token[1] != ';':
-                                token = next(iterator)
+                    elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                        name = token[1]
+                        token = next(iterator)
+                        if token[1] == ';':
+                            clazz.fields.append((type_str, name, _consume_comment()))
                             continue
-                        if token[1] == 'template':
-                            token = next(iterator)
-                            _skip_special_clause()
-                            continue
-
-                        while True:
-                            type_str = _parse_type()
-                            if type_str in ["explicit", "static", "virtual"]:
-                                continue
-                            break
                         if token[1] == '(':
-                            # ctor
-                            clazz.methods.append(('', type_str, _consume_comment()))
-                            args = _skip_special_clause()
-                            continue
-                        elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
-                            name = token[1]
+                            clazz.methods.append((type_str, name, _consume_comment()))
+                            _skip_special_clause()
                             token = next(iterator)
-                            if token[1] == ';':
-                                clazz.fields.append((type_str, name, _consume_comment()))
-                                continue
-                            if token[1] == '(':
-                                clazz.methods.append((type_str, name, _consume_comment()))
-                                _skip_special_clause()
-                                token = next(iterator)
-                        while True:
-                            if token[1] == ';':
-                                break
-                            if token[1] == '{':
-                                _skip_special_clause()
-                                break
-                            # consume const noexcept
-                            token = next(iterator)
+                    while True:
+                        if token[1] == ';':
+                            break
+                        if token[1] == '{':
+                            _skip_special_clause()
+                            break
+                        # consume const noexcept
+                        token = next(iterator)
 
 
-            if _parse_comment():
-                continue
+        if _parse_comment():
+            continue
 
-            if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
-                token = next(iterator) # enum class???
-                continue
+        if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
+            token = next(iterator) # enum class???
+            continue
 
 
 
-            if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
+        if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
+            token = next(iterator)
+            if token[1].startswith("API_"):
+                # export macro, ignore
                 token = next(iterator)
-                if token[1].startswith("API_"):
-                    # export macro, ignore
-                    token = next(iterator)
-                assert token[0] == cpp_tokenizer.Type.IDENTIFIER
-                clazz = CppClass()
-                clazz.name = token[1]
-                clazz.doc = _consume_comment()
+            assert token[0] == cpp_tokenizer.Type.IDENTIFIER
+            clazz = CppClass()
+            clazz.name = token[1]
+            clazz.doc = _consume_comment()
 
-                while token[1] not in '{;':
-                    token = next(iterator)
-                if token[1] == '{':
-                    _parse_class_body(clazz)
+            while token[1] not in '{;':
+                token = next(iterator)
+            if token[1] == '{':
+                _parse_class_body(clazz)
 
-                if clazz.doc:
-                    yield clazz
-    except StopIteration:
-        pass
+            if clazz.doc:
+                yield clazz
+
 
 
 
@@ -586,6 +584,36 @@ public:
     ]
 
 
+def test_parse_class_const_less():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    _<Test> hello(_<Test> test) const noexcept {
+        if (test < 0) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+
+
 def test_parse_class_nodiscard():
     clazz = next(_parse("""
 /**
@@ -656,3 +684,5 @@ def test_parse_astring():
     clazz = next(_parse((Path('test_data') / 'AString.h').read_text()))
     assert clazz.name == "AString"
     assert len(clazz.methods) > 50
+    for i in ["endsWith", "split", "rfind", "length", "data"]:
+        assert i in [i[1] for i in clazz.methods]

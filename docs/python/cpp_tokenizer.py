@@ -18,6 +18,8 @@ class Type(Enum):
     IDENTIFIER = auto()
     GENERIC_OPEN = auto()
     GENERIC_CLOSE = auto()
+    GENERIC_OPEN2 = auto()
+    GENERIC_CLOSE2 = auto()
     LITERAL = auto()
     STRING = auto()
     COLON = auto()
@@ -76,12 +78,18 @@ def tokenize(input: str):
                     yield make_token(Type.COLON2)
                     continue
                 yield make_token(Type.COLON)
-            elif peek() in "<({[":
+            elif peek() in "({[":
                 take()
                 yield make_token(Type.GENERIC_OPEN)
-            elif peek() in ">)}]":
+            elif peek() in ")}]":
                 take()
                 yield make_token(Type.GENERIC_CLOSE)
+            elif peek() in "<":
+                take()
+                yield make_token(Type.GENERIC_OPEN2)
+            elif peek() in ">":
+                take()
+                yield make_token(Type.GENERIC_CLOSE2)
             elif str.isdigit(peek()):
                 while str.isdigit(peek()):
                     take()
