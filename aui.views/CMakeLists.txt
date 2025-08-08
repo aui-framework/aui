@@ -84,7 +84,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     auisl_shader(aui.views square_sector.fsh)
     auisl_shader(aui.views line_solid_dashed.fsh)
 
-    target_compile_definitions(aui.views PRIVATE UNICODE=1)
+    target_compile_definitions(aui.views PRIVATE
+        $<$<OR:$<PLATFORM_ID:MinGW>,$<PLATFORM_ID:Windows>>:UNICODE=1>
+        $<$<CXX_COMPILER_ID:AppleClang>:GL_SILENCE_DEPRECATION=1>
+    )
     if (AUI_SHOW_TOUCHES)
         target_compile_definitions(aui.views PUBLIC AUI_SHOW_TOUCHES=1)
     endif ()
