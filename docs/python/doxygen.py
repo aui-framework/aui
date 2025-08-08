@@ -111,9 +111,18 @@ def _parse(input: str):
             nonlocal token
             nonlocal iterator
             out = token[1]
+            while token[1] in ['const', 'volatile']:
+                token = next(iterator)
+                out += " " + token[1]
+
             token = next(iterator)
+
             if token[0] == cpp_tokenizer.Type.SPECIAL_OPEN and not token[1] == '(':
                 out += "".join([i[1] for i in _skip_special_clause()])
+                token = next(iterator)
+            while token[1] in '&*':
+                out += token[1]
+                token = next(iterator)
             return out
         def _parse_class_body(clazz: CppClass):
             nonlocal iterator
@@ -138,18 +147,18 @@ def _parse(input: str):
                         continue
 
                     while True:
-                        typez = _parse_type()
-                        if typez in ["explicit", "static"]:
+                        type_str = _parse_type()
+                        if type_str in ["explicit", "static"]:
                             continue
                         break
                     assert token[0] == cpp_tokenizer.Type.IDENTIFIER
                     name = token[1]
                     token = next(iterator)
                     if token[1] == ';':
-                        clazz.fields.append((typez, name, _consume_comment()))
+                        clazz.fields.append((type_str, name, _consume_comment()))
                         continue
                     if token[1] == '(':
-                        clazz.methods.append((typez, name, _consume_comment()))
+                        clazz.methods.append((type_str, name, _consume_comment()))
                         _skip_special_clause()
                         token = next(iterator)
                     if token[1] == ';':
@@ -382,3 +391,118 @@ public:
         ('int', 'world', '@brief World'),
     ]
 
+
+def test_parse_class_enum():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    enum class Kek : uint8_t { VAL };
+
+    /**
+     * @brief Hello
+     */
+    void hello() {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('void', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+def test_parse_class_complex_return1():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    _<Test> hello() {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+def test_parse_class_complex_return_cref():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    const _<Test>& hello() {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('const _<Test>&', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+
+def test_parse_class_complex_return_args():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    _<Test> hello(_<Test> test) {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
