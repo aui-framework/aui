@@ -39,8 +39,8 @@ public:
         CATCH_UP       // 2: catch up one frame per call
     };
 
-    void SetFrameSkipMode(const FrameSkipMode mode) { mSkipMode = mode;}
-    FrameSkipMode GetFrameSkipMode() const { return mSkipMode; }
+    void setFrameSkipMode(const FrameSkipMode mode) { mSkipMode = mode;}
+    FrameSkipMode getFrameSkipMode() const { return mSkipMode; }
 
 private:
     size_t mWidth;
