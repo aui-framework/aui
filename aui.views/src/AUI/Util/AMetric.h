@@ -16,9 +16,7 @@
 #include <ostream>
 #include <tuple>
 #include "AUI/Util/Assert.h"
-#if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
 #include <fmt/format.h>
-#endif
 
 class AString;
 
