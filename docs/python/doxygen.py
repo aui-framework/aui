@@ -107,8 +107,6 @@ def gen_pages():
 
                         class_name = m.group(2)
 
-                        CppClass.parse(class_name, iterator)
-
                         classes.add(class_name)
                         with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
                             print(f'# {class_name}', file=fos)
@@ -120,18 +118,21 @@ def gen_pages():
                             for i in [i for i in doxygen if i[0] == '@brief']:
                                 print(i[1], file=fos)
 
-                            print('[More...](#detailed-description)', file=fos)
+                            has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
+
+                            if has_detailed_description:
+                                print('[More...](#detailed-description)', file=fos)
 
                             print('<table>', file=fos)
                             for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
                                 print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
                             print('</table>', file=fos)
 
-                            print('## Detailed Description', file=fos)
-                            for i in [i for i in doxygen if i[0] == '@details']:
-                                print(i[1], file=fos)
+                            if has_detailed_description:
+                                print('## Detailed Description', file=fos)
+                                for i in [i for i in doxygen if i[0] == '@details']:
+                                    print(i[1], file=fos)
 
-                            print('## Public Members', file=fos)
 
 
                     last_comment_line = None
