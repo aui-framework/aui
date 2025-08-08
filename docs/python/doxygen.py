@@ -94,16 +94,16 @@ def _parse(input: str):
         def _skip_special_clause():
             nonlocal token
             nonlocal iterator
-            assert token[0] == cpp_tokenizer.Type.SPECIAL_OPEN
+            assert token[0] == cpp_tokenizer.Type.GENERIC_OPEN
             special_open = 1
             out = [ token ]
             while special_open > 0:
                 token = next(iterator)
                 out.append(token)
                 match token[0]:
-                    case cpp_tokenizer.Type.SPECIAL_OPEN:
+                    case cpp_tokenizer.Type.GENERIC_OPEN:
                         special_open += 1
-                    case cpp_tokenizer.Type.SPECIAL_CLOSE:
+                    case cpp_tokenizer.Type.GENERIC_CLOSE:
                         special_open -= 1
             return out
 
@@ -117,7 +117,7 @@ def _parse(input: str):
 
             token = next(iterator)
 
-            if token[0] == cpp_tokenizer.Type.SPECIAL_OPEN and not token[1] == '(':
+            if token[0] == cpp_tokenizer.Type.GENERIC_OPEN and not token[1] == '(':
                 out += "".join([i[1] for i in _skip_special_clause()])
                 token = next(iterator)
             while token[1] in '&*':

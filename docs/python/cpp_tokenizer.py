@@ -16,8 +16,8 @@ class Type(Enum):
     PREPROCESSOR = auto()
     SEMICOLON = auto()
     IDENTIFIER = auto()
-    SPECIAL_OPEN = auto()
-    SPECIAL_CLOSE = auto()
+    GENERIC_OPEN = auto()
+    GENERIC_CLOSE = auto()
     LITERAL = auto()
     STRING = auto()
 
@@ -67,10 +67,10 @@ def tokenize(input: str):
             yield make_token(Type.SEMICOLON)
         elif peek() in "<({[":
             take()
-            yield make_token(Type.SPECIAL_OPEN)
+            yield make_token(Type.GENERIC_OPEN)
         elif peek() in ">)}]":
             take()
-            yield make_token(Type.SPECIAL_CLOSE)
+            yield make_token(Type.GENERIC_CLOSE)
         elif str.isdigit(peek()):
             while str.isdigit(peek()):
                 take()
@@ -124,8 +124,8 @@ class Test {
     """)] == [
         (Type.IDENTIFIER, "class"),
         (Type.IDENTIFIER, "Test"),
-        (Type.SPECIAL_OPEN, "{"),
-        (Type.SPECIAL_CLOSE, "}"),
+        (Type.GENERIC_OPEN, "{"),
+        (Type.GENERIC_CLOSE, "}"),
         (Type.SEMICOLON, ";"),
     ]
 
