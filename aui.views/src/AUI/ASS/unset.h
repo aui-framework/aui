@@ -183,3 +183,27 @@ std::ostream& operator<<(std::ostream& o, const ass::unset_wrap<T>& wrap) {
     }
     return o;
 }
+
+#if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
+template <typename T, typename Char>
+struct fmt::formatter<ass::unset_wrap<T>, Char> {
+    fmt::formatter<T, Char> inner;
+
+    // Parse format specs like {:>10}, {:.2f}, etc.
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx) {
+        return inner.parse(ctx);
+    }
+
+    // Format either the value (if set) or the "<unset>" fallback
+    template<typename FormatContext>
+    auto format(const ass::unset_wrap<T>& value, FormatContext& ctx) const {
+        if (value) {
+            return inner.format(*value, ctx);
+        } else {
+            static constexpr auto fallback = std::basic_string_view<Char>(FMT_STRING("<unset>"));
+            return fmt::format_to(ctx.out(), "{}", fallback);
+        }
+    }
+};
+#endif
