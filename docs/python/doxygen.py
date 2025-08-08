@@ -212,7 +212,7 @@ def _parse(input: str):
 
             if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
                 token = next(iterator)
-                if token[1].startswith("AUI_"):
+                if token[1].startswith("API_"):
                     # export macro, ignore
                     token = next(iterator)
                 assert token[0] == cpp_tokenizer.Type.IDENTIFIER
@@ -254,18 +254,18 @@ def gen_pages():
 
                 contents = [i for i in _parse(full_path.read_text())]
 
-                for i in contents:
-                    class_name = i.name
+                for clazz in contents:
+                    class_name = clazz.name
                     classes.add(class_name)
                     with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
                         print(f'# {class_name}', file=fos)
                         print(f'', file=fos)
-                        doxygen = parse_doxygen(i.doc)
+                        doxygen = parse_doxygen(clazz.doc)
 
                         module_name = str(include_dir.parent.name).replace('.', '::')
 
-                        for i in [i for i in doxygen if i[0] == '@brief']:
-                            print(i[1], file=fos)
+                        for clazz in [i for i in doxygen if i[0] == '@brief']:
+                            print(clazz[1], file=fos)
 
                         has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
@@ -273,14 +273,19 @@ def gen_pages():
                             print('[More...](#detailed-description)', file=fos)
 
                         print('<table>', file=fos)
-                        for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
-                            print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
+                        for clazz in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
+                            print(f'<tr><td>{clazz[0]}</td><td>{clazz[1]}</td></tr>', file=fos)
                         print('</table>', file=fos)
 
                         if has_detailed_description:
                             print('## Detailed Description', file=fos)
-                            for i in [i for i in doxygen if i[0] == '@details']:
-                                print(i[1], file=fos)
+                            for clazz in [i for i in doxygen if i[0] == '@details']:
+                                print(clazz[1], file=fos)
+
+                        if clazz.methods:
+                            print('## Public Methods', file=fos)
+                            for i in clazz.methods:
+                                print(f'### {i}', file=fos)
             except Exception as e:
                 log.warning(f'Source file {full_path} could not be parsed:', e)
 
@@ -289,14 +294,14 @@ def gen_pages():
     with mkdocs_gen_files.open('classes.md', 'w') as f:
         classes_alphabet = { }
 
-        for i in classes:
-            letter = i[0]
-            if letter == 'A' and i[1].isupper():
+        for clazz in classes:
+            letter = clazz[0]
+            if letter == 'A' and clazz[1].isupper():
                 # most classes in AUI start with 'A', so it makes less sense to chunk by 'A'. Instead, we'll use the
                 # second letter.
-                letter = i[1]
+                letter = clazz[1]
             letter = letter.upper()
-            classes_alphabet.setdefault(letter, []).append(i)
+            classes_alphabet.setdefault(letter, []).append(clazz)
         classes_alphabet = sorted(classes_alphabet.items())
         print('<div class="class-index-title">', file=f)
         for letter, _ in classes_alphabet:
@@ -639,3 +644,11 @@ public:
         ('test::Test', 'hello', '@brief Hello'),
         ('int', 'world', '@brief World'),
     ]
+
+def test_parse_class9():
+    assert next(_parse("""
+/**
+ * @brief test
+ */
+class API_AUI_CORE Test {}
+    """)).name == "Test"
