@@ -178,8 +178,7 @@ def _parse(input: str):
                         if token[1] == '(':
                             # ctor
                             clazz.methods.append(('', type_str, _consume_comment()))
-                            _skip_special_clause()
-                            token = next(iterator)
+                            args = _skip_special_clause()
                             continue
                         elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
                             name = token[1]
@@ -264,8 +263,8 @@ def gen_pages():
 
                         module_name = str(include_dir.parent.name).replace('.', '::')
 
-                        for clazz in [i for i in doxygen if i[0] == '@brief']:
-                            print(clazz[1], file=fos)
+                        for i in [i for i in doxygen if i[0] == '@brief']:
+                            print(i[1], file=fos)
 
                         has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
@@ -273,14 +272,14 @@ def gen_pages():
                             print('[More...](#detailed-description)', file=fos)
 
                         print('<table>', file=fos)
-                        for clazz in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
-                            print(f'<tr><td>{clazz[0]}</td><td>{clazz[1]}</td></tr>', file=fos)
+                        for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
+                            print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
                         print('</table>', file=fos)
 
                         if has_detailed_description:
                             print('## Detailed Description', file=fos)
-                            for clazz in [i for i in doxygen if i[0] == '@details']:
-                                print(clazz[1], file=fos)
+                            for i in [i for i in doxygen if i[0] == '@details']:
+                                print(i[1], file=fos)
 
                         if clazz.methods:
                             print('## Public Methods', file=fos)
@@ -652,3 +651,8 @@ def test_parse_class9():
  */
 class API_AUI_CORE Test {}
     """)).name == "Test"
+
+def test_parse_astring():
+    clazz = next(_parse((Path('test_data') / 'AString.h').read_text()))
+    assert clazz.name == "AString"
+    assert len(clazz.methods) > 50
