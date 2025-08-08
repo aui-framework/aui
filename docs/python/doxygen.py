@@ -12,7 +12,7 @@ from pathlib import Path
 
 import mkdocs_gen_files
 
-from docs.python import regexes
+from docs.python import regexes, cpp_tokenizer
 
 CPP_CLASS_DEF = re.compile('class( API_\S+)? ([a-zA-Z0-9_$]+)')
 assert CPP_CLASS_DEF.match('class Test').group(2) == "Test"
@@ -24,7 +24,7 @@ assert CPP_CLASS_DEF.match('class API_AUI_CORE Test: Base {').group(2) == "Test"
 CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
 assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
 
-CPP_BRIEF_LINE = re.compile('(\@\w+) ?(.*)')
+CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
 assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
 assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
 assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
@@ -32,6 +32,8 @@ assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
 def parse_comment_lines(iterator):
     output = []
     for line in iterator:
+        if "/*" in line:
+            continue
         if "*/" in line:
             break
         line = CPP_COMMENT_LINE.match(line).group(1)
@@ -61,19 +63,122 @@ def parse_doxygen(comment):
     return output
 
 class CppClass:
-    def __init__(self, name):
-        self.name = name
-        self.brief = ""
-        self.detailed_description = ""
-        self.public_members = []
-        self.private_members = []
-        self.protected_members = []
-        self.static_members = []
+    def __init__(self):
+        self.name = None
+        self.doc = None
         self.methods = []
+        self.fields = []
 
-    @staticmethod
-    def parse(self, class_name, iterator):
-        pass
+def _parse(input: str):
+    tokens = cpp_tokenizer.tokenize(input)
+    iterator = iter(tokens)
+    last_doc = None
+
+    for token in iterator:
+        def _parse_comment():
+            nonlocal last_doc
+            nonlocal token
+            if token[0] == cpp_tokenizer.Type.COMMENT:
+                if not "/**" in token[1]:
+                    return True
+                last_doc = parse_comment_lines(token[1].split('\n'))
+                return True
+            return False
+
+        def _consume_comment():
+            nonlocal last_doc
+            doc = last_doc
+            last_doc = None
+            return doc
+
+        def _skip_special_clause():
+            nonlocal token
+            nonlocal iterator
+            assert token[0] == cpp_tokenizer.Type.SPECIAL_OPEN
+            special_open = 1
+            out = [ token ]
+            while special_open > 0:
+                token = next(iterator)
+                out.append(token)
+                match token[0]:
+                    case cpp_tokenizer.Type.SPECIAL_OPEN:
+                        special_open += 1
+                    case cpp_tokenizer.Type.SPECIAL_CLOSE:
+                        special_open -= 1
+            return out
+
+        def _parse_type():
+            nonlocal token
+            nonlocal iterator
+            out = token[1]
+            token = next(iterator)
+            if token[0] == cpp_tokenizer.Type.SPECIAL_OPEN and not token[1] == '(':
+                out += "".join([i[1] for i in _skip_special_clause()])
+            return out
+        def _parse_class_body(clazz: CppClass):
+            nonlocal iterator
+            nonlocal token
+            assert token[1] == '{'
+
+            visibility = 'private'
+
+            for token in iterator:
+                if _parse_comment():
+                    continue
+                if token[1] == '}':
+                    break
+                if token[1] in ['public', 'private', 'protected']:
+                    visibility = token[1]
+                    assert next(iterator)[1] == ':'
+                    continue
+                if token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                    if token[1] == 'enum':
+                        while token[1] != ';':
+                            token = next(iterator)
+                        continue
+
+                    while True:
+                        typez = _parse_type()
+                        if typez in ["explicit", "static"]:
+                            continue
+                        break
+                    assert token[0] == cpp_tokenizer.Type.IDENTIFIER
+                    name = token[1]
+                    token = next(iterator)
+                    if token[1] == ';':
+                        clazz.fields.append((typez, name, _consume_comment()))
+                        continue
+                    if token[1] == '(':
+                        clazz.methods.append((typez, name, _consume_comment()))
+                        _skip_special_clause()
+                        token = next(iterator)
+                    if token[1] == ';':
+                        continue
+                    if token[1] == '{':
+                        _skip_special_clause()
+
+
+        if _parse_comment():
+            continue
+
+        if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
+            token = next(iterator)
+            if token[1].startswith("AUI_"):
+                # export macro, ignore
+                token = next(iterator)
+            assert token[0] == cpp_tokenizer.Type.IDENTIFIER
+            clazz = CppClass()
+            clazz.name = token[1]
+            clazz.doc = _consume_comment()
+
+            while token[1] not in '{;':
+                token = next(iterator)
+            if token[1] == '{':
+                _parse_class_body(clazz)
+
+            if clazz.doc:
+                yield clazz
+
 
 
 
@@ -93,49 +198,36 @@ def gen_pages():
                 if include_dir == include_dir.parent:
                     break
                 include_dir = include_dir.parent
-            with open(full_path, 'r') as f:
-                iterator = iter(f.readlines())
-                last_comment_line = None
-                for line in iterator:
-                    if "/**" in line:
-                        last_comment_line = parse_comment_lines(iterator)
-                        continue
 
-                    if m := CPP_CLASS_DEF.match(line):
-                        if not last_comment_line:
-                            continue # non-documented class = non-existing class
+            contents = _parse(full_path.read_text())
 
-                        class_name = m.group(2)
+            for i in contents:
+                class_name = i.name
+                classes.add(class_name)
+                with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
+                    print(f'# {class_name}', file=fos)
+                    print(f'', file=fos)
+                    doxygen = parse_doxygen(i.doc)
 
-                        classes.add(class_name)
-                        with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
-                            print(f'# {class_name}', file=fos)
-                            print(f'', file=fos)
-                            doxygen = parse_doxygen(last_comment_line)
+                    module_name = str(include_dir.parent.name).replace('.', '::')
 
-                            module_name = str(include_dir.parent.name).replace('.', '::')
+                    for i in [i for i in doxygen if i[0] == '@brief']:
+                        print(i[1], file=fos)
 
-                            for i in [i for i in doxygen if i[0] == '@brief']:
-                                print(i[1], file=fos)
+                    has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
-                            has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
+                    if has_detailed_description:
+                        print('[More...](#detailed-description)', file=fos)
 
-                            if has_detailed_description:
-                                print('[More...](#detailed-description)', file=fos)
+                    print('<table>', file=fos)
+                    for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
+                        print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
+                    print('</table>', file=fos)
 
-                            print('<table>', file=fos)
-                            for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
-                                print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
-                            print('</table>', file=fos)
-
-                            if has_detailed_description:
-                                print('## Detailed Description', file=fos)
-                                for i in [i for i in doxygen if i[0] == '@details']:
-                                    print(i[1], file=fos)
-
-
-
-                    last_comment_line = None
+                    if has_detailed_description:
+                        print('## Detailed Description', file=fos)
+                        for i in [i for i in doxygen if i[0] == '@details']:
+                            print(i[1], file=fos)
 
 
 
@@ -166,4 +258,127 @@ def gen_pages():
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)
+
+def test_parse_comment_lines():
+    iterator = iter(Path('test_data/AString.h').read_text().splitlines())
+    for i in iterator:
+        if "/**" in iterator:
+            break
+    assert parse_comment_lines(iterator) =="""@brief Represents a Unicode character string.
+@ingroup core
+@details
+AString stores a string of 16-bit chars, where each char corresponds to one UTF-16 code unit. Unicode characters with
+code values above 65535 are stored using two consecutive chars.
+
+Unicode is an international standard that supports most of the writing systems in use today."""
+
+def test_parse_class1():
+    assert [i for i in _parse("""
+class Test;
+    """)] == []
+
+
+def test_parse_class2():
+    assert [i for i in _parse("""
+class Test;
+    """)] == []
+
+def test_parse_class3():
+    assert [i for i in _parse("""
+class Test {};
+    """)] == []
+
+def test_parse_class4():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+
+def test_parse_class5():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    void hello();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [('void', 'hello', None)]
+
+def test_parse_class6():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    void hello();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [('void', 'hello', '@brief Hello')]
+
+def test_parse_class7():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    void hello();
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('void', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+def test_parse_class8():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    void hello() {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('void', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
 
