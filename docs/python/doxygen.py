@@ -209,7 +209,6 @@ def _parse(input: str):
                 continue
 
 
-
             if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
                 token = next(iterator)
                 if token[1].startswith("AUI_"):
