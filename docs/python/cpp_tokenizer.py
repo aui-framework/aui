@@ -42,64 +42,67 @@ def tokenize(input: str):
         return (type, input[beginning:i])
 
 
-    while i < len(input):
-        beginning = i
-        if peek() == '/':
-            take()
+    try:
+        while i < len(input):
+            beginning = i
             if peek() == '/':
-                while i < len(input) and peek() != '\n':
+                take()
+                if peek() == '/':
+                    while i < len(input) and peek() != '\n':
+                        take()
+                    yield make_token(Type.COMMENT)
+                elif peek() == '*':
                     take()
-                yield make_token(Type.COMMENT)
-            elif peek() == '*':
+                    while True:
+                        if take() == '*':
+                            if take() == '/':
+                                yield make_token(Type.COMMENT)
+                                break
+            elif peek() == '#':
+                while peek() != '\n':
+                    take()
+                yield make_token(Type.PREPROCESSOR)
+            elif str.isalpha(peek()) or peek() == '_':
+                while str.isalnum(peek()) or peek() == '_':
+                    take()
+                yield make_token(Type.IDENTIFIER)
+            elif peek() == ';':
                 take()
-                while True:
-                    if take() == '*':
-                        if take() == '/':
-                            yield make_token(Type.COMMENT)
-                            break
-        elif peek() == '#':
-            while peek() != '\n':
+                yield make_token(Type.SEMICOLON)
+            elif peek() == ':':
                 take()
-            yield make_token(Type.PREPROCESSOR)
-        elif str.isalpha(peek()) or peek() == '_':
-            while str.isalnum(peek()) or peek() == '_':
+                if peek() == ':':
+                    take()
+                    yield make_token(Type.COLON2)
+                    continue
+                yield make_token(Type.COLON)
+            elif peek() in "<({[":
                 take()
-            yield make_token(Type.IDENTIFIER)
-        elif peek() == ';':
-            take()
-            yield make_token(Type.SEMICOLON)
-        elif peek() == ':':
-            take()
-            if peek() == ':':
+                yield make_token(Type.GENERIC_OPEN)
+            elif peek() in ">)}]":
                 take()
-                yield make_token(Type.COLON2)
-                continue
-            yield make_token(Type.COLON)
-        elif peek() in "<({[":
-            take()
-            yield make_token(Type.GENERIC_OPEN)
-        elif peek() in ">)}]":
-            take()
-            yield make_token(Type.GENERIC_CLOSE)
-        elif str.isdigit(peek()):
-            while str.isdigit(peek()):
+                yield make_token(Type.GENERIC_CLOSE)
+            elif str.isdigit(peek()):
+                while str.isdigit(peek()):
+                    take()
+                yield make_token(Type.LITERAL)
+            elif peek() == '"':
                 take()
-            yield make_token(Type.LITERAL)
-        elif peek() == '"':
-            take()
-            while peek() != '"':
-                if peek() == '\\':
+                while peek() != '"':
+                    if peek() == '\\':
+                        take()
                     take()
                 take()
-            take()
-            yield make_token(Type.STRING)
-        elif peek() in "\n \t":
-            take()
-        else:
-            # line = len([i for i in input[0:i] if i == '\n'])
-            # raise RuntimeError(f'unexpected token "{take()}" at {line}')
-            take()
-            yield make_token(Type.UNKNOWN)
+                yield make_token(Type.STRING)
+            elif peek() in "\n \t":
+                take()
+            else:
+                # line = len([i for i in input[0:i] if i == '\n'])
+                # raise RuntimeError(f'unexpected token "{take()}" at {line}')
+                take()
+                yield make_token(Type.UNKNOWN)
+    except IndexError:
+        pass
 
 
 

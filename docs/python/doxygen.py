@@ -6,6 +6,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 import os
 import re
 from pathlib import Path
@@ -28,6 +29,8 @@ CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
 assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
 assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
 assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
+
+log = logging.getLogger('mkdocs')
 
 def parse_comment_lines(iterator):
     output = []
@@ -70,156 +73,161 @@ class CppClass:
         self.fields = []
 
 def _parse(input: str):
-    tokens = cpp_tokenizer.tokenize(input)
-    iterator = iter(tokens)
-    last_doc = None
+    try:
+        tokens = cpp_tokenizer.tokenize(input)
+        iterator = iter(tokens)
+        last_doc = None
 
-    for token in iterator:
-        def _parse_comment():
-            nonlocal last_doc
-            nonlocal token
-            if token[0] == cpp_tokenizer.Type.COMMENT:
-                if not "/**" in token[1]:
+        for token in iterator:
+            def _parse_comment():
+                nonlocal last_doc
+                nonlocal token
+                if token[0] == cpp_tokenizer.Type.COMMENT:
+                    if not "/**" in token[1]:
+                        return True
+                    last_doc = parse_comment_lines(token[1].split('\n'))
                     return True
-                last_doc = parse_comment_lines(token[1].split('\n'))
-                return True
-            return False
+                return False
 
-        def _consume_comment():
-            nonlocal last_doc
-            doc = last_doc
-            last_doc = None
-            return doc
+            def _consume_comment():
+                nonlocal last_doc
+                doc = last_doc
+                last_doc = None
+                return doc
 
-        def _skip_special_clause():
-            nonlocal token
-            nonlocal iterator
-            assert token[0] == cpp_tokenizer.Type.GENERIC_OPEN
-            special_open = 1
-            out = [ token ]
-            while special_open > 0:
-                token = next(iterator)
-                out.append(token)
-                match token[0]:
-                    case cpp_tokenizer.Type.GENERIC_OPEN:
-                        special_open += 1
-                    case cpp_tokenizer.Type.GENERIC_CLOSE:
-                        special_open -= 1
-            return out
+            def _skip_special_clause():
+                nonlocal token
+                nonlocal iterator
+                assert token[0] == cpp_tokenizer.Type.GENERIC_OPEN
+                special_open = 1
+                out = [ token ]
+                while special_open > 0:
+                    token = next(iterator)
+                    out.append(token)
+                    match token[0]:
+                        case cpp_tokenizer.Type.GENERIC_OPEN:
+                            special_open += 1
+                        case cpp_tokenizer.Type.GENERIC_CLOSE:
+                            special_open -= 1
+                return out
 
-        def _parse_type():
-            nonlocal token
-            nonlocal iterator
-            out = token[1]
-            while token[1] in ['const', 'volatile']:
-                token = next(iterator)
-                out += " " + token[1]
+            def _parse_type():
+                nonlocal token
+                nonlocal iterator
+                out = token[1]
+                while token[1] in ['const', 'volatile']:
+                    token = next(iterator)
+                    out += " " + token[1]
 
-            token = next(iterator)
-
-            # handle namespace types
-            while token[1] == '::':
-                out += token[1]
-                token = next(iterator)
-                out += token[1]
                 token = next(iterator)
 
-            if token[0] == cpp_tokenizer.Type.GENERIC_OPEN and not token[1] == '(':
-                out += "".join([i[1] for i in _skip_special_clause()])
-                token = next(iterator)
-            while token[1] in '&*':
-                out += token[1]
-                token = next(iterator)
-            return out
-        def _parse_class_body(clazz: CppClass):
-            nonlocal iterator
-            nonlocal token
-            assert token[1] == '{'
+                # handle namespace types
+                while token[1] == '::':
+                    out += token[1]
+                    token = next(iterator)
+                    out += token[1]
+                    token = next(iterator)
 
-            if clazz.doc is None:
-                _skip_special_clause()
-                return
+                if token[0] == cpp_tokenizer.Type.GENERIC_OPEN and not token[1] == '(':
+                    out += "".join([i[1] for i in _skip_special_clause()])
+                    token = next(iterator)
+                while token[1] in '&*':
+                    out += token[1]
+                    token = next(iterator)
+                return out
+            def _parse_class_body(clazz: CppClass):
+                nonlocal iterator
+                nonlocal token
+                assert token[1] == '{'
 
-            visibility = 'private'
-
-            for token in iterator:
-                if _parse_comment():
-                    continue
-                if token[1] == '}':
-                    break
-                if token[1] in ['public', 'private', 'protected', 'signals']:
-                    visibility = token[1]
-                    if visibility == 'signals':
-                        visibility = 'public'
-                    assert next(iterator)[1] == ':'
-                    continue
-                if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
+                if clazz.doc is None:
                     _skip_special_clause()
+                    return
 
-                if token[0] == cpp_tokenizer.Type.IDENTIFIER:
-                    if token[1] == 'enum':
-                        while token[1] != ';':
-                            token = next(iterator)
+                visibility = 'private'
+
+                for token in iterator:
+                    if _parse_comment():
                         continue
-
-                    while True:
-                        type_str = _parse_type()
-                        if type_str in ["explicit", "static"]:
-                            continue
+                    if token[1] == '}':
                         break
-                    if token[1] == '(':
-                        # ctor
-                        clazz.methods.append(('', type_str, _consume_comment()))
-                        _skip_special_clause()
-                        token = next(iterator)
+                    if token[1] in ['public', 'private', 'protected', 'signals']:
+                        visibility = token[1]
+                        if visibility == 'signals':
+                            visibility = 'public'
+                        assert next(iterator)[1] == ':'
                         continue
-                    else:
-                        assert token[0] == cpp_tokenizer.Type.IDENTIFIER
-                        name = token[1]
-                        token = next(iterator)
-                        if token[1] == ';':
-                            clazz.fields.append((type_str, name, _consume_comment()))
+                    if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
+                        _skip_special_clause()
+
+                    if token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                        if token[1] == 'enum':
+                            while token[1] != ';':
+                                token = next(iterator)
                             continue
+                        if token[1] == 'template':
+                            token = next(iterator)
+                            _skip_special_clause()
+                            continue
+
+                        while True:
+                            type_str = _parse_type()
+                            if type_str in ["explicit", "static", "virtual"]:
+                                continue
+                            break
                         if token[1] == '(':
-                            clazz.methods.append((type_str, name, _consume_comment()))
+                            # ctor
+                            clazz.methods.append(('', type_str, _consume_comment()))
                             _skip_special_clause()
                             token = next(iterator)
-                    while True:
-                        if token[1] == ';':
-                            break
-                        if token[1] == '{':
-                            _skip_special_clause()
-                            break
-                        # consume const noexcept
-                        token = next(iterator)
+                            continue
+                        elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                            name = token[1]
+                            token = next(iterator)
+                            if token[1] == ';':
+                                clazz.fields.append((type_str, name, _consume_comment()))
+                                continue
+                            if token[1] == '(':
+                                clazz.methods.append((type_str, name, _consume_comment()))
+                                _skip_special_clause()
+                                token = next(iterator)
+                        while True:
+                            if token[1] == ';':
+                                break
+                            if token[1] == '{':
+                                _skip_special_clause()
+                                break
+                            # consume const noexcept
+                            token = next(iterator)
 
 
-        if _parse_comment():
-            continue
+            if _parse_comment():
+                continue
 
-        if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
-            token = next(iterator) # enum class???
-            continue
+            if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
+                token = next(iterator) # enum class???
+                continue
 
 
-        if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
-            token = next(iterator)
-            if token[1].startswith("AUI_"):
-                # export macro, ignore
+            if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
                 token = next(iterator)
-            assert token[0] == cpp_tokenizer.Type.IDENTIFIER
-            clazz = CppClass()
-            clazz.name = token[1]
-            clazz.doc = _consume_comment()
+                if token[1].startswith("AUI_"):
+                    # export macro, ignore
+                    token = next(iterator)
+                assert token[0] == cpp_tokenizer.Type.IDENTIFIER
+                clazz = CppClass()
+                clazz.name = token[1]
+                clazz.doc = _consume_comment()
 
-            while token[1] not in '{;':
-                token = next(iterator)
-            if token[1] == '{':
-                _parse_class_body(clazz)
+                while token[1] not in '{;':
+                    token = next(iterator)
+                if token[1] == '{':
+                    _parse_class_body(clazz)
 
-            if clazz.doc:
-                yield clazz
-
+                if clazz.doc:
+                    yield clazz
+    except StopIteration:
+        pass
 
 
 
@@ -229,46 +237,51 @@ def gen_pages():
         for file in files:
             if not root.startswith('./aui.'):
                 continue
+            if "aui.toolbox" in str(root):
+                continue
             if not file.endswith('.h'):
                 continue
             if "3rdparty" in root:
                 continue
             full_path = Path(root) / file
-            include_dir = full_path
-            while include_dir.name != 'src':
-                if include_dir == include_dir.parent:
-                    break
-                include_dir = include_dir.parent
+            try:
+                include_dir = full_path
+                while include_dir.name != 'src':
+                    if include_dir == include_dir.parent:
+                        break
+                    include_dir = include_dir.parent
 
-            contents = [i for i in _parse(full_path.read_text())]
+                contents = [i for i in _parse(full_path.read_text())]
 
-            for i in contents:
-                class_name = i.name
-                classes.add(class_name)
-                with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
-                    print(f'# {class_name}', file=fos)
-                    print(f'', file=fos)
-                    doxygen = parse_doxygen(i.doc)
+                for i in contents:
+                    class_name = i.name
+                    classes.add(class_name)
+                    with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
+                        print(f'# {class_name}', file=fos)
+                        print(f'', file=fos)
+                        doxygen = parse_doxygen(i.doc)
 
-                    module_name = str(include_dir.parent.name).replace('.', '::')
+                        module_name = str(include_dir.parent.name).replace('.', '::')
 
-                    for i in [i for i in doxygen if i[0] == '@brief']:
-                        print(i[1], file=fos)
-
-                    has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
-
-                    if has_detailed_description:
-                        print('[More...](#detailed-description)', file=fos)
-
-                    print('<table>', file=fos)
-                    for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
-                        print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
-                    print('</table>', file=fos)
-
-                    if has_detailed_description:
-                        print('## Detailed Description', file=fos)
-                        for i in [i for i in doxygen if i[0] == '@details']:
+                        for i in [i for i in doxygen if i[0] == '@brief']:
                             print(i[1], file=fos)
+
+                        has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
+
+                        if has_detailed_description:
+                            print('[More...](#detailed-description)', file=fos)
+
+                        print('<table>', file=fos)
+                        for i in [('Header:', f'<code>#include &lt;{full_path.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
+                            print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
+                        print('</table>', file=fos)
+
+                        if has_detailed_description:
+                            print('## Detailed Description', file=fos)
+                            for i in [i for i in doxygen if i[0] == '@details']:
+                                print(i[1], file=fos)
+            except Exception as e:
+                log.warning(f'Source file {full_path} could not be parsed:', e)
 
 
 
