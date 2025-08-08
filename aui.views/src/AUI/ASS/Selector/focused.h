@@ -33,7 +33,7 @@ namespace ass {
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
             view->focusState.clearAllOutgoingConnectionsWith(helper.get());
-            AObject::connect(view->focusState, slot(helper)::onInvalidateStateAss);
+            AObject::connect(view->focusState, AUI_SLOT(helper)::onInvalidateStateAss);
         }
     };
 }

@@ -1119,6 +1119,18 @@ function(aui_module AUI_MODULE_NAME)
             endif()
         endif()
     endif()
+    if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+        add_custom_command(
+            TARGET ${AUI_MODULE_NAME}
+            POST_BUILD
+            COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+            ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-x>
+					$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-S>
+                    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+            COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+            VERBATIM
+        )
+    endif()
 endfunction(aui_module)
 
 # links the auisl shader located in shaders/<NAME>
@@ -1210,6 +1222,15 @@ macro(aui_app)
     set(multiValueArgs )
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
+    struct AUIAppInfo {
+        AUIAppInfo() {
+            aui::app_info::name = \"${APP_NAME}\";
+        }
+    }; AUIAppInfo auiAppInfo;")
+
+    target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
 
     # defaults
     # ios
@@ -1713,8 +1734,12 @@ endmacro()
 
 if (MINGW OR UNIX)
     # strip for release
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    if (NOT(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang"))
+	    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+	    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+        set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -s")
+        set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -s")
+    endif()
 endif()
 
 

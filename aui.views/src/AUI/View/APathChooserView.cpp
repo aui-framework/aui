@@ -33,7 +33,7 @@ ADirChooserView::ADirChooserView(const APath& defaultPath) {
                 }
             });
         });
-    }) let { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
+    }) AUI_LET { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
 
     setPath(defaultPath);
 
@@ -57,7 +57,7 @@ AFileChooserView::AFileChooserView(const APath& defaultPath, AVector<ADesktop::F
                 }
             });
         });
-    }) let { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
+    }) AUI_LET { it->setCustomStyle({ ass::MinSize { 15_dp, {} } }); });
 
     setPath(defaultPath);
 

@@ -117,7 +117,12 @@ inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {
     lhs << "[";
     for (const auto b : rhs) {
         char buf[8];
+        #if defined(FMT_VERSION) && (FMT_VERSION < 100000)
         lhs.write(buf, std::distance(std::begin(buf), fmt::format_to(buf, " {:02x}", b)));
+        #else
+        auto end = fmt::format_to(buf, " {:02x}", b);
+        lhs.write(buf, end - buf);
+        #endif
     }
     lhs << " ]";
 

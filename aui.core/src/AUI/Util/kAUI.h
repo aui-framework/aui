@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
+#include <range/v3/range_fwd.hpp>
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -77,7 +77,7 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       connect(clicked, slot(myObject)::handleClicked);
+ *       connect(clicked, AUI_SLOT(myObject)::handleClicked);
  *       @endcode
  *     </td>
  *   </tr>
@@ -85,7 +85,7 @@ namespace aui::impl::slot {
  *
  * @note If you are intended to reference this-> object, consider using @ref #me instead.
  */
-#define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
+#define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name.
@@ -204,7 +204,7 @@ namespace aui::impl::slot {
  * @param lambda code executed in the context of an object (as its member function)
  * @note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * @details
- * `let` allows to call methods of newly created objects right in place. For example:
+ * `AUI_LET` allows to call methods of newly created objects right in place. For example:
  *
  * <table>
  *   <tr>
@@ -220,7 +220,7 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       auto tf = _new<ATextField>() let { it->setText("Hello!"); };
+ *       auto tf = _new<ATextField>() AUI_LET { it->setText("Hello!"); };
  *       @endcode
  *     </td>
  *   </tr>
@@ -251,15 +251,15 @@ namespace aui::impl::slot {
  *       @code{cpp}
  *       // clean, less code and easy to understand
  *       setContents(Vertical {
- *           _new<ATextField>() let { it->setText("Hello!") },
- *           _new<ATextField>() let { it->setText("World!") },
+ *           _new<ATextField>() AUI_LET { it->setText("Hello!") },
+ *           _new<ATextField>() AUI_LET { it->setText("World!") },
  *       });
  *       @endcode
  *     </td>
  *   </tr>
  * </table>
  */
-#define let ^ [&](const auto& it)
+#define AUI_LET ^ [&](const auto& it)
 
 /**
  * @brief Allows to define a style to the view right in place.
@@ -270,7 +270,7 @@ namespace aui::impl::slot {
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   _new<ALabel>("Red text!") with_style { TextColor { AColor::RED } },
+ *   _new<ALabel>("Red text!") AUI_WITH_STYLE { TextColor { AColor::RED } },
  * });
  * @endcode
  *
@@ -280,31 +280,31 @@ namespace aui::impl::slot {
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   Label { "Red text!" } with_style { TextColor { AColor::RED } },
+ *   Label { "Red text!" } AUI_WITH_STYLE { TextColor { AColor::RED } },
  * });
  * @endcode
  */
-#define with_style & ass::PropertyListRecursive
+#define AUI_WITH_STYLE & ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
- * asyncX, does now allow to set lambda's capture. Lambda's capture is `[=]`.
+ * AUI_THREADPOOL_X, does now allow to set lambda's capture. Lambda's capture is `[=]`.
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `async` task is either cancelled or removed from
+ * @note When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
  * @details
  * <p>Example without a return value</p>
  * @code{cpp}
- * auto task = async {
+ * auto task = AUI_THREADPOOL {
  *   AThread::sleep(1000); // a long task
  * };
  * @endcode
  * <p>Example with a return value</p>
  * @code{cpp}
- * auto futureStatus = async {
+ * auto futureStatus = AUI_THREADPOOL {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -316,7 +316,7 @@ namespace aui::impl::slot {
  *
  * Lambda operators are supported:
  * @code{cpp}
- * auto futureStatus = async mutable noexcept {
+ * auto futureStatus = AUI_THREADPOOL mutable noexcept {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -326,28 +326,28 @@ namespace aui::impl::slot {
  * int status = *futureStatus;
  * @endcode
  */
-#define async AThreadPool::global() * [=]()
+#define AUI_THREADPOOL AThreadPool::global() * [=]()
 
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
- * async, allows to set lambda's capture but you should always specify lambda's capture.
+ * AUI_THREADPOOL, allows to set lambda's capture but you should always specify lambda's capture.
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `async` task is either cancelled or removed from
+ * @note When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
  * @details
  * <p>Example without a return value</p>
  * @code{cpp}
- * auto task = asyncX [&] {
+ * auto task = AUI_THREADPOOL_X [&] {
  *   AThread::sleep(1000); // a long task
  * };
  * @endcode
  * <p>Example with a return value</p>
  * @code{cpp}
- * auto futureStatus = asyncX [&] {
+ * auto futureStatus = AUI_THREADPOOL_X [&] {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -357,7 +357,7 @@ namespace aui::impl::slot {
  * int status = *futureStatus;
  * @endcode
  */
-#define asyncX AThreadPool::global() *
+#define AUI_THREADPOOL_X AThreadPool::global() *
 
 /**
  * @brief Executes following function call or {} block once per program execution
@@ -380,7 +380,7 @@ namespace aui::impl::slot {
  *     </td>
  *     <td>
  *       @code{cpp}
- *       do_once {
+ *       AUI_DO_ONCE {
  *           std::printf("Only once!");
  *       }
  *       @endcode
@@ -388,19 +388,19 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define do_once if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
+#define AUI_DO_ONCE if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
  * @brief Executes lambda on main thread.
  * @ingroup useful_macros
  */
-#define ui_thread (*AThread::main()) * [=]()
+#define AUI_UI_THREAD (*AThread::main()) * [=]()
 
 /**
  * @brief Executes lambda on main thread. Allows to determine lambda's capture.
  * @ingroup useful_macros
  */
-#define ui_threadX (*AThread::main()) *
+#define AUI_UI_THREAD_X (*AThread::main()) *
 
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

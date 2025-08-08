@@ -53,13 +53,67 @@ WebpImageFactory::~WebpImageFactory() {
 }
 
 AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
+    auto now = system_clock::now();
+
     if (mLastTimeFrameStarted.time_since_epoch().count() == 0) {
         loadNextFrame();
-        mLastTimeFrameStarted = system_clock::now();
-    } else {
-        if (isNewImageAvailable()) {
-            loadNextFrame();
-            mLastTimeFrameStarted += mDurations[mCurrentFrame];
+        mLastTimeFrameStarted = now;
+    } else if (!(mLoopCount > 0 && mLoopsPassed >= mLoopCount)) {
+        const auto& currentDuration = mDurations[mCurrentFrame];
+        auto elapsed = now - mLastTimeFrameStarted;
+
+        switch (mSkipMode) {
+            case FrameSkipMode::PAUSE: {
+                // Long pause: start the current frame over
+                if (elapsed >= currentDuration * 5) {
+                    mLastTimeFrameStarted = now;
+                    elapsed = 0ms;
+                }
+
+                if (elapsed >= currentDuration) {
+                    loadNextFrame();
+                    mLastTimeFrameStarted += mDurations[mCurrentFrame];
+                }
+                break;
+            }
+
+            case FrameSkipMode::SKIP_FRAMES: {
+                // Skipping cycles
+                if (mTotalDuration.count() > 0 && mDurations.size() >= mFrameCount) {
+                    size_t fullCycles = elapsed / mTotalDuration;
+                    if (fullCycles > 0) {
+                        auto cyclesToSkip =
+                            (mLoopCount == 0)
+                                ? fullCycles
+                                : std::min(fullCycles, static_cast<size_t>(mLoopCount - mLoopsPassed));
+
+                        mLoopsPassed += cyclesToSkip;
+                        mLastTimeFrameStarted += mTotalDuration * cyclesToSkip;
+
+                        WebPAnimDecoderReset(mDecoder);
+                        int ts;
+                        WebPAnimDecoderGetNext(mDecoder, &mDecodedFrameBuffer, &ts);
+                        mCurrentFrame = 0;
+                        break;
+                    }
+                }
+
+                // Skipping frames in the current cycle
+                while (!(mLoopCount > 0 && mLoopsPassed >= mLoopCount) && elapsed >= mDurations[mCurrentFrame]) {
+                    loadNextFrame();
+                    mLastTimeFrameStarted += mDurations[mCurrentFrame];
+                    elapsed = now - mLastTimeFrameStarted;
+                }
+                break;
+            }
+
+            case FrameSkipMode::CATCH_UP: {
+                if (elapsed >= currentDuration) {
+                    loadNextFrame();
+                    mLastTimeFrameStarted += mDurations[mCurrentFrame];
+                }
+                break;
+            }
         }
     }
 
@@ -78,7 +132,8 @@ bool WebpImageFactory::isNewImageAvailable() {
     }
 
     auto delta = system_clock::now() - mLastTimeFrameStarted;
-    return delta + 1ms >= mDurations[mCurrentFrame];
+
+    return delta >= mDurations[mCurrentFrame];
 }
 
 glm::ivec2 WebpImageFactory::getSizeHint() {
@@ -98,7 +153,9 @@ void WebpImageFactory::loadNextFrame() {
     int prevFrameTimestamp = mDecodedFrameTimestamp;
     WebPAnimDecoderGetNext(mDecoder, &mDecodedFrameBuffer, &mDecodedFrameTimestamp);
     if (mDurations.size() < mFrameCount) {
-        mDurations.push_back(milliseconds(mDecodedFrameTimestamp - prevFrameTimestamp));
+        auto msduration = milliseconds(mDecodedFrameTimestamp - prevFrameTimestamp);
+        mTotalDuration += msduration;
+        mDurations.push_back(msduration);
     }
 }
 

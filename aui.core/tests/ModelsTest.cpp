@@ -34,7 +34,7 @@ namespace {
 TEST(Models, Insert) {
     auto model = _new<AListModel<int>>();
     auto receiver = _new<Receiver>();
-    AObject::connect(model->dataInserted, slot(receiver)::receive);
+    AObject::connect(model->dataInserted, AUI_SLOT(receiver)::receive);
 
     testing::InSequence s;
     EXPECT_CALL(*receiver, receive(AListModelRange<int>(AListModelIndex(0), AListModelIndex(1), model)));

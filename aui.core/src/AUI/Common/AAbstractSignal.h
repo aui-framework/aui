@@ -139,12 +139,12 @@ class AObject;
  * @endcode
  *
  * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
- * @ref slot "slot" macro:
+ * @ref AUI_SLOT "AUI_SLOT" macro:
  * @code{cpp}
- * connect(mCounter->valueChanged, slot(this)::printCounter);
+ * connect(mCounter->valueChanged, AUI_SLOT(this)::printCounter);
  * @endcode
  *
- * Furthermore, when connecting to `this`, slot(this) can be replaced with @ref me "me":
+ * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with @ref me "me":
  * @code{cpp}
  * connect(mCounter->valueChanged, me::printCounter);
  * @endcode
@@ -230,7 +230,7 @@ class AObject;
  *       button,
  *     });
  *
- *     connect(button->clicked, slot(mCounter)::increase); // beauty, huh?
+ *     connect(button->clicked, AUI_SLOT(mCounter)::increase); // beauty, huh?
  *     connect(mCounter->valueChanged, label, [label = label.get()](int value) {
  *       label->setText("{}"_format(value));
  *     });
@@ -249,18 +249,18 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref let "let" syntax to set up connections:
+ * Let's make things more declarative and use @ref AUI_LET "AUI_LET" syntax to set up connections:
  * @code{cpp}
  * MyApp() {
  *   using namespace declarative;
  *   setContents(Vertical {
- *     _new<ALabel>("-") let {
+ *     _new<ALabel>("-") AUI_LET {
  *       connect(counter->valueChanged, label, [label = it.get()](int value) {
  *         label->setText("{}"_format(value));
  *       });
  *     },
- *     _new<AButton>("Increase") let {
- *       connect(it->clicked, slot(mCounter)::increase);
+ *     _new<AButton>("Increase") AUI_LET {
+ *       connect(it->clicked, AUI_SLOT(mCounter)::increase);
  *     },
  *   });
  * }
@@ -348,7 +348,7 @@ class AObject;
  *     </td>
  *     <td>
  *     @code{cpp}
- *       AObject::connect(emitter->statusChanged, slot(receiver)::showMessage);
+ *       AObject::connect(emitter->statusChanged, AUI_SLOT(receiver)::showMessage);
  *     @endcode
  *     </td>
  *   </tr>

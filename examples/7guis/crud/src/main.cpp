@@ -46,7 +46,7 @@ public:
             Vertical::Expanding {
               Horizontal {
                 Label { "Filter prefix:" },
-                _new<ATextField>() with_style { Expanding(1, 0) } && mFilterPrefix,
+                _new<ATextField>() AUI_WITH_STYLE { Expanding(1, 0) } && mFilterPrefix,
               },
               AScrollArea::Builder().withExpanding().withContents(
                   AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
@@ -62,7 +62,7 @@ public:
                     });
                     return view;
                   }
-              ).build() with_style { BackgroundSolid { AColor::WHITE } },
+              ).build() AUI_WITH_STYLE { BackgroundSolid { AColor::WHITE } },
             },
             Centered::Expanding {
               _form({

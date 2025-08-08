@@ -39,5 +39,7 @@ public:
 private:
     ASpinlockMutex mConcurrentAccessCheck;
     std::list<_<IAudioPlayer>> mPlayers;
+    std::vector<float> mMixBuffer;
+    std::vector<float> mReadBuffer;
 };
 

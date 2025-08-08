@@ -1,6 +1,7 @@
 #include "PulseAudioPlayer.h"
+
+#include "AUI/AppInfo.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/ASoundResampler.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
@@ -38,7 +39,7 @@ static void stream_request_cb(pa_stream *s, size_t length, void *userdata) {
 struct PulseAudioInstance {
     PulseAudioInstance(): mMainLoop(pa_threaded_mainloop_new()),
                           mApi(pa_threaded_mainloop_get_api(mMainLoop)),
-                          mContext(pa_context_new(mApi, "aui sink")) {
+                          mContext(pa_context_new(mApi, aui::app_info::name.toStdString().c_str())) {
         if (pa_context_connect(mContext, nullptr, PA_CONTEXT_NOFLAGS, nullptr) < 0) {
             ALogger::err(LOG_TAG) << "Failed to connect to pulseaudio";
             return;

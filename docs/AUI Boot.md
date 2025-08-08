@@ -306,8 +306,17 @@ Forces `find_package` to use the config mode only.
 ### VERSION
 Commit hash, tag or branch name to `checkout`.
 
-When unspecified, AUI.Boot uses the latest version from main branch of the library. Once discovered, **AUI.Boot never
-updates the library version**.
+When no version is specified, AUI.Boot defaults to using the latest version from the main branch. Once AUI.Boot
+discovers and locks onto a version, **it will never automatically update that version**, even across rebuilds. If you
+specify a branch name in the `VERSION` parameter instead of a specific tag or commit, the same semantics take place.
+
+Branch names point to moving targets - the same branch name could reference different commits at different times. Using
+a specific tag or hash ensures you get exactly the same code every time you build.
+
+AUI.Boot will emit a warning encouraging the use of either:
+
+- Tags (e.g. `v1.2.3`) - ideal for released versions
+- Commit hashes (e.g. `8b0e838b`) - perfect for specific commits or work-in-progress changes
 
 @note
 Despite this argument is optional, we still encourage you to use it, to "lock" the version. This makes your builds

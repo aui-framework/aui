@@ -17,8 +17,12 @@
 
 using namespace aui::gtk4_fake;
 
+#if defined(__clang__)
 #pragma clang diagnostic push
+#endif
+#if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "LocalValueEscapesScope"
+#endif
 void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingContext::Init& init) {
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
     windowManagerInitCommon(init, window);
@@ -83,7 +87,9 @@ GtkWidget* PlatformAbstractionGtk::windowManagerInitGtkBox(const IRenderingConte
     }
     return box;
 }
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
 void PlatformAbstractionGtk::windowManagerNotifyProcessMessages() {
     g_main_context_wakeup(mMainContext);

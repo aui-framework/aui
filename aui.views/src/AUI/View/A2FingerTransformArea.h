@@ -44,12 +44,12 @@ struct A2DTransform {
  * @code{cpp}
  * 
  * _<AView> multitouchDemo() {
- *   return _new<A2FingerTransformArea>() let {    
+ *   return _new<A2FingerTransformArea>() AUI_LET {
  *       it->setCustomStyle({
  *         MinSize { 256_dp },
  *         Border { 1_px, AColor::BLACK },
  *       });
- *       _<AView> blackRect = Stacked { _new<ALabel>("A2FingerTransformArea") with_style {
+ *       _<AView> blackRect = Stacked { _new<ALabel>("A2FingerTransformArea") AUI_WITH_STYLE {
  *         FixedSize{200_dp, 100_dp},
  *         BackgroundSolid{AColor::BLACK},
  *         TextColor{AColor::WHITE},

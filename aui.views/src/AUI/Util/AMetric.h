@@ -16,6 +16,7 @@
 #include <ostream>
 #include <tuple>
 #include "AUI/Util/Assert.h"
+#include <fmt/format.h>
 
 class AString;
 
@@ -260,3 +261,24 @@ inline std::ostream& operator<<(std::ostream& o, const AMetric& value) {
     }
     return o;
 }
+#if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
+template <> struct fmt::formatter<AMetric> {
+    constexpr auto parse(format_parse_context& ctx) {
+        return ctx.begin(); // No custom formatting options needed
+    }
+
+    template <typename FormatContext>
+    auto format(const AMetric& metric, FormatContext& ctx) const {
+        std::string_view suffix;
+        switch (metric.getUnit()) {
+            case AMetric::T_PX: suffix = "px"; break;
+            case AMetric::T_DP: suffix = "dp"; break;
+            case AMetric::T_PT: suffix = "pt"; break;
+            default:            suffix = "";   break;
+        }
+
+        return fmt::format_to(ctx.out(), "{}{}", metric.getRawValue(), suffix);
+    }
+};
+
+#endif

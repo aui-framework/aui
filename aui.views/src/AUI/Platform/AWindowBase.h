@@ -192,12 +192,18 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
+#if defined(__clang__)
 #pragma clang diagnostic push
+#endif
+#if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
+#endif
     virtual void redraw() {
         AView::redraw();
     }
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
     virtual void focusNextView();
     virtual void flagRedraw();

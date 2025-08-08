@@ -39,16 +39,23 @@ void AThreadPool::Worker::iteration(std::unique_lock<std::mutex>& tpLock) {
 }
 
 void AThreadPool::Worker::wait(std::unique_lock<std::mutex>& tpLock) {
+#if defined(__clang__)
 #pragma clang diagnostic push
+#endif
+#if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "ConstantConditionsOC"
+#endif
     if (!mEnabled)
         return;
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
     mTP.mIdleWorkers += 1;
     assert(tpLock.owns_lock());
 
     mTP.mCV.wait(tpLock);
     mTP.mIdleWorkers -= 1;
+
 }
 
 bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue) {

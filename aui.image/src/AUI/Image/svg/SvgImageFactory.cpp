@@ -15,7 +15,15 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-#include <lunasvg.h>
+#if defined(__has_include)
+    #if __has_include(<lunasvg/lunasvg.h>)
+        #include <lunasvg/lunasvg.h>
+    #else
+        #include <lunasvg.h>
+    #endif
+#else
+    #include <lunasvg.h>
+#endif
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {

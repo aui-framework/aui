@@ -126,7 +126,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
         out << "{";
         for (uint8_t c : packed) {
             char buf[32];
-            sprintf(buf, "0x%02x,", c);
+            std::snprintf(buf, sizeof(buf), "0x%02x,", static_cast<unsigned>(c));
             out << std::string(buf);
         }
         out << "};\n";
@@ -134,7 +134,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
         out << "\"";
         for (uint8_t c : packed) {
             char buf[32];
-            sprintf(buf, "\\x%02x", c);
+            std::snprintf(buf, sizeof(buf), "\\x%02x", static_cast<unsigned>(c));
             out << std::string(buf);
         }
         out << "\";\n";

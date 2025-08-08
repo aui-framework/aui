@@ -166,7 +166,7 @@ class AViewContainer;
  *       @code{cpp}
  *       setContents(
  *         Stacked {
- *           _new<AView>() with_style { BackgroundSolid(0xff0000_rgb), Expanding() },
+ *           _new<AView>() AUI_WITH_STYLE { BackgroundSolid(0xff0000_rgb), Expanding() },
  *           Label { "Test" },
  *         }
  *       );
@@ -219,11 +219,11 @@ class AViewContainer;
  *           Horizontal {
  *             _new<AButton>("Left"),
  *             _new<AButton>("Center"),
- *             _new<AButton>("Right") let { it->setExpanding(); },
+ *             _new<AButton>("Right") AUI_LET { it->setExpanding(); },
  *                  // alias to it->setExpanding(2) ^^^^^^
  *           },
  *           _new<AButton>("Down"),
- *         } with_style { MinSize { 300_dp, {} } },
+ *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
  *       @endcode
  *     </td>
@@ -245,11 +245,11 @@ class AViewContainer;
  *           _new<AButton>("Up"),
  *           Horizontal {
  *               _new<AButton>("Left"),
- *               _new<AButton>("Center") let { it->setExpanding(); },
+ *               _new<AButton>("Center") AUI_LET { it->setExpanding(); },
  *               _new<AButton>("Right"),
  *           },
  *           _new<AButton>("Down"),
- *         } with_style { MinSize { 300_dp, {} } },
+ *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
  *       @endcode
  *     </td>
@@ -263,8 +263,8 @@ class AViewContainer;
  * occupy two thirds of free space:
  * @code{cpp}
  * Vertical {
- *   _new<AButton>("Left") let { it->setExpanding(1); },
- *   _new<AButton>("Right") let { it->setExpanding(2); }, // will be twice as big as "Left"
+ *   _new<AButton>("Left") AUI_LET { it->setExpanding(1); },
+ *   _new<AButton>("Right") AUI_LET { it->setExpanding(2); }, // will be twice as big as "Left"
  * }
  * @endcode
  *

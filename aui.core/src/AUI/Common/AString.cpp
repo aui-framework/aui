@@ -1173,7 +1173,7 @@ AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
 
 AString AString::numberHex(int i) noexcept {
     char buf[32];
-    sprintf(buf, "%x", i);
+    std::snprintf(buf, sizeof(buf), "%x", static_cast<unsigned>(i));
     return buf;
 }
 

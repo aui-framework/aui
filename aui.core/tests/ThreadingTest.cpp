@@ -33,7 +33,7 @@ TEST(Threading, Async) {
     auto someInt = _new<std::atomic_int>(0);
     AFutureSet<> f;
     for (int i = 0; i < 100; ++i) {
-        f << async {
+        f << AUI_THREADPOOL {
             (*someInt) += 1;
         };
     }
@@ -44,7 +44,7 @@ TEST(Threading, Async) {
 
 TEST(Threading, SleepInterruption) {
     bool called = false;
-    auto future = asyncX [&] {
+    auto future = AUI_THREADPOOL_X [&] {
         called = true;
         AThread::sleep(1000ms);
         ADD_FAILURE() << "this line should not have reached";
@@ -58,7 +58,7 @@ TEST(Threading, SleepInterruption) {
 }
 TEST(Threading, ConditionVariableInterruption) {
     bool called = false;
-    auto future = asyncX [&] {
+    auto future = AUI_THREADPOOL_X [&] {
         called = true;
         AConditionVariable cv;
         AMutex mutex;
@@ -78,7 +78,7 @@ TEST(Threading, Future1) {
     auto time = util::measureExecutionTime<std::chrono::milliseconds>([&]() {
         AUI_REPEAT(1000)
         {
-            taskList << async{
+            taskList << AUI_THREADPOOL{
                     double i = 2.0;
                     AUI_REPEAT(1000)
                     {
@@ -97,7 +97,7 @@ TEST(Threading, Future1) {
 
 TEST(Threading, Future2) {
     auto b = _new<bool>(false);
-    auto f = async{
+    auto f = AUI_THREADPOOL{
             AThread::sleep(1000ms);
             *b = true;
     };
@@ -108,12 +108,12 @@ TEST(Threading, Future2) {
 
 TEST(Threading, Future3) {
     auto b = _new<bool>(false);
-    auto v8 = async{
+    auto v8 = AUI_THREADPOOL{
             AThread::sleep(1000ms);
             *b = true;
             return 8;
     };
-    auto v1231 = async{
+    auto v1231 = AUI_THREADPOOL{
             AThread::sleep(1000ms);
             *b = true;
             return 1231.f;
@@ -218,7 +218,7 @@ TEST(Threading, FutureCancellationBeforeExecution) {
 TEST(Threading, FutureCancellationWhileExecution) {
     bool called = false;
     {
-        auto future = asyncX [&] {
+        auto future = AUI_THREADPOOL_X [&] {
             called = true;
             // hard work
             AThread::sleep(1000ms);
@@ -251,7 +251,7 @@ TEST(Threading, FutureInterruptionCascade) {
     {
         static bool interrupted = false;
         {
-            auto t = asyncX [&] {
+            auto t = AUI_THREADPOOL_X [&] {
                 auto items = AVector<int>::generate(10000, [](std::size_t i) { return i; });
                 auto tasks = AUI_PARALLEL_MP(items) {
                     for (auto it = begin; it != end; ++it) {
