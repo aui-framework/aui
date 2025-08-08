@@ -20,6 +20,9 @@ class Type(Enum):
     GENERIC_CLOSE = auto()
     LITERAL = auto()
     STRING = auto()
+    COLON = auto()
+    COLON2 = auto()
+
 
 
 def tokenize(input: str):
@@ -65,6 +68,13 @@ def tokenize(input: str):
         elif peek() == ';':
             take()
             yield make_token(Type.SEMICOLON)
+        elif peek() == ':':
+            take()
+            if peek() == ':':
+                take()
+                yield make_token(Type.COLON2)
+                continue
+            yield make_token(Type.COLON)
         elif peek() in "<({[":
             take()
             yield make_token(Type.GENERIC_OPEN)

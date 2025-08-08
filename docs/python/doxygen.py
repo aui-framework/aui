@@ -117,6 +117,13 @@ def _parse(input: str):
 
             token = next(iterator)
 
+            # handle namespace types
+            while token[1] == '::':
+                out += token[1]
+                token = next(iterator)
+                out += token[1]
+                token = next(iterator)
+
             if token[0] == cpp_tokenizer.Type.GENERIC_OPEN and not token[1] == '(':
                 out += "".join([i[1] for i in _skip_special_clause()])
                 token = next(iterator)
@@ -140,6 +147,9 @@ def _parse(input: str):
                     visibility = token[1]
                     assert next(iterator)[1] == ':'
                     continue
+                if token[0] == cpp_tokenizer.Type.GENERIC_OPEN:
+                    _skip_special_clause()
+
                 if token[0] == cpp_tokenizer.Type.IDENTIFIER:
                     if token[1] == 'enum':
                         while token[1] != ';':
@@ -151,20 +161,31 @@ def _parse(input: str):
                         if type_str in ["explicit", "static"]:
                             continue
                         break
-                    assert token[0] == cpp_tokenizer.Type.IDENTIFIER
-                    name = token[1]
-                    token = next(iterator)
-                    if token[1] == ';':
-                        clazz.fields.append((type_str, name, _consume_comment()))
-                        continue
                     if token[1] == '(':
-                        clazz.methods.append((type_str, name, _consume_comment()))
+                        # ctor
+                        clazz.methods.append(('', type_str, _consume_comment()))
                         _skip_special_clause()
                         token = next(iterator)
-                    if token[1] == ';':
                         continue
-                    if token[1] == '{':
-                        _skip_special_clause()
+                    else:
+                        assert token[0] == cpp_tokenizer.Type.IDENTIFIER
+                        name = token[1]
+                        token = next(iterator)
+                        if token[1] == ';':
+                            clazz.fields.append((type_str, name, _consume_comment()))
+                            continue
+                        if token[1] == '(':
+                            clazz.methods.append((type_str, name, _consume_comment()))
+                            _skip_special_clause()
+                            token = next(iterator)
+                    while True:
+                        if token[1] == ';':
+                            break
+                        if token[1] == '{':
+                            _skip_special_clause()
+                            break
+                        # consume const noexcept
+                        token = next(iterator)
 
 
         if _parse_comment():
@@ -504,5 +525,92 @@ public:
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
         ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+def test_parse_class_const_noexcept():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    _<Test> hello(_<Test> test) const noexcept {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+
+def test_parse_class_nodiscard():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    [[nodiscard]]
+    _<Test> hello(_<Test> test) const noexcept {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('_<Test>', 'hello', '@brief Hello'),
+        ('int', 'world', '@brief World'),
+    ]
+
+def test_parse_class_namespace():
+    clazz = next(_parse("""
+/**
+ * @brief Test
+ */
+class Test {
+public:
+    /**
+     * @brief Hello
+     */
+    [[nodiscard]]
+    test::Test hello(test::Test test) const noexcept {
+        if (test) {
+        }
+    }
+    
+    /**
+     * @brief World
+     */
+    int world();
+};
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == [
+        ('test::Test', 'hello', '@brief Hello'),
         ('int', 'world', '@brief World'),
     ]
