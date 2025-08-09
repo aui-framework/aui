@@ -82,7 +82,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             Horizontal {
               Button { "Add \"DevtoolsTest\" stylesheet name" } AUI_LET {
                       it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
-                      connect(it->clicked, [=] {
+                      connect(it->clicked, [=, this] {
                           targetView->addAssName("DevtoolsTest");
                           setTargetView(targetView);
                       });
