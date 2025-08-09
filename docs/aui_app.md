@@ -50,7 +50,7 @@ aui_app(
     
     # apple only
     [APPLE_TEAM_ID <apple-team-id>]
-    [APPLE_BUNDLE_IDENTIFIER <bundle-identifier>]
+    [MACOS_BUNDLE_IDENTIFIER <bundle-identifier>]
     [APPLE_SIGN_IDENTITY <sign-identity>]
 
     # ios only
@@ -184,7 +184,7 @@ Specify your Apple Team ID (https://discussions.apple.com/thread/7942941).
 |macOS|+||
 |iOS|+||
 
-### APPLE_BUNDLE_IDENTIFIER
+### MACOS_BUNDLE_IDENTIFIER
 
 Specify bundle identifier. If not set, the value of `NAME` used instead.
 
