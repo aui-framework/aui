@@ -130,63 +130,52 @@ Suppose whe want to create a module called `aui::my_module`:
 1. In the main `CMakeLists.txt`:
     1. Find the `# define all components` anchor, put `define_aui_component(my_module)`.
     2. Find the `# all components for exporting` anchor, put `my_module` to `AUI_ALL_COMPONENTS`.
-2. In `docs/Doxyfile`:
-    1. Append `aui.my_module/src` to the `STRIP_FROM_INC_PATH` variable.
-    2. Append `aui.my_module` to the `INPUT` variable.
-3. If `aui::my_module` has external dependencies, handle them at `# add dependencies` in
+2. If `aui::my_module` has external dependencies, handle them at `# add dependencies` in
    `cmake/aui-config.cmake.in`.
-4. Put the reference to the module in `docs/index.html`.
-5. Create `aui.my_module` dir.
-6. Copy & paste `CMakeLists.txt` from any small module (i.e. `aui::xml`) and configure it for your module.
-7. Use `API_AUI_MY_MODULE` to export symbols from your module (it's created by the `aui_module` CMake function).
+3. Put the reference to the module in `docs/index.md`.
+4. Create `aui.my_module` dir.
+5. Copy & paste `CMakeLists.txt` from any small module (i.e. `aui::xml`) and configure it for your module.
+6. Use `API_AUI_<your module>` to export symbols from your module (it's created by the `aui_module` CMake function).
 
-### Documentation generation
+### Documentation
 
-The documentation generation process is primarily handled through Python scripts located in the `doxygen` directory.
-These scripts invoke `doxygen` which is a de facto standard doc generation tool for C++, applying additional checks and
-post-processing on `doxygen`'s output, most notably:
-
-- Adds footer contents
-- Removes unnecessary UI elements which can't be disabled through `Doxyfile`
-- Adds view/edit source links
-- Adjusts the navigation tree
-- Fixes formatting and indentation in code snippets
-- Generates table of contents for each page
-- Generates `#` links for each header
-- Generates full-fledged documentation pages from unit tests, i.e., in
-  [aui.uitests/tests/UIDataBindingTest.cpp](https://github.com/aui-framework/aui/blob/96fea693675bfcacf60f5c138f8574c676160932/aui.uitests/tests/UIDataBindingTest.cpp#L28)
-
-Key files and directories:
-
-- `doxygen/extra`: extra files to put into output
-- `doxygen/gen`: Python scripts whose stdout is inserted to the documentation. In example, there's a
-  `doxygen/gen/aui_app_ICON.py`, which is invoked by `\@pythongen{aui_app_ICON}` from within Doxygen.
-- `doxygen/intermediate`: temporary directory for immediate parts on the documentation, which is picked up by Doxygen.
-  This directory is gitignored.
-- `doxygen/Doxyfile`: main Doxygen configuration file
-- `doxygen/modules`: Python modules
-- `doxygen/out/html`: Generated documentation output
-- `doxygen/patches`: Documentation portions that are used in patching
+The docs found on [aui-framework.github.io](https://aui-framework.github.io) is generated with MkDocs.
 
 To generate documentation, run the following command from the root of AUI repository:
 
-@note
-These commands are not tested on Windows.
+!!! note
+    
+    These commands are not tested on Windows.
 
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
 
+# if you want to use venv
+python3 -m venv .venv
+source .venv/bin/activate
+
 # only for the first time
-python3 -m pip install -r doxygen/requirements.txt 
+python3 -m pip install -r docs/requirements.txt 
 
 # generate docs
-python3 doxygen/docs.py
+mkdocs serve --use-directory-urls
 ```
 
-After the command is complete, the local copy of HTML doc pages are available for manual review in `doxygen/out/html`
-directory. These pages are static so they can be deployed on a static site hosting provider.
+After the command is complete, you can visit docs at [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+
+In our pipelines, we use `--strict` flag to treat warnings as errors. If warnings were produced during generation, the
+CI/CD pipeline wouldn't pass.
 
 ```bash
-xdg-open doxygen/out/html/index.html
+mkdocs serve --use-directory-urls --strict
 ```
+
+Most functionality is provided by Material for MkDocs theme. In addition to `md` files found in `docs/` dir, we have
+several python scripts to populate documentation:
+
+ - `docs/python/hooks.py` - handles XML comments.
+ - `docs/python/doxygen.py` - handles Doxygen-style documentation found in our C++ code. Doxygen, as the tool, does not
+   participate in our documentation generation. We still use Doxygen style to maintain compatibility with documentation
+   readers in IDEs.
+ - `docs/python/examples_page.py` - generates pages related to examples.
