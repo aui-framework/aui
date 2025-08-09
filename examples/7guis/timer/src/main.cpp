@@ -31,7 +31,7 @@ public:
             Horizontal {
               Label { "Elapsed Time:" },
               Centered::Expanding {
-                _new<AProgressBar>() let {
+                _new<AProgressBar>() AUI_LET {
                         it & mElapsedTimeRatio;
                         it->setCustomStyle({ Expanding { 1, 0 } });
                     },
@@ -42,7 +42,7 @@ public:
             }),
             Horizontal {
               Label { "Duration:" },
-              _new<ASlider>() let {
+              _new<ASlider>() AUI_LET {
                       it&& mDuration.biProjected(aui::lambda_overloaded {
                         [](high_resolution_clock::duration d) -> aui::float_within_0_1 {
                             return float(d.count()) / float(MAX_DURATION.count());
@@ -54,9 +54,9 @@ public:
                       it->setCustomStyle({ Expanding {} });
                   },
             },
-            _new<AButton>("Reset Timer") with_style {
+            _new<AButton>("Reset Timer") AUI_WITH_STYLE {
                   Expanding { 1, 0 },
-                } let { connect(it->clicked, me::reset); },
+                } AUI_LET { connect(it->clicked, me::reset); },
           },
         });
 

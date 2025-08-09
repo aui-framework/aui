@@ -148,7 +148,7 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    ui_thread {
+    AUI_UI_THREAD {
         ATextInputType type = ATextInputType::DEFAULT;
         ATextInputActionIcon action = ATextInputActionIcon::DEFAULT;
         bool isPassword = false;

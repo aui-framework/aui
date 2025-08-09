@@ -157,7 +157,7 @@ public:
         Expanding(Views&&... views) : layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...) {}
 
         _<Container> operator()() {
-            return layouted_container_factory_impl<Layout, Container>::operator()() let { it->setExpanding(); };
+            return layouted_container_factory_impl<Layout, Container>::operator()() AUI_LET { it->setExpanding(); };
         }
     };
 };

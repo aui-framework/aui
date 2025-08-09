@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-auib_import(CURL https://github.com/aui-framework/curl/archive/refs/heads/master.zip
+auib_import(CURL https://github.com/aui-framework/curl/archive/b92149696f1b740b144e52f44c81b25edb2e1b24.zip
             ARCHIVE)
 
 aui_module(aui.curl EXPORT aui WHOLEARCHIVE)

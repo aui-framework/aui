@@ -51,8 +51,8 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
     setExpanding();
 
-    connect(mVerticalScrollbar->scrolled, slot(mInner)::setScrollY);
-    connect(mHorizontalScrollbar->scrolled, slot(mInner)::setScrollX);
+    connect(mVerticalScrollbar->scrolled, AUI_SLOT(mInner)::setScrollY);
+    connect(mHorizontalScrollbar->scrolled, AUI_SLOT(mInner)::setScrollX);
     connect(mInner->scroll().changed, [&](glm::ivec2 scroll) {
         mHorizontalScrollbar->setScroll(scroll.x);
         mVerticalScrollbar->setScroll(scroll.y);

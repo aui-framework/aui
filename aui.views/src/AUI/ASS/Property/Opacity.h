@@ -19,6 +19,14 @@
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
+#if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
+template <> struct fmt::formatter<aui::float_within_0_1> : fmt::formatter<float> {
+    auto format(const aui::float_within_0_1& v, fmt::format_context& ctx) const {
+        return fmt::formatter<float>::format(static_cast<float>(v), ctx);
+    }
+};
+#endif
+
 namespace ass {
 
     /**

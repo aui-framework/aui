@@ -163,7 +163,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     }
 
     // vsync
-    do_once {
+    AUI_DO_ONCE {
         glXSwapIntervalEXT = reinterpret_cast<PFNGLXSWAPINTERVALEXTPROC>(
             glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXSwapIntervalEXT")));
     }

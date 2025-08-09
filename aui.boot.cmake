@@ -130,7 +130,7 @@ if (APPLE)
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
     # [RPATH apple]
 elseif(UNIX AND NOT ANDROID)
-    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
     endif()
     # [RPATH linux]
@@ -155,8 +155,8 @@ else()
     set(HOME_DIR $ENV{HOME})
 endif()
 
-if (NOT CMAKE_CXX_COMPILER_ID)
-    message(FATAL_ERROR "CMAKE_CXX_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
+if (NOT CMAKE_C_COMPILER_ID)
+    message(FATAL_ERROR "CMAKE_C_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
 endif()
 
 if (ANDROID_ABI)
@@ -178,7 +178,7 @@ else()
     else ()
         set(AUI_TARGET_ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
     endif()
-    string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
+    string(TOLOWER "${CMAKE_C_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
@@ -1157,6 +1157,16 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
+    _auib_find_git()
+    if (GIT_EXECUTABLE AND NOT AUIB_IMPORT_ARCHIVE)
+        execute_process(COMMAND ${GIT_EXECUTABLE} status
+                WORKING_DIRECTORY ${DEP_SOURCE_DIR}
+                OUTPUT_VARIABLE git_status
+        )
+        if(NOT git_status MATCHES "HEAD")
+            message(WARNING "${AUIB_IMPORT_NAME} You are staying on a branch or did not specify the version control, please specify a tag or hash VERSION!\nSee https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html#version")
+        endif ()
+    endif ()
 endfunction()
 
 

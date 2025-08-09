@@ -52,13 +52,13 @@ namespace ass {
              * { .radius = 6_dp * x, .downscale = 1 } is x^2.
              *
              * @code{cpp}
-             * view with_style {
+             * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 6_dp, .downscale = 4 } },
              * }
              * @endcode
              * is visually approximately same as
              * @code{cpp}
-             * view with_style {
+             * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 24_dp } },
              * }
              * @endcode

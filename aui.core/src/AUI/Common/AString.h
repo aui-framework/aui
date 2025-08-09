@@ -12,12 +12,10 @@
 #pragma once
 
 #include <algorithm>
-#include <span>
 #include <string>
 #include <iostream>
-#include <AUI/Core.h>
-#include <AUI/Traits/values.h>
-#include <AUI/Common/AChar.h>
+#include "AUI/Core.h"
+#include "AUI/Traits/values.h"
 #include <AUI/Common/ASet.h>
 #include <optional>
 #include <AUI/Common/AOptional.h>
@@ -27,27 +25,20 @@ class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
-enum class AStringEncoding {
-    UTF8,
-    UTF16,
-    UTF32,
-    LATIN1,
-};
-
 /**
  * @brief Represents a Unicode character string.
  * @ingroup core
  * @details
- * AString stores a string of 8-bit chars, where each char corresponds to one UTF-8 code unit. Unicode characters with
- * code values above 255 are stored using two, three or four consecutive chars.
+ * AString stores a string of 16-bit chars, where each char corresponds to one UTF-16 code unit. Unicode characters with
+ * code values above 65535 are stored using two consecutive chars.
  *
  * Unicode is an international standard that supports most of the writing systems in use today.
  */
-class API_AUI_CORE AString: std::string
+class API_AUI_CORE AString: std::u16string
 {
 private:
     friend struct std::hash<AString>;
-    using super = std::string;
+    using super = std::u16string;
 
 public:
 
@@ -58,113 +49,124 @@ public:
     using const_reverse_iterator = super::const_reverse_iterator;
     auto constexpr static NPOS = super::npos;
 
-    AString() noexcept
-    {
-    }
 
     AString(AString&& other) noexcept
-            : super(static_cast<basic_string&&>(other))
+            : std::u16string(static_cast<basic_string&&>(other))
     {
     }
 
-    AString(const AString& other) noexcept
-            : super(other)
+    /**
+     * @param other utf8 string
+     */
+    AString(const basic_string& other) noexcept
+            : basic_string<char16_t>(other)
     {
     }
 
     /**
      * @param utf8 utf8 string
      */
-    AString(const std::string& utf8) noexcept
-            : super(utf8)
+    AString(const std::string& utf8) noexcept;
+
+    AString(const AString& other) noexcept
+            : super(other.c_str())
+    {
+    }
+
+    AString(const basic_string& rhs, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(rhs, allocator)
     {
     }
 
     template <class Iterator>
     AString(Iterator first, Iterator last) noexcept : super(first, last) {}
 
-    /**
-     * @param utf8 utf8 string
-     */
-    AString(const char* utf8) noexcept
-            : super(utf8)
+    AString() noexcept
     {
+    }
+
+    AString(char16_t c) noexcept : super(&c, &c + 1)
+    {
+
     }
 
     /**
      * @param utf8 utf8 string
      */
-    AString(std::string_view utf8) noexcept
-            : super(utf8)
+    AString(const char* utf8) noexcept;
+
+    /**
+     * @param utf8 utf8 string
+     */
+    AString(std::string_view utf8) noexcept;
+
+    explicit AString(const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(allocator)
     {
     }
 
-    explicit AString(std::span<std::byte> bytes, AStringEncoding encoding = AStringEncoding::UTF8) noexcept;
-
-    AString(char c) noexcept : super(&c, &c + 1)
+    AString(const basic_string& rhs, size_type offset, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(rhs, offset, allocator)
     {
     }
 
-    AString(AChar c) noexcept;
-
-    AString(const AByteBuffer& buffer, AStringEncoding encoding);
-    AString(const AByteBufferView& buffer, AStringEncoding encoding);
-    AString(const char* buffer, size_t length, AStringEncoding encoding);
-    AString(const char* buffer, AStringEncoding encoding);
-
-    explicit AString(const std::allocator<value_type>& allocator) noexcept
-            : super(allocator)
+    AString(const basic_string& rhs, size_type offset, size_type count, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(rhs, offset, count, allocator)
     {
     }
 
-    AString(const basic_string& rhs, size_type offset, const std::allocator<value_type>& allocator) noexcept
-            : super(rhs, offset, allocator)
+    AString(const char16_t* cStyleString, size_type count) noexcept
+            : basic_string<char16_t>(cStyleString, count)
     {
     }
 
-    AString(const basic_string& rhs, size_type offset, size_type count, const std::allocator<value_type>& allocator) noexcept
-            : super(rhs, offset, count, allocator)
+    AString(const char16_t* cStyleString, size_type count, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(cStyleString, count, allocator)
     {
     }
 
-    AString(const char* utf8, size_type count) noexcept
-            : super(utf8, count)
+    AString(const char16_t* cStyleString) noexcept
+            : basic_string<char16_t>(cStyleString)
     {
     }
 
-    AString(const char* utf8, size_type count, const std::allocator<value_type>& allocator) noexcept
-            : super(utf8, count, allocator)
+    AString(const char16_t* cStyleString, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(cStyleString, allocator)
     {
     }
 
-    AString(size_type count, char _Ch) noexcept
-            : super(count, _Ch)
+    AString(size_type count, char16_t _Ch) noexcept
+            : basic_string<char16_t>(count, _Ch)
     {
     }
 
-    AString(size_type count, char _Ch, const std::allocator<value_type>& allocator) noexcept
-            : super(count, _Ch, allocator)
+    AString(size_type count, char16_t _Ch, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(count, _Ch, allocator)
     {
     }
 
     AString(basic_string&& rhs) noexcept
-            : super(std::move(rhs))
+            : basic_string<char16_t>(std::move(rhs))
     {
     }
 
-    AString(std::initializer_list<char> _Ilist) noexcept
-            : super(_Ilist)
+    AString(basic_string&& rhs, const std::allocator<char16_t>& allocator) noexcept
+            : basic_string<char16_t>(std::move(rhs), allocator)
+    {
+    }
+
+    AString(std::initializer_list<char16_t> _Ilist) noexcept
+            : basic_string<char16_t>(_Ilist)
     {
     }
 
     ~AString() = default;
 
 
-    void push_back(char c) noexcept
+    void push_back(char16_t c) noexcept
     {
         super::push_back(c);
     }
-    void push_back(AChar c) noexcept;
     void pop_back() noexcept
     {
         super::pop_back();
@@ -245,12 +247,12 @@ public:
 
     AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
 
-    char* data() noexcept
+    char16_t* data() noexcept
     {
         return super::data();
     }
 
-    const char* data() const noexcept
+    const char16_t* data() const noexcept
     {
         return super::data();
     }
@@ -408,6 +410,11 @@ public:
         return find(other) != npos;
     }
 
+    static AString fromLatin1(const AByteBuffer& buffer);
+    static AString fromUtf8(const AByteBufferView& buffer);
+    static AString fromUtf8(const char* buffer, size_t length);
+    static AString fromLatin1(const char* buffer);
+
     static AString numberHex(int i) noexcept;
 
     template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
@@ -447,6 +454,7 @@ public:
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
     }
 
+
     /**
      * @return utf8-encoded std::string.
      */
@@ -474,7 +482,7 @@ public:
         return *this;
     }
 
-    AByteBuffer getBytes(AStringEncoding encoding = AStringEncoding::UTF8) const noexcept;
+    AByteBuffer toUtf8() const noexcept;
 
     void removeAt(unsigned at) noexcept
     {
@@ -526,12 +534,14 @@ public:
     [[nodiscard]] bool empty() const noexcept {
         return super::empty();
     }
-    [[nodiscard]] size_type size() const noexcept;
-    char operator[](size_type index) const
+    [[nodiscard]] size_type size() const noexcept {
+        return super::size();
+    }
+    char16_t operator[](size_type index) const
     {
         return super::at(index);
     }
-    char& operator[](size_type index)
+    char16_t& operator[](size_type index)
     {
         return super::at(index);
     }
@@ -545,11 +555,11 @@ public:
         super::clear();
     }
 
-    char& front() noexcept
+    char16_t& front() noexcept
     {
         return super::front();
     }
-    char& back() noexcept
+    char16_t& back() noexcept
     {
         return super::back();
     }
@@ -561,11 +571,11 @@ public:
     {
         return super::back();
     }
-    char& first() noexcept
+    char16_t& first() noexcept
     {
         return super::front();
     }
-    char& last() noexcept
+    char16_t& last() noexcept
     {
         return super::back();
     }
@@ -596,7 +606,7 @@ public:
         return super::back();
     }
 
-    const char* c_str() const
+    const char16_t* c_str() const
     {
         return super::c_str();
     }
@@ -643,16 +653,10 @@ public:
         return *this;
     }
 
-    AString& append(size_t count, char ch) noexcept
+    AString& append(size_t count, char16_t ch) noexcept
     {
         super::append(count, ch);
         return *this;
-    }
-
-    [[nodiscard]]
-    size_t sizeInBytes() const noexcept
-    {
-        return size() * sizeof(super::value_type);
     }
 
     AString& operator=(const AString& value) noexcept
@@ -674,19 +678,42 @@ public:
         }
         return std::memcmp(data(), other.data(), sizeInBytes()) == 0;
     }
+    bool operator==(const char16_t* other) const noexcept
+    {
+        auto it = begin();
+        for (; it != end(); ++it, ++other) {
+            if (*it != *other) {
+                return false;
+            }
+            if (*other == '\0') {
+                return false;
+            }
+        }
+        return *other == '\0';
+    }
+
+    [[nodiscard]]
+    size_t sizeInBytes() const noexcept {
+        return size() * sizeof(super::value_type);
+    }
+
     bool operator!=(const AString& other) const noexcept
+    {
+        return !operator==(other);
+    }
+    bool operator!=(const char16_t* other) const noexcept
     {
         return !operator==(other);
     }
 
     bool operator==(const char* other) const noexcept
     {
-        return static_cast<super>(*this) == other;
+        return *this == AString(other);
     }
 
     bool operator!=(const char* other) const noexcept
     {
-        return !operator==(other);
+        return *this != AString(other);
     }
 
     template<typename... Args>
@@ -694,7 +721,10 @@ public:
 
     AString processEscapes() const;
 
-    AString& removeAll(AChar c) noexcept;
+    AString& removeAll(char16_t c) noexcept {
+        erase(std::remove(begin(), end(), c), end());
+        return *this;
+    }
 
     [[nodiscard]]
     AString substr(std::size_t offset, std::size_t count = npos) const {
@@ -753,14 +783,68 @@ struct std::hash<AString>
 {
     size_t operator()(const AString& t) const noexcept
     {
-        return std::hash<std::string>()(t);
+        return std::hash<std::u16string>()(t);
     }
 };
 
+#if AUI_PLATFORM_WIN
+namespace aui::win32 {
+    /*
+     * On Windows, char16_t == wchar_t. WinAPI interfaces use wchar_t widely, so we have some handy functions to
+     * convert AString to wchar_t* and back.
+     */
+
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
+    inline const wchar_t* toWchar(const AString& string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return reinterpret_cast<const wchar_t *const>(string.data());
+    }
+
+    /**
+     * @brief AString to const wchar_t*.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
+    inline wchar_t* toWchar(AString& string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return reinterpret_cast<wchar_t*>(string.data());
+    }
+
+    /**
+     * @brief AString to wchar_t string view.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
+    inline std::wstring_view toWcharView(const AString& string) {
+        return {toWchar(string), string.length() };
+    }
+
+    /**
+     * @brief wchar_t string view to AString.
+     * @ingroup core
+     * @details
+     * @exclusivefor{windows}
+     */
+    inline AString fromWchar(std::wstring_view string) {
+        // NOLINTNEXTLINE(*-pro-type-reinterpret-cast)
+        return {reinterpret_cast<const char16_t *>(string.data()), string.size()};
+    }
+}
+#endif
+
+#if defined(FMT_VERSION) && (FMT_VERSION < 100000)
 template <> struct fmt::detail::is_string<AString>: std::false_type {};
+#endif
 
 template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
-    auto format(const AString& s, format_context& ctx) const {
+    auto format(const AString& s, fmt::format_context& ctx) const {
         return fmt::formatter<std::string>::format(s.toStdString(), ctx);
     }
 };

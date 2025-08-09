@@ -241,7 +241,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     setWindowStyle(ws);
 
-    ui_thread {
+    AUI_UI_THREAD {
         emit mSizeChanged(getSize());
     };
 }
@@ -258,7 +258,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    ui_thread {
+    AUI_UI_THREAD {
         window->show();
     };
 

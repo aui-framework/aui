@@ -43,7 +43,7 @@ From now, you can use the file from C++.
 ```
 
 ```cpp
-_new<AView>() with_style {
+_new<AView>() AUI_WITH_STYLE {
   BackgroundImage { ":background.png" },
 },
 ```

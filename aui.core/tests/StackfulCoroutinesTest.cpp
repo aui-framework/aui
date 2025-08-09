@@ -25,7 +25,7 @@ using namespace std::chrono_literals;
 
 
 AFuture<int> longTask(high_resolution_clock::time_point* returnTimePoint, milliseconds duration) {
-    return async {
+    return AUI_THREADPOOL {
         AThread::sleep(duration); // long tamssk
         *returnTimePoint = high_resolution_clock::now();
         return 228;
@@ -60,7 +60,7 @@ TEST(StackfulCoroutines, CoAwait) {
 }
 
 AFuture<int> longTaskException() {
-    return async -> int {
+    return AUI_THREADPOOL -> int {
         AThread::sleep(10ms); // long tamssk
         throw AException("Whoops! Something bad happened");
     };

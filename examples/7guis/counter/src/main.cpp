@@ -22,7 +22,7 @@ public:
     CounterWindow(): AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
         setContents(Centered {
           Horizontal {
-            _new<ATextField>() let {
+            _new<ATextField>() AUI_LET {
                 AObject::connect(mCounter.readProjected(AString::number<int>), it->text());
                 it->setEditable(false);
             },
