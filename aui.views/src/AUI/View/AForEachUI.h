@@ -388,10 +388,25 @@ auto makeForEach(RangeFactory&& rangeFactory)
 }
 }   // namespace aui::detail
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, capture) \
+/**
+ * @brief Declarative UI loop for member contexts — explicitly captures 'this' and values.
+ * @ingroup useful_macros
+ * @details 
+ * Use from inside class member functions.
+ */
+#define AUI_DECLARATIVE_FOR_EX_THIS(value, model, layout, capture) \
     aui::detail::makeForEach<layout>([capture, this]() -> decltype(auto) { \
         return (model); \
     }) - [capture, this](const auto& value) -> _<AView>
+
+/**
+ * @brief Declarative UI loop for non-member contexts — no implicit 'this' capture.
+ * @ingroup useful_macros
+ */
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, capture) \
+    aui::detail::makeForEach<layout>([capture]() -> decltype(auto) { \
+        return (model); \
+    }) - [capture](const auto& value) -> _<AView>
 
 /**
  * @brief ranged-for-loop style wrapped for @ref AForEachUI.
@@ -399,4 +414,5 @@ auto makeForEach(RangeFactory&& rangeFactory)
  * @details
  * See @ref AForEachUI
  */
-#define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =, this)
+#define AUI_DECLARATIVE_FOR(value, model, layout) \
+    AUI_DECLARATIVE_FOR_EX(value, model, layout, =)

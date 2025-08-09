@@ -24,10 +24,10 @@ using namespace std::chrono_literals;
 
 
 AFuture<int> longTask() {
-    return AUI_THREADPOOL {
-        AThread::sleep(10ms); // long tamssk
+    return AUI_THREADPOOL_SAFE({
+        AThread::sleep(10ms); // long task
         return 228;
-    };
+    });
 }
 
 TEST(Coroutines, CoAwait) {
@@ -40,10 +40,10 @@ TEST(Coroutines, CoAwait) {
 }
 
 AFuture<int> longTaskException() {
-    return AUI_THREADPOOL -> int {
-        AThread::sleep(10ms); // long tamssk
+    return AUI_THREADPOOL_SAFE_RET(int, {
+        AThread::sleep(10ms); // long task
         throw AException("Whoops! Something bad happened");
-    };
+    });
 }
 
 TEST(Coroutines, CoAwaitException) {

@@ -37,10 +37,10 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 
 AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
-    return AUI_THREADPOOL noexcept {
+    return AUI_THREADPOOL_SAFE_NOEXCEPT({
         APath result;
         Ole::inst();
-        IFileOpenDialog *pFileOpen;
+        IFileOpenDialog* pFileOpen;
 
         // Create the FileOpenDialog object.
         auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
@@ -51,10 +51,10 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
 
         ARaiiHelper d = [&] {
             AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
-                    parent->blockUserInput(false);
+                parent->blockUserInput(false);
 
-                    pFileOpen->Release();
-                });
+                pFileOpen->Release();
+            });
         };
 
         pFileOpen->SetOptions(FOS_PICKFOLDERS);
@@ -73,11 +73,9 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         }
 
 
-        HWND nativeParentWindow;
+        HWND nativeParentWindow = nullptr;
         if (auto d = dynamic_cast<AWindow*>(parent)) {
             nativeParentWindow = d->nativeHandle();
-        } else {
-            nativeParentWindow = nullptr;
         }
 
         hr = pFileOpen->Show(nativeParentWindow);
@@ -85,7 +83,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
         {
-            IShellItem *pItem;
+            IShellItem* pItem;
             hr = pFileOpen->GetResult(&pItem);
             if (SUCCEEDED(hr))
             {
@@ -103,15 +101,15 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         }
 
         return result;
-    };
+    });
 }
 
 AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
-    return AUI_THREADPOOL noexcept {
+    return AUI_THREADPOOL_SAFE_NOEXCEPT({
         APath result;
         Ole::inst();
-        IFileOpenDialog *pFileOpen;
+        IFileOpenDialog* pFileOpen;
 
         // Create the FileOpenDialog object.
         auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
@@ -120,10 +118,10 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
         ARaiiHelper d = [&] {
             AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
-                    parent->blockUserInput(false);
+                parent->blockUserInput(false);
 
-                    pFileOpen->Release();
-                });
+                pFileOpen->Release();
+            });
         };
 
         AUI_ASSERT(SUCCEEDED(hr));
@@ -156,11 +154,9 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
             }
         }
 
-        HWND nativeParentWindow;
+        HWND nativeParentWindow = nullptr;
         if (auto d = dynamic_cast<AWindow*>(parent)) {
             nativeParentWindow = d->nativeHandle();
-        } else {
-            nativeParentWindow = nullptr;
         }
 
         hr = pFileOpen->Show(nativeParentWindow);
@@ -168,7 +164,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
         {
-            IShellItem *pItem;
+            IShellItem* pItem;
             hr = pFileOpen->GetResult(&pItem);
             if (SUCCEEDED(hr))
             {
@@ -187,7 +183,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
 
         return result;
-    };
+    });
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {

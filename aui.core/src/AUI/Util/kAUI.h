@@ -404,3 +404,85 @@ namespace aui::impl::slot {
 
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()
+
+/**
+ * @brief Executes the provided statements asynchronously on the global thread pool from contexts without this (free/static functions). Captures outer variables by value via a lambda.
+ * @ingroup useful_macros
+ */
+#define AUI_THREADPOOL_SAFE(...)                        \
+([&]() {                                                \
+auto lambda = [=]() { __VA_ARGS__; };                   \
+return AThreadPool::global() * lambda;                  \
+}())
+
+/**
+ * @brief Same as AUI_THREADPOOL_SAFE, but for call sites that require an explicit return type in the lambda. Useful when the future’s value type can’t be deduced reliably.
+ * @ingroup useful_macros
+ */
+#define AUI_THREADPOOL_SAFE_RET(Type, ...)              \
+([&]() {                                                \
+auto lambda = [=]() -> Type { __VA_ARGS__; };           \
+return AThreadPool::global() * lambda;                  \
+}())
+
+/**
+ * @brief Executes the provided statements asynchronously on the global thread pool with a noexcept lambda, suitable for functions that must not throw.
+ * @ingroup useful_macros
+ */
+#define AUI_THREADPOOL_SAFE_NOEXCEPT(...)               \
+([&]() {                                                \
+auto lambda = [=]() noexcept { __VA_ARGS__; };          \
+return AThreadPool::global() * lambda;                  \
+}())
+
+/**
+ * @brief Combines explicit return type and noexcept for asynchronous execution on the global thread pool from contexts without this.
+ * @ingroup useful_macros
+ */
+#define AUI_THREADPOOL_SAFE_NOEXCEPT_RET(Type, ...)     \
+([&]() {                                                \
+auto lambda = [=]() noexcept -> Type { __VA_ARGS__; };  \
+return AThreadPool::global() * lambda;                  \
+}())
+
+/**
+ * @brief Executes the provided statements on the main (UI) thread from contexts without this (free/static functions).
+ *        Captures outer variables by value via a lambda.
+ * @ingroup useful_macros
+ */
+#define AUI_UI_THREAD_SAFE(...)                         \
+([&]() {                                                \
+    auto lambda = [=]() { __VA_ARGS__; };               \
+    return (*AThread::main()) * lambda;                 \
+}())
+
+/**
+ * @brief Same as AUI_UI_THREAD_SAFE, but for call sites that require an explicit return type in the lambda.
+ *        Useful when the future’s value type can’t be deduced reliably.
+ * @ingroup useful_macros
+ */
+#define AUI_UI_THREAD_SAFE_RET(Type, ...)               \
+([&]() {                                                \
+    auto lambda = [=]() -> Type { __VA_ARGS__; };       \
+    return (*AThread::main()) * lambda;                 \
+}())
+
+/**
+ * @brief Executes the provided statements on the main (UI) thread with a noexcept lambda, suitable for functions that must not throw.
+ * @ingroup useful_macros
+ */
+#define AUI_UI_THREAD_SAFE_NOEXCEPT(...)                \
+([&]() {                                                \
+    auto lambda = [=]() noexcept { __VA_ARGS__; };      \
+    return (*AThread::main()) * lambda;                 \
+}())
+
+/**
+ * @brief Combines explicit return type and noexcept for execution on the main (UI) thread from contexts without this.
+ * @ingroup useful_macros
+ */
+#define AUI_UI_THREAD_SAFE_NOEXCEPT_RET(Type, ...)          \
+([&]() {                                                    \
+    auto lambda = [=]() noexcept -> Type { __VA_ARGS__; };  \
+    return (*AThread::main()) * lambda;                     \
+}())

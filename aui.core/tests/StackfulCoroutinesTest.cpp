@@ -25,11 +25,11 @@ using namespace std::chrono_literals;
 
 
 AFuture<int> longTask(high_resolution_clock::time_point* returnTimePoint, milliseconds duration) {
-    return AUI_THREADPOOL {
-        AThread::sleep(duration); // long tamssk
+    return AUI_THREADPOOL_SAFE({
+        AThread::sleep(duration); // long task
         *returnTimePoint = high_resolution_clock::now();
         return 228;
-    };
+    });
 }
 
 TEST(StackfulCoroutines, CoAwait) {
@@ -60,8 +60,8 @@ TEST(StackfulCoroutines, CoAwait) {
 }
 
 AFuture<int> longTaskException() {
-    return AUI_THREADPOOL -> int {
-        AThread::sleep(10ms); // long tamssk
+    return AUI_THREADPOOL_SAFE_RET(int, {
+        AThread::sleep(10ms); // long task
         throw AException("Whoops! Something bad happened");
-    };
+    });
 }
