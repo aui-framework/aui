@@ -138,3 +138,23 @@ th, td {
     padding: 8px;
     font-size: 1.1em;
 }
+
+
+/* doxygen-style dl lists (arguments, returns, etc) */
+.doxygen-dl dt {
+    font-weight: bold;
+}
+
+.doxygen-dl th, .doxygen-dl td {
+    padding: 2px;
+}
+
+.doxygen-dl table, .doxygen-dl tr {
+    background: none !important;
+    border: none !important;
+}
+
+.doxygen-dl dd {
+    padding: 0;
+    margin: 0;
+}

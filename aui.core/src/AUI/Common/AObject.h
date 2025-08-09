@@ -257,6 +257,7 @@ public:
      * @ingroup property_system
      * @details
      * See [signal_slot] "signal-slot system" for more info.
+     *
      * ```cpp
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
@@ -266,6 +267,7 @@ public:
      *
      *    `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
      *    connection creation.
+     *
      *
      * @param property source property.
      * @param object instance of `AObject`.

@@ -54,16 +54,12 @@ def parse_doxygen(comment):
     output = [['', '']]
     iterator = iter(comment.split('\n'))
 
-    details_found = False
     for i in iterator:
-        if not details_found:
-            if m := CPP_BRIEF_LINE.match(i):
-                section_name = m.group(1)
-                output.append([section_name, ''])
-                output[-1][1] += m.group(2)
-                if section_name == '@details':
-                    details_found = True
-                continue
+        if m := CPP_BRIEF_LINE.match(i):
+            section_name = m.group(1)
+            output.append([section_name, ''])
+            output[-1][1] += m.group(2)
+            continue
         output[-1][1] += "\n" + i
     output = [i for i in filter(lambda x: x[1] != '', output)]
     for output_line in output:
@@ -246,6 +242,7 @@ def _parse(input: str):
                             break
                         # consume const noexcept
                         token = next(iterator)
+                    _consume_comment()
 
 
         if _parse_comment():
@@ -355,7 +352,33 @@ def gen_pages():
                                     print('', file=fos)
                                     print(f'```', file=fos)
                                     print(f'', file=fos)
-                                    print(f'{overload.doc}', file=fos)
+
+                                    doxygen = parse_doxygen(overload.doc)
+
+                                    for i in [i for i in doxygen if i[0] == '@brief']:
+                                        print(i[1], file=fos)
+                                    print('<dl class="doxygen-dl">', file=fos)
+                                    params = [i for i in doxygen if i[0] == '@param']
+                                    if params:
+                                        print('<dt>Arguments</dt>', file=fos)
+                                        print('<dd><div style="display: table">', file=fos)
+                                        for i in params:
+                                            print(f'<div style="display: table-row">', file=fos)
+                                            argument_name = i[1].split(' ')[0]
+                                            print(f'<b style="display: table-cell; padding-right: 6px"><code>{argument_name}</code></b>', file=fos)
+                                            print(f'<div style="display: table-cell">{i[1][len(argument_name):]}</div>', file=fos)
+                                            print(f'</div>', file=fos)
+                                        print('</div></dd>', file=fos)
+                                    for i in doxygen:
+                                        if i[0] != '@return':
+                                            continue
+                                        print('<dt>Returns</dt>', file=fos)
+                                        print(f'<dd>{i[1]}</dd>', file=fos)
+                                    print('</dl>', file=fos)
+
+                                    for i in doxygen:
+                                        if i[0] in ['', '@details']:
+                                            print(f'{i[1]}', file=fos)
 
             except Exception as e:
                 log.warning(f'Source file {full_path} could not be parsed:', e)
