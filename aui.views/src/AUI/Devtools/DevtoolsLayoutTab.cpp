@@ -117,7 +117,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
 
     setContents(Vertical {
       Horizontal {
-        Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+        Button { .content = "Force layout update", .onClick = {me::forceLayoutUpdate} },
         SpacerExpanding {},
         Label { "Use CTRL to hit test views" },
       },

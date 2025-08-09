@@ -103,14 +103,16 @@ public:
     template<class Iterator>
     float length(const FontEntry& charset, Iterator begin, Iterator end) {
         int size = charset.first.size;
+        int prevLineAdvance = 0;
         int advance = 0;
 
         for (Iterator i = begin; i != end; i++) {
             if (*i == ' ')
                 advance += getSpaceWidth(size);
-            else if (*i == '\n')
+            else if (*i == '\n') {
                 advance = 0;
-            else {
+                prevLineAdvance = glm::max(prevLineAdvance, advance);
+            } else {
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {
                     advance += ch.advanceX;
@@ -119,7 +121,7 @@ public:
                     advance += getSpaceWidth(size);
             }
         }
-        return advance;
+        return glm::max(prevLineAdvance, advance);
     }
 
     AString

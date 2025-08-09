@@ -13,6 +13,7 @@
 #include "ACheckBox.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
+using namespace declarative;
 
 ACheckBox::ACheckBox()
 {

@@ -20,6 +20,7 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AEmbedMenuProvider.h"
+using namespace declarative;
 
 class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:

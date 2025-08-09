@@ -68,12 +68,12 @@ struct APropertyDef {
     //     };
     // }
     //
-    // deduction in designated initializers is relatively recent feature.
+    // deduction in designated initializers is a relatively recent feature.
     APropertyDef(const M* base, Getter get, Setter set, const emits<SignalArg>& changed)
         : base(base), get(std::move(get)), set(std::move(set)), changed(changed) {}
 
     template <aui::convertible_to<Underlying> U>
-    APropertyDef& operator=(U&& u) {
+    const APropertyDef& operator=(U&& u) const { // NOLINT(*-unconventional-assign-operator)
         std::invoke(set, *const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
