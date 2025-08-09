@@ -24,7 +24,7 @@ elseif (AUI_PLATFORM_WIN)
     aui_link(aui.audio PUBLIC Winmm dsound.lib dxguid.lib)
 endif()
 
-auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
+auib_import(Opus https://github.com/xiph/opus.git VERSION v1.5.2)
 aui_link(aui.audio PRIVATE Opus::opus)
 
 if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
