@@ -49,7 +49,7 @@ public:
                 _new<ATextField>() AUI_WITH_STYLE { Expanding(1, 0) } && mFilterPrefix,
               },
               AScrollArea::Builder().withExpanding().withContents(
-                  AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
+                  AUI_DECLARATIVE_FOR_EX_THIS(i, *mUsers | FILTER_VIEW, AVerticalLayout, =) {
                     auto view = _new<ALabel>();
                     view & i->displayName;
                     connect(mSelectedUser, view, [this, &view = *view, i] {
