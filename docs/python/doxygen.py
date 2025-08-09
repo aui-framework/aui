@@ -65,12 +65,37 @@ def parse_doxygen(comment):
 
     return output
 
+class CppFunction:
+    def __init__(self, name, return_type = None, doc = None, args = None):
+        self.name = name
+        self.return_type = return_type
+        self.doc = doc
+        self.args = args
+
+
+    def tuple(self):
+        return self.name, self.doc, self.return_type, self.args
+
+    def __eq__(self, other):
+        return self.tuple() == other.tuple()
+
+    def __str__(self):
+        return f'CppFunction({self.tuple()})'
+
 class CppClass:
     def __init__(self):
         self.name = None
         self.doc = None
         self.methods = []
         self.fields = []
+
+    def tuple(self):
+        return self.name, self.doc, self.methods, self.fields
+
+    def __eq__(self, other):
+        return self.tuple() == other.tuple()
+    def __str__(self):
+        return f'CppClass({self.tuple()})'
 
 def _parse(input: str):
     tokens = cpp_tokenizer.tokenize(input)
@@ -176,7 +201,7 @@ def _parse(input: str):
                         break
                     if token[1] == '(':
                         # ctor
-                        clazz.methods.append(('', type_str, _consume_comment()))
+                        clazz.methods.append(CppFunction(name=type_str, doc=_consume_comment()))
                         args = _skip_special_clause()
                         continue
                     elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
@@ -186,7 +211,7 @@ def _parse(input: str):
                             clazz.fields.append((type_str, name, _consume_comment()))
                             continue
                         if token[1] == '(':
-                            clazz.methods.append((type_str, name, _consume_comment()))
+                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment()))
                             _skip_special_clause()
                             token = next(iterator)
                     while True:
@@ -282,7 +307,13 @@ def gen_pages():
                         if clazz.methods:
                             print('## Public Methods', file=fos)
                             for i in clazz.methods:
-                                print(f'### {i}', file=fos)
+                                print(f'### {i.name}', file=fos)
+                                print(f'', file=fos)
+                                if i.doc:
+                                    print(f'{i.doc}', file=fos)
+                                else:
+                                    print(f'__No documentation provided.__', file=fos)
+
             except Exception as e:
                 log.warning(f'Source file {full_path} could not be parsed:', e)
 
@@ -367,7 +398,9 @@ public:
     """))
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
-    assert clazz.methods == [('void', 'hello', None)]
+    assert clazz.methods == [
+        CppFunction(return_type='void', name='hello')
+    ]
 
 def test_parse_class6():
     clazz = next(_parse("""
@@ -384,7 +417,7 @@ public:
     """))
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
-    assert clazz.methods == [('void', 'hello', '@brief Hello')]
+    assert clazz.methods == [CppFunction(return_type='void', name='hello', doc='@brief Hello')]
 
 def test_parse_class7():
     clazz = next(_parse("""
@@ -407,8 +440,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('void', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='void', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class8():
@@ -435,8 +468,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('void', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='void', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 
@@ -466,8 +499,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('void', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='void', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class_complex_return1():
@@ -494,8 +527,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('_<Test>', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class_complex_return_cref():
@@ -522,8 +555,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('const _<Test>&', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='const _<Test>&', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 
@@ -551,8 +584,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('_<Test>', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class_const_noexcept():
@@ -579,8 +612,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('_<Test>', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 
@@ -608,8 +641,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('_<Test>', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 
@@ -639,8 +672,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('_<Test>', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class_namespace():
@@ -668,8 +701,8 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        ('test::Test', 'hello', '@brief Hello'),
-        ('int', 'world', '@brief World'),
+        CppFunction(return_type='test::Test', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
 def test_parse_class9():
@@ -685,4 +718,4 @@ def test_parse_astring():
     assert clazz.name == "AString"
     assert len(clazz.methods) > 50
     for i in ["endsWith", "split", "rfind", "length", "data"]:
-        assert i in [i[1] for i in clazz.methods]
+        assert i in [i.name for i in clazz.methods]
