@@ -83,7 +83,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  *
- * @note If you are intended to reference this-> object, consider using []#me instead.
+ * If you are intended to reference this-> object, consider using [AUI_ME] instead.
  */
 #define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
@@ -93,7 +93,7 @@ namespace aui::impl::slot {
  * @param object object to perform operations on
  * @param lambda code executed in the context of an object (as its member function)
  * @details
- * @note It's an analogue to <code>with</code>, <code>apply</code> in Kotlin.
+ * It's an analogue to <code>with</code>, <code>apply</code> in Kotlin.
  *
  *
  *<table>
@@ -202,8 +202,9 @@ namespace aui::impl::slot {
  * @ingroup useful_macros
  * @param T object type to perform operations on
  * @param lambda code executed in the context of an object (as its member function)
- * @note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * @details
+ * Analogue to <code>with</code>, <code>apply</code> in Kotlin.
+ *
  * `AUI_LET` allows to call methods of newly created objects right in place. For example:
  *
  * <table>
@@ -292,17 +293,19 @@ namespace aui::impl::slot {
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
+ * @details
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
- * @details
- * <p>Example without a return value</p>
+ * Example without a return value:
  * ```cpp
  * auto task = AUI_THREADPOOL {
  *   AThread::sleep(1000); // a long task
  * };
  * ```
- * <p>Example with a return value</p>
+ *
+ * Example with a return value:
+ *
  * ```cpp
  * auto futureStatus = AUI_THREADPOOL {
  *   int status;
@@ -335,17 +338,19 @@ namespace aui::impl::slot {
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
+ * @details
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
- * @details
- * <p>Example without a return value</p>
+ * Example without a return value:
+ *
  * ```cpp
  * auto task = AUI_THREADPOOL_X [&] {
  *   AThread::sleep(1000); // a long task
  * };
  * ```
- * <p>Example with a return value</p>
+ *
+ * Example with a return value:
  * ```cpp
  * auto futureStatus = AUI_THREADPOOL_X [&] {
  *   int status;

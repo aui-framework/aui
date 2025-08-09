@@ -678,7 +678,8 @@ public:
     /**
      * @brief Requests focus for this AView.
      * @param needFocusChainUpdate if true, focus chain for new focused view will be updated
-     * @note if needFocusChainUpdate is false you need to control focus chain targets outside the focus function
+     * @details
+     * If needFocusChainUpdate is false you need to control focus chain targets outside the focus function
      */
      void focus(bool needFocusChainUpdate = true);
 
@@ -756,10 +757,10 @@ public:
      * Handles touch screen gesture event.
      * @param origin position where the event(s) started to occur from.
      * @param event gesture event.
-     * @note The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click and
-     *       scroll.
      * @see transformGestureEventsToDesktop
      * @return true, if consumed (handled). True value prevents click.
+     * @details The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click
+     * and scroll.
      */
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
@@ -770,7 +771,6 @@ public:
      * @param pos event position
      * @param event event description
      * @details
-     * @note
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
@@ -788,7 +788,6 @@ public:
      * @brief Called on pointer (mouse) released event.
      * @param event event
      * @details
-     * @note
      * To handle clicks, you should use AView::clicked signal instead. View still receives pointer move and released
      * events even if cursor goes outside the view boundaries, or other exclusive event appeared (i.e. scrollarea
      * scroll). AView::clicked emitted only if release event occurred inside view and no other event has prevented
@@ -1201,14 +1200,16 @@ private:
 
     /**
      * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
-     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
+     * @details
+     * This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabledn
      */
     bool mMouseEntered = false;
 
     /**
      * @brief Determines if pressing the view allows triggering click on other views
-     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
-     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     * @details
+     * By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     * if this flag is set to false, allows to click on others views without releasing pointer from this view
      */
     bool mBlockClicksWhenPressed = true;
 

@@ -138,8 +138,9 @@ TEST(UpdaterTest, ApplyUpdate) {
 // priveleges). If that's not your case, you'll need to update your [installer configuration](INNOSETUP) to install
 // to user's directory (i.e., in `AppData`).
 //
-// @note
-// Check out our [example_app_template] for a GitHub-hosted app template with auto update implemented.
+// !!! note
+//
+//     Check out our [example_app_template] for a GitHub-hosted app template with auto update implemented.
 //
 // # Supported platforms
 // `aui::updater` supports the following platforms:

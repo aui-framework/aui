@@ -135,7 +135,6 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * @experimental
  *
- * @note
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
  *

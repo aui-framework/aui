@@ -313,7 +313,7 @@ public:
         }
 
         /**
-         * @note Also disables throwing exception on error
+         * Also disables throwing exception on error
          */
         Builder& withErrorCallback(ErrorCallback callback) {
             AUI_ASSERTX(mErrorCallback == nullptr, "error callback already set");
@@ -430,9 +430,10 @@ public:
 
         /**
          * @brief Makes input stream from curl builder.
-         * @note creates async task where curl's loop lives in.
          * @throws AIOException
          * @return input stream
+         * @details
+         * Creates async task where curl's loop lives in.
          */
         _unique<IInputStream> toInputStream();
 
@@ -545,15 +546,17 @@ signals:
 
     /**
      * @brief Emitted on network error.
-     * @note A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
-     *       <code>getResponseCode()</code> function.
+     * @details
+     * A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
+     * <code>getResponseCode()</code> function.
      */
     emits<ErrorDescription> fail;
 
     /**
      * @brief Emitted on success.
-     * @note A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
-     *       <code>getResponseCode()</code> function.
+     * @details
+     * A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
+     * <code>getResponseCode()</code> function.
      */
     emits<> success;
 

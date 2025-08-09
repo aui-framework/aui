@@ -164,9 +164,11 @@ public:
         /**
          * @brief Notifies IMultiStringCanvas than a symbol was added used to construct a ATextLayoutHelper.
          * @details
-         * @note should be called by the implementation of IMultiStringCanvas.
          * @param symbol symbol data to add
-         * @note at the end of line, implementation must add extra symbol to mark last position.
+         * @details
+         * This method should be called by the implementation of IMultiStringCanvas.
+         *
+         * At the end of line, implementation must add extra symbol to mark last position.
          */
         void notifySymbolAdded(const ATextLayoutHelper::Boundary& symbol) noexcept {
             if (mSymbols) mSymbols->last().push_back(symbol);
@@ -199,8 +201,9 @@ public:
 
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
-         * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
          * @return instance of <code>_<IRenderer::IPrerenderedString></code> to drawElements with.
+         * @details
+         * Invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
@@ -209,9 +212,9 @@ public:
          * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
          * <code>IMultiStringCanvas</code>'s cache to efficiently map cursor position to the string index.
          * @details
-         * @note call enableCachingForTextLayoutHelper before adding
-         *       strings.
-         * @note can be called only once.
+         * Call enableCachingForTextLayoutHelper before adding strings.
+         *
+         * Can be called only once.
          */
         ATextLayoutHelper getTextLayoutHelper() noexcept {
             AUI_ASSERTX(bool(mSymbols), "call enableCachingForTextLayoutHelper() before using getTextLayoutHelper");
@@ -321,7 +324,7 @@ public:
      * @param position string's top left point
      * @param string string to render
      * @param fs font style (optional)
-     * @note
+     * @details
      * This function is dramatically inefficient since it does symbol lookup for every character is the
      * <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
      * times (frames), consider using the IRenderer::prerenderString function or high level views (such as

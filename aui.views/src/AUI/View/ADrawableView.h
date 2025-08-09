@@ -38,7 +38,6 @@
  * };
  * ```
  *
- * @note
  * When applying ass::BackgroundImage, do not pass url to it, it's redundant for ADrawableView and would cause a debug
  * error.
  */

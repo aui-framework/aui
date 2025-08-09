@@ -36,7 +36,7 @@ struct AMutex: aui::detail::MutexExtras<std::mutex>{};
  * @brief Like AMutex but can handle multiple locks for one thread (recursive).
  * @ingroup core
  * @details
- * @note Please note that the usage of recursive mutex may indicate that your code may have architectural issues related
+ * Please note that the usage of recursive mutex may indicate that your code may have architectural issues related
  * to the concurrency (e.g., comodification of a container that is being foreach-looped). Use recursive mutex with care.
  */
 struct ARecursiveMutex: aui::detail::MutexExtras<std::recursive_mutex>{};

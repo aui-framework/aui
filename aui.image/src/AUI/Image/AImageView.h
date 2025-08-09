@@ -120,7 +120,6 @@ public:
      * This is a universal function that basically allows you to don't care about underlying image format
      * representation. For performance critical code you may want to use visit method.
      *
-     * @note
      * Specifying position out of image range causes assertion fail in debug or undefined behaviour.
      */
     [[nodiscard]]
@@ -144,7 +143,7 @@ public:
      * @brief Retrieves reference to raw data at specified position.
      * @param position position
      * @return reference to raw pixel data
-     * @note
+     * @details
      * Specifying position out of image range causes assertion fail in debug or undefined behaviour.
      */
     [[nodiscard]]

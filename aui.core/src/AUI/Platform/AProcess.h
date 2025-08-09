@@ -76,7 +76,6 @@ public:
  * @details
  * Process model that facilitates process creation, management, and interaction with other processes.
  *
- * @note
  * In a sandboxed environment (especially in iOS and Android) this functionality is mostly irrelevant (except
  * `AProcess::self()`).
  *
@@ -118,7 +117,6 @@ public:
     /**
      * @brief Process arguments represented as a single string.
      * @details
-     * @note
      * In general, prefer using AProcess::Args.
      */
     struct ArgSingleString {
@@ -225,7 +223,8 @@ public:
      * @param applicationFile executable file
      * @param args arguments
      * @param workingDirectory pro
-     * @note This function could not determine exit code because of MS Windows restrictions
+     * @details
+     * This function could not determine exit code because of MS Windows restrictions
      * @exclusivefor{windows}
      */
     static void executeAsAdministrator(

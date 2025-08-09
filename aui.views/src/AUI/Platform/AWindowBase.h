@@ -81,7 +81,6 @@ public:
      * It is userful when you open a modal window and you want the user to complete the action in the modal window first
      * in order to continue interacting with the parent window.
      *
-     * @note
      * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
      * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
      */
@@ -161,7 +160,8 @@ public:
     /**
      * @brief Returns current dpi ratio
      * @see ScalingParams, scaling params affects dpi ratio
-     * @note dpi ratio value is rounded to 0.25
+     * @details
+     * dpi ratio value is rounded to 0.25
      */
     float getDpiRatio()
     {
@@ -337,8 +337,9 @@ public:
     static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
 
     /**
-     * @note FPS is captured every second
      * @return Last captured FPS
+     * @details
+     * FPS is captured every second
      */
     size_t getFps() {
         return mLastCapturedFps;
@@ -355,7 +356,8 @@ public:
         float scalingFactor = 1.f;
         /**
          * @brief If set, DPI ratio will be adjusted to be small enough for proper displaying layout of given size.
-         * @note Size in dp
+         * @details
+         * Size in dp
          */
         AOptional<glm::uvec2> minimalWindowSizeDp = std::nullopt;
     };

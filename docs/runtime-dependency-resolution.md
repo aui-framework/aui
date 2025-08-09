@@ -3,9 +3,10 @@
 Runtime dependencies are files that are required by your application during execution. Typically, those files are
 program modules such as `*.dll`, `*.so` or `*.dylib`.
 
-@note
-Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons, images,
-sounds and other resources consider using [assets] to embed them right into your binary.
+!!! note
+
+   Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons,
+   images, sounds and other resources consider using [assets] to embed them right into your binary.
 
 ## Build-time shared library resolution
 
@@ -60,10 +61,11 @@ Additionally, RPATH is populated by compiler with hardcoded absolute paths to th
 copying might seem redundant when the entire project with all its dependencies are built on the same machine. Since AUI
 Boot allows usage of precompiled binaries, instead of paying extra cost determining whether the dependencies are built
 locally or externally it just copies them to the build tree regardless of their origin.
-@note
-The hardcoded full path is suitable for the only machine where binary is built. CMake's
-[CMAKE_INSTALL] "--install" command clears these paths, opting to use an universal RPATH to make these binaries
-relocable. AUI.Boot populates RPATH on its own, see the section above.
+
+!!! note
+    The hardcoded full path is suitable for the only machine where binary is built. CMake's
+    [CMAKE_INSTALL] "--install" command clears these paths, opting to use an universal RPATH to make these binaries
+    relocable. AUI.Boot populates RPATH on its own, see the section above.
 
 ## Install-time shared library resolution
 
@@ -109,21 +111,22 @@ bin/aui.views.dll
 ...
 ```
 
-@note
-On Windows, if [docs]/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
-to installation root directory (common practice). From perspective of a user, extra directory hierarchy is redundant.
-```sh
-tree install_prefix/
-aui_app.exe
-aui.core.dll
-aui.views.dll
-...
-```
-This behaviour is achieved by setting `AUI_INSTALL_RUNTIME_DIR` target property to `"."`. To mitigate this behaviour,
-simply set the property back to "bin" after `aui_app` call.
-```
-set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
-```
+!!! note
+
+    On Windows, if [docs]/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
+    to installation root directory (common practice). From perspective of a user, extra directory hierarchy is redundant.
+    ```sh
+    tree install_prefix/
+    aui_app.exe
+    aui.core.dll
+    aui.views.dll
+    ...
+    ```
+    This behaviour is achieved by setting `AUI_INSTALL_RUNTIME_DIR` target property to `"."`. To mitigate this behaviour,
+    simply set the property back to "bin" after `aui_app` call.
+    ```
+    set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
+    ```
 
 ### Other platforms (UNIX-like only)
 

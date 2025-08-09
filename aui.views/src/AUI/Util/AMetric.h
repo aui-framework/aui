@@ -68,7 +68,7 @@ class AString;
  * | Typography point           | T_PT | _pt     | px * `scale_factor` * 4 / 3 |
  * | Pixels                     | T_PX | _px     | px                          |
  *
- * @note It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
+ * It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
  * will correctly handle systems with hidpi screens.
  */
 class API_AUI_VIEWS AMetric

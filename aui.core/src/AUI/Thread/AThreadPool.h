@@ -219,7 +219,7 @@ public:
      *
      * The thread on which your callback will be called is undefined.
      *
-     * @note AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
+     * AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
      * temporary object is created to keep track of the task completeness.
      */
     template <aui::invocable OnComplete>

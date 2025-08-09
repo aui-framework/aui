@@ -25,6 +25,7 @@ assert CPP_CLASS_DEF.match('class API_AUI_CORE Test: Base {').group(2) == "Test"
 
 CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
 assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
+assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
 CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
 assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
@@ -46,7 +47,7 @@ def parse_comment_lines(iterator):
         # todo: things like # Platform support {#AFatalException_Platform_support} breaks markdown parser in mkdocs
         line = line.replace('{', '').replace('}', '')
 
-        output.append(line.strip())
+        output.append(line)
     return "\n".join(output)
 
 def parse_doxygen(comment):

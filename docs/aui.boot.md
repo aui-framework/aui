@@ -272,9 +272,10 @@ auib_import(<PackageName> <URL>
             [VERSION version])
 ```
 
-@note
-This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
-configure time. See ["docs]/Runtime Dependency Resolution.md" for more info.
+!!! note
+    
+    This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
+    configure time. See ["docs]/Runtime Dependency Resolution.md" for more info.
 
 #### PackageName
 Specifies the package name which will be passed to `find_package`. See [AUI_BOOT_3RDPARTY].
@@ -320,9 +321,10 @@ AUI.Boot will emit a warning encouraging the use of either:
 - Tags (e.g. `v1.2.3`) - ideal for released versions
 - Commit hashes (e.g. `8b0e838b`) - perfect for specific commits or work-in-progress changes
 
-@note
-Despite this argument is optional, we still encourage you to use it, to "lock" the version. This makes your builds
-precisely reproducible on other machines.
+!!! note
+
+    Despite this argument is optional, we still encourage you to use it, to "lock" the version. This makes your builds
+    precisely reproducible on other machines.
 
 #### COMPONENTS
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
@@ -403,9 +405,10 @@ git remote set-url origin git@github.com/your-name/your-aui-fork
 git push
 ```
 
-@note
-To have write access to the library's repository, it's likely you'll need to make a fork. Optionally, you can upstream
-your changes in the future.
+!!! note
+
+    To have write access to the library's repository, it's likely you'll need to make a fork. Optionally, you can
+    upstream your changes in the future.
 
 Since you have updated the library, you may want to share your own version of the library within your project. To do
 this, you need to:
@@ -434,9 +437,10 @@ this, you need to:
     ```
 4. Commit and push to your project
 
-@note
-It is common to delete a feature branch after merging. Be careful: AUI.Boot can't find a commit if it was deleted from
-a repository.
+!!! note
+
+    It is common to delete a feature branch after merging. Be careful: AUI.Boot can't find a commit if it was deleted
+    from a repository.
 
 
 ### AUIB_DISABLE (=FALSE|TRUE)
@@ -525,9 +529,10 @@ All checks are disabled.
    target_link_libraries(awesomelib PUBLIC ZLIB::ZLIB) # GOOD!
    ```
 
-   @note
-   AUI.Boot is capable of replacing absolute paths to libraries by their respective target names in order to support
-   legacy libraries.
+   !!! note
+       
+       AUI.Boot is capable of replacing absolute paths to libraries by their respective target names in order to support
+       legacy libraries.
 
 
 ## Diamond Shape Graphs

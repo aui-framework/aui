@@ -174,24 +174,25 @@ class AObject;
  * });
  * ```
  *
- * @note
- * In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
- * a memory leak:
- * ```
- * mOkButton = _new<AButton>("OK");
- * ...
- * connect(mOkButton->clicked, [view] { // WRONG!!!
- *     view->setText("clicked");
- * });
- * ```
- * Do this way:
- * ```
- * mOkButton = _new<AButton>("OK");
- * ...
- * connect(mOkButton->clicked, [view = view.get()] { // ok
- *     view->setText("clicked");
- * });
- * ```
+ * !!! bug "Pitfall"
+ *
+ *     In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
+ *     a memory leak:
+ *     ```
+ *     mOkButton = _new<AButton>("OK");
+ *     ...
+ *     connect(mOkButton->clicked, [view] { // WRONG!!!
+ *         view->setText("clicked");
+ *     });
+ *     ```
+ *     Do this way:
+ *     ```
+ *     mOkButton = _new<AButton>("OK");
+ *     ...
+ *     connect(mOkButton->clicked, [view = view.get()] { // ok
+ *         view->setText("clicked");
+ *     });
+ *     ```
  *
  * ## Going further
  * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects

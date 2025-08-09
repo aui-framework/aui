@@ -52,14 +52,15 @@ private:
 };
 ```
 
-@note
-With [property_system], a better way of defining data models will be:
-```cpp
-struct User {
-    AProperty<AString> username;
-};
-```
-It allows aggregate initialization: `User u { .username = "Test" };`
+!!! note
+
+    With [property_system], a better way of defining data models will be:
+    ```cpp
+    struct User {
+        AProperty<AString> username;
+    };
+    ```
+    It allows aggregate initialization: `User u { .username = "Test" };`
 
 
 ## Assertions
@@ -75,10 +76,11 @@ AUI_ASSERTX(mId == std::this_thread::get_id(),
 
 The code above ensures that the function was not called from some other thread.
 
-@note
-Do not put algorithm-necessary code inside `assert()`, `AUI_ASSERT` or `AUI_ASSERTX` since asserts are removed in
-release builds on some compilers, i.e. don't `assert(("someAction failed!", someObject->someAction() != 0))` since it
-leads to hard-to-find bugs.
+!!! note
+
+    Do not put algorithm-necessary code inside `assert()`, `AUI_ASSERT` or `AUI_ASSERTX` since asserts are removed in
+    release builds on some compilers, i.e. don't `assert(("someAction failed!", someObject->someAction() != 0))` since it
+    leads to hard-to-find bugs.
 
 ### Assert or exception?
 

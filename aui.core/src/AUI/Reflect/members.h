@@ -41,8 +41,8 @@ namespace aui::reflect {
  *
  * ## Methods (member functions)
  * @snippet aui.core/src/AUI/Reflect/members.h methods
- * @note
- * Use [aui]::tuple_visitor and [aui]::parameter_pack to introspect arguments.
+ *
+ * Use [aui::tuple_visitor] and [aui::parameter_pack] to introspect arguments.
  */
 template <typename Type>
 struct member;

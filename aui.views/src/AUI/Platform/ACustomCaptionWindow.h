@@ -30,7 +30,7 @@ using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
  * Use getCaptionContainer to fill up window caption.
  *
  * Use getContentContainer to fill up the window contents.
- * @note
+ *
  * Do not use setContents/setLayout.
  *
  * Depending on the platform, AUI provides following ASS classes to customize:

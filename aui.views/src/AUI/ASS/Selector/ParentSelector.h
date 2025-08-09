@@ -73,7 +73,6 @@ namespace ass {
      * @ingroup ass_selectors
      * @details
      *
-     * @note
      * This selector is slower than direct parent subselector. If possible, use the latter.
      *
      * In this example, we want to select all views that have indirect parent matching ".window-title" ASS class and

@@ -51,8 +51,8 @@ namespace aui::detail {
  * @brief Implements addView/removeView/getAllViews and protected mViews field for Vertical, Horizontal and Stacked layouts.
  * @tparam Storage optional storage type. See details for further info.
  * @details
- * @note The Storage type is `_<AView>` by default. If you specify your own type, you would have to implement addView
- *       to fill your custom type with data, you may use addViewBasicImpl then.
+ * The Storage type is `_<AView>` by default. If you specify your own type, you would have to implement addView
+ * to fill your custom type with data, you may use addViewBasicImpl then.
  *
  */
 template<aui::convertible_to<_<AView>> Storage = _<AView>>

@@ -34,8 +34,9 @@ out of the box.
 
 This guide covers various packaging techniques for all supported platforms.
 
-@note
-This guide assumes you have already called [docs]/aui_app.md inside your `CMakeLists.txt`.
+!!! note
+
+    This guide assumes you have already called [docs]/aui_app.md inside your `CMakeLists.txt`.
 
 # Windows
 
@@ -45,9 +46,10 @@ files (`msi`s), often downloaded from the internet. This method can be considere
 Although Windows offers its official store and numerous unofficial repositories for distributing software, many
 developers still opt for traditional methods. This guide will cover the latter.
 
-@note
-Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
-preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
+!!! note
+
+    Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
+    preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
 
 ## Inno Setup
 
@@ -88,14 +90,16 @@ leverage to admin privileges during update installation.
 
 ## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
 
-@note
-This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
+!!! note
+
+    This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
 
 This packaging method creates an `*.zip` or `*.tar.gz` archive with your application "preinstalled". After
 unpacking, no extra actions are needed. The user can launch executable of your application directly.
 
-@note
-[updater] requires ZIP portable to be published. Other archive formats such tar `tar.gz` are not supported.
+!!! note
+
+    [updater] requires ZIP portable to be published. Other archive formats such tar `tar.gz` are not supported.
 
 ```python
 # standard CMake build process
@@ -121,9 +125,9 @@ gh release upload ${{ github.ref }} artifacts/*.*
 
 WIX is the installer framework that produces `msi` packages.
 
-@note
-[updater] requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
-used with WIX.
+!!! note
+    [updater] requires application to be installed in user's directory and thus AUI's autoupdating functionality can't
+    be used with WIX.
 
 ```python
 # install requirements
@@ -153,8 +157,9 @@ of [docs]/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 # macOS
 
-@note
-Guides about packaging for macOS assume you are running macOS with Xcode preinstalled.
+!!! note
+
+    Guides about packaging for macOS assume you are running macOS with Xcode preinstalled.
 
 The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
 

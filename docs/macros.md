@@ -1,8 +1,9 @@
 # Build-time macros
 
-@note
-This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
-[useful_macros].
+!!! note
+
+    This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
+    [useful_macros].
 
 ## Writing platform dependent code
 
@@ -216,8 +217,9 @@ both CMake and C++.
 With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` or `src/platform/<PLATFORM_NAME>`
 dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table above).
 
-@note
-Both cases (Platform and platform) were added to honor projects with various directory naming agreements.
+!!! note
+
+    Both cases (Platform and platform) were added to honor projects with various directory naming agreements.
 
 
 ### Compiler checks

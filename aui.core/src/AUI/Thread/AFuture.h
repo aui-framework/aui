@@ -459,8 +459,9 @@ namespace aui::impl::future {
 
         /**
          * @brief Sleeps if the supplyValue is not currently available.
-         * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
-         *       yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
+         * @details
+         * The task will be executed inside wait() function if the threadpool have not taken the task to execute
+         * yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
             (*mInner)->wait(mInner, flags);
@@ -561,25 +562,27 @@ namespace aui::impl::future {
  * ```
  *
  * If your operation consists of complex future sequences, you have multiple options:
- * 1. Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
- *    threadpool thread (including the one that runs [AUI_THREADPOOL] 's body). If value is not currently available,
- *    these methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
- *    @note Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
- *          acquiring operation.
- * 2. Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
- *    AFuture value:
- * ```cpp
- * AFuture<int> longOperation();
- * AFuture<int> myFunction() {
- *   int resultOfLongOperation = co_await longOperation();
- *   return resultOfLongOperation + 1;
- * }
- * ```
- * 3. Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
- *    AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
- *    method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
  *
- * ```cpp
+ * 1.  Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
+ *     threadpool thread (including the one that runs [AUI_THREADPOOL] 's body). If value is not currently available,
+ *     these methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
+ *
+ *     Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
+ *     acquiring operation.
+ *
+ * 2.  Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
+ *     AFuture value:
+ *     ```cpp
+ *     AFuture<int> longOperation();
+ *     AFuture<int> myFunction() {
+ *       int resultOfLongOperation = co_await longOperation();
+ *       return resultOfLongOperation + 1;
+ *     }
+ *     ```
+ *
+ * 3.  Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
+ *     AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
+ *     method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
  *
  * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyValue() method:
  *
@@ -593,9 +596,9 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * ```
  *
- * @note Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
- *       unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
- *       Consider using one of suggested methods of usage instead.
+ * Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
+ * unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
+ * Consider using one of suggested methods of usage instead.
  *
  * AFuture provides a set of functions for both "value emitting" side: supplyValue(), supplyException(), and "value
  * receiving" side: operator->(), operator*(), get().
@@ -612,7 +615,6 @@ namespace aui::impl::future {
  *
  * To manage multiple AFutures, use AAsyncHolder or AFutureSet classes.
  *
- * @note
  * AFuture implements work-stealing algorithm to prevent deadlocks and optimizaze thread usage: when waiting for result,
  * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
  * for details.
@@ -693,7 +695,6 @@ public:
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      *
-     * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
      * ```cpp
@@ -718,7 +719,6 @@ public:
      *
      * onError does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      *
-     * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
      * ```cpp
@@ -837,7 +837,6 @@ public:
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      *
-     * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
      * ```cpp
@@ -862,7 +861,6 @@ public:
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      *
-     * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
      * ```cpp

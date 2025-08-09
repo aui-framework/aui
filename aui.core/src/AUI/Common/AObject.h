@@ -207,9 +207,11 @@ public:
      * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
      * ```
-     * @note
-     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     * connection creation.
+     *
+     * !!! note
+     *
+     *     `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     *      connection creation.
      *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
@@ -234,12 +236,15 @@ public:
      * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
      * ```
-     * @note
-     * This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If possible,
-     * consider using shorter overload:
-     * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
-     * ```
+     *
+     * !!! note
+     *
+     *     This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If
+     *     possible, consider using shorter overload:
+     *
+     *     ```cpp
+     *     connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
+     *     ```
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static decltype(auto)
@@ -256,9 +261,11 @@ public:
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
      * ```
-     * @note
-     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     * connection creation.
+     *
+     * !!! note
+     *
+     *    `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     *    connection creation.
      *
      * @param property source property.
      * @param object instance of `AObject`.

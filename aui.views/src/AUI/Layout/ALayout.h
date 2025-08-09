@@ -38,9 +38,10 @@ class AViewContainer;
  * - Respecting view margins and alignment
  * - Supporting expanding/stretching of views
  *
- * @note
- * You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
- * [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
+ * !!! note
+ *
+ *     You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
+ *     [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
  *
  * Common layout managers include:
  *
@@ -183,9 +184,10 @@ class AViewContainer;
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
  *
- * @note
- * You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
- * [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
+ * !!! note
+ *
+ *     You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
+ *     [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
  *
  * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
  *
@@ -277,8 +279,9 @@ class AViewContainer;
  * }
  * ```
  *
- * @note
- * FixedSize nullifies Expanding's action (on per axis basic).
+ * !!! note
+ *
+ *     FixedSize nullifies Expanding's action (on per axis basic).
  *
  * # Implementation details
  *

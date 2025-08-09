@@ -32,15 +32,17 @@ public:
 
     /**
      * @brief The drawable (vector) image loader implementation.
-     * @note Called if and only if <code>matches</code> returned true.
      * @return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
+     * @details
+     * Called if and only if <code>matches</code> returned true.
      */
     virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
 
     /**
      * @brief The image loader implementation (raster).
-     * @note Called if and only if <code>matches</code> returned true.
      * @return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
+     * @details
+     * Called if and only if <code>matches</code> returned true.
      */
     virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
 };

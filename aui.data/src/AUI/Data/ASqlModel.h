@@ -20,7 +20,8 @@
  * @brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
  *        (insert, update, select, delete)
  * @tparam Model ORM model.
- * @note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
+ * @details
+ * Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
  */
 template<typename Model>
 struct ASqlModel {

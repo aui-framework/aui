@@ -48,8 +48,9 @@
  * @ingroup core
  * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
  * @details
- * @note
- * For build-time macros, see ["docs]/Macros.md".
+ * !!! note
+ *
+ *     For build-time macros, see ["docs]/Macros.md".
  */
 
 /**

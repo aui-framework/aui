@@ -86,8 +86,9 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // [signal_slot] "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
 // involve external tools (like `moc`). They are written in pure C++.
 //
-// @note
-// This page is about presenting individual values. For lists, see [AForEachUI].
+// !!! note
+//
+//     This page is about presenting individual values. For lists, see [AForEachUI].
 //
 // AUI property system is relatively complex, as it involves a lot of features in a single place:
 // 1. thread safe
@@ -184,11 +185,13 @@ TEST_F(UIDataBindingTest, TextField1) {
 // Please check their respective documentation pages for an additional information.
 //
 // # UI data binding with AUI_LET
-// @note
-// This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
-// deeper understanding on how connections are made and what does declarative way do under the hood. This way may be
-// used in favour of declarative way if the latter not work for you. For declarative way, go to
-// ["UI_declarative_data_binding"].
+//
+// !!! note
+//
+//     This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can
+//     get deeper understanding on how connections are made and what does declarative way do under the hood. This way
+//     may be used in favour of declarative way if the latter not work for you. For declarative way, go to
+//     [UI_declarative_data_binding].
 //
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
 // a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
@@ -457,9 +460,10 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
         [](int i) -> Gender { return GENDERS[i]; },
     };
     // AUI_DOCS_CODE_END
-    // @note
-    // It's convenient to use lambda trailing return type syntax (i.e., `... -> int`, `... -> Gender`)
-    // to make it obvious what do transformations do and how one type is transformed to another.
+    // !!! note
+    //
+    //     It's convenient to use lambda trailing return type syntax (i.e., `... -> int`, `... -> Gender`)
+    //     to make it obvious what do transformations do and how one type is transformed to another.
     //
     // The function-like object above detects the direction of transformation and performs as follows:
     // AUI_DOCS_CODE_BEGIN
@@ -714,9 +718,10 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               // AUI_DOCS_CODE_BEGIN
               _new<ANumberPicker>() && user->age,
               // AUI_DOCS_CODE_END
-              // @note
-              // We're using `operator&&` here to set up bidirectional connection. For more info, go to
-              // ["UIDataBindingTest_Declarative_bidirectional_connection"].
+              // !!! note
+              //
+              //     We're using `operator&&` here to set up bidirectional connection. For more info, go to
+              //     [UIDataBindingTest_Declarative_bidirectional_connection].
               //
             });
         }
@@ -963,9 +968,10 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
                 _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION) > &ADropdownList::selectionId
                 // AUI_DOCS_CODE_END
                 //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
-                // @note
-                // We used the `&&` operator here instead of `&` because we want the connection work in both
-                // directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
+                // !!! note
+                //
+                //     We used the `&&` operator here instead of `&` because we want the connection work in both
+                //     directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
                 //
             });
         }

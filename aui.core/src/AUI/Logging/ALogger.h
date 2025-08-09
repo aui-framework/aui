@@ -229,7 +229,7 @@ public:
      * @param path path to the log file.
      * @details
      * Log file is opened immediately in setLogFile.
-     * @note
+     *
      * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
      * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
      * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
@@ -258,7 +258,8 @@ public:
      * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
      * @details
      * Useful when sending log file to remote server.
-     * @note Windows, for instance, doesn't allow to read the file when it's already opened
+     *
+     * On Windows, for instance, doesn't allow to read the file when it's already opened.
      */
     template <aui::invocable Callable>
     void doLogFileAccessSafe(Callable action) {

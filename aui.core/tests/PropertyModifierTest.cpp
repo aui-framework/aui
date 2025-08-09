@@ -58,8 +58,10 @@ TEST_F(PropertyModifierTest, Write_operators_observable2) {
 }
 
 //
-// @note Make sure your read-only operators (such as `operator+`, `operator-`) have marked const, otherwise property
-// would treat them as a writing access, resulting in unwanted signaling `changed` upon each access.
+// !!! note
+//
+//     Make sure your read-only operators (such as `operator+`, `operator-`) have marked const, otherwise property
+//     would treat them as a writing access, resulting in unwanted signaling `changed` upon each access.
 TEST_F(PropertyModifierTest, Write_operators_const_access) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN

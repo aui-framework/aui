@@ -7,7 +7,10 @@ typedef struct OpusDecoder OpusDecoder;
 
 /**
  * @brief Sound pipe for OPUS format, decodes OPUS packets
- * @note ready packets should be passed with write() method for proper work, header must precede the packets
+ * @details
+ * !!! note
+ *
+ *     Ready packets should be passed with write() method for proper work, header must precede the packets.
  */
 class AOpusSoundPipe : public ISoundPipe {
 public:

@@ -108,22 +108,29 @@ AUI_ENUM_FLAG(AFileAccess) {
 /**
  * @brief An add-on to AString with functions for working with the path.
  * @ingroup io
- * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  * @details
+ * !!! note
+ *
+ *     In most file systems, both a regular file and a folder with the same name can exist on the same path.
+ *
  * Example usage:
+ *
  * ```cpp
  * APath someDir = "someDir";
  * APath filePath = someDir / "myfile.txt"; // "/" replaced with a system file separator
  * ```
- * @note Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
- *       (directory, a file that contains other regular files and folders), i.e. a unit of the file system, which is
- *       often a confusion in terminology. Here and further:
- *       <ul>
- *          <li><b>file</b> - a unit of the file system.</li>
- *          <li><b>regular file</b> - a file that can be read or written to. You can think of as a sequence of bytes
- *                                    or a stream of bytes.</li>
- *          <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
- *       </ul>
+ *
+ * !!! note
+ *
+ *     Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
+ *     (directory, a file that contains other regular files and folders), i.e. a unit of the file system, which is
+ *     often a confusion in terminology. Here and further:
+ *     <ul>
+ *        <li><b>file</b> - a unit of the file system.</li>
+ *        <li><b>regular file</b> - a file that can be read or written to. You can think of as a sequence of bytes
+ *                                  or a stream of bytes.</li>
+ *        <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
+ *     </ul>
  */
 class API_AUI_CORE APath final: public AString {
 private:
@@ -215,9 +222,10 @@ public:
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
-     * @note Use AFileListFlags enum flags to customize behaviour of this function.
      * @sa relativelyTo
      * @return list of children of this folder.
+     * @details
+     * Use AFileListFlags enum flags to customize behaviour of this function.
      */
     ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
 
@@ -232,8 +240,9 @@ public:
      * @brief Path of the child element. Relevant only for folders.
      * @details
      * with `fileName = work`: `/home/user -> /home/user/work`
-     * @note
+     *
      * It's convient to use `/` syntax instead:
+     *
      * ```cpp
      * APath("/home/user") / "work"
      * ```
@@ -277,26 +286,30 @@ public:
 
     /**
      * @return true if whether regular file or a folder exists on this path
-     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if neither
-     *       the folder nor the file does not exists on this path.
+     * @details
      *
-     *       Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
-     *       type of the file exists on this path.
+     * A file can exist as a regular file or(and) as a folder. This function will return false only if neither
+     * the folder nor the file does not exists on this path.
+     *
+     * Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
+     * type of the file exists on this path.
      */
     bool exists() const;
 
 
     /**
      * @return true if regular file exists on this path
-     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if regular
-     *       file does not exists on this path.
+     * @details
+     * A file can exist as a regular file or(and) as a folder. This function will return false only if regular
+     * file does not exists on this path.
      */
     bool isRegularFileExists() const;
 
     /**
      * @return true if folder exists on this path
-     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
-     *       not exists on this path.
+     * @details
+     * A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
+     * not exists on this path.
      */
     bool isDirectoryExists() const;
 
@@ -444,8 +457,9 @@ public:
 
     /**
      * @brief Get system's default folder.
-     * @note See the <code>APath::DefaultPath</code> definition.
      * @return absolute path to default folder.
+     * @details
+     * See [APath::DefaultPath] definition.
      */
     static APath getDefaultPath(DefaultPath path);
 
@@ -499,7 +513,6 @@ public:
      * Checks permissions and existence of the file identified by this APath using the real user and group
      * identifiers of the process, like if the file were opened by open().
      *
-     * @note
      * Using this function to check a process's permissions on a file before performing some operation based on that
      * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
      * safer just to attempt the desired operation and handle any permission error that occurs.

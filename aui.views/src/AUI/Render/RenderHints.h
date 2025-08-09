@@ -20,10 +20,11 @@
 namespace RenderHints {
     /**
      * @brief Increases mask stack. Used by AView.
-     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     *       wrapper class instead.
      * @param render renderer
      * @param maskRenderer function - mask renderer
+     * @details
+     * This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     * wrapper class instead.
      */
     template<aui::invocable Callable>
     static void pushMask(IRenderer& render, Callable&& maskRenderer) {
@@ -34,10 +35,11 @@ namespace RenderHints {
 
     /**
      * @brief Decreases mask stack. Used by AView.
-     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     *       wrapper class instead.
      * @param render renderer
      * @param maskRenderer function - mask renderer
+     * @details
+     * This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     * wrapper class instead.
      */
     template<aui::invocable Callable>
     static void popMask(IRenderer& render, Callable&& maskRenderer) {

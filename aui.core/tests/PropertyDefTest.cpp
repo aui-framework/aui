@@ -81,11 +81,12 @@ TEST_F(PropertyDefTest, Declaration) {
         EXPECT_EQ(u.name(), "Hello");
         // AUI_DOCS_CODE_END
     }
-    // @note
-    // Properties defined with APropertyDef instead of AProperty impersonate themselves by trailing braces `()`. We
-    // can't get rid of them, as APropertyDef is defined thanks to member function. In comparison to `user->name`, think
-    // of `user->name()` as the same kind of property except defining custom behaviour via function, hence the braces
-    // `()`.
+    // !!! note
+    //
+    //     Properties defined with APropertyDef instead of AProperty impersonate themselves by trailing braces `()`. We
+    //     can't get rid of them, as APropertyDef is defined thanks to member function. In comparison to `user->name`,
+    //     think of `user->name()` as the same kind of property except defining custom behaviour via function, hence the
+    //     braces `()`.
     //
     // For the rest, APropertyDef is identical to AProperty including seamless interaction:
     {
@@ -100,12 +101,13 @@ TEST_F(PropertyDefTest, Declaration) {
         EXPECT_EQ(u.name()->length(), AString("Hello world!").length());
         // AUI_DOCS_CODE_END
         //
-        // @note
-        // In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your property
-        // directly. Equivalent code will be:
-        // ```cpp
-        // u.setName(u.getName() + " world!")
-        // ```
+        // !!! note
+        //
+        //     In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your
+        //     property directly. Equivalent code will be:
+        //     ```cpp
+        //     u.setName(u.getName() + " world!")
+        //     ```
         //
     }
 
