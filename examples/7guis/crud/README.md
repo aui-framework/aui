@@ -24,5 +24,3 @@ domain and presentation logic. Also, the approach to managing the mutation of th
 solution will have a good separation between the domain and presentation logic without much overhead (e.g. in the form
 of toolkit specific concepts or language/paradigm concepts), a mutation management that is fast but not error-prone and
 a natural representation of the layout (layout builders are allowed, of course, but would increase the overhead).
-
-<!-- aui:include examples/7guis/crud/src/main.cpp -->
