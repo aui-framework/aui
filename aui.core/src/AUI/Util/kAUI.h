@@ -326,7 +326,7 @@ namespace aui::impl::slot {
  * int status = *futureStatus;
  * @endcode
  */
-#define AUI_THREADPOOL AThreadPool::global() * [=]()
+#define AUI_THREADPOOL AThreadPool::global() * [=, this]()
 
 
 /**
@@ -394,7 +394,7 @@ namespace aui::impl::slot {
  * @brief Executes lambda on main thread.
  * @ingroup useful_macros
  */
-#define AUI_UI_THREAD (*AThread::main()) * [=]()
+#define AUI_UI_THREAD (*AThread::main()) * [=, this]()
 
 /**
  * @brief Executes lambda on main thread. Allows to determine lambda's capture.

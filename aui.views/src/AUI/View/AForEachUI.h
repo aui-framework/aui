@@ -388,10 +388,10 @@ auto makeForEach(RangeFactory&& rangeFactory)
 }
 }   // namespace aui::detail
 
-#define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
-    aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
-        return (model);                                        \
-    }) - [__VA_ARGS__](const auto& value) -> _<AView>
+#define AUI_DECLARATIVE_FOR_EX(value, model, layout, capture) \
+    aui::detail::makeForEach<layout>([capture, this]() -> decltype(auto) { \
+        return (model); \
+    }) - [capture, this](const auto& value) -> _<AView>
 
 /**
  * @brief ranged-for-loop style wrapped for @ref AForEachUI.
@@ -399,4 +399,4 @@ auto makeForEach(RangeFactory&& rangeFactory)
  * @details
  * See @ref AForEachUI
  */
-#define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)
+#define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =, this)
