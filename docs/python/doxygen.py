@@ -12,6 +12,7 @@ import re
 from pathlib import Path
 
 import mkdocs_gen_files
+from pygments.lexers.csound import newline
 
 from docs.python import regexes, cpp_tokenizer
 
@@ -66,21 +67,23 @@ def parse_doxygen(comment):
     return output
 
 class CppFunction:
-    def __init__(self, name, return_type = None, doc = None, args = None):
+    def __init__(self, name, return_type = None, doc = None, args = None, visibility = 'public', template_clause = None):
         self.name = name
         self.return_type = return_type
         self.doc = doc
         self.args = args
+        self.visibility = visibility
+        self.template_clause = template_clause
 
 
     def tuple(self):
-        return self.name, self.doc, self.return_type, self.args
+        return self.name, self.return_type, self.doc, self.args
 
     def __eq__(self, other):
         return self.tuple() == other.tuple()
 
     def __str__(self):
-        return f'CppFunction({self.tuple()})'
+        return f'CppFunction{self.tuple()}'
 
 class CppClass:
     def __init__(self):
@@ -95,7 +98,7 @@ class CppClass:
     def __eq__(self, other):
         return self.tuple() == other.tuple()
     def __str__(self):
-        return f'CppClass({self.tuple()})'
+        return f'CppClass{self.tuple()}'
 
 def _parse(input: str):
     tokens = cpp_tokenizer.tokenize(input)
@@ -151,7 +154,10 @@ def _parse(input: str):
                 out += token[1]
                 token = next(iterator)
 
-            if token[0] in [ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ] and not token[1] == '(':
+            is_decltype = 'decltype' in out
+            is_template_wizardy = token[0] in [ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ] and not token[1] == '('
+
+            if is_decltype or is_template_wizardy:
                 out += "".join([i[1] for i in _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])])
                 token = next(iterator)
             while token[1] in '&*':
@@ -168,6 +174,7 @@ def _parse(input: str):
                 return
 
             visibility = 'private'
+            template_clause = None
 
             for token in iterator:
                 # print(f'_parse_class_body iteration {token}')
@@ -190,8 +197,9 @@ def _parse(input: str):
                             token = next(iterator)
                         continue
                     if token[1] == 'template':
+                        template_clause = [token]
                         token = next(iterator)
-                        _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
+                        template_clause += _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
                         continue
 
                     while True:
@@ -201,7 +209,7 @@ def _parse(input: str):
                         break
                     if token[1] == '(':
                         # ctor
-                        clazz.methods.append(CppFunction(name=type_str, doc=_consume_comment()))
+                        clazz.methods.append(CppFunction(name=type_str, doc=_consume_comment(), visibility=visibility))
                         args = _skip_special_clause()
                         continue
                     elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
@@ -211,7 +219,8 @@ def _parse(input: str):
                             clazz.fields.append((type_str, name, _consume_comment()))
                             continue
                         if token[1] == '(':
-                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment()))
+                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment(), visibility=visibility, template_clause=template_clause))
+                            template_clause = None
                             _skip_special_clause()
                             token = next(iterator)
                     while True:
@@ -304,15 +313,31 @@ def gen_pages():
                             for i in [i for i in doxygen if i[0] == '@details']:
                                 print(i[1], file=fos)
 
-                        if clazz.methods:
+                        methods = [i for i in clazz.methods if i.visibility != 'private' and i.doc is not None]
+                        if methods:
                             print('## Public Methods', file=fos)
-                            for i in clazz.methods:
-                                print(f'### {i.name}', file=fos)
-                                print(f'', file=fos)
-                                if i.doc:
-                                    print(f'{i.doc}', file=fos)
-                                else:
-                                    print(f'__No documentation provided.__', file=fos)
+                            methods_grouped = {}
+                            for i in methods:
+                                methods_grouped.setdefault(i.name, []).append(i)
+                            for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != class_name else '!!!ctor'):
+                                # hack: present the header as invisible block. The header will still appear in TOC and
+                                # can be anchor referenced.
+                                print(f'<div style="height: 0px; opacity: 0" markdown>', file=fos)
+                                print(f'### {name}', file=fos)
+                                print(f'</div>', file=fos)
+                                for overload in overloads:
+                                    print('---', file=fos)
+                                    print(f'```cpp', file=fos)
+                                    if overload.template_clause:
+                                        print(" ".join([i[1] for i in overload.template_clause]), file=fos)
+
+                                    if overload.return_type: # not a constructor
+                                        print(f'{overload.return_type} ', end='', file=fos)
+                                    print(f'{class_name}::{overload.name}({overload.args})', end='', file=fos)
+                                    print('', file=fos)
+                                    print(f'```', file=fos)
+                                    print(f'', file=fos)
+                                    print(f'{overload.doc}', file=fos)
 
             except Exception as e:
                 log.warning(f'Source file {full_path} could not be parsed:', e)
@@ -713,9 +738,32 @@ def test_parse_class9():
 class API_AUI_CORE Test {}
     """)).name == "Test"
 
-def test_parse_astring():
-    clazz = next(_parse((Path('test_data') / 'AString.h').read_text()))
-    assert clazz.name == "AString"
-    assert len(clazz.methods) > 50
-    for i in ["endsWith", "split", "rfind", "length", "data"]:
-        assert i in [i.name for i in clazz.methods]
+def test_parse_aobject():
+    clazz = next(_parse((Path('test_data') / 'AObject.h').read_text()))
+    assert clazz.name == "AObject"
+    for i in clazz.methods:
+        i.doc = None
+        # print(i, ',')
+
+    assert [str(i) for i in clazz.methods] == [
+        "CppFunction('AObject', None, None, None)",
+        "CppFunction('AObject', '~', None, None)",
+        "CppFunction('disconnect', 'void', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'void', None, None)",
+        "CppFunction('biConnect', 'void', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'decltype(auto)', None, None)",
+        "CppFunction('connect', 'void', None, None)",
+        "CppFunction('setSignalsEnabled', 'void', None, None)",
+        "CppFunction('isSignalsEnabled', 'bool', None, None)",
+        "CppFunction('getThread', 'const _<AAbstractThread>&', None, None)",
+        "CppFunction('isSlotsCallsOnlyOnMyThread', 'bool', None, None)",
+        "CppFunction('moveToThread', 'void', None, None)",
+        "CppFunction('setSlotsCallsOnlyOnMyThread', 'void', None, None)",
+        "CppFunction('setThread', 'void', None, None)",
+        "CppFunction('isDisconnected', 'bool&', None, None)",
+    ]
