@@ -27,6 +27,9 @@ gl::Texture<TEXTURE_TARGET>::Texture() {
 
 template<unsigned int TEXTURE_TARGET>
 gl::Texture<TEXTURE_TARGET>::~Texture() {
+    if (mTexture == 0) {
+        return;
+    }
     gl::ResourcePool<gl::ResourceKind::TEXTURE>::put(mTexture);
     gl::State::bindTexture(TEXTURE_TARGET, 0);
 }
