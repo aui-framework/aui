@@ -145,18 +145,20 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 }
 }
 
-
-#define AUI_DETAIL_BINARY_OP(op)                                                       \
-template<AAnyProperty T, typename Rhs>                                                 \
-inline decltype(auto) operator op (T&& lhs, Rhs&& rhs) { /* property forwarding op */  \
-    /* try const operator first */                                                     \
-    if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                      \
-        return *lhs op std::forward<Rhs>(rhs);                                         \
-    } else {                                                                           \
-        /* fallback to a non-const version, involving writeScope() */                  \
-        return *lhs.writeScope() op std::forward<Rhs>(rhs);                            \
-    }                                                                                  \
-}                                                                                      \
+#define AUI_DETAIL_BINARY_OP(op)                                                         \
+    template <AAnyProperty T, typename Rhs>                                              \
+    inline decltype(auto) operator op(T&& lhs, Rhs&& rhs) { /* property forwarding op */ \
+        static_assert(                                                                   \
+            requires { *lhs.writeScope() op std::forward<Rhs>(rhs); },                   \
+            "AProperty: this binary operator is not defined for underlying type.");      \
+        /* try const operator first */                                                   \
+        if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                    \
+            return *lhs op std::forward<Rhs>(rhs);                                       \
+        } else {                                                                         \
+            /* fallback to a non-const version, involving writeScope() */                \
+            return *lhs.writeScope() op std::forward<Rhs>(rhs);                          \
+        }                                                                                \
+    }                                                                                    \
 // note: sync this PropertyModifier.h
 
 // comparison
