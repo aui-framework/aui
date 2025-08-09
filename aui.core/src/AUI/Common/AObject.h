@@ -107,6 +107,8 @@ public:
 
     /**
      * @brief Connects source property to the destination property.
+     * @param propertySource source property, whose value is preserved on connection creation.
+     * @param propertyDestination destination property, whose value is overwritten on connection creation.
      * @ingroup property_system
      * @details
      * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
@@ -116,8 +118,6 @@ public:
      * connect pulls AObject from `propertyDestination` to maintain the connection.
      *
      * See [signal_slot] "signal-slot system" for more info.
-     * @param propertySource source property, whose value is preserved on connection creation.
-     * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
     template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
     static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {

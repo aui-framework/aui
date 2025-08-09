@@ -76,6 +76,13 @@ def _format_token_sequence(tokens: list[str]):
         output = output.replace(f" {i}", i)
     return output
 
+class CppVariable:
+    def __init__(self, name, type_str, doc = None, visibility = 'public'):
+        self.name = name
+        self.type_str = type_str
+        self.doc = doc
+        self.visibility = visibility
+
 class CppFunction:
     def __init__(self, name, return_type = None, doc = None, args = None, visibility = 'public', template_clause = None, modifiers_before = None):
         self.name = name
@@ -228,7 +235,7 @@ def _parse(input: str):
                         name = token[1]
                         token = next(iterator)
                         if token[1] == ';':
-                            clazz.fields.append((type_str, name, _consume_comment()))
+                            clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=_consume_comment(), visibility=visibility))
                             continue
                         if token[1] == '(':
                             clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment(), visibility=visibility, template_clause=template_clause, args=_skip_special_clause(), modifiers_before=modifiers_before))
@@ -325,6 +332,27 @@ def gen_pages():
                             for i in [i for i in doxygen if i[0] == '@details']:
                                 print(i[1], file=fos)
 
+                        def _render_invisible_header(name):
+                            # hack: present the header as invisible block. The header will still appear in TOC and
+                            # can be anchor referenced.
+                            print(f'<div style="height: 0px; opacity: 0" markdown>', file=fos)
+                            print(f'### {name}', file=fos)
+                            print(f'</div>', file=fos)
+
+                        fields = [i for i in clazz.fields if i.visibility != 'private' and i.doc is not None]
+                        if fields:
+                            print('## Public fields and Signals', file=fos)
+                            for i in sorted(fields, key=lambda x: x.name):
+                                print('---', file=fos)
+                                _render_invisible_header(i.name)
+                                print('```cpp', file=fos)
+                                print(f'{i.type_str} {i.name}', file=fos)
+                                print('```', file=fos)
+                                doxygen = parse_doxygen(i.doc)
+                                for i in doxygen:
+                                    print(i[1], file=fos)
+
+
                         methods = [i for i in clazz.methods if i.visibility != 'private' and i.doc is not None]
                         if methods:
                             print('## Public Methods', file=fos)
@@ -332,11 +360,7 @@ def gen_pages():
                             for i in methods:
                                 methods_grouped.setdefault(i.name, []).append(i)
                             for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != class_name else '!!!ctor'):
-                                # hack: present the header as invisible block. The header will still appear in TOC and
-                                # can be anchor referenced.
-                                print(f'<div style="height: 0px; opacity: 0" markdown>', file=fos)
-                                print(f'### {name}', file=fos)
-                                print(f'</div>', file=fos)
+                                _render_invisible_header(name)
                                 for overload in overloads:
                                     print('---', file=fos)
                                     print(f'```cpp', file=fos)
