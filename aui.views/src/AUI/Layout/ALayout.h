@@ -21,7 +21,7 @@ class AViewContainer;
 /**
  * @brief Layout manager is an object that manages placement and size of [views](AView) inside
  * [containers](AViewContainer).
- * @defgroup layout_managers Layout Managers
+ * @defgroup layout-managers Layout Managers
  * @ingroup views
  * @details In AUI, layout building consists of layout managers. Layout manager determines position and size of
  * [container](AViewContainer)'s children [views](AView). A [container](AViewContainer) is a [AView]
@@ -85,7 +85,7 @@ class AViewContainer;
  *    [AViewContainer]. When we say "Vertical", we imply a [AViewContainer] with [AVerticalLayout] as the
  *    layout manager.
  *
- * # Layout Examples
+ * ## Layout Examples
  *
  * [Horizontal](AHorizontalLayout) layout:
  * <table>
@@ -174,12 +174,12 @@ class AViewContainer;
  *       ```
  *     </td>
  *     <td>
- *     ![](imgs/docs/imgs/Screenshot_20250625_011101.png)
+ *     ![](imgs/Screenshot_20250625_011101.png)
  *     </td>
  *   </tr>
  * </table>
  *
- * # Expanding {#EXPANDING}
+ * ## Expanding
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
@@ -283,7 +283,7 @@ class AViewContainer;
  *
  *     FixedSize nullifies Expanding's action (on per axis basic).
  *
- * # Implementation details
+ * ## Implementation details
  *
  * The process of applying position and size involves several key functions:
  * ```
@@ -306,7 +306,7 @@ class AViewContainer;
  *                                 └─> AView::setGeometry()
  * ```
  *
- * ## Applying size
+ * ### Applying size
  *
  * - Size of each view in tree is [calculated](SIZE_CALCULATION) on this phase
  * - [AView]::redraw "AWindow::redraw" - geometry is applied before rendering
@@ -317,7 +317,7 @@ class AViewContainer;
  * - [ALayout]::onResize - implemented by layout manager, whose have their own algorithms of arranging views
  * - [setGeometry](AView::setGeometry) - sets geometry of a view (which might be a container)
  *
- * ## Size calculation {#SIZE_CALCULATION}
+ * ### Size calculation
  *
  * - Layout manager queries **Minimum size** which is determined with [AView]::getMinimumSize and cached until the
  *   view or its children call [AView]::markMinContentSizeInvalid. It considers:
@@ -330,7 +330,7 @@ class AViewContainer;
  *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
  *   [EXPANDING] ratios.
  *
- * ## Special cases
+ * ### Special cases
  *
  * - **[AScrollArea]**: requires special handling for viewport positioning and size compensation
  * - **[AForEachUI]**: manages view inflation/deflation based on visibility
@@ -339,7 +339,7 @@ class AViewContainer;
 
 /**
  * @brief Base class for all layout managers.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS ALayout : public AObject {
 public:
@@ -353,7 +353,7 @@ public:
      * @param width width of the container, add padding if necessary.
      * @param height height of the container, add padding if necessary.
      * @details
-     * See [layout_managers] for more info.
+     * See [layout-managers] for more info.
      */
     virtual void onResize(int x, int y, int width, int height) = 0;
 

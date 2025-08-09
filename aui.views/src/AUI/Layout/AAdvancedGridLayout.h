@@ -15,7 +15,7 @@
 
 /**
  * @brief Grid layout. Unlike AGridLayout, cells may have different sizes.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS AAdvancedGridLayout : public ALayout {
 public:

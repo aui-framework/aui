@@ -121,7 +121,7 @@ nav:
 
   - 'UI Architecture':
     - ui-building-overview.md
-    - layout_managers.md
+    - layout-managers.md
     - signal_slot.md
     - property_system.md
     - devtools.md

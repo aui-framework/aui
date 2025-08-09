@@ -27,7 +27,7 @@ namespace aui::detail {
 
 /**
  * @brief Absolute positioning layout. Allows to explicitly set your own coordinates.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS AAbsoluteLayout: public ALinearLayout<aui::detail::AbsoluteLayoutCell> {
 public:

@@ -124,7 +124,7 @@ public:
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
      * @details
-     * It does affect expanding environment inside the container. See expanding [layout managers](layout_managers)
+     * It does affect expanding environment inside the container. See expanding [layout managers](layout-managers)
      * for more info.
      *
      * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
@@ -233,7 +233,7 @@ public:
     /**
      * @brief Marks this view it requires a layout update.
      * @details
-     * See [layout_managers] for more info.
+     * See [layout-managers] for more info.
      */
     virtual void markMinContentSizeInvalid();
 
@@ -513,7 +513,7 @@ public:
 
     /**
      * @brief Changes the expanding of view.
-     * @sa layout_managers
+     * @sa layout-managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
@@ -529,7 +529,7 @@ public:
 
     /**
      * @brief Changes the expanding of view.
-     * @sa layout_managers
+     * @sa layout-managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
@@ -583,7 +583,7 @@ public:
     /**
      * @brief Sets position and size of the view.
      * @details
-     * See [layout_managers] for more info.
+     * See [layout-managers] for more info.
      */
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {

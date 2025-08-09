@@ -17,7 +17,7 @@
 
 /**
  * @brief Imitates behaviour of word wrapping, but uses [views](AView) instead words
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS AWordWrappingLayout: public ALinearLayout<> {
 private:

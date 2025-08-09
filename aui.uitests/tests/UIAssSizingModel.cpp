@@ -58,7 +58,7 @@ public:
 //   this box and other elements; control it using [ass]::Margin.
 //
 //   Layout manager of view's parent is responsible to handling margin properly. All
-//   [layout managers](layout_managers) tend to honor children margins; with an exception to [AWindow] (it's
+//   [layout managers](layout-managers) tend to honor children margins; with an exception to [AWindow] (it's
 //   margin has no effect) and [AAbsoluteLayout] (positioning and sizing is defined manually). As an AUI user, you
 //   wouldn't need to bother about that unless you are implementing custom layout manager.
 //

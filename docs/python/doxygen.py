@@ -252,13 +252,15 @@ def _parse(input: str):
                     _consume_comment()
 
 
+        prev_doc = last_doc
         if _parse_comment():
+            if prev_doc is not None:
+                yield prev_doc
             continue
 
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
             token = next(iterator) # enum class???
             continue
-
 
 
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
@@ -304,13 +306,39 @@ def gen_pages():
 
                 contents = [i for i in _parse(full_path.read_text())]
 
-                for clazz in contents:
-                    class_name = clazz.name
+                for parse_entry in contents:
+                    if isinstance(parse_entry, str):
+                        # Arbitrary comment. It may contain group definition or other information.
+                        doxygen = parse_doxygen(parse_entry)
+                        for def_group in [i for i in doxygen if i[0] == '@defgroup']:
+                            m = re.compile(r"(\S+) (.+)").match(def_group[1])
+                            group_id = m.group(1)
+                            group_name = m.group(2)
+
+                            with mkdocs_gen_files.open(f'{group_id.lower()}.md', 'w') as fos:
+                                print(f'# {group_name}', file=fos)
+                                print(f'', file=fos)
+                                for i in [i for i in doxygen if i[0] == '@brief']:
+                                    print(i[1], file=fos)
+
+                                details = [i for i in doxygen if i[0] in ['@details', '']]
+                                if details:
+                                    print(f'## Detailed Description', file=fos)
+                                    for i in details:
+                                        print(i[1], file=fos)
+
+
+
+                            break
+
+                        continue
+
+                    class_name = parse_entry.name
                     classes.add(class_name)
-                    with mkdocs_gen_files.open(f'reference/{class_name.lower()}.md', 'w') as fos:
+                    with mkdocs_gen_files.open(f'{class_name.lower()}.md', 'w') as fos:
                         print(f'# {class_name}', file=fos)
                         print(f'', file=fos)
-                        doxygen = parse_doxygen(clazz.doc)
+                        doxygen = parse_doxygen(parse_entry.doc)
 
                         module_name = str(include_dir.parent.name).replace('.', '::')
 
@@ -339,7 +367,7 @@ def gen_pages():
                             print(f'### {name}', file=fos)
                             print(f'</div>', file=fos)
 
-                        fields = [i for i in clazz.fields if i.visibility != 'private' and i.doc is not None]
+                        fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
                         if fields:
                             print('## Public fields and Signals', file=fos)
                             for i in sorted(fields, key=lambda x: x.name):
@@ -353,7 +381,7 @@ def gen_pages():
                                     print(i[1], file=fos)
 
 
-                        methods = [i for i in clazz.methods if i.visibility != 'private' and i.doc is not None]
+                        methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
                         if methods:
                             print('## Public Methods', file=fos)
                             methods_grouped = {}
@@ -412,14 +440,14 @@ def gen_pages():
     with mkdocs_gen_files.open('classes.md', 'w') as f:
         classes_alphabet = { }
 
-        for clazz in classes:
-            letter = clazz[0]
-            if letter == 'A' and clazz[1].isupper():
+        for parse_entry in classes:
+            letter = parse_entry[0]
+            if letter == 'A' and parse_entry[1].isupper():
                 # most classes in AUI start with 'A', so it makes less sense to chunk by 'A'. Instead, we'll use the
                 # second letter.
-                letter = clazz[1]
+                letter = parse_entry[1]
             letter = letter.upper()
-            classes_alphabet.setdefault(letter, []).append(clazz)
+            classes_alphabet.setdefault(letter, []).append(parse_entry)
         classes_alphabet = sorted(classes_alphabet.items())
         print('<div class="class-index-title">', file=f)
         for letter, _ in classes_alphabet:
@@ -432,7 +460,7 @@ def gen_pages():
             print(f'<div class="letter" id="{letter.lower()}">{letter}</div>', file=f)
             print('<div class="list">', file=f)
             for c in sorted(classes2):
-                print('<div class="entry">', f'<a href="/reference/{c.lower()}">{c}</a>', '</div>', file=f)
+                print('<div class="entry">', f'<a href="/{c.lower()}">{c}</a>', '</div>', file=f)
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)

@@ -16,7 +16,7 @@
 
 /**
  * @brief Places views in a stack (along z axis).
- * @ingroup layout_managers
+ * @ingroup layout-managers
  * @details
  *
  * |             |                               |

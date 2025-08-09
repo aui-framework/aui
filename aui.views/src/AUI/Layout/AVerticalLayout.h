@@ -16,7 +16,7 @@
 
 /**
  * @brief Places views in a column.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  * @details
  *
  * |             |                               |
