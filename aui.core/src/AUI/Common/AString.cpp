@@ -19,6 +19,12 @@
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
+namespace aui::detail {
+
+using FCodecMeasure = void;
+
+}
+
 static AStaticVector<char, 4> toUtf8(char32_t i) {
     if (i <= 0x7F) {
         return { static_cast<char>(i) };
@@ -90,25 +96,32 @@ static char32_t decodeUtf8(const char*& ptr, const char* end) {
     return result;
 }
 
-AString::AString(std::span<std::byte> bytes, AStringEncoding encoding) noexcept {
-
+AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) noexcept {
+    switch (encoding) {
+        case AStringEncoding::UTF8: {
+            super::resize(bytes.size());
+            std::memcpy(data(), bytes.data(), bytes.size());
+        } break;
+        case AStringEncoding::UTF16: {
+            size_t size = simdutf::utf8_length_from_utf16(reinterpret_cast<const char16_t*>(bytes.data()), bytes.size() / 2);
+            super::resize(size);
+            simdutf::convert_utf16_to_utf8(reinterpret_cast<const char16_t*>(bytes.data()), bytes.size() / 2, data());
+        } break;
+        case AStringEncoding::UTF32: {
+            size_t size = simdutf::utf8_length_from_utf32(reinterpret_cast<const char32_t*>(bytes.data()), bytes.size() / 4);
+            super::resize(size);
+            simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(bytes.data()), bytes.size() / 4, data());
+        } break;
+        case AStringEncoding::LATIN1: {
+            size_t size = simdutf::utf8_length_from_latin1(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+            super::resize(size);
+            simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(bytes.data()), bytes.size(), data());
+        } break;
+    }
 }
 
 AString::AString(AChar c) noexcept {
     push_back(c);
-}
-
-AString::AString(const AByteBuffer& buffer, AStringEncoding encoding) {
-
-}
-AString::AString(const AByteBufferView& buffer, AStringEncoding encoding) {
-
-}
-AString::AString(const char* buffer, size_t length, AStringEncoding encoding) {
-
-}
-AString::AString(const char* buffer, AStringEncoding encoding) {
-
 }
 
 void AString::push_back(AChar c) noexcept {
@@ -1093,9 +1106,11 @@ AString AString::lowercase() const {
 }
 
 void AString::resizeToNullTerminator() {
-    char* i = data();
-    for (; *i; ++i);
-    resize(i - data());
+    const char* end = data();
+    while (*end) {
+        ++end;
+    }
+    resize(end - data());
 }
 
 AString::size_type AString::size() const noexcept {
@@ -1142,7 +1157,7 @@ AString AString::processEscapes() const {
 }
 
 AString& AString::removeAll(AChar c) noexcept {
-
+    //erase(std::remove(begin(), end(), c), end());
     return *this;
 }
 
