@@ -32,15 +32,15 @@ class AWindow;
  * @snippet examples/ui/views/src/ExampleWindow.cpp AMessageBox
  *
  * @specificto{windows}
- * Implemented with @ref MessageBox.
+ * Implemented with [MessageBox].
  * ![](imgs/ajkdhadkjfh.png)
  *
  * @specificto{linux}
- * Implemented with @ref GtkDialog.
+ * Implemented with [GtkDialog].
  * ![](imgs/wjkfnjkws.png)
  *
  * @specificto{macos}
- * Implemented with @ref NSAlert.
+ * Implemented with [NSAlert].
  * ![](imgs/revierio.png)
  */
 namespace AMessageBox {

@@ -16,7 +16,7 @@
 #include "ALinearLayout.h"
 
 /**
- * @brief Imitates behaviour of word wrapping, but uses @ref AView "views" instead words
+ * @brief Imitates behaviour of word wrapping, but uses [views](AView) instead words
  * @ingroup layout_managers
  */
 class API_AUI_VIEWS AWordWrappingLayout: public ALinearLayout<> {

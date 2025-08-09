@@ -22,9 +22,9 @@
  * @details
  * Checkbox is a checkable button that is typically used to enable/disable some action.
  *
- * See @ref declarative::CheckBox for a declarative form and examples.
+ * See [declarative]::CheckBox for a declarative form and examples.
  *
- * For a checkbox with label, see @ref ACheckBoxWrapper.
+ * For a checkbox with label, see [ACheckBoxWrapper].
  *
  * Whenever the checkbox is checked or unchecked, it emits checked() signal.
  */
@@ -79,9 +79,9 @@ private:
  * @brief View container with a checkbox.
  * @ingroup useful_views
  * @details
- * For a checkbox itself, see @ref ACheckBox.
+ * For a checkbox itself, see [ACheckBox].
  *
- * See @ref declarative::CheckBoxWrapper for a declarative form and examples.
+ * See [declarative]::CheckBoxWrapper for a declarative form and examples.
  */
 class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
 public:

@@ -8,7 +8,7 @@ platform-specific means to package and locate those files.
 This makes the application self-contained and reduces the surface of attack for your application and resources, as they
 can't be viewed or changed as easily as files lying around in user's filesystem.
 
-To refer to an asset file, prefix the path with colon character. See @ref AUrl for more info.
+To refer to an asset file, prefix the path with colon character. See [AUrl] for more info.
 
 ## aui_compile_assets
 
@@ -30,7 +30,7 @@ cp test.txt assets/test.txt
 
 !!! danger "Pitfall"
     
-    Please invoke @ref BUILD_CACHE_INVALIDATION "CMake configure" each time you add/remove files in `assets/`!
+    Please invoke [CMake configure](BUILD_CACHE_INVALIDATION) each time you add/remove files in `assets/`!
     Otherwise, these files will not appear in your program.
 
 
@@ -57,7 +57,7 @@ See also [examples/minimal-ui-template-with-assets.md] for a complete minimal ex
 
 `aui_compile_assets` adds a build time dependency to the specified target on `aui.toolbox` that generates C++ files per
 each file found in `assets/` directory. Those `*.cpp` files are compiled along with your target. C++ files contain a
-byte array that is being registered automatically to AUI's @ref ABuiltinFiles filesystem.
+byte array that is being registered automatically to AUI's [ABuiltinFiles] filesystem.
 
 `aui.toolbox` applies several transformations on a file before putting it into the `*.cpp`:
 

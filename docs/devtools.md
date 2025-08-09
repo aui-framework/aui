@@ -8,7 +8,7 @@ invoked by hitting `CTRL+F12` on AUI-based application (debug only).
 ## Layout tab
 
 The most notable functionality of devtools is the `Layout` tab. Here you can discover your view hierarchy and check
-which @ref ass "ASS" rules were applied to your view.
+which [ASS](ass) rules were applied to your view.
 
 You can hold `CTRL` and hover over your application to peek views:
 

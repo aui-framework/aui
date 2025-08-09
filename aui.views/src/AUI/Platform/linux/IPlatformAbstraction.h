@@ -25,7 +25,7 @@
  * # API Selection and Prioritization
  *
  * The framework determines the preferred UI backend based on an `initializationOrder` defined within
- * @ref APlatformAbstractionOptions. The order prioritizes backends, attempting to initialize them sequentially.
+ * [APlatformAbstractionOptions]. The order prioritizes backends, attempting to initialize them sequentially.
  *
  * # Dynamic Loading
  *

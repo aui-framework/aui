@@ -1,7 +1,7 @@
 # Minesweeper Game
 
 <!-- aui:example app -->
-Minesweeper game implementation driven by @ref ass.
+Minesweeper game implementation driven by [ass].
 
 ![](../imgs/Screenshot_20250211_052511.png)
 
@@ -37,7 +37,7 @@ As you can see, game data is represented by `FieldCell` enum:
 
 @snippet examples/app/minesweeper/src/FieldCell.h FieldCell
 
-`FieldCell` is just a bitfield implemented thanks to @ref AUI_ENUM_FLAG.
+`FieldCell` is just a bitfield implemented thanks to [AUI_ENUM_FLAG].
 
 ### Open cell (left click)
 

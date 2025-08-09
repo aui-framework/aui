@@ -1,7 +1,7 @@
 # Replacing AUI mobile project
 
 @note
-This page describes an advanced scenario of integrating AUI. For basic usage, see @ref "docs/Crosscompiling.md"
+This page describes an advanced scenario of integrating AUI. For basic usage, see ["docs]/Crosscompiling.md"
 
 Some projects may require their custom mobile project (Android Studio or Xcode), for example to specific mobile
 features (such as Google Play Games integration, Face ID, etc). In this case, you would have to create your own project

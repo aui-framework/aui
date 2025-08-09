@@ -1,6 +1,6 @@
 # Code Style and Recommendations
 
-See also: @ref docs/clang-format.md
+See also: [docs]/clang-format.md
 
 AUI's code should be kept with the following code style:
 
@@ -53,7 +53,7 @@ private:
 ```
 
 @note
-With @ref property_system, a better way of defining data models will be:
+With [property_system], a better way of defining data models will be:
 ```cpp
 struct User {
     AProperty<AString> username;
@@ -128,7 +128,7 @@ message among a long list of compiler diagnostics.
 ### Single line comment error messages
 
 You can exploit the fact that a compiler prints code lines in its diagnostics. Put a single line comment with long arrow
-prefix to put potentially helpful messages. Use @ref TRY_TO_BREAK technique to discover the lines to put the comments
+prefix to put potentially helpful messages. Use [TRY_TO_BREAK] technique to discover the lines to put the comments
 in.
 
 Cast failure example:
@@ -168,7 +168,7 @@ This makes it obvious what does this overload do.
 ## .clang-format
 
 clang-format is a de facto standard tool to auto format (C++) code with style described by `.clang-format` file that
-typically located inside your project's root directory. AUI @ref CLANG_FORMAT "has such file".
+typically located inside your project's root directory. AUI [has such file](CLANG_FORMAT).
 
 Since AUI abuses C++'s syntax, it's important to set up appropriate auto formatting, or you will often find yourself
 struggling with AUI's DSL especially in large portions of layout, despite the fact we recommend to decompose large
@@ -200,7 +200,7 @@ When it comes to `clang-format` there's one an unobvious feature when using AUI'
 
 See the difference? The second example lacks one comma. If we try to trigger `clang-format`
 (<kbd>ALT</kbd>+<kbd>CTRL</kbd>+<kbd>L</kbd> in **CLion**), we'll get the following results (assuming AUI's
-@ref CLANG_FORMAT ".clang-format"):
+[CLANG_FORMAT] ".clang-format"):
 
 === "With Trailing Comma"
      

@@ -31,7 +31,7 @@ namespace aui::detail {
  * @brief A base object class.
  * @ingroup core signal_slot
  * @details
- * AObject is required to use @ref signal_slot "signal-slot system".
+ * AObject is required to use [signal_slot] "signal-slot system".
  *
  * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with
  * aui::ptr::shared_from_this().
@@ -51,7 +51,7 @@ public:
      * connection is breaks only when the sender (signal) dies.
      *
      * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
-     * observe @ref property_system "property" or @ref signal_slot "signal", i.e., you just want to make a
+     * observe [property](property_system) or [signal](signal_slot), i.e., you just want to make a
      * _generic observer_.
      *
      * Use this in combination with lambda.
@@ -69,7 +69,7 @@ public:
      * @brief Connects signal to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
      * @endcode
@@ -90,7 +90,7 @@ public:
      * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
      * property (pre-fire).
      *
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
      * @endcode
@@ -115,7 +115,7 @@ public:
      *
      * connect pulls AObject from \c propertyDestination to maintain the connection.
      *
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
@@ -144,7 +144,7 @@ public:
      *
      * biConnect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
      *
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
@@ -164,7 +164,7 @@ public:
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
      * @endcode
@@ -184,7 +184,7 @@ public:
      * @brief Connects signal or property to slot of \c "this" object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
@@ -202,7 +202,7 @@ public:
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
@@ -229,7 +229,7 @@ public:
      * @return Connection instance
      *
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
@@ -251,7 +251,7 @@ public:
      * @brief Connects signal or property to the slot of the specified non-AObject type.
      * @ingroup property_system
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal_slot] "signal-slot system" for more info.
      * @code{cpp}
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
@@ -330,12 +330,12 @@ private:
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
- * If @ref emits "signal declaration" has arguments, you have to specify them in braces:
+ * If [signal declaration](emits) has arguments, you have to specify them in braces:
  * @code{cpp}
  * emit keyPressed(AInput::LCTRL);
  * @endcode
  *
- * See @ref signal_slot "signal-slot system" for more info.
+ * See [signal_slot] "signal-slot system" for more info.
  */
 #define emit (*this) ^
 
@@ -357,12 +357,12 @@ private:
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
- * If @ref emits "signal declaration" has arguments, you have to specify them:
+ * If [signal declaration](emits) has arguments, you have to specify them:
  * @code{cpp}
  * AUI_EMIT_FOREIGN(view, keyPressed, AInput::LCTRL);
  * @endcode
  *
- * See @ref signal_slot "signal-slot system" for more info.
+ * See [signal_slot] "signal-slot system" for more info.
  */
 #define AUI_EMIT_FOREIGN(object, signal, ...) (*object) ^ object->signal(__VA_ARGS__)
 

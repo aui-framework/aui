@@ -14,7 +14,7 @@ cmake --build .
 
 ### AUI_APP_PACKAGING
 Specifies the desired packaging method. This variable accepts CPack generator or one of the packaging methods provided
-by AUI. See @ref "docs/Packaging Your App.md" for more info.
+by AUI. See ["docs]/Packaging Your App.md" for more info.
 
 ### AUI_CATCH_UNHANDLED
 Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for
@@ -28,7 +28,7 @@ Whether to use AddressSanitizer.
 
 ### AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
-performance information. See [Profiling](@ref profiling)
+performance information. See [Profiling]([profiling])
 
 ### AUI_SHOW_TOUCHES
 When `true`, shows touches visually (like in Android Developer Tools) and performs additional trace logging on touches.
@@ -39,10 +39,10 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 Whether build examples or not.
 
 ### AUI_BUILD_FOR
-Specifies target platform for cross-compilation (see [cross-compiling](@ref docs/Crosscompiling.md)).
+Specifies target platform for cross-compilation (see [cross-compiling]([docs]/Crosscompiling.md)).
 
 ### AUIB_CACHE_DIR
-Changes @ref AUIB_CACHE.
+Changes [AUIB_CACHE].
 
 Can be defined as environment variable.
 
@@ -73,4 +73,4 @@ Disables code signing step on iOS.
 
 ## aui.boot-specific
 
-See @ref AUIB_VARIABLES.
+See [AUIB_VARIABLES].

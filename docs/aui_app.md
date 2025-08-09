@@ -11,7 +11,7 @@ collaboration with [CPack](https://cmake.org/cmake/help/book/mastering-cmake/cha
 - `WIX`
 - `External`
 
-For the targets that require [cross-compilation](@ref docs/Crosscompiling.md), it requires `@ref AUI_BUILD_FOR` to be
+For the targets that require [cross-compilation]([docs]/Crosscompiling.md), it requires `[AUI_BUILD_FOR]` to be
 set, and, in fact, does not involve CPack in such case.
 
 For all packaging methods, `aui_app` assumes it is called once per CMake project. It is relevant for packaging methods
@@ -24,7 +24,7 @@ that expect one "entrypoint" per package.
 For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
 various installation methods but also override the variables if needed.
 
-For more info about packaging methods, see @ref "docs/Packaging Your App.md".
+For more info about packaging methods, see ["docs]/Packaging Your App.md".
 
 ## Syntax
 
@@ -92,7 +92,7 @@ This argument assigns value to aui::app_info::name
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-See @ref "docs/Setting App Icon.md" for best practices.
+See ["docs]/Setting App Icon.md" for best practices.
 
 | Platform | Required | Traits                                                |
 |----------|----------|-------------------------------------------------------|
@@ -102,7 +102,7 @@ See @ref "docs/Setting App Icon.md" for best practices.
 | Android  | +        | generates icon assets from your `svg`                 |
 | iOS      | +        | generates `*.icns` file from your `svg`               |
 
-Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
+Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the ["docs]/Packaging Your App.md" "app packaging method"
 chosen.
 
 @pythongen{aui_app_ICON}

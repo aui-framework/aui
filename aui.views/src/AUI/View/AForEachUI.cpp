@@ -81,8 +81,8 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     AViewContainerBase::onViewGraphSubtreeChanged();
 
     AUI_DEFER {
-        // if parent @ref AUI_DECLARATIVE_FOR was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
-        // on parent's @ref AUI_DECLARATIVE_FOR subrange, so we put our views to shared cache.
+        // if parent [AUI_DECLARATIVE_FOR] was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
+        // on parent's [AUI_DECLARATIVE_FOR] subrange, so we put our views to shared cache.
         putOurViewsToSharedCache();
     };
 

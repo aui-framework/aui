@@ -40,7 +40,7 @@
  * <!-- aui:include examples/ui/button/src/main.cpp -->
  *
  *
- * See @ref declarative::Button for a declarative form and examples.
+ * See [declarative]::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AAbstractLabel {
 public:

@@ -79,15 +79,15 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/properties.h
 // @defgroup property_system Property System
 // @ingroup core
-// @brief Property System is a data binding mechanism based on @ref signal_slot "signal-slot system".
+// @brief Property System is a data binding mechanism based on [signal_slot] "signal-slot system".
 // @details
 // @experimental
 // AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
-// @ref signal_slot "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
+// [signal_slot] "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
 // involve external tools (like `moc`). They are written in pure C++.
 //
 // @note
-// This page is about presenting individual values. For lists, see @ref AForEachUI.
+// This page is about presenting individual values. For lists, see [AForEachUI].
 //
 // AUI property system is relatively complex, as it involves a lot of features in a single place:
 // 1. thread safe
@@ -188,13 +188,13 @@ TEST_F(UIDataBindingTest, TextField1) {
 // This is a comprehensive, straightforward way of setting up a connection. We are demonstrating it here so you can get
 // deeper understanding on how connections are made and what does declarative way do under the hood. This way may be
 // used in favour of declarative way if the latter not work for you. For declarative way, go to
-// @ref "UI_declarative_data_binding".
+// ["UI_declarative_data_binding"].
 //
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
 // a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
 // for such a simple operation.
 TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
-    // Use \c AUI_LET expression to connect the model's username property to the label's @ref ALabel::text "text()"
+    // Use \c AUI_LET expression to connect the model's username property to the label's [ALabel]::text "text()"
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -399,7 +399,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
     // know anything about underlying values.
     //
-    // For example, define enum with @ref AUI_ENUM_VALUES "AUI_ENUM_VALUES" and model:
+    // For example, define enum with [AUI_ENUM_VALUES](AUI_ENUM_VALUES) and model:
     //
     // @code{cpp}
     // enum class Gender {
@@ -537,9 +537,9 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 //
 // Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
 //
-// The example below is essentially the same as @ref "UIDataBindingTest_Label_via_let" but uses declarative connection set up syntax.
+// The example below is essentially the same as ["UIDataBindingTest_Label_via_let"] but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
-    // Use `&` and `>` expression to connect the model's username property to the label's @ref ALabel::text "text"
+    // Use `&` and `>` expression to connect the model's username property to the label's [text](ALabel::text)
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -586,7 +586,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // @ref "UIDataBindingTest_Label_via_let" example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
+    // ["UIDataBindingTest_Label_via_let"] example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
     // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
@@ -639,7 +639,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "Roza");
 
     //
-    // Behaviour of such connection is equal to @ref "UIDataBindingTest_Label_via_declarative":
+    // Behaviour of such connection is equal to ["UIDataBindingTest_Label_via_declarative"]:
     //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
@@ -658,7 +658,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in @ref "UIDataBindingTest_Label_via_declarative".
+    // as in ["UIDataBindingTest_Label_via_declarative"].
 
     {
         auto l = Label {} & user->name;
@@ -716,7 +716,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
               // AUI_DOCS_CODE_END
               // @note
               // We're using `operator&&` here to set up bidirectional connection. For more info, go to
-              // @ref "UIDataBindingTest_Declarative_bidirectional_connection".
+              // ["UIDataBindingTest_Declarative_bidirectional_connection"].
               //
             });
         }
@@ -937,7 +937,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
     // We can use projections in the same way as with `AUI_LET`.
     //
-    // Let's repeat the @ref "UIDataBindingTest_Bidirectional_projection" sample in declarative way:
+    // Let's repeat the ["UIDataBindingTest_Bidirectional_projection"] sample in declarative way:
     using namespace declarative;
     struct User {
         AProperty<Gender> gender;

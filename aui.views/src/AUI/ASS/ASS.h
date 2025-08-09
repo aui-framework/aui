@@ -21,10 +21,10 @@
  * @brief CSS-like styling system
  * @details
  * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
- * of rules. A rule consists of a @ref ass_selectors and a list of @ref ass_properties . Selector is a basic matcher
- * that determines whether apply a rule to the specific @ref AView "view" or not. Selector is the first statement in a
- * rule and further statements are @ref ass_properties "style properties".
- * @ref ass_properties "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * of rules. A rule consists of a [ass_selectors] and a list of [ass_properties] . Selector is a basic matcher
+ * that determines whether apply a rule to the specific [view](AView) or not. Selector is the first statement in a
+ * rule and further statements are [style properties](ass_properties).
+ * [Property](ass_properties) controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
@@ -311,7 +311,7 @@
  *
  * # Box Model (Padding, Margin)
  *
- * See @ref "AUI Box Model".
+ * See ["AUI] Box Model".
  *
  * # ASS Refenence
  * See below for declarations and selectors.

@@ -5,16 +5,16 @@ techniques. AUI unifies package building process while still relying on `CMake` 
 
 AUI Framework focuses on minimizing efforts for AUI-based project to produce production-ready packages as easily as
 possible. AUI refrains from self-promotion in placeholders and "default values"; instead it carefully uses the
-information about your project passed to @ref docs/aui_app.md where needed.
+information about your project passed to [docs]/aui_app.md where needed.
 
 AUI provides a convenient configure time variable for choosing target packaging method -
-@ref AUI_APP_PACKAGING "-DAUI_APP_PACKAGING=...". Furthermore, if you are using @ref AUI_BUILD_FOR "-DAUI_BUILD_FOR=..."
-(for cross-compiling), `AUI_APP_PACKAGING` is @ref PACKAGING_WITH_AUI_BUILD_FOR "not required" to specify. This page
+[AUI_APP_PACKAGING] "-DAUI_APP_PACKAGING=...". Furthermore, if you are using [AUI_BUILD_FOR] "-DAUI_BUILD_FOR=..."
+(for cross-compiling), `AUI_APP_PACKAGING` is [not required](PACKAGING_WITH_AUI_BUILD_FOR) to specify. This page
 provides full usage examples.
 
-`AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by @ref docs/aui_app.md.
+`AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by [docs]/aui_app.md.
 
-@ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
+[docs]/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
 
 - Display name
@@ -35,7 +35,7 @@ out of the box.
 This guide covers various packaging techniques for all supported platforms.
 
 @note
-This guide assumes you have already called @ref docs/aui_app.md inside your `CMakeLists.txt`.
+This guide assumes you have already called [docs]/aui_app.md inside your `CMakeLists.txt`.
 
 # Windows
 
@@ -75,15 +75,15 @@ gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME`
-arg of @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
+arg of [docs]/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_innosetup}
 
-@ref docs/aui_app.md generates some image assets for the installer from your icon.
+[docs]/aui_app.md generates some image assets for the installer from your icon.
 
 By default, in addition to branding adjustments (such as app logo and name), AUI configures INNOSETUP so the installer
 won't prompt a UAC dialog (leverage to _admin privileges_). This way the installation process is more secure from
-perspective of the end user. Moreover, installation to user's directory allows @ref updater to work without prompting
+perspective of the end user. Moreover, installation to user's directory allows [updater] to work without prompting
 leverage to admin privileges during update installation.
 
 ## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
@@ -95,7 +95,7 @@ This packaging method creates an `*.zip` or `*.tar.gz` archive with your applica
 unpacking, no extra actions are needed. The user can launch executable of your application directly.
 
 @note
-@ref updater requires ZIP portable to be published. Other archive formats such tar `tar.gz` are not supported.
+[updater] requires ZIP portable to be published. Other archive formats such tar `tar.gz` are not supported.
 
 ```python
 # standard CMake build process
@@ -122,7 +122,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 WIX is the installer framework that produces `msi` packages.
 
 @note
-@ref updater requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
+[updater] requires application to be installed in user's directory and thus AUI's autoupdating functionality can't be
 used with WIX.
 
 ```python
@@ -143,11 +143,11 @@ gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg
-of @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
+of [docs]/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_wix}
 
-@ref docs/aui_app.md generates some image assets for the installer from your icon.
+[docs]/aui_app.md generates some image assets for the installer from your icon.
 
 ![](imgs/wix_logo.png) Installer with AUI's patches applied
 
@@ -170,7 +170,7 @@ not in `/Applications` but in some other place they can do that intuitively by c
 to whatever place they want.
 
 Default DMG image produced by CPack is sparse: it's just a regular Finder window with sidebar and top bar showing
-your application bundle and a symlink. @ref docs/aui_app.md configures CPack to rearrange icons and place a background
+your application bundle and a symlink. [docs]/aui_app.md configures CPack to rearrange icons and place a background
 image so no extra configuration by an AUI-based project is needed:
 
 ![](imgs/dmg.png)
@@ -190,7 +190,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 ```
 
 The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, where `<APP_NAME>` is the `NAME` arg of
-@ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
+[docs]/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_dmg}
 

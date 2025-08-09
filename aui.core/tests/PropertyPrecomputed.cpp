@@ -144,7 +144,7 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
 TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
     //
     // The expression should not read from the property it's a binding for, including other referenced
-    // APropertyPrecomputes. Otherwise, there's an infinite evaluation loop, and @ref AEvaluationLoopException is
+    // APropertyPrecomputes. Otherwise, there's an infinite evaluation loop, and [AEvaluationLoopException] is
     // thrown.
 
     AOptional<APropertyPrecomputed<int>> v1 ,v2;

@@ -139,9 +139,9 @@ concept RangeFactory = requires(Factory&& factory) {
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
  *
- * AForEachUI is created by using @ref AUI_DECLARATIVE_FOR macro.
+ * AForEachUI is created by using [AUI_DECLARATIVE_FOR] macro.
  *
- * @ref AUI_DECLARATIVE_FOR mimics *ranged for loop* semantically.
+ * [AUI_DECLARATIVE_FOR] mimics *ranged for loop* semantically.
  *
  * @code{cpp}
  * static const std::array users = { "Foo", "Bar", "Lol" };
@@ -163,11 +163,11 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * ![](imgs/docs/imgs/UIDeclarativeForTest.Example_.png)
  *
- * @ref AUI_DECLARATIVE_FOR consists of single entry variable name, a potentially @ref aui::react "reactive" expression
+ * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially [reactive](aui::react) expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
  * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
- * @ref AUI_DECLARATIVE_FOR macro; the lambda's body (including curly braces) is left up to developer. The final
- * declaration of @ref AUI_DECLARATIVE_FOR returns an instance of AForEachUI.
+ * [AUI_DECLARATIVE_FOR] macro; the lambda's body (including curly braces) is left up to developer. The final
+ * declaration of [AUI_DECLARATIVE_FOR] returns an instance of AForEachUI.
  *
  * *range* models one-dimensional list.
  *
@@ -185,18 +185,18 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
  *
- * The range's type is erased with runtime-based *range* layer @ref aui::any_view.
+ * The range's type is erased with runtime-based *range* layer [aui]::any_view.
  *
- * @ref AUI_DECLARATIVE_FOR can be nested with no restrictions in both directions.
+ * [AUI_DECLARATIVE_FOR] can be nested with no restrictions in both directions.
  *
  * # Examples
  *
- * See examples of @ref AUI_DECLARATIVE_FOR.
+ * See examples of [AUI_DECLARATIVE_FOR].
  *
  * # Lazy Semantics
  *
- * AForEachUI presents all data available. If placed somewhere inside @ref AScrollArea (implies
- * @ref AScrollAreaViewport), lazy semantics take place. This means that AForEachUI knows scroll position and
+ * AForEachUI presents all data available. If placed somewhere inside [AScrollArea] (implies
+ * [AScrollAreaViewport]), lazy semantics take place. This means that AForEachUI knows scroll position and
  * sliding window size in pixels, making it possible to present a limited set of data that is actually visible, and
  * present data further as soon as the user scrolls down the scroll area.
  *
@@ -209,11 +209,11 @@ concept RangeFactory = requires(Factory&& factory) {
  * - *iterator* has decrement operator `--it`
  *
  * If this requirement is not satisfied (case of some `ranges::views`), AForEachUI would not unload old items,
- * unless a @ref AFOREACHUI_UPDATE "data update event" occurred.
+ * unless a [data update event](AFOREACHUI_UPDATE) occurred.
  *
- * The amount of displayed data is governed by *range* size, @ref "docs/Render to texture.md" tile size, AScrollArea's
+ * The amount of displayed data is governed by *range* size, ["docs]/Render to texture.md" tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUI. In particular, the sliding is performed once per @ref "docs/Render to texture.md" tile is passed.
+ * AForEachUI. In particular, the sliding is performed once per ["docs]/Render to texture.md" tile is passed.
  *
  * @note
  * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of
@@ -394,9 +394,9 @@ auto makeForEach(RangeFactory&& rangeFactory)
     }) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
- * @brief ranged-for-loop style wrapped for @ref AForEachUI.
+ * @brief ranged-for-loop style wrapped for [AForEachUI].
  * @ingroup useful_macros
  * @details
- * See @ref AForEachUI
+ * See [AForEachUI]
  */
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)

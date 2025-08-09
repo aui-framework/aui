@@ -1,8 +1,8 @@
 # Game of Life
 
 <!-- aui:example app -->
-Game of Life implementation that uses advanced large dynamic data rendering techniques such as @ref ITexture,
-@ref AImage to be GPU friendly. The computation is performed in @ref AThreadPool.
+Game of Life implementation that uses advanced large dynamic data rendering techniques such as [ITexture],
+[AImage] to be GPU friendly. The computation is performed in [AThreadPool].
 
 ![](imgs/docs/imgs/eb3f5607-5dfb-4f58-958c-ed513cf3161e.jpeg)
 

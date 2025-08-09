@@ -3,7 +3,7 @@
 AUI Boot is yet another package manager based on CMake. If a library uses CMake with
 [good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
-it in @ref AUIB_CACHE folder for future reuse.
+it in [AUIB_CACHE] folder for future reuse.
 
 ## Importing AUI
 
@@ -37,7 +37,7 @@ To use a precompiled binary, you must specify a tag of a released version from
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
 set up a development and building with AUI.
 
-If you would like to force AUI Boot to use precompiled binaries only, you can set @ref AUIB_FORCE_PRECOMPILED "AUIB_FORCE_PRECOMPILED":
+If you would like to force AUI Boot to use precompiled binaries only, you can set [AUIB_FORCE_PRECOMPILED](AUIB_FORCE_PRECOMPILED):
 
 ```shell
 cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
@@ -45,7 +45,7 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
-If usage of precompiled binaries break your build for whatever reason, you can set @ref AUIB_NO_PRECOMPILED "AUIB_NO_PRECOMPILED":
+If usage of precompiled binaries break your build for whatever reason, you can set [AUIB_NO_PRECOMPILED](AUIB_NO_PRECOMPILED):
 
 ```shell
 cmake .. -DAUIB_NO_PRECOMPILED=TRUE
@@ -55,7 +55,7 @@ This way AUI Boot will never try to use precompiled binaries and will try to bui
 
 ## CI caching
 
-No matter using precompiled binaries or building them locally, it's convenient to cache @ref AUIB_CACHE in
+No matter using precompiled binaries or building them locally, it's convenient to cache [AUIB_CACHE] in
 your CIs:
 
 @snippet .github/workflows/build.yml cache example
@@ -180,7 +180,7 @@ For more libraries, please visit https://github.com/aui-framework/boot.
 
 Common scenario:
 
-1. Remove @ref AUIB_CACHE
+1. Remove [AUIB_CACHE]
 2. Remove your build directory
 
 And try again.
@@ -250,7 +250,7 @@ target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 ## Importing project as a subdirectory
 
-See @ref AUIB_ADD_SUBDIRECTORY
+See [AUIB_ADD_SUBDIRECTORY]
 
 ## CMake commands
 
@@ -274,17 +274,17 @@ auib_import(<PackageName> <URL>
 
 @note
 This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
-configure time. See @ref "docs/Runtime Dependency Resolution.md" for more info.
+configure time. See ["docs]/Runtime Dependency Resolution.md" for more info.
 
 #### PackageName
-Specifies the package name which will be passed to `find_package`. See @ref AUI_BOOT_3RDPARTY.
+Specifies the package name which will be passed to `find_package`. See [AUI_BOOT_3RDPARTY].
 
 #### URL
 URL to the git repository of the project you want to import.
 
 #### ADD_SUBDIRECTORY
 
-See also: @ref AUIB_LIB_AS.
+See also: [AUIB_LIB_AS].
 
 Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. 
 
@@ -348,11 +348,11 @@ thus does not forward.
 
 ## Variables
 
-See @ref "docs/AUI configure flags.md" on how to set variables.
+See ["docs]/AUI configure flags.md" on how to set variables.
 
 ### AUIB_ALL_AS (=FALSE|TRUE)
 
-Equivalent of setting @ref AUIB_LIB_AS for every single library present in the project.
+Equivalent of setting [AUIB_LIB_AS] for every single library present in the project.
 
 ### AUIB_<PackageName>_AS (=FALSE|TRUE)
 
@@ -361,7 +361,7 @@ becomes a part of your project, within your `build/` directory. This allows chan
 
 It is useful for library developers. They can use consumer's project to change something in their library, without
 changing `CMakeLists.txt` of the consumer's project. Setting `AUIB_<PackageName>_AS` is an equivalent of passing
-@ref AUIB_ADD_SUBDIRECTORY to `auib_import`.
+[AUIB_ADD_SUBDIRECTORY] to `auib_import`.
 
 This action disables usage of precompiled binary and validation.
 
@@ -445,11 +445,11 @@ Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
 ### AUIB_SKIP_REPOSITORY_WAIT (=FALSE|TRUE)
 
-Disables "Waiting for repository" @ref REPO_LOCK "lock".
+Disables "Waiting for repository" [lock](REPO_LOCK).
 
 ### AUIB_NO_PRECOMPILED (=FALSE|TRUE)
 
-Disables precompiled binaries, building all dependencies locally. You may want to set up @ref CI_CACHING.
+Disables precompiled binaries, building all dependencies locally. You may want to set up [CI_CACHING].
 
 ### AUIB_FORCE_PRECOMPILED (=FALSE|TRUE)
 
@@ -461,7 +461,7 @@ The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-suf
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
 archive in the `deps/` dir.
 
-See @ref aui_boot_producing_packages
+See [aui_boot_producing_packages]
 
 ### AUIB_VALIDATION_LEVEL
 
@@ -510,7 +510,7 @@ All checks are disabled.
 
 #### AUIB_VALIDATION_LEVEL 2
 
-*Covers scenario*: `cmake --install .` of *dependency* produces a @ref PREBUILT_PACKAGES "relocatable binary package".
+*Covers scenario*: `cmake --install .` of *dependency* produces a [relocatable binary package](PREBUILT_PACKAGES).
 
 *Requirements*:
 
@@ -594,7 +594,7 @@ life by hardcoding paths in your CMake lists and thus making hardly reproducible
 
 ### Building AUI without AUI Boot
 
-@ref AUIB_DISABLE CMake configure flag can be used to replace `auib_import` calls to `find_package`. In this scenario
+[AUIB_DISABLE] CMake configure flag can be used to replace `auib_import` calls to `find_package`. In this scenario
 you will need to resolve AUI's dependencies in some other way (i.e, by using Conan).
 
 ### Using AUI distributions with `find_package`
@@ -607,14 +607,14 @@ requiring AUI Boot.
 
 ## ~/.aui (AUI.Boot Cache Dir)
 
-It is a directory located in your home directory (can be changed with @ref AUIB_CACHE_DIR). This
+It is a directory located in your home directory (can be changed with [AUIB_CACHE_DIR]). This
 directory contains dependencies' source code and installation artifacts of each dependency. AUI.Boot looks up there
 for built libraries or their source code in order to reduce build latency and bandwidth.
 
 If a dependency is not present in the cache, AUI.Boot will download a precompiled binary or build it from source, so the
 subsequent `auib_import` invocations can reuse that even across different projects.
 
-On a CI/CD, you can @ref CI_CACHING "cache" this directory to drastically improve build times.
+On a CI/CD, you can [cache](CI_CACHING) this directory to drastically improve build times.
 
 ## Structure
 
@@ -643,7 +643,7 @@ Contains dependencies source code (if any), downloaded by `auib_import`.
 - `~/.aui/repo/<PackageName>/src/FETCHED` - indicates the latest download is successful.
 - `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
 
-If the dependency imported as a @ref AUIB_ADD_SUBDIRECTORY "subdirectory", these paths are used instead:
+If the dependency imported as a [subdirectory](AUIB_ADD_SUBDIRECTORY), these paths are used instead:
 
 - `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>` - a copy of source to be used by CMake's `add_subdirectory`.
   The second `<PackageName>` helps IDEs such as CLion to identify dependency name.
@@ -652,7 +652,7 @@ If the dependency imported as a @ref AUIB_ADD_SUBDIRECTORY "subdirectory", these
 
 ### ~/.aui/crosscompile-host
 
-In case of @ref docs/Crosscompiling.md, contains AUI.Boot sub cache for the host system.
+In case of [docs]/Crosscompiling.md, contains AUI.Boot sub cache for the host system.
 
 ### ~/.aui/repo.lock
 

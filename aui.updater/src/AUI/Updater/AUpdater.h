@@ -25,7 +25,7 @@
  * AUpdater follows strategy pattern, i.e., you are excepted to call its functions but the behaviour and conditions
  * are yours.
  *
- * Refer to @ref updater for update process overview.
+ * Refer to [updater] for update process overview.
  */
 class API_AUI_UPDATER AUpdater : public AObject {
 public:
@@ -95,13 +95,13 @@ public:
      *
      * This function handles following arguments to your application:
      * - `--aui-updater-origin` -
-     * - `--aui-updater-wait-for-process` - maps to @ref AUpdater::handleWaitForProcess that instructs AUpdater to wait
+     * - `--aui-updater-wait-for-process` - maps to [AUpdater]::handleWaitForProcess that instructs AUpdater to wait
      *   the specified process to finish before processing next argument(s).
-     * - `--aui-updater-cleanup` - maps to @ref AUpdater::handlePostUpdateCleanup and returns control flow to normal
+     * - `--aui-updater-cleanup` - maps to [AUpdater]::handlePostUpdateCleanup and returns control flow to normal
      *   execution of your application (last updating step)
      * - `--aui-updater-failed` - reports last error occurred while update deployment. See AUpdater::getLastDeploymentError().
      *
-     * Refer to @ref updater for update process overview.
+     * Refer to [updater] for update process overview.
      */
     virtual void handleStartup(const AStringVector& applicationArguments);
 
@@ -110,7 +110,7 @@ public:
      * @details
      * Basically about replacing files (no network operations will be performed).
      *
-     * Requires @ref status = StatusWaitingForApplyAndRestart, otherwise has no effect.
+     * Requires [status] = StatusWaitingForApplyAndRestart, otherwise has no effect.
      *
      * Terminates current process with `std::exit(0)`
      *
@@ -196,25 +196,25 @@ public:
      * `status` is updated in UI thread only.
      *
      * `status` is designed in such a way the user can use their own custom status types or any of predefined ones:
-     * - @ref AUpdater::StatusIdle
-     * - @ref AUpdater::StatusCheckingForUpdates
-     * - @ref AUpdater::StatusDownloading
-     * - @ref AUpdater::StatusWaitingForApplyAndRestart
-     * - @ref AUpdater::StatusNotAvailable
+     * - [AUpdater]::StatusIdle
+     * - [AUpdater]::StatusCheckingForUpdates
+     * - [AUpdater]::StatusDownloading
+     * - [AUpdater]::StatusWaitingForApplyAndRestart
+     * - [AUpdater]::StatusNotAvailable
      *
      * These statuses might be set by AUpdater itself.
      */
     AProperty<std::any> status;
 
     /**
-     * @brief Sets `status` to @ref StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
+     * @brief Sets `status` to [StatusCheckingForUpdates] and calls checkForUpdatesImpl, implemented by user.
      * @details
-     * Requires @ref status = StatusIdle, otherwise has no effect.
+     * Requires [status] = StatusIdle, otherwise has no effect.
      */
     void checkForUpdates();
 
     /**
-     * @brief Sets `status` to @ref StatusDownloading and calls downloadUpdateImpl, implemented by user.
+     * @brief Sets `status` to [StatusDownloading] and calls downloadUpdateImpl, implemented by user.
      * @details
      * An implementation might expect to checkForUpdates to be called first.
      */
@@ -226,7 +226,7 @@ public:
     /**
      * @brief Checks that updater functionality is available.
      * @details
-     * For cases when AUpdater is available see @ref updater
+     * For cases when AUpdater is available see [updater]
      */
     static bool isAvailable();
 
@@ -250,7 +250,7 @@ protected:
      * The function is called by AUpdater::handleStartup. If triggerUpdateOnStartup succeeds, it should terminate
      * execution of the current process.
      *
-     * Requires @ref status = StatusWaitingForApplyAndRestart.
+     * Requires [status] = StatusWaitingForApplyAndRestart.
      *
      * If you'd like to disable applying downloaded update on startup, stub this function.
      */
@@ -283,7 +283,7 @@ protected:
     /**
      * @brief Being called by downloadUpdateImpl, reports download percentage to `status`.
      * @details
-     * Requires @ref status = StatusDownloading, otherwise has no effect. Updates the value in UI thread.
+     * Requires [status] = StatusDownloading, otherwise has no effect. Updates the value in UI thread.
      */
     void reportDownloadedPercentage(aui::float_within_0_1 progress);
 

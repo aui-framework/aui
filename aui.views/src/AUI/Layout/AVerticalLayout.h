@@ -59,7 +59,7 @@ public:
     int getMinimumHeight() override;
 
     /**
-     * @see @ref ass::LayoutSpacing "LayoutSpacing"
+     * @see [LayoutSpacing](ass::LayoutSpacing)
      */
     void setSpacing(int spacing) override;
 

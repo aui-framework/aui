@@ -33,12 +33,12 @@
  * @brief Main central library.
  * @details
  * Some additional features:
- * - @ref AAbstractThread::interrupt() "interruptable threads"
- * - @ref AI18n "i18n"
- * - @ref ALogger "logging"
+ * - [interruptable threads](AAbstractThread::interrupt())
+ * - [i18n](AI18n)
+ * - [logging](ALogger)
  * - data models
  * - trait classes
- * - @ref AUrl "urls"
+ * - [urls](AUrl)
  */
 
 
@@ -49,7 +49,7 @@
  * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
  * @details
  * @note
- * For build-time macros, see @ref "docs/Macros.md".
+ * For build-time macros, see ["docs]/Macros.md".
  */
 
 /**

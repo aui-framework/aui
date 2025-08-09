@@ -11,7 +11,7 @@
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
  * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
  *
- * See @ref property_system "property system" for usage examples.
+ * See [property system](property_system) for usage examples.
  *
  * # Performance considerations
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
@@ -101,7 +101,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a readonly [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
@@ -110,7 +110,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a bidirectional @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a bidirectional [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <
         aui::invocable<const Underlying&> ProjectionRead,

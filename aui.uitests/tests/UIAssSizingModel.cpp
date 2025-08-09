@@ -38,35 +38,35 @@ public:
 // elements to create a visual container, defining the outer appearance of each AView as a rectangular block on-screen.
 // ## Box key components
 //
-// - **View's content box**: the area are whose size is defined by @ref AView::getContentMinimumSize() and
-//   @ref AView::getContentSize(). The content area is the innermost area, wrapping view's specific contents only (i.e,
-//   label's text); control it by implementing @ref AView::getContentMinimumWidth() and
-//   @ref AView::getContentMinimumHeight().
-// - **View's box**: the area whose size is defined by AView::size(). Use @ref ass::FixedSize, @ref ass::MinSize and
-//   @ref ass::MaxSize to define an acceptable size range. Use @ref ass::Padding to add a blank space between view's box
+// - **View's content box**: the area are whose size is defined by [AView]::getContentMinimumSize() and
+//   [AView]::getContentSize(). The content area is the innermost area, wrapping view's specific contents only (i.e,
+//   label's text); control it by implementing [AView]::getContentMinimumWidth() and
+//   [AView]::getContentMinimumHeight().
+// - **View's box**: the area whose size is defined by AView::size(). Use [ass]::FixedSize, [ass]::MinSize and
+//   [ass]::MaxSize to define an acceptable size range. Use [ass]::Padding to add a blank space between view's box
 //   and view's context box.
 //
 //   A view is responsible to handle its padding properly. As an AUI user, you wouldn't need to bother about that unless
-//   you are implementing custom @ref AView::render().
+//   you are implementing custom [AView]::render().
 //
-//   @ref ass::BackgroundSolid "BackgroundSolid" and similar @ref ass properties are fit into this box.
+//   [BackgroundSolid](ass::BackgroundSolid) and similar [ass] properties are fit into this box.
 //
-//   @ref ass::Border "Border" property outlines this box from the inner side, and never affects the layout; it's just a
+//   [Border](ass::Border) property outlines this box from the inner side, and never affects the layout; it's just a
 //   visual trait.
 //
 // - **View's margin**: the margin is the outermost layer, wrapping the content, padding, and border as whitespace between
-//   this box and other elements; control it using @ref ass::Margin.
+//   this box and other elements; control it using [ass]::Margin.
 //
 //   Layout manager of view's parent is responsible to handling margin properly. All
-//   @ref layout_managers "layout managers" tend to honor children margins; with an exception to @ref AWindow (it's
-//   margin has no effect) and @ref AAbsoluteLayout (positioning and sizing is defined manually). As an AUI user, you
+//   [layout managers](layout_managers) tend to honor children margins; with an exception to [AWindow] (it's
+//   margin has no effect) and [AAbsoluteLayout] (positioning and sizing is defined manually). As an AUI user, you
 //   wouldn't need to bother about that unless you are implementing custom layout manager.
 //
 
 TEST_F(UIAssSizingModel, AllBoxesAreIdential) {
     // In this example, the equally sized boxes are produced with `FixedSize`, `MinSize` and `MaxSize`, respectively.
     // `FixedSize` will always acquire the specified size, `MinSize` specifies the minimum size that can potentially
-    // grow further, and `MaxSize` restricts @ref EXPANDING "expanding" by specified size.
+    // grow further, and `MaxSize` restricts [expanding](EXPANDING) by specified size.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
     using namespace ass;

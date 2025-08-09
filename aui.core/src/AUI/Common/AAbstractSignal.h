@@ -34,7 +34,7 @@ class AObject;
  * the object does to communicate. It does not know or care whether anything is receiving the signals it emits. This is
  * true information encapsulation, and ensures that the object can be used as a software component.
  *
- * @ref emits "Signal declarations" are special public fields of any class that inherit from AObject.
+ * [Signal declarations](emits) are special public fields of any class that inherit from AObject.
  * @code{cpp}
  * class Counter: public AObject {
  * public:
@@ -139,12 +139,12 @@ class AObject;
  * @endcode
  *
  * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
- * @ref AUI_SLOT "AUI_SLOT" macro:
+ * [AUI_SLOT](AUI_SLOT) macro:
  * @code{cpp}
  * connect(mCounter->valueChanged, AUI_SLOT(this)::printCounter);
  * @endcode
  *
- * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with @ref me "me":
+ * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with [me](me):
  * @code{cpp}
  * connect(mCounter->valueChanged, me::printCounter);
  * @endcode
@@ -249,7 +249,7 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref AUI_LET "AUI_LET" syntax to set up connections:
+ * Let's make things more declarative and use [AUI_LET](AUI_LET) syntax to set up connections:
  * @code{cpp}
  * MyApp() {
  *   using namespace declarative;
@@ -266,7 +266,7 @@ class AObject;
  * }
  * @endcode
  *
- * See also @ref property_system for making reactive UI's on trivial data.
+ * See also [property_system] for making reactive UI's on trivial data.
  *
  * # Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:

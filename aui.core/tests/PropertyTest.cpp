@@ -62,7 +62,7 @@ TEST_F(PropertyTest, Declaration) {
         // AUI_DOCS_CODE_END
     }
 
-    // Non-const operators have @ref PropertyTest_Write_operators "side effects"; const operators don't, so you can
+    // Non-const operators have [side effects](PropertyTest_Write_operators); const operators don't, so you can
     // perform seamlessly:
     {
         LogObserver mock;
@@ -321,7 +321,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
 }
 
 // # Non-const operators {#PropertyTest_Write_operators}
-// Refer to @ref aui::PropertyModifier.
+// Refer to [aui]::PropertyModifier.
 
 TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1
     // Assuming you have an AVector wrapped with AProperty:

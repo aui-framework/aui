@@ -2,16 +2,16 @@
 
 @note
 This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
-@ref useful_macros.
+[useful_macros].
 
-# Writing platform dependent code
+## Writing platform dependent code
 
 AUI provides a set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in
 both CMake and C++.
 
-## Platform checks
+### Platform checks
 
-<table>
+<table markdown>
    <tr>
      <th>Platform</th>
      <th>C++</th>
@@ -19,194 +19,194 @@ both CMake and C++.
      <th>Platform specific dir(s)</th>
    </tr>
    <tr>
-     <td>
-       @ref windows
+     <td markdown>
+       [windows]
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_WIN
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_WIN)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/win32`<br/>
-       `src/platform/win32`
+     <td markdown>
+       src/Platform/win32
+       src/platform/win32
      </td>
    </tr>
 
    <tr>
-     <td>
-       @ref linux
+     <td markdown>
+       [linux]
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_LINUX
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_LINUX)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/linux`<br/>
-       `src/platform/linux`
+     <td markdown>
+       src/Platform/linux
+       src/platform/linux
      </td>
    </tr>
 
    <tr>
-     <td>
-       @ref macos
+     <td markdown>
+       [macos]
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_MACOS
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_MACOS)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/macos`<br/>
-       `src/platform/macos`
+     <td markdown>
+       src/Platform/macos
+       src/platform/macos
      </td>
    </tr>
 
    <tr>
-     <td>
-       @ref android
+     <td markdown>
+       [android]
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_ANDROID
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_ANDROID)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/android`<br/>
-       `src/platform/android`
+     <td markdown>
+       src/Platform/android
+       src/platform/android
      </td>
    </tr>
 
    <tr>
-     <td>
-       @ref ios <br/>(both iPhone and iPad)
+     <td markdown>
+       [ios] (both iPhone and iPad)
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_IOS
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_IOS)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/ios`<br/>
-       `src/platform/ios`
+     <td markdown>
+       src/Platform/ios
+       src/platform/ios
      </td>
    </tr>
 
    <tr>
-     <td>
-       Apple<br/>(@ref macos "macOS", @ref ios "iOS")
+     <td markdown>
+       Apple([macOS](macos), [iOS](ios))
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_APPLE
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_APPLE)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/apple`<br/>
-       `src/platform/apple`
+     <td markdown>
+       src/Platform/apple
+       src/platform/apple
      </td>
    </tr>
 
    <tr>
-     <td>
-       Unix<br/>(@ref linux "Linux", @ref android "Android", @ref macos "macOS", @ref ios "iOS")
+     <td markdown>
+       Unix([Linux](linux), [Android](android), [macOS](macos), [iOS](ios))
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_UNIX
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_UNIX)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/unix`<br/>
-       `src/platform/unix`
+     <td markdown>
+       src/Platform/unix
+       src/platform/unix
      </td>
    </tr>
 
    <tr>
-     <td>
-       @ref emscripten
+     <td markdown>
+       [emscripten]
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_PLATFORM_EMSCRIPTEN
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_PLATFORM_EMSCRIPTEN)
           # ...
         endif()
-       @endcode
+       ```
      </td>
-     <td>
-       `src/Platform/emscripten`<br/>
-       `src/platform/emscripten`
+     <td markdown>
+       src/Platform/emscripten
+       src/platform/emscripten
      </td>
    </tr>
 </table>
@@ -220,7 +220,7 @@ dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table a
 Both cases (Platform and platform) were added to honor projects with various directory naming agreements.
 
 
-## Compiler checks
+### Compiler checks
 
 <table>
    <tr>
@@ -229,87 +229,87 @@ Both cases (Platform and platform) were added to honor projects with various dir
      <th>CMake</th>
    </tr>
    <tr>
-     <td>
+     <td markdown>
        MSVC
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_COMPILER_MSVC
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_COMPILER_MSVC)
           # ...
         endif()
-       @endcode
+       ```
      </td>
    </tr>
 
    <tr>
-     <td>
+     <td markdown>
        GCC (including MinGW)
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_COMPILER_GCC
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_COMPILER_GCC)
           # ...
         endif()
-       @endcode
+       ```
      </td>
    </tr>
 
    <tr>
-     <td>
+     <td markdown>
        CLANG
      </td>
-     <td>
-       @code{cpp}
+     <td markdown>
+       ```cpp
         #if AUI_COMPILER_CLANG
           // ...
         #endif
-       @endcode
+       ```
      </td>
-     <td>
-       @code{cmake}
+     <td markdown>
+       ```cmake
         if(AUI_COMPILER_CLANG)
           # ...
         endif()
-       @endcode
+       ```
      </td>
    </tr>
 </table>
 
-# Other
+## Other
 
-## AUI_MODULE_NAME
+### AUI_MODULE_NAME
 
-Target name exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+Target name exposed by [aui_module]([docs]/aui_module.md) and [aui_executable]([docs]/aui_executable.md).
 
-## AUI_CMAKE_PROJECT_VERSION
+### AUI_CMAKE_PROJECT_VERSION
 
-`${CMAKE_PROJECT_VERSION}` exposed by [aui_module](@ref docs/aui_module.md) and [aui_executable](@ref docs/aui_executable.md).
+`${CMAKE_PROJECT_VERSION}` exposed by [aui_module]([docs]/aui_module.md) and [aui_executable]([docs]/aui_executable.md).
 
 `CMAKE_PROJECT_VERSION` is typically defined by [project](https://cmake.org/cmake/help/latest/command/project.html) 
 CMake command:
 
 @snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION
 
-## API_\<module name\>
+### API_\<module name\>
 
 \c dllexport (on Windows) or \c visibility (on other platforms) policy for the symbol.
 
-@code{cpp}
+```cpp
 class API_AUI_VIEWS AView ... { // defined in aui.views module
   ...
 };
-@endcode
+```

@@ -83,7 +83,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  *
- * @note If you are intended to reference this-> object, consider using @ref #me instead.
+ * @note If you are intended to reference this-> object, consider using []#me instead.
  */
 #define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
@@ -287,7 +287,7 @@ namespace aui::impl::slot {
 #define AUI_WITH_STYLE & ass::PropertyListRecursive
 
 /**
- * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
+ * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
  * AUI_THREADPOOL_X, does now allow to set lambda's capture. Lambda's capture is `[=]`.
  *
  * @ingroup useful_macros
@@ -330,7 +330,7 @@ namespace aui::impl::slot {
 
 
 /**
- * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
+ * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
  * AUI_THREADPOOL, allows to set lambda's capture but you should always specify lambda's capture.
  *
  * @ingroup useful_macros

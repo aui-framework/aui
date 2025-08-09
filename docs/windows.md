@@ -7,8 +7,8 @@ and tablets is Windows 11, while certain older versions are still supported and 
 
 ## Key considerations
 
-- You'll need to @ref PACKAGING_FOR_WINDOWS "make an installer and potentially a portable package" with
-  @ref updater "auto updating" to distribute your application despite Windows offers an "official" software repository
+- You'll need to [make an installer and potentially a portable package](PACKAGING_FOR_WINDOWS) with
+  [auto updating](updater) to distribute your application despite Windows offers an "official" software repository
 - Windows is the only system that is not Unix-like, despite it provides POSIX-compliant APIs
 - You might need to sign your executables, otherwise Windows would probably treat your application as a virus and make
   launching your executables a lot harder

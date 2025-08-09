@@ -28,7 +28,7 @@
  * ASpinner's default style is a circular arc constantly and smoothly rotating around. ASpinnerV2's default style is a
  * segmented circle which visually substains the "stepness" of the animation.
  *
- * ASpinnerV2 is configured through @ref ass :
+ * ASpinnerV2 is configured through [ass] :
  * @snippet aui.views/src/AUI/ASS/AStylesheet.cpp ASpinnerV2
  */
 class API_AUI_VIEWS ASpinnerV2: public AView {

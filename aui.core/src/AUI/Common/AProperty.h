@@ -24,7 +24,7 @@
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
- * See @ref property_system "property system" for usage examples.
+ * See [property system](property_system) for usage examples.
  */
 template <typename T>
 struct AProperty: AObjectBase {
@@ -109,8 +109,8 @@ struct AProperty: AObjectBase {
      * In common, you won't need to use this function. AProperty is reevaluated automatically as soon as one updates the
      * value within property.
      *
-     * If your scenario goes beyond @ref writeScope that explicitly defines modification scope within RAII scope, you
-     * can modify the underlying value by accessing `AProperty::raw` and then call @ref notify to notify the observers
+     * If your scenario goes beyond [writeScope] that explicitly defines modification scope within RAII scope, you
+     * can modify the underlying value by accessing `AProperty::raw` and then call [notify] to notify the observers
      * that value is changed.
      */
     void notify() {
@@ -143,7 +143,7 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a readonly [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
@@ -152,7 +152,7 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a bidirectional @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a bidirectional [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template<aui::invocable<const T&> ProjectionRead,
              aui::invocable<const std::invoke_result_t<ProjectionRead, T>&> ProjectionWrite>

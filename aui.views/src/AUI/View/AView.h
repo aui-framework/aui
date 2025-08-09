@@ -124,7 +124,7 @@ public:
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
      * @details
-     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
+     * It does affect expanding environment inside the container. See expanding [layout managers](layout_managers)
      * for more info.
      *
      * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
@@ -233,7 +233,7 @@ public:
     /**
      * @brief Marks this view it requires a layout update.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout_managers] for more info.
      */
     virtual void markMinContentSizeInvalid();
 
@@ -330,7 +330,7 @@ public:
     }
 
     /**
-     * @brief Returns the @ref AView::mMargin "margin".
+     * @brief Returns the [margin](AView::mMargin).
      * @return margin
      * @details
      * @copydetails AView::mMargin
@@ -343,7 +343,7 @@ public:
     }
 
     /**
-     * @brief Sets the @ref AView::mMargin "margin".
+     * @brief Sets the [margin](AView::mMargin).
      * @param margin margin
      * @details
      * @copydetails AView::mMargin
@@ -362,7 +362,7 @@ public:
     virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
-     * @brief Returns the @ref AView::mPadding "padding".
+     * @brief Returns the [padding](AView::mPadding).
      * @return padding
      */
     [[nodiscard]]
@@ -373,7 +373,7 @@ public:
     }
 
     /**
-     * @brief Sets the @ref AView::mPadding "padding".
+     * @brief Sets the [padding](AView::mPadding).
      * @param padding padding
      * @details
      * @copydetails AView::mPadding
@@ -583,7 +583,7 @@ public:
     /**
      * @brief Sets position and size of the view.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout_managers] for more info.
      */
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
@@ -1059,14 +1059,14 @@ protected:
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
      * @details
-     * See @ref "AUI Box Model".
+     * See ["AUI] Box Model".
      */
     ABoxFields mMargin;
 
     /**
      * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
      * @details
-     * See @ref "AUI Box Model".
+     * See ["AUI] Box Model".
      */
     ABoxFields mPadding;
 

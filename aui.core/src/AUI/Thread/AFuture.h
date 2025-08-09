@@ -446,7 +446,7 @@ namespace aui::impl::future {
          * When cancel() is called, there are 3 possible cases:
          * 1. AFuture's task is not taken by AThreadPool. The task is simply removed from the AThreadPool queue.
          * 2. AFuture's task is being executed. The task's thread is
-         * @ref AAbstractThread::interrupt() "requested for interrupt".
+         * [requested for interrupt](AAbstractThread::interrupt()).
          * 3. AFuture's task is already completed. cancel() does nothing.
          */
         void cancel() const noexcept {
@@ -549,7 +549,7 @@ namespace aui::impl::future {
  * @experimental
  * AFuture is used as a result for asynchronous functions.
  *
- * AFuture is returned by @ref AUI_THREADPOOL keyword, which is used to perform heavy operations in a background thread.
+ * AFuture is returned by [AUI_THREADPOOL] keyword, which is used to perform heavy operations in a background thread.
  *
  * @code{cpp}
  * AFuture<int> theFuture = AUI_THREADPOOL {
@@ -562,7 +562,7 @@ namespace aui::impl::future {
  *
  * If your operation consists of complex future sequences, you have multiple options:
  * 1. Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
- *    threadpool thread (including the one that runs @ref AUI_THREADPOOL 's body). If value is not currently available,
+ *    threadpool thread (including the one that runs [AUI_THREADPOOL] 's body). If value is not currently available,
  *    these methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
  *    @note Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
  *          acquiring operation.

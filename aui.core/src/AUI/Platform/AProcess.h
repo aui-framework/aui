@@ -81,7 +81,7 @@ public:
  * `AProcess::self()`).
  *
  * The AProcess class is typically used for creating, controlling, and monitoring subprocesses (including
- * @ref AProcess::self "self") in a platform-independent manner. It provides a way to run external applications from
+ * [self](AProcess::self)) in a platform-independent manner. It provides a way to run external applications from
  * within the application itself, which can be useful for tasks like running scripts, launching other programs, or
  * automating system operations through commands.
  */

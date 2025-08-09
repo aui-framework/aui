@@ -5,8 +5,8 @@ overall user experience. Approach to app icon briefly resembles the overall qual
 While making distinct visuals for every platform can be challenging, AUI is here to help you to produce
 professional-grade app icons while preserving targeted platform's specifics.
 
-@ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
-application, including @ref aui_app_ICON "ICON".
+[docs]/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
+application, including [ICON](aui_app_ICON).
 
 ```cmake
 aui_app(TARGET app_target

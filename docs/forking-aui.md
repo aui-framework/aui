@@ -13,7 +13,7 @@ You can fork AUI to whatever source hosting provider you want, but in general, i
 1. AUI's original infrastructure setup is on GitHub already. You'll benefit from complete build, docs gen and testing
    pipelines without asking your devops to support them on your behalf.
    
-   Additionally, you won't lose @ref PREBUILT_PACKAGES "AUI.Boot's precompiled binaries" feature by publishing your fork
+   Additionally, you won't lose [PREBUILT_PACKAGES] "AUI.Boot's precompiled binaries" feature by publishing your fork
    on GitHub and enabling GitHub Actions (AUI's license does not obligate you to publish byproducts, e.g., compiled
    binaries or documentation).
 2. As soon as you publish your project with modified version of AUI, you'll need to publish changes to AUI anyway

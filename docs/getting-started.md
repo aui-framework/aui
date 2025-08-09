@@ -19,7 +19,7 @@ Here's the example of a basic hello work application, which every AUI project st
 
 @note
 **You do not need to install AUI manually!** An AUI application build is easily reproducible thanks to CMake and
-@ref "docs/AUI Boot.md" magic done below in `CMakeLists.txt`.
+["docs]/AUI Boot.md" magic done below in `CMakeLists.txt`.
 
 `CMakeLists.txt`
 
@@ -176,8 +176,8 @@ The example above produces the following window:
 
 ![](imgs/Screenshot_20210408_024201.jpg)
 
-See @ref layout_managers "layout managers" for more info about layout managers.
+See [layout managers](layout_managers) for more info about layout managers.
 
-See @ref ass "ASS" for more info about styling.
+See [ASS](ass) for more info about styling.
 
-See @ref examples for examples.
+See [examples] for examples.

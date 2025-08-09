@@ -135,15 +135,15 @@ TEST(UpdaterTest, ApplyUpdate) {
 // your website).
 //
 // `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
-// priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
+// priveleges). If that's not your case, you'll need to update your [installer configuration](INNOSETUP) to install
 // to user's directory (i.e., in `AppData`).
 //
 // @note
-// Check out our @ref example_app_template for a GitHub-hosted app template with auto update implemented.
+// Check out our [example_app_template] for a GitHub-hosted app template with auto update implemented.
 //
 // # Supported platforms
 // `aui::updater` supports the following platforms:
-// - **Windows** - @ref PORTABLE_WINDOWS "portables" only, installers to user's directory only (@ref INNOSETUP)
+// - **Windows** - [portables](PORTABLE_WINDOWS) only, installers to user's directory only ([INNOSETUP])
 // - **Linux** - portables only
 //
 // On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
@@ -196,68 +196,68 @@ AUI_ENTRY {
 //
 // ## Checking for updates
 //
-// AUpdater expects @ref AUpdater::checkForUpdates to be called to check for updates. It can be called once per some
-// period of time. It calls user-defined @ref AUpdater::checkForUpdatesImpl to perform an update checking.
+// AUpdater expects [AUpdater]::checkForUpdates to be called to check for updates. It can be called once per some
+// period of time. It calls user-defined [AUpdater]::checkForUpdatesImpl to perform an update checking.
 //
 // The update steps are reported by changing `AUpdater::status` property.
 //
 // @msc
 // a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"];
-// a -> u [label = "handleStartup(...)", URL = "@ref AUpdater::handleStartup"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+// u[label = "AUpdater", URL = "[AUpdater"]];
+// a -> u [label = "handleStartup(...)", URL = "[AUpdater]::handleStartup"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "[AUpdater]::StatusIdle"];
 // a <- u [label = "control flow"];
 //
 // --- [label="App Normal Lifecycle"];
 // ...;
-// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
+// a -> u [label = "checkForUpdates()", URL = "[AUpdater]::checkForUpdates"];
+// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "[AUpdater]::StatusCheckingForUpdates"];
 // a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+// u box u [label = "checkForUpdatesImpl()", URL = "[AUpdater]::checkForUpdatesImpl"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "[AUpdater]::StatusIdle"];
 //
 // ...;
 // --- [label="Update published"];
 // ...;
-// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
+// a -> u [label = "checkForUpdates()", URL = "[AUpdater]::checkForUpdates"];
+// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "[AUpdater]::StatusCheckingForUpdates"];
 // a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
+// u box u [label = "checkForUpdatesImpl()", URL = "[AUpdater]::checkForUpdatesImpl"];
 // u box u [label = "update was found"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+// a <- u [label = "status = AUpdater::StatusIdle", URL = "[AUpdater]::StatusIdle"];
 // ...;
 // @endmsc
 //
 // You might want to store update check results (i.e., download url) in your implementation of
-// @ref AUpdater::checkForUpdatesImpl so your @ref AUpdater::downloadUpdateImpl might reuse this information.
+// [AUpdater]::checkForUpdatesImpl so your [AUpdater]::downloadUpdateImpl might reuse this information.
 //
 // ## Downloading the update
 //
-// When an update is found, your app should call @ref AUpdater::downloadUpdate to download and unpack the update. It is
-// up to you to decide when to download an update. If you wish, you can call @ref AUpdater::downloadUpdate in
-// @ref AUpdater::checkForUpdatesImpl to proceed to download process right after update was found (see
-// @ref UPDATER_WORKFLOWS for more information about update workflow decisions). It calls
-// user-defined @ref AUpdater::downloadUpdateImpl which might choose to call default
+// When an update is found, your app should call [AUpdater]::downloadUpdate to download and unpack the update. It is
+// up to you to decide when to download an update. If you wish, you can call [AUpdater]::downloadUpdate in
+// [AUpdater]::checkForUpdatesImpl to proceed to download process right after update was found (see
+// [UPDATER_WORKFLOWS] for more information about update workflow decisions). It calls
+// user-defined [AUpdater]::downloadUpdateImpl which might choose to call default
 // `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`.
 //
 // @msc
 // a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"];
+// u[label = "AUpdater", URL = "[AUpdater"]];
 // ...;
-// a -> u [label = "downloadUpdate()", URL = "@ref AUpdater::downloadUpdate"];
-// a <- u [label = "status = AUpdater::StatusDownloading", URL = "@ref AUpdater::StatusDownloading"];
-// u box u [label = "downloadUpdateImpl()", URL = "@ref AUpdater::downloadUpdateImpl"];
-// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "@ref AUpdater::StatusWaitingForApplyAndRestart"];
+// a -> u [label = "downloadUpdate()", URL = "[AUpdater]::downloadUpdate"];
+// a <- u [label = "status = AUpdater::StatusDownloading", URL = "[AUpdater]::StatusDownloading"];
+// u box u [label = "downloadUpdateImpl()", URL = "[AUpdater]::downloadUpdateImpl"];
+// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "[AUpdater]::StatusWaitingForApplyAndRestart"];
 // --- [label="Your App Prompts User to Update"];
 // ...;
 // @endmsc
 //
 // ## Applying (deploying) the update
 //
-// At this moment, AUpdater waits @ref AUpdater::applyUpdateAndRestart to be called. When
-// @ref AUpdater::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes the
+// At this moment, AUpdater waits [AUpdater]::applyUpdateAndRestart to be called. When
+// [AUpdater]::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes the
 // newer copy of your app downloaded before with a special command line argument which is handled by
-// @ref AUpdater::handleStartup in that executable. The initial app process is finished, closing your app window as
+// [AUpdater]::handleStartup in that executable. The initial app process is finished, closing your app window as
 // well. From now, your app is in "downtime" state, so we need to apply the update and reopen app back again as quickly
 // as possible. This action is required to perform update installation. The copy then replaces old application (where it
 // actually installed) with itself (that is, the downloaded, newer copy). After operation is complete, it passes the
@@ -266,21 +266,21 @@ AUI_ENTRY {
 //
 // @msc
 // a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"],
+// u[label = "AUpdater", URL = "[AUpdater"]],
 // da[label = "Newer Copy of Your App"],
-// du[label = "AUpdater in App Copy", URL = "@ref AUpdater"];
-// a :> u [label = "applyUpdateAndRestart()", URL = "@ref AUpdater::applyUpdateAndRestart"];
+// du[label = "AUpdater in App Copy", URL = "[AUpdater"]];
+// a :> u [label = "applyUpdateAndRestart()", URL = "[AUpdater]::applyUpdateAndRestart"];
 // u :> da [label = "Execute with update arg"];
 // u box u [label = "exit(0)"];
 // a box u [label = "Process Finished"];
 // da box du [label = "Process Started"];
-// da -> du [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
-// du box du [label = "AUpdater::deployUpdate(...)", URL = "@ref AUpdater::deployUpdate"];
+// da -> du [label = "handleStartup", URL = "[AUpdater]::handleStartup"];
+// du box du [label = "AUpdater::deployUpdate(...)", URL = "[AUpdater]::deployUpdate"];
 // a <: du [label = "Execute"];
 // du box du [label = "exit(0)"];
 // da box du [label = "Process Finished"];
 // a box u [label = "Process Started"];
-// a -> u [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
+// a -> u [label = "handleStartup", URL = "[AUpdater]::handleStartup"];
 // u box u [label = "cleanup download dir"];
 // a box u [label="App Normal Lifecycle"];
 // ...;
@@ -402,7 +402,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ## Prompt user on every step
 //
-// This approach is implemented in AUI's @ref example_app_template.
+// This approach is implemented in AUI's [example_app_template].
 //
 // The updater checks for updater periodically or upon user request and informs the user that an update is available.
 // The user then decides whether to proceed with update or not. If they agree the application will download and install
@@ -420,7 +420,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ## Silent download
 //
-// This approach is implemented in @ref example_app_auigram, as well as in official Qt-based Telegram Desktop client.
+// This approach is implemented in [example_app_auigram], as well as in official Qt-based Telegram Desktop client.
 //
 // The updater silently downloads the update in the background while the user continues working within the application
 // or even other tasks. The update then is applied automatically upon restart.

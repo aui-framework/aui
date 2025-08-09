@@ -126,7 +126,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
               .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // A static range like in the example above will not blow up the machine because AForEachUI is wrapped with a
-    // @ref AScrollArea, thus it is not required to evaluate the whole range, which is infinite in our case.
+    // [AScrollArea], thus it is not required to evaluate the whole range, which is infinite in our case.
     //
     // An attempt to update AForEachUI with a large range still can lead to high resource consumption, due to need of
     // recomposition.
@@ -144,10 +144,10 @@ TEST_F(UIDeclarativeForTest, Performance) {
 //
 // # Initialization {#AFOREACHUI_UPDATE}
 //
-// This section explains how to initialize @ref AUI_DECLARATIVE_FOR, manage lifetime of containers and how to make them
+// This section explains how to initialize [AUI_DECLARATIVE_FOR], manage lifetime of containers and how to make them
 // reactive.
 //
-// In @ref AUI_DECLARATIVE_FOR, a potentially @ref aui::react "reactive" expression evaluating to *range* and the lambda
+// In [AUI_DECLARATIVE_FOR], a potentially [reactive](aui::react) expression evaluating to *range* and the lambda
 // that creates a new views are both lambdas with capture default by value `[=]`. This means that:
 //
 // 1. All mentioned *local* variables are captured by copying.
@@ -194,7 +194,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
 
 TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
-    // It's a good idea to wrap AForEachUI with an @ref AScrollArea.
+    // It's a good idea to wrap AForEachUI with an [AScrollArea].
     // AUI_DOCS_CODE_BEGIN
     mWindow-> // HIDE
     setContents(Vertical {
@@ -270,7 +270,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
 
 TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
     // If your container lives inside your class, its value is not copied but referenced. To avoid unobserved iterator
-    // invalidation and content changes, @ref AUI_DECLARATIVE_FOR requires borrowed containers to be constant. There's a
+    // invalidation and content changes, [AUI_DECLARATIVE_FOR] requires borrowed containers to be constant. There's a
     // compile-time check to verify this requirement that does work in most cases, like this one.
     //
     // AUI_DOCS_CODE_BEGIN
@@ -302,23 +302,23 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
 
     //
     // Marking the borrowed container as const effectively saves you from unintended borrowed data changes. If you'd
-    // like to change the container or view options and @ref AUI_DECLARATIVE_FOR to respond to the changes, read the section
+    // like to change the container or view options and [AUI_DECLARATIVE_FOR] to respond to the changes, read the section
     // below.
 }
 
 TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
-    // The reason why @ref AUI_DECLARATIVE_FOR is so restrictive about using borrowed non-const data is because it stores
+    // The reason why [AUI_DECLARATIVE_FOR] is so restrictive about using borrowed non-const data is because it stores
     // *range*'s iterators under the hood. Various containers have different rules on iterator invalidation, but, since
     // it accepts any type of *range*, we consider using its iterators after a modifying access to the container or a
     // view as unsafe:
-    // - visual presentation by @ref AUI_DECLARATIVE_FOR might seem unresponsive to borrowed data changes,
+    // - visual presentation by [AUI_DECLARATIVE_FOR] might seem unresponsive to borrowed data changes,
     // - may lead to program crash.
     //
-    // To address this issue, we provide a convenient @ref property_system "way" to make iterator invalidation
+    // To address this issue, we provide a convenient [way](property_system) to make iterator invalidation
     // *observable*:
     //
     // - wrap the container with `AProperty`,
-    // - dereference `mColors` in @ref AUI_DECLARATIVE_FOR clause.
+    // - dereference `mColors` in [AUI_DECLARATIVE_FOR] clause.
     //
     // AUI_DOCS_CODE_BEGIN
     class MyWindow: public AWindow {

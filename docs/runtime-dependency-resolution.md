@@ -5,7 +5,7 @@ program modules such as `*.dll`, `*.so` or `*.dylib`.
 
 @note
 Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons, images,
-sounds and other resources consider using @ref assets to embed them right into your binary.
+sounds and other resources consider using [assets] to embed them right into your binary.
 
 ## Build-time shared library resolution
 
@@ -35,7 +35,7 @@ Windows runtime linking process is simple. The dll lookup is performed as follow
    "error code 0xc000007b").
 
 On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BINARY_DIR}/bin`
-directory alongside exe files by @ref "docs/AUI Boot.md".
+directory alongside exe files by ["docs]/AUI Boot.md".
 ```sh
 tree build/
 bin/aui_app.exe
@@ -47,11 +47,11 @@ bin/aui.views.dll
 ### Other platforms (UNIX-like only)
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
-installations (for compatibility reasons), hence @ref "docs/AUI Boot.md" copies imported shared objects to
+installations (for compatibility reasons), hence ["docs]/AUI Boot.md" copies imported shared objects to
 `${CMAKE_BINARY_DIR}/lib`.
 
-These libraries are picked up by targets defined via [aui_module](@ref docs/aui_module.md) and
-[aui_executable](@ref docs/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
+These libraries are picked up by targets defined via [aui_module]([docs]/aui_module.md) and
+[aui_executable]([docs]/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
 indicating where to find required shared libraries.
 
 @snippet cmake/aui.build.cmake _auib_apply_rpath
@@ -62,7 +62,7 @@ Boot allows usage of precompiled binaries, instead of paying extra cost determin
 locally or externally it just copies them to the build tree regardless of their origin.
 @note
 The hardcoded full path is suitable for the only machine where binary is built. CMake's
-@ref CMAKE_INSTALL "--install" command clears these paths, opting to use an universal RPATH to make these binaries
+[CMAKE_INSTALL] "--install" command clears these paths, opting to use an universal RPATH to make these binaries
 relocable. AUI.Boot populates RPATH on its own, see the section above.
 
 ## Install-time shared library resolution
@@ -70,10 +70,10 @@ relocable. AUI.Boot populates RPATH on its own, see the section above.
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
 way so the executables can actually find their dependencies. CPack and
-@ref "docs/Packaging Your App.md" "other deployment methods" use `cpack --install` so the behaviour is common.
+["docs]/Packaging Your App.md" "other deployment methods" use `cpack --install` so the behaviour is common.
 
-In addition to CMake's installation behaviour, targets defined with AUI's @ref docs/aui_executable.md and 
-@ref docs/aui_module.md implement an additional installation behaviour to copy all the required dependencies to
+In addition to CMake's installation behaviour, targets defined with AUI's [docs]/aui_executable.md and 
+[docs]/aui_module.md implement an additional installation behaviour to copy all the required dependencies to
 installation prefix.
 
 ```
@@ -110,7 +110,7 @@ bin/aui.views.dll
 ```
 
 @note
-On Windows, if @ref docs/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
+On Windows, if [docs]/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
 to installation root directory (common practice). From perspective of a user, extra directory hierarchy is redundant.
 ```sh
 tree install_prefix/
@@ -127,7 +127,7 @@ set_target_properties(your_app PROPERTIES AUI_INSTALL_RUNTIME_DIR "bin")
 
 ### Other platforms (UNIX-like only)
 
-@ref "docs/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
+["docs]/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
 
 - **ld** (Linux/Android): @snippet aui.boot.cmake RPATH linux
 - **dyld** (macOS/iOS): @snippet aui.boot.cmake RPATH apple
