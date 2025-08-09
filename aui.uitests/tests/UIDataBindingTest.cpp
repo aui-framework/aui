@@ -111,8 +111,8 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 // ties getter, setter and a signal reporting value changes. Property acts almost transparently, as if there's no
 // extra wrapper around your data. This allows to work with properties in the same way as with their underlying values.
 // You can read the intermediate value of a property and subscribe to its changes via a single
-// \c connect call. Also, when connecting property to property, it is possible to make them observe changes of each
-// other bia \c biConnect call:
+// `connect` call. Also, when connecting property to property, it is possible to make them observe changes of each
+// other bia `biConnect` call:
 TEST_F(UIDataBindingTest, TextField1) {
     // AUI_DOCS_CODE_BEGIN
     struct User {
@@ -194,7 +194,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 // a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
 // for such a simple operation.
 TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
-    // Use \c AUI_LET expression to connect the model's username property to the label's [ALabel]::text "text()"
+    // Use `AUI_LET` expression to connect the model's username property to the label's [ALabel]::text "text()"
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -524,7 +524,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 
 //
 // # UI declarative data binding {#UI_declarative_data_binding}
-// As said earlier, \c AUI_LET syntax is a little bit clunky and requires extra boilerplate code to set up.
+// As said earlier, `AUI_LET` syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
 // `AObject::connect`/`AObject::biConnect` (for ease of replacement/understanding).

@@ -306,7 +306,7 @@ CMake command:
 
 ### API_\<module name\>
 
-\c dllexport (on Windows) or \c visibility (on other platforms) policy for the symbol.
+`dllexport` (on Windows) or `visibility` (on other platforms) policy for the symbol.
 
 ```cpp
 class API_AUI_VIEWS AView ... { // defined in aui.views module

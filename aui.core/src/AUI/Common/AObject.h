@@ -109,11 +109,11 @@ public:
      * @brief Connects source property to the destination property.
      * @ingroup property_system
      * @details
-     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
-     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, dataflow is from left
+     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
+     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, dataflow is from left
      * argument to the right argument.
      *
-     * connect pulls AObject from \c propertyDestination to maintain the connection.
+     * connect pulls AObject from `propertyDestination` to maintain the connection.
      *
      * See [signal_slot] "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
@@ -132,17 +132,17 @@ public:
      * @brief Connects source property to the destination property and opposite (bidirectionally).
      * @ingroup property_system
      * @details
-     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
-     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
+     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
+     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, initial dataflow is
      * from left argument to the right argument.
      *
-     * After pre-fire, connects \c propertyDestination.changed to the setter of \c propertySource . This way, when
-     * \c propertyDestination changes (i.e, \c propertyDestination belongs to some view and it's value is changed due to
-     * user action) it immediately reflects on \c propertySource . So, \c propertySource is typically a property of some
+     * After pre-fire, connects `propertyDestination.changed` to the setter of `propertySource` . This way, when
+     * `propertyDestination` changes (i.e, `propertyDestination` belongs to some view and it's value is changed due to
+     * user action) it immediately reflects on `propertySource` . So, `propertySource` is typically a property of some
      * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
      * is unimportant at the moment of connection creation.
      *
-     * biConnect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
+     * biConnect pulls AObject from `propertySource` and `propertyDestination` to maintain the connection.
      *
      * See [signal_slot] "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
@@ -181,7 +181,7 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to slot of \c "this" object.
+     * @brief Connects signal or property to slot of `"this"` object.
      * @ingroup signal_slot
      * @details
      * See [signal_slot] "signal-slot system" for more info.
@@ -318,7 +318,7 @@ private:
 };
 
 /**
- * @brief emits the specified signal in context of \c this object.
+ * @brief emits the specified signal in context of `this` object.
  * @details
  * @ingroup signal_slot
  * Unlike Qt's emit, AUI's emit is not just a syntax sugar; it's required to actually perform a signal call.
