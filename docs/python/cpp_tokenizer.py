@@ -24,6 +24,8 @@ class Type(Enum):
     STRING = auto()
     COLON = auto()
     COLON2 = auto()
+    AMPERSAND1 = auto()
+    AMPERSAND2 = auto()
 
 
 
@@ -78,6 +80,13 @@ def tokenize(input: str):
                     yield make_token(Type.COLON2)
                     continue
                 yield make_token(Type.COLON)
+            elif peek() == '&':
+                take()
+                if peek() == '&':
+                    take()
+                    yield make_token(Type.AMPERSAND2)
+                    continue
+                yield make_token(Type.AMPERSAND1)
             elif peek() in "({[":
                 take()
                 yield make_token(Type.GENERIC_OPEN)

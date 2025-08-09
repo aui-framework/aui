@@ -53,31 +53,45 @@ def parse_doxygen(comment):
     output = [['', '']]
     iterator = iter(comment.split('\n'))
 
+    details_found = False
     for i in iterator:
-        if m := CPP_BRIEF_LINE.match(i):
-            section_name = m.group(1)
-            output.append([section_name, ''])
-            output[-1][1] += m.group(2)
-            continue
-        output[-1][1] += " " + i
+        if not details_found:
+            if m := CPP_BRIEF_LINE.match(i):
+                section_name = m.group(1)
+                output.append([section_name, ''])
+                output[-1][1] += m.group(2)
+                if section_name == '@details':
+                    details_found = True
+                continue
+        output[-1][1] += "\n" + i
     output = [i for i in filter(lambda x: x[1] != '', output)]
     for output_line in output:
         output_line[1] = output_line[1].strip()
 
     return output
 
+def _format_token_sequence(tokens: list[str]):
+    output = " ".join(tokens)
+    for i in [",", "&&", ">", "&", "*"]:
+        output = output.replace(f" {i} ", f"{i} ")
+    for i in "()<[]:":
+        output = output.replace(f"{i} ", i)
+        output = output.replace(f" {i}", i)
+    return output
+
 class CppFunction:
-    def __init__(self, name, return_type = None, doc = None, args = None, visibility = 'public', template_clause = None):
+    def __init__(self, name, return_type = None, doc = None, args = None, visibility = 'public', template_clause = None, modifiers_before = None):
         self.name = name
         self.return_type = return_type
         self.doc = doc
         self.args = args
         self.visibility = visibility
         self.template_clause = template_clause
+        self.modifiers_before = modifiers_before
 
 
     def tuple(self):
-        return self.name, self.return_type, self.doc, self.args
+        return self.name, self.return_type, self.doc
 
     def __eq__(self, other):
         return self.tuple() == other.tuple()
@@ -202,15 +216,16 @@ def _parse(input: str):
                         template_clause += _skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
                         continue
 
+                    modifiers_before = []
                     while True:
                         type_str = _parse_type()
-                        if type_str in ["explicit", "static", "virtual"]:
+                        if type_str in ["explicit", "static", "constexpr", "virtual"]:
+                            modifiers_before.append(type_str)
                             continue
                         break
                     if token[1] == '(':
                         # ctor
-                        clazz.methods.append(CppFunction(name=type_str, doc=_consume_comment(), visibility=visibility))
-                        args = _skip_special_clause()
+                        clazz.methods.append(CppFunction(name=type_str, doc=_consume_comment(), visibility=visibility, args=_skip_special_clause(), modifiers_before=modifiers_before))
                         continue
                     elif token[0] == cpp_tokenizer.Type.IDENTIFIER:
                         name = token[1]
@@ -219,9 +234,8 @@ def _parse(input: str):
                             clazz.fields.append((type_str, name, _consume_comment()))
                             continue
                         if token[1] == '(':
-                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment(), visibility=visibility, template_clause=template_clause))
+                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=_consume_comment(), visibility=visibility, template_clause=template_clause, args=_skip_special_clause(), modifiers_before=modifiers_before))
                             template_clause = None
-                            _skip_special_clause()
                             token = next(iterator)
                     while True:
                         if token[1] == ';':
@@ -329,11 +343,14 @@ def gen_pages():
                                     print('---', file=fos)
                                     print(f'```cpp', file=fos)
                                     if overload.template_clause:
-                                        print(" ".join([i[1] for i in overload.template_clause]), file=fos)
+                                        print(_format_token_sequence([i[1] for i in overload.template_clause]), file=fos)
+
+                                    if overload.modifiers_before:
+                                        print(_format_token_sequence(overload.modifiers_before), end=' ', file=fos)
 
                                     if overload.return_type: # not a constructor
                                         print(f'{overload.return_type} ', end='', file=fos)
-                                    print(f'{class_name}::{overload.name}({overload.args})', end='', file=fos)
+                                    print(f'{class_name}::{overload.name}{_format_token_sequence([ i[1] for i in overload.args])}', end='', file=fos)
                                     print('', file=fos)
                                     print(f'```', file=fos)
                                     print(f'', file=fos)
@@ -746,24 +763,24 @@ def test_parse_aobject():
         # print(i, ',')
 
     assert [str(i) for i in clazz.methods] == [
-        "CppFunction('AObject', None, None, None)",
-        "CppFunction('AObject', '~', None, None)",
-        "CppFunction('disconnect', 'void', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'void', None, None)",
-        "CppFunction('biConnect', 'void', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'decltype(auto)', None, None)",
-        "CppFunction('connect', 'void', None, None)",
-        "CppFunction('setSignalsEnabled', 'void', None, None)",
-        "CppFunction('isSignalsEnabled', 'bool', None, None)",
-        "CppFunction('getThread', 'const _<AAbstractThread>&', None, None)",
-        "CppFunction('isSlotsCallsOnlyOnMyThread', 'bool', None, None)",
-        "CppFunction('moveToThread', 'void', None, None)",
-        "CppFunction('setSlotsCallsOnlyOnMyThread', 'void', None, None)",
-        "CppFunction('setThread', 'void', None, None)",
-        "CppFunction('isDisconnected', 'bool&', None, None)",
+        "CppFunction('AObject', None, None)",
+        "CppFunction('AObject', '~', None)",
+        "CppFunction('disconnect', 'void', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'void', None)",
+        "CppFunction('biConnect', 'void', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'decltype(auto)', None)",
+        "CppFunction('connect', 'void', None)",
+        "CppFunction('setSignalsEnabled', 'void', None)",
+        "CppFunction('isSignalsEnabled', 'bool', None)",
+        "CppFunction('getThread', 'const _<AAbstractThread>&', None)",
+        "CppFunction('isSlotsCallsOnlyOnMyThread', 'bool', None)",
+        "CppFunction('moveToThread', 'void', None)",
+        "CppFunction('setSlotsCallsOnlyOnMyThread', 'void', None)",
+        "CppFunction('setThread', 'void', None)",
+        "CppFunction('isDisconnected', 'bool&', None)",
     ]
