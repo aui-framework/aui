@@ -304,7 +304,7 @@ Target name exposed by [aui_module]([docs]/aui_module.md) and [aui_executable]([
 `CMAKE_PROJECT_VERSION` is typically defined by [project](https://cmake.org/cmake/help/latest/command/project.html) 
 CMake command:
 
-@snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION
+<!-- aui:snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION -->
 
 ### API_\<module name\>
 

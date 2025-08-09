@@ -43,6 +43,8 @@ def on_page_markdown(
             return _badge_for_icon(args)
         if type == "include":
             return _include(args)
+        if type == "snippet":
+            return _snippet(args)
 
         # Otherwise, raise an error
         raise RuntimeError(f"Unknown shortcode: {type} in {page}")
@@ -101,6 +103,38 @@ def _include(args: str):
     return f"""
 ```{common.determine_extension(file_path)} linenums="1"{args.group(2)}
 {Path(file_path).read_text()}
+```
+"""
+
+
+def _snippet(args: str):
+    args = re.match(r"(\S+) (\S+)(.*)", args)
+    file_path = Path(args.group(1))
+    section_name = Path(args.group(2))
+
+    def find_section():
+        iterator = iter(Path(file_path).read_text().split('\n'))
+        for i in iterator:
+            if f"[{section_name}]" in i:
+                break
+        for i in iterator:
+            if f"[{section_name}]" in i:
+                break
+            yield i
+    section = [i for i in find_section()]
+    if not section:
+        log.warning(f"Can't find section '{section_name}' in {file_path}")
+        section = f"/* can't find section: {args} */"
+
+    identation = 9999
+    for i in section:
+        identation = min(identation, len(i) - len(i.lstrip()))
+
+    section = "\n".join([i[identation:] for i in section])
+
+    return f"""
+```{common.determine_extension(file_path)} linenums="1"{args.group(3)}
+{section}
 ```
 """
 

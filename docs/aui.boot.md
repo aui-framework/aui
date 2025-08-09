@@ -58,7 +58,7 @@ This way AUI Boot will never try to use precompiled binaries and will try to bui
 No matter using precompiled binaries or building them locally, it's convenient to cache [AUIB_CACHE] in
 your CIs:
 
-@snippet .github/workflows/build.yml cache example
+<!-- aui:snippet .github/workflows/build.yml cache_example -->
 
 This snippet is based on [GitHub's cache action example](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/caching-dependencies-to-speed-up-workflows#example-using-the-cache-action).
 
@@ -243,7 +243,7 @@ file(
     ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 ```
-@snippet aui.core/CMakeLists.txt auib_import examples
+<!-- aui:snippet aui.core/CMakeLists.txt auib_import_examples -->
 ```cmake
 target_link_libraries(YOUR_APP PUBLIC fmt::fmt-header-only range-v3::range-v3)
 ```
@@ -570,7 +570,7 @@ AUI distributions [published on our GitHub releases page](https://github.com/aui
 
 CMake-driven projects produce package configuration with [configure_file](https://cmake.org/cmake/help/latest/command/configure_file.html):
 
-@snippet CMakeLists.txt configure file example
+<!-- aui:snippet CMakeLists.txt configure_file_example -->
 
 Inside of `aui-config.cmake.in`, there's a line:
 ```cmake
@@ -584,11 +584,11 @@ As was mentioned, AUI Boot requires specially formatted (precompiled) package na
 can call `auib_precompiled_binary` inside of your root `CMakeLists.txt` which configures `cpack` to produce `tar.gz`
 with properly formatted name.
 
-@snippet CMakeLists.txt auib_precompiled_binary
+<!-- aui:snippet CMakeLists.txt auib_precompiled_binary -->
 
 At last, use `cpack` to produce a package.
 
-@snippet .github/workflows/build.yml cpack
+<!-- aui:snippet .github/workflows/build.yml cpack -->
 
 ## Importing AUI without AUI Boot
 
@@ -637,7 +637,7 @@ changes in this information, it produces a new `<BUILD_SPECIFIER>` because it re
 
 Here's how exactly it is computed:
 
-@snippet aui.boot.cmake BUILD_SPECIFIER
+<!-- aui:snippet aui.boot.cmake BUILD_SPECIFIER -->
 
 ### ~/.aui/repo
 

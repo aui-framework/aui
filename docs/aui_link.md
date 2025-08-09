@@ -5,7 +5,7 @@ rules (see below)
 
 ## Syntax
 
-@snippet examples/ui/views/CMakeLists.txt aui_link
+<!-- aui:snippet examples/ui/views/CMakeLists.txt aui_link -->
 
 ```cmake
 aui_link(<target>

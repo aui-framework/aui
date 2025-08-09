@@ -203,7 +203,7 @@ jobs:
           submodules: true
 
       # Cache AUI boot directory/build
-      # [cache example]
+      # [cache_example]
       - name: Cache AUI.BOOT deps
         id: cache-aui-boot
         uses: actions/cache@v3
@@ -218,7 +218,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      # [cache example]
+      # [cache_example]
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'

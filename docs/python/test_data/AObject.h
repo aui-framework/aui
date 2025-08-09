@@ -56,7 +56,7 @@ public:
      *
      * Use this in combination with lambda.
      *
-     * @snippet aui.core/tests/SignalSlotTest.cpp GENERIC_OBSERVER
+     * <!-- aui:snippet aui.core/tests/SignalSlotTest.cpp GENERIC_OBSERVER -->
      */
     static constexpr AObjectBase* GENERIC_OBSERVER = nullptr;
 

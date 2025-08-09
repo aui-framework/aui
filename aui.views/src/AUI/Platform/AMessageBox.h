@@ -29,7 +29,7 @@ class AWindow;
  * should be used only in emergency situations, when your application literally can't operate until it recevies a
  * response from the user. Use non-blocking, contextual and structured feedback where possible.
  *
- * @snippet examples/ui/views/src/ExampleWindow.cpp AMessageBox
+ * <!-- aui:snippet examples/ui/views/src/ExampleWindow.cpp AMessageBox -->
  *
  * @specificto{windows}
  * Implemented with [MessageBox].

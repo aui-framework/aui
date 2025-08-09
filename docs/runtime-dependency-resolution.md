@@ -55,7 +55,7 @@ These libraries are picked up by targets defined via [aui_module]([docs]/aui_mod
 [aui_executable]([docs]/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
 indicating where to find required shared libraries.
 
-@snippet cmake/aui.build.cmake _auib_apply_rpath
+<!-- aui:snippet cmake/aui.build.cmake _auib_apply_rpath -->
 
 Additionally, RPATH is populated by compiler with hardcoded absolute paths to the dependencies hence shared object
 copying might seem redundant when the entire project with all its dependencies are built on the same machine. Since AUI
@@ -132,8 +132,8 @@ bin/aui.views.dll
 
 ["docs]/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
 
-- **ld** (Linux/Android): @snippet aui.boot.cmake RPATH linux
-- **dyld** (macOS/iOS): @snippet aui.boot.cmake RPATH apple
+- **ld** (Linux/Android): <!-- aui:snippet aui.boot.cmake rpath_linux -->
+- **dyld** (macOS/iOS): <!-- aui:snippet aui.boot.cmake rpath_apple -->
 
 Typical Linux app installation consists of `bin/` directory where the executables are located and `lib/` directory
 for shared libraries (*.so). The `lib/` directory should contain all shared libraries required by the executable.

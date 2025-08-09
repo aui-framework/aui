@@ -125,7 +125,7 @@ Use concepts instead of SFINAE were possible.
 With `static_assert` with potentially helpful message, use `====================>` prefix in your message to raise your
 message among a long list of compiler diagnostics.
 
-@snippet aui.core/src/AUI/Reflect/AClass.h ARROW_ERROR_MESSAGE_EXAMPLE
+<!-- aui:snippet aui.core/src/AUI/Reflect/AClass.h ARROW_ERROR_MESSAGE_EXAMPLE -->
 
 ### Single line comment error messages
 
@@ -230,7 +230,7 @@ reordering, git diffs, etc..., but also `.clang-format` makes proper formatting 
 In some scenarios clang-format may fight against you, especially with complicated syntax. You can use
 `// clang-format off` and `// clang-format on` to disable and enable clang-format, respectively.
 
-@snippet aui.json/tests/JsonFieldsTest.cpp clang format toggle
+<!-- aui:snippet aui.json/tests/JsonFieldsTest.cpp clang_format_toggle -->
 
 ### AUI's .clang-format
 

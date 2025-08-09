@@ -159,7 +159,7 @@ TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
 // constructor are explicitly deleted** to avoid potential object lifetime errors created by the lambda capture and
 // prevent non-intuitive behaviour.
 //
-// @snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed User
+// <!-- aui:snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed --> User
 //
 // If copy construction of `APropertyPrecomputed` were possible, consider the following code:
 // ```cpp

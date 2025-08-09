@@ -32,7 +32,7 @@ namespace aui::reflect {
  * - It must have no virtual functions (i.e., it's not polymorphic).
  * - It must be an aggregate type (i.e., must have no user defined constructors).
  *
- * @snippet aui.core/tests/ReflectTest.cpp for_each_field_value
+ * <!-- aui:snippet aui.core/tests/ReflectTest.cpp for_each_field_value -->
  */
 template<class Clazz, typename F>
 constexpr void for_each_field_value(Clazz&& clazz, F&& callback) {

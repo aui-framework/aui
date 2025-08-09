@@ -48,12 +48,12 @@ struct dyn_range_capabilities {
  * `aui::any_view` initialized with an lvalue reference will contain a reference to the container; thus the container
  * can be modified.
  *
- * @snippet aui.core/tests/IteratorsTest.cpp DynRange4
+ * <!-- aui:snippet aui.core/tests/IteratorsTest.cpp DynRange4 -->
  *
  * `aui::any_view` initialized with an rvalue reference will move the container into itself; thus it acquires
  * ownership.
  *
- * @snippet aui.core/tests/IteratorsTest.cpp DynRange5
+ * <!-- aui:snippet aui.core/tests/IteratorsTest.cpp DynRange5 -->
  *
  * Using `aui::any_view::iterator` acquired before modification of the referenced container may lead to undefined
  * behaviour; it all depends on the referenced container.

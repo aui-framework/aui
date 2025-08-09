@@ -59,7 +59,7 @@ struct API_AUI_VIEWS APlatformAbstractionOptions {
      * a successful API initialization is found.
      *
      * By default, this field is initialized as such:
-     * @snippet aui.views/src/AUI/Platform/linux/APlatformAbstractionOptions.cpp APlatformAbstractionOptions::defaultInitializationOrder
+     * <!-- aui:snippet aui.views/src/AUI/Platform/linux/APlatformAbstractionOptions.cpp APlatformAbstractionOptions::defaultInitializationOrder -->
      */
     AVector<InitializationVariant> initializationOrder = defaultInitializationOrder();
 

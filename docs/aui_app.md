@@ -28,7 +28,7 @@ For more info about packaging methods, see ["docs]/Packaging Your App.md".
 
 ## Syntax
 
-@snippet examples/ui/views/CMakeLists.txt aui_app
+<!-- aui:snippet examples/ui/views/CMakeLists.txt aui_app -->
 
 ```cmake
 aui_app(
