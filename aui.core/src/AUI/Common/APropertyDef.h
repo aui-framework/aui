@@ -37,7 +37,7 @@ struct APropertyDef {
      * @details
      * The setter implementation typically emits `changed` signal. If it is, it must emit changes only if value is
      * actually changed.
-     * @code{cpp}
+     * ```cpp
      * void setValue(int value) {
      *   if (mValue == value) {
      *     return;
@@ -45,7 +45,7 @@ struct APropertyDef {
      *   mValue = value;
      *   emit mValueChanged(valueChanged);
      * }
-     * @endcode
+     * ```
      */
     Setter set;
     using GetterReturnT = decltype(std::invoke(get, base));

@@ -33,7 +33,7 @@ namespace aui {
      *   </tr>
      *   <tr>
      *     <td>
-     *       @code{cpp}
+     *       ```cpp
      *       template<typename Arg, typename... Args> void helperFunc(Arg&& arg, Args&&... args) {
      *          // do something with arg
      *          std::cout << std::forward<Arg>(arg) << std::endl;
@@ -45,17 +45,17 @@ namespace aui {
      *       template<typename... Args> void yourFunc(Args&&... args) {
      *           helperFunc(std::forward<Args>(args)...);
      *       }
-     *       @endcode
+     *       ```
      *     </td>
      *     <td>
-     *       @code{cpp}
+     *       ```cpp
      *       template<typename... Args> void yourFunc(Args&&... args) {
      *           aui::parameter_pack::for_each([](auto&& i) {
      *               // do something with arg
      *               std::cout << i << " ";
      *           }, std::forward<Args>(args)...);
      *       }
-     *       @endcode
+     *       ```
      *     </td>
      *   </tr>
      * </table>
@@ -82,13 +82,13 @@ namespace aui {
          * @brief Visit types (not values) of the tuple, passing each element as single template arguments.
          * @details
          * This helper is especially useful with `aui::reflect::member<>::args` trait:
-         * @code{cpp}
+         * ```cpp
          * void MyClazz::myMethod(int arg1, std::string arg2);
          * aui::tuple_visitor<aui::reflect::member<&MyClazz::myMethod>::args>::for_each_single([]<typename T>() {
          *   cout << AClass<T>::name() << " ";
          * });
          * // -> outputs int, std::string
-         * @endcode
+         * ```
          */
         template<typename Callable>
         static void for_each_single(Callable&& c) {
@@ -99,13 +99,13 @@ namespace aui {
          * @brief Visit types (not values) of the tuple, passing each element as template arguments.
          * @details
          * This helper is especially useful with `aui::reflect::member<>::args` trait:
-         * @code{cpp}
+         * ```cpp
          * void MyClazz::myMethod(int arg1, std::string arg2);
          * aui::tuple_visitor<aui::reflect::member<&MyClazz::myMethod>::args>::for_each_all([]<typename... T>() {
          *   cout << (... << (AClass<T>::name() << " "));
          * });
          * // -> outputs int, std::string
-         * @endcode
+         * ```
          */
         template<typename Callable>
         static auto for_each_all(Callable&& c) {
@@ -117,12 +117,12 @@ namespace aui {
          * Unlike for_each_single, produces tuple from callback's return value, respecting argument order.
          * @details
          * This helper is especially useful with `aui::reflect::member<>::args` trait:
-         * @code{cpp}
+         * ```cpp
          * void MyClazz::myMethod(int arg1, std::string arg2);
          * aui::tuple_visitor<aui::reflect::member<&MyClazz::myMethod>::args>::for_each_make_tuple([]<typename T>() {
          *   return readValue<T>();
          * }); // -> std::tuple<int, std::string>
-         * @endcode
+         * ```
          */
         template<typename Callable>
         static auto for_each_make_tuple(Callable&& c) {

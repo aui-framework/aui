@@ -29,13 +29,13 @@
  * only and for `Vertical` layout it consumes vertical space only.
  *
  * Example usage:
- * @code{cpp}
+ * ```cpp
  * Horizontal {
  *   Label { "Hello" },
  *   SpacerFixed(100_dp),
  *   Label { "world" },
  * }
- * @endcode
+ * ```
  * In this case, SpacerFixed occupies `100_dp` in horizontal but nothing in vertical.
  */
 class API_AUI_VIEWS ASpacerFixed : public AView {

@@ -73,12 +73,12 @@ namespace ass {
      * `ass::class_of`.
      *
      * For example:
-     * @code{cpp}
+     * ```cpp
      * {
      *   c(".btn"),
      *   BackgroundSolid(...),
      * }
-     * @endcode
+     * ```
      * This will select all views that belong to ".btn" ASS class.
      */
     using c = class_of;

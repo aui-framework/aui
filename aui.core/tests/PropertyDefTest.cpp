@@ -103,9 +103,9 @@ TEST_F(PropertyDefTest, Declaration) {
         // @note
         // In order to honor getters/setters, `APropertyDef` calls getter/setter instead of using `+=` on your property
         // directly. Equivalent code will be:
-        // @code{cpp}
+        // ```cpp
         // u.setName(u.getName() + " world!")
-        // @endcode
+        // ```
         //
     }
 
@@ -153,9 +153,9 @@ TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H1
         u->name() = "Marinette";
         // AUI_DOCS_CODE_END
         // Code produces the following output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
     }
     {
         testing::InSequence s;
@@ -171,23 +171,23 @@ TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H1
         AObject::connect(u->name(), AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
+        // ```
         //
         // Subsequent changes to field would send updates as well:
         // AUI_DOCS_CODE_BEGIN
         u->name() = "Marinette";
         // AUI_DOCS_CODE_END
         // Assignment operation above makes an additional line to output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
         //
         // Whole program output when connecting to property directly:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
     }
 }

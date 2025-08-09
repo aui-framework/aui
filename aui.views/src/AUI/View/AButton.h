@@ -88,36 +88,36 @@ struct Button : aui::ui_building::view_container_layout<AStackedLayout, AButtonE
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     Button(AString text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { std::move(text) } }) {}
 
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     Button(const char* text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { text } }) {}
 
     /**
      * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button {
      *   Icon { ":img/cart.svg" },
      *   Label { "Cart" },
      * }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     template <typename... Views>
     Button(Views&&... views)

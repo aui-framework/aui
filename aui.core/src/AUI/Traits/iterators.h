@@ -139,13 +139,13 @@ namespace aui {
      * @brief Iterates multiple containers in parallel.
      * @ingroup useful_templates
      * @details
-     * @code{cpp}
+     * ```cpp
      * std::array<int, 3> ints = { 1, 2, 3 };
      * std::array<std::string, 3> strings = { "one", "two", "three" };
      * for (auto&[i, s] : aui::zip(ints, strings)) {
      *     std::cout << i << ", " << s << std::endl;
      * }
-     * @endcode
+     * ```
      * <pre>
      * 1, one<br />
      * 2, two<br />

@@ -45,7 +45,7 @@ namespace aui {
      * @ingroup useful_templates
      * @details
      * Example:
-     * @code{cpp}
+     * ```cpp
      * struct GameObject {
      * public:
      *   void setPos(glm::vec3);
@@ -53,7 +53,7 @@ namespace aui {
      * };
      * ...
      * auto setPosVec2 = aui::select_overload<glm::vec2>(&GameObject::setPos);
-     * @endcode
+     * ```
      */
     template<typename... Args>
     constexpr impl::select_overload<Args...> select_overload = {};

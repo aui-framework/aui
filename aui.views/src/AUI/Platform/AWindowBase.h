@@ -216,7 +216,7 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      * @details
-     * @code{cpp}
+     * ```cpp
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
@@ -226,12 +226,12 @@ public:
      * });
      *
      * surfaceContainer->pack();
-     * @endcode
+     * ```
      *
      * To create overlapping surface below some `view`, use AView::getPositionInWindow:
-     * @code{cpp}
+     * ```cpp
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
-     * @endcode
+     * ```
      */
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,

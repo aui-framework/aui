@@ -89,12 +89,12 @@ private:
  * @details
  * In addition to default variant functions (std::get, std::get_if, std::visit), you can also use the following
  * expressions:
- * @code{cpp}
+ * ```cpp
  * bool isRoot = vertex == ATreeModelIndex::ROOT;
  * if (!isRoot) {
  *   ATreeModelIndex = *vertex;
  * }
- * @endcode
+ * ```
  */
 using ATreeModelIndexOrRoot = std::variant<ATreeModelIndex, decltype(ATreeModelIndex::ROOT)>;
 

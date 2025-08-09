@@ -27,7 +27,7 @@
  *
  * Note that the callback will be called even if onSuccess is not.
  *
- * @code{cpp}
+ * ```cpp
  * auto marker = ASharedRaiiHelper::make([] {
  *     // will be called when all futures called onSuccess or destroyed
  * });
@@ -42,7 +42,7 @@
  * // keep the future alive in AUI_THREADPOOL holder
  * mAsyncHolder << future;
  *
- * @endcode
+ * ```
  */
 class ASharedRaiiHelper {
 public:

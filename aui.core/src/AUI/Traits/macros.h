@@ -24,7 +24,7 @@
  * The macro should be called in any function/method which is not being optimized out (i.e. in destructor).
  *
  * Basic usage:
- * @code{cpp}
+ * ```cpp
  * struct SomeClass {
  * public:
  *   ~SomeClass() {
@@ -35,7 +35,7 @@
  *     ...
  *   }
  * }
- * @endcode
+ * ```
  */
 #define AUI_NO_OPTIMIZE_OUT(object) { auto unused = &object ; }
 

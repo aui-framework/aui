@@ -25,7 +25,7 @@
  *
  * Vertical layout manager places views in a column, fitting their width to the container's height.
  * Has a `Vertical` shortcut that allows easy usage in UI building:
- * @code{cpp}
+ * ```cpp
  * setContents(
  *   Vertical {
  *     _new<AButton>("1"),
@@ -33,7 +33,7 @@
  *     _new<AButton>("3"),
  *   }
  * );
- * @endcode
+ * ```
  *
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">

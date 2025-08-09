@@ -35,7 +35,7 @@ class AObject;
  * true information encapsulation, and ensures that the object can be used as a software component.
  *
  * [Signal declarations](emits) are special public fields of any class that inherit from AObject.
- * @code{cpp}
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -51,14 +51,14 @@ class AObject;
  * private:
  *   int mValue = 0;
  * };
- * @endcode
+ * ```
  *
  * They can specify arguments:
- * @code{cpp}
+ * ```cpp
  * emits<int> valueChanged;
  * ...
  * emit valueChanged(mValue);
- * @endcode
+ * ```
  *
  * Any member function of a class can be used as a slot.
  *
@@ -97,7 +97,7 @@ class AObject;
  *
  * # Basic example
  * Let's use \c Counter from our previous example:
- * @code{cpp}
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -136,68 +136,68 @@ class AObject;
  *   app->run();
  *   return 0;
  * }
- * @endcode
+ * ```
  *
  * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
  * [AUI_SLOT](AUI_SLOT) macro:
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, AUI_SLOT(this)::printCounter);
- * @endcode
+ * ```
  *
  * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with [me](me):
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, me::printCounter);
- * @endcode
+ * ```
  *
  * Lambda can be used as a slot either:
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, this, [](int value) {
  *   ALogger::info("MyApp") << value;
  * });
- * @endcode
+ * ```
  *
  * As with methods, `this` can be omitted:
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, [](int value) {
  *   ALogger::info("MyApp") << value;
  * });
- * @endcode
+ * ```
  *
  *
  * # UI example
  * Knowing basics of signal slots, you can now utilize UI signals:
- * @code{cpp}
+ * ```cpp
  * mOkButton = _new<AButton>("OK");
  * ...
  * connect(mOkButton->clicked, [] { // the signal is connected to "this" object
  *     ALogger::info("Example") << "The button was clicked";
  * });
- * @endcode
+ * ```
  *
  * @note
  * In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
  * a memory leak:
- * @code
+ * ```
  * mOkButton = _new<AButton>("OK");
  * ...
  * connect(mOkButton->clicked, [view] { // WRONG!!!
  *     view->setText("clicked");
  * });
- * @endcode
+ * ```
  * Do this way:
- * @code
+ * ```
  * mOkButton = _new<AButton>("OK");
  * ...
  * connect(mOkButton->clicked, [view = view.get()] { // ok
  *     view->setText("clicked");
  * });
- * @endcode
+ * ```
  *
  * ## Going further
  * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects
  * have small handy functions, so lets add `increase` method to our counter:
  *
- * @code{cpp}
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -245,12 +245,12 @@ class AObject;
  *   app->show();
  *   return 0;
  * }
- * @endcode
+ * ```
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
  * Let's make things more declarative and use [AUI_LET](AUI_LET) syntax to set up connections:
- * @code{cpp}
+ * ```cpp
  * MyApp() {
  *   using namespace declarative;
  *   setContents(Vertical {
@@ -264,29 +264,29 @@ class AObject;
  *     },
  *   });
  * }
- * @endcode
+ * ```
  *
  * See also [property_system] for making reactive UI's on trivial data.
  *
  * # Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:
- * @code{cpp}
+ * ```cpp
  * view = _new<ATextField>();
  * ...
  * connect(view->keyPressed, [](AInput::Key k) { // the signal is connected to "this" object
  *     ALogger::info("Example") << "Key was pressed: " << k;
  * });
- * @endcode
+ * ```
  *
  * The signals and slots mechanism is type safe: The signature of a signal must match the signature of the receiving
  * slot. Also, a slot may have a shorter signature than the signal it receives because it can ignore extra arguments:
- * @code{cpp}
+ * ```cpp
  * view = _new<ATextField>();
  * ...
  * connect(view->keyPressed, [] { // the signal is connected to "this" object
  *     ALogger::info("Example") << "Key was pressed";
  * });
- * @endcode
+ * ```
  *
  * # Differences between Qt and AUI implementation
  * Suppose we want to emit <code>statusChanged</code> signal with a string argument and connect it with
@@ -300,56 +300,56 @@ class AObject;
  *   <tr>
  *     <td>Signal declaration</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     signals:
  *       void statusChanged(QString str);
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     signals:
  *       emits<AString> statusChanged;
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Slot declaration</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     slots:
  *       void showMessage(QString str);
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       void showMessage(AString str);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Connect from <code>this</code> to <code>this</code></td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     connect(this, SIGNAL(statusChanged(QString), this, SLOT(showMessage(QString)));
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       connect(statusChanged, me::showMessage);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Connect from the <code>emitter</code> object to the <code>sender</code> object</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *      QObject::connect(emitter, SIGNAL(statusChanged(QString), receiver, SLOT(showMessage(QString)));
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       AObject::connect(emitter->statusChanged, AUI_SLOT(receiver)::showMessage);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  * </table>

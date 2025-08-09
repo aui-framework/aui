@@ -162,11 +162,11 @@ TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
 // @snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed User
 //
 // If copy construction of `APropertyPrecomputed` were possible, consider the following code:
-// @code{cpp}
+// ```cpp
 // User user { .name = "Hello" };
 // auto copy = user;             // WON'T COMPILE
 // auto moved = std::move(user); // WON'T COMPILE
-// @endcode
+// ```
 // `copy` has copied factory function of `user`, which refers to fields of `user`, not to `copy`'s fields. Copy
 // construction of a class or struct discards default values of all fields - this is the way `APropertyPrecomputed`'s
 // factory function is set to APropertyPrecomputed.

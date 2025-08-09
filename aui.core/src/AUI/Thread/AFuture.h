@@ -551,14 +551,14 @@ namespace aui::impl::future {
  *
  * AFuture is returned by [AUI_THREADPOOL] keyword, which is used to perform heavy operations in a background thread.
  *
- * @code{cpp}
+ * ```cpp
  * AFuture<int> theFuture = AUI_THREADPOOL {
  *   AThread::sleep(1000); // long operation
  *   return 123;
  * };
  * ...
  * cout << *theFuture; // waits for the task, outputs 123
- * @endcode
+ * ```
  *
  * If your operation consists of complex future sequences, you have multiple options:
  * 1. Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
@@ -568,22 +568,22 @@ namespace aui::impl::future {
  *          acquiring operation.
  * 2. Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
  *    AFuture value:
- * @code{cpp}
+ * ```cpp
  * AFuture<int> longOperation();
  * AFuture<int> myFunction() {
  *   int resultOfLongOperation = co_await longOperation();
  *   return resultOfLongOperation + 1;
  * }
- * @endcode
+ * ```
  * 3. Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
  *    AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
  *    method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
  *
- * @code{cpp}
+ * ```cpp
  *
  * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyValue() method:
  *
- * @code{cpp}
+ * ```cpp
  * AFuture<int> theFuture;
  * AThread t([=] {
  *   AThread::sleep(1000); // long operation
@@ -591,7 +591,7 @@ namespace aui::impl::future {
  * });
  * t.start();
  * cout << *theFuture; // 123
- * @endcode
+ * ```
  *
  * @note Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
  *       unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
@@ -696,14 +696,14 @@ public:
      * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
-     * @code{cpp}
+     * ```cpp
      * ...
      * private:
      *   AAsyncHolder mAsync;
      * ...
      *
      * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * @endcode
+     * ```
      */
     template<aui::invocable<const T&> Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
@@ -721,14 +721,14 @@ public:
      * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
-     * @code{cpp}
+     * ```cpp
      * ...
      * private:
      *   AAsyncHolder mAsync;
      * ...
      *
      * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * @endcode
+     * ```
      */
     template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
@@ -840,14 +840,14 @@ public:
      * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
-     * @code{cpp}
+     * ```cpp
      * ...
      * private:
      *   AAsyncHolder mAsync;
      * ...
      *
      * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * @endcode
+     * ```
      */
     template<aui::invocable Callback>
     const AFuture& onSuccess(Callback&& callback) const {
@@ -865,14 +865,14 @@ public:
      * @note
      * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
      * Example:
-     * @code{cpp}
+     * ```cpp
      * ...
      * private:
      *   AAsyncHolder mAsync;
      * ...
      *
      * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * @endcode
+     * ```
      */
     template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const {

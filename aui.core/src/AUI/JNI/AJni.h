@@ -36,7 +36,7 @@
  * @param path slash-style path to Java class (including name)
  * @details
  * Usage:
- * @code{cpp}
+ * ```cpp
  * namespace com::github::aui::android {
  *     AUI_JNI_CLASS(com/github/aui/android/Platform, AUI) {
  *     public:
@@ -47,7 +47,7 @@
  * }
  * ..
  * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
- * @endcode
+ * ```
  */
 #define AUI_JNI_CLASS(path, name) \
 class name ## _info: public ::aui::jni::GlobalRef { \
@@ -67,7 +67,7 @@ struct name: public name ## _info
  * @param args arguments wrapped with braces. Types should be also wrapped in braces (see example).
  * @details
  * Usage:
- * @code{cpp}
+ * ```cpp
  * namespace com::github::aui::android {
  *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
@@ -78,7 +78,7 @@ struct name: public name ## _info
  * }
  * ..
  * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
- * @endcode
+ * ```
  */
 #define AUI_JNI_STATIC_METHOD(ret_t, name, args) \
     static ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \
@@ -101,7 +101,7 @@ struct name: public name ## _info
  * @param args arguments wrapped with braces. Types should be also wrapped in braces (see example).
  * @details
  * Usage:
- * @code{cpp}
+ * ```cpp
  * namespace com::github::aui::android {
  *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
@@ -112,7 +112,7 @@ struct name: public name ## _info
  * }
  * ..
  * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
- * @endcode
+ * ```
  */
 #define AUI_JNI_METHOD(ret_t, name, args) \
     ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \

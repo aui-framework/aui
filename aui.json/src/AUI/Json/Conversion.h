@@ -143,7 +143,7 @@ struct AJsonConvFieldDescriptor;
 
 /**
  * @brief Json fields definition.
- * @code{.cpp}
+ * ```cpp
  * struct SomeModel {
  *     type1 field1;
  *     type2 field2;
@@ -155,22 +155,22 @@ struct AJsonConvFieldDescriptor;
  *     (field2, "name2")
  *     ...
  * )
- * @endcode
+ * ```
  *
  * Also, flags can be set:
  *
- * @code{.cpp}
+ * ```cpp
  * AJSON_FIELDS(SomeModel,
  *     (field1, "name1")
  *     (field2, "name2", AJsonFieldFlags::OPTIONAL)
  *     ...
  * )
- * @endcode
+ * ```
  *
  * @see AJsonFieldFlags
  *
  * @example
- * @code{.cpp}
+ * ```cpp
  * struct SomeModel {
  *     int value1;
  *     AString value2;
@@ -187,7 +187,7 @@ struct AJsonConvFieldDescriptor;
  *     AJSON_FIELDS_ENTRY(value1)
  *     AJSON_FIELDS_ENTRY(value2)
  * )
- * @endcode
+ * ```
  */
 #define AJSON_FIELDS(N, ...) \
 template<> struct AJsonConvFieldDescriptor<N>: N { \

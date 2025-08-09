@@ -41,12 +41,12 @@ namespace ass {
      * @details
      *
      * In this example, we want to select all views that match ".btn" but don't match ".accent".
-     * @code{cpp}
+     * ```cpp
      * {
      *   class_of(".btn-title") && !class_of(".accent"),
      *   BackgroundSolid { 0xe81123_rgb }
      * },
-     * @endcode
+     * ```
      */
     template <aui::derived_from<IAssSubSelector> L>
     NotSelector<L> operator!(L l) {

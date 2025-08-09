@@ -29,7 +29,7 @@ namespace ass::on_state {
      * @ingroup ass_selectors
      * @details
      * It's convenient to use it with AUI_WITH_STYLE:
-     * @code{cpp}
+     * ```cpp
      * _new<AView>() AUI_WITH_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
@@ -37,7 +37,7 @@ namespace ass::on_state {
      *     BackgroundSolid { AColor::RED },
      *   },
      * },
-     * @endcode
+     * ```
      */
     struct Hovered: public PropertyListConditional {
     public:
@@ -52,7 +52,7 @@ namespace ass::on_state {
      * @ingroup ass_selectors
      * @details
      * It's convenient to use it with AUI_WITH_STYLE:
-     * @code{cpp}
+     * ```cpp
      * _new<AView>() AUI_WITH_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
@@ -60,7 +60,7 @@ namespace ass::on_state {
      *     BackgroundSolid { AColor::RED },
      *   },
      * },
-     * @endcode
+     * ```
      */
     struct Activated: public PropertyListConditional {
     public:
@@ -75,7 +75,7 @@ namespace ass::on_state {
      * @ingroup ass_selectors
      * @details
      * It's convenient to use it with AUI_WITH_STYLE:
-     * @code{cpp}
+     * ```cpp
      * _new<AView>() AUI_WITH_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
@@ -83,7 +83,7 @@ namespace ass::on_state {
      *     BackgroundSolid { AColor::RED },
      *   },
      * },
-     * @endcode
+     * ```
      */
     struct Focused: public PropertyListConditional {
     public:
@@ -98,7 +98,7 @@ namespace ass::on_state {
      * @ingroup ass_selectors
      * @details
      * It's convenient to use it with AUI_WITH_STYLE:
-     * @code{cpp}
+     * ```cpp
      * _new<AView>() AUI_WITH_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
@@ -106,7 +106,7 @@ namespace ass::on_state {
      *     BackgroundSolid { AColor::RED },
      *   },
      * },
-     * @endcode
+     * ```
      */
     struct Disabled: public PropertyListConditional {
     public:

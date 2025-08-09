@@ -70,9 +70,9 @@ public:
      * @ingroup signal_slot
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
-     * @endcode
+     * ```
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -91,9 +91,9 @@ public:
      * property (pre-fire).
      *
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
-     * @endcode
+     * ```
      * @param property property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -165,9 +165,9 @@ public:
      * @ingroup signal_slot
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
-     * @endcode
+     * ```
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -185,10 +185,10 @@ public:
      * @ingroup signal_slot
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
-     * @endcode
+     * ```
      * @param connectable signal or property
      * @param function slot. Can be lambda
      * @return Connection instance
@@ -203,10 +203,10 @@ public:
      * @ingroup signal_slot
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
-     * @endcode
+     * ```
      * @note
      * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
      * connection creation.
@@ -230,16 +230,16 @@ public:
      *
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
-     * @endcode
+     * ```
      * @note
      * This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If possible,
      * consider using shorter overload:
-     * @code{cpp}
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
-     * @endcode
+     * ```
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static decltype(auto)
@@ -252,10 +252,10 @@ public:
      * @ingroup property_system
      * @details
      * See [signal_slot] "signal-slot system" for more info.
-     * @code{cpp}
+     * ```cpp
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
-     * @endcode
+     * ```
      * @note
      * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
      * connection creation.
@@ -324,16 +324,16 @@ private:
  * Unlike Qt's emit, AUI's emit is not just a syntax sugar; it's required to actually perform a signal call.
  *
  * Basic example: (in context of member function of AView):
- * @code{cpp}
+ * ```cpp
  * emit clicked;
- * @endcode
+ * ```
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
  * If [signal declaration](emits) has arguments, you have to specify them in braces:
- * @code{cpp}
+ * ```cpp
  * emit keyPressed(AInput::LCTRL);
- * @endcode
+ * ```
  *
  * See [signal_slot] "signal-slot system" for more info.
  */
@@ -350,17 +350,17 @@ private:
  * there's no way to use emit.
  *
  * Basic example: (in context of member function of AView):
- * @code{cpp}
+ * ```cpp
  * auto view = _new<AButton>("button"); // or whatever view
  * AUI_EMIT_FOREIGN(view, clicked);
- * @endcode
+ * ```
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
  * If [signal declaration](emits) has arguments, you have to specify them:
- * @code{cpp}
+ * ```cpp
  * AUI_EMIT_FOREIGN(view, keyPressed, AInput::LCTRL);
- * @endcode
+ * ```
  *
  * See [signal_slot] "signal-slot system" for more info.
  */

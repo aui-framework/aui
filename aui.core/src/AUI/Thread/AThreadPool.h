@@ -127,7 +127,7 @@ public:
      * @param begin range begin
      * @param end range end
      * @param functor a functor of the following signature:
-     * @code{cpp} Result(Iterator begin, Iterator end) @endcode
+     * ```cpp Result(Iterator begin, Iterator end) ```
      *
      * @return future set per thread (i.e. for 8 items on a 4-core processor there will be 4 futures)
      *

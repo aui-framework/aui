@@ -40,9 +40,9 @@
  * <!-- aui:include examples/basic/hello_world/src/main.cpp -->
  *
  * Prototype of `AUI_ENTRY` function you are actually implementing:
- * @code{cpp}
+ * ```cpp
  * AUI_EXPORT int aui_entry(const AStringVector& args);
- * @endcode
+ * ```
  *
  * @specificto{android}
  * Only the main thread is able to initialize graphics context.

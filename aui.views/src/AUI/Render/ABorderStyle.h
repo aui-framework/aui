@@ -21,9 +21,9 @@
  * @brief Describes border style, like CSS border-style.
  * @details
  * ABorderStyle is std::variant-based type that stores one of defined subclass types:
- * @code{cpp}
+ * ```cpp
  * ABorderStyle borderStyle = ABorderStyle::Solid{}; // valid
- * @endcode
+ * ```
  */
 class ABorderStyle {
 public:

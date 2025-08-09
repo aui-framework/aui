@@ -94,7 +94,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Horizontal {
  *           _new<AButton>("1"),
@@ -102,7 +102,7 @@ class AViewContainer;
  *           _new<AButton>("3"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png" /></td>
  *   </tr>
@@ -116,7 +116,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("1"),
@@ -124,7 +124,7 @@ class AViewContainer;
  *           _new<AButton>("3"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png" /></td>
  *   </tr>
@@ -138,7 +138,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
@@ -149,7 +149,7 @@ class AViewContainer;
  *           _new<AButton>("Down"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_041807.png" /></td>
  *   </tr>
@@ -163,14 +163,14 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Stacked {
  *           _new<AView>() AUI_WITH_STYLE { BackgroundSolid(0xff0000_rgb), Expanding() },
  *           Label { "Test" },
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
  *     ![](imgs/docs/imgs/Screenshot_20250625_011101.png)
@@ -212,7 +212,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
@@ -225,7 +225,7 @@ class AViewContainer;
  *           _new<AButton>("Down"),
  *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_172900.png" /></td>
  *   </tr>
@@ -239,7 +239,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
@@ -251,7 +251,7 @@ class AViewContainer;
  *           _new<AButton>("Down"),
  *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_174121.png" /></td>
  *   </tr>
@@ -261,21 +261,21 @@ class AViewContainer;
  * any positive value it would occupy all free space in the container. If there is a view with expanding equal to 1 and
  * another view with expanding equal to 2 the first view would occupy one third of free space, the second view would
  * occupy two thirds of free space:
- * @code{cpp}
+ * ```cpp
  * Vertical {
  *   _new<AButton>("Left") AUI_LET { it->setExpanding(1); },
  *   _new<AButton>("Right") AUI_LET { it->setExpanding(2); }, // will be twice as big as "Left"
  * }
- * @endcode
+ * ```
  *
  * You can use ASpacerExpanding as blank expanding view:
- * @code{cpp}
+ * ```cpp
  * Vertical {
  *   _new<AButton>("Left"),
  *   SpacerExpanding(),
  *   _new<AButton>("Right"),
  * }
- * @endcode
+ * ```
  *
  * @note
  * FixedSize nullifies Expanding's action (on per axis basic).

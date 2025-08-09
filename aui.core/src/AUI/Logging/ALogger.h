@@ -35,16 +35,16 @@ class AString;
  * It provides `std::cout`-like API.
  *
  * Example:
- * @code{cpp}
+ * ```cpp
  * ALogger::info("MyApp") << "Hello world!";
- * @endcode
+ * ```
  * Possible output:
  * ```
  * [00:47:02][UI Thread][Logger][INFO]: Hello world!
  * ```
  *
  * It's convenient to define `LOG_TAG` variable for your class:
- * @code{cpp}
+ * ```cpp
  * static constexpr auto LOG_TAG = "MyDownloader";
  * class MyDownloader {
  * public:
@@ -55,7 +55,7 @@ class AString;
  *     ALogger::info(LOG_TAG) << "Downloading file: " << name;
  *   }
  * }
- * @endcode
+ * ```
  */
 class API_AUI_CORE ALogger final
 {

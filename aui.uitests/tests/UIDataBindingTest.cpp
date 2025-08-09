@@ -401,7 +401,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     //
     // For example, define enum with [AUI_ENUM_VALUES](AUI_ENUM_VALUES) and model:
     //
-    // @code{cpp}
+    // ```cpp
     // enum class Gender {
     //     MALE,
     //     FEMALE,
@@ -411,7 +411,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     //                 Gender::MALE,
     //                 Gender::FEMALE,
     //                 Gender::OTHER)
-    // @endcode
+    // ```
     // AUI_DOCS_CODE_BEGIN
     struct User {
         AProperty<Gender> gender;
@@ -426,10 +426,10 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
     // AUI_DOCS_CODE_END
     //
     // The compile-time constant above is equivalent to:
-    // @code{cpp}
+    // ```cpp
     // /* pseudocode */
     // GENDERS = std::array { Gender::MALE, Gender::FEMALE, GENDER::OTHER };
-    // @endcode
+    // ```
     //
     // We just using `aui::enumerate::ALL_VALUES` because it was provided conveniently by `AUI_ENUM_VALUES` for us.
     //
@@ -603,14 +603,14 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     // type. Some views have already predefined such specialization for their underlying types. For instance, ALabel has
     // such specialization:
     //
-    // @code{cpp}
+    // ```cpp
     // /* PREDEFINED! You don't need to define it! This listing is an example */
     // template<>
     // struct ADataBindingDefault<ALabel, AString> {
     // public:
     //     static auto property(const _<ALabel>& view) { return view->text(); }
     // };
-    // @endcode
+    // ```
     //
     // We can use this predefined specialization to omit the destination property:
     using namespace declarative;
@@ -683,7 +683,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // syntax, the property system calls `ADataBindingDefault::setup` to apply some extra traits of the bound value on
     // the view. Here's an abstract on how `ANumberPicker` defines specialization of `ADataBingingDefault` with
     // `aui::ranged_number`:
-    // @code{cpp}
+    // ```cpp
     // /* PREDEFINED! You don't need to define it! This listing is an example */
     // template <aui::arithmetic UnderlyingType, auto min, auto max>
     // struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>> {
@@ -697,7 +697,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     //     }
     //     // ...
     // };
-    // @endcode
+    // ```
     //
     // As you can see, this specialization pulls the min and max values from `aui::ranged_number` type and sets them
     // to `ANumberPicker`. This way `ANumberPicker` finds out the valid range of values by simply being bound to value

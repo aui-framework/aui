@@ -111,10 +111,10 @@ AUI_ENUM_FLAG(AFileAccess) {
  * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  * @details
  * Example usage:
- * @code{cpp}
+ * ```cpp
  * APath someDir = "someDir";
  * APath filePath = someDir / "myfile.txt"; // "/" replaced with a system file separator
- * @endcode
+ * ```
  * @note Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
  *       (directory, a file that contains other regular files and folders), i.e. a unit of the file system, which is
  *       often a confusion in terminology. Here and further:
@@ -234,9 +234,9 @@ public:
      * with `fileName = work`: `/home/user -> /home/user/work`
      * @note
      * It's convient to use `/` syntax instead:
-     * @code{cpp}
+     * ```cpp
      * APath("/home/user") / "work"
-     * @endcode
+     * ```
      *
      * @param fileName name of child file
      * @return path to child file relatively to this folder
@@ -385,10 +385,10 @@ public:
      * @param newMode new mode.
      * @details
      * It's convenient to use octet literal on `newMode`:
-     * @code{cpp}
+     * ```cpp
      * APath p("file.txt");
      * p.chmod(0755); // -rwxr-xr-x
-     * @endcode
+     * ```
      */
     const APath& chmod(int newMode) const;
 
@@ -481,10 +481,10 @@ public:
     /**
      * @brief Path of the child element. Relevant only for folders.
      * @param filename child to produce path to
-     * @code{cpp}
+     * ```cpp
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
-     * @endcode
+     * ```
      * Which would supplyValue into "path/to/your/file.txt"
      * @return path to child file relatively to this folder
      */

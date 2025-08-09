@@ -143,13 +143,13 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * [AUI_DECLARATIVE_FOR] mimics *ranged for loop* semantically.
  *
- * @code{cpp}
+ * ```cpp
  * static const std::array users = { "Foo", "Bar", "Lol" };
  * for (const auto& user : users) {
  *   fmt::println("{}", user);
  * }
- * @endcode
- * @code{cpp}
+ * ```
+ * ```cpp
  * static const std::array users = { "Foo", "Bar", "Lol" };
  * ...
  * setContents(Centered {
@@ -159,7 +159,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *     }
  *   ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
  * });
- * @endcode
+ * ```
  *
  * ![](imgs/docs/imgs/UIDeclarativeForTest.Example_.png)
  *

@@ -198,7 +198,7 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
  * @ingroup useful_macros
  * @details
  * Defines all enum values to by used by AEnumerate.
- * @code{cpp}
+ * ```cpp
  * enum class ATextOverflow {
  *     NONE,
  *     ELLIPSIS,
@@ -209,7 +209,7 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
  *                 ATextOverflow::CLIP)
  *
  * // AEnumerate<ATextOverflow>::toName(ATextOverflow::CLIP) -> "CLIP"
- * @endcode
+ * ```
  */
 #define AUI_ENUM_VALUES(enum_t, ...) template<> \
 struct AEnumerateAllValues<enum_t>{         \

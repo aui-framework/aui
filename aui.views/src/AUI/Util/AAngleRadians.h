@@ -27,16 +27,16 @@ class AString;
  *
  * # Initialization
  * Recommended way is to use operator literal format:
- * @code{cpp}
+ * ```cpp
  * auto angle = 180_deg;
  * angle.radians() --> 3.14
  * angle.degrees() --> 180
- * @endcode
- * @code{cpp}
+ * ```
+ * ```cpp
  * auto angle = 3.14_rad;
  * angle.radians() --> 3.14
  * angle.degrees() --> 180
- * @endcode
+ * ```
  */
 class API_AUI_VIEWS AAngleRadians
 {

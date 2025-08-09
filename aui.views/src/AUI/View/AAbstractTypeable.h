@@ -87,9 +87,9 @@ public:
      * @brief Performs paste operation (CTRL+V) from system clipboard.
      * @details
      * Effectively:
-     * @code{cpp}
+     * ```cpp
      * paste(AClipboard::pasteFromClipboard());
-     * @endcode
+     * ```
      */
     void pasteFromClipboard();
 
