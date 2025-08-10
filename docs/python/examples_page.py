@@ -114,8 +114,9 @@ def gen_pages():
     for category_name, category in examples_lists.items():
         for example in category:
             id = example['id']
+            page_path = example['page_path']
+            mkdocs_gen_files.set_edit_path(f"{id}.md", '..' / page_path.relative_to(Path.cwd()))
             with mkdocs_gen_files.open(f"{id}.md", "w") as fos:
-                page_path = example['page_path']
                 with io.open(page_path, 'r', encoding='utf-8') as fis:
                     contents = fis.read()
                     print(contents, file=fos, end='')
@@ -144,5 +145,4 @@ def gen_pages():
                         for line in skip_license(iter(f.read_text().splitlines())):
                             print(f'{line}', file=fos)
                         print(f'```', file=fos)
-            mkdocs_gen_files.set_edit_path(f"{id}.md", '..' / page_path.relative_to(Path.cwd()))
 

@@ -103,12 +103,18 @@ class CppFunction:
     def __str__(self):
         return f'CppFunction{self.tuple()}'
 
+class DoxygenEntry:
+    def __init__(self, doc = None):
+        self.doc = doc
+        self.location = None
+
 class CppClass:
     def __init__(self):
         self.name = None
         self.doc = None
         self.methods = []
         self.fields = []
+        self.location = None
 
     def tuple(self):
         return self.name, self.doc, self.methods, self.fields
@@ -118,7 +124,7 @@ class CppClass:
     def __str__(self):
         return f'CppClass{self.tuple()}'
 
-def _parse(input: str):
+def _parse(input: str, location = None | Path):
     tokens = cpp_tokenizer.tokenize(input)
     iterator = iter(tokens)
     last_doc = None
@@ -255,7 +261,9 @@ def _parse(input: str):
         prev_doc = last_doc
         if _parse_comment():
             if prev_doc is not None:
-                yield prev_doc
+                entry = DoxygenEntry(doc=prev_doc)
+                entry.location = location
+                yield entry
             continue
 
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
@@ -304,18 +312,19 @@ def gen_pages():
                         break
                     include_dir = include_dir.parent
 
-                contents = [i for i in _parse(full_path.read_text())]
+                contents = [i for i in _parse(full_path.read_text(), location=full_path)]
 
                 for parse_entry in contents:
-                    if isinstance(parse_entry, str):
+                    if isinstance(parse_entry, DoxygenEntry):
                         # Arbitrary comment. It may contain group definition or other information.
-                        doxygen = parse_doxygen(parse_entry)
+                        doxygen = parse_doxygen(parse_entry.doc)
                         for def_group in [i for i in doxygen if i[0] == '@defgroup']:
                             m = re.compile(r"(\S+) (.+)").match(def_group[1])
                             group_id = m.group(1)
                             group_name = m.group(2)
 
-                            with mkdocs_gen_files.open(f'{group_id.lower()}.md', 'w') as fos:
+                            output = f'{group_id.lower()}.md'
+                            with mkdocs_gen_files.open(output, 'w') as fos:
                                 print(f'# {group_name}', file=fos)
                                 print(f'', file=fos)
                                 for i in [i for i in doxygen if i[0] == '@brief']:
@@ -327,8 +336,7 @@ def gen_pages():
                                     for i in details:
                                         print(i[1], file=fos)
 
-
-
+                            mkdocs_gen_files.set_edit_path(output, '..' / parse_entry.location.relative_to(Path.cwd()))
                             break
 
                         continue
