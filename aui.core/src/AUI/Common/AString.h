@@ -101,7 +101,7 @@ public:
         return super::find(c, offset) == offset;
     }
 
-    AStringVector split(char16_t c) const noexcept;
+    AStringVector split(AChar c) const noexcept;
 
     size_type find(char c, size_type offset = 0) const noexcept
     {
