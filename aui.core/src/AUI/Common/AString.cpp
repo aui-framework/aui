@@ -19,12 +19,6 @@
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-namespace aui::detail {
-
-using FCodecMeasure = void;
-
-}
-
 static AStaticVector<char, 4> toUtf8(char32_t i) {
     if (i <= 0x7F) {
         return { static_cast<char>(i) };
@@ -131,19 +125,26 @@ void AString::push_back(AChar c) noexcept {
 AByteBuffer AString::getBytes(AStringEncoding encoding) const noexcept {
     AByteBuffer bytes;
     if (super::empty()) return bytes;
-    if (encoding == AStringEncoding::UTF8) {
-        bytes.reserve(super::size());
-        bytes.write(super::data(), super::size());
-    } else if (encoding == AStringEncoding::UTF16) {
-        size_t expected_words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-        bytes.resize(expected_words * 2);
-        simdutf::convert_utf8_to_utf16le(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data()));
-    } else if (encoding == AStringEncoding::UTF32) {
-        size_t expected_words = simdutf::utf32_length_from_utf8(super::data(), super::size());
-        bytes.resize(expected_words * 4);
-        simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data()));
-    } else if (encoding == AStringEncoding::LATIN1) {
-
+    switch (encoding) {
+        case AStringEncoding::UTF8: {
+            bytes.reserve(super::size());
+            bytes.write(super::data(), super::size());
+        } break;
+        case AStringEncoding::UTF16: {
+            size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
+            bytes.resize(words * 2);
+            simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data()));
+        } break;
+        case AStringEncoding::UTF32: {
+            size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
+            bytes.resize(words * 4);
+            simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data()));
+        } break;
+        case AStringEncoding::LATIN1: {
+            size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
+            bytes.resize(words);
+            simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data()));
+        } break;
     }
     return std::move(bytes);
 }
