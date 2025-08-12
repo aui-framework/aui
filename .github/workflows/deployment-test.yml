@@ -56,7 +56,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         with:
           submodules: true
 
@@ -96,7 +96,7 @@ jobs:
         group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Fedora-${{ matrix.kind }}
         cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         with:
           submodules: true
 
