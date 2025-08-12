@@ -88,12 +88,13 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        kind: [static, shared]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
         include:
           - os: ubuntu-latest
             generator: "Ninja"
             additional_cmake_flags: ''
-  
+
           - os: ubuntu-latest
             generator: "Ninja"
             additional_cmake_flags: ''
@@ -110,7 +111,7 @@ jobs:
       - name: Install build dependencies (Fedora)
         run: |
           dnf -y update
-          dnf -y install git libstdc++ libstdc++-static
+          dnf -y install git libstdc++ libstdc++-static cmake gcc-c++ make pkgconf glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
 
       - uses: actions/checkout@v4
         with:
@@ -119,11 +120,6 @@ jobs:
       - name: Extract tag
         shell: bash
         run: echo "TAG=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
-
-      - name: Install build dependencies (Fedora)
-        run: |
-          dnf -y update
-          dnf -y install cmake gcc-c++ make pkgconf glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
 
       - name: Configure CMake
         run: cmake -G "${{ matrix.generator }}" -B build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
