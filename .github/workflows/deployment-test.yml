@@ -5,10 +5,6 @@ on:
     tags:
       - v*
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
-
 env:
   GIT_SUBMODULE_STRATEGY: recursive
   REPO_RELEASE_BASE: ${{ github.server_url }}/${{ github.repository }}
@@ -90,6 +86,7 @@ jobs:
         os: [ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        arch: [x86_64]
         include:
           - os: ubuntu-latest
             generator: "Ninja"
@@ -104,9 +101,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     container: fedora:latest
 
-    concurrency:
-        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Fedora-${{ matrix.kind }}
-        cancel-in-progress: true
     steps:
       - name: Install build dependencies (Fedora)
         run: |
