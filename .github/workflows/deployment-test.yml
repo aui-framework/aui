@@ -11,7 +11,7 @@ concurrency:
 
 env:
   GIT_SUBMODULE_STRATEGY: recursive
-  REPO_RELEASE_BASE: ${{ github.server_url }}/${{ github.repository }}/releases/download
+  REPO_RELEASE_BASE: ${{ github.server_url }}/${{ github.repository }}
 
 permissions:
   contents: write
