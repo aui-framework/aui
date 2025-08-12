@@ -105,9 +105,10 @@ static Result recognize(AImageView image) {
                 r.internalformat = GL_RGBA32F;
             break;
         default:
-            ALogger::warn("Texture2D") << "Unhandled type mask: 0x" << std::hex << (unsigned)type << " (defaulting to UBYTE RGBA8)";
+            ALogger::warn("Texture2D") << "Unhandled type mask: 0x" << std::hex << type << " (defaulting to UBYTE RGBA8)";
             r.type = GL_UNSIGNED_BYTE;
-            r.internalformat = (comps == APixelFormat::R) ? GL_R8 : (comps == APixelFormat::RGB) ? GL_RGB8 : GL_RGBA8; break;
+            r.internalformat = (comps == APixelFormat::R) ? GL_R8 : (comps == APixelFormat::RGB) ? GL_RGB8 : GL_RGBA8;
+            break;
     }
     return r;
 }
