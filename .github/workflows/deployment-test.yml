@@ -56,7 +56,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -96,14 +96,13 @@ jobs:
         group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Fedora-${{ matrix.kind }}
         cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
       - name: Extract tag
         shell: bash
-        run: |
-          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+        run: echo "TAG=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
 
       - name: Install build dependencies (Fedora)
         run: |
@@ -112,14 +111,6 @@ jobs:
             git cmake gcc-c++ make pkgconf \
             glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel \
             gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
-
-      - uses: actions/checkout@v4
-        with:
-          submodules: true
-
-      - name: Extract tag
-        shell: bash
-        run: echo "TAG=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
 
       - name: Configure CMake
         run: >
