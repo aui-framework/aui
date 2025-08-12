@@ -88,6 +88,16 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         kind: [static, shared]
+        include:
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+  
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
 
     runs-on: ${{ matrix.os }}
     container: fedora:latest
