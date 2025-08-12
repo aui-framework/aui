@@ -126,7 +126,8 @@ jobs:
           dnf -y install cmake gcc-c++ make pkgconf glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
 
       - name: Configure CMake
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        run: cmake -G "${{ matrix.generator }}" -B build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        working-directory: ${{ github.workspace }}
 
       - name: Run tests
         working-directory: ${{ github.workspace }}/build
