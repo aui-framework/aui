@@ -97,9 +97,9 @@ private:
     }
 
     _<AView> indexedList() {
-        return AUI_DECLARATIVE_FOR_EX_THIS(group, *mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+        return AUI_DECLARATIVE_FOR(group, *mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
                                 return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
-                            }), AVerticalLayout, =) {
+                            }), AVerticalLayout) {
             auto firstContact = *ranges::begin(group);
             auto firstLetter = groupLetter(firstContact->displayName);
             ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
@@ -111,7 +111,7 @@ private:
                                         FontSize { 8_pt },
                                       },
                 common_views::divider(),
-                AUI_DECLARATIVE_FOR_EX_THIS(i, group, AVerticalLayout, =) {
+                AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                     ALogger::info("Test") << "Computing view for item " << i->displayName;
                     return contactPreview(i);
                 },
@@ -128,7 +128,7 @@ private:
             }
             return false;
         });
-        return AUI_DECLARATIVE_FOR_EX_THIS(i, *mContacts | searchFilter, AVerticalLayout, =) {
+        return AUI_DECLARATIVE_FOR(i, *mContacts | searchFilter, AVerticalLayout) {
             return contactPreview(i);
         };
     }
