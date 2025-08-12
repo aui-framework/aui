@@ -34,6 +34,6 @@ def on_page_markdown(
 
 
 def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files):
-    html = inject_classes_href(html, files)
+    html = inject_classes_href(html, page, files)
 
     return html

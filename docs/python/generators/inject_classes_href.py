@@ -9,6 +9,7 @@
 import re
 
 from mkdocs.structure.files import Files, File
+from mkdocs.structure.pages import Page
 
 from docs.python.generators import regexes
 
@@ -23,7 +24,14 @@ def _extract_page_title(page: File):
 
 mapping = None
 
-def inject_classes_href(html: str, files: Files):
+def inject_classes_href(html: str, page: Page, files: Files):
+    """
+    Generates automatic references for words with no explicit linking. This is especially useful in code snippets where
+    Markdown [linking syntax]() is not viable.
+
+    Failure to link is not an error. So, if you want to benefit from link checking, consider using [explicit] links in
+    Markdown.
+    """
     global mapping
     if mapping is None:
         mapping = {_extract_page_title(i): i for i in files}
@@ -34,9 +42,10 @@ def inject_classes_href(html: str, files: Files):
         for i in items:
             if not ignore: # skip contents of <a>
                 if not i.startswith("<"): # skip all xml tags
-                    if page := mapping.get(i):
-                        yield f'<a href="/{page.url}">{i}</a>'
-                        continue
+                    if file := mapping.get(i):
+                        if file != page.file: # skip refences to itself
+                            yield f'<a href="/{page.url}">{i}</a>'
+                            continue
             if i.startswith("<a "):
                 ignore = True
             elif i == "</a>":
