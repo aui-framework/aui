@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   deployment-tests-windows-ubuntu:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (full)
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (Windows / Linux (Ubuntu))
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
