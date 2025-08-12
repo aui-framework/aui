@@ -76,7 +76,14 @@ static Result recognize(AImageView image) {
             r.format = GL_RGBA;
             break;
         case APixelFormat::BGRA:
+            #if defined(GL_BGRA_EXT) && !defined(GL_BGRA)
+            r.format = GL_BGRA_EXT;
+            #elif defined(GL_BGRA)
             r.format = GL_BGRA;
+            #else
+            ALogger::warn("Texture2D") << "Unhandled components mask for BGRA: 0x" << std::hex << comps << " (defaulting to RGBA)";
+            r.format = GL_RGBA;
+            #endif
             break;
         default:
             ALogger::warn("Texture2D") << "Unhandled components mask: 0x" << std::hex << comps << " (defaulting to RGBA)";
