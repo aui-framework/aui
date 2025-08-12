@@ -49,7 +49,7 @@ To link AUI to your project, use the following CMake script. This script is self
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION v9.3.0)
+set(AUI_VERSION v9.4.0)
 
 # Use AUI.Boot
 file(
