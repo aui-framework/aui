@@ -56,7 +56,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -96,7 +96,12 @@ jobs:
         group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Fedora-${{ matrix.kind }}
         cancel-in-progress: true
     steps:
-      - uses: actions/checkout@v2
+      - name: Install build dependencies (Fedora)
+        run: |
+          dnf -y update
+          dnf -y install git
+
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -108,7 +113,7 @@ jobs:
         run: |
           dnf -y update
           dnf -y install \
-            git cmake gcc-c++ make pkgconf \
+            cmake gcc-c++ make pkgconf \
             glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel \
             gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
 
