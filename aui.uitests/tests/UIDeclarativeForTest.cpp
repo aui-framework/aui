@@ -278,7 +278,7 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
     public:
         MyWindow(AVector<AString> colors): mColors(std::move(colors)) {
             setContents(Vertical {
-                AUI_DECLARATIVE_FOR_EX_THIS(i, mColors, AVerticalLayout, =) {
+                AUI_DECLARATIVE_FOR(i, mColors, AVerticalLayout) {
                   return Label { "{}"_format(i) };
                 }
             });
@@ -327,7 +327,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
             setContents(Vertical {
                 _new<AButton>("Add A new color").connect(&AView::clicked, me::addColor),
                 AScrollArea::Builder().withContents(
-                  AUI_DECLARATIVE_FOR_EX_THIS(i, *mColors, AVerticalLayout, =) {
+                  AUI_DECLARATIVE_FOR(i, *mColors, AVerticalLayout) {
                     return Label { "{}"_format(i) };
                   }
                 ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
@@ -446,16 +446,16 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
       AScrollArea::Builder()
               .withContents(
                   /* group foreach */
-                  AUI_DECLARATIVE_FOR_EX_THIS(
+                  AUI_DECLARATIVE_FOR(
                   group, *state->ints | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
-                  AVerticalLayout, =) {
+                  AVerticalLayout) {
                       /* group foreach data to view transformer callback, aka group's view callback */
                       auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
                       mTestObserver.onViewCreated(groupName);
                       return Vertical {
                           Label { groupName } AUI_WITH_STYLE { FontSize{10_pt} },
                           /* single item foreach */
-                          AUI_DECLARATIVE_FOR_EX_THIS(i, group, AVerticalLayout, =) {
+                          AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                               /* single item data to view transformer callback, aka item's view callback */
                               auto str = "{}"_format(i);
                               mTestObserver.onViewCreated(str);

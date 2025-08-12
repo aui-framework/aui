@@ -42,7 +42,7 @@ _<AView> myLazyList(_<State> state) {
             return;
         }
         auto loadFrom = state->items->size(); // base index to load from.
-        state->asyncTasks << AUI_THREADPOOL_SAFE({
+        state->asyncTasks << AUI_THREADPOOL {
             // perform "loading" task on a worker thread.
 
             AThread::sleep(500ms); // imitate hard work here
@@ -52,11 +52,11 @@ _<AView> myLazyList(_<State> state) {
                 return aui::ptr::manage_shared(new Item { .value = "Item {}"_format(loadFrom + i) });
             });
 
-            AUI_UI_THREAD_SAFE( // back to main thread.
+            AUI_UI_THREAD { // back to main thread.
                 state->items.writeScope()->insertAll(loadedItems);
                 state->needMore = false;
-            );
-        });
+            };
+        };
     });
 
     return Vertical {

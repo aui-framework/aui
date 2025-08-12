@@ -132,7 +132,7 @@ public:
                       /// [scrollarea]
                       AScrollArea::Builder()
                           .withContents(
-                          AUI_DECLARATIVE_FOR_EX_THIS(note, *mNotes, AVerticalLayout, =) {
+                          AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
                               observeChangesForDirty(note);
                               return notePreview(note) AUI_LET {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });

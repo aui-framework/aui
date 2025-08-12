@@ -94,7 +94,7 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
 }
 
 ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
-    mFunctionQueue << [=, this] {
+    mFunctionQueue << [=] {
         removeCurl(curl);
     };
     return *this;
