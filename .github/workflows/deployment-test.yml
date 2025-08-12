@@ -5,6 +5,10 @@ on:
     tags:
       - v*
 
+concurrency:
+  group: ${{ github.workflow }}:${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   GIT_SUBMODULE_STRATEGY: recursive
   REPO_RELEASE_BASE: ${{ github.server_url }}/${{ github.repository }}
