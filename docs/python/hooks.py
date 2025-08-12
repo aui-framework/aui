@@ -7,21 +7,19 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
-import posixpath
 import re
 import sys
 from pathlib import Path
 
+from docs.python.generators.autorefs import handle_autorefs
+from docs.python.generators.comment_macros import handle_comment_macros
+from docs.python.generators.inject_classes_href import inject_classes_href
+
 sys.path.append(str(Path.cwd()))
 
-import mkdocs
 from mkdocs.config.defaults import MkDocsConfig
-from mkdocs.structure.files import File, Files
-from mkdocs.structure.nav import Navigation
+from mkdocs.structure.files import Files
 from mkdocs.structure.pages import Page
-from re import Match
-
-from docs.python import common, regexes, examples_page
 
 
 log = logging.getLogger('mkdocs')
@@ -29,125 +27,13 @@ log = logging.getLogger('mkdocs')
 def on_page_markdown(
         markdown: str, *, page: Page, config: MkDocsConfig, files: Files
 ):
-    # Replace callback
-    def replace_comment(match: re.Match):
-        type, args = match.groups()
-        args = args.strip()
-        if type == "example-file-count":
-            return _badge_for_file_count(args, page, files)
-        if type == "example":
-            return examples_page.example(args)
-        if type == "examples":
-            return examples_page.examples(args)
-        if type == "icon":
-            return _badge_for_icon(args)
-        if type == "include":
-            return _include(args)
-        if type == "snippet":
-            return _snippet(args)
-
-        # Otherwise, raise an error
-        raise RuntimeError(f"Unknown shortcode: {type} in {page}")
-
-    markdown = re.sub(
-        r"<!-- aui:([\w\-]+)(.*?) -->",
-        replace_comment, markdown, flags=re.I | re.M
-    )
-
-    def replace_url(match: re.Match):
-        referred_page_id = match.group(1)
-        referred_page = files.src_paths.get(referred_page_id)
-        if not referred_page:
-            line = markdown[:match.endpos].count('\n') + 1
-            log.warning(f"Doc file '{page.file.abs_src_path}' (line {line}) contains an unrecognized link to '{referred_page_id}'.")
-            return f"==broken link to {referred_page_id}=="
-        title = regexes.PAGE_TITLE.match(referred_page.content_string).group(1)
-        return f"[{title}]({referred_page_id})"
-
-    def handle_lines(iterator: iter):
-        for line in iterator:
-            if "```" in line:
-                yield line
-                for line in iterator:
-                    yield line
-                    if "```" in line:
-                        break
-            else:
-                line = re.sub(
-                    r"\[(.+\.md)\](?![\(])",
-                    replace_url, line, flags=re.I | re.M
-                )
-                yield line
-
-    markdown = "\n".join([i for i in handle_lines(iter(markdown.splitlines()))])
+    markdown = handle_comment_macros(markdown, page, files)
+    markdown = handle_autorefs(markdown, page, files)
 
     return markdown
 
-def _badge(icon: str, text: str = "", type: str = "", tooltip: str = ""):
-    classes = f"mdx-badge mdx-badge--{type}" if type else "mdx-badge"
-    return "".join([
-        f"<span class=\"{classes}\" title=\"{tooltip}\">",
-        *([f"<span class=\"mdx-badge__icon\">{icon}</span>"] if icon else []),
-        *([f"<span class=\"mdx-badge__text\">{text}</span>"] if text else []),
-        f"</span>",
-    ])
 
-def _badge_for_icon(icon: str):
-    return _badge(
-        icon = f":{icon}:",
-    )
+def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files):
+    html = inject_classes_href(html, files)
 
-def _include(args: str):
-    args = re.match(r"(\S+)(.*)", args)
-    file_path = Path(args.group(1))
-    return f"""
-```{common.determine_extension(file_path)} linenums="1"{args.group(2)}
-{Path(file_path).read_text()}
-```
-"""
-
-
-def _snippet(args: str):
-    args = re.match(r"(\S+) (\S+)(.*)", args)
-    file_path = Path(args.group(1))
-    section_name = Path(args.group(2))
-
-    def find_section():
-        iterator = iter(Path(file_path).read_text().split('\n'))
-        for i in iterator:
-            if f"[{section_name}]" in i:
-                break
-        for i in iterator:
-            if f"[{section_name}]" in i:
-                break
-            yield i
-    section = [i for i in find_section()]
-    if not section:
-        log.warning(f"Can't find section '{section_name}' in {file_path}")
-        section = f"/* can't find section: {args} */"
-
-    identation = 9999
-    for i in section:
-        identation = min(identation, len(i) - len(i.lstrip()))
-
-    section = "\n".join([i[identation:] for i in section])
-
-    return f"""
-```{common.determine_extension(file_path)} linenums="1"{args.group(3)}
-{section}
-```
-"""
-
-
-def _badge_for_file_count(text: str, page: Page, files: Files):
-    if text == "0":
-        return _badge(
-            icon = ":octicons-link-external-16:",
-            tooltip = "External repository"
-        )
-
-    return _badge(
-        icon = ":material-file-multiple-outline:",
-        text = text,
-        tooltip = "File count"
-    )
+    return html

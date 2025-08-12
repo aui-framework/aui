@@ -158,3 +158,10 @@ th, td {
     padding: 0;
     margin: 0;
 }
+
+/* links in code */
+.md-code__content a {
+    color: var(--md-typeset-color);
+    font-weight: bold;
+    word-break: break-word;
+}

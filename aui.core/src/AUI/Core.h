@@ -64,7 +64,7 @@
  * @ingroup core
  * @brief Basic reflection capabilities.
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * This component provides functionality for reflection and introspection of classes and their members in compile-time.
  * Some runtime methods are also available.
  */

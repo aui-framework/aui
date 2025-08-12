@@ -176,7 +176,7 @@ public:
  * @ingroup core
  * @tparam T future's return type
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * AFutureSet involves functions to efficiently manage multiple AFutures.
  *
  * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.

@@ -6,13 +6,19 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#  SPDX-License-Identifier: MPL-2.0
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import logging
 import os
 import re
 from pathlib import Path
 
-from docs.python import regexes, cpp_tokenizer
+from docs.python.generators import regexes, cpp_tokenizer
 
 CPP_CLASS_DEF = re.compile('class( API_\S+)? ([a-zA-Z0-9_$]+)')
 assert CPP_CLASS_DEF.match('class Test').group(2) == "Test"
@@ -278,6 +284,7 @@ def _scan():
     return contents
 
 index = _scan()
+# mapping = {i.name : i for i in index if hasattr(i, "name")}
 
 
 

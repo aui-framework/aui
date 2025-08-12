@@ -133,7 +133,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * @details
  * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
  *
- * @experimental
+ * <!-- aui:experimental -->
  *
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.

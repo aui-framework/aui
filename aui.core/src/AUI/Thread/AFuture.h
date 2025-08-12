@@ -547,7 +547,7 @@ namespace aui::impl::future {
  * @ingroup core
  * @tparam T result type (void is default)
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * AFuture is used as a result for asynchronous functions.
  *
  * AFuture is returned by [AUI_THREADPOOL] keyword, which is used to perform heavy operations in a background thread.

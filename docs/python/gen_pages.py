@@ -9,11 +9,12 @@
 import sys
 from pathlib import Path
 
+from docs.python.generators import examples_page, doxygen
+
 l = str(Path(__file__).parent)
 sys.path.append(l)
 
 import mkdocs_gen_files
-from docs.python import examples_page, doxygen
 
 
 examples_page.gen_pages()

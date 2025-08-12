@@ -45,7 +45,7 @@ public:
     /**
      * @brief Indicates that a connection should not be explicitly linked to receiver's lifetime.
      * @details
-     * @experimental
+     * <!-- aui:experimental -->
      * Normally, a connection is broken when either sender or receiver die. You can indicate that you actually don't
      * need the connection to be broken if receiver dies, or you don't have a receiver AObject either. In such case, the
      * connection is breaks only when the sender (signal) dies.

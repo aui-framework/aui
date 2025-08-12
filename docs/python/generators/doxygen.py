@@ -6,14 +6,20 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+#
+#  SPDX-License-Identifier: MPL-2.0
+#
+#  This Source Code Form is subject to the terms of the Mozilla Public
+#  License, v. 2.0. If a copy of the MPL was not distributed with this
+#  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import re
 from pathlib import Path
 
 import mkdocs_gen_files
 
-from docs.python import cpp_parser
-from docs.python.cpp_parser import DoxygenEntry, CppClass
+from docs.python.generators import cpp_parser
+from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 
 CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
 assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"

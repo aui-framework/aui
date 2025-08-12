@@ -6,7 +6,7 @@
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property_system
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
  * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.

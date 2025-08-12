@@ -35,7 +35,7 @@ struct dyn_range_capabilities {
  * @ingroup core
  * @tparam T element type
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * `aui::any_view` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
  * interfaces. It allows for the creation of runtime-checked, polymorphic ranges with input iterators.
  *

@@ -76,38 +76,6 @@ TEST_F(UIDataBindingTest, ComplexBinaryOperations) {
 }
 
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/properties.h
-// @defgroup property_system Property System
-// @ingroup core
-// @brief Property System is a data binding mechanism based on [signal_slot] "signal-slot system".
-// @details
-// @experimental
-// AUI property system, a compiler-agnostic alternative to __property or [property]. Based on
-// [signal_slot] "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
-// involve external tools (like `moc`). They are written in pure C++.
-//
-// !!! note
-//
-//     This page is about presenting individual values. For lists, see [AForEachUI].
-//
-// AUI property system is relatively complex, as it involves a lot of features in a single place:
-// 1. thread safe
-// 2. many-to-many relationships between objects
-// 3. optional data modification when passing values between objects (like STL projections)
-// 4. emitter can be either signal or property
-// 5. slot can be either lambda, method or property
-// 6. for the latter case, system must set up backward connection as well (including projection support)
-// 7. again, for the latter case, there's an option to make property-to-slot connection, where the "slot" is property's
-//    assignment operation
-// 8. 2 syntax variants: procedural (straightforward) and declarative
-// 9. three property variants: simple field (AProperty), custom getter/setter (APropertyDef) and custom evaluation
-//    (APropertyPrecomputed)
-// 10. some properties can be readonly
-// 11. propagating strong types' traits on views
-//
-// Learning curve is relatively flat, so be sure to
-// [ask questions and open issues](https://github.com/aui-framework/aui/issues) on our GitHub page.
-//
 // Main difference between basic value lying somewhere inside your class and a property is that the latter explicitly
 // ties getter, setter and a signal reporting value changes. Property acts almost transparently, as if there's no
 // extra wrapper around your data. This allows to work with properties in the same way as with their underlying values.
@@ -142,27 +110,33 @@ TEST_F(UIDataBindingTest, TextField1) {
 
     // The code above generates a window with a text field:
     saveScreenshot("1");
+    // <figure markdown="span">
     // ![text field](imgs/UIDataBindingTest.TextField1_1.png)
+    // </figure>
     //
     // A single call of `biConnect`:
     //
 
-    // - Prefills text field with the current `user->name` value (pre fire):
+    // -  Prefills text field with the current `user->name` value (pre fire):
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(tf->text(), "Robert");
     // AUI_DOCS_CODE_END
 
-    // - Connects `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
+    // -  Connects `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Angela";           // changing user->name programmatically...
     EXPECT_EQ(tf->text(), "Angela"); // ...should reflect on the text field
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
+    // <figure markdown="span">
     // ![text field](imgs/UIDataBindingTest.TextField1_2.png)
+    // </figure>
 
-    // - Connects `tf->text().changed` to notify the `user->name` property about changes in text field (i.e., if the
-    // user typed another value to the text field):
+    // -  Connects `tf->text().changed` to notify the `user->name` property about changes in text field (i.e., if the
+    //    user typed another value to the text field):
+    // <figure markdown="span">
     // ![text field](imgs/UIDataBindingTest.TextField1_3.png)
+    // </figure>
     tf->selectAll();
     By::value(tf).perform(type("Snezhana"));
     saveScreenshot("3");
@@ -176,15 +150,17 @@ TEST_F(UIDataBindingTest, TextField1) {
 }
 
 //
-// # Declaring Properties
+// ## Declaring Properties
+//
 // There are several ways to define a property in AUI:
+//
 // - AProperty - basic wrapper property type for data models
 // - APropertyDef - property-compliant view type to tie custom getter, setter and signal together
 // - APropertyPrecomputed - readonly property whose value is determined by a callable that references other properties
 //
 // Please check their respective documentation pages for an additional information.
 //
-// # UI data binding with AUI_LET
+// ## UI data binding with AUI_LET
 //
 // !!! note
 //
@@ -527,7 +503,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 }
 
 //
-// # UI declarative data binding {#UI_declarative_data_binding}
+// ## UI declarative data binding {#UI_declarative_data_binding}
 // As said earlier, `AUI_LET` syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
