@@ -75,7 +75,6 @@ jobs:
         run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
 
       - name: Run tests
-        # Build your program with the given configuration
         working-directory: ${{github.workspace}}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV
 
