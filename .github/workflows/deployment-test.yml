@@ -16,7 +16,7 @@ permissions:
   contents: write
 
 jobs:
-  deployment-tests-full:
+  deployment-tests-windows-ubuntu:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (full)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -81,3 +81,57 @@ jobs:
         # Build your program with the given configuration
         working-directory: ${{github.workspace}}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV
+
+  deployment-tests-fedora:
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (Linux (Fedora))
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        kind: [static, shared]
+
+    runs-on: ${{ matrix.os }}
+    container: fedora:latest
+
+    concurrency:
+        group: ${{ github.ref }}-${{ github.base_ref }}-${{ github.head_ref }}-Fedora-${{ matrix.kind }}
+        cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Extract tag
+        shell: bash
+        run: |
+          echo "TAG=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
+      - name: Install build dependencies (Fedora)
+        run: |
+          dnf -y update
+          dnf -y install \
+            git cmake gcc-c++ make pkgconf \
+            glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel \
+            gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Extract tag
+        shell: bash
+        run: echo "TAG=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
+
+      - name: Configure CMake
+        run: >
+          cmake -G "${{ matrix.generator }}"
+          -B ${{ github.workspace }}/build
+          -DCMAKE_BUILD_TYPE=${{ matrix.debug_or_release }}
+          -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }}
+          ${{ matrix.additional_cmake_flags }}
+          -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}"
+          -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON
+          -DAUI_BUILD_AUDIO=OFF
+
+      - name: Run tests
+        working-directory: ${{ github.workspace }}/build
+        run: ctest -C ${{ matrix.debug_or_release }} -VV
