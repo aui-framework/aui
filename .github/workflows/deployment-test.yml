@@ -6,7 +6,7 @@ on:
       - v*
 
 concurrency:
-  group: ${{ github.workflow }}:${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:
@@ -85,6 +85,7 @@ jobs:
   deployment-tests-fedora:
     name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (Linux (Fedora))
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest]
         debug_or_release: [Debug, Release]
