@@ -44,12 +44,13 @@ def inject_classes_href(html: str, page: Page, files: Files):
                 if not i.startswith("<"): # skip all xml tags
                     if file := mapping.get(i):
                         if file != page.file: # skip refences to itself
-                            yield f'<a href="/{page.url}">{i}</a>'
+                            yield f'<a href="/{file.url}">{i}</a>'
                             continue
-            if i.startswith("<a "):
-                ignore = True
-            elif i == "</a>":
-                ignore = False
+            for tag in ["a", "h1", "h2", "h3", "h4", "h5", "h6"]:
+                if i.startswith(f"<{tag} "):
+                    ignore = True
+                elif i == f"</{tag}>":
+                    ignore = False
 
 
             yield i
