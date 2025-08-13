@@ -14,47 +14,51 @@
 #include <cstdint>
 
 namespace gl {
-    constexpr uint32_t TEXTURE_1D = 0x0DE1;
-    constexpr uint32_t TEXTURE_2D = 0x0DE1;
-    constexpr uint32_t TEXTURE_3D = 0x806F;
-    constexpr uint32_t TEXTURE_2D_ARRAY = 0x8C1A;
+constexpr uint32_t TEXTURE_1D = 0x0DE1;
+constexpr uint32_t TEXTURE_2D = 0x0DE1;
+constexpr uint32_t TEXTURE_3D = 0x806F;
+constexpr uint32_t TEXTURE_2D_ARRAY = 0x8C1A;
 
+template <unsigned TEXTURE_TARGET>
+class API_AUI_VIEWS Texture : public aui::noncopyable {
+public:
+    Texture();
+    virtual ~Texture();
+    void setupNearest();
+    void setupLinear();
+    void setupClampToEdge();
+    void setupRepeat();
+    void setupMirroredRepeat();
 
-    template<unsigned TEXTURE_TARGET>
-    class API_AUI_VIEWS Texture {
-    public:
-        Texture();
-        virtual ~Texture();
-        void setupNearest();
-        void setupLinear();
-        void setupClampToEdge();
-        void setupRepeat();
-        void setupMirroredRepeat();
-        Texture(const Texture&) = delete;
+    Texture(Texture&& rhs) noexcept
+      : mTexture(std::exchange(rhs.mTexture, 0)), mFiltering(rhs.mFiltering), mWrapping(rhs.mWrapping) {}
 
-        void bind(uint8_t index = 0);
-        static void unbind(uint8_t index = 0);
+    Texture& operator=(Texture&& rhs) noexcept {
+        mTexture = std::exchange(rhs.mTexture, 0);
+        mFiltering = std::exchange(rhs.mFiltering, Filtering::UNDEFINED);
+        mWrapping = std::exchange(rhs.mWrapping, Wrapping::UNDEFINED);
+        return *this;
+    }
 
-        operator bool() const {
-            return mTexture;
-        }
-        uint32_t getHandle() const {
-            return mTexture;
-        }
+    void bind(uint8_t index = 0);
+    static void unbind(uint8_t index = 0);
 
-    private:
-        uint32_t mTexture = 0;
-        enum class Filtering {
-            UNDEFINED,
-            NEAREST,
-            LINEAR,
-        } mFiltering = Filtering::UNDEFINED;
+    operator bool() const { return mTexture; }
+    uint32_t getHandle() const { return mTexture; }
 
-        enum class Wrapping {
-            UNDEFINED,
-            CLAMP_TO_EDGE,
-            REPEAT,
-            MIRRORED_REPEAT,
-        } mWrapping = Wrapping::UNDEFINED;
-    };
-}
+private:
+    uint32_t mTexture = 0;
+    enum class Filtering {
+        UNDEFINED,
+        NEAREST,
+        LINEAR,
+    } mFiltering = Filtering::UNDEFINED;
+
+    enum class Wrapping {
+        UNDEFINED,
+        CLAMP_TO_EDGE,
+        REPEAT,
+        MIRRORED_REPEAT,
+    } mWrapping = Wrapping::UNDEFINED;
+};
+}   // namespace gl

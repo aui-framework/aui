@@ -18,37 +18,37 @@
 #include "Texture2DArray.h"
 #include "gl.h"
 #include "TextureImpl.h"
+#include "Texture2D.h"
 
 template class gl::Texture<gl::TEXTURE_2D_ARRAY>;
 
+static constexpr auto MIPMAP_LEVELS = 1;
+
 namespace {
-    /**
-     * @internal
+/**
+ * @internal
+ */
+struct Result {
+    /*
+     * GL_R16F / GL_RGB16F / GL_RGBA16F / GL_RGBA ....
      */
-    struct Result {
-        /*
-         * GL_R16F / GL_RGB16F / GL_RGBA16F / GL_RGBA ....
-         */
-        GLint internalformat = 0;
+    GLint internalformat = 0;
 
-        /*
-         * GL_RED / GL_RGB / GL_RGBA
-         */
-        GLenum format = 0;
+    /*
+     * GL_RED / GL_RGB / GL_RGBA
+     */
+    GLenum format = 0;
 
-        /*
-         * GL_FLOAT / GL_UNSIGNED_BYTE
-         */
-        GLenum type = GL_FLOAT;
+    /*
+     * GL_FLOAT / GL_UNSIGNED_BYTE
+     */
+    GLenum type = GL_FLOAT;
 
-        bool operator==(const Result& rhs) const;
-    };
-}
+    bool operator==(const Result& rhs) const;
+};
+}   // namespace
 
-inline bool Result::operator==(const Result& rhs) const
-{
-	return memcmp(this, &rhs, sizeof(rhs)) == 0;
-}
+inline bool Result::operator==(const Result& rhs) const { return memcmp(this, &rhs, sizeof(rhs)) == 0; }
 
 static Result recognize(AImageView image) {
     Result r{};
@@ -112,21 +112,21 @@ static Result recognize(AImageView image) {
     return r;
 }
 
-void gl::Texture2DArray::tex3D(const AVector<AImageView>& images) {
-    static constexpr auto MIPMAP_LEVELS = 1;
+gl::Texture2DArray::Texture2DArray(glm::uvec2 textureSize, unsigned int textureCount) {
     bind();
-    if (images.empty()) {
-        glTexStorage3D(GL_TEXTURE_2D_ARRAY, MIPMAP_LEVELS, GL_RGBA8, 0, 0, 0);
-        return;
-    }
+    glTexStorage3D(GL_TEXTURE_2D_ARRAY, MIPMAP_LEVELS, GL_RGBA8, textureSize.x, textureSize.y, textureCount);
+    mTextureSize = textureSize;
+    mTextureCount = textureCount;
+}
 
-    Result types = recognize(images.first());
+void gl::Texture2DArray::update(unsigned int texture, AImageView image) {
+    bind();
+    AUI_ASSERT(texture < mTextureCount);
+    AUI_ASSERT(image.size() == mTextureSize);
 
-    glTexStorage3D(GL_TEXTURE_2D_ARRAY, MIPMAP_LEVELS, GL_RGBA8, images.first().width(), images.first().height(), images.size());
+    Result types = recognize(image);
 
-    for (size_t i = 0; i < images.size(); ++i) {
-        auto image = images[i];
-        glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, GLint(i), image.width(), image.height(), 1, types.format, types.type, image.data());
-    }
-    glGenerateMipmap(GL_TEXTURE_2D_ARRAY);
+    glTexSubImage3D(
+        GL_TEXTURE_2D_ARRAY, 0, 0, 0, GLint(texture), image.width(), image.height(), 1, types.format, types.type,
+        image.data());
 }
