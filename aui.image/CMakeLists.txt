@@ -15,6 +15,15 @@ endforeach()
 auib_import(WebP https://github.com/webmproject/libwebp VERSION v1.3.1 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
 
 aui_module(aui.image WHOLEARCHIVE EXPORT aui)
+
+if(NOT MSVC OR (MSVC_VERSION GREATER_EQUAL 1900))
+    include(CheckSymbolExists)
+    check_symbol_exists(snprintf "stdio.h" HAVE_SNPRINTF)
+    if(HAVE_SNPRINTF)
+        target_compile_definitions(aui.image PUBLIC HAVE_SNPRINTF=1)
+    endif()
+endif()
+
 add_subdirectory(3rdparty)
 aui_link(aui.image PRIVATE aui::core lunasvg::lunasvg WebP::webp WebP::webpdemux)
 aui_enable_tests(aui.image)

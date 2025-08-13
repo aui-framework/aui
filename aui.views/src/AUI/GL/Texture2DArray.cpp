@@ -51,57 +51,65 @@ struct Result {
 inline bool Result::operator==(const Result& rhs) const { return memcmp(this, &rhs, sizeof(rhs)) == 0; }
 
 static Result recognize(AImageView image) {
-    Result res;
-    switch (image.format() & APixelFormat::COMPONENT_BITS) {
+    Result r{};
+    const auto comps = (image.format() & APixelFormat::COMPONENT_BITS);
+    const auto type = (image.format() & APixelFormat::TYPE_BITS);
+    switch (comps) {
         case APixelFormat::R:
-            res.format = GL_RED;
-            switch (image.format() & APixelFormat::TYPE_BITS) {
-                case APixelFormat::FLOAT:
-                    res.internalformat = GL_R16F;
-                    res.type = GL_FLOAT;
-                    break;
-                case APixelFormat::BYTE:
-                    res.internalformat = GL_R8;
-                    res.type = GL_UNSIGNED_BYTE;
-                    break;
-                default:
-                    assert(0);
-            }
+            r.format = GL_RED;
+            break;
+        case APixelFormat::RG:
+            r.format = GL_RG;
             break;
         case APixelFormat::RGB:
-            res.format = GL_RGB;
-            switch (image.format() & APixelFormat::TYPE_BITS) {
-                case APixelFormat::FLOAT:
-                    res.internalformat = GL_RGB16F;
-                    res.type = GL_FLOAT;
-                    break;
-                case APixelFormat::BYTE:
-                    res.internalformat = GL_RGB;
-                    res.type = GL_UNSIGNED_BYTE;
-                    break;
-                default:
-                    assert(0);
-            }
+            r.format = GL_RGB;
             break;
         case APixelFormat::RGBA:
-            res.format = GL_RGBA;
-            switch (image.format() & APixelFormat::TYPE_BITS) {
-                case APixelFormat::FLOAT:
-                    res.internalformat = GL_RGBA16F;
-                    res.type = GL_FLOAT;
-                    break;
-                case APixelFormat::BYTE:
-                    res.internalformat = GL_RGBA;
-                    res.type = GL_UNSIGNED_BYTE;
-                    break;
-                default:
-                    assert(0);
-            }
+            r.format = GL_RGBA;
+            break;
+        case APixelFormat::BGRA:
+            #if defined(GL_BGRA_EXT) && !defined(GL_BGRA)
+            r.format = GL_BGRA_EXT;
+            #elif defined(GL_BGRA)
+            r.format = GL_BGRA;
+            #else
+            ALogger::warn("Texture2D") << "Unhandled components mask for BGRA: 0x" << std::hex << comps << " (defaulting to RGBA)";
+            r.format = GL_RGBA;
+            #endif
             break;
         default:
-            assert(0);
+            ALogger::warn("Texture2D") << "Unhandled components mask: 0x" << std::hex << comps << " (defaulting to RGBA)";
+            r.format = GL_RGBA;
+            break;
     }
-    return res;
+    switch (type) {
+        case APixelFormat::BYTE:
+            r.type = GL_UNSIGNED_BYTE;
+            if (comps == APixelFormat::R)
+                r.internalformat = GL_R8;
+            else if (comps == APixelFormat::RG)
+                r.internalformat = GL_RG8;
+            else
+                r.internalformat = GL_RGBA8;
+            break;
+        case APixelFormat::FLOAT:
+            r.type = GL_FLOAT;
+            if (comps == APixelFormat::R)
+                r.internalformat = GL_R32F;
+            else if (comps == APixelFormat::RG)
+                r.internalformat = GL_RG32F;
+            else if (comps == APixelFormat::RGB)
+                r.internalformat = GL_RGB32F;
+            else
+                r.internalformat = GL_RGBA32F;
+            break;
+        default:
+            ALogger::warn("Texture2D") << "Unhandled type mask: 0x" << std::hex << type << " (defaulting to UBYTE RGBA8)";
+            r.type = GL_UNSIGNED_BYTE;
+            r.internalformat = (comps == APixelFormat::R) ? GL_R8 : (comps == APixelFormat::RGB) ? GL_RGB8 : GL_RGBA8;
+            break;
+    }
+    return r;
 }
 
 gl::Texture2DArray::Texture2DArray(glm::uvec2 textureSize, unsigned int textureCount) {
