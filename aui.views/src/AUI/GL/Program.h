@@ -99,6 +99,11 @@ private:
     uint32_t mVertex = 0;
     uint32_t mFragment = 0;
 
+    class UniformState {
+    public:
+        enum Value { UNINITIALIZED = -2, DOES_NOT_EXIST = -1 };
+    };
+
     struct UniformCache {
         int32_t id = UniformState::UNINITIALIZED;
         using Value = std::variant<
@@ -106,11 +111,6 @@ private:
         Value lastValue = std::nullopt;
     };
     mutable std::array<UniformCache, 64> mUniforms;
-
-    class UniformState {
-    public:
-        enum Value { UNINITIALIZED = -2, DOES_NOT_EXIST = -1 };
-    };
 
     template <typename T>
     inline bool sameAsCache(const gl::Program::Uniform& uniform, T value) const {
