@@ -204,9 +204,15 @@ endif()
 
 function(aui_add_properties AUI_MODULE_NAME)
     if(MSVC)
-        set_target_properties(${AUI_MODULE_NAME} PROPERTIES
-                LINK_FLAGS "/force:MULTIPLE"
-                COMPILE_FLAGS "/MP /utf-8")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/MP /utf-8")
+        else() # clang-cl does not support /MP
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/utf-8")
+        endif()
     endif()
 
     if(NOT ANDROID)
