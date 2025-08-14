@@ -660,10 +660,12 @@ AStylesheet::AStylesheet() {
         {
             c(".agroupbox-title"),
             Margin { {}, 4_dp },
+            AOverflow::HIDDEN,
         },
         {
             c(".agroupbox-title") > t<AView>(),
             Padding { {}, 4_dp },
+            ATextOverflow::ELLIPSIS,
         },
         {
             c(".agroupbox-inner"),
