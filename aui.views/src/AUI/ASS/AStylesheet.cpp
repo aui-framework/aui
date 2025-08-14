@@ -660,7 +660,6 @@ AStylesheet::AStylesheet() {
         {
             c(".agroupbox-title"),
             Margin { {}, 4_dp },
-            AOverflow::HIDDEN,
         },
         {
             c(".agroupbox-title") > t<AView>(),
