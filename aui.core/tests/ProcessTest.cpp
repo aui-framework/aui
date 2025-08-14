@@ -62,7 +62,10 @@ TEST_F(ProcessTest, Self) {
 }
 
 TEST_F(ProcessTest, ExitCode) {
-    auto process = AProcess::make(mSelf, "--help");
+    auto process = AProcess::create({
+        .executable = mSelf,
+        .args = AProcess::ArgStringList { { "--help"} },
+    });
     process->run();
     EXPECT_EQ(process->waitForExitCode(), 0);
 }
