@@ -1,39 +1,19 @@
 plugins {
-    id 'com.android.application'
+    id 'com.android.library'
     id 'org.jetbrains.kotlin.android'
 }
 
 android {
+    namespace 'com.github.aui.android'
     compileSdk 31
 
-    sourceSets {
-        main {
-            java {
-                srcDirs = ['@AUI_ANDROID_JAVA_SRC@', 'src/main/java']
-            }
-        }
-     }
-
     defaultConfig {
-        applicationId "@APP_ANDROID_PACKAGE@"
         minSdk 24
-        targetSdk 31
-        versionCode 1
-        versionName "@APP_VERSION@"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-
-        externalNativeBuild {
-            cmake {
-                targets "@APP_TARGET@"
-            }
-        }
+        consumerProguardFiles "consumer-rules.pro"
     }
-    ndkVersion '25.2.9519653'
 
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
     buildTypes {
         release {
             minifyEnabled false
@@ -44,20 +24,20 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    externalNativeBuild {
-        cmake {
-            path file('src/main/CMakeLists.txt')
-            version '3.16.0+'
-        }
+    kotlinOptions {
+        jvmTarget = '1.8'
     }
 }
+
 dependencies {
+
     implementation 'androidx.core:core-ktx:1.7.0'
-    implementation 'com.google.oboe:oboe:1.6.1' // sounds
     implementation 'androidx.core:core-ktx:1.6.0'
     implementation 'androidx.appcompat:appcompat:1.3.1'
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+
+    implementation 'com.google.oboe:oboe:1.6.1' // sounds
 }

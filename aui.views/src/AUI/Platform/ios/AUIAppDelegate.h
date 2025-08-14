@@ -9,16 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-//  AppDelegate.h
-//  test
-//
-//  Created by Alexey Titov on 02.12.2021.
-//
-
 #import <UIKit/UIKit.h>
 
-@interface AppDelegate : NSObject <UIApplicationDelegate>
+@interface AUIAppDelegate : NSObject <UIApplicationDelegate>
 @property(nonatomic) UIWindow *window;
 
 @end

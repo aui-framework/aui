@@ -38,15 +38,10 @@ message(STATUS "CMake Version: ${CMAKE_VERSION}")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
-set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
-
-if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
-    message(FATAL_ERROR "CMAKE_CROSSCOMPILING and AUI_BUILD_FOR are exclusive vars.")
-endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -664,7 +659,7 @@ function(aui_executable AUI_MODULE_NAME)
         list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?[Pp]latform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
-    if(ANDROID)
+    if(ANDROID OR IOS)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
     else()
 
@@ -1233,21 +1228,11 @@ macro(aui_app)
             ICON
             VENDOR
 
-            # android
-            ANDROID_PACKAGE
-
             # linux
             LINUX_DESKTOP
 
             # apple
-            APPLE_TEAM_ID
-            APPLE_BUNDLE_IDENTIFIER
-            APPLE_SIGN_IDENTITY
-
-            # ios
-            IOS_VERSION
-            IOS_DEVICE
-            IOS_CONTROLLER)
+            MACOS_BUNDLE_IDENTIFIER)
     set(multiValueArgs )
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -1279,12 +1264,6 @@ macro(aui_app)
     if (NOT APP_COPYRIGHT)
         set(APP_COPYRIGHT "Copyright is not specified")
     endif()
-    if (NOT APP_APPLE_SIGN_IDENTITY)
-        set(APP_APPLE_SIGN_IDENTITY "iPhone Developer")
-    endif()
-    if (NOT APP_IOS_CONTROLLER)
-        set(APP_IOS_CONTROLLER "AUIViewController")
-    endif()
 
     unset(_error_msg)
     if (NOT APP_TARGET)
@@ -1304,15 +1283,6 @@ macro(aui_app)
     list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
     list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
     list(APPEND _error_msg_opt "NO_INCLUDE_CPACK forbids aui_app to include(CPack).")
-    if (IOS)
-        if (NOT APP_APPLE_TEAM_ID)
-            list(APPEND _error_msg "APPLE_TEAM_ID which is your Apple Team ID (https://discussions.apple.com/thread/7942941).")
-        endif()
-        list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
-        list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
-        list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
-        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController).")
-    endif()
 
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP_FILE)
@@ -1320,10 +1290,22 @@ macro(aui_app)
         endif()
     endif()
 
-    if (AUI_PLATFORM_ANDROID OR AUI_BUILD_FOR STREQUAL "android")
-        if (NOT APP_ANDROID_PACKAGE)
-            list(APPEND _error_msg "ANDROID_PACKAGE which is android app package name.")
-        endif()
+    if (AUI_PLATFORM_ANDROID)
+        if (NOT AUI_GRADLE_BUILD_DIR)
+            message(FATAL_ERROR "AUI_GRADLE_BUILD_DIR is not specified - please refer to AUI Android Build documentation.")
+        endif ()
+        get_target_property(_t ${APP_TARGET} TYPE)
+        if (NOT _t STREQUAL SHARED_LIBRARY)
+            message(FATAL_ERROR "On Android, TARGET is expected to be a shared library.")
+        endif ()
+        # On Android, we load the application with `System.loadLibrary("app")`. Hardcoding the binary name to "app"
+        # frees us from propagating the library name to the Java code.
+        set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "app")
+
+        file(INSTALL ${AUI_BUILD_AUI_ROOT}/platform/android
+             DESTINATION ${AUI_GRADLE_BUILD_DIR}/aui_gradle
+        )
+        message(STATUS "Installed gradle part to ${AUI_GRADLE_BUILD_DIR}/aui_gradle")
     endif()
 
     if (_error_msg)
@@ -1484,18 +1466,18 @@ macro(aui_app)
 #        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
     endif()
 
-    # IOS AND MACOS ====================================================================================================
-    if (APPLE)
+    # MACOS ============================================================================================================
+    if (AUI_PLATFORM_MACOS)
         string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _cmake_system_processor_lower)
         _auib_weak_set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${APP_VERSION}-${_cmake_system_processor_lower}) # proper system processor on macOS
-        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
-            set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
+        if (NOT APP_MACOS_BUNDLE_IDENTIFIER)
+            set(APP_MACOS_BUNDLE_IDENTIFIER ${APP_NAME})
         endif()
         set(PRODUCT_NAME ${APP_NAME})
         set(EXECUTABLE_NAME ${APP_NAME})
         _auib_weak_set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
-        _auib_weak_set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
-        _auib_weak_set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
+        _auib_weak_set(MACOSX_BUNDLE_INFO_STRING ${APP_MACOS_BUNDLE_IDENTIFIER})
+        _auib_weak_set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_MACOS_BUNDLE_IDENTIFIER})
         _auib_weak_set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_NAME})
         _auib_weak_set(MACOSX_BUNDLE_ICON_FILE "app.icns")
         _auib_weak_set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
@@ -1503,9 +1485,6 @@ macro(aui_app)
         _auib_weak_set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
         _auib_weak_set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         _auib_weak_set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
-        if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
-        endif()
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE TRUE)
         _auib_weak_set_target_property(${APP_TARGET} BUNDLE TRUE)
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_BUNDLE_INFO_PLIST           "${CPACK_BUNDLE_PLIST}")
@@ -1521,10 +1500,7 @@ macro(aui_app)
         _auib_weak_set_target_property(${APP_TARGET} MACOSX_DEPLOYMENT_TARGET           "${MACOSX_DEPLOYMENT_TARGET}")
 
         set_target_properties(${APP_TARGET} PROPERTIES OUTPUT_NAME "${APP_NAME}") # rename the bundle to display name
-    endif()
 
-    # MACOS ============================================================================================================
-    if (AUI_PLATFORM_MACOS)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         if (APP_ICON)
@@ -1564,34 +1540,19 @@ macro(aui_app)
 
     # IOS ==============================================================================================================
     if (IOS)
-        if (APP_IOS_DEVICE STREQUAL IPHONE)
-            set(APP_IOS_DEVICE "1")
-        elseif (APP_IOS_DEVICE STREQUAL IPAD)
-            set(APP_IOS_DEVICE "2")
-        elseif (APP_IOS_DEVICE STREQUAL BOTH)
-            set(APP_IOS_DEVICE "1,2")
-        endif()
-
-        set(LOGIC_ONLY_TESTS 0)                                     # <== Set to 1 if you do not want tests to be hosted by the application, speeds up pure logic tests but you can not run them on real devices
-
-        set(_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
-        set(CMAKE_SYSTEM_PROCESSOR ${_SYSTEM_PROCESSOR})
-        #include(BundleUtilities)
-        include(FindXCTest)
-        if (CMAKE_TOOLCHAIN_FILE)
-            get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
-        endif()
-
-        message(STATUS XCTestFound:${XCTest_FOUND})
-
-        set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
-        )
-
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
-
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
-        set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+        set_target_properties(${APP_TARGET} PROPERTIES
+                OUTPUT_NAME "App" # always use "App.framework" name - so we won't need to update it elsewhere
+                LIBRARY_OUTPUT_DIRECTORY "$ENV{BUILT_PRODUCTS_DIR}" # place App.framework to Products/ dir so Xcode can see it
+                XCODE_ATTRIBUTE_ENABLE_BITCODE "NO"
+                FRAMEWORK TRUE
+                FRAMEWORK_VERSION C
+                MACOSX_FRAMEWORK_IDENTIFIER aui.App
+                VERSION 1.0.0
+                SOVERSION 1.0.0
+#                PUBLIC_HEADER dynamicFramework.h
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY "iPhone Developer"
+        )
 
         # Locate system libraries on iOS
         find_library(UIKIT UIKit REQUIRED)
@@ -1613,151 +1574,39 @@ macro(aui_app)
                 ${COREANIMATION}
                 ${SYSTEMCONFIGURATION})
 
-
         # Turn on ARC
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 
-        if (NOT DEFINED AUI_IOS_CODE_SIGNING_REQUIRED)
-            set(AUI_IOS_CODE_SIGNING_REQUIRED YES)
+        # put all Objective-C headers located in src/platform/ios/*.h from APP_TARGET and all it's dependencies
+        # to App.framework's Headers, so they are available to application's root target.
+        get_target_property(_targets ${APP_TARGET} LINK_LIBRARIES)
+        foreach(_target ${APP_TARGET} ${_targets})
+            if (NOT TARGET ${_target})
+                continue()
+            endif()
+            get_target_property(_include_dirs ${_target} INTERFACE_INCLUDE_DIRECTORIES)
+            message(STATUS "Pidor ${_target} ${_include_dirs}")
+            foreach(_include_dir ${_include_dirs})
+                add_custom_command(
+                        TARGET
+                        ${APP_TARGET}
+                        POST_BUILD COMMAND cmake -E echo "${_include_dirs}")
+            endforeach ()
+        endforeach ()
+        if (_headers_accumulator)
+            set_target_properties(${APP_TARGET} PUBLIC_HEADER ${_headers_accumulator})
+            string(REPLACE ";" "\n" _headers_accumulator "${_headers_accumulator}")
+            message(STATUS "[aui_app] These headers from <INCLUDE_DIRS>/platform/ios are exported to App.framework:\n"
+                ${_headers_accumulator}
+                "You can use them from Objective-C and Swift with import statements.")
         endif()
 
-        # Create the app target
-        set_target_properties(${APP_TARGET} PROPERTIES
-                XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
-                RESOURCE "${RESOURCES}"
-                XCODE_ATTRIBUTE_GCC_PRECOMPILE_PREFIX_HEADER "YES"
-                XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${APP_IOS_VERSION}
-                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
-                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
-                XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/platform/apple/plist.in
-                XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
-                XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
-                XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
-                XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
-                XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
-                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
-        )
-        # Include framework headers, needed to make "Build" Xcode action work.
-        # "Archive" works fine just relying on default search paths as it has different
-        # build product output directory.
-
-
-        # Set the app's linker search path to the default location on iOS
-        set_target_properties(
-                ${APP_TARGET}
-                PROPERTIES
-                XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS
-                "@executable_path/Frameworks"
-        )
-
-        # Note that commands below are indented just for readability. They will endup as
-        # one liners after processing and unescaped ; will disappear so \; are needed.
-        # First condition in each command is for normal build, second for archive.
-        # \&\>/dev/null makes sure that failure of one command and success of other
-        # is not printed and does not make Xcode complain that /bin/sh failed and build
-        # continued.
-
-        # Create Frameworks directory in app bundle
-        add_custom_command(
-                TARGET
-                ${APP_TARGET}
-                POST_BUILD COMMAND /bin/sh -c
-                \"COMMAND_DONE=0 \;
-                if ${CMAKE_COMMAND} -E make_directory
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
-                \&\>/dev/null \; then
-                COMMAND_DONE=1 \;
-                fi \;
-                if ${CMAKE_COMMAND} -E make_directory
-                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks
-                \&\>/dev/null \; then
-                COMMAND_DONE=1 \;
-                fi \;
-                if [ \\$$COMMAND_DONE -eq 0 ] \; then
-                echo Failed to create Frameworks directory in app bundle \;
-                exit 1 \;
-                fi\"
-        )
-
-        # Copy the framework into the app bundle
-        add_custom_command(
-                TARGET
-                ${APP_TARGET}
-                POST_BUILD COMMAND /bin/sh -c
-                \"COMMAND_DONE=0 \;
-                if ${CMAKE_COMMAND} -E copy_directory
-                ${_current_app_build_files}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
-                \&\>/dev/null \; then
-                COMMAND_DONE=1 \;
-                fi \;
-                if ${CMAKE_COMMAND} -E copy_directory
-                \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
-                \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
-                \&\>/dev/null \; then
-                COMMAND_DONE=1 \;
-                fi \;
-                if [ \\$$COMMAND_DONE -eq 0 ] \; then
-                echo Failed to copy the framework into the app bundle \;
-                exit 1 \;
-                fi\"
-        )
-        # Codesign the framework in it's new spot
-        if (AUI_IOS_CODE_SIGNING_REQUIRED)
-            add_custom_command(
-                    TARGET
-                    ${APP_TARGET}
-                    POST_BUILD COMMAND /bin/sh -c
-                    \"COMMAND_DONE=0 \;
-                    if codesign --force --verbose
-                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
-                    --sign ${APP_APPLE_SIGN_IDENTITY}
-                    \&\>/dev/null \; then
-                    COMMAND_DONE=1 \;
-                    fi \;
-                    if codesign --force --verbose
-                    \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
-                    --sign ${APP_APPLE_SIGN_IDENTITY}
-                    \&\>/dev/null \; then
-                    COMMAND_DONE=1 \;
-                    fi \;
-                    if [ \\$$COMMAND_DONE -eq 0 ] \; then
-                    echo Framework codesign failed \;
-                    exit 1 \;
-                    fi\"
-            )
-
-        endif()
-
-        # Add a "PlugIns" folder as a kludge fix for how the XcTest package generates paths
-        add_custom_command(
-                TARGET
-                ${APP_TARGET}
-                POST_BUILD COMMAND /bin/sh -c
-                \"COMMAND_DONE=0 \;
-                if ${CMAKE_COMMAND} -E make_directory
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/PlugIns
-                \&\>/dev/null \; then
-                COMMAND_DONE=1 \;
-                fi \;
-                if [ \\$$COMMAND_DONE -eq 0 ] \; then
-                echo Failed to create PlugIns directory in EFFECTIVE_PLATFORM_NAME folder. \;
-                exit 1 \;
-                fi\"
-        )
     endif()
     string(TOLOWER "${_aui_package_file_name}" _aui_package_file_name)
     string(REPLACE " " "_" _aui_package_file_name "${_aui_package_file_name}")
     _auib_weak_set(CPACK_PACKAGE_FILE_NAME "${_aui_package_file_name}")
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
-    endif()
-
-    if (AUI_BUILD_FOR STREQUAL "android")
-        _aui_android_app()
-    elseif (AUI_BUILD_FOR STREQUAL "ios")
-        _aui_ios_app()
     endif()
 endmacro()
 
@@ -1780,13 +1629,6 @@ endif()
 #    endif()
 #endif()
 
-
-if (AUI_BUILD_FOR STREQUAL "android")
-    # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)
-    _aui_find_root()
-    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
-endif()
-
 if (ANDROID)
     # cmake -> gradle -> [cmake(x86|mips|arm|arm64)]
     auib_use_system_libs_begin()
@@ -1795,9 +1637,4 @@ if (ANDROID)
     set_target_properties(aui::android_log PROPERTIES
             IMPORTED_LOCATION "${log-lib}")
     auib_use_system_libs_end()
-endif()
-
-if (AUI_BUILD_FOR STREQUAL "ios")
-    _aui_find_root()
-    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.ios.cmake)
 endif()

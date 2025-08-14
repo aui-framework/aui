@@ -16,7 +16,7 @@ import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import kotlin.system.exitProcess
 
-open class AuiActivity : AppCompatActivity() {
+open class AUIActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         window.setFlags(
@@ -24,8 +24,9 @@ open class AuiActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
         Platform.ourContext = this
-        val surfaceView = AuiView(this)
+        val surfaceView = AUIView(this)
         setContentView(surfaceView)
+        System.loadLibrary("app")
     }
 
     override fun onDestroy() {

@@ -1,16 +1,22 @@
 Cross-platform app packaging is a large topic that involves various build systems, platform-specific tools and
-techniques. AUI unifies package building process while still relying on `CMake` as the central build system.
+techniques. AUI unifies package building process while still relying on `CMake` as the central build system on these
+CPack-enabled platforms:
+
+- @ref windows
+- @ref linux
+- @ref macos
+- @ref emscripten
+
+For platforms with external build systems, see @ref "docs/Crosscompiling.md":
+
+- @ref android
+- @ref ios
 
 AUI Framework focuses on minimizing efforts for AUI-based project to produce production-ready packages as easily as
 possible. AUI refrains from self-promotion in placeholders and "default values"; instead it carefully uses the
 information about your project passed to @ref docs/aui_app.md where needed.
 
-AUI provides a convenient configure time variable for choosing target packaging method -
-@ref AUI_APP_PACKAGING "-DAUI_APP_PACKAGING=...". Furthermore, if you are using @ref AUI_BUILD_FOR "-DAUI_BUILD_FOR=..."
-(for cross-compiling), `AUI_APP_PACKAGING` is @ref PACKAGING_WITH_AUI_BUILD_FOR "not required" to specify. This page
-provides full usage examples.
-
-`AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by @ref docs/aui_app.md.
+`AUI_APP_PACKAGING` are handled by @ref docs/aui_app.md.
 
 @ref docs/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
@@ -191,9 +197,3 @@ The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, 
 @ref docs/aui_app.md (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 @pythongen{aui_app_dmg}
-
-# Android and iOS {#PACKAGING_WITH_AUI_BUILD_FOR}
-
-`-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
-
-Please refer to [cross-compiling](docs/Crosscompiling.md).
