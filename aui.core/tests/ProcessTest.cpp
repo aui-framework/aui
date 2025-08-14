@@ -62,7 +62,9 @@ TEST_F(ProcessTest, Self) {
 }
 
 TEST_F(ProcessTest, ExitCode) {
-    EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
+    auto process = AProcess::make(mSelf, "--help");
+    process->run();
+    EXPECT_EQ(process->waitForExitCode(), 0);
 }
 
 TEST_F(ProcessTest, Stdout) {
