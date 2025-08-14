@@ -12,7 +12,7 @@
 #include <AUI/Platform/linux/x11/PlatformAbstractionX11.h>
 
 #include <X11/Xlib.h>
-#include <X11/keysym.h>
+#include <X11/XKBlib.h>
 
 static bool isMouseKeyDown(AInput::Key button) {
     if (PlatformAbstractionX11::ourDisplay == nullptr)
@@ -44,7 +44,7 @@ AInput::Key PlatformAbstractionX11::inputFromNative(int k) {
     if (PlatformAbstractionX11::ourDisplay == nullptr)
         return AInput::UNKNOWN;
     AInput::Key key;
-    KeySym keycode = XKeycodeToKeysym(PlatformAbstractionX11::ourDisplay, k, 0); // NOLINT
+    KeySym keycode = XkbKeycodeToKeysym(PlatformAbstractionX11::ourDisplay, k, 0, 0); // NOLINT
     switch (keycode) {
         case XK_Shift_L:
             key = AInput::LSHIFT;
