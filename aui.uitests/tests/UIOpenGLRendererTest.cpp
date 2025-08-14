@@ -15,6 +15,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 
 using namespace ass;
+using namespace declarative;
 
 class UIOpenGLRendererTest : public testing::Test {
 public:

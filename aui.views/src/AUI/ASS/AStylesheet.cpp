@@ -108,31 +108,23 @@ AStylesheet::AStylesheet() {
 
         {
             t<ATextArea>(),
+            TextColor { inherit },
             Expanding { 1 },
         },
         // AAbstractLabel
         {
             t<AAbstractLabel>(),
-            Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
-        },
-        {
-            t<AText>() > t<AAbstractLabel>(),
-            Margin { 0 },
-            Padding { 0 },
+            TextColor { inherit },
         },
         {
             t<AAbstractLabel>::disabled(),
             TextColor { 0x444444_rgb },
         },
-        {
-            t<AAbstractLabel>(),
-            Margin {2_dp, 4_dp},
-        },
 
-        // AButton
+        /// [AButton]
         {
-            { t<AButton>(), c(".btn")},
+            t<AButton>(),
             BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 5_dp},
             Margin {2_dp, 4_dp},
@@ -144,24 +136,15 @@ AStylesheet::AStylesheet() {
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
-            { t<AButton>::hover(), c::hover(".btn")},
+            t<AButton>::hover(),
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
-            { t<AButton>::active(), c::active(".btn")},
+            t<AButton>::active(),
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            t<AButtonEx>() > t<AViewContainer>(),
-            LayoutSpacing { 2_dp },
-        },
-        {
-            t<AButtonEx>() >> t<ALabel>(),
-            Margin { 0 },
-            Padding { 0 },
-        },
-        {
-            { button::Default(t<AButton>()), c(".btn_default")},
+            button::Default(t<AButton>()),
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
@@ -174,15 +157,15 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            button::Default(t<AButton>::hover()),
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
-            { t<AButton>::active(), c::active(".btn")},
+            t<AButton>::active(),
             BoxShadow { nullptr },
         },
         {
-            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            button::Default(t<AButton>::hover()),
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
                             {0.f, getOsThemeColorLighter()},
@@ -191,16 +174,17 @@ AStylesheet::AStylesheet() {
             } },
         },
         {
-            { button::Default(t<AButton>::active()), c::active(".btn_default")},
+            button::Default(t<AButton>::active()),
             BackgroundSolid { getOsThemeColor() }
         },
         {
-            { t<AButton>::disabled(), c::disabled(".btn") },
+            t<AButton>::disabled(),
             BackgroundSolid { 0xcccccc_rgb },
             BoxShadow { nullptr },
             Border { 1_dp, 0xbfbfbf_rgb },
             TextColor { 0x838383_rgb }
         },
+        /// [AButton]
 
         // Text fields
         {
@@ -271,7 +255,7 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp },
+            Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },
@@ -370,7 +354,8 @@ AStylesheet::AStylesheet() {
 
         // ADropdownList
         {
-            t<ADropdownList>(),
+            t<ADropdownList>() >> t<ALabel>(),
+            Expanding{},
             ATextAlign::LEFT,
         },
 

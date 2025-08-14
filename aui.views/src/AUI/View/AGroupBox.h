@@ -13,7 +13,7 @@
 
 
 #include "AViewContainer.h"
-#include "AUI/Util/Declarative.h"
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
  * @brief A titled frame

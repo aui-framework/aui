@@ -19,8 +19,10 @@
 #include "ARulerView.h"
 #include "AScrollbar.h"
 #include <AUI/ASS/ASS.h>
+#include <AUI/Util/Declarative/Containers.h>
 
 using namespace ass;
+using namespace declarative;
 
 class WrapperContainer: public AViewContainerBase {
 private:

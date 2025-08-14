@@ -97,6 +97,16 @@ public:
     }
 };
 
+/// [label coloring]
+static _<AView> link(const AString& url) {
+    return Label { url } AUI_WITH_STYLE {
+               TextColor { AColor::BLUE },
+               BorderBottom { 1_px, AColor::BLUE },
+               ACursor::POINTER,
+           } AUI_LET { AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [url] { APlatform::openUrl(url); }); };
+}
+/// [label coloring]
+
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();
 
@@ -116,6 +126,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_WITH_STYLE {
             Expanding(1, 0),
           },
+      Label { "Pidori\nEbanie" },
       Horizontal {} AUI_LET {
               mAsync << AUI_THREADPOOL {
                   auto drawable = IDrawable::fromUrl(
@@ -153,12 +164,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Default button") AUI_LET { it->setDefault(); },
                     _new<AButton>("Disabled button") AUI_LET { it->setDisabled(); },
                     Button {
-                      Icon { ":img/logo.svg" },
-                      Label { "Button with icon" },
-                    }
-                        .clicked(this, [&] {
-                            AMessageBox::show(this, "Title", "Message");
-                        }),
+                      .content = Horizontal { Icon { ":img/logo.svg" }, Label { "Button with icon" }, },
+                      .onClick = [this] {
+                        AMessageBox::show(this, "Title", "Message");
+                      },
+                    },
                   },
                 },
 
@@ -183,17 +193,17 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   },
                 },
 
-                // comboboxes
+                // dropdown lists
                 GroupBox {
-                  Label { "Comboboxes" },
+                  Label { "Dropdown lists" },
                   Vertical {
                     _new<ADropdownList>(AListModel<AString>::make({
-                      "Combobox 1",
-                      "Combobox 2",
-                      "Combobox 3",
-                      "Combobox 4",
-                      "Combobox 5",
-                      "Combobox 6",
+                      "Dropdown list 1",
+                      "Dropdown list 2",
+                      "Dropdown list 3",
+                      "Dropdown list 4",
+                      "Dropdown list 5",
+                      "Dropdown list 6",
                     })),
                     _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
                   },
@@ -611,12 +621,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Label { "Custom cursor" } AUI_WITH_STYLE {
                           ACursor { ":img/logo.svg", 64 },
                         },
-                    Label { "github.com/aui-framework/aui" }.clicked(
-                        this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) AUI_WITH_STYLE {
-                          TextColor { AColor::BLUE },
-                          BorderBottom { 1_px, AColor::BLUE },
-                          ACursor::POINTER,
-                        },
+                    link("https://github.com/aui-framework/aui"),
                   },
                 },
                 Stacked {
@@ -678,7 +683,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") AUI_WITH_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { "OK" }.clicked(this, [surface] { surface->close(); }) }
+        Centered { Button { .content = "OK", .onClick = [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

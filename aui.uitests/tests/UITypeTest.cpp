@@ -14,6 +14,8 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
 
+using namespace declarative;
+
 /**
  * There's a text field and a button:
  * _____________________-[]X_

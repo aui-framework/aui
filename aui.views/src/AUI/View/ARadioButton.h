@@ -19,6 +19,7 @@
 #include "AViewContainer.h"
 #include <AUI/Common/AMap.h>
 #include <AUI/ASS/Selector/Selected.h>
+#include <AUI/Util/Declarative/Containers.h>
 
 
 class ARadioButtonInner: public AView

@@ -132,10 +132,25 @@ TEST(UpdaterTest, ApplyUpdate) {
 // @experimental
 // This module is purposed for delivering updates to your end users on distribution methods that do not support that by
 // themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
-// your website).
+// your website). Here's small breakdown:
+//
+// | Platform      | Distribution method           | Auto updating solution |
+// | ------------- | ----------------------------- | ---------------------- |
+// | @ref windows  | Installer/exe                 | @ref updater           |
+// | @ref windows  | Microsoft Store (used rarely) | Microsoft Store        |
+// | @ref linux    | Portables                     | @ref updater           |
+// | @ref linux    | Flatpak                       | Flathub                |
+// | @ref macos    | DMG (*.app)                   | -                      |
+// | @ref macos    | Apple App Store               | Apple App Store        |
+// | @ref android  | APK                           | Google Play Store      |
+// | @ref ios      | IPA                           | Apple App Store        |
+//
+// @note
+// "Portable" means that you distribute your app as a single executable file (i.e., a single file with all dependencies
+// packed into it), usually not requiring to "install" it to the system.
 //
 // `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
-// priveleges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
+// privileges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
 // to user's directory (i.e., in `AppData`).
 //
 // @note
