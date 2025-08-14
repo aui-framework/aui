@@ -658,12 +658,11 @@ AStylesheet::AStylesheet() {
 
         // AGroupBox
         {
-            c(".agroupbox-title"),
-            Margin { {}, 4_dp },
+            c(".agroupbox-title") > t<ADrawableIconView>(),
+            Padding { {}, 4_dp },
         },
         {
-            c(".agroupbox-title") > t<AView>(),
-            Padding { {}, 4_dp },
+            c(".agroupbox-title") >> t<ADrawableIconView>(),
             ATextOverflow::ELLIPSIS,
         },
         {
