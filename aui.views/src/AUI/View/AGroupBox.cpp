@@ -53,14 +53,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
 
     using namespace declarative;
     setContents(Vertical {
-        Horizontal {
-            mTitle AUI_LET {
-                if (auto label = _cast<ALabel>(it)) {
-                    label->setOverflow(AOverflow::HIDDEN);
-                    label->setTextOverflow(ATextOverflow::ELLIPSIS);
-                }
-            }
-        } << ".agroupbox-title",
+        Horizontal { mTitle } << ".agroupbox-title",
         mFrame = _new<Inner>(mTitle,
                             /*
                              * Using two nested container because view's masking does not affect it's background (style), but does for
