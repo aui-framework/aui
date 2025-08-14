@@ -906,11 +906,10 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endforeach()
 
-
-                if(MSVC)
-                    # force msvc compiler to parallel build
-                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+ 
+                # force msvc compiler to parallel build
+                if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                           # MSVC but exclude clang-cl
+                    set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS "-MP")   # Parallel compilation
                 endif()
 
                 if (IOS)
