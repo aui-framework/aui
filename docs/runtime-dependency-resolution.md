@@ -51,8 +51,8 @@ On UNIX-like platforms, a special directory hierarchy should be maintained, for 
 installations (for compatibility reasons), hence ["docs]/AUI Boot.md" copies imported shared objects to
 `${CMAKE_BINARY_DIR}/lib`.
 
-These libraries are picked up by targets defined via [aui_module]([docs]/aui_module.md) and
-[aui_executable]([docs]/aui_executable.md) by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
+These libraries are picked up by targets defined via [aui_module] and
+[aui_executable] by adjusting `RUNPATH`/`RPATH` which is a special field inside executables
 indicating where to find required shared libraries.
 
 <!-- aui:snippet cmake/aui.build.cmake _auib_apply_rpath -->
@@ -74,8 +74,8 @@ This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`
 way so the executables can actually find their dependencies. CPack and
 ["docs]/Packaging Your App.md" "other deployment methods" use `cpack --install` so the behaviour is common.
 
-In addition to CMake's installation behaviour, targets defined with AUI's [docs]/aui_executable.md and 
-[docs]/aui_module.md implement an additional installation behaviour to copy all the required dependencies to
+In addition to CMake's installation behaviour, targets defined with AUI's [aui_executable] and 
+[aui_module] implement an additional installation behaviour to copy all the required dependencies to
 installation prefix.
 
 ```
@@ -113,7 +113,7 @@ bin/aui.views.dll
 
 !!! note
 
-    On Windows, if [docs]/aui_app.md was used to produce an application, it reconfigures the installation to put dlls and exe
+    On Windows, if [aui_app] was used to produce an application, it reconfigures the installation to put dlls and exe
     to installation root directory (common practice). From perspective of a user, extra directory hierarchy is redundant.
     ```sh
     tree install_prefix/

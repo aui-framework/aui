@@ -39,7 +39,7 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 Whether build examples or not.
 
 ### AUI_BUILD_FOR
-Specifies target platform for cross-compilation (see [cross-compiling]([docs]/Crosscompiling.md)).
+Specifies target platform for cross-compilation (see [cross-compiling](crosscompiling.md)).
 
 ### AUIB_CACHE_DIR
 Changes [AUIB_CACHE].

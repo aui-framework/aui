@@ -106,7 +106,7 @@ TEST_F(PropertyModifierTest, Write_operators_write_equals) {
 }
 
 // However, it is still possible to achieve non-const version of `operator->`. To do this, you need a
-// [aui]::PropertyModifier object that grants such access:
+// [aui::PropertyModifier] object that grants such access:
 
 TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow1) {
     LogObserver observer;
@@ -139,9 +139,9 @@ TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow2) {
 }
 
 //
-// The right way is to create [aui]::PropertyModifier just once. This will produce exactly one notification, ensuring
+// The right way is to create [aui::PropertyModifier] just once. This will produce exactly one notification, ensuring
 // that modifications to the property are performed atomically. This means that all operations within
-// the scope of [aui]::PropertyModifier produced by `writeScope()` will be treated as one unit, and only one change
+// the scope of [aui::PropertyModifier] produced by `writeScope()` will be treated as one unit, and only one change
 // notification will be emitted.
 TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow3) {
     LogObserver observer;

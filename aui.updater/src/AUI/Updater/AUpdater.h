@@ -95,9 +95,9 @@ public:
      *
      * This function handles following arguments to your application:
      * - `--aui-updater-origin` -
-     * - `--aui-updater-wait-for-process` - maps to [AUpdater]::handleWaitForProcess that instructs AUpdater to wait
+     * - `--aui-updater-wait-for-process` - maps to [AUpdater::handleWaitForProcess()] that instructs AUpdater to wait
      *   the specified process to finish before processing next argument(s).
-     * - `--aui-updater-cleanup` - maps to [AUpdater]::handlePostUpdateCleanup and returns control flow to normal
+     * - `--aui-updater-cleanup` - maps to [AUpdater::handlePostUpdateCleanup()] and returns control flow to normal
      *   execution of your application (last updating step)
      * - `--aui-updater-failed` - reports last error occurred while update deployment. See AUpdater::getLastDeploymentError().
      *
@@ -196,11 +196,12 @@ public:
      * `status` is updated in UI thread only.
      *
      * `status` is designed in such a way the user can use their own custom status types or any of predefined ones:
-     * - [AUpdater]::StatusIdle
-     * - [AUpdater]::StatusCheckingForUpdates
-     * - [AUpdater]::StatusDownloading
-     * - [AUpdater]::StatusWaitingForApplyAndRestart
-     * - [AUpdater]::StatusNotAvailable
+     *
+     * - AUpdater::StatusIdle
+     * - AUpdater::StatusCheckingForUpdates
+     * - AUpdater::StatusDownloading
+     * - AUpdater::StatusWaitingForApplyAndRestart
+     * - AUpdater::StatusNotAvailable
      *
      * These statuses might be set by AUpdater itself.
      */

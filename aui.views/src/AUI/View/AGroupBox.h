@@ -21,7 +21,7 @@
  * @details
  * Group box provides a frame and a customizable title on top.
  *
- * See [declarative]::GroupBox for a declarative form and examples.
+ * See [declarative::GroupBox] for a declarative form and examples.
  *
  * If the title is a checkbox then it's checked state used to enable/disable the elements of this group box.
  *

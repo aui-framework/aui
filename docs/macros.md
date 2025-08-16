@@ -295,11 +295,11 @@ dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table a
 
 ### AUI_MODULE_NAME
 
-Target name exposed by [aui_module]([docs]/aui_module.md) and [aui_executable]([docs]/aui_executable.md).
+Target name exposed by [aui_module](aui_module.md) and [aui_executable](aui_executable.md).
 
 ### AUI_CMAKE_PROJECT_VERSION
 
-`${CMAKE_PROJECT_VERSION}` exposed by [aui_module]([docs]/aui_module.md) and [aui_executable]([docs]/aui_executable.md).
+`${CMAKE_PROJECT_VERSION}` exposed by [aui_module] and [aui_executable].
 
 `CMAKE_PROJECT_VERSION` is typically defined by [project](https://cmake.org/cmake/help/latest/command/project.html) 
 CMake command:

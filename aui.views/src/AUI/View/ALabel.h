@@ -20,7 +20,7 @@
  * @details
  * ALabel is used for displaying nonformatted single-line text.
  *
- * See [declarative]::Label for a declarative form and examples.
+ * See [declarative::Label] for a declarative form and examples.
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {
 public:

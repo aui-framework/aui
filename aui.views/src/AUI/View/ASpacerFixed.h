@@ -23,7 +23,7 @@
  * ASpacerFixed is fixed size blank view which acquires specified space in `Horizontal` and `Vertical` layouts. For the
  * rest of layout managers it does nothing.
  *
- * See [declarative]::SpacerFixed for a declarative form and examples.
+ * See [declarative::SpacerFixed] for a declarative form and examples.
  *
  * ASpacerFixed follows direction of its container layout. That is, for `Horizontal` layout it consumes horizontal space
  * only and for `Vertical` layout it consumes vertical space only.

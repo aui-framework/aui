@@ -1,7 +1,5 @@
 # Crosscompiling (Android and iOS)
 
-See also: [docs]/Macros.md
-
 AUI provides the unified way to cross-compile your application with AUI_BUILD_FOR CMake configure variable. When
 specified, CMake does the whole configure routine as if the project is compiled for the host system but it generates
 extra project directory for the target platform's development environment once the `apps` target is invoked.

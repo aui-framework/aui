@@ -59,13 +59,13 @@ class AViewContainer;
  *    - Following ["AUI] Box Model".
  *
  * 2. **[Expanding Views](EXPANDING)** - Children can expand to fill available space of their parent:
- *    - Set via [AView]::setExpanding or [ass]::Expanding on a child
- *    - Requires parent to have [ass]::FixedSize or [ass]::MinSize or [EXPANDING] set to take effect
+ *    - Set via [AView::setExpanding()] or [ass::Expanding] on a child
+ *    - Requires parent to have [ass::FixedSize] or [ass::MinSize] or [EXPANDING] set to take effect
  *    - Independent for horizontal/vertical directions
- *    - Ignored if [ass]::FixedSize is set
+ *    - Ignored if [ass::FixedSize] is set
  *
  * 3. **Spacing** - Configurable gaps between views:
- *    - Set via [ALayout]::setSpacing() or [ass]::LayoutSpacing of the parent view
+ *    - Set via [ALayout::setSpacing()] or [ass::LayoutSpacing] of the parent view
  *    - Part of minimum size calculations of the parent view
  *    - Applied uniformly between its child views
  *
@@ -174,7 +174,7 @@ class AViewContainer;
  *       ```
  *     </td>
  *     <td>
- *     ![](imgs/Screenshot_20250625_011101.png)
+ *  ![](imgs/Screenshot_20250625_011101.png)
  *     </td>
  *   </tr>
  * </table>
@@ -309,23 +309,23 @@ class AViewContainer;
  * ### Applying size
  *
  * - Size of each view in tree is [calculated](SIZE_CALCULATION) on this phase
- * - [AView]::redraw "AWindow::redraw" - geometry is applied before rendering
+ * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
  * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
  *   only if really needed (i.e., if there were a resize event, or views were added or removed)
  * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
  *   no preconditions
- * - [ALayout]::onResize - implemented by layout manager, whose have their own algorithms of arranging views
- * - [setGeometry](AView::setGeometry) - sets geometry of a view (which might be a container)
+ * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
+ * - [AView::setGeometry] - sets geometry of a view (which might be a container)
  *
  * ### Size calculation
  *
- * - Layout manager queries **Minimum size** which is determined with [AView]::getMinimumSize and cached until the
- *   view or its children call [AView]::markMinContentSizeInvalid. It considers:
- *     - Children's minimum sizes (if any). A child includes its [ass]::Padding to its minimum size.
- *     - Children's [ass]::Margin
- *     - Container's [ass]::Padding
- *     - Container's [ass]::LayoutSpacing
- *     - Other constraints such as [ass]::FixedSize
+ * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
+ *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:
+ *     - Children's minimum sizes (if any). A child includes its [ass::Padding] to its minimum size.
+ *     - Children's [ass::Margin]
+ *     - Container's [ass::Padding]
+ *     - Container's [ass::LayoutSpacing]
+ *     - Other constraints such as [ass::FixedSize]
  * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
  *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
  *   [EXPANDING] ratios.

@@ -11,7 +11,7 @@ collaboration with [CPack](https://cmake.org/cmake/help/book/mastering-cmake/cha
 - `WIX`
 - `External`
 
-For the targets that require [cross-compilation]([docs]/Crosscompiling.md), it requires `[AUI_BUILD_FOR]` to be
+For the targets that require [cross-compilation](crosscompiling.md), it requires `[AUI_BUILD_FOR]` to be
 set, and, in fact, does not involve CPack in such case.
 
 For all packaging methods, `aui_app` assumes it is called once per CMake project. It is relevant for packaging methods

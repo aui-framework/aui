@@ -50,7 +50,7 @@ Things to note:
 - There are several AUI instances: for the host platform, arm64 (for the target) and armv7 (for the target).
 - The host version of AUI supplies `aui.toolbox`, which is used to compile assets; and a copy of Gradle/Xcode project
   to generate from. Also, this template delivers Kotlin/Swift platform code of AUI.
-- Libraries (the components defined with [docs]/aui_module.md) are built statically. This is needed to avoid code signing
+- Libraries (the components defined with [aui_module.md]) are built statically. This is needed to avoid code signing
   hell on iOS.
-- On Android, the application executable (the one defined with [docs]/aui_executable.md) is compiled as a shared library,
+- On Android, the application executable (the one defined with [aui_executable.md]) is compiled as a shared library,
   because JVM is the executable of an Android application, which is then loads a shared library containing native code.

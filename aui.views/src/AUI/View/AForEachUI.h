@@ -184,7 +184,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
  *
- * The range's type is erased with runtime-based *range* layer [aui]::any_view.
+ * The range's type is erased with runtime-based *range* layer [aui::any_view].
  *
  * [AUI_DECLARATIVE_FOR] can be nested with no restrictions in both directions.
  *
@@ -210,9 +210,9 @@ concept RangeFactory = requires(Factory&& factory) {
  * If this requirement is not satisfied (case of some `ranges::views`), AForEachUI would not unload old items,
  * unless a [data update event](AFOREACHUI_UPDATE) occurred.
  *
- * The amount of displayed data is governed by *range* size, ["docs]/Render to texture.md" tile size, AScrollArea's
+ * The amount of displayed data is governed by *range* size, [docs/render-to-texture.md] tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUI. In particular, the sliding is performed once per ["docs]/Render to texture.md" tile is passed.
+ * AForEachUI. In particular, the sliding is performed once per [docs/render-to-texture.md] tile is passed.
  *
  * @note
  * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of

@@ -29,7 +29,7 @@
  * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a [view container](AViewContainer) it
  * places the initialized radio buttons to itself.
  *
- * See [declarative]::RadioGroup for a declarative form and examples.
+ * See [declarative::RadioGroup] for a declarative form and examples.
  */
 class API_AUI_VIEWS ARadioGroup : public AViewContainer {
 private:

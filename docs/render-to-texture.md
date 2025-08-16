@@ -6,7 +6,7 @@ pixel data from the last frame. Sometimes this technique is referred as backbuff
 
 This may gradually improve performance especially if there are a lot of static views.
 
-Starting from 6.x.x, [docs]/Devtools.md has several options to debug and visualise render-to-texture optimization.
+Starting from 6.x.x, [devtools.md] has several options to debug and visualise render-to-texture optimization.
 
 ![](imgs/Screenshot_20241014_054912.png)
 

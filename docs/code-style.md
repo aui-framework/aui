@@ -1,7 +1,5 @@
 # Code Style and Recommendations
 
-See also: [docs]/clang-format.md
-
 AUI's code should be kept with the following code style:
 
 - `No tabs`; only four spaces (exception: for UI building, 2 spaces is acceptable)

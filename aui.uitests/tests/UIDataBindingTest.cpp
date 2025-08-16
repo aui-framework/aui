@@ -173,7 +173,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 // a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
 // for such a simple operation.
 TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
-    // Use `AUI_LET` expression to connect the model's username property to the label's [ALabel]::text "text()"
+    // Use `AUI_LET` expression to connect the model's username property to the label's [text()](ALabel::text)
     // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;

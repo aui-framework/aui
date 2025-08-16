@@ -19,7 +19,7 @@
  * @details
  * AExpandingSpacer is an expanding blank view which tries acquire space as much as possible.
  *
- * See [declarative]::SpacerExpanding for a declarative form and examples.
+ * See [declarative::SpacerExpanding] for a declarative form and examples.
  *
  * See expanding in [layout managers](layout-managers) for more info.
  *

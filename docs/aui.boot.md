@@ -657,7 +657,7 @@ If the dependency imported as a [subdirectory](AUIB_ADD_SUBDIRECTORY), these pat
 
 ### ~/.aui/crosscompile-host
 
-In case of [docs]/Crosscompiling.md, contains AUI.Boot sub cache for the host system.
+In case of [crosscompiling.md], contains AUI.Boot sub cache for the host system.
 
 ### ~/.aui/repo.lock
 
