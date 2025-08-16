@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Simple counter.
 
-![](imgs/docs/imgs/Screenshot_20250401_081123.png)
+![](imgs/Screenshot_20250401_081123.png)
 
 Challenge: Understanding the basic ideas of a language/toolkit.
 
@@ -53,7 +53,7 @@ fun Counter() {
 }
 ```
 
-![](imgs/docs/imgs/Screenshot_20250401_081455.png)
+![](imgs/Screenshot_20250401_081455.png)
 
 |           | AUI                                                                           | Kotlin                            |
 |-----------|-------------------------------------------------------------------------------|-----------------------------------|

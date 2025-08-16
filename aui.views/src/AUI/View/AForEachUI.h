@@ -160,7 +160,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * });
  * ```
  *
- * ![](imgs/docs/imgs/UIDeclarativeForTest.Example_.png)
+ * ![](imgs/UIDeclarativeForTest.Example_.png)
  *
  * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially [reactive](aui::react) expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
@@ -232,7 +232,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * This optimization gives a severe performance benefit. Despite the fact that there's a complete mess "under the hood"
  * (scrollbar is the only visual confirmation), the scrolled contents appear normal and natural.
  *
- * ![](imgs/docs/imgs/edrfgsrgsrg.webp) A lie is going on behind the scenes
+ * ![](imgs/edrfgsrgsrg.webp) A lie is going on behind the scenes
  */
 template <typename T>
 class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver {

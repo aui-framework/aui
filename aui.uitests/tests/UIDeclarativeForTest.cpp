@@ -211,7 +211,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     EXPECT_TRUE(By::text("Red").one());
     EXPECT_TRUE(By::text("White").one());
 
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Constant_global_data2_.png)
+    // ![](imgs/UIDeclarativeForTest.Constant_global_data2_.png)
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
@@ -231,7 +231,7 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
     // AUI_DOCS_CODE_END
 
     validateOrder();
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png)
+    // ![](imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png)
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
@@ -264,7 +264,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     EXPECT_FALSE(By::text("Bruh").one());
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png)
+    // ![](imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png)
     saveScreenshot("");
 }
 
@@ -295,7 +295,7 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
         ();
 
     //
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png)
+    // ![](imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png)
     uitest::frame();
     saveScreenshot("");
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
@@ -350,7 +350,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
 
 
     //
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Reactive_lists_1.png)
+    // ![](imgs/UIDeclarativeForTest.Reactive_lists_1.png)
     uitest::frame();
     saveScreenshot("1");
     EXPECT_TRUE(By::text("Red").one());
@@ -360,7 +360,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
     // Upon clicking "Add A new color" button, the "A new color" label will appear in the list.
     By::text("Add A new color").perform(click());
     //
-    // ![](imgs/docs/imgs/UIDeclarativeForTest.Reactive_lists_2.png)
+    // ![](imgs/UIDeclarativeForTest.Reactive_lists_2.png)
     uitest::frame();
     saveScreenshot("2");
     EXPECT_TRUE(By::text("A new color").one());

@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Flight Booker.
 
-![](imgs/docs/imgs/wjhsdflksdnjv.webp)
+![](imgs/wjhsdflksdnjv.webp)
 
 Challenge: Constraints.
 

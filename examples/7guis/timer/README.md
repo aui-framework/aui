@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Timer example.
 
-![](imgs/docs/imgs/Screenshot_20250401_085438.png)
+![](imgs/Screenshot_20250401_085438.png)
 
 Challenges: concurrency, competing user/signal interactions, responsiveness.
 

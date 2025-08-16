@@ -58,7 +58,7 @@ Story points are designed as relative measurements of work complexity, deliberat
 hours/days/weeks). They provide a general indication of effort required for task completion. It's important to note that
 story point comparisons across different teams, departments, or organizations are inherently invalid.
 
-![](imgs/docs/imgs/Screenshot_20250722_041541.png)
+![](imgs/Screenshot_20250722_041541.png)
 
 For example, Team A's 100-point sprint delivery might represent more actual work than Team B's 200 points, as each team
 develops their own story point scale. While this guide isn't meant to standardize story points globally, it offers

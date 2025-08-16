@@ -3,7 +3,7 @@
 <!-- aui:example ui -->
 Minimal UI boilerplate template XMake.
 
-![](imgs/docs/imgs/minimal-template.png)
+![](imgs/minimal-template.png)
 
 # Source Code
 ## Project Structure

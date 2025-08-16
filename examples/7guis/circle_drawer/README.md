@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Undo, redo, dialog control.
 
-![](imgs/docs/imgs/Screenshot_20250401_090701.png)
+![](imgs/Screenshot_20250401_090701.png)
 
 Challenges: undo/redo, custom drawing, dialog control.
 

@@ -3,7 +3,7 @@
 <!-- aui:example 7guis -->
 Create/Read/Update/Delete example.
 
-![](imgs/docs/imgs/Screenshot_20250401_074431.png)
+![](imgs/Screenshot_20250401_074431.png)
 
 Challenges: separating the domain and presentation logic, managing mutation, building a non-trivial layout.
 

@@ -4,7 +4,7 @@
 Game of Life implementation that uses advanced large dynamic data rendering techniques such as [ITexture],
 [AImage] to be GPU friendly. The computation is performed in [AThreadPool].
 
-![](imgs/docs/imgs/eb3f5607-5dfb-4f58-958c-ed513cf3161e.jpeg)
+![](imgs/eb3f5607-5dfb-4f58-958c-ed513cf3161e.jpeg)
 
 Conway's Game of Life, a cellular automaton devised by the mathematician John Conway. The game consists of a grid where
 each cell can be either alive or dead, and its state evolves over time according to simple rules based on the states of
