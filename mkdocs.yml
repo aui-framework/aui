@@ -155,7 +155,7 @@ nav:
       - CMake:
           - aui_app.md
           - aui_executable.md
-          - aui_link.md"
+          - aui_link.md
           - aui_module.md
           - aui-configure-flags.md
           - app-build-overview.md

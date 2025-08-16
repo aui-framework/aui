@@ -11,18 +11,8 @@ import re
 from mkdocs.structure.files import Files, File
 from mkdocs.structure.pages import Page
 
-from docs.python.generators import regexes
+from docs.python.generators import regexes, autorefs
 
-
-def _extract_page_title(page: File):
-    try:
-        if m := regexes.PAGE_TITLE.match(page.content_string):
-            return m.group(1)
-    except UnicodeDecodeError:
-        pass
-    return None
-
-mapping = None
 
 def inject_classes_href(html: str, page: Page, files: Files):
     """
@@ -32,9 +22,6 @@ def inject_classes_href(html: str, page: Page, files: Files):
     Failure to link is not an error. So, if you want to benefit from link checking, consider using [explicit] links in
     Markdown.
     """
-    global mapping
-    if mapping is None:
-        mapping = {_extract_page_title(i): i for i in files}
 
     def process():
         items = re.findall('(<[^>]*>|[\w\'_\.]+|.)', html, flags=re.S)
@@ -42,7 +29,7 @@ def inject_classes_href(html: str, page: Page, files: Files):
         for i in items:
             if not ignore: # skip contents of <a>
                 if not i.startswith("<"): # skip all xml tags
-                    if file := mapping.get(i):
+                    if file := autorefs.find_page(i):
                         if file != page.file: # skip refences to itself
                             yield f'<a href="/{file.url}">{i}</a>'
                             continue

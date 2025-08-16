@@ -280,7 +280,7 @@ def _scan():
             try:
                 contents += [i for i in _parse(full_path.read_text(), location=full_path)]
             except Exception as e:
-                log.warning(f'Source file {full_path} could not be parsed:', e)
+                log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
     return contents
 
 index = _scan()
