@@ -26,7 +26,7 @@ assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
 assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
 assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
 
-log = logging.getLogger('doxygen')
+log = logging.getLogger('mkdocs')
 
 def _parse_doxygen(comment):
     output = [['', '']]

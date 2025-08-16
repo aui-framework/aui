@@ -31,7 +31,7 @@ CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
 assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
 assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
-log = logging.getLogger('cpp_parser')
+log = logging.getLogger('mkdocs')
 
 def parse_comment_lines(iterator):
     output = []

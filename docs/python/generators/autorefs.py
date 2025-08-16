@@ -14,7 +14,7 @@ from mkdocs.structure.pages import Page
 
 from docs.python.generators import regexes
 
-log = logging.getLogger("autorefs")
+log = logging.getLogger('mkdocs')
 
 
 _mapping = None

@@ -15,7 +15,7 @@ from mkdocs.structure.pages import Page
 
 from docs.python.generators import parse_tests, examples_page, common
 
-log = logging.getLogger("comment_macros")
+log = logging.getLogger('mkdocs')
 
 def handle_comment_macros(markdown: str, page: Page, files: Files):
     def replace_comment(match: re.Match):
