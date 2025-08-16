@@ -101,7 +101,7 @@ public:
     /**
      * @brief Maps compile-time specified enum value to name.
      * @details
-     * Use names()[enumValue] for mapping runtime values.
+     * Use `names()[enumValue]` for mapping runtime values.
      *
      * This function's behaviour can be reimplemented by aui::enumerate::ValueToName trait.
      */

@@ -45,7 +45,7 @@ def handle_autorefs(markdown: str, page : Page, files: Files):
             log.warning(f"Doc file '{page.file.abs_src_path}' (line {line}) contains an unrecognized explicit link to '{referred_page_id}'.")
             return f'<span style="background:red">unrecognized link to {referred_page_id}</span>'
         title = _extract_page_title(referred_page)
-        return f"[{title}](/{page.url})"
+        return f"[{title}]({page.file.src_uri})"
 
     def handle_lines(iterator: iter):
         for line in iterator:
