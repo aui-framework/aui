@@ -27,8 +27,6 @@
  * (i.e., AAnimatedImage).
  *
  *
- * See [declarative::Icon] for a declarative form and examples.
- *
  * The sizing and positioning acts like ass::BackgroundImage. Moreover, these rules are taken from ass::BackgroundImage
  * applied to ADrawableView:
  * ```cpp
