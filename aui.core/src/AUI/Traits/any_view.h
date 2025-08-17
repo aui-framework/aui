@@ -213,10 +213,16 @@ struct any_view {
         return *this;
     }
 
+    /**
+     * @return polymorphic begin iterator.
+     */
     iterator begin() const {
         return mImpl->begin();
     }
 
+    /**
+     * @return polymorphic end iterator.
+     */
     iterator end() const {
         return mImpl->end();
     }

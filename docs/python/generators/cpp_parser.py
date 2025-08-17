@@ -86,6 +86,7 @@ class CppClass:
         self.fields = []
         self.location = None
         self.namespace = []
+        self.kind = None # 'class' | 'struct'
 
     def namespaced_name(self):
         return "::".join(self.namespace + [self.name])
@@ -166,11 +167,15 @@ class _Parser:
             self._skip_special_clause()
             return
 
-        visibility = 'private'
+        visibility = 'private' if clazz.kind == 'class' else 'public'
         template_clause = None
+        template_clause2 = None
 
         for self.last_token in self.iterator:
             # print(f'_parse_class_body iteration {self.last_token}')
+            template_clause = template_clause2
+            template_clause2 = None
+
             if self._parse_comment():
                 continue
             if self.last_token[1] == '}':
@@ -190,9 +195,9 @@ class _Parser:
                         self.last_token = next(self.iterator)
                     continue
                 if self.last_token[1] == 'template':
-                    template_clause = [self.last_token]
+                    template_clause2 = [self.last_token]
                     self.last_token = next(self.iterator)
-                    template_clause += self._skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
+                    template_clause2 += self._skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
                     continue
 
                 modifiers_before = []
@@ -269,13 +274,15 @@ class _Parser:
                         i.namespace = namespace + i.namespace
                     yield i
 
-            if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
+            if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER and self.last_token[1] in ['class', 'struct']:
+                kind = self.last_token[1]
                 self.last_token = next(self.iterator)
                 if self.last_token[1].startswith("API_"):
                     # export macro, ignore
                     self.last_token = next(self.iterator)
                 assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
                 clazz = CppClass()
+                clazz.kind = kind
                 clazz.name = self.last_token[1]
                 clazz.doc = self._consume_comment()
                 clazz.location = self.location

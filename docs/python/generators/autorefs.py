@@ -25,7 +25,7 @@ def handle_autorefs(markdown: str, page : Page, files: Files):
         referred_page = index.find_page(referred_page_id)
         if not referred_page:
             log.warning(f"Doc file '{page.file.abs_src_path}' contains an unrecognized explicit link to '{referred_page_id}'.")
-            return f'<span style="background:red">unrecognized link to {referred_page_id}</span>'
+            return f'<span style="background:red">unrecognized link to "{referred_page_id}"</span>'
         return f"[{referred_page.title}]({referred_page.url})"
 
     def tokenize():
