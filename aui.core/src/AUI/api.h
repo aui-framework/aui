@@ -17,7 +17,7 @@
 #else
     #if AUI_PLATFORM_WIN
         // Define IUnknown for Windows XP compability
-        #ifndef BUILD_WINXP
+        #ifdef BUILD_WINXP
             #define __IUnknown_FWD_DEFINED__
             typedef interface IUnknown IUnknown;
         #endif
