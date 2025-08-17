@@ -43,3 +43,6 @@ assert PAGE_TITLE.match('# AUI Framework').group(1) == "AUI Framework"
 HEADING_ANCHOR = re.compile('[#]{1,6} (.+) (\{ #(.+) \})')
 assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(1) == "AUI Framework"
 assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(3) == "aui"
+
+INDEX_ALIAS = re.compile('<!-- aui:index_alias (.+) -->')
+assert INDEX_ALIAS.match('<!-- aui:index_alias AUI_DECLARATIVE_FOR -->').group(1) == "AUI_DECLARATIVE_FOR"

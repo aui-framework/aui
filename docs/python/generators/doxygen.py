@@ -147,7 +147,7 @@ def gen_pages():
             def _render_invisible_header(name):
                 # hack: present the header as invisible block. The header will still appear in TOC and
                 # can be anchor referenced.
-                print(f'<div style="height: 0px; opacity: 0" markdown>', file=fos)
+                print(f'<div style="position:absolute;opacity:0" markdown>', file=fos)
                 print(f'### {name}', file=fos)
                 print(f'</div>', file=fos)
 

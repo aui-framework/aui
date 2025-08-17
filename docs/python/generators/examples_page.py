@@ -54,7 +54,7 @@ def examine():
                         id = id.replace(i, "-")
                     id = "".join(filter(lambda x: str.isalnum(x) or x == '-', id))
                     id = id.strip('-')
-                    id = f"examples/{id}"
+                    id = f"{id}"
 
                 category = None
                 description = ""
@@ -112,7 +112,7 @@ def example(category: str):
     return f"""
 !!! example "Example's page"
     
-    This page describes an example listed in [{category}](../examples.md#{category}) category.
+    This page describes an example listed in [{category}](examples.md#{category}) category.
 
 """
 

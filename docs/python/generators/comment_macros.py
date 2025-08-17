@@ -37,6 +37,8 @@ def handle_comment_macros(markdown: str, page: Page, files: Files):
             return parse_tests.parse_tests(Path(args))
         if type == "experimental":
             return _experimental(args)
+        if type == "index_alias":
+            return match.group(0) # handled at autorefs stage
         # Otherwise, raise an error
         raise RuntimeError(f"Unknown shortcode: {type} in {page}")
 

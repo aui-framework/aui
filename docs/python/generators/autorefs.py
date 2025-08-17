@@ -33,6 +33,7 @@ def _populate_mapping(files: Files):
 
     for file in files:
         try:
+            page_title = None
             if m := regexes.PAGE_TITLE.match(file.content_string):
                 page_title = m.group(1)
                 _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
@@ -53,7 +54,11 @@ def _populate_mapping(files: Files):
                 if m := regexes.HEADING_ANCHOR.match(line_contents):
                     heading_title = m.group(1)
                     heading_id = m.group(3)
-                    _mapping[heading_id] = MappingEntry(title=heading_title, url=f"{file.src_uri}#{heading_id}", containing_file=file)
+                    _mapping[heading_id] = MappingEntry(title=heading_title, url=f"{file.url}#{heading_id}", containing_file=file)
+
+                if m := regexes.INDEX_ALIAS.match(line_contents):
+                    heading_id = m.group(1)
+                    _mapping[heading_id] = MappingEntry(title=heading_id, url=f"{file.url}", containing_file=file)
 
 
         except UnicodeDecodeError:
