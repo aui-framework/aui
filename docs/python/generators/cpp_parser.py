@@ -226,7 +226,7 @@ class _Parser:
                     self.last_token = next(self.iterator)
                 self._consume_comment()
 
-    def parse(self):
+    def _parse_file(self):
         for self.last_token in self.iterator:
             prev_doc = self.last_doc
             if self._parse_comment():
@@ -239,6 +239,17 @@ class _Parser:
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
                 self.last_token = next(self.iterator) # TODO parse enums
                 continue
+
+            if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'namespace'):
+                self.last_token = next(self.iterator)
+                assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
+                namespace = self.last_token[1]
+                self.last_token = next(self.iterator)
+                assert self.last_token[1] == '{'
+                for i in self._parse_file():
+                    if hasattr(i, 'name'):
+                        i.namespace = [namespace] + i.namespace
+                    yield i
 
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
                 self.last_token = next(self.iterator)
@@ -258,6 +269,9 @@ class _Parser:
 
                 if clazz.doc:
                     yield clazz
+
+    def parse(self):
+        return self._parse_file()
 
 def _parse(input: str, location = None | Path):
     return _Parser(input=input, location=location).parse()
@@ -682,7 +696,7 @@ def test_parse_aobject():
         "CppFunction('isDisconnected', 'bool&', None)",
     ]
 
-def test_parse_namespace():
+def test_parse_namespace1():
     clazz = next(_parse("""
 namespace aui {
 
@@ -697,3 +711,40 @@ class Test {};
     assert clazz.doc == '@brief Test'
     assert clazz.methods == []
     assert clazz.namespace == ["aui"]
+
+def test_parse_namespace2():
+    clazz = [i for i in _parse("""
+namespace aui {
+
+namespace impl {
+/**
+ * @brief Test
+ */
+class Impl {};
+}
+
+/**
+ * @brief Test
+ */
+class Test {};
+
+}
+
+
+/**
+ * @brief Test
+ */
+class AButton {};
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'
+    assert clazz[0].methods == []
+    assert clazz[0].namespace == ["aui", "impl"]
+    assert clazz[1].name == "Test"
+    assert clazz[1].doc == '@brief Test'
+    assert clazz[1].methods == []
+    assert clazz[1].namespace == ["aui"]
+    assert clazz[2].name == "AButton"
+    assert clazz[2].doc == '@brief Test'
+    assert clazz[2].methods == []
+    assert clazz[2].namespace == []
