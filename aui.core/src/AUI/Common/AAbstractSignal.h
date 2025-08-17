@@ -65,7 +65,7 @@ class AObject;
  * You can connect as many signals as you want to a single slot, and a signal can be connected to as many slots as you
  * need.
  *
- * # Signals
+ * ## Signals
  * Signals are publicly accessible fields that notify an object's client when its internal state has changed in some way
  * that might be interesting or significant. These signals can be emitted from various locations, but it is generally
  * recommended to only emit them from within the class that defines the signal and its subclasses.
@@ -75,7 +75,7 @@ class AObject;
  * true and \c emit was called on a different thread, \c emit queues slot execution to the AEventLoop associated with
  * receiver's thread. All AView have this behaviour enabled by default.
  *
- * # Slots
+ * ## Slots
  * A slot is triggered by the emission of a related signal. Slot is no more than a regular class method with a signal
  * connected to it.
  *
@@ -95,7 +95,7 @@ class AObject;
  * The trade-off between the signals and slots mechanism's simplicity and flexibility compared to pure function calls or
  * callbacks is well-justified for most applications, given its minimal performance cost that users won't perceive.
  *
- * # Basic example
+ * ## Basic example
  * Let's use \c Counter from our previous example:
  * ```cpp
  * class Counter: public AObject {
@@ -164,7 +164,7 @@ class AObject;
  * ```
  *
  *
- * # UI example
+ * ## UI example
  * Knowing basics of signal slots, you can now utilize UI signals:
  * ```cpp
  * mOkButton = _new<AButton>("OK");
@@ -194,7 +194,7 @@ class AObject;
  *     });
  *     ```
  *
- * ## Going further
+ * ### Going further
  * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects
  * have small handy functions, so lets add `increase` method to our counter:
  *
@@ -269,7 +269,7 @@ class AObject;
  *
  * See also [property_system] for making reactive UI's on trivial data.
  *
- * # Arguments
+ * ## Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:
  * ```cpp
  * view = _new<ATextField>();
@@ -289,7 +289,7 @@ class AObject;
  * });
  * ```
  *
- * # Differences between Qt and AUI implementation
+ * ## Differences between Qt and AUI implementation
  * Suppose we want to emit <code>statusChanged</code> signal with a string argument and connect it with
  * <code>showMessage</code> slot:
  * <table>

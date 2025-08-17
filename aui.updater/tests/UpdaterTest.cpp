@@ -142,7 +142,7 @@ TEST(UpdaterTest, ApplyUpdate) {
 //
 //     Check out our [example_app_template] for a GitHub-hosted app template with auto update implemented.
 //
-// # Supported platforms
+// ## Supported platforms
 // `aui::updater` supports the following platforms:
 // - **Windows** - [portables](PORTABLE_WINDOWS) only, installers to user's directory only ([INNOSETUP])
 // - **Linux** - portables only
@@ -156,7 +156,7 @@ TEST(UpdaterTest, ApplyUpdate) {
 // (applying/deploying an update). To minimize downtime for end-users, the replacement should be seamless and quick and
 // thus the deployment process just copies newer files (overwriting old ones), it does not involve network operations.
 //
-// # Getting started
+// ## Getting started
 //
 // `AUpdater` lives inside entrypoint of your application. It needs you to pass program arguments. It might decide
 // to terminate process execution via std::exit.
@@ -189,13 +189,13 @@ AUI_ENTRY {
 // You can pass updater instance to your window (as shown in the example) and display update information from
 // `AUpdater::status` and perform the update when requested.
 //
-// # Observing update progress
+// ## Observing update progress
 //
 // @copydetails AUpdater::status
 //
-// # Update process
+// ## Update process
 //
-// ## Checking for updates
+// ### Checking for updates
 //
 // AUpdater expects [AUpdater::checkForUpdates()] to be called to check for updates. It can be called once per some
 // period of time. It calls user-defined [AUpdater::checkForUpdatesImpl()] to perform an update checking.
@@ -232,7 +232,7 @@ AUI_ENTRY {
 // You might want to store update check results (i.e., download url) in your implementation of
 // AUpdater::checkForUpdatesImpl so your [AUpdater::downloadUpdateImpl] might reuse this information.
 //
-// ## Downloading the update
+// ### Downloading the update
 //
 // When an update is found, your app should call [AUpdater::downloadUpdate] to download and unpack the update. It is
 // up to you to decide when to download an update. If you wish, you can call AUpdater::downloadUpdate in
@@ -253,7 +253,7 @@ AUI_ENTRY {
 // ...;
 // @endmsc
 //
-// ## Applying (deploying) the update
+// ### Applying (deploying) the update
 //
 // At this moment, AUpdater waits [AUpdater::applyUpdateAndRestart()] to be called. When
 // [AUpdater::applyUpdateAndRestart()] is called (i.e., when user accepted update installation), AUpdater executes the
@@ -395,13 +395,13 @@ TEST(UpdaterTest, WaitForProcess) {
 }
 
 
-// # Updater workflows { #UPDATER_WORKFLOWS }
+// ## Updater workflows { #UPDATER_WORKFLOWS }
 // When using AUpdater for your application, you need to consider several factors including usability, user experience,
 // system resources, and particular needs of your project.
 //
 // Either way, you might want to implement a way to disable auto update feature in your application.
 //
-// ## Prompt user on every step
+// ### Prompt user on every step
 //
 // This approach is implemented in AUI's [example_app_template].
 //
@@ -419,7 +419,7 @@ TEST(UpdaterTest, WaitForProcess) {
 // it checks for updates in background and pops the message box if update was found, **even if user is focused on
 // another application or away from keyboard**.
 //
-// ## Silent download
+// ### Silent download
 //
 // This approach is implemented in [example_app_auigram], as well as in official Qt-based Telegram Desktop client.
 //

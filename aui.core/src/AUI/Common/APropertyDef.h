@@ -13,7 +13,8 @@
  *
  * See [property system](property_system) for usage examples.
  *
- * # Performance considerations
+ * ## Performance considerations
+ *
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
  */

@@ -14,7 +14,7 @@ provides full usage examples.
 
 `AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by [aui_app].
 
-[docs]/aui_app.md is a CMake command provided by AUI that defines platform-specific technical information about your
+[aui_app] is a CMake command provided by AUI that defines platform-specific technical information about your
 application:
 
 - Display name
@@ -38,7 +38,7 @@ This guide covers various packaging techniques for all supported platforms.
 
     This guide assumes you have already called [aui_app] inside your `CMakeLists.txt`.
 
-# Windows
+## Windows
 
 Historically, Windows has been associated with installers in the form of executable files (`exe`s) and Windows Installer
 files (`msi`s), often downloaded from the internet. This method can be considered unsecure.
@@ -51,7 +51,7 @@ developers still opt for traditional methods. This guide will cover the latter.
     Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
     preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
 
-## Inno Setup
+### Inno Setup
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
@@ -88,7 +88,7 @@ won't prompt a UAC dialog (leverage to _admin privileges_). This way the install
 perspective of the end user. Moreover, installation to user's directory allows [updater] to work without prompting
 leverage to admin privileges during update installation.
 
-## AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
+### AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
 
 !!! note
 
@@ -117,7 +117,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 
 `AUI_PORTABLE_ZIP` appends `-portable` suffix to archive file name, if not overridden by `CPACK_PACKAGE_FILE_NAME`.
 
-## WIX
+### WIX
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
 
@@ -155,7 +155,7 @@ of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 ![](imgs/wix_logo.png) Installer with AUI's patches applied
 
-# macOS
+## macOS
 
 !!! note
 
@@ -163,7 +163,7 @@ of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 The simplest and the most user-friendly installation method is `DragNDrop` which you are probably looking for.
 
-## DragNDrop
+### DragNDrop
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
 
@@ -199,7 +199,7 @@ The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, 
 
 @pythongen{aui_app_dmg}
 
-# Android and iOS
+## Android and iOS
 
 `-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
 

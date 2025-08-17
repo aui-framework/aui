@@ -27,7 +27,7 @@ class AString;
  * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
  * define lines of exact one or two pixels wide.
  *
- * # Initialization
+ * ## Initialization
  * Recommended way is to use operator literal format:
  * ```cpp
  * AMetric a = 5_dp // -> a = 5 dimension-independent units (= pixels on 100% scaling)

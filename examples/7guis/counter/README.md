@@ -16,7 +16,7 @@ build a GUI application. A good solution will have almost no scaffolding.
 
 <!-- aui:include examples/7guis/counter/src/main.cpp -->
 
-# Comparison to Jetpack Compose
+## Comparison to Jetpack Compose
 
 Here's implementation of the same app with Jetpack Compose:
 

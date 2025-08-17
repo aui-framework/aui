@@ -114,7 +114,7 @@ public:
      *
      * Terminates current process with `std::exit(0)`
      *
-     * # Debugging update deployment
+     * ## Debugging update deployment
      *
      * You can locate update deployment logs by locating deployment process id (pid). The PID is printed by this
      * function:

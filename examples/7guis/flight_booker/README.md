@@ -22,7 +22,7 @@ behind a lot of scaffolding.
 
 <!-- aui:include examples/7guis/flight_booker/src/main.cpp -->
 
-# Regex Library
+## Regex Library
 
 For validation in this example, we've chosen using regex technology, as it's fairly simple and extensible way to
 make parsers.

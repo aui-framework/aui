@@ -19,7 +19,7 @@ adjacent cells.
 > 
 > [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 
-# Cells
+## Cells
 
 Represents the grid of cells with their states (`CellState::ALIVE` or `CellState::DEAD`). It has methods for
 initialization and randomization, as well as accessors to get the size and state of individual cells.
@@ -31,7 +31,7 @@ computations in large grids.
 @skip class Cells
 @until /// end
 
-# CellsView
+## CellsView
 
 Visualizes the grid using a texture. It updates the texture when cells change their states. When the pointer is pressed
 on the view, it toggles the state of the cell under the cursor.
@@ -42,7 +42,7 @@ call to draw the grid.
 @skip class CellsView
 @until /// end
 
-# GameOfLifeWindow
+## GameOfLifeWindow
 
 This is the main window for the Game of Life application. It sets up the UI with buttons to randomize the grid and
 start/pause the game, as well as a central area where the `CellsView` is displayed.

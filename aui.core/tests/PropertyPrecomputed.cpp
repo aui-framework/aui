@@ -28,7 +28,7 @@ public:
 namespace {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/reactive.h
 // @class APropertyPrecomputed
-// # Declaration
+// ## Declaration
 // Declare a property with custom expression determining it's value as follows:
 // AUI_DOCS_CODE_BEGIN
 /// [APropertyPrecomputed User]
@@ -153,7 +153,7 @@ TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
     EXPECT_THROW({ [[maybe_unused]] auto unused = **v1;}, AEvaluationLoopException);
 }
 
-// # Copying and moving APropertyPrecomputed
+// ## Copying and moving APropertyPrecomputed
 // @warning
 // Despite the underlying value and factory callback are both copy constructible and movable, the **copy and move
 // constructor are explicitly deleted** to avoid potential object lifetime errors created by the lambda capture and

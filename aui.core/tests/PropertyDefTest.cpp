@@ -28,7 +28,7 @@ public:
 namespace {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/property_def.h
 // @class APropertyDef
-// # Declaration
+// ## Declaration
 //
 // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is
 // defined by const member function as follows:

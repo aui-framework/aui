@@ -30,7 +30,8 @@
  * such errors and continue normal application execution. However, still recommended to handle such errors with
  * setGlobalHandler() to at least save user data.
  *
- * # Platform support { #AFatalException_Platform_support }
+ * ## Platform support { #AFatalException_Platform_support }
+ *
  * | Platform | Translation to throwing AFatalException | setGlobalHandler() |
  * |----------|-----------------------------------------|--------------------|
  * | Windows  | MSVC                                    | +                  |

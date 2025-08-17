@@ -37,9 +37,11 @@ namespace aui::reflect {
  * Depending on the actual kind of the member, different kinds of data available.
  *
  * ## Fields (member variables)
+ *
  * <!-- aui:snippet aui.core/src/AUI/Reflect/members.h fields -->
  *
  * ## Methods (member functions)
+ *
  * <!-- aui:snippet aui.core/src/AUI/Reflect/members.h methods -->
  *
  * Use [aui::tuple_visitor] and [aui::parameter_pack] to introspect arguments.

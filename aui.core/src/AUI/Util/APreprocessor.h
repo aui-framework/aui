@@ -102,7 +102,7 @@
  * - the number of arguments after expansion is at most 15.
  * - If the argument is a macro, it must be able to be called with one argument.
  *
- * ### Implementation details
+ * ## Implementation details
  *
  * There is one case when it generates a compile error: if the argument is macro
  * that cannot be called with one argument.

@@ -8,7 +8,7 @@ Note taking app that demonstrates usage of AListModel, AProperty, user data savi
 The functionality includes loading, saving, creating and deleting notes, as well as marking the UI state as dirty when
 changes are made.
 
-# Models
+## Models
 
 `Note` struct describes a note:
 
@@ -21,17 +21,17 @@ The JSON representation is described as follows:
 @line AJSON
 
 
-# MainWindow class
+## MainWindow class
 
 The `MainWindow` class is responsible for managing the overall view and logic related to notes.
 
-## Fields
+### Fields
 
 - `mNotes`: a member that holds a list of notes.
 - `mCurrentNote`: a property holding a pointer to the currently selected note.
 - `mDirty`: a boolean property indicating whether there are unsaved changes in the application.
 
-## Methods
+### Methods
 
 - `load()`: loads notes from a JSON file.
   <!-- aui:snippet examples/app/notes/src/main.cpp load -->
@@ -48,7 +48,7 @@ The `MainWindow` class is responsible for managing the overall view and logic re
   @skip markDirty()
   @until }
 
-# UI Components and Layout
+## UI Components and Layout
 
 @dontinclude examples/app/notes/src/main.cpp
 - `TitleTextArea`: derivative of `ATextArea` that focuses next text area when `Enter` is pressed.

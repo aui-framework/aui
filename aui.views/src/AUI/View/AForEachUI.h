@@ -188,11 +188,11 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * [AUI_DECLARATIVE_FOR] can be nested with no restrictions in both directions.
  *
- * # Examples
+ * ## Examples
  *
  * See examples of [AUI_DECLARATIVE_FOR].
  *
- * # Lazy Semantics
+ * ## Lazy Semantics
  *
  * AForEachUI presents all data available. If placed somewhere inside [AScrollArea] (implies
  * [AScrollAreaViewport]), lazy semantics take place. This means that AForEachUI knows scroll position and
@@ -219,7 +219,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * AForEachUI is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
  * semantics, thanks to iterators.
  *
- * ## Scrollbars
+ * ### Scrollbars
  *
  * From perspective of layout, lazy semantics is implemented by careful layout updates driven by scroll area events. If
  * possible, the items that appear far from sliding window are unloaded (views are removed). The new items are loaded

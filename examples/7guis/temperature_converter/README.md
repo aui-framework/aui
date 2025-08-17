@@ -19,7 +19,7 @@ dependency very clear with minimal boilerplate code.
 
 <!-- aui:include examples/7guis/temperature_converter/src/main.cpp -->
 
-# Comparison to Jetpack Compose
+## Comparison to Jetpack Compose
 
 Here's implementation of the same app with Jetpack Compose:
 

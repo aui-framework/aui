@@ -25,7 +25,7 @@ class AString;
  * @ingroup views
  * @details
  *
- * # Initialization
+ * ## Initialization
  * Recommended way is to use operator literal format:
  * ```cpp
  * auto angle = 180_deg;

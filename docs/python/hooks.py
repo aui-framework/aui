@@ -37,3 +37,7 @@ def on_page_content(html: str, page: Page, config: MkDocsConfig, files: Files):
     html = inject_classes_href(html, page, files)
 
     return html
+
+
+def on_files(files: Files, config: MkDocsConfig):
+    return Files([i for i in files if not "python" in str(i.src_path)])

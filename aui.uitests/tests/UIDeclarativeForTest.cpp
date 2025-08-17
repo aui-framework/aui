@@ -142,7 +142,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
 
 /**********************************************************************************************************************/
 //
-// # Initialization { #AFOREACHUI_UPDATE }
+// ## Initialization { #AFOREACHUI_UPDATE }
 //
 // This section explains how to initialize [AUI_DECLARATIVE_FOR], manage lifetime of containers and how to make them
 // reactive.

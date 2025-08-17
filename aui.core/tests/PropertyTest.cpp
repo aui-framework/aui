@@ -27,7 +27,7 @@ public:
 namespace {
 // AUI_DOCS_OUTPUT: doxygen/intermediate/property.h
 // @class AProperty
-// # Declaration
+// ## Declaration
 // To declare a property inside your data model, use AProperty template:
 // AUI_DOCS_CODE_BEGIN
 struct User {
@@ -320,7 +320,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     EXPECT_EQ(connections(*observer).size(), 1);
 }
 
-// # Non-const operators { #PropertyTest_Write_operators }
+// ## Non-const operators { #PropertyTest_Write_operators }
 // Refer to [aui::PropertyModifier].
 
 TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1

@@ -144,10 +144,10 @@
  * setContents(Centered{ l });
  * ```
  *
- * # Selectors
+ * ## Selectors
  * As said earlier, first statement in a rule is selector. Here's some examples.
  *
- * ## Select all ALabels
+ * ### Select all ALabels
  * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -159,7 +159,7 @@
  * });
  * ```
  *
- * ## Select all ASS name
+ * ### Select all ASS name
  * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -179,7 +179,7 @@
  * });
  * ```
  *
- * ## Select all ALabel's or AButton's
+ * ### Select all ALabel's or AButton's
  * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -191,7 +191,7 @@
  * });
  * ```
  *
- * ## Select all labels with ASS name
+ * ### Select all labels with ASS name
  * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -208,7 +208,7 @@
  * });
  * ```
  *
- * ## Select indirect child
+ * ### Select indirect child
  * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
@@ -230,7 +230,7 @@
  * });
  * ```
  *
- * ## Select direct child
+ * ### Select direct child
  * Works faster than selecting indirect child
  * ```cpp
  * using namespace ass;
@@ -258,7 +258,7 @@
  * other selectors don't replace previous rules entirely. Instead, they extend existing rules. However, same properties
  * are replaced.
  *
- * ## Hover sub selector
+ * ### Hover sub selector
  * Hovered view is a view below mouse cursor.
  * ```cpp
  * using namespace ass;
@@ -271,7 +271,7 @@
  * });
  * ```
  *
- * ## Active sub selector
+ * ### Active sub selector
  * Active view is a pressed view.
  * ```cpp
  * using namespace ass;
@@ -283,7 +283,7 @@
  * });
  * ```
  *
- * ## Focus sub selector
+ * ### Focus sub selector
  * Focused view is a view that was clicked and currently receiving keyboard input.
  * ```cpp
  * using namespace ass;
@@ -296,7 +296,7 @@
  * });
  * ```
  *
- * ## Disabled sub selector
+ * ### Disabled sub selector
  * Disabled view is a view with AView::setEnabled(false) thus not able to change it's state.
  * ```cpp
  * using namespace ass;
@@ -309,11 +309,11 @@
  * });
  * ```
  *
- * # Box Model (Padding, Margin)
+ * ### Box Model (Padding, Margin)
  *
  * See [aui-box-model.md].
  *
- * # ASS Refenence
+ * ## ASS Refenence
  * See below for declarations and selectors.
  *
  */

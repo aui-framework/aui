@@ -24,7 +24,7 @@
  *
  * Aka `boost::synchronized_value`.
  *
- * # Implementing thread safety
+ * ## Implementing thread safety
  *
  * ```cpp
  * struct SharedResource {

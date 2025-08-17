@@ -37,8 +37,20 @@ def _populate_mapping(files: Files):
                 page_title = m.group(1)
                 _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
                 _mapping[file.src_uri] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
-            for line in file.content_string.splitlines():
-                if m := regexes.HEADING_ANCHOR.match(line):
+
+            state_code = False
+            for line_number, line_contents in enumerate(file.content_string.splitlines()):
+                if "```" in line_contents:
+                    state_code = not state_code
+                    continue
+
+                if state_code:
+                    continue
+                if line_contents.startswith("# ") and line_number != 0:
+                    # several H1 headings breaks TOC.
+                    log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
+
+                if m := regexes.HEADING_ANCHOR.match(line_contents):
                     heading_title = m.group(1)
                     heading_id = m.group(3)
                     _mapping[heading_id] = MappingEntry(title=heading_title, url=f"{file.src_uri}#{heading_id}", containing_file=file)

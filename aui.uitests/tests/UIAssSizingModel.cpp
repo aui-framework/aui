@@ -72,7 +72,7 @@ TEST_F(UIAssSizingModel, AllBoxesAreIdential) {
     saveScreenshot("1");
 }
 //
-// # Comparison to CSS
+// ## Comparison to CSS
 //
 // AUI shares principles with [web technologies](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Box_model#what_is_the_css_box_model)
 // with some exceptions. In AUI:
