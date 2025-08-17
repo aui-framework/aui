@@ -13,7 +13,7 @@ from mkdocs import utils
 from mkdocs.structure.files import Files, File
 from mkdocs.structure.pages import Page
 
-from docs.python.generators import regexes, autorefs
+from docs.python.generators import regexes, autorefs, index
 
 
 def inject_classes_href(html: str, page: Page, files: Files):
@@ -31,7 +31,7 @@ def inject_classes_href(html: str, page: Page, files: Files):
         for i in items:
             if not ignore: # skip contents of <a>
                 if not i[0] in ["\n", "<", " ", "\t"]: # skip all xml tags
-                    if entry := autorefs.find_page(i):
+                    if entry := index.find_page(i):
                         if entry.containing_file != page.file: # skip refences to itself
                             # _RelativePathTreeprocessor
                             scheme, netloc, path, query, anchor = urlsplit(entry.url)

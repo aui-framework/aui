@@ -17,6 +17,7 @@ import re
 from pathlib import Path
 
 import mkdocs_gen_files
+import pymdownx
 
 from docs.python.generators import cpp_parser
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
@@ -111,9 +112,10 @@ def gen_pages():
 
             continue
 
-        class_name = parse_entry.name
-        with mkdocs_gen_files.open(f'{class_name.lower()}.md', 'w') as fos:
-            print(f'# {class_name}', file=fos)
+        slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
+
+        with mkdocs_gen_files.open(f'{slugged_name}.md', 'w') as fos:
+            print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
             doxygen = _parse_doxygen(parse_entry.doc)
 
@@ -172,7 +174,7 @@ def gen_pages():
                 methods_grouped = {}
                 for i in methods:
                     methods_grouped.setdefault(i.name, []).append(i)
-                for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != class_name else '!!!ctor'):
+                for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
                     _render_invisible_header(name)
                     for overload in overloads:
                         print('', file=fos)
@@ -187,7 +189,7 @@ def gen_pages():
 
                         if overload.return_type: # not a constructor
                             print(f'{overload.return_type} ', end='', file=fos)
-                        print(f'{class_name}::{overload.name}{_format_token_sequence([ i[1] for i in overload.args])}', end='', file=fos)
+                        print(f'{parse_entry.name}::{overload.name}{_format_token_sequence([ i[1] for i in overload.args])}', end='', file=fos)
                         print('', file=fos)
                         print(f'```', file=fos)
                         print(f'', file=fos)

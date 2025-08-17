@@ -228,6 +228,8 @@ class _Parser:
 
     def _parse_file(self):
         for self.last_token in self.iterator:
+            if self.last_token[1] == '}':
+                break
             prev_doc = self.last_doc
             if self._parse_comment():
                 if prev_doc is not None:
@@ -296,8 +298,6 @@ def _scan():
     return contents
 
 index = _scan()
-# mapping = {i.name : i for i in index if hasattr(i, "name")}
-
 
 
 def test_parse_comment_lines():
