@@ -228,9 +228,16 @@ class _Parser:
 
     def _parse_file(self):
         for self.last_token in self.iterator:
+            # print(f'_parse_file iteration {self.last_token}')
+            prev_doc = self.last_doc
+
             if self.last_token[1] == '}':
                 break
-            prev_doc = self.last_doc
+
+            if self.last_token[1] == '{':
+                self._skip_special_clause()
+                continue
+
             if self._parse_comment():
                 if prev_doc is not None:
                     entry = DoxygenEntry(doc=prev_doc)
@@ -245,12 +252,21 @@ class _Parser:
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'namespace'):
                 self.last_token = next(self.iterator)
                 assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
-                namespace = self.last_token[1]
-                self.last_token = next(self.iterator)
-                assert self.last_token[1] == '{'
+                namespace = [self.last_token[1]]
+                for self.last_token in self.iterator:
+                    match self.last_token[1]:
+                        case '{':
+                            break
+                        case '::':
+                            self.last_token = next(self.iterator)
+                            assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
+                            namespace.append(self.last_token[1])
+                        case _:
+                            raise RuntimeError(f'Unexpected token {self.last_token} in namespace declaration')
+
                 for i in self._parse_file():
                     if hasattr(i, 'name'):
-                        i.namespace = [namespace] + i.namespace
+                        i.namespace = namespace + i.namespace
                     yield i
 
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
@@ -748,3 +764,17 @@ class AButton {};
     assert clazz[2].doc == '@brief Test'
     assert clazz[2].methods == []
     assert clazz[2].namespace == []
+
+def test_parse_namespace3():
+    clazz = [i for i in _parse("""
+namespace aui::impl {
+/**
+ * @brief Test
+ */
+class Impl {};
+}
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'
+    assert clazz[0].methods == []
+    assert clazz[0].namespace == ["aui", "impl"]
