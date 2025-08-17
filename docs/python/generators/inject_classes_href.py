@@ -32,7 +32,7 @@ def inject_classes_href(html: str, page: Page, files: Files):
             if not ignore: # skip contents of <a>
                 if not i[0] in ["\n", "<", " ", "\t"]: # skip all xml tags
                     if entry := index.find_page(i):
-                        if entry.containing_file != page.file: # skip refences to itself
+                        if entry.containing_file.url != page.file.url: # skip refences to itself
                             # _RelativePathTreeprocessor
                             scheme, netloc, path, query, anchor = urlsplit(entry.url)
                             path = utils.get_relative_url(entry.containing_file.url, page.file.url)
