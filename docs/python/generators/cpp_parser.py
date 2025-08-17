@@ -85,6 +85,10 @@ class CppClass:
         self.methods = []
         self.fields = []
         self.location = None
+        self.namespace = []
+
+    def namespaced_name(self):
+        return "::".join(self.namespace + [self.name])
 
     def tuple(self):
         return self.name, self.doc, self.methods, self.fields
@@ -237,9 +241,8 @@ def _parse(input: str, location = None | Path):
             continue
 
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
-            token = next(iterator) # enum class???
+            token = next(iterator) # TODO parse enums
             continue
-
 
         if token == (cpp_tokenizer.Type.IDENTIFIER, 'class'):
             token = next(iterator)
@@ -679,3 +682,19 @@ def test_parse_aobject():
         "CppFunction('setThread', 'void', None)",
         "CppFunction('isDisconnected', 'bool&', None)",
     ]
+
+def test_parse_namespace():
+    clazz = next(_parse("""
+namespace aui {
+
+/**
+ * @brief Test
+ */
+class Test {};
+
+}
+    """))
+    assert clazz.name == "Test"
+    assert clazz.doc == '@brief Test'
+    assert clazz.methods == []
+    assert clazz.namespace == ["aui"]

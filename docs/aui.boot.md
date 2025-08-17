@@ -1,5 +1,7 @@
 # aui.boot
 
+<!-- aui:index_alias auib_import -->
+
 AUI Boot is yet another package manager based on CMake. If a library uses CMake with
 [good CMakeLists](https://github.com/cpm-cmake/CPM.cmake/wiki/Preparing-projects-for-CPM.cmake), AUI Boot in 99% cases
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
@@ -73,7 +75,7 @@ Don't worry updating dependencies: GitHub `cache` action will restore the cache 
 fallback keys `restore-keys` in such case, so you would not lose build speed up. Additionally, since the cache hit
 occurred on non-primary key, the newer cache will be uploaded to GitHub so the subsequent builds will reuse it.
 
-## Importing 3rdparty libraries
+## Importing 3rdparty libraries { #AUI_BOOT_3RDPARTY }
 
 For a maintained list of `auib_import`ed libraries, please visit https://github.com/aui-framework/boot.
 
