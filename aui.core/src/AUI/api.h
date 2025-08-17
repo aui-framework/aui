@@ -16,6 +16,10 @@
     #define AUI_EXPORT
 #else
     #if AUI_PLATFORM_WIN
+        #ifndef __IUnknown_FWD_DEFINED__
+            #define __IUnknown_FWD_DEFINED__
+            typedef interface IUnknown IUnknown;
+        #endif
         #define AUI_IMPORT __declspec(dllimport)
         #define AUI_EXPORT __declspec(dllexport)
     #else
