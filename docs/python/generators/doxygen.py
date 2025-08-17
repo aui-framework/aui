@@ -174,7 +174,9 @@ def gen_pages():
                 for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != class_name else '!!!ctor'):
                     _render_invisible_header(name)
                     for overload in overloads:
+                        print('', file=fos)
                         print('---', file=fos)
+                        print('', file=fos)
                         print(f'```cpp', file=fos)
                         if overload.template_clause:
                             print(_format_token_sequence([i[1] for i in overload.template_clause]), file=fos)
@@ -191,6 +193,7 @@ def gen_pages():
 
                         doxygen = _parse_doxygen(overload.doc)
 
+                        # todo add a check for @brief to exist
                         for i in [i for i in doxygen if i[0] == '@brief']:
                             print(i[1], file=fos)
                         print('<dl class="doxygen-dl">', file=fos)
