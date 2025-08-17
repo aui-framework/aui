@@ -42,10 +42,6 @@ def parse_comment_lines(iterator):
             break
         line = CPP_COMMENT_LINE.match(line).group(1)
 
-
-        # todo: things like # Platform support {#AFatalException_Platform_support} breaks markdown parser in mkdocs
-        line = line.replace('{', '').replace('}', '')
-
         output.append(line)
     return "\n".join(output)
 

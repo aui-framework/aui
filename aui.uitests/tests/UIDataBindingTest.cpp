@@ -503,7 +503,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 }
 
 //
-// ## UI declarative data binding {#UI_declarative_data_binding}
+// ## UI declarative data binding { #UI_declarative_data_binding }
 // As said earlier, `AUI_LET` syntax is a little bit clunky and requires extra boilerplate code to set up.
 //
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in

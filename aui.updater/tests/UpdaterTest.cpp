@@ -395,7 +395,7 @@ TEST(UpdaterTest, WaitForProcess) {
 }
 
 
-// # Updater workflows {#UPDATER_WORKFLOWS}
+// # Updater workflows { #UPDATER_WORKFLOWS }
 // When using AUpdater for your application, you need to consider several factors including usability, user experience,
 // system resources, and particular needs of your project.
 //
