@@ -157,7 +157,7 @@ TEST_F(ProcessTest, StartDetachedSleep) {
 
 // AUI_DOCS_OUTPUT: doxygen/intermediate/aprocess.h
 // @class AProcess
-TEST_F(ProcessTest, Launching_executable) { // HEADER_H1
+TEST_F(ProcessTest, Launching_executable) { // HEADER_H2
     // To start a process, pass the name of application you want to run and optionally provide arguments and working dir
     // for that application. In this code snippet, we are starting another instance of the current executable with
     // specific arguments and capturing its standard output (stdOut).

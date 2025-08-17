@@ -18,9 +18,10 @@ AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
 COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 assert COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 
-# TEST_F(UIDataBindingTest, AProperty) { // HEADER_H2
+# TEST_F(UIDataBindingTest, AProperty) { // HEADER_H3
 TESTCASE_HEADER_H1 = re.compile(r'TEST(_F)?\((.+), (.+)\) ?\{ *// *HEADER_H1')
 TESTCASE_HEADER_H2 = re.compile(r'TEST(_F)?\((.+), (.+)\) ?\{ *// *HEADER_H2')
+TESTCASE_HEADER_H3 = re.compile(r'TEST(_F)?\((.+), (.+)\) ?\{ *// *HEADER_H3')
 
 INGROUP = re.compile(r'.*([@\\]ingroup ?\w*).*')
 assert INGROUP.match("   * @ingroup")

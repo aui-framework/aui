@@ -12,6 +12,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import logging
 from pathlib import Path
 
 from docs.python.generators import regexes, common
@@ -23,11 +24,17 @@ def _process_code_begin(iter):
             return
         yield line
 
+log = logging.getLogger('mkdocs')
+
 def parse_tests(path: Path):
     output = ""
     lines = iter(enumerate(path.read_text().split('\n')))
     for line_number, line in lines:
         if match := regexes.TESTCASE_HEADER_H1.match(line):
+            log.warning(f'In tests file {path} found usage of HEADER_H1; please use HEADER_H2 instead.')
+            output += "## Broken group; see logs"
+
+        if match := regexes.TESTCASE_HEADER_H2.match(line):
             output += "\n"
             output += "## "
             output += match.group(3).replace("_", " ")
@@ -37,7 +44,7 @@ def parse_tests(path: Path):
             output += "\n"
             continue
 
-        if match := regexes.TESTCASE_HEADER_H2.match(line):
+        if match := regexes.TESTCASE_HEADER_H3.match(line):
             output += "\n"
             output += "### "
             output += match.group(3).replace("_", " ")

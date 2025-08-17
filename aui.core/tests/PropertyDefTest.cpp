@@ -128,7 +128,7 @@ TEST_F(PropertyDefTest, Declaration) {
     }
 }
 
-TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H1
+TEST_F(PropertyDefTest, Observing_changes) { // HEADER_H2
     // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
     // object for demonstration:
     {

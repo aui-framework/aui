@@ -172,7 +172,7 @@ TEST_F(UIDataBindingTest, TextField1) {
 // This approach allows more control over the binding process by using `AObject::connect`/`AObject::biConnect` which is
 // a procedural way of setting up connections. As a downside, it requires "AUI_LET" syntax clause which may seem as overkill
 // for such a simple operation.
-TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
+TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H3
     // Use `AUI_LET` expression to connect the model's username property to the label's [text()](ALabel::text)
     // property.
     // AUI_DOCS_CODE_BEGIN
@@ -233,7 +233,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H2
     EXPECT_EQ(label->text(), "World");
 }
 
-TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
     // It's fairly easy to define a projection because one-sided connection requires exactly one projection, obviously.
     using namespace declarative;
 
@@ -290,7 +290,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H2
     EXPECT_EQ(label->text(), "VASIL"); // uppercased by projection!
 }
 
-TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H3
     // In previous examples, we've used `AObject::connect` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
     //
@@ -370,7 +370,7 @@ AUI_ENUM_VALUES(Gender,
                 Gender::FEMALE,
                 Gender::OTHER)
 
-TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H3
     using namespace declarative;
     // Bidirectional connection updates values in both directions, hence it requires the projection to work in both
     // sides as well.
@@ -518,7 +518,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H2
 // Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
 //
 // The example below is essentially the same as ["UIDataBindingTest_Label_via_let"] but uses declarative connection set up syntax.
-TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
+TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     // Use `&` and `>` expression to connect the model's username property to the label's [text](ALabel::text)
     // property.
     // AUI_DOCS_CODE_BEGIN
@@ -575,7 +575,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H2
     }
 }
 
-TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H2
+TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H3
     // In previous example we have explicitly specified ALabel's property to connect with.
     //
     // One of notable features of declarative way (in comparison to procedural `AUI_LET` way) is that we can omit the view's
@@ -646,7 +646,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     }
 }
 
-TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER_H2
+TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER_H3
     using namespace declarative;
     // Think of `ADataBindingDefault` as we're not only connecting properties to properties, but also creating a
     // "property to view" relationship. This philosophy covers the following scenario.
@@ -721,7 +721,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // propagates its constraints on `ANumberPicker` thanks to `ADataBindingDefault` specialization.
 }
 
-TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
     // We can use projections in the same way as with `AUI_LET`.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
@@ -850,7 +850,7 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
     EXPECT_EQ(label->visibility(), Visibility::INVISIBLE);
 }
 
-TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     // In previous examples, we've used `&` to make one directional (one sided) connection. This is
     // perfectly enough for ALabel because it cannot be changed by user.
     //
@@ -915,7 +915,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H2
     // changes.
 }
 
-TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H2
+TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H3
     // We can use projections in the same way as with `AUI_LET`.
     //
     // Let's repeat the ["UIDataBindingTest_Bidirectional_projection"] sample in declarative way:

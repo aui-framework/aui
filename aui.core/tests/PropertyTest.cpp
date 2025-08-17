@@ -95,7 +95,7 @@ TEST_F(PropertyTest, Declaration) {
     }
 }
 
-TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
+TEST_F(PropertyTest, Observing_changes) { // HEADER_H2
     // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
     // object for demonstration:
     {
@@ -167,7 +167,7 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
     }
 }
 
-TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H2
     {
         User user { .name = "Hello" };
         auto copy = user;
@@ -209,7 +209,7 @@ TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
     }
 }
 
-TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H2
     {
         User user1{ .name = "Hello" };
         EXPECT_EQ(user1.name, "Hello");
@@ -243,7 +243,7 @@ TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
     EXPECT_EQ(connections(*observer).size(), 1);
 }
 
-TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H2
     {
         User user { .name = "Hello" };
         auto copy = std::move(user);
@@ -323,7 +323,7 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
 // ## Non-const operators { #PropertyTest_Write_operators }
 // Refer to [aui::PropertyModifier].
 
-TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1
+TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H2
     // Assuming you have an AVector wrapped with AProperty:
     // AUI_DOCS_CODE_BEGIN
     AProperty<AVector<int>> ints = AVector<int>{1, 2, 3};

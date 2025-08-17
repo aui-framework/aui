@@ -292,7 +292,7 @@ AUI_ENTRY {
 
 TEST(UpdaterTest, ExampleCase) { EXPECT_EQ(fake_entry({}), 0); }
 
-TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
+TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
     // AUpdater is an abstract class; it needs some functions to be implemented by you.
     //
     // In this example, let's implement auto update from GitHub release pages.

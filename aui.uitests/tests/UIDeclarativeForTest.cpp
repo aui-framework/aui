@@ -160,7 +160,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
 //
 // An attempt to go out of the scenarios listed below will likely lead to a `static_assert` with a link to this section.
 
-TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H3
     // The most straightforward way is using constant global data:
 #ifdef AUI_ENTRY
 #undef AUI_ENTRY
@@ -217,7 +217,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
 }
 
-TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H3
     // Most generators, ranges and views are expected to work.
     // AUI_DOCS_CODE_BEGIN
     mWindow-> // HIDE
@@ -237,7 +237,7 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
     EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }
 
-TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H3
     // When using locals, their immediate values are copied during initialization of AUI_DECLARATIVE_FOR.
     // AUI_DOCS_CODE_BEGIN
     auto items = AVector<AString> { "Hello", "World", "Test" };
@@ -268,7 +268,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     saveScreenshot("");
 }
 
-TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
+TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H3
     // If your container lives inside your class, its value is not copied but referenced. To avoid unobserved iterator
     // invalidation and content changes, [AUI_DECLARATIVE_FOR] requires borrowed containers to be constant. There's a
     // compile-time check to verify this requirement that does work in most cases, like this one.
@@ -306,7 +306,7 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
     // below.
 }
 
-TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
     // The reason why [AUI_DECLARATIVE_FOR] is so restrictive about using borrowed non-const data is because it stores
     // *range*'s iterators under the hood. Various containers have different rules on iterator invalidation, but, since
     // it accepts any type of *range*, we consider using its iterators after a modifying access to the container or a
