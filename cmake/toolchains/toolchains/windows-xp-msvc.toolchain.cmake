@@ -1,0 +1,24 @@
+# Windows XP MSVC Toolchain
+# Supports Visual Studio 2017 (v141) and later with XP compatibility
+
+set(CMAKE_SYSTEM_NAME Windows)
+set(CMAKE_SYSTEM_VERSION 5.1)
+set(CMAKE_SYSTEM_PROCESSOR x86)
+
+set(CMAKE_C_COMPILER cl)
+set(CMAKE_CXX_COMPILER cl)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /D_WIN32_WINNT=0x0501 /DWINVER=0x0501 /EHsc")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D_WIN32_WINNT=0x0501 /DWINVER=0x0501 /EHsc")
+
+set(CMAKE_GENERATOR_TOOLSET "v141_xp" CACHE STRING "Platform Toolset" FORCE)
+set(CMAKE_GENERATOR_PLATFORM "Win32" CACHE STRING "Platform" FORCE)
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}" CACHE STRING "c flags")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}" CACHE STRING "c++ flags")
+
+message(STATUS "Windows XP MSVC Toolchain configured")
+message(STATUS "  Platform Toolset: ${CMAKE_GENERATOR_TOOLSET}")
+message(STATUS "  Platform: ${CMAKE_GENERATOR_PLATFORM}")
+message(STATUS "  Runtime Library: ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+message(STATUS "  Build Type: ${CMAKE_BUILD_TYPE}")
