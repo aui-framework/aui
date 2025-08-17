@@ -167,6 +167,7 @@ def gen_pages():
 
             methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
             if methods:
+                print('', file=fos)
                 print('## Public Methods', file=fos)
                 methods_grouped = {}
                 for i in methods:
