@@ -18,7 +18,6 @@
     #if AUI_PLATFORM_WIN
         // Define IUnknown for Windows XP compability
         #ifdef BUILD_WINXP
-            #define __IUnknown_FWD_DEFINED__
             typedef interface IUnknown IUnknown;
         #endif
         #define AUI_IMPORT __declspec(dllimport)
