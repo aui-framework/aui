@@ -7,7 +7,9 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import re
+from urllib.parse import urlsplit, urlunsplit
 
+from mkdocs import utils
 from mkdocs.structure.files import Files, File
 from mkdocs.structure.pages import Page
 
@@ -31,7 +33,11 @@ def inject_classes_href(html: str, page: Page, files: Files):
                 if not i[0] in ["\n", "<", " ", "\t"]: # skip all xml tags
                     if entry := autorefs.find_page(i):
                         if entry.containing_file != page.file: # skip refences to itself
-                            yield f'<a href="/{entry.url}">{i}</a>'
+                            # _RelativePathTreeprocessor
+                            scheme, netloc, path, query, anchor = urlsplit(entry.url)
+                            path = utils.get_relative_url(entry.containing_file.url, page.file.url)
+                            url = urlunsplit(('', '', path, query, anchor))
+                            yield f'<a href="{url}">{i}</a>'
                             continue
             for tag in ["a", "h1", "h2", "h3", "h4", "h5", "h6"]:
                 if i.startswith(f"<{tag} "):
