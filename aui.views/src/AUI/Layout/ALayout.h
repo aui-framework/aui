@@ -56,7 +56,7 @@ class AViewContainer;
  *    - Considering minimum sizes of child views
  *    - Adding margins and spacing
  *    - Respecting fixed size constraints
- *    - Following ["AUI] Box Model".
+ *    - Following [aui-box-model.md].
  *
  * 2. **[Expanding Views](EXPANDING)** - Children can expand to fill available space of their parent:
  *    - Set via [AView::setExpanding()] or [ass::Expanding] on a child

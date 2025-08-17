@@ -38,3 +38,7 @@ assert AUI_EXAMPLE.match("<!-- aui:example app -->").group(1) == "app"
 
 PAGE_TITLE = re.compile('# (.+)')
 assert PAGE_TITLE.match('# AUI Framework').group(1) == "AUI Framework"
+
+HEADING_ANCHOR = re.compile('[#]{1,6} (.+) (\{ #(.+) \})')
+assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(1) == "AUI Framework"
+assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(3) == "aui"

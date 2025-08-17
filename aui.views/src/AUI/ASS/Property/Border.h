@@ -24,7 +24,7 @@ namespace ass {
      * @brief Represents border.
      * @ingroup ass_properties
      * @details
-     * See ["AUI] Box Model".
+     * See [aui-box-model.md].
      */
     struct Border {
         enum BorderType {

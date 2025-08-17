@@ -24,7 +24,7 @@ that expect one "entrypoint" per package.
 For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
 various installation methods but also override the variables if needed.
 
-For more info about packaging methods, see ["docs]/Packaging Your App.md".
+For more info about packaging methods, see [aui-configure-flags.md].
 
 ## Syntax
 
@@ -92,7 +92,7 @@ This argument assigns value to aui::app_info::name
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-See ["docs]/Setting App Icon.md" for best practices.
+See [app-icon.md] for best practices.
 
 | Platform | Required | Traits                                                |
 |----------|----------|-------------------------------------------------------|
@@ -102,7 +102,7 @@ See ["docs]/Setting App Icon.md" for best practices.
 | Android  | +        | generates icon assets from your `svg`                 |
 | iOS      | +        | generates `*.icns` file from your `svg`               |
 
-Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the ["docs]/Packaging Your App.md" "app packaging method"
+Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the [app packaging method](packaging.md).
 chosen.
 
 @pythongen{aui_app_ICON}

@@ -1,7 +1,7 @@
 # App Template ⚡
 
 <!-- aui:example app -->
-GitHub-hosted app project with CI/CD building, ["docs]/Writing tests.md" "testing", releasing,
+GitHub-hosted app project with CI/CD building, [testing](writing-tests.md), releasing,
 [auto updating](updater), code quality checking and more.
 
 ![](imgs/afljskfllkaf.gif)

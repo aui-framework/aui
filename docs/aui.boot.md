@@ -275,7 +275,7 @@ auib_import(<PackageName> <URL>
 !!! note
     
     This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
-    configure time. See ["docs]/Runtime Dependency Resolution.md" for more info.
+    configure time. See [runtime-dependency-resolution.md] for more info.
 
 #### PackageName
 Specifies the package name which will be passed to `find_package`. See [AUI_BOOT_3RDPARTY].
@@ -350,7 +350,7 @@ thus does not forward.
 
 ## Variables
 
-See ["docs]/AUI configure flags.md" on how to set variables.
+See [aui-configure-flags.md] on how to set variables.
 
 ### AUIB_ALL_AS (=FALSE|TRUE)
 

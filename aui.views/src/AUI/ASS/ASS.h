@@ -311,7 +311,7 @@
  *
  * # Box Model (Padding, Margin)
  *
- * See ["AUI] Box Model".
+ * See [aui-box-model.md].
  *
  * # ASS Refenence
  * See below for declarations and selectors.

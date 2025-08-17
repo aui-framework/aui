@@ -15,7 +15,7 @@ Telegram Client is a great example:
 
 - `tdlib`, which is basis of every Telegram client, uses C++
 - almost everyone is familiar with Telegram
-- there are many challenges for AUI, such as importing `tdlib` with ["docs]/AUI Boot.md" (spoiler: it does the job
+- there are many challenges for AUI, such as importing `tdlib` with [aui.boot.md] (spoiler: it does the job
   perfectly), asynchronous data loading, data binding, animations, assets, full support of Windows, macOS, Linux,
   Android, iOS.
 

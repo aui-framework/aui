@@ -28,10 +28,10 @@ def inject_classes_href(html: str, page: Page, files: Files):
         ignore = False
         for i in items:
             if not ignore: # skip contents of <a>
-                if not i.startswith("<"): # skip all xml tags
-                    if file := autorefs.find_page(i):
-                        if file != page.file: # skip refences to itself
-                            yield f'<a href="/{file.url}">{i}</a>'
+                if not i[0] in ["\n", "<", " ", "\t"]: # skip all xml tags
+                    if entry := autorefs.find_page(i):
+                        if entry.containing_file != page.file: # skip refences to itself
+                            yield f'<a href="/{entry.url}">{i}</a>'
                             continue
             for tag in ["a", "h1", "h2", "h3", "h4", "h5", "h6"]:
                 if i.startswith(f"<{tag} "):

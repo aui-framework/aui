@@ -20,7 +20,7 @@ Here's the example of a basic hello work application, which every AUI project st
 !!! note
 
     **You do not need to install AUI manually!** An AUI application build is easily reproducible thanks to CMake and
-    ["docs]/AUI Boot.md" magic done below in `CMakeLists.txt`.
+    [aui.boot.md] magic done below in `CMakeLists.txt`.
 
 `CMakeLists.txt`
 

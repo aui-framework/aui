@@ -36,7 +36,7 @@ Windows runtime linking process is simple. The dll lookup is performed as follow
    "error code 0xc000007b").
 
 On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BINARY_DIR}/bin`
-directory alongside exe files by ["docs]/AUI Boot.md".
+directory alongside exe files by [aui.boot.md].
 ```sh
 tree build/
 bin/aui_app.exe
@@ -48,7 +48,7 @@ bin/aui.views.dll
 ### Other platforms (UNIX-like only)
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
-installations (for compatibility reasons), hence ["docs]/AUI Boot.md" copies imported shared objects to
+installations (for compatibility reasons), hence [aui.boot.md] copies imported shared objects to
 `${CMAKE_BINARY_DIR}/lib`.
 
 These libraries are picked up by targets defined via [aui_module] and
@@ -72,7 +72,7 @@ locally or externally it just copies them to the build tree regardless of their 
 `cmake --install . --prefix=install_prefix` produces a portable project installation in `install_prefix` directory.
 This involves copying runtime dependencies (for example, `.dll`, `.so`, `.dylib`) alongside executables in a special
 way so the executables can actually find their dependencies. CPack and
-["docs]/Packaging Your App.md" "other deployment methods" use `cpack --install` so the behaviour is common.
+[other deployment methods](packaging.md) use `cpack --install` so the behaviour is common.
 
 In addition to CMake's installation behaviour, targets defined with AUI's [aui_executable] and 
 [aui_module] implement an additional installation behaviour to copy all the required dependencies to
@@ -130,7 +130,7 @@ bin/aui.views.dll
 
 ### Other platforms (UNIX-like only)
 
-["docs]/AUI Boot.md" updates RUNPATH/RPATH CMake install variables to follow that convention:
+[aui.boot.md] updates RUNPATH/RPATH CMake install variables to follow that convention:
 
 - **ld** (Linux/Android): <!-- aui:snippet aui.boot.cmake rpath_linux -->
 - **dyld** (macOS/iOS): <!-- aui:snippet aui.boot.cmake rpath_apple -->

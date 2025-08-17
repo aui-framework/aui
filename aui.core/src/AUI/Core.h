@@ -50,7 +50,7 @@
  * @details
  * !!! note
  *
- *     For build-time macros, see ["docs]/Macros.md".
+ *     For build-time macros, see [macros.md].
  */
 
 /**

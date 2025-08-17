@@ -2,7 +2,7 @@
 
 AUI Framework provides a comprehensive set of tools and libraries for building robust, scalable, and maintainable user
 interfaces. With its modular architecture and extensive feature set, developers can create complex UI components with
-ease. See ["docs]/Getting started with AUI.md" for quick start.
+ease. See [getting-started.md] for quick start.
 
 ## Views
 
