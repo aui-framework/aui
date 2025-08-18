@@ -107,9 +107,6 @@ TEST_F(UIDeclarativeForTest, Example) {
 }
 
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/foreach.h
-// @class AForEachUI
-
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
@@ -211,7 +208,9 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     EXPECT_TRUE(By::text("Red").one());
     EXPECT_TRUE(By::text("White").one());
 
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Constant_global_data2_.png)
+    // </figure>
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
@@ -231,7 +230,9 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H3
     // AUI_DOCS_CODE_END
 
     validateOrder();
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png)
+    // </figure>
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
@@ -264,7 +265,9 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H3
     EXPECT_FALSE(By::text("Bruh").one());
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png)
+    // </figure>
     saveScreenshot("");
 }
 
@@ -295,7 +298,10 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H3
         ();
 
     //
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png)
+    // </figure>
+    //
     uitest::frame();
     saveScreenshot("");
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
@@ -311,10 +317,11 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
     // *range*'s iterators under the hood. Various containers have different rules on iterator invalidation, but, since
     // it accepts any type of *range*, we consider using its iterators after a modifying access to the container or a
     // view as unsafe:
+    //
     // - visual presentation by [AUI_DECLARATIVE_FOR] might seem unresponsive to borrowed data changes,
     // - may lead to program crash.
     //
-    // To address this issue, we provide a convenient [way](property_system) to make iterator invalidation
+    // To address this issue, we provide a convenient [way](property_system.md) to make iterator invalidation
     // *observable*:
     //
     // - wrap the container with `AProperty`,
@@ -350,7 +357,9 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
 
 
     //
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Reactive_lists_1.png)
+    // </figure>
     uitest::frame();
     saveScreenshot("1");
     EXPECT_TRUE(By::text("Red").one());
@@ -360,7 +369,9 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
     // Upon clicking "Add A new color" button, the "A new color" label will appear in the list.
     By::text("Add A new color").perform(click());
     //
+    // <figure markdown="span">
     // ![](imgs/UIDeclarativeForTest.Reactive_lists_2.png)
+    // </figure>
     uitest::frame();
     saveScreenshot("2");
     EXPECT_TRUE(By::text("A new color").one());

@@ -208,7 +208,7 @@ template<> struct AJsonConvFieldDescriptor<N>: N { \
  * @brief Simplified conversion for class fields.
  * @tparam T class type.
  * @details
- * @note Use <a href="AJSON_FIELDS">AJSON_FIELDS</a> macro.
+ * Use <a href="AJSON_FIELDS">AJSON_FIELDS</a> macro.
  */
 template<typename T>
 struct AJsonConv<T, std::enable_if_t<aui::is_complete<AJsonConvFieldDescriptor<T>>>> {

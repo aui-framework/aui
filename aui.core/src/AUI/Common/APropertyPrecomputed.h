@@ -25,7 +25,7 @@
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
  *
- * See [property system](property_system) for usage info.
+ * See [property system](property_system.md) for usage info.
  *
  * Despite properties offer [projection methods](UIDataBindingTest_Label_via_declarative_projection), you might
  * want to track and process values of several properties.

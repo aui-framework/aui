@@ -116,7 +116,9 @@ th, td {
     justify-content: space-between;
     gap: 20px;
 }
-
+.class-index p {
+    margin: 0;
+}
 .class-index .item .list {
     column-width: 250px;
     flex: 1 1 200px;

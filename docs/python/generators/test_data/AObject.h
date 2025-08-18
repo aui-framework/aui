@@ -51,7 +51,7 @@ public:
      * connection is breaks only when the sender (signal) dies.
      *
      * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
-     * observe [property](property_system) or [signal](signal_slot), i.e., you just want to make a
+     * observe [property](property_system.md) or [signal](signal_slot.md), i.e., you just want to make a
      * _generic observer_.
      *
      * Use this in combination with lambda.

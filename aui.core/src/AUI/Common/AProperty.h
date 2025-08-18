@@ -60,7 +60,7 @@
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
- * See [property system](property_system) for usage examples.
+ * See [property system](property_system.md) for usage examples.
  */
 template <typename T>
 struct AProperty: AObjectBase {

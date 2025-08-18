@@ -3,9 +3,6 @@
 #include <range/v3/algorithm/find_if.hpp>
 #include <AUI/Common/AStringVector.h>
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/appropriate_predicate.h
-// @struct aui::updater::AppropriatePortablePackagePredicate
-
 TEST(AppropriatePredicateTest, Custom_qualifier) {   // HEADER_H2
     // AUI_DOCS_CODE_BEGIN
     aui::updater::AppropriatePortablePackagePredicate p { .qualifier = "windows-x86_64" };

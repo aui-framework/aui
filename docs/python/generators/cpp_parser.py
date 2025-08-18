@@ -53,6 +53,12 @@ class CppVariable:
         self.doc = doc
         self.visibility = visibility
 
+    def tuple(self):
+        return self.name, self.type_str, self.doc
+
+    def __str__(self):
+        return f'CppVariable{self.tuple()}'
+
 class CppFunction:
     def __init__(self, name, return_type = None, doc = None, args = None, visibility = 'public', template_clause = None, modifiers_before = None):
         self.name = name
@@ -87,6 +93,7 @@ class CppClass:
         self.location = None
         self.namespace = []
         self.kind = None # 'class' | 'struct'
+        self.page_url = None
 
     def namespaced_name(self):
         return "::".join(self.namespace + [self.name])
@@ -214,7 +221,7 @@ class _Parser:
                 elif self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
                     name = self.last_token[1]
                     self.last_token = next(self.iterator)
-                    if self.last_token[1] == ';':
+                    if self.last_token[1] in [';', '{', '=']:
                         clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_comment(), visibility=visibility))
                         continue
                     if self.last_token[1] == '(':
@@ -262,12 +269,17 @@ class _Parser:
                     match self.last_token[1]:
                         case '{':
                             break
+                        case ';':
+                            break
                         case '::':
                             self.last_token = next(self.iterator)
                             assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
                             namespace.append(self.last_token[1])
                         case _:
                             raise RuntimeError(f'Unexpected token {self.last_token} in namespace declaration')
+
+                if self.last_token[1] == ';': # namespace declaration?
+                    continue
 
                 for i in self._parse_file():
                     if hasattr(i, 'name'):
@@ -785,3 +797,24 @@ class Impl {};
     assert clazz[0].doc == '@brief Test'
     assert clazz[0].methods == []
     assert clazz[0].namespace == ["aui", "impl"]
+
+def test_parse_field_initializer():
+    clazz = [i for i in _parse("""
+namespace aui::impl {
+/**
+ * @brief Test
+ */
+class Impl {
+    /**
+     * @brief Test field
+     */
+    AString field{};
+};
+}
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'
+    assert clazz[0].methods == []
+    assert [str(i) for i in clazz[0].fields] == [
+        str(CppVariable(name="field", type_str="AString", doc="@brief Test field"))
+    ]

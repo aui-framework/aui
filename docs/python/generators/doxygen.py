@@ -113,8 +113,8 @@ def gen_pages():
             continue
 
         slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
-
-        with mkdocs_gen_files.open(f'{slugged_name}.md', 'w') as fos:
+        parse_entry.page_url = f'{slugged_name}.md'
+        with mkdocs_gen_files.open(parse_entry.page_url, 'w') as fos:
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
             doxygen = _parse_doxygen(parse_entry.doc)
@@ -236,20 +236,25 @@ def gen_pages():
                 # second letter.
                 letter = clazz.name[1]
             letter = letter.upper()
-            classes_alphabet.setdefault(letter, []).append(clazz.name)
+            classes_alphabet.setdefault(letter, []).append(clazz)
         classes_alphabet = sorted(classes_alphabet.items())
         print('<div class="class-index-title">', file=f)
         for letter, _ in classes_alphabet:
             print(f'<a href="#{letter.lower()}">{letter}</a>', file=f)
         print('</div>', file=f)
 
-        print('<div class="class-index">', file=f)
+        print('<div class="class-index" markdown>', file=f)
         for letter, classes2 in classes_alphabet:
-            print('<div class="item">', file=f)
+            print('<div class="item" markdown>', file=f)
             print(f'<div class="letter" id="{letter.lower()}">{letter}</div>', file=f)
-            print('<div class="list">', file=f)
-            for c in sorted(classes2):
-                print('<div class="entry">', f'<a href="/{c.lower()}">{c}</a>', '</div>', file=f)
+            print('<div class="list" markdown>', file=f)
+            for c in sorted(classes2, key=lambda x: x.name):
+                if not c.page_url:
+                    continue
+                print('<div class="entry" markdown>', file=f)
+                print(f'[{c.name}]({c.page_url})', file=f)
+                # print(f'{c.name}', file=f)
+                print('</div>', file=f)
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)

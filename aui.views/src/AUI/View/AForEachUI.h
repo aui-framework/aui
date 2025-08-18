@@ -209,16 +209,18 @@ concept RangeFactory = requires(Factory&& factory) {
  * - *iterator* has decrement operator `--it`
  *
  * If this requirement is not satisfied (case of some `ranges::views`), AForEachUI would not unload old items,
- * unless a [data update event](AFOREACHUI_UPDATE) occurred.
+ * unless a [data update event](#AFOREACHUI_UPDATE) occurred.
  *
- * The amount of displayed data is governed by *range* size, [docs/render-to-texture.md] tile size, AScrollArea's
+ * The amount of displayed data is governed by *range* size, [render-to-texture.md] tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUI. In particular, the sliding is performed once per [docs/render-to-texture.md] tile is passed.
+ * AForEachUI. In particular, the sliding is performed once per [render-to-texture.md] tile is passed.
  *
- * @note
- * During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics of
- * AForEachUI is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
- * semantics, thanks to iterators.
+ *
+ * !!! note
+ *
+ *     During rendering inside AScrollArea, the renderer clips visible views more precisely; the goal of lazy semantics
+ *     of AForEachUI is to optimize view instantiation and layout processing overhead, as well as *range* views' lazy
+ *     semantics, thanks to iterators.
  *
  * ### Scrollbars
  *
@@ -234,6 +236,9 @@ concept RangeFactory = requires(Factory&& factory) {
  * (scrollbar is the only visual confirmation), the scrolled contents appear normal and natural.
  *
  * ![](imgs/edrfgsrgsrg.webp) A lie is going on behind the scenes
+ *
+ * <!-- aui:parse_tests aui.uitests/tests/UIDeclarativeForTest.cpp -->
+ *
  */
 template <typename T>
 class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver {
@@ -297,7 +302,9 @@ public:
     }
 
     /**
-     * @copybrief AForEachUIBase::setModelImpl
+     * @brief Notifies that range was changed or iterators might have invalidated.
+     * @details
+     * You do not need to call this manually, AUI_DECLARATIVE_FOR makes all essential connection automatically.
      */
     void invalidate() override {
 //        ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
@@ -378,7 +385,7 @@ auto makeForEach(RangeFactory&& rangeFactory)
                   "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
                   "AUI_DECLARATIVE_FOR's, or\n"
                   "====================> (3) wrap your container as AProperty.\n"
-                  "====================> Please consult with https://aui-framework.github.io/develop/classAForEachUI.html#AFOREACHUI_UPDATE for more info.");
+                  "====================> Please consult with https://aui-framework.github.io/develop/aforeachui/#AFOREACHUI_UPDATE for more info.");
 
     using T = std::decay_t<ImmediateValueType>;
 

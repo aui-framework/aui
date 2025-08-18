@@ -13,8 +13,6 @@ DIR = re.compile(r'.*(aui\..+)/tests')
 assert DIR.match("/home/aui.views/tests")
 assert not DIR.match("/home/aui.views/src")
 
-AUI_DOCS_OUTPUT = re.compile(r'^// ?AUI_DOCS_OUTPUT: ?(.+)\n$')
-
 COMMENT = re.compile(r'\s*// ?(.*)\n?$')
 assert COMMENT.match("   // AUI_DOCS_CODE_BEGIN\n")
 

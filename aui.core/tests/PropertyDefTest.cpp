@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+* Copyright (C) 2020-2025 Alex2772 and Contributors
+*
+* SPDX-License-Identifier: MPL-2.0
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Logging/ALogger.h>
@@ -26,8 +28,7 @@ public:
 };
 
 namespace {
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property_def.h
-// @class APropertyDef
+//
 // ## Declaration
 //
 // To declare a property with custom getter/setter, use APropertyDef template. APropertyDef-based property is

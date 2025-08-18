@@ -1,3 +1,15 @@
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+* Copyright (C) 2020-2025 Alex2772 and Contributors
+*
+* SPDX-License-Identifier: MPL-2.0
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+
 #pragma once
 
 #include <AUI/Common/detail/property.h>
@@ -11,12 +23,14 @@
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
  * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
  *
- * See [property system](property_system) for usage examples.
+ * See [property system](property_system.md) for usage examples.
  *
  * ## Performance considerations
  *
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
+ *
+ * <!-- aui:parse_tests aui.core/tests/PropertyDefTest.cpp -->
  */
 template <
     typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
