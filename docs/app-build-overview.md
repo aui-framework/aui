@@ -4,15 +4,15 @@ This page describes how an AUI application is built.
 
 ## Trivia
 
-On this page, libraries and executables are represented with [windows] file name extensions with shared linking.
+On this page, libraries and executables are represented with [windows.md] file name extensions with shared linking.
 Other platforms and configurations follow the same principles but with different file types.
 
 - LIBRARY.dll refers to a binary (compiled) representation of LIBRARY
 - PROGRAM.exe refers to a binary (compiled) representation of PROGRAM (executable)
 
-Also, on this page, the build system is demonstrated on [example_minimal_ui_template_with_assets].
+Also, on this page, the build system is demonstrated on [examples/minimal-ui-template-with-assets.md].
 
-## Generic scenario
+## Generic scenario { #BUILD_SCENARIO_GENERIC }
 
 The most common and straightforward scenario. CMake handles everything.
 
@@ -24,7 +24,7 @@ Things to note:
 
 - [aui.boot.md] is downloaded in your `CMakeLists.txt`, which downloads AUI itself and all its dependencies.
 - Among with AUI libraries, there's `aui.toolbox`, which participates in the build process. In particular, it converts
-  [assets] to cpp files, compressing them, making them available in the application, effectively embedding them to
+  [aui-assets.md] to cpp files, compressing them, making them available in the application, effectively embedding them to
   the application binary.
 
 ## Mobile scenario
@@ -44,7 +44,7 @@ On combinations of the other host/target platforms, the build process remains si
 
 Things to note:
 
-- Mobile scenario slightly resembles [BUILD_SCENARIO_GENERIC].
+- Mobile scenario slightly resembles [#BUILD_SCENARIO_GENERIC].
 - There are multiple CMake processes: one of the host, which defines `apps` meta target, which invokes Gradle, which
   invokes another CMakes per architecture, supplying `CMAKE_TOOLCHAIN`.
 - There are several AUI instances: for the host platform, arm64 (for the target) and armv7 (for the target).

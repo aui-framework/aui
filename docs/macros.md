@@ -16,7 +16,7 @@ both CMake and C++.
    </tr>
    <tr>
      <td markdown>
-       [windows]
+       [windows.md]
      </td>
      <td markdown>
        ```cpp
@@ -40,7 +40,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [linux]
+       [linux.md]
      </td>
      <td markdown>
        ```cpp
@@ -64,7 +64,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [macos]
+       [macos.md]
      </td>
      <td markdown>
        ```cpp
@@ -88,7 +88,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [android]
+       [android.md]
      </td>
      <td markdown>
        ```cpp
@@ -112,7 +112,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [ios] (both iPhone and iPad)
+       [ios.md] (both iPhone and iPad)
      </td>
      <td markdown>
        ```cpp
@@ -136,7 +136,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       Apple([macOS](macos), [iOS](ios))
+       Apple([macOS](macos.md), [iOS](ios.md))
      </td>
      <td markdown>
        ```cpp
@@ -160,7 +160,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       Unix([Linux](linux), [Android](android), [macOS](macos), [iOS](ios))
+       Unix([Linux](linux.md), [Android](android.md), [macOS](macos.md), [iOS](ios.md))
      </td>
      <td markdown>
        ```cpp
@@ -184,7 +184,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [emscripten]
+       [emscripten.md]
      </td>
      <td markdown>
        ```cpp
@@ -290,7 +290,7 @@ dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table a
 
 `AUI_MODULE_NAME`
 
-Target name exposed by [aui_module](aui_module.md) and [aui_executable](aui_executable.md).
+Target name exposed by [aui_module] and [aui_executable].
 
 ---
 

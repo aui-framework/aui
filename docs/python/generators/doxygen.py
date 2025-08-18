@@ -75,8 +75,8 @@ def gen_pages():
 
                 output = f'{group_id.lower()}.md'
                 with mkdocs_gen_files.open(output, 'w') as fos:
-                    print(f'# {group_name}', file=fos)
-                    print(f'', file=fos)
+                    print(f'# {group_name}\n', file=fos)
+                    print(f'<!-- aui:index_alias {group_id} -->', file=fos)
                     for i in [i for i in doxygen if i[0] == '@brief']:
                         print(i[1], file=fos)
 

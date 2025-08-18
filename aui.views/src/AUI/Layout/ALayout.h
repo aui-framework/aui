@@ -19,15 +19,15 @@
 class AViewContainer;
 
 /**
- * @brief Layout manager is an object that manages placement and size of [views](AView) inside
- * [containers](AViewContainer).
+ * @brief Layout manager is an object that manages placement and size of [views](aview.md) inside
+ * [containers](aviewcontainer.md).
  * @defgroup layout-managers Layout Managers
  * @ingroup views
  * @details In AUI, layout building consists of layout managers. Layout manager determines position and size of
- * [container](AViewContainer)'s children [views](AView). A [container](AViewContainer) is a [AView]
- * "view" that consists of other [views](AView), called children. In general, layout manager does not allow going
- * beyond the border of the [container](AViewContainer). A [container](AViewContainer) can be a child of an
- * another [container](AViewContainer) i.e., nesting is allowed.
+ * [container](aviewcontainer.md)'s children [views](aview.md). A [container](aviewcontainer.md) is a [AView]
+ * "view" that consists of other [views](aview.md), called children. In general, layout manager does not allow going
+ * beyond the border of the [container](aviewcontainer.md). A [container](aviewcontainer.md) can be a child of an
+ * another [container](aviewcontainer.md) i.e., nesting is allowed.
  *
  * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
  *
@@ -40,8 +40,8 @@ class AViewContainer;
  *
  * !!! note
  *
- *     You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
- *     [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
+ *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with
+ *     [Expanding](#EXPANDING) property, to get better understanding on how does layout work in AUI.
  *
  * Common layout managers include:
  *
@@ -58,7 +58,7 @@ class AViewContainer;
  *    - Respecting fixed size constraints
  *    - Following [aui-box-model.md].
  *
- * 2. **[Expanding Views](EXPANDING)** - Children can expand to fill available space of their parent:
+ * 2. **[Expanding Views](#EXPANDING)** - Children can expand to fill available space of their parent:
  *    - Set via [AView::setExpanding()] or [ass::Expanding] on a child
  *    - Requires parent to have [ass::FixedSize] or [ass::MinSize] or [EXPANDING] set to take effect
  *    - Independent for horizontal/vertical directions
@@ -87,7 +87,7 @@ class AViewContainer;
  *
  * ## Layout Examples
  *
- * [Horizontal](AHorizontalLayout) layout:
+ * [Horizontal](ahorizontallayout.md) layout:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -109,7 +109,7 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * [Vertical](AVerticalLayout) layout:
+ * [Vertical](averticallayout.md) layout:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -156,7 +156,7 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * [Stacked](AStackedLayout) layout:
+ * [Stacked](astackedlayout.md) layout:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -179,15 +179,15 @@ class AViewContainer;
  *   </tr>
  * </table>
  *
- * ## Expanding
+ * ## Expanding { #EXPANDING }
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
  *
  * !!! note
  *
- *     You can use [AUI Devtools](docs/Devtools.md) to play around with layouts, especially with
- *     [Expanding](EXPANDING) property, to get better understanding on how does layout work in AUI.
+ *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with
+ *     [Expanding](#EXPANDING) property, to get better understanding on how does layout work in AUI.
  *
  * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
  *
@@ -308,7 +308,7 @@ class AViewContainer;
  *
  * ### Applying size
  *
- * - Size of each view in tree is [calculated](SIZE_CALCULATION) on this phase
+ * - Size of each view in tree is [calculated](#SIZE_CALCULATION) on this phase
  * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
  * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
  *   only if really needed (i.e., if there were a resize event, or views were added or removed)
@@ -317,7 +317,7 @@ class AViewContainer;
  * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
  * - [AView::setGeometry] - sets geometry of a view (which might be a container)
  *
- * ### Size calculation
+ * ### Size calculation { #SIZE_CALCULATION }
  *
  * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
  *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:

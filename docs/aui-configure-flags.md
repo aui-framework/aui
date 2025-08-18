@@ -41,7 +41,7 @@ Whether build examples or not.
 ### AUI_BUILD_FOR
 Specifies target platform for cross-compilation (see [cross-compiling](crosscompiling.md)).
 
-### AUIB_CACHE_DIR
+### AUIB_CACHE_DIR { #AUIB_CACHE_DIR }
 Changes [AUIB_CACHE].
 
 Can be defined as environment variable.

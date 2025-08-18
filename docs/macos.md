@@ -12,12 +12,12 @@ macOS shares its XNU kernel and codebase with [ios].
 
 Due to closed nature of Apple platforms, a single macOS machine is considered as the only option for AUI/application
 development for all supported platforms at once:
-- [macOS](macos) - natively (obviously)
-- [iOS](ios) - natively (via Xcode)
-- [Android](android) - natively (via Android Studio)
-- [Windows](windows) - via VM
-- [Linux](linux) - via VM
-- [emscripten] - natively
+- [macOS](macos.md) - natively (obviously)
+- [iOS](ios.md) - natively (via Xcode)
+- [Android](android.md) - natively (via Android Studio)
+- [Windows](windows.md) - via VM
+- [Linux](linux.md) - via VM
+- [emscripten.md] - natively
 
 ## Key considerations
 

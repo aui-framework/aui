@@ -6,7 +6,7 @@ While making distinct visuals for every platform can be challenging, AUI is here
 professional-grade app icons while preserving targeted platform's specifics.
 
 [aui_app.md] is a CMake command provided by AUI that defines platform-specific technical information about your
-application, including [ICON](aui_app_ICON).
+application, including [ICON](#aui_app_ICON).
 
 ```cmake
 aui_app(TARGET app_target

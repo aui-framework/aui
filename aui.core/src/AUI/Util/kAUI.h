@@ -83,7 +83,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  *
- * If you are intended to reference this-> object, consider using [AUI_ME] instead.
+ * If you are intended to reference this-> object, consider using [me] instead.
  */
 #define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 

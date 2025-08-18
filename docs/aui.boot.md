@@ -55,7 +55,7 @@ cmake .. -DAUIB_NO_PRECOMPILED=TRUE
 
 This way AUI Boot will never try to use precompiled binaries and will try to build then locally.
 
-## CI caching
+## CI caching { #CI_CACHING }
 
 No matter using precompiled binaries or building them locally, it's convenient to cache [AUIB_CACHE] in
 your CIs:
@@ -285,7 +285,7 @@ Specifies the package name which will be passed to `find_package`. See [AUI_BOOT
 #### URL
 URL to the git repository of the project you want to import.
 
-#### ADD_SUBDIRECTORY
+#### ADD_SUBDIRECTORY { #AUIB_ADD_SUBDIRECTORY }
 
 See also: [AUIB_LIB_AS].
 
@@ -445,7 +445,7 @@ this, you need to:
     from a repository.
 
 
-### AUIB_DISABLE (=FALSE|TRUE)
+### AUIB_DISABLE (=FALSE|TRUE) { #AUIB_ADD_SUBDIRECTORY }
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
@@ -453,11 +453,11 @@ Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
 Disables "Waiting for repository" [lock](REPO_LOCK).
 
-### AUIB_NO_PRECOMPILED (=FALSE|TRUE)
+### AUIB_NO_PRECOMPILED (=FALSE|TRUE)  { #AUIB_NO_PRECOMPILED }
 
 Disables precompiled binaries, building all dependencies locally. You may want to set up [CI_CACHING].
 
-### AUIB_FORCE_PRECOMPILED (=FALSE|TRUE)
+### AUIB_FORCE_PRECOMPILED (=FALSE|TRUE)  { #AUIB_FORCE_PRECOMPILED }
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
@@ -612,7 +612,7 @@ requiring AUI Boot.
 
 <!-- aui:include test/aui.boot/Precompiled3/test_project/CMakeLists.txt -->
 
-## ~/.aui (AUI.Boot Cache Dir)
+## ~/.aui (AUI.Boot Cache Dir) { #AUIB_CACHE }
 
 It is a directory located in your home directory (can be changed with [AUIB_CACHE_DIR]). This
 directory contains dependencies' source code and installation artifacts of each dependency. AUI.Boot looks up there
@@ -621,7 +621,7 @@ for built libraries or their source code in order to reduce build latency and ba
 If a dependency is not present in the cache, AUI.Boot will download a precompiled binary or build it from source, so the
 subsequent `auib_import` invocations can reuse that even across different projects.
 
-On a CI/CD, you can [cache](CI_CACHING) this directory to drastically improve build times.
+On a CI/CD, you can [cache](#CI_CACHING) this directory to drastically improve build times.
 
 ## Structure
 

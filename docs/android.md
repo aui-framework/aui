@@ -14,11 +14,11 @@ Its ecosystem includes apps like Google Chrome and Google Play Store, which are 
 distributions exist, such as Amazon Fire OS and LineageOS, and it has been used to develop operating systems for various
 electronics like TVs and wearables.
 
-Android shares its kernel with [linux], but is not treated by AUI exactly as Linux.
+Android shares its kernel with [linux.md], but is not treated by AUI exactly as Linux.
 
 ## Key considerations
 
-- Like [linux], Android is customizable - core services and components tend to vary depending on device manufacturer.
+- Like [linux.md], Android is customizable - core services and components tend to vary depending on device manufacturer.
   It's mostly AUI's responsibility and AUI-based applications are mostly immune to such specifics unless they use native
   Java/Kotlin APIs
 - Android apps can't be customized by the end user, with an exception to fonts, launcher icons and virtual keyboard
