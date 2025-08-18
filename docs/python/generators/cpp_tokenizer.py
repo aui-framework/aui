@@ -64,6 +64,8 @@ def tokenize(input: str):
                                 break
             elif peek() == '#':
                 while peek() != '\n':
+                    if peek() == '\\':
+                        take()
                     take()
                 yield make_token(Type.PREPROCESSOR)
             elif str.isalpha(peek()) or peek() == '_':

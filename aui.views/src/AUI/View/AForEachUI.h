@@ -405,5 +405,6 @@ auto makeForEach(RangeFactory&& rangeFactory)
  * @ingroup useful_macros
  * @details
  * See [AForEachUI]
+ * <!-- aui:no_dedicated_page -->
  */
 #define AUI_DECLARATIVE_FOR(value, model, layout) AUI_DECLARATIVE_FOR_EX(value, model, layout, =)

@@ -1,9 +1,4 @@
-# Build-time macros
-
-!!! note
-
-    This page is about macros generated in build-time (i.e., platform specifics). For macros defined in C++ code, see
-    [useful_macros].
+# Macros
 
 ## Writing platform dependent code
 
@@ -293,11 +288,13 @@ dirs, where `<PLATFORM_NAME>` is one of the supported platforms (see the table a
 
 ## Other
 
-### AUI_MODULE_NAME
+`AUI_MODULE_NAME`
 
 Target name exposed by [aui_module](aui_module.md) and [aui_executable](aui_executable.md).
 
-### AUI_CMAKE_PROJECT_VERSION
+---
+
+`AUI_CMAKE_PROJECT_VERSION`
 
 `${CMAKE_PROJECT_VERSION}` exposed by [aui_module] and [aui_executable].
 
@@ -306,7 +303,9 @@ CMake command:
 
 <!-- aui:snippet test/minimal_deployment_test/CMakeLists.txt AUI_CMAKE_PROJECT_VERSION -->
 
-### API_\<module name\>
+---
+
+`API_\<module name\>`
 
 `dllexport` (on Windows) or `visibility` (on other platforms) policy for the symbol.
 
@@ -315,3 +314,5 @@ class API_AUI_VIEWS AView ... { // defined in aui.views module
   ...
 };
 ```
+
+{{% list_macros() %}}

@@ -18,7 +18,7 @@ import os
 import re
 from pathlib import Path
 
-from docs.python.generators import cpp_tokenizer
+from docs.python.generators import cpp_tokenizer, regexes
 
 CPP_CLASS_DEF = re.compile('class( API_\S+)? ([a-zA-Z0-9_$]+)')
 assert CPP_CLASS_DEF.match('class Test').group(2) == "Test"
@@ -106,6 +106,16 @@ class CppClass:
     def __str__(self):
         return f'CppClass{self.tuple()}'
 
+class CppMacro:
+    def __init__(self, name: str, doc: str | None, definition: str, location: str):
+        self.name = name
+        self.doc = doc
+        self.definition = definition
+        self.location = location
+
+    def namespaced_name(self):
+        return self.name
+
 class _Parser:
     def __init__(self, input: str, location = None | Path):
         self.tokens = cpp_tokenizer.tokenize(input)
@@ -123,7 +133,7 @@ class _Parser:
         return False
 
 
-    def _consume_comment(self):
+    def _consume_doc(self):
         doc = self.last_doc
         self.last_doc = None
         return doc
@@ -216,16 +226,16 @@ class _Parser:
                     break
                 if self.last_token[1] == '(':
                     # ctor
-                    clazz.methods.append(CppFunction(name=type_str, doc=self._consume_comment(), visibility=visibility, args=self._skip_special_clause(), modifiers_before=modifiers_before))
+                    clazz.methods.append(CppFunction(name=type_str, doc=self._consume_doc(), visibility=visibility, args=self._skip_special_clause(), modifiers_before=modifiers_before))
                     continue
                 elif self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
                     name = self.last_token[1]
                     self.last_token = next(self.iterator)
                     if self.last_token[1] in [';', '{', '=']:
-                        clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_comment(), visibility=visibility))
+                        clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_doc(), visibility=visibility))
                         continue
                     if self.last_token[1] == '(':
-                        clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_comment(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
+                        clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_doc(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
                         template_clause = None
                         self.last_token = next(self.iterator)
                 while True:
@@ -236,7 +246,7 @@ class _Parser:
                         break
                     # consume const noexcept
                     self.last_token = next(self.iterator)
-                self._consume_comment()
+                self._consume_doc()
 
     def _parse_file(self):
         for self.last_token in self.iterator:
@@ -256,6 +266,14 @@ class _Parser:
                     entry.location = self.location
                     yield entry
                 continue
+
+            if self.last_token[0] == cpp_tokenizer.Type.PREPROCESSOR:
+                if m := regexes.MACRO_DEFINE.match(self.last_token[1]):
+                    doc = self._consume_doc()
+                    if doc is not None:
+                        yield CppMacro(name=m.group(1), doc=doc, definition=self.last_token[1], location=self.location)
+                    continue
+
 
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
                 self.last_token = next(self.iterator) # TODO parse enums
@@ -296,7 +314,7 @@ class _Parser:
                 clazz = CppClass()
                 clazz.kind = kind
                 clazz.name = self.last_token[1]
-                clazz.doc = self._consume_comment()
+                clazz.doc = self._consume_doc()
                 clazz.location = self.location
 
                 while self.last_token[1] not in '{;':
@@ -818,3 +836,15 @@ class Impl {
     assert [str(i) for i in clazz[0].fields] == [
         str(CppVariable(name="field", type_str="AString", doc="@brief Test field"))
     ]
+
+def test_macro1():
+    macro = [i for i in _parse("""
+/**
+ * @brief Test
+ */
+#define AUI_MACRO(k, v) k v
+    """)]
+    assert macro[0].name == "AUI_MACRO"
+    assert macro[0].doc == '@brief Test'
+    assert macro[0].definition == '#define AUI_MACRO(k, v) k v'
+

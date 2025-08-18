@@ -29,7 +29,7 @@ assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
 
 log = logging.getLogger('mkdocs')
 
-def _parse_doxygen(comment):
+def parse_doxygen(comment):
     output = [['', '']]
     iterator = iter(comment.split('\n'))
 
@@ -61,9 +61,13 @@ def gen_pages():
 
 
     for parse_entry in cpp_parser.index:
+        if hasattr(parse_entry, 'doc'):
+            if "<!-- aui:no_dedicated_page -->" in parse_entry.doc:
+                continue
+
         if isinstance(parse_entry, DoxygenEntry):
             # Arbitrary comment. It may contain group definition or other information.
-            doxygen = _parse_doxygen(parse_entry.doc)
+            doxygen = parse_doxygen(parse_entry.doc)
             for def_group in [i for i in doxygen if i[0] == '@defgroup']:
                 m = re.compile(r"(\S+) (.+)").match(def_group[1])
                 group_id = m.group(1)
@@ -94,7 +98,7 @@ def gen_pages():
                             continue
                         if f"@ingroup {group_id}" not in group_item.doc:
                             continue
-                        brief = "\n".join([i[1] for i in _parse_doxygen(group_item.doc) if f"@brief" in i[0]])
+                        brief = "\n".join([i[1] for i in parse_doxygen(group_item.doc) if f"@brief" in i[0]])
                         print(f"""
 -   __{group_item.name}__
 
@@ -117,7 +121,7 @@ def gen_pages():
         with mkdocs_gen_files.open(parse_entry.page_url, 'w') as fos:
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
-            doxygen = _parse_doxygen(parse_entry.doc)
+            doxygen = parse_doxygen(parse_entry.doc)
 
 
             include_dir = parse_entry.location
@@ -141,6 +145,12 @@ def gen_pages():
                 print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
             print('</table>', file=fos)
 
+            if hasattr(parse_entry, 'definition'):
+                print('## Definition', file=fos)
+                print('```cpp', file=fos)
+                print(parse_entry.definition, file=fos)
+                print('```\n', file=fos)
+
             if has_detailed_description:
                 print('## Detailed Description', file=fos)
                 for i in [i for i in doxygen if i[0] == '@details']:
@@ -153,74 +163,76 @@ def gen_pages():
                 print(f'### {name}', file=fos)
                 print(f'</div>', file=fos)
 
-            fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
-            if fields:
-                print('## Public fields and Signals', file=fos)
-                for i in sorted(fields, key=lambda x: x.name):
-                    print('---', file=fos)
-                    _render_invisible_header(i.name)
-                    print('```cpp', file=fos)
-                    print(f'{i.type_str} {i.name}', file=fos)
-                    print('```', file=fos)
-                    doxygen = _parse_doxygen(i.doc)
-                    for i in doxygen:
-                        print(i[1], file=fos)
-
-
-            methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
-            if methods:
-                print('', file=fos)
-                print('## Public Methods', file=fos)
-                methods_grouped = {}
-                for i in methods:
-                    methods_grouped.setdefault(i.name, []).append(i)
-                for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
-                    _render_invisible_header(name)
-                    for overload in overloads:
-                        print('', file=fos)
+            if hasattr(parse_entry, 'fields'):
+                fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
+                if fields:
+                    print('## Public fields and Signals', file=fos)
+                    for i in sorted(fields, key=lambda x: x.name):
                         print('---', file=fos)
-                        print('', file=fos)
-                        print(f'```cpp', file=fos)
-                        if overload.template_clause:
-                            print(_format_token_sequence([i[1] for i in overload.template_clause]), file=fos)
-
-                        if overload.modifiers_before:
-                            print(_format_token_sequence(overload.modifiers_before), end=' ', file=fos)
-
-                        if overload.return_type: # not a constructor
-                            print(f'{overload.return_type} ', end='', file=fos)
-                        print(f'{parse_entry.name}::{overload.name}{_format_token_sequence([ i[1] for i in overload.args])}', end='', file=fos)
-                        print('', file=fos)
-                        print(f'```', file=fos)
-                        print(f'', file=fos)
-
-                        doxygen = _parse_doxygen(overload.doc)
-
-                        # todo add a check for @brief to exist
-                        for i in [i for i in doxygen if i[0] == '@brief']:
+                        _render_invisible_header(i.name)
+                        print('```cpp', file=fos)
+                        print(f'{i.type_str} {i.name}', file=fos)
+                        print('```', file=fos)
+                        doxygen = parse_doxygen(i.doc)
+                        for i in doxygen:
                             print(i[1], file=fos)
-                        print('<dl class="doxygen-dl">', file=fos)
-                        params = [i for i in doxygen if i[0] == '@param']
-                        if params:
-                            print('<dt>Arguments</dt>', file=fos)
-                            print('<dd><div style="display: table">', file=fos)
-                            for i in params:
-                                print(f'<div style="display: table-row">', file=fos)
-                                argument_name = i[1].split(' ')[0]
-                                print(f'<b style="display: table-cell; padding-right: 6px"><code>{argument_name}</code></b>', file=fos)
-                                print(f'<div style="display: table-cell">{i[1][len(argument_name):]}</div>', file=fos)
-                                print(f'</div>', file=fos)
-                            print('</div></dd>', file=fos)
-                        for i in doxygen:
-                            if i[0] != '@return':
-                                continue
-                            print('<dt>Returns</dt>', file=fos)
-                            print(f'<dd>{i[1]}</dd>', file=fos)
-                        print('</dl>', file=fos)
 
-                        for i in doxygen:
-                            if i[0] in ['', '@details']:
-                                print(f'{i[1]}', file=fos)
+
+            if hasattr(parse_entry, 'methods'):
+                methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
+                if methods:
+                    print('', file=fos)
+                    print('## Public Methods', file=fos)
+                    methods_grouped = {}
+                    for i in methods:
+                        methods_grouped.setdefault(i.name, []).append(i)
+                    for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
+                        _render_invisible_header(name)
+                        for overload in overloads:
+                            print('', file=fos)
+                            print('---', file=fos)
+                            print('', file=fos)
+                            print(f'```cpp', file=fos)
+                            if overload.template_clause:
+                                print(_format_token_sequence([i[1] for i in overload.template_clause]), file=fos)
+
+                            if overload.modifiers_before:
+                                print(_format_token_sequence(overload.modifiers_before), end=' ', file=fos)
+
+                            if overload.return_type: # not a constructor
+                                print(f'{overload.return_type} ', end='', file=fos)
+                            print(f'{parse_entry.name}::{overload.name}{_format_token_sequence([ i[1] for i in overload.args])}', end='', file=fos)
+                            print('', file=fos)
+                            print(f'```', file=fos)
+                            print(f'', file=fos)
+
+                            doxygen = parse_doxygen(overload.doc)
+
+                            # todo add a check for @brief to exist
+                            for i in [i for i in doxygen if i[0] == '@brief']:
+                                print(i[1], file=fos)
+                            print('<dl class="doxygen-dl">', file=fos)
+                            params = [i for i in doxygen if i[0] == '@param']
+                            if params:
+                                print('<dt>Arguments</dt>', file=fos)
+                                print('<dd><div style="display: table">', file=fos)
+                                for i in params:
+                                    print(f'<div style="display: table-row">', file=fos)
+                                    argument_name = i[1].split(' ')[0]
+                                    print(f'<b style="display: table-cell; padding-right: 6px"><code>{argument_name}</code></b>', file=fos)
+                                    print(f'<div style="display: table-cell">{i[1][len(argument_name):]}</div>', file=fos)
+                                    print(f'</div>', file=fos)
+                                print('</div></dd>', file=fos)
+                            for i in doxygen:
+                                if i[0] != '@return':
+                                    continue
+                                print('<dt>Returns</dt>', file=fos)
+                                print(f'<dd>{i[1]}</dd>', file=fos)
+                            print('</dl>', file=fos)
+
+                            for i in doxygen:
+                                if i[0] in ['', '@details']:
+                                    print(f'{i[1]}', file=fos)
 
 
 

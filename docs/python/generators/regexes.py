@@ -44,3 +44,6 @@ assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(3) == "aui"
 
 INDEX_ALIAS = re.compile('<!-- aui:index_alias (.+) -->')
 assert INDEX_ALIAS.match('<!-- aui:index_alias AUI_DECLARATIVE_FOR -->').group(1) == "AUI_DECLARATIVE_FOR"
+
+MACRO_DEFINE = re.compile('#define ([\w\d_$]+)')
+assert MACRO_DEFINE.match('#define AUI_HELLO()').group(1) == "AUI_HELLO"

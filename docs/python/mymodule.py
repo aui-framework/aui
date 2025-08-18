@@ -7,9 +7,10 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from docs.python.generators import examples_page
+from docs.python.generators import examples_page, macros_page
 
 
 def define_env(env):
     "Hook function"
     examples_page.define_env(env)
+    macros_page.define_env(env)
