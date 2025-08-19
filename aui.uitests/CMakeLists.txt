@@ -6,7 +6,11 @@ if (NOT TARGET aui::views)
 endif()
 aui_module(aui.uitests EXPORT aui)
 
-aui_link(aui.uitests PRIVATE aui::core aui::views)
+if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+  aui_link(aui.uitests PRIVATE aui::core aui::views YY_Thunks)
+else()
+  aui_link(aui.uitests PRIVATE aui::core aui::views)
+endif()
 
 if (TARGET GTest::gmock)
   aui_link(aui.uitests PRIVATE GTest::gmock)

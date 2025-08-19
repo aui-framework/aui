@@ -1,7 +1,11 @@
 cmake_minimum_required(VERSION 3.10)
 
 aui_module(aui.updater EXPORT aui)
-aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json)
+if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+    aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json YY_Thunks)
+else()
+    aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json)
+endif()
 
 aui_get_package_name_and_arch(_default_qualifier)
 target_compile_definitions(aui.updater PRIVATE AUI_DEFAULT_PACKAGE_QUALIFIER="${_default_qualifier}-portable")

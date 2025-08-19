@@ -16,10 +16,6 @@
     #define AUI_EXPORT
 #else
     #if AUI_PLATFORM_WIN
-        // Define IUnknown for Windows XP compability
-        #ifdef BUILD_WINXP
-            typedef interface IUnknown IUnknown;
-        #endif
         #define AUI_IMPORT __declspec(dllimport)
         #define AUI_EXPORT __declspec(dllexport)
     #else

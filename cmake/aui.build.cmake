@@ -1780,6 +1780,11 @@ endif()
 #    endif()
 #endif()
 
+if (AUI_BUILD_FOR STREQUAL "winxp")
+    # [cmake] -> YY_THUNKS MSVC .obj -> cmake(x86|x64)
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.winxp.cmake)
+endif()
 
 if (AUI_BUILD_FOR STREQUAL "android")
     # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)

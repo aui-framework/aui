@@ -86,7 +86,11 @@ if (AUI_ENABLE_MYSQL)
 
 
 		target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})
-		aui_link(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
+		if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+			aui_link(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES} YY_Thunks)
+		else()
+			aui_link(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
+		endif()
 	else()
 		message("MySQL library was not found. Disabling AUI.Mysql")
 	endif()

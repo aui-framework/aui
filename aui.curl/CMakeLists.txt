@@ -6,4 +6,9 @@ auib_import(CURL https://github.com/aui-framework/curl/archive/b8c004e47705bb45c
 aui_module(aui.curl EXPORT aui WHOLEARCHIVE)
 aui_enable_tests(aui.curl)
 aui_link(aui.curl PUBLIC aui::core aui::json)
-aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt)
+
+if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+    aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt YY_Thunks)
+else()
+    aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt)
+endif()
