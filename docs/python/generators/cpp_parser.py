@@ -79,6 +79,18 @@ class CppFunction:
     def __str__(self):
         return f'CppFunction{self.tuple()}'
 
+class CppEnum:
+    def __init__(self, name, doc = None):
+        self.name = name
+        self.doc = doc
+        self.enum_values = []
+        self.namespace = []
+        self.generic_kind = 'enum'
+        self.location = None
+
+    def namespaced_name(self):
+        return "::".join(self.namespace + [self.name])
+
 class DoxygenEntry:
     def __init__(self, doc = None):
         self.doc = doc
@@ -92,8 +104,9 @@ class CppClass:
         self.fields = []
         self.location = None
         self.namespace = []
-        self.kind = None # 'class' | 'struct'
+        self.generic_kind = None # 'class' | 'struct'
         self.page_url = None
+        self.types = []
 
     def namespaced_name(self):
         return "::".join(self.namespace + [self.name])
@@ -112,6 +125,8 @@ class CppMacro:
         self.doc = doc
         self.definition = definition
         self.location = location
+        self.values = []
+        self.generic_kind = '#define'
 
     def namespaced_name(self):
         return self.name
@@ -177,6 +192,45 @@ class _Parser:
             self.last_token = next(self.iterator)
         return out
 
+    def _parse_enum(self):
+        assert self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'enum')
+        self.last_token = next(self.iterator)
+        generic_kind = None
+        if self.last_token[1] in ['class', 'struct']:
+            generic_kind = f"enum {self.last_token[1]}"
+            self.last_token = next(self.iterator)
+        name = self.last_token[1]
+        self.last_token = next(self.iterator)
+        if self.last_token[1] == ':':
+            while self.last_token[1] != '{':
+                self.last_token = next(self.iterator)
+        elif self.last_token[1] == ';':
+            # just a enum definition, ignore.
+            return None
+        assert self.last_token[1] == '{'
+        out = CppEnum(name=name, doc=self._consume_doc())
+        if generic_kind:
+            out.generic_kind = generic_kind
+        while True:
+            if self.last_token[1] == '}':
+                break
+            self.last_token = next(self.iterator)
+            if self.last_token[1] == '}':
+                break
+
+            if self._parse_comment():
+                continue
+            assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
+            enumeration_name = self.last_token[1]
+            while self.last_token[1] not in ',}':
+                self.last_token = next(self.iterator)
+            out.enum_values.append((enumeration_name, self._consume_doc()))
+        return out
+
+
+
+
+
     def _parse_class_body(self, clazz: CppClass):
         assert self.last_token[1] == '{'
 
@@ -184,7 +238,7 @@ class _Parser:
             self._skip_special_clause()
             return
 
-        visibility = 'private' if clazz.kind == 'class' else 'public'
+        visibility = 'private' if clazz.generic_kind == 'class' else 'public'
         template_clause = None
         template_clause2 = None
 
@@ -208,8 +262,9 @@ class _Parser:
 
             if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
                 if self.last_token[1] == 'enum':
-                    while self.last_token[1] != ';':
-                        self.last_token = next(self.iterator)
+                    e = self._parse_enum()
+                    if visibility != 'private':
+                        clazz.types.append(e)
                     continue
                 if self.last_token[1] == 'template':
                     template_clause2 = [self.last_token]
@@ -276,7 +331,10 @@ class _Parser:
 
 
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
-                self.last_token = next(self.iterator) # TODO parse enums
+                e = self._parse_enum()
+                e.location = self.location
+                if e.doc:
+                    yield e
                 continue
 
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'namespace'):
@@ -312,7 +370,7 @@ class _Parser:
                     self.last_token = next(self.iterator)
                 assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
                 clazz = CppClass()
-                clazz.kind = kind
+                clazz.generic_kind = kind
                 clazz.name = self.last_token[1]
                 clazz.doc = self._consume_doc()
                 clazz.location = self.location
@@ -508,6 +566,7 @@ public:
         CppFunction(return_type='void', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
+    assert clazz.types[0].name == 'Kek'
 
 def test_parse_class_complex_return1():
     clazz = next(_parse("""
@@ -847,4 +906,34 @@ def test_macro1():
     assert macro[0].name == "AUI_MACRO"
     assert macro[0].doc == '@brief Test'
     assert macro[0].definition == '#define AUI_MACRO(k, v) k v'
+
+def test_class_types1():
+    clazz = [i for i in _parse("""
+/**
+ * @brief Test
+ */
+class Impl {
+public:
+    /**
+     * @brief Enum
+     */
+    enum class Enum {
+        /**
+         * @brief Value 1
+         */
+        VALUE_1, 
+        
+        /**
+         * @brief Value 2
+         */
+        VALUE_2, 
+    };
+};
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'
+    assert clazz[0].types[0].name == "Enum"
+    assert clazz[0].types[0].enum_values[0] == ('VALUE_1', '@brief Value 1')
+    assert clazz[0].types[0].enum_values[1] == ('VALUE_2', '@brief Value 2')
+
 

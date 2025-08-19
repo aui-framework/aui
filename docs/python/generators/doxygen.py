@@ -31,6 +31,8 @@ log = logging.getLogger('mkdocs')
 
 def parse_doxygen(comment):
     output = [['', '']]
+    if comment is None:
+        return output
     iterator = iter(comment.split('\n'))
 
     for i in iterator:
@@ -77,14 +79,14 @@ def gen_pages():
                 with mkdocs_gen_files.open(output, 'w') as fos:
                     print(f'# {group_name}\n', file=fos)
                     print(f'<!-- aui:index_alias {group_id} -->', file=fos)
-                    for i in [i for i in doxygen if i[0] == '@brief']:
-                        print(i[1], file=fos)
+                    for type_entry in [i for i in doxygen if i[0] == '@brief']:
+                        print(type_entry[1], file=fos)
 
                     details = [i for i in doxygen if i[0] in ['@details', '']]
                     if details:
                         print(f'## Detailed Description', file=fos)
-                        for i in details:
-                            print(i[1], file=fos)
+                        for type_entry in details:
+                            print(type_entry[1], file=fos)
                     print('', file=fos)
                     print('## Related Pages', file=fos)
                     print('', file=fos)
@@ -132,8 +134,8 @@ def gen_pages():
 
             module_name = str(include_dir.parent.name).replace('.', '::')
 
-            for i in [i for i in doxygen if i[0] == '@brief']:
-                print(i[1], file=fos)
+            for type_entry in [i for i in doxygen if i[0] == '@brief']:
+                print(type_entry[1], file=fos)
 
             has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
@@ -141,8 +143,8 @@ def gen_pages():
                 print('[More...](#detailed-description)', file=fos)
 
             print('<table>', file=fos)
-            for i in [('Header:', f'<code>#include &lt;{parse_entry.location.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
-                print(f'<tr><td>{i[0]}</td><td>{i[1]}</td></tr>', file=fos)
+            for type_entry in [('Header:', f'<code>#include &lt;{parse_entry.location.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
+                print(f'<tr><td>{type_entry[0]}</td><td>{type_entry[1]}</td></tr>', file=fos)
             print('</table>', file=fos)
 
             if hasattr(parse_entry, 'definition'):
@@ -153,15 +155,57 @@ def gen_pages():
 
             if has_detailed_description:
                 print('## Detailed Description', file=fos)
-                for i in [i for i in doxygen if i[0] == '@details']:
-                    print(i[1], file=fos)
+                for type_entry in [i for i in doxygen if i[0] == '@details']:
+                    print(type_entry[1], file=fos)
 
-            def _render_invisible_header(name):
+            def _render_invisible_header(name, id):
                 # hack: present the header as invisible block. The header will still appear in TOC and
                 # can be anchor referenced.
                 print(f'<div style="position:absolute;opacity:0" markdown>', file=fos)
-                print(f'### {name}', file=fos)
+                print(f'### {name} {"{"} #{id} {"}"}', file=fos)
                 print(f'</div>', file=fos)
+
+            if hasattr(parse_entry, 'types'):
+                types = [i for i in parse_entry.types]
+                if types:
+                    print('', file=fos)
+                    print('## Public Types', file=fos)
+                    for type_entry in types:
+                        _render_invisible_header(type_entry.name, f"{parse_entry.namespaced_name()}::{type_entry.name}")
+                        print('', file=fos)
+                        print('---', file=fos)
+                        print('', file=fos)
+                        print(f'`{type_entry.generic_kind} {parse_entry.namespaced_name()}::{type_entry.name}`', file=fos)
+                        print(f'', file=fos)
+
+                        doxygen = parse_doxygen(type_entry.doc)
+
+                        # todo add a check for @brief to exist
+                        for i in [i for i in doxygen if i[0] == '@brief']:
+                            print(i[1], file=fos)
+
+                        for i in doxygen:
+                            if i[0] in ['', '@details']:
+                                print(f'{i[1]}', file=fos)
+
+                        if hasattr(type_entry, 'enum_values'):
+                            print('<table markdown>', file=fos)
+                            print('<tr markdown>', file=fos)
+                            print('<th>Constant</th>', file=fos)
+                            print('<th>Description</th>', file=fos)
+                            print('</tr>', file=fos)
+                            for v in type_entry.enum_values:
+                                print('<tr markdown>', file=fos)
+                                print('<td markdown>', file=fos)
+                                print(f'`{type_entry.name}::{v[0]}`', file=fos)
+                                print('</td>', file=fos)
+                                print('<td markdown>', file=fos)
+                                for i in parse_doxygen(v[1]):
+                                    print(i[1], file=fos)
+                                print('</td>', file=fos)
+                                print('</tr>', file=fos)
+
+                            print('</table>', file=fos)
 
             if hasattr(parse_entry, 'fields'):
                 fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
@@ -169,7 +213,7 @@ def gen_pages():
                     print('## Public fields and Signals', file=fos)
                     for i in sorted(fields, key=lambda x: x.name):
                         print('---', file=fos)
-                        _render_invisible_header(i.name)
+                        _render_invisible_header(i.name, f"{parse_entry.namespaced_name()}::{i.name}")
                         print('```cpp', file=fos)
                         print(f'{i.type_str} {i.name}', file=fos)
                         print('```', file=fos)
@@ -187,7 +231,7 @@ def gen_pages():
                     for i in methods:
                         methods_grouped.setdefault(i.name, []).append(i)
                     for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
-                        _render_invisible_header(name)
+                        _render_invisible_header(name, f"{parse_entry.namespaced_name()}::{name}()")
                         for overload in overloads:
                             print('', file=fos)
                             print('---', file=fos)
