@@ -8,7 +8,14 @@ Minimal UI boilerplate template.
 ## Source Code
 ### Project Structure
 
-@mermaid{project_structure_minimal_example}
+```mermaid
+graph TD
+    A[project_template_ui] --> B[CMakeLists.txt]
+A --> C[src/]
+C --> D[MainWindow.h]
+C --> E[MainWindow.cpp]
+C --> F[main.cpp]
+```
 
 ---
 ### CMakeLists.txt

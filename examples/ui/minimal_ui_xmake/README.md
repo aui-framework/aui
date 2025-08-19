@@ -8,7 +8,16 @@ Minimal UI boilerplate template XMake.
 ## Source Code
 ### Project Structure
 
-@mermaid{project_structure_minimal_example_xmake}
+```mermaid
+graph TD
+    A[project_template_ui_xmake] --> B[xmake.lua]
+    A --> C[src/]
+    C --> D[MainWindow.h]
+    C --> E[MainWindow.cpp]
+    C --> F[main.cpp]
+    A --> G[.vscode/]
+    G --> H[c_cpp_properties.json]
+```
 
 ---
 

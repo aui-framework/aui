@@ -282,7 +282,7 @@ class _Parser:
                 modifiers_before = []
                 while True:
                     type_str = self._parse_type()
-                    if type_str in ["explicit", "static", "constexpr", "virtual"]:
+                    if type_str in ["explicit", "static", "inline", "constexpr", "virtual"]:
                         modifiers_before.append(type_str)
                         continue
                     break

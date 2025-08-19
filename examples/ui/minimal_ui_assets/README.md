@@ -8,7 +8,17 @@ Minimal UI boilerplate template with [aui-assets].
 ## Source Code
 ### Project Structure
 
-@mermaid{project_structure_minimal_assets_example}
+
+```mermaid
+graph TD
+    A[project_template_assets_ui] --> B[CMakeLists.txt]
+    A --> C[src/]
+    C --> D[MainWindow.h]
+    C --> E[MainWindow.cpp]
+    C --> F[main.cpp]
+    A --> G[assets/img/]
+    G --> H[logo.svg]
+```
 
 ---
 ### CMakeLists.txt
