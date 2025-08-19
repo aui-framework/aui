@@ -170,32 +170,31 @@ AUI_ENTRY {
 //
 // The update steps are reported by changing `AUpdater::status` property.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "[AUpdater"]];
-// a -> u [label = "handleStartup(...)", URL = "AUpdater::handleStartup"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "AUpdater::StatusIdle"];
-// a <- u [label = "control flow"];
+// ```mermaid
+//sequenceDiagram
+//  autonumber
+//  participant a as Your App
+//  participant u as AUpdater
 //
-// --- [label="App Normal Lifecycle"];
-// ...;
-// a -> u [label = "checkForUpdates()", URL = "AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "AUpdater::StatusCheckingForUpdates"];
-// a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "AUpdater::checkForUpdatesImpl"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "AUpdater::StatusIdle"];
+//  a->>u: handleStartup(...)
+//  u-->>a: status = AUpdater::StatusIdle
+//  u-->>a: control flow
 //
-// ...;
-// --- [label="Update published"];
-// ...;
-// a -> u [label = "checkForUpdates()", URL = "AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "AUpdater::StatusCheckingForUpdates"];
-// a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "AUpdater::checkForUpdatesImpl"];
-// u box u [label = "update was found"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "AUpdater::StatusIdle"];
-// ...;
-// @endmsc
+//  Note over a,u: App Normal Lifecycle
+//  a->>u: checkForUpdates()
+//  u-->>a: status = AUpdater::StatusCheckingForUpdates
+//  u-->>a: control flow
+//  u->>u: checkForUpdatesImpl()
+//  u-->>a: status = AUpdater::StatusIdle
+//
+//  Note over a,u: update published
+//  a->>u: checkForUpdates()
+//  u-->>a: status = AUpdater::StatusCheckingForUpdates
+//  u-->>a: control flow
+//  u->>u: checkForUpdatesImpl()
+//  Note over u: update was found
+//  u-->>a: status = AUpdater::StatusIdle
+// ```
 //
 // You might want to store update check results (i.e., download url) in your implementation of
 // AUpdater::checkForUpdatesImpl so your [AUpdater::downloadUpdateImpl] might reuse this information.
