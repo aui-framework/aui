@@ -156,7 +156,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 
 # only for the first time
-python3 -m pip install -r docs/requirements.txt 
+python3 -m pip install -r docs/python/requirements.txt 
 
 # generate docs
 mkdocs serve --use-directory-urls

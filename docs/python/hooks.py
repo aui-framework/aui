@@ -7,11 +7,16 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
+import sys
+from pathlib import Path
 
 import mkdocs.plugins
 from mkdocs.config.defaults import MkDocsConfig
 from mkdocs.structure.files import Files
 from mkdocs.structure.pages import Page
+
+l = str(Path.cwd())
+sys.path.append(l)
 
 from docs.python.generators import index, autorefs
 from docs.python.generators.comment_macros import handle_comment_macros
