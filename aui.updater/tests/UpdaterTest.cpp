@@ -171,7 +171,7 @@ AUI_ENTRY {
 // The update steps are reported by changing `AUpdater::status` property.
 //
 // ```mermaid
-//sequenceDiagram
+// sequenceDiagram
 //  autonumber
 //  participant a as Your App
 //  participant u as AUpdater
@@ -208,17 +208,19 @@ AUI_ENTRY {
 // user-defined [AUpdater::downloadUpdateImpl] which might choose to call default
 // `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "[AUpdater"]];
-// ...;
-// a -> u [label = "downloadUpdate()", URL = "AUpdater::downloadUpdate"];
-// a <- u [label = "status = AUpdater::StatusDownloading", URL = "AUpdater::StatusDownloading"];
-// u box u [label = "downloadUpdateImpl()", URL = "AUpdater::downloadUpdateImpl"];
-// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "AUpdater::StatusWaitingForApplyAndRestart"];
-// --- [label="Your App Prompts User to Update"];
-// ...;
-// @endmsc
+// ``` mermaid
+// sequenceDiagram
+//    autonumber
+//    participant a as Your App
+//    participant u as AUpdater
+//
+//    a->>u: downloadUpdate()
+//    u-->>a: status = AUpdater::StatusDownloading
+//    u->>u: downloadUpdateImpl()
+//    u-->>a: status = AUpdater::StatusWaitingForApplyAndRestart
+//
+//    Note over a,u: Your App Prompts User to Update
+// ```
 //
 // ### Applying (deploying) the update
 //
@@ -232,27 +234,29 @@ AUI_ENTRY {
 // control back to the updated application executable. At last, the newly updated application performs a cleanup after
 // update.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "AUpdater"],
-// da[label = "Newer Copy of Your App"],
-// du[label = "AUpdater in App Copy", URL = "AUpdater"];
-// a :> u [label = "applyUpdateAndRestart()", URL = "AUpdater::applyUpdateAndRestart"];
-// u :> da [label = "Execute with update arg"];
-// u box u [label = "exit(0)"];
-// a box u [label = "Process Finished"];
-// da box du [label = "Process Started"];
-// da -> du [label = "handleStartup", URL = "AUpdater::handleStartup"];
-// du box du [label = "AUpdater::deployUpdate(...)", URL = "AUpdater::deployUpdate"];
-// a <: du [label = "Execute"];
-// du box du [label = "exit(0)"];
-// da box du [label = "Process Finished"];
-// a box u [label = "Process Started"];
-// a -> u [label = "handleStartup", URL = "AUpdater::handleStartup"];
-// u box u [label = "cleanup download dir"];
-// a box u [label="App Normal Lifecycle"];
-// ...;
-// @endmsc
+// ``` mermaid
+// sequenceDiagram
+//    autonumber
+//    participant a as Your App
+//    participant u as AUpdater
+//    u -->> a: applyUpdateAndRestart()
+//    create participant da as Your App Copy
+//    u -->> da: Execute with update arg
+//    u -->> u: exit(0)
+//    Note over a,u: Process Finished
+//    create participant du as AUpdater Copy
+//    da -->> du: handleStartup
+//    du -->> du: deployUpdate(...)
+//    du -->> a: Execute
+//    destroy du
+//    du -->> da: exit(0)
+//    destroy da
+//    da-->a:
+//    Note over a,u: Process Started
+//    a -->> u: handleStartup
+//    u -->> u: cleanup download dir
+//    a --x u: App Normal Lifecycle
+// ```
 //
 // After these operations complete, your app is running in its normal lifecycle.
 //
@@ -370,7 +374,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ### Prompt user on every step
 //
-// This approach is implemented in AUI's [example_app_template].
+// This approach is implemented in AUI's [app-template.md].
 //
 // The updater checks for updater periodically or upon user request and informs the user that an update is available.
 // The user then decides whether to proceed with update or not. If they agree the application will download and install
@@ -388,7 +392,7 @@ TEST(UpdaterTest, WaitForProcess) {
 //
 // ### Silent download
 //
-// This approach is implemented in [example_app_auigram], as well as in official Qt-based Telegram Desktop client.
+// This approach is implemented in [aui-telegram-client-auigram.md], as well as in official Qt-based Telegram Desktop client.
 //
 // The updater silently downloads the update in the background while the user continues working within the application
 // or even other tasks. The update then is applied automatically upon restart.
