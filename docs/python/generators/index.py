@@ -50,7 +50,7 @@ def populate_mapping(files: Files):
                     log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
 
                 if m := regexes.HEADING_ANCHOR.match(line_contents):
-                    heading_title = m.group(1)
+                    heading_title = m.group(4) or m.group(1)
                     heading_id = m.group(3)
                     _mapping[heading_id] = MappingEntry(title=heading_title, url=f"{file.src_uri}#{heading_id}", containing_file=file)
 

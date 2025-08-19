@@ -271,6 +271,13 @@ class _Parser:
                     self.last_token = next(self.iterator)
                     template_clause2 += self._skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
                     continue
+                if self.last_token[1] in ['class', 'struct']:
+                    e = self._parse_class()
+                    e.location = self.location
+                    if visibility != 'private':
+                        clazz.types.append(e)
+                    continue
+
 
                 modifiers_before = []
                 while True:
@@ -286,13 +293,14 @@ class _Parser:
                 elif self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
                     name = self.last_token[1]
                     self.last_token = next(self.iterator)
-                    if self.last_token[1] in [';', '{', '=']:
-                        clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_doc(), visibility=visibility))
-                        continue
-                    if self.last_token[1] == '(':
-                        clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_doc(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
-                        template_clause = None
-                        self.last_token = next(self.iterator)
+                    if visibility != 'private':
+                        if self.last_token[1] in [';', '{', '=']:
+                            clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_doc(), visibility=visibility))
+                            continue
+                        if self.last_token[1] == '(':
+                            clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_doc(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
+                            template_clause = None
+                            self.last_token = next(self.iterator)
                 while True:
                     if self.last_token[1] == ';':
                         break
@@ -302,6 +310,26 @@ class _Parser:
                     # consume const noexcept
                     self.last_token = next(self.iterator)
                 self._consume_doc()
+
+    def _parse_class(self):
+        assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER and self.last_token[1] in ['class', 'struct']
+        kind = self.last_token[1]
+        self.last_token = next(self.iterator)
+        if self.last_token[1].startswith("API_"):
+            # export macro, ignore
+            self.last_token = next(self.iterator)
+        assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
+        clazz = CppClass()
+        clazz.generic_kind = kind
+        clazz.name = self.last_token[1]
+        clazz.doc = self._consume_doc()
+        clazz.location = self.location
+
+        while self.last_token[1] not in '{;':
+            self.last_token = next(self.iterator)
+        if self.last_token[1] == '{':
+            self._parse_class_body(clazz)
+        return clazz
 
     def _parse_file(self):
         for self.last_token in self.iterator:
@@ -363,23 +391,7 @@ class _Parser:
                     yield i
 
             if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER and self.last_token[1] in ['class', 'struct']:
-                kind = self.last_token[1]
-                self.last_token = next(self.iterator)
-                if self.last_token[1].startswith("API_"):
-                    # export macro, ignore
-                    self.last_token = next(self.iterator)
-                assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
-                clazz = CppClass()
-                clazz.generic_kind = kind
-                clazz.name = self.last_token[1]
-                clazz.doc = self._consume_doc()
-                clazz.location = self.location
-
-                while self.last_token[1] not in '{;':
-                    self.last_token = next(self.iterator)
-                if self.last_token[1] == '{':
-                    self._parse_class_body(clazz)
-
+                clazz = self._parse_class()
                 if clazz.doc:
                     yield clazz
 
@@ -937,3 +949,27 @@ public:
     assert clazz[0].types[0].enum_values[1] == ('VALUE_2', '@brief Value 2')
 
 
+def test_class_types2():
+    clazz = [i for i in _parse("""
+/**
+ * @brief Test
+ */
+class Impl {
+public:
+    /**
+     * @brief Nested
+     */
+    struct Nested {
+        /**
+         * @brief Test field
+         */
+        AString field; 
+    };
+};
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'
+    assert clazz[0].types[0].name == "Nested"
+    assert [str(i) for i in clazz[0].types[0].fields] == [
+        str(CppVariable(name="field", type_str="AString", doc="@brief Test field"))
+    ]

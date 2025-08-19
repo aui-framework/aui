@@ -38,12 +38,17 @@ assert AUI_EXAMPLE.match("<!-- aui:example app -->").group(1) == "app"
 PAGE_TITLE = re.compile('# (.+)')
 assert PAGE_TITLE.match('# AUI Framework').group(1) == "AUI Framework"
 
-HEADING_ANCHOR = re.compile('[#]{1,6} (.+) (\{ #(.+) \})')
+HEADING_ANCHOR = re.compile('[#]{1,6} (.+) (\{ #(\S+) ?(\S*) \})')
 assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(1) == "AUI Framework"
 assert HEADING_ANCHOR.match('## AUI Framework { #aui }').group(3) == "aui"
+assert HEADING_ANCHOR.match('## AUI Framework { #aui aboba::aboba() }').group(4) == "aboba::aboba()"
 
 INDEX_ALIAS = re.compile('<!-- aui:index_alias (.+) -->')
 assert INDEX_ALIAS.match('<!-- aui:index_alias AUI_DECLARATIVE_FOR -->').group(1) == "AUI_DECLARATIVE_FOR"
 
 MACRO_DEFINE = re.compile('#define ([\w\d_$]+)')
 assert MACRO_DEFINE.match('#define AUI_HELLO()').group(1) == "AUI_HELLO"
+
+HREF_INJECT = re.compile('(<[^>]*>|[\w\'_\.:]+(\(\))?|.)', flags=re.S)
+assert HREF_INJECT.match('AProcess::self()->hello').group(1) == 'AProcess::self()'
+assert HREF_INJECT.match('AProcess::self->hello').group(1) == 'AProcess::self'

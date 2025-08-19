@@ -158,11 +158,13 @@ def gen_pages():
                 for type_entry in [i for i in doxygen if i[0] == '@details']:
                     print(type_entry[1], file=fos)
 
-            def _render_invisible_header(name, id):
+            def _render_invisible_header(toc, id, on_other_pages=None):
                 # hack: present the header as invisible block. The header will still appear in TOC and
-                # can be anchor referenced.
+                # can be anchor referenced. Also, the markdown parser in index.py can pick up the heading.
+                if not on_other_pages:
+                    on_other_pages = toc
                 print(f'<div style="position:absolute;opacity:0" markdown>', file=fos)
-                print(f'### {name} {"{"} #{id} {"}"}', file=fos)
+                print(f'### {toc} {"{"} #{id} {on_other_pages} {"}"} ', file=fos)
                 print(f'</div>', file=fos)
 
             if hasattr(parse_entry, 'types'):
@@ -171,7 +173,8 @@ def gen_pages():
                     print('', file=fos)
                     print('## Public Types', file=fos)
                     for type_entry in types:
-                        _render_invisible_header(type_entry.name, f"{parse_entry.namespaced_name()}::{type_entry.name}")
+                        full_name = f"{parse_entry.namespaced_name()}::{type_entry.name}"
+                        _render_invisible_header(toc=type_entry.name, id=full_name, on_other_pages=full_name)
                         print('', file=fos)
                         print('---', file=fos)
                         print('', file=fos)
@@ -188,6 +191,7 @@ def gen_pages():
                             if i[0] in ['', '@details']:
                                 print(f'{i[1]}', file=fos)
 
+                        # enums - see APath::DefaultPath
                         if hasattr(type_entry, 'enum_values'):
                             print('<table markdown>', file=fos)
                             print('<tr markdown>', file=fos)
@@ -197,7 +201,7 @@ def gen_pages():
                             for v in type_entry.enum_values:
                                 print('<tr markdown>', file=fos)
                                 print('<td markdown>', file=fos)
-                                print(f'`{type_entry.name}::{v[0]}`', file=fos)
+                                print(f'`#!cpp {type_entry.name}::{v[0]}`', file=fos)
                                 print('</td>', file=fos)
                                 print('<td markdown>', file=fos)
                                 for i in parse_doxygen(v[1]):
@@ -207,19 +211,42 @@ def gen_pages():
 
                             print('</table>', file=fos)
 
+                        # nested struct - see AUpdater::InstallCmdline
+                        if hasattr(type_entry, 'fields'):
+                            if type_entry.fields:
+                                print('<table markdown>', file=fos)
+                                print('<tr markdown>', file=fos)
+                                print('<th>Field</th>', file=fos)
+                                print('<th>Description</th>', file=fos)
+                                print('</tr>', file=fos)
+                                for v in type_entry.fields:
+                                    print('<tr markdown>', file=fos)
+                                    print('<td markdown>', file=fos)
+                                    print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
+                                    print('</td>', file=fos)
+                                    print('<td markdown>', file=fos)
+                                    for i in parse_doxygen(v.doc):
+                                        print(i[1], file=fos)
+                                    print('</td>', file=fos)
+                                    print('</tr>', file=fos)
+
+                                print('</table>', file=fos)
+                            else:
+                                print('\n\n_Empty structure._', file=fos)
+
             if hasattr(parse_entry, 'fields'):
                 fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
                 if fields:
                     print('## Public fields and Signals', file=fos)
                     for i in sorted(fields, key=lambda x: x.name):
                         print('---', file=fos)
-                        _render_invisible_header(i.name, f"{parse_entry.namespaced_name()}::{i.name}")
-                        print('```cpp', file=fos)
-                        print(f'{i.type_str} {i.name}', file=fos)
-                        print('```', file=fos)
+                        full_name = f"{parse_entry.namespaced_name()}::{i.name}"
+                        _render_invisible_header(toc=i.name, id=full_name, on_other_pages=full_name)
+                        print(f'`#!cpp {i.type_str} {i.name}`\n\n', file=fos)
                         doxygen = parse_doxygen(i.doc)
                         for i in doxygen:
                             print(i[1], file=fos)
+                        print(f'\n', file=fos)
 
 
             if hasattr(parse_entry, 'methods'):
@@ -231,7 +258,8 @@ def gen_pages():
                     for i in methods:
                         methods_grouped.setdefault(i.name, []).append(i)
                     for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
-                        _render_invisible_header(name, f"{parse_entry.namespaced_name()}::{name}()")
+                        full_name = f"{parse_entry.namespaced_name()}::{name}"
+                        _render_invisible_header(toc=f"{name}", id=full_name, on_other_pages=f'{full_name}()')
                         for overload in overloads:
                             print('', file=fos)
                             print('---', file=fos)

@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <range/v3/all.hpp>
 #include <AUI/Updater/AUpdater.h>
@@ -30,7 +32,6 @@ TEST(UpdaterTest, getInstallationDirectory) {
         AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
     } myUpdater;
 
-    // clang-format off
     EXPECT_EQ(
         myUpdater.getInstallationDirectory(
             { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
@@ -39,7 +40,6 @@ TEST(UpdaterTest, getInstallationDirectory) {
                                     "/home/alex2772/CLionProjects/example_app/cmake-build-debug"
         );
 
-    // malformed structure
     EXPECT_ANY_THROW(
         myUpdater.getInstallationDirectory(
             { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
@@ -53,13 +53,11 @@ TEST(UpdaterTest, getInstallationDirectory) {
               .updaterDir         = "/tmp/__aui_update_example_app/download",
               .originExe          = "/home/alex2772/CLionProjects/example_app/cmake-build-debug/example_app.exe" }),
                                     "/home/alex2772/CLionProjects/example_app/cmake-build-debug");
-
-    // clang-format on
 }
 
 #ifdef AUI_UPDATER_TEST
 TEST(UpdaterTest, ApplyUpdate) {
-    // test update installation scenario
+    /* test update installation scenario */
 
     auto updaterPath = [] {
         auto selfDir = AProcess::self()->getPathToExecutable().parent();
@@ -73,22 +71,22 @@ TEST(UpdaterTest, ApplyUpdate) {
         return APath();
     }();
     APathOwner temporary(APath::nextRandomTemporary());
-    auto tempDir = APath(temporary) / "white space";   // white space to check everything is ok on Win
+    auto tempDir = APath(temporary) / "white space";   /* white space to check everything is ok on Win */
     tempDir.makeDirs();
     auto tempDirUpdater = tempDir / updaterPath.filename();
 
-    // set up "downloaded" update
+    /* set up "downloaded" update */
     APath::copy(updaterPath, tempDirUpdater);
     tempDirUpdater.chmod(0755);
     auto dependencyPath = updaterPath.parent() / "dependency.txt";
     dependencyPath.removeFileRecursive();
     AFileOutputStream(tempDir / "dependency.txt") << aui::serialize_sized(AString("1234"));
 
-    // first launch. --test= flag instructs aui.updater.test to apply update from the specified dir.
-    // this launch will launch a copy of aui.updater.test from tempDir and copy itself along with the dependency.txt
-    // back to updaterPath.
+    /* first launch. --test= flag instructs aui.updater.test to apply update from the specified dir.
+       this launch will launch a copy of aui.updater.test from tempDir and copy itself along with the dependency.txt
+       back to updaterPath.*/
     {
-        // check that dependency.txt does not exist ("no update applied").
+        /* check that dependency.txt does not exist ("no update applied"). */
         EXPECT_FALSE(dependencyPath.isRegularFileExists());
 
         AProcess::ArgStringList args;
@@ -101,13 +99,13 @@ TEST(UpdaterTest, ApplyUpdate) {
         EXPECT_EQ(process->waitForExitCode(), 0);
     }
 
-    // wait a little bit to apply the update.
+    /* wait a little bit to apply the update. */
     AThread::sleep(1s);
     {
-        // check that dependency.txt appeared.
+        /* check that dependency.txt appeared. */
         EXPECT_TRUE(dependencyPath.isRegularFileExists());
 
-        // perform "app normal lifecycle". In case of aui.updater.test, it will check for dependency.txt.
+        /* perform "app normal lifecycle". In case of aui.updater.test, it will check for dependency.txt. */
         auto process = AProcess::create({
           .executable = updaterPath,
           .workDir = updaterPath.parent(),
@@ -125,36 +123,6 @@ TEST(UpdaterTest, ApplyUpdate) {
 
 #define AUI_ENTRY static int fake_entry(const AStringVector& args)
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/updater.h
-// @defgroup updater aui::updater
-// @brief Deliver updates on non-centralized distribution methods
-// @details
-// <!-- aui:experimental -->
-// This module is purposed for delivering updates to your end users on distribution methods that do not support that by
-// themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
-// your website).
-//
-// `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
-// priveleges). If that's not your case, you'll need to update your [installer configuration](INNOSETUP) to install
-// to user's directory (i.e., in `AppData`).
-//
-// !!! note
-//
-//     Check out our [example_app_template] for a GitHub-hosted app template with auto update implemented.
-//
-// ## Supported platforms
-// `aui::updater` supports the following platforms:
-// - **Windows** - [portables](PORTABLE_WINDOWS) only, installers to user's directory only ([INNOSETUP])
-// - **Linux** - portables only
-//
-// On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
-// executable is not writeable, or running on a non-supported platform, `AUpdater` stubs it's methods (i.e., they do
-// nothing). You can check that the `aui::updater` functionality is engaged by calling `AUpdater::isAvailable()`.
-//
-// Updating process requires the initial application running instance to be stopped to replace its files with newer
-// ones. Additionally, the updater process starts the newer version of the application after replacing the files
-// (applying/deploying an update). To minimize downtime for end-users, the replacement should be seamless and quick and
-// thus the deployment process just copies newer files (overwriting old ones), it does not involve network operations.
 //
 // ## Getting started
 //
@@ -191,7 +159,7 @@ AUI_ENTRY {
 //
 // ## Observing update progress
 //
-// @copydetails AUpdater::status
+// See [AUpdater::status]
 //
 // ## Update process
 //

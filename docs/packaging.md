@@ -51,7 +51,7 @@ developers still opt for traditional methods. This guide will cover the latter.
     Guides about packaging for Windows assume you are running Windows with [Chocolatey](https://community.chocolatey.org/)
     preinstalled. This way the process is easily reproducible (i.e., on a CI/CD runner).
 
-### Inno Setup
+### Inno Setup { #INNOSETUP }
 
 [\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
