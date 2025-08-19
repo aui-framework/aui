@@ -32,7 +32,9 @@
  * @defgroup core aui::core
  * @brief Main central library.
  * @details
- * Some additional features:
+ * `aui::core` is the main module of AUI. All other modules are built on top of `aui::core`. It implements several basic
+ * features:
+ *
  * - [interruptable threads](AAbstractThread::interrupt())
  * - [i18n](AI18n)
  * - [logging](ALogger)
@@ -48,9 +50,6 @@
  * @ingroup core
  * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
  * @details
- * !!! note
- *
- *     For build-time macros, see [macros.md].
  */
 
 /**

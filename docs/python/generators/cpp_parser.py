@@ -296,6 +296,7 @@ class _Parser:
                     if visibility != 'private':
                         if self.last_token[1] in [';', '{', '=']:
                             clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_doc(), visibility=visibility))
+                            self.last_token = next(self.iterator)
                             continue
                         if self.last_token[1] == '(':
                             clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_doc(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
@@ -817,7 +818,6 @@ def test_parse_aobject():
         "CppFunction('moveToThread', 'void', None)",
         "CppFunction('setSlotsCallsOnlyOnMyThread', 'void', None)",
         "CppFunction('setThread', 'void', None)",
-        "CppFunction('isDisconnected', 'bool&', None)",
     ]
 
 def test_parse_namespace1():
@@ -894,10 +894,16 @@ namespace aui::impl {
  * @brief Test
  */
 class Impl {
+public:
     /**
-     * @brief Test field
+     * @brief Test field 1
      */
-    AString field{};
+    AString field1{};
+    
+    /**
+     * @brief Test field 2
+     */
+    AString field2{};
 };
 }
     """)]
@@ -905,7 +911,8 @@ class Impl {
     assert clazz[0].doc == '@brief Test'
     assert clazz[0].methods == []
     assert [str(i) for i in clazz[0].fields] == [
-        str(CppVariable(name="field", type_str="AString", doc="@brief Test field"))
+        str(CppVariable(name="field1", type_str="AString", doc="@brief Test field 1")),
+        str(CppVariable(name="field2", type_str="AString", doc="@brief Test field 2")),
     ]
 
 def test_macro1():

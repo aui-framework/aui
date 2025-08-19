@@ -9,10 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 31.08.2020.
-//
-
 #include <gtest/gtest.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AByteBuffer.h>
@@ -96,7 +92,7 @@ TEST_F(ProcessTest, FinishedSignal) {
 
         AThread::processMessages();
 
-        receiver = nullptr;   // gmock wants object to be removed
+        receiver = nullptr;
     }
 }
 
@@ -114,7 +110,7 @@ TEST_F(ProcessTest, StdoutSignal) {
 
         AThread::processMessages();
 
-        receiver = nullptr;   // gmock wants object to be removed
+        receiver = nullptr;
     }
 }
 
@@ -143,7 +139,6 @@ TEST_F(ProcessTest, StartDetachedBad) {
 }
 
 TEST_F(ProcessTest, StartDetachedSleep) {
-    // This test checks that no zombies are stuck during usage of double fork technique.
     auto p = AProcess::create({
                                   .executable = "/usr/bin/sleep",
                                   .args = AProcess::ArgStringList{ { "5" } },
@@ -155,8 +150,6 @@ TEST_F(ProcessTest, StartDetachedSleep) {
 }
 
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/aprocess.h
-// @class AProcess
 TEST_F(ProcessTest, Launching_executable) { // HEADER_H2
     // To start a process, pass the name of application you want to run and optionally provide arguments and working dir
     // for that application. In this code snippet, we are starting another instance of the current executable with

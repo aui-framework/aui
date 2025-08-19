@@ -245,6 +245,13 @@ def gen_pages():
                         print(f'`#!cpp {i.type_str} {i.name}`\n\n', file=fos)
                         doxygen = parse_doxygen(i.doc)
                         for i in doxygen:
+                            if i[0] != '@brief':
+                                continue
+                            print(i[1], file=fos)
+                        print('', file=fos)
+                        for i in doxygen:
+                            if i[0] == '@brief':
+                                continue
                             print(i[1], file=fos)
                         print(f'\n', file=fos)
 

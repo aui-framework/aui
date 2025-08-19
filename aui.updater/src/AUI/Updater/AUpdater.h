@@ -243,6 +243,8 @@ public:
      * - [AUpdater::StatusNotAvailable]
      *
      * These statuses might be set by AUpdater itself.
+     *
+     * <!-- aui:parse_tests aui.updater/tests/UpdaterStatusTest.cpp -->
      */
     AProperty<std::any> status;
 

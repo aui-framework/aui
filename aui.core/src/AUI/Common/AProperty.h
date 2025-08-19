@@ -53,14 +53,18 @@
  */
 
 /**
- * @brief Basic easy-to-use property implementation containing T.
+ * @brief Observable container of `T`.
  * @ingroup property_system
  * @details
+ *
  * <!-- aui:experimental -->
+ *
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
  * See [property system](property_system.md) for usage examples.
+ *
+ * <!-- aui:parse_tests aui.core/tests/PropertyTest.cpp -->
  */
 template <typename T>
 struct AProperty: AObjectBase {
@@ -145,9 +149,9 @@ struct AProperty: AObjectBase {
      * In common, you won't need to use this function. AProperty is reevaluated automatically as soon as one updates the
      * value within property.
      *
-     * If your scenario goes beyond [writeScope] that explicitly defines modification scope within RAII scope, you
-     * can modify the underlying value by accessing `AProperty::raw` and then call [notify] to notify the observers
-     * that value is changed.
+     * If your scenario goes beyond [AProperty::writeScope] that explicitly defines modification scope within RAII
+     * scope, you can modify the underlying value by accessing `AProperty::raw` and then call [AProperty::notify] to
+     * notify the observers value is changed.
      */
     void notify() {
         emit changed(this->raw);
@@ -172,14 +176,14 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
+     * @return aui::PropertyModifier of this property.
      */
     aui::PropertyModifier<AProperty> writeScope() noexcept {
         return { *this };
     }
 
     /**
-     * @brief Makes a readonly [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
+     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template<aui::invocable<const T&> Projection>
     [[nodiscard]]
@@ -188,7 +192,7 @@ struct AProperty: AObjectBase {
     }
 
     /**
-     * @brief Makes a bidirectional [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
+     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template<aui::invocable<const T&> ProjectionRead,
              aui::invocable<const std::invoke_result_t<ProjectionRead, T>&> ProjectionWrite>

@@ -30,8 +30,6 @@ public:
 };
 }
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property_modifier.h
-// @class aui::PropertyModifier
 //
 // Non-const operators of properties such as non-const versions of `operator=`, `operator+=`, `operator-=` have a side
 // effect of emitting `changed` signal upon operation completion. This ensures that modifying access to the property can

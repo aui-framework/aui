@@ -27,7 +27,7 @@
  *
  * See [property system](property_system.md) for usage info.
  *
- * Despite properties offer [projection methods](UIDataBindingTest_Label_via_declarative_projection), you might
+ * Despite properties offer [projection methods](property-system.md#UIDataBindingTest_Label_via_declarative_projection), you might
  * want to track and process values of several properties.
  *
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
@@ -46,6 +46,8 @@
  *
  * `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
  * value with `value()` method or implicit conversion `operator T()` as with other properties.
+ *
+ * <!-- aui:parse_tests aui.core/tests/PropertyPrecomputed.cpp -->
  */
 template<typename T>
 struct APropertyPrecomputed final : aui::react::DependencyObserver {
@@ -106,7 +108,7 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
     }
 
     /**
-     * @brief Makes a readonly [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
+     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]

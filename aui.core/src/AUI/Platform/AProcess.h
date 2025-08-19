@@ -83,6 +83,8 @@ public:
  * [self](AProcess::self)) in a platform-independent manner. It provides a way to run external applications from
  * within the application itself, which can be useful for tasks like running scripts, launching other programs, or
  * automating system operations through commands.
+ *
+ * <!-- aui:parse_tests aui.core/tests/ProcessTest.cpp -->
  */
 class API_AUI_CORE AProcess : public aui::noncopyable {
 public:

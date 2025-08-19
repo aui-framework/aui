@@ -21,6 +21,7 @@ namespace aui {
  * operator implementations (see below). It gains transparent writeable handle to property's value, and calls `notify()`
  * method on associated property upon PropertyModifier destruction.
  *
+ * <!-- aui:parse_tests aui.core/tests/PropertyModifierTest.cpp -->
  */
 template<typename Property>
 class PropertyModifier;

@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Logging/ALogger.h>
@@ -25,8 +27,6 @@ public:
 };
 
 namespace {
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property.h
-// @class AProperty
 // ## Declaration
 // To declare a property inside your data model, use AProperty template:
 // AUI_DOCS_CODE_BEGIN
@@ -341,7 +341,7 @@ TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H2
     for (int i : *ints) {
         // i = 1, 2, 3...
     }
-    // AUI_DOCS_CODE_BEGIN
+    // AUI_DOCS_CODE_END
 }
 
 TEST_F(PropertyTest, AProperty_and_AVector_modifying) {
@@ -353,7 +353,7 @@ TEST_F(PropertyTest, AProperty_and_AVector_modifying) {
     ints.writeScope() << 2;
     // or
     ints << 2; // implies writeScope()
-    // AUI_DOCS_CODE_BEGIN
+    // AUI_DOCS_CODE_END
     EXPECT_EQ(ints[0], 2);
     EXPECT_EQ(ints[1], 2);
     EXPECT_EQ(ints[2], 2);

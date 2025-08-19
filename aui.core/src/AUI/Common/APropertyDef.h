@@ -116,7 +116,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a readonly [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
+     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
@@ -125,7 +125,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a bidirectional [projection](UIDataBindingTest_Label_via_declarative_projection) of this property.
+     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <
         aui::invocable<const Underlying&> ProjectionRead,
