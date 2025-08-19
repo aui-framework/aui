@@ -4,13 +4,13 @@ This page describes how an AUI application is built.
 
 ## Trivia
 
-On this page, libraries and executables are represented with [windows.md] file name extensions with shared linking.
+On this page, libraries and executables are represented with [windows] file name extensions with shared linking.
 Other platforms and configurations follow the same principles but with different file types.
 
 - LIBRARY.dll refers to a binary (compiled) representation of LIBRARY
 - PROGRAM.exe refers to a binary (compiled) representation of PROGRAM (executable)
 
-Also, on this page, the build system is demonstrated on [minimal-ui-template-with-assets.md].
+Also, on this page, the build system is demonstrated on [minimal-ui-template-with-assets].
 
 ## Generic scenario { #BUILD_SCENARIO_GENERIC }
 
@@ -22,9 +22,9 @@ This is applicable for most desktop platforms.
 
 Things to note:
 
-- [aui.boot.md] is downloaded in your `CMakeLists.txt`, which downloads AUI itself and all its dependencies.
+- [aui.boot] is downloaded in your `CMakeLists.txt`, which downloads AUI itself and all its dependencies.
 - Among with AUI libraries, there's `aui.toolbox`, which participates in the build process. In particular, it converts
-  [aui-assets.md] to cpp files, compressing them, making them available in the application, effectively embedding them to
+  [aui-assets] to cpp files, compressing them, making them available in the application, effectively embedding them to
   the application binary.
 
 ## Mobile scenario
@@ -50,7 +50,7 @@ Things to note:
 - There are several AUI instances: for the host platform, arm64 (for the target) and armv7 (for the target).
 - The host version of AUI supplies `aui.toolbox`, which is used to compile assets; and a copy of Gradle/Xcode project
   to generate from. Also, this template delivers Kotlin/Swift platform code of AUI.
-- Libraries (the components defined with [aui_module.md]) are built statically. This is needed to avoid code signing
+- Libraries (the components defined with [aui_module]) are built statically. This is needed to avoid code signing
   hell on iOS.
-- On Android, the application executable (the one defined with [aui_executable.md]) is compiled as a shared library,
+- On Android, the application executable (the one defined with [aui_executable]) is compiled as a shared library,
   because JVM is the executable of an Android application, which is then loads a shared library containing native code.

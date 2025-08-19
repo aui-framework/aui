@@ -3,7 +3,7 @@
 <!-- aui:example app -->
 Minesweeper game implementation driven by [ass].
 
-![](../imgs/Screenshot_20250211_052511.png)
+![](imgs/Screenshot_20250211_052511.png)
 
 ## Game Logic
 

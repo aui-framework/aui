@@ -14,7 +14,7 @@ If neither of these suggestions helped and you think you encountered an AUI's is
 
 ## Assets
 
-See also: [aui-assets.md]
+See also: [aui-assets]
 
 1. Ensure you have called `aui_compile_assets()` in your `CMakeLists.txt`.
 2. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.

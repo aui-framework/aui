@@ -16,7 +16,7 @@ both CMake and C++.
    </tr>
    <tr>
      <td markdown>
-       [windows.md]
+       [windows]
      </td>
      <td markdown>
        ```cpp
@@ -40,7 +40,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [linux.md]
+       [linux]
      </td>
      <td markdown>
        ```cpp
@@ -64,7 +64,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [macos.md]
+       [macos]
      </td>
      <td markdown>
        ```cpp
@@ -88,7 +88,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [android.md]
+       [android]
      </td>
      <td markdown>
        ```cpp
@@ -112,7 +112,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [ios.md] (both iPhone and iPad)
+       [ios] (both iPhone and iPad)
      </td>
      <td markdown>
        ```cpp
@@ -184,7 +184,7 @@ both CMake and C++.
 
    <tr>
      <td markdown>
-       [emscripten.md]
+       [emscripten]
      </td>
      <td markdown>
        ```cpp

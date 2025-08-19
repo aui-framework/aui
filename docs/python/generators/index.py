@@ -29,7 +29,7 @@ def populate_mapping(markdown: str, file: File):
     if m := regexes.PAGE_TITLE.match(markdown):
         page_title = m.group(1)
         _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
-        _mapping[file.src_uri] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
+        _mapping[file.name] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
 
     state_code = False
     for line_number, line_contents in enumerate(markdown.splitlines()):

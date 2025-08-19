@@ -6,7 +6,7 @@ program modules such as `*.dll`, `*.so` or `*.dylib`.
 !!! note
 
     Runtime dependencies are not easy to deploy and might require additional building process tinkering. For icons,
-    images, sounds and other resources consider using [aui-assets.md] to embed them right into your binary.
+    images, sounds and other resources consider using [aui-assets] to embed them right into your binary.
 
 ## Build-time shared library resolution
 
@@ -36,7 +36,7 @@ Windows runtime linking process is simple. The dll lookup is performed as follow
    "error code 0xc000007b").
 
 On DLL targets, the first way is used: the runtime part of shared libraries (dll) are copied to `${CMAKE_BINARY_DIR}/bin`
-directory alongside exe files by [aui.boot.md].
+directory alongside exe files by [aui.boot].
 ```sh
 tree build/
 bin/aui_app.exe
@@ -48,7 +48,7 @@ bin/aui.views.dll
 ### Other platforms (UNIX-like only)
 
 On UNIX-like platforms, a special directory hierarchy should be maintained, for both build tree and portable
-installations (for compatibility reasons), hence [aui.boot.md] copies imported shared objects to
+installations (for compatibility reasons), hence [aui.boot] copies imported shared objects to
 `${CMAKE_BINARY_DIR}/lib`.
 
 These libraries are picked up by targets defined via [aui_module] and
@@ -64,7 +64,7 @@ locally or externally it just copies them to the build tree regardless of their 
 
 !!! note
     The hardcoded full path is suitable for the only machine where binary is built. CMake's
-    [CMAKE_INSTALL] "--install" command clears these paths, opting to use an universal RPATH to make these binaries
+    `cmake --install` command clears these paths, opting to use an universal RPATH to make these binaries
     relocable. AUI.Boot populates RPATH on its own, see the section above.
 
 ## Install-time shared library resolution
@@ -130,7 +130,7 @@ bin/aui.views.dll
 
 ### Other platforms (UNIX-like only)
 
-[aui.boot.md] updates RUNPATH/RPATH CMake install variables to follow that convention:
+[aui.boot] updates RUNPATH/RPATH CMake install variables to follow that convention:
 
 - **ld** (Linux/Android): <!-- aui:snippet aui.boot.cmake rpath_linux -->
 - **dyld** (macOS/iOS): <!-- aui:snippet aui.boot.cmake rpath_apple -->

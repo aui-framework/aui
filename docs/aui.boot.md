@@ -277,7 +277,7 @@ auib_import(<PackageName> <URL>
 !!! note
     
     This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
-    configure time. See [runtime-dependency-resolution.md] for more info.
+    configure time. See [runtime-dependency-resolution] for more info.
 
 #### PackageName
 Specifies the package name which will be passed to `find_package`. See [AUI_BOOT_3RDPARTY].
@@ -352,7 +352,7 @@ thus does not forward.
 
 ## Variables { #AUIB_VARIABLES }
 
-See [aui-configure-flags.md] on how to set variables.
+See [aui-configure-flags] on how to set variables.
 
 ### AUIB_ALL_AS (=FALSE|TRUE) { #AUIB_ALL_AS }
 
@@ -659,7 +659,7 @@ If the dependency imported as a [subdirectory](#AUIB_ADD_SUBDIRECTORY), these pa
 
 ### ~/.aui/crosscompile-host
 
-In case of [crosscompiling.md], contains AUI.Boot sub cache for the host system.
+In case of [crosscompiling], contains AUI.Boot sub cache for the host system.
 
 ### ~/.aui/repo.lock
 

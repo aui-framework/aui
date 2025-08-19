@@ -75,7 +75,7 @@ programming languages and external compilers.
 
     Audio recording and playback
 
--   ui::__updater__
+-   __aui::updater__
 
     ---
 

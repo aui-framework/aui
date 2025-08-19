@@ -1,7 +1,7 @@
 # Prometheus Exporter Template
 
 <!-- aui:example desktop -->
-Example of using [aui.boot.md] to pull Prometheus library.
+Example of using [aui.boot] to pull Prometheus library.
 
 ## Source Code
 

@@ -26,7 +26,7 @@ struct API_AUI_VIEWS APlatformAbstractionOptions {
      * @brief Corresponds to X11 (legacy) mode.
      * @details
      * While being deprecated, this is still a useful fallback option. If user uses Wayland (which is likely on a modern
-     * [linux.md] system), X11 application still work good enough, thanks to Xwayland compatibility layer.
+     * [linux] system), X11 application still work good enough, thanks to Xwayland compatibility layer.
      */
     struct X11 {
         _unique<IPlatformAbstraction> operator()();

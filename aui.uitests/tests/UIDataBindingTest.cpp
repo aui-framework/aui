@@ -378,7 +378,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H3
     // It is the case for ADropdownList with enums. ADropdownList works with string list model and indices. It does not
     // know anything about underlying values.
     //
-    // For example, define enum with [AUI_ENUM_VALUES](AUI_ENUM_VALUES) and model:
+    // For example, define enum with [AUI_ENUM_VALUES] and model:
     //
     // ```cpp
     // enum class Gender {
@@ -517,7 +517,7 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H3
 //
 // Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
 //
-// The example below is essentially the same as ["UIDataBindingTest_Label_via_let"] but uses declarative connection set up syntax.
+// The example below is essentially the same as [UIDataBindingTest_Label_via_let] but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     // Use `&` and `>` expression to connect the model's username property to the label's [text](ALabel::text)
     // property.
@@ -566,7 +566,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // ["UIDataBindingTest_Label_via_let"] example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
+    // [UIDataBindingTest_Label_via_let] example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
     // and `AObject::connect` so projection use cases can be adapted in a similar manner.
 
     {
@@ -619,7 +619,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "Roza");
 
     //
-    // Behaviour of such connection is equal to ["UIDataBindingTest_Label_via_declarative"]:
+    // Behaviour of such connection is equal to [UIDataBindingTest_Label_via_declarative]:
     //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
 
@@ -638,7 +638,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in ["UIDataBindingTest_Label_via_declarative"].
+    // as in [UIDataBindingTest_Label_via_declarative].
 
     {
         auto l = Label {} & user->name;
@@ -918,7 +918,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
 TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H3
     // We can use projections in the same way as with `AUI_LET`.
     //
-    // Let's repeat the ["UIDataBindingTest_Bidirectional_projection"] sample in declarative way:
+    // Let's repeat the [UIDataBindingTest_Bidirectional_projection] sample in declarative way:
     using namespace declarative;
     struct User {
         AProperty<Gender> gender;

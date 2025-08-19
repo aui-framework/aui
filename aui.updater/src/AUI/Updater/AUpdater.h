@@ -31,18 +31,18 @@
  * your website).
  *
  * `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
- * privileges). If that's not your case, you'll need to update your [installer configuration](INNOSETUP) to install
+ * privileges). If that's not your case, you'll need to update your installer configuration ([INNOSETUP]) to install
  * to user's directory (i.e., in `AppData`).
  *
  * !!! note
  *
- *     Check out our [app-template.md] for a GitHub-hosted app template with auto update implemented.
+ *     Check out our [app-template] for a GitHub-hosted app template with auto update implemented.
  *
  * ## Supported platforms
  *
  * `aui::updater` supports the following platforms:
  *
- * - **Windows** - [portables](PORTABLE_WINDOWS) only, installers to user's directory only ([INNOSETUP])
+ * - **Windows** - portables ([PORTABLE_WINDOWS]) only, installers to user's directory only ([INNOSETUP])
  * - **Linux** - portables only
  *
  * On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the

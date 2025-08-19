@@ -8,7 +8,7 @@ devices.
     
     At the moment, support of macOS in AUI Framework is in early stage and lacks a lot of features.
 
-macOS shares its XNU kernel and codebase with [ios.md].
+macOS shares its XNU kernel and codebase with [ios].
 
 Due to closed nature of Apple platforms, a single macOS machine is considered as the only option for AUI/application
 development for all supported platforms at once:
@@ -17,7 +17,7 @@ development for all supported platforms at once:
 - [Android](android.md) - natively (via Android Studio)
 - [Windows](windows.md) - via VM
 - [Linux](linux.md) - via VM
-- [emscripten.md] - natively
+- [emscripten] - natively
 
 ## Key considerations
 

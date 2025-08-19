@@ -9,7 +9,7 @@ information about your project passed to [aui_app] where needed.
 
 AUI provides a convenient configure time variable for choosing target packaging method -
 [AUI_APP_PACKAGING] "-DAUI_APP_PACKAGING=...". Furthermore, if you are using [AUI_BUILD_FOR] "-DAUI_BUILD_FOR=..."
-(for cross-compiling), `AUI_APP_PACKAGING` is [not required](PACKAGING_WITH_AUI_BUILD_FOR) to specify. This page
+(for cross-compiling), `AUI_APP_PACKAGING` is [not required](#PACKAGING_WITH_AUI_BUILD_FOR) to specify. This page
 provides full usage examples.
 
 `AUI_APP_PACKAGING` and `AUI_BUILD_FOR` are handled by [aui_app].
@@ -53,9 +53,9 @@ developers still opt for traditional methods. This guide will cover the latter.
 
 ### Inno Setup { #INNOSETUP }
 
-[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
+[CMake Documentation](https://cmake.org/cmake/help/latest/cpack_gen/innosetup.html)
 
-![](imgs/innosetup.png) Installer with AUI's patches applied
+![](imgs/innosetup.png)
 
 Inno Setup is a free installer framework for Windows program by Jordan Russell and Martijn Laan.
 
@@ -79,7 +79,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH-setup.exe`, where `<APP_NAME>` is the `NAME`
 arg of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
-@pythongen{aui_app_innosetup}
+{{% cmake_list_all_vars_containing('cmake/aui.build.cmake', 'INNOSETUP') %}}
 
 [aui_app] generates some image assets for the installer from your icon.
 
@@ -119,7 +119,7 @@ gh release upload ${{ github.ref }} artifacts/*.*
 
 ### WIX
 
-[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
+[CMake Documentation](https://cmake.org/cmake/help/latest/cpack_gen/wix.html)
 
 ![](imgs/wix.png)
 
@@ -149,11 +149,11 @@ gh release upload ${{ github.ref }} artifacts/*.*
 The script above produces a file `artifacts/<APP_NAME>-VERSION-windows-ARCH.msi`, where `<APP_NAME>` is the `NAME` arg
 of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
-@pythongen{aui_app_wix}
+{{% cmake_list_all_vars_containing('cmake/aui.build.cmake', 'WIX') %}}
 
 [aui_app] generates some image assets for the installer from your icon.
 
-![](imgs/wix_logo.png) Installer with AUI's patches applied
+![](imgs/wix_logo.png)
 
 ## macOS
 
@@ -165,7 +165,7 @@ The simplest and the most user-friendly installation method is `DragNDrop` which
 
 ### DragNDrop
 
-[\[CMake Documentation\]](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
+[CMake Documentation](https://cmake.org/cmake/help/latest/cpack_gen/dmg.html)
 
 The DragNDrop CPack generator creates a DMG image. When opened, a Finder window appears with your application and a
 symlink to `/Applications`, effectively prompting the user to copy the application from the medium to his app library.
@@ -197,9 +197,9 @@ gh release upload ${{ github.ref }} artifacts/*.*
 The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, where `<APP_NAME>` is the `NAME` arg of
 [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
-@pythongen{aui_app_dmg}
+{{% cmake_list_all_vars_containing('cmake/aui.build.cmake', 'DMG') %}}
 
-## Android and iOS
+## Android and iOS { #PACKAGING_WITH_AUI_BUILD_FOR }
 
 `-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
 

@@ -211,9 +211,9 @@ concept RangeFactory = requires(Factory&& factory) {
  * If this requirement is not satisfied (case of some `ranges::views`), AForEachUI would not unload old items,
  * unless a [data update event](#AFOREACHUI_UPDATE) occurred.
  *
- * The amount of displayed data is governed by *range* size, [render-to-texture.md] tile size, AScrollArea's
+ * The amount of displayed data is governed by *range* size, [render-to-texture] tile size, AScrollArea's
  * viewport size and individual entry size. Optimal frequency of sliding during scroll and window size are determined by
- * AForEachUI. In particular, the sliding is performed once per [render-to-texture.md] tile is passed.
+ * AForEachUI. In particular, the sliding is performed once per [render-to-texture] tile is passed.
  *
  *
  * !!! note

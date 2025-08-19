@@ -34,7 +34,7 @@ class AObject;
  * the object does to communicate. It does not know or care whether anything is receiving the signals it emits. This is
  * true information encapsulation, and ensures that the object can be used as a software component.
  *
- * [Signal declarations](emits) are special public fields of any class that inherit from AObject.
+ * Signal declarations ([emits]) are special public fields of any class that inherit from AObject.
  * ```cpp
  * class Counter: public AObject {
  * public:
@@ -139,12 +139,12 @@ class AObject;
  * ```
  *
  * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
- * [AUI_SLOT](AUI_SLOT) macro:
+ * [AUI_SLOT] macro:
  * ```cpp
  * connect(mCounter->valueChanged, AUI_SLOT(this)::printCounter);
  * ```
  *
- * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with [me](me):
+ * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with [me]:
  * ```cpp
  * connect(mCounter->valueChanged, me::printCounter);
  * ```
@@ -250,7 +250,7 @@ class AObject;
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use [AUI_LET](AUI_LET) syntax to set up connections:
+ * Let's make things more declarative and use [AUI_LET] syntax to set up connections:
  * ```cpp
  * MyApp() {
  *   using namespace declarative;

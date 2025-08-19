@@ -194,7 +194,7 @@ public:
  * };
  * ```
  * <p>Here, we use getEditableModel() in order to change data in our model and notifyUpdate() to notify.</p>
- * <p>Also, we use []#AUI_LET construction to define custom format for label.</p>
+ * <p>Also, we use [AUI_LET] construction to define custom format for label.</p>
  *
  */
 template <typename Model>

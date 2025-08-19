@@ -12,9 +12,9 @@ cmake --build .
 
 ## Common variables
 
-### AUI_APP_PACKAGING
+### AUI_APP_PACKAGING { #AUI_APP_PACKAGING }
 Specifies the desired packaging method. This variable accepts CPack generator or one of the packaging methods provided
-by AUI. See [packaging.md] for more info.
+by AUI. See [packaging] for more info.
 
 ### AUI_CATCH_UNHANDLED
 Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for
@@ -28,7 +28,7 @@ Whether to use AddressSanitizer.
 
 ### AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
-performance information. See [profiling.md]
+performance information. See [profiling]
 
 ### AUI_SHOW_TOUCHES
 When `true`, shows touches visually (like in Android Developer Tools) and performs additional trace logging on touches.
@@ -38,7 +38,7 @@ When `true`, shows touches visually (like in Android Developer Tools) and perfor
 ### AUI_BUILD_EXAMPLES
 Whether build examples or not.
 
-### AUI_BUILD_FOR
+### AUI_BUILD_FOR { #AUI_BUILD_FOR }
 Specifies target platform for cross-compilation (see [cross-compiling](crosscompiling.md)).
 
 ### AUIB_CACHE_DIR { #AUIB_CACHE_DIR }

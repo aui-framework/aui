@@ -1,7 +1,7 @@
 # Minimal UI Template with Assets
 
 <!-- aui:example ui -->
-Minimal UI boilerplate template with [aui-assets.md].
+Minimal UI boilerplate template with [aui-assets].
 
 ![](imgs/minimal-assets-template.png)
 

@@ -167,3 +167,9 @@ th, td {
     font-weight: bold;
     word-break: break-word;
 }
+
+.md-typeset img, .md-typeset video {
+    width: auto;
+    max-width: 100%;
+    max-height: 40vh;
+}

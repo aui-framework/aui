@@ -24,7 +24,7 @@ that expect one "entrypoint" per package.
 For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
 various installation methods but also override the variables if needed.
 
-For more info about packaging methods, see [aui-configure-flags.md].
+For more info about packaging methods, see [aui-configure-flags].
 
 ## Syntax
 
@@ -86,13 +86,13 @@ This argument assigns value to aui::app_info::name
 |Android|+||
 |iOS|+||
 
-@pythongen{aui_app_NAME}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_NAME', 'APP_NAME') %}}
 
 ### ICON { #aui_app_ICON }
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-See [app-icon.md] for best practices.
+See [app-icon] for best practices.
 
 | Platform | Required | Traits                                                |
 |----------|----------|-------------------------------------------------------|
@@ -105,7 +105,7 @@ See [app-icon.md] for best practices.
 Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the [app packaging method](packaging.md).
 chosen.
 
-@pythongen{aui_app_ICON}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', '(APP_ICON|_ico)', 'APP_ICON') %}}
 
 ### VENDOR
 
@@ -119,7 +119,7 @@ Specify application author's name or company.
 |Android|||
 |iOS|||
 
-@pythongen{aui_app_VENDOR}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_VENDOR', 'APP_VENDOR') %}}
 
 ### COPYRIGHT
 
@@ -133,7 +133,7 @@ Specify application copyright string (not file)
 |Android|||
 |iOS|+||
 
-@pythongen{aui_app_COPYRIGHT}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_COPYRIGHT', 'APP_COPYRIGHT') %}}
 
 
 ### VERSION
@@ -148,7 +148,7 @@ Specify application version. If not set, the value of `PROJECT_VERSION` used ins
 |Android|+||
 |iOS|+||
 
-@pythongen{aui_app_VERSION}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_VERSION', 'APP_VERSION') %}}
 
 ### NO_INCLUDE_CPACK
 

@@ -21,7 +21,7 @@
 class AString;
 
 /**
- * @brief Filesystem for [aui-assets.md].
+ * @brief Filesystem for [aui-assets].
  */
 class API_AUI_CORE ABuiltinFiles {
 private:

@@ -220,6 +220,8 @@ class _Parser:
 
             if self._parse_comment():
                 continue
+            if self.last_token[0] == cpp_tokenizer.Type.PREPROCESSOR:
+                continue
             assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
             enumeration_name = self.last_token[1]
             while self.last_token[1] not in ',}':
@@ -267,9 +269,7 @@ class _Parser:
                         clazz.types.append(e)
                     continue
                 if self.last_token[1] == 'template':
-                    template_clause2 = [self.last_token]
-                    self.last_token = next(self.iterator)
-                    template_clause2 += self._skip_special_clause([ cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2 ], [ cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2 ])
+                    template_clause2 = self._parse_template()
                     continue
                 if self.last_token[1] in ['class', 'struct']:
                     e = self._parse_class()
@@ -313,6 +313,16 @@ class _Parser:
                     self.last_token = next(self.iterator)
                 self._consume_doc()
 
+    def _parse_template(self):
+        assert self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'template')
+        template_clause2 = [self.last_token]
+        while self.last_token[1] != '<':
+            self.last_token = next(self.iterator)
+        template_clause2 += self._skip_special_clause(
+            [cpp_tokenizer.Type.GENERIC_OPEN, cpp_tokenizer.Type.GENERIC_OPEN2],
+            [cpp_tokenizer.Type.GENERIC_CLOSE, cpp_tokenizer.Type.GENERIC_CLOSE2])
+        return template_clause2
+
     def _parse_class(self):
         assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER and self.last_token[1] in ['class', 'struct']
         kind = self.last_token[1]
@@ -320,6 +330,10 @@ class _Parser:
         if self.last_token[1].startswith("API_"):
             # export macro, ignore
             self.last_token = next(self.iterator)
+        if self.last_token[0] == cpp_tokenizer.Type.GENERIC_OPEN: # [[deprecated]]
+            self._skip_special_clause()
+            self.last_token = next(self.iterator)
+
         assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
         clazz = CppClass()
         clazz.generic_kind = kind
@@ -367,6 +381,10 @@ class _Parser:
                     yield e
                 continue
 
+            if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'template'):
+                self._parse_template()
+                continue
+
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'namespace'):
                 self.last_token = next(self.iterator)
                 assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
@@ -376,6 +394,8 @@ class _Parser:
                         case '{':
                             break
                         case ';':
+                            break
+                        case '=': # namespace alias
                             break
                         case '::':
                             self.last_token = next(self.iterator)
@@ -999,3 +1019,18 @@ public:
     assert [str(i) for i in clazz[0].types[0].fields] == [
         str(CppVariable(name="field", type_str="AString", doc="@brief Test field"))
     ]
+
+
+
+def test_class_template():
+    clazz = [i for i in _parse("""
+/**
+ * @brief Test
+ */
+template<class T, class Allocator>
+class Impl {
+public:
+};
+    """)]
+    assert clazz[0].name == "Impl"
+    assert clazz[0].doc == '@brief Test'

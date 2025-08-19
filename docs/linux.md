@@ -3,7 +3,7 @@
 !!! note
 
     AUI's codebase and documentation refer to the family of operating systems based on the Linux kernel with Freedesktop
-    technology stack, which (mostly) excludes [android.md].
+    technology stack, which (mostly) excludes [android].
 
 Linux is a family of open-source operating systems based on the Linux kernel. It comes in various distributions
 (distros) that include software and libraries from third parties, with the most popular ones being Debian, Fedora,
@@ -41,7 +41,7 @@ compatibility layers such as WINE to launch your application under Linux.
 - Different desktop environment, most notable are:
     - GNOME (GTK-based)
     - KDE (Qt-based)
-- Some configurations might use [macos.md] style global menu:
+- Some configurations might use [macos] style global menu:
     - KDE with global menu widget
     - Ubuntu Unity
 - There are distros designed for smartphones but they're considered unusable at the moment
