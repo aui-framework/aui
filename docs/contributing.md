@@ -168,7 +168,7 @@ In our pipelines, we use `--strict` flag to treat warnings as errors. If warning
 CI/CD pipeline wouldn't pass.
 
 ```bash
-mkdocs serve --use-directory-urls --strict
+mkdocs build --strict --use-directory-urls
 ```
 
 Most functionality is provided by Material for MkDocs theme. In addition to `md` files found in `docs/` dir, we have

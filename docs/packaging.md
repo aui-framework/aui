@@ -88,7 +88,7 @@ won't prompt a UAC dialog (leverage to _admin privileges_). This way the install
 perspective of the end user. Moreover, installation to user's directory allows [updater] to work without prompting
 leverage to admin privileges during update installation.
 
-### AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ
+### AUI_PORTABLE_ZIP, AUI_PORTABLE_TGZ { #PORTABLE_WINDOWS }
 
 !!! note
 

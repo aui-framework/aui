@@ -147,6 +147,8 @@ private:
 /**
  * @brief Signal field which can be subscribed to.
  * @tparam Args Arguments of the signal.
+ * @details
+ * <!-- aui:index_alias emits -->
  */
 template <typename... Args>
 class ASignal final : public AAbstractSignal {

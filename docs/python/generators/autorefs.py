@@ -70,6 +70,8 @@ def handle_autorefs(markdown: str, page : Page, files: Files):
                 if i == '(':
                     # just a regular link, no special treatment
                     yield f"[{link_first_part}]("
+                elif not link_first_part:
+                    yield f"[{link_first_part}]"
                 else:
                     # an explicit link in format [AObject], where AObject is a destination classname/page name.
                     # this is not a standard Markdown though.
