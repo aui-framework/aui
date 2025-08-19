@@ -38,7 +38,7 @@ connect(mOkButton->clicked, [] {
 
 ## Data Binding
 
-[Data binding](property_system.md), based on [signal_slot] "signal-slot", allows to establish a connection between
+[Data binding](property-system.md), based on [signal_slot] "signal-slot", allows to establish a connection between
 UI and application data objects.
 
 ![](imgs/Screenshot_20250109_065134.png)

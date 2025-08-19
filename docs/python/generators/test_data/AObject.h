@@ -51,7 +51,7 @@ public:
      * connection is breaks only when the sender (signal) dies.
      *
      * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
-     * observe [property](property_system.md) or [signal](signal_slot.md), i.e., you just want to make a
+     * observe [property](property-system.md) or [signal](signal_slot.md), i.e., you just want to make a
      * _generic observer_.
      *
      * Use this in combination with lambda.
@@ -85,7 +85,7 @@ public:
 
     /**
      * @brief Connects property to the slot of the specified object.
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
      * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
      * property (pre-fire).
@@ -107,7 +107,7 @@ public:
 
     /**
      * @brief Connects source property to the destination property.
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
      * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
      * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, dataflow is from left
@@ -130,7 +130,7 @@ public:
 
     /**
      * @brief Connects source property to the destination property and opposite (bidirectionally).
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
      * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
      * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
@@ -249,7 +249,7 @@ public:
 
     /**
      * @brief Connects signal or property to the slot of the specified non-AObject type.
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
      * See [signal_slot] "signal-slot system" for more info.
      * ```cpp

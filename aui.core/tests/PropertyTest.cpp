@@ -62,7 +62,7 @@ TEST_F(PropertyTest, Declaration) {
         // AUI_DOCS_CODE_END
     }
 
-    // Non-const operators have [side effects](PropertyTest_Write_operators); const operators don't, so you can
+    // Non-const operators have [side effects](#PropertyTest_Write_operators); const operators don't, so you can
     // perform seamlessly:
     {
         LogObserver mock;

@@ -19,13 +19,13 @@
 
 /**
  * @brief Readonly property that holds a value computed by an expression.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
  * <!-- aui:experimental -->
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
  *
- * See [property system](property_system.md) for usage info.
+ * See [property system](property-system.md) for usage info.
  *
  * Despite properties offer [projection methods](property-system.md#UIDataBindingTest_Label_via_declarative_projection), you might
  * want to track and process values of several properties.

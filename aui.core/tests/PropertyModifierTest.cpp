@@ -89,7 +89,7 @@ TEST_F(PropertyModifierTest, Write_operators_prefer_const_access) {
     // AUI_DOCS_CODE_END
 }
 
-// [property_system] is designed in such a way you would explicitly express a modifying operation via binary equals
+// [property-system] is designed in such a way you would explicitly express a modifying operation via binary equals
 // operator (and favours such as `+=`, `-=`):
 //
 TEST_F(PropertyModifierTest, Write_operators_write_equals) {

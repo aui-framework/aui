@@ -26,7 +26,7 @@
  * @brief A group of radio buttons.
  * @ingroup useful_views
  * @details
- * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a [view container](AViewContainer) it
+ * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a [view container](aviewcontainer.md) it
  * places the initialized radio buttons to itself.
  */
 class API_AUI_VIEWS ARadioGroup : public AViewContainer {

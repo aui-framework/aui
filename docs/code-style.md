@@ -52,7 +52,7 @@ private:
 
 !!! note
 
-    With [property_system], a better way of defining data models will be:
+    With [property-system], a better way of defining data models will be:
     ```cpp
     struct User {
         AProperty<AString> username;

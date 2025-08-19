@@ -127,7 +127,7 @@ nav:
     - ui-building-overview.md
     - layout-managers.md
     - signal_slot.md
-    - property_system.md
+    - property-system.md
     - devtools.md
 
   - 'Views':

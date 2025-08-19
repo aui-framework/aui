@@ -267,7 +267,7 @@ class AObject;
  * }
  * ```
  *
- * See also [property_system] for making reactive UI's on trivial data.
+ * See also [property-system] for making reactive UI's on trivial data.
  *
  * ## Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:

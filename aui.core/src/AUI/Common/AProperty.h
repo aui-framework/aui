@@ -18,7 +18,7 @@
 
 
 /**
- * @defgroup property_system Property System
+ * @defgroup property-system Property System
  * @ingroup core
  * @brief Property System is a data binding mechanism based on [signal_slot] "signal-slot system".
  * @details
@@ -54,7 +54,7 @@
 
 /**
  * @brief Observable container of `T`.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
  *
  * <!-- aui:experimental -->
@@ -62,7 +62,7 @@
  * `AProperty<T>` is a container holding an instance of `T`. You can assign a value to it with `operator=` and read
  * value with `value()` method or implicit conversion `operator T()`.
  *
- * See [property system](property_system.md) for usage examples.
+ * See [property system](property-system.md) for usage examples.
  *
  * <!-- aui:parse_tests aui.core/tests/PropertyTest.cpp -->
  */

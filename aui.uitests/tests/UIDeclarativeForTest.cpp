@@ -321,7 +321,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
     // - visual presentation by [AUI_DECLARATIVE_FOR] might seem unresponsive to borrowed data changes,
     // - may lead to program crash.
     //
-    // To address this issue, we provide a convenient [way](property_system.md) to make iterator invalidation
+    // To address this issue, we provide a convenient [way](property-system.md) to make iterator invalidation
     // *observable*:
     //
     // - wrap the container with `AProperty`,
