@@ -1,14 +1,14 @@
 # Backdrop
 
-@auiexample{ui}
+<!-- aui:example ui -->
 Backdrop effects demo.
 
-@image html 454168224-491c728f-9bfd-40c5-b83a-281076b8292f.gif
+![](imgs/454168224-491c728f-9bfd-40c5-b83a-281076b8292f.gif)
 
-This example demonstrates how @ref ass::Backdrop effects can be used to produce rich visuals that conform modern design
+This example demonstrates how [ass::Backdrop] effects can be used to produce rich visuals that conform modern design
 principles.
 
-In this example, a combination of @ref ass::Backdrop -enabled view and @ref AScrollArea is used. To raise the
-@ref ass::Backdrop above the @ref AScrollArea, @ref AStackedLayout layout is used.
+In this example, a combination of [ass::Backdrop] -enabled view and [AScrollArea] is used. To raise the
+[ass::Backdrop] above the [AScrollArea], [AStackedLayout] layout is used.
 
-@include examples/ui/backdrop/src/main.cpp
+<!-- aui:include examples/ui/backdrop/src/main.cpp -->

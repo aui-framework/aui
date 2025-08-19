@@ -28,38 +28,42 @@ class AString;
  * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
  * define lines of exact one or two pixels wide.
  *
- * # Initialization
+ * ## Initialization
  * Recommended way is to use operator literal format:
- * @code{cpp}
+ * ```cpp
  * AMetric a = 5_dp // -> a = 5 dimension-independent units (= pixels on 100% scaling)
- * @endcode
+ * ```
  *
  * Common usage:
- * @code{cpp}
+ * ```cpp
  * AMetric a = 5_dp;
  * a.getValuePx() // 5 on 100% scale, 6 on 125% scale, etc
- * @endcode
+ * ```
  *
  * AMetric can be also initialized via value and unit:
  *
- * @code{cpp}
+ * ```cpp
  * AMetric a(5, T_DP);
- * @endcode
+ * ```
  *
  * AMetric can be also initialized with zero without unit specified (in this case, AMetric::getUnit will return T_PX):
  *
- * @code{cpp}
+ * ```cpp
  * AMetric zero1 = 0; // zero pixels
  * AMetric zero2 = {}; // also zero pixels
- * @endcode
+ * ```
  *
  * However, if you try to specify nonzero integer without unit, it will produce a runtime error:
  *
- * @code{cpp}
+ * ```cpp
  * AMetric a = 5; // runtime error
- * @endcode{cpp}
+ * ```
  *
  * ## Supported units
+ *
+ * <!-- aui:index_alias _dp -->
+ * <!-- aui:index_alias _pt -->
+ * <!-- aui:index_alias _px -->
  *
  * Currently supported units:
  *
@@ -69,7 +73,7 @@ class AString;
  * | Typography point           | T_PT | _pt     | px * `scale_factor` * 4 / 3 |
  * | Pixels                     | T_PX | _px     | px                          |
  *
- * @note It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
+ * It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
  * will correctly handle systems with hidpi screens.
  */
 class API_AUI_VIEWS AMetric
@@ -98,13 +102,11 @@ public:
     /**
      * @brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
      *        example)
-     * @code{cpp}
-     * <code>
+     * ```cpp
      * AMetric a = 0; // ok<br />
      * AMetric b = 5_dp; // ok<br />
      * AMetric c = 5; // produces error<br />
-     * </code>
-     * @endcode
+     * ```
      * @tparam T integer
      * @param value should be zero
      */

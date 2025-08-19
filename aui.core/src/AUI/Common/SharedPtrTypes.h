@@ -207,8 +207,11 @@ namespace aui {
 
 /**
  * @brief @brief An std::weak_ptr with AUI extensions.
- * @note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
- *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
+ * @details
+ * !!! note
+ *
+ *     Of course, it is not good tone to define a class with _ type but it significantly increases coding speed. Instead
+ *     of writing every time std::shared_ptr you should write only the _ symbol.
  */
 template<typename T>
 class _ : public std::shared_ptr<T>
@@ -516,34 +519,34 @@ inline _<TO> _cast(std::shared_ptr<FROM>&& object)
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       if (getAnimator()) getAnimator()->postRender(this);
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       AUI_NULLSAFE(getAnimator())->postRender(this);
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
  *
  * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>AUI_NULLSAFE</code> expands to:
  *
- * @code{cpp}
+ * ```cpp
  * if (auto& _tmp = (getAnimator())) _tmp->postRender(this);
- * @endcode
+ * ```
  *
  * Since `AUI_NULLSAFE` is a macro that expands to `if`, you can use `else` keyword:
  *
- * @code{cpp}
+ * ```cpp
  * AUI_NULLSAFE(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
- * @endcode
+ * ```
  *
  * and even combine multiple `AUI_NULLSAFE` statements:
  *
- * @code{cpp}
+ * ```cpp
  * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
- * @endcode
+ * ```
  */
 #define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

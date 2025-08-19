@@ -27,18 +27,15 @@
  * (i.e., AAnimatedImage).
  *
  *
- * See @ref declarative::Icon for a declarative form and examples.
- *
  * The sizing and positioning acts like ass::BackgroundImage. Moreover, these rules are taken from ass::BackgroundImage
  * applied to ADrawableView:
- * @code{cpp}
+ * ```cpp
  * auto drawable = IDrawable::fromUrl(":animation.webp");
  * _new<ADrawableView>(drawable) AUI_WITH_STYLE {
  *   BackgroundImage({}, {}, {}, Sizing::COVER), // <- drawable is sized and positioned as with COVER.
  * };
- * @endcode
+ * ```
  *
- * @note
  * When applying ass::BackgroundImage, do not pass url to it, it's redundant for ADrawableView and would cause a debug
  * error.
  */

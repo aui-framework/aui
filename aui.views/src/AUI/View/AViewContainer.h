@@ -20,12 +20,11 @@
  * AViewContainer can store, render, resize, provide events to and handle the child views.
  *
  * AViewContainer does not control the position and size of the child views by itself; instead, it delegates that
- * responsibility to it's @ref layout_managers "layout manager".
+ * responsibility to it's [layout manager](layout-managers.md).
  *
  * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
  * possible complex UI by nested AViewContainers with different layout managers.
  *
- * @note
  * Consider using AViewContainerBase as a base class when possible. Use AViewContainer if you want to expose view
  * modifying methods such as addView, removeView, setContents, setLayout, etc. Use AViewContainerBase if these methods
  * might cause unwanted interference with implementation details of your view.

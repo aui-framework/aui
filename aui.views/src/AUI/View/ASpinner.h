@@ -20,7 +20,6 @@
  * @details
  * Rotates its contents as it renders.
  *
- * @note
  * ASpinner constantly requests redraws to maintain its animation which might lead to high performance usage. See
  * ASpinnerV2.
  */

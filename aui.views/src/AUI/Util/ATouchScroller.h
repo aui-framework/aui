@@ -30,7 +30,8 @@ class API_AUI_VIEWS ATouchScroller {
 public:
     /*
      * @brief Deceleration for kinetic scroll
-     * @note Multiply by dpi ratio for proper work of kinetic scroll on all devices
+     * @details
+     * Multiply by dpi ratio for proper work of kinetic scroll on all devices
      */
     static constexpr float BASE_DECELERATION = 1600.f;
 

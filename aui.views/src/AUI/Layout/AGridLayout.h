@@ -15,7 +15,7 @@
 /**
  * @brief Grid layout with fixed-size cells.
  * @see AAdvancedGridLayout
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS AGridLayout: public ALayout
 {

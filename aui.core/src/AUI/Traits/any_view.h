@@ -35,7 +35,7 @@ struct dyn_range_capabilities {
  * @ingroup core
  * @tparam T element type
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * `aui::any_view` is a dynamic range class that mimics the behavior of C++20 ranges/range-v3 using type-erased
  * interfaces. It allows for the creation of runtime-checked, polymorphic ranges with input iterators.
  *
@@ -48,12 +48,12 @@ struct dyn_range_capabilities {
  * `aui::any_view` initialized with an lvalue reference will contain a reference to the container; thus the container
  * can be modified.
  *
- * @snippet aui.core/tests/IteratorsTest.cpp DynRange4
+ * <!-- aui:snippet aui.core/tests/IteratorsTest.cpp DynRange4 -->
  *
  * `aui::any_view` initialized with an rvalue reference will move the container into itself; thus it acquires
  * ownership.
  *
- * @snippet aui.core/tests/IteratorsTest.cpp DynRange5
+ * <!-- aui:snippet aui.core/tests/IteratorsTest.cpp DynRange5 -->
  *
  * Using `aui::any_view::iterator` acquired before modification of the referenced container may lead to undefined
  * behaviour; it all depends on the referenced container.
@@ -213,10 +213,16 @@ struct any_view {
         return *this;
     }
 
+    /**
+     * @return polymorphic begin iterator.
+     */
     iterator begin() const {
         return mImpl->begin();
     }
 
+    /**
+     * @return polymorphic end iterator.
+     */
     iterator end() const {
         return mImpl->end();
     }

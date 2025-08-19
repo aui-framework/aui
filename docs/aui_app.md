@@ -11,7 +11,7 @@ collaboration with [CPack](https://cmake.org/cmake/help/book/mastering-cmake/cha
 - `WIX`
 - `External`
 
-For the targets that require [cross-compilation](@ref docs/Crosscompiling.md), it requires `@ref AUI_BUILD_FOR` to be
+For the targets that require [cross-compilation](crosscompiling.md), it requires `[AUI_BUILD_FOR]` to be
 set, and, in fact, does not involve CPack in such case.
 
 For all packaging methods, `aui_app` assumes it is called once per CMake project. It is relevant for packaging methods
@@ -24,11 +24,11 @@ that expect one "entrypoint" per package.
 For this reason, `aui_app` populates some empty `CPACK_*` variables. This approach allows you not to bother about
 various installation methods but also override the variables if needed.
 
-For more info about packaging methods, see @ref "docs/Packaging Your App.md".
+For more info about packaging methods, see [aui-configure-flags].
 
 ## Syntax
 
-@snippet examples/ui/views/CMakeLists.txt aui_app
+<!-- aui:snippet examples/ui/views/CMakeLists.txt aui_app -->
 
 ```cmake
 aui_app(
@@ -86,13 +86,13 @@ This argument assigns value to aui::app_info::name
 |Android|+||
 |iOS|+||
 
-@pythongen{aui_app_NAME}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_NAME', 'APP_NAME') %}}
 
-### ICON {#aui_app_ICON}
+### ICON { #aui_app_ICON }
 
 Specify SVG icon location (defaults to `icon.svg` if exists).
 
-See @ref "docs/Setting App Icon.md" for best practices.
+See [app-icon] for best practices.
 
 | Platform | Required | Traits                                                |
 |----------|----------|-------------------------------------------------------|
@@ -102,10 +102,10 @@ See @ref "docs/Setting App Icon.md" for best practices.
 | Android  | +        | generates icon assets from your `svg`                 |
 | iOS      | +        | generates `*.icns` file from your `svg`               |
 
-Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the @ref "docs/Packaging Your App.md" "app packaging method"
+Using `aui.toolbox`, `aui_app` generates image assets from your icon depending on the [app packaging method](packaging.md).
 chosen.
 
-@pythongen{aui_app_ICON}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', '(APP_ICON|_ico)', 'APP_ICON') %}}
 
 ### VENDOR
 
@@ -119,7 +119,7 @@ Specify application author's name or company.
 |Android|||
 |iOS|||
 
-@pythongen{aui_app_VENDOR}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_VENDOR', 'APP_VENDOR') %}}
 
 ### COPYRIGHT
 
@@ -133,7 +133,7 @@ Specify application copyright string (not file)
 |Android|||
 |iOS|+||
 
-@pythongen{aui_app_COPYRIGHT}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_COPYRIGHT', 'APP_COPYRIGHT') %}}
 
 
 ### VERSION
@@ -148,7 +148,7 @@ Specify application version. If not set, the value of `PROJECT_VERSION` used ins
 |Android|+||
 |iOS|+||
 
-@pythongen{aui_app_VERSION}
+{{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', 'APP_VERSION', 'APP_VERSION') %}}
 
 ### NO_INCLUDE_CPACK
 

@@ -17,7 +17,7 @@
 struct WebPAnimDecoder;
 
 /**
- * @note Passed webp must have animation
+ * Passed webp must have animation
  */
 class WebpImageFactory : public IAnimatedImageFactory {
 public:
@@ -47,7 +47,7 @@ private:
     size_t mHeight;
 
     /**
-     * @note mCurrentFrame will be equal to 0 after the first invoke of loadNextFrame()
+     * mCurrentFrame will be equal to 0 after the first invoke of loadNextFrame()
      */
     size_t mCurrentFrame = -1;
     size_t mFrameCount;

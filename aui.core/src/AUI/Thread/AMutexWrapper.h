@@ -24,9 +24,9 @@
  *
  * Aka `boost::synchronized_value`.
  *
- * # Implementing thread safety
+ * ## Implementing thread safety
  *
- * @code{cpp}
+ * ```cpp
  * struct SharedResource {
  *   AString data;
  * };
@@ -43,7 +43,7 @@
  * std::unique_lock lock(sharedResource); //
  * sharedResource->data = "world";        // ok, will be done before or after "hello", but not simultaneously
  * ...
- * @endcode
+ * ```
  */
 template<typename T, typename Lockable = AMutex>
 class AMutexWrapper: public aui::noncopyable {

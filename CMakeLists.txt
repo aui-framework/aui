@@ -201,12 +201,12 @@ auib_precompiled_binary()
 # test aui.boot on ci/cd
 add_subdirectory(test/)
 
-# [configure file example]
+# [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
-# [configure file example]
+# [configure_file_example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

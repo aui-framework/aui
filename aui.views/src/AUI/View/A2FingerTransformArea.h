@@ -41,7 +41,7 @@ struct A2DTransform {
  * A2FingerTransformArea to transforming routines, including limit handling.
  *
  * Consider the following example, where the transformation is applied through ASS styles:
- * @code{cpp}
+ * ```cpp
  * 
  * _<AView> multitouchDemo() {
  *   return _new<A2FingerTransformArea>() AUI_LET {
@@ -68,7 +68,7 @@ struct A2DTransform {
  *       });
  *   };
  * }
- * @endcode
+ * ```
  *
  * This example renders to the following result:
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/a2fingertransformarea.gif">

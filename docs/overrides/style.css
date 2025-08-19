@@ -1,0 +1,175 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+[data-md-color-scheme="slate"] {
+    /* footer bg is used in the notice - i don't like how the default grayish color combines with other grayish color of
+    the header. */
+    --md-footer-bg-color: #000;
+    --md-footer-bg-color--dark: #000;
+
+}
+
+/* make contents a little bit wider */
+.md-grid {
+    max-width: 70rem;
+}
+
+/* i want the copyright notice and the social links on the same line. */
+@media screen and (min-width: 45em) {
+    .md-copyright {
+        width: 60em;
+    }
+}
+
+/* permalink is not visible upon hover by default. */
+.md-typeset .headerlink {
+    opacity: 0.8;
+}
+
+/* blur !*/
+header.md-header.md-header--shadow {
+    backdrop-filter: blur(10px);
+    background-color: #14151ae0;
+
+}
+
+/* tables */
+th, td {
+    border: 1px solid var(--md-typeset-table-color);
+    border-spacing: 0;
+    border-bottom: none;
+    border-left: none;
+    border-top: none;
+}
+
+.md-typeset__table table:not([class]) {
+    font-size: .74rem;
+    border-right: none;
+}
+
+.md-typeset__table table:not([class]) td,
+.md-typeset__table table:not([class]) th {
+    padding: 9px;
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+    background-color: var(--md-default-bg-color);
+}
+
+
+.md-typeset__table tr:nth-child(2n), .md-typeset__table th {
+    background-color: #f8f8f8 !important;
+}
+
+[data-md-color-scheme="slate"] .md-typeset__table tr:nth-child(2n), .md-typeset__table th {
+    background-color: var(--md-typeset-table-color--light) !important;
+}
+
+
+/* badges stolen from material for mkdocs docs :) */
+.md-typeset .mdx-badge {
+    font-size: .85em;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__icon {
+    border-bottom-left-radius: .1rem;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__icon {
+    border-top-left-radius: .1rem;
+}
+.md-typeset .mdx-badge__icon {
+    background: var(--md-accent-fg-color--transparent);
+    padding: .2rem;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__text {
+    border-bottom-right-radius: .1rem;
+}
+[dir=ltr] .md-typeset .mdx-badge__text {
+    border-top-right-radius: .1rem;
+}
+.md-typeset .mdx-badge__text {
+    box-shadow: 0 0 0 1px inset var(--md-accent-fg-color--transparent);
+    padding: .2rem .3rem;
+}
+
+/* center images */
+.md-typeset p:has(> img) {
+    text-align: center;
+}
+
+/* classes.md */
+.class-index .item {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: 20px;
+    justify-content: space-between;
+    gap: 20px;
+}
+.class-index p {
+    margin: 0;
+}
+.class-index .item .list {
+    column-width: 250px;
+    flex: 1 1 200px;
+    min-width: 350px;
+}
+
+.class-index > .item:nth-child(2n) {
+    background: var(--md-code-bg-color);
+}
+
+.class-index .item .letter {
+    font-size: 2em;
+    line-height: 1.2;
+}
+
+.class-index-title {
+    background: var(--md-accent-fg-color--transparent);
+    text-align: center;
+    padding: 8px;
+    font-size: 1.1em;
+}
+
+
+/* doxygen-style dl lists (arguments, returns, etc) */
+.doxygen-dl dt {
+    font-weight: bold;
+}
+
+.doxygen-dl th, .doxygen-dl td {
+    padding: 2px;
+}
+
+.doxygen-dl table, .doxygen-dl tr {
+    background: none !important;
+    border: none !important;
+}
+
+.doxygen-dl dd {
+    padding: 0;
+    margin: 0;
+}
+
+/* links in code */
+.md-code__content a {
+    color: var(--md-typeset-color);
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.md-typeset img, .md-typeset video {
+    width: auto;
+    max-width: 100%;
+    max-height: 40vh;
+}
