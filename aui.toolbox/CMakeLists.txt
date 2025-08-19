@@ -7,7 +7,7 @@ endif()
 
 aui_executable(aui.toolbox WIN32_SUBSYSTEM_CONSOLE EXPORT aui)
 if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-    aui_link(aui.toolbox PRIVATE aui::core aui::crypt aui::image )
+    aui_link(aui.toolbox PRIVATE aui::core aui::crypt aui::image YY_Thunks)
 else()
     aui_link(aui.toolbox PRIVATE aui::core aui::crypt aui::image)
 endif()
