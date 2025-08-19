@@ -531,7 +531,7 @@ public:
  * APathOwner is designed to simplify management of (temporary) files on disk, ensuring cleanup of the pointed file
  * in RAII (Resource Acquisition Is Initialization) style.
  *
- * <!-- aui:snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner --> example
+ * <!-- aui:snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner_example -->
  * @sa APath::nextRandomTemporary()
  */
 struct API_AUI_CORE APathOwner: public aui::noncopyable {

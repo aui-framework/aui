@@ -127,7 +127,7 @@ void AUpdater::applyUpdateAndRestart() {
 }
 
 void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdateDir) {
-    // [APathOwner example]
+    // [APathOwner_example]
     APathOwner tempFilePath(APath::nextRandomTemporary());
     {
         AFileOutputStream tempFileOs(tempFilePath);
@@ -148,7 +148,7 @@ void AUpdater::downloadAndUnpack(AString downloadUrl, const APath& unpackedUpdat
           .prefix = unpackedUpdateDir,
           .pathProjection = &APath::withoutUppermostFolder,
         });
-    // [APathOwner example]
+    // [APathOwner_example]
 }
 
 void AUpdater::reportDownloadedPercentage(aui::float_within_0_1 progress) {

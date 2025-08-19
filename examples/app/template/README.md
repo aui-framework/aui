@@ -2,7 +2,7 @@
 
 <!-- aui:example app -->
 GitHub-hosted app project with CI/CD building, [testing](writing-tests.md), releasing,
-[auto updating](updater), code quality checking and more.
+[auto updating](updater.md), code quality checking and more.
 
 ![](imgs/afljskfllkaf.gif)
 

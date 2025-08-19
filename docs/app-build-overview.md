@@ -10,7 +10,7 @@ Other platforms and configurations follow the same principles but with different
 - LIBRARY.dll refers to a binary (compiled) representation of LIBRARY
 - PROGRAM.exe refers to a binary (compiled) representation of PROGRAM (executable)
 
-Also, on this page, the build system is demonstrated on [examples/minimal-ui-template-with-assets.md].
+Also, on this page, the build system is demonstrated on [minimal-ui-template-with-assets.md].
 
 ## Generic scenario { #BUILD_SCENARIO_GENERIC }
 
@@ -44,7 +44,7 @@ On combinations of the other host/target platforms, the build process remains si
 
 Things to note:
 
-- Mobile scenario slightly resembles [#BUILD_SCENARIO_GENERIC].
+- Mobile scenario slightly resembles [BUILD_SCENARIO_GENERIC].
 - There are multiple CMake processes: one of the host, which defines `apps` meta target, which invokes Gradle, which
   invokes another CMakes per architecture, supplying `CMAKE_TOOLCHAIN`.
 - There are several AUI instances: for the host platform, arm64 (for the target) and armv7 (for the target).

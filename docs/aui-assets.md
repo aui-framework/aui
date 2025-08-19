@@ -72,5 +72,5 @@ byte array that is being registered automatically to AUI's [ABuiltinFiles] files
 
 ## Examples
 
-- [examples/app-template.md]
-- [examples/minimal-ui-template-with-assets.md]
+- [app-template.md]
+- [minimal-ui-template-with-assets.md]
