@@ -10,19 +10,19 @@ import logging
 import re
 from pathlib import Path
 
-from mkdocs.structure.files import Files
+from mkdocs.structure.files import Files, File
 from mkdocs.structure.pages import Page
 
 from docs.python.generators import parse_tests, examples_page, common
 
 log = logging.getLogger('mkdocs')
 
-def handle_comment_macros(markdown: str, page: Page, files: Files):
+def handle_comment_macros(markdown: str, file: File):
     def replace_comment(match: re.Match):
         type, args = match.groups()
         args = args.strip()
         if type == "example-file-count":
-            return _badge_for_file_count(args, page, files)
+            return _badge_for_file_count(args)
         if type == "example":
             return examples_page.example(args)
         if type == "examples":
@@ -43,7 +43,7 @@ def handle_comment_macros(markdown: str, page: Page, files: Files):
         ]:
             return match.group(0)
         # Otherwise, raise an error
-        raise RuntimeError(f"Unknown shortcode: {type} in {page}")
+        raise RuntimeError(f"Unknown shortcode: {type} in {file.url}")
 
     return re.sub(
         r"<!-- aui:([\w\-]+)(.*?) -->",
@@ -110,7 +110,7 @@ def _experimental(name):
     This API is experimental. Experimental APIs are likely to contain bugs, might be changed or removed in the future.
     """
 
-def _badge_for_file_count(text: str, page: Page, files: Files):
+def _badge_for_file_count(text: str):
     if text == "0":
         return _badge(
             icon = ":octicons-link-external-16:",

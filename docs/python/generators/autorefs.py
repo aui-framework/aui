@@ -18,14 +18,11 @@ log = logging.getLogger('mkdocs')
 
 
 def handle_autorefs(markdown: str, page : Page, files: Files):
-    global _mapping
-    index.populate_mapping(files)
-
     def replace_url(referred_page_id: str):
         referred_page_id = referred_page_id.rstrip('()') # refs to functions might have trailing braces AString::first().
         entry = index.find_page(referred_page_id)
         if not entry:
-            log.warning(f"Doc file '{page.file.abs_src_path}' contains an unrecognized explicit link to '{referred_page_id}'.")
+            log.warning(f"Doc file '{page.file.src_path}' contains an unrecognized explicit link to '{referred_page_id}'.")
             return f'<span style="background:red">unrecognized link to "{referred_page_id}"</span>'
         title = entry.title
         if "::" in title:

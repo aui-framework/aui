@@ -38,9 +38,9 @@ def parse_tests(path: Path):
             output += "\n"
             output += "## "
             output += match.group(3).replace("_", " ")
-            output += " {#"
+            output += " { #"
             output += f'{match.group(2)}_{match.group(3)}'
-            output += "}"
+            output += " }"
             output += "\n"
             continue
 
@@ -48,9 +48,9 @@ def parse_tests(path: Path):
             output += "\n"
             output += "### "
             output += match.group(3).replace("_", " ")
-            output += " {#"
+            output += " { #"
             output += f'{match.group(2)}_{match.group(3)}'
-            output += "}"
+            output += " }"
             output += "\n"
             continue
 
