@@ -102,7 +102,7 @@ def gen_pages():
                             continue
                         brief = "\n".join([i[1] for i in parse_doxygen(group_item.doc) if f"@brief" in i[0]])
                         print(f"""
--   __{group_item.name}__
+-   __{group_item.namespaced_name()}__
 
     ---
 
