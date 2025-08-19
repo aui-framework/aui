@@ -56,9 +56,13 @@ class AString;
  *
  * ```cpp
  * AMetric a = 5; // runtime error
- * ```cpp
+ * ```
  *
  * ## Supported units
+ *
+ * <!-- aui:index_alias _dp -->
+ * <!-- aui:index_alias _pt -->
+ * <!-- aui:index_alias _px -->
  *
  * Currently supported units:
  *
@@ -98,11 +102,9 @@ public:
      * @brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
      *        example)
      * ```cpp
-     * <code>
      * AMetric a = 0; // ok<br />
      * AMetric b = 5_dp; // ok<br />
      * AMetric c = 5; // produces error<br />
-     * </code>
      * ```
      * @tparam T integer
      * @param value should be zero

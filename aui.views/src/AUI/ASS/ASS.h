@@ -22,9 +22,9 @@
  * @details
  * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
  * of rules. A rule consists of a [ass_selectors] and a list of [ass_properties] . Selector is a basic matcher
- * that determines whether apply a rule to the specific [view](AView) or not. Selector is the first statement in a
- * rule and further statements are [style properties](ass_properties).
- * [Property](ass_properties) controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * that determines whether apply a rule to the specific [view](aview.md) or not. Selector is the first statement in a
+ * rule and further statements are [style properties](ass_properties.md).
+ * [Property](ass_properties.md) controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>

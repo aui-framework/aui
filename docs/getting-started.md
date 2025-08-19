@@ -177,8 +177,8 @@ The example above produces the following window:
 
 ![](imgs/Screenshot_20210408_024201.jpg)
 
-See [layout managers](layout-managers) for more info about layout managers.
+See [layout managers](layout-managers.md) for more info about layout managers.
 
-See [ASS](ass) for more info about styling.
+See [ASS](ass.md) for more info about styling.
 
-See [examples] for examples.
+See [examples.md] for examples.

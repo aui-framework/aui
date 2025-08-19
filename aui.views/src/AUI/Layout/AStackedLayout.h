@@ -23,8 +23,8 @@
  * |-------------|-------------------------------|
  * | Declarative notation | `Stacked { }`<br/> `Centered { }` |
  *
- * Stacked layout manager places views stacking them onto each other. If the [view](AView) is expanding, then it
- * uses all space available. Otherwise, the [view](AView) is centered.
+ * Stacked layout manager places views stacking them onto each other. If the [view](aview.md) is expanding, then it
+ * uses all space available. Otherwise, the [view](aview.md) is centered.
  *
  * AStackedLayout has two declarative notations - `Stacked` and `Centered`. They are equivalent, so you can express
  * your intentions more clearly by specifying `Stacked` to stack views and `Centered` to center them.

@@ -36,11 +36,11 @@
  * features:
  *
  * - [interruptable threads](AAbstractThread::interrupt())
- * - [i18n](AI18n)
- * - [logging](ALogger)
+ * - [i18n](ai18n.md)
+ * - [logging](alogger.md)
  * - data models
  * - trait classes
- * - [urls](AUrl)
+ * - [urls](aurl.md)
  */
 
 

@@ -206,7 +206,7 @@ class AViewContainer;
  * order to make container larger than minimum possible size, you can specify FixedSize or MinSize or Expanding to the
  * container.
  *
- * You can use ass::Expanding [ASS](ass) property, or AView::setExpanding method to specify Expanding:
+ * You can use ass::Expanding [ASS](ass.md) property, or AView::setExpanding method to specify Expanding:
  * <table>
  *   <tr>
  *     <th>Code</th>

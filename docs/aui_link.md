@@ -26,7 +26,7 @@ If building with `BUILD_SHARED_LIBS=OFF`, the following rules apply:
 1. Visibility is forced to `PUBLIC` to propagate static libraries up to the executable.
 2. Target `<item>`s with `INTERFACE_AUI_WHOLEARCHIVE=TRUE` are wrapped with compiler-specific flags during linkage to
    enable whole archive linking (i.e., forbid dropping of unused symbols). This is essential when linking to binaries
-   with [assets].
+   with [aui-assets.md].
 3. The `<item>`s are reordered this way: from the most dependant target to the less dependant target.
 
    If A depends on B; C depends on both A and B, you should write

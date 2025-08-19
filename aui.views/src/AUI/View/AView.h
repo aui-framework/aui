@@ -124,7 +124,7 @@ public:
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
      * @details
-     * It does affect expanding environment inside the container. See expanding [layout managers](layout-managers)
+     * It does affect expanding environment inside the container. See expanding [layout managers](layout-managers.md)
      * for more info.
      *
      * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or

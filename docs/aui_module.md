@@ -47,4 +47,4 @@ The target is a dynamically loadable AUI plugin.
 ### WHOLEARCHIVE
 
 The target is compiled with `wholearchive` compiler-specific flag, forcing all unused variables to be included to the 
-binary. This may be required by [assets].
+binary. This may be required by [aui-assets.md].

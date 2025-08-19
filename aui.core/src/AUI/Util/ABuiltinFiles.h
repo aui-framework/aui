@@ -20,6 +20,9 @@
 
 class AString;
 
+/**
+ * @brief Filesystem for [aui-assets.md].
+ */
 class API_AUI_CORE ABuiltinFiles {
 private:
     AMap<std::string_view, AByteBufferView> mBuffers;

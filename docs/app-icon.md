@@ -1,3 +1,5 @@
+# App Icon
+
 The app icon is an important part of any software product, representing your brand identity and conveying the purpose of
 your project. It's often one of the first things users see when they discover a new application, setting a tone for
 overall user experience. Approach to app icon briefly resembles the overall quality of the product.

@@ -19,7 +19,7 @@
  * @details
  * AExpandingSpacer is an expanding blank view which tries acquire space as much as possible.
  *
- * See expanding in [layout managers](layout-managers) for more info.
+ * See expanding in [layout managers](layout-managers.md) for more info.
  *
  * @sa AView::setExpanding
  */

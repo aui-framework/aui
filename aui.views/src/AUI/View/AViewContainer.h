@@ -20,7 +20,7 @@
  * AViewContainer can store, render, resize, provide events to and handle the child views.
  *
  * AViewContainer does not control the position and size of the child views by itself; instead, it delegates that
- * responsibility to it's [layout manager](layout-managers).
+ * responsibility to it's [layout manager](layout-managers.md).
  *
  * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
  * possible complex UI by nested AViewContainers with different layout managers.

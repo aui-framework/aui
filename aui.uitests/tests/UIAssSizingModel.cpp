@@ -34,7 +34,7 @@ public:
 TEST_F(UIAssSizingModel, AllBoxesAreIdential) {
     // In this example, the equally sized boxes are produced with `FixedSize`, `MinSize` and `MaxSize`, respectively.
     // `FixedSize` will always acquire the specified size, `MinSize` specifies the minimum size that can potentially
-    // grow further, and `MaxSize` restricts [expanding](EXPANDING) by specified size.
+    // grow further, and `MaxSize` restricts [EXPANDING] by specified size.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
     using namespace ass;

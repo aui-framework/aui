@@ -14,7 +14,7 @@ If neither of these suggestions helped and you think you encountered an AUI's is
 
 ## Assets
 
-See also: [assets]
+See also: [aui-assets.md]
 
 1. Ensure you have called `aui_compile_assets()` in your `CMakeLists.txt`.
 2. Make sure you are using `aui_link` instead of `target_link_libraries` at least for AUI's components.
@@ -22,7 +22,7 @@ See also: [assets]
    also with the final executable (`PUBLIC` linking does not solve this issue on Linux).
 4. Try using [WHOLEARCHIVE] flag.
 
-## Build cache invalidation
+## Build cache invalidation { #BUILD_CACHE_INVALIDATION }
 
 Symptoms:
 

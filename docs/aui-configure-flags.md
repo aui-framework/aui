@@ -28,7 +28,7 @@ Whether to use AddressSanitizer.
 
 ### AUI_PROFILING
 When `true`, AUI profiling features are enabled. This means "Performance" tab in devtools would appear and show
-performance information. See [Profiling]([profiling])
+performance information. See [profiling.md]
 
 ### AUI_SHOW_TOUCHES
 When `true`, shows touches visually (like in Android Developer Tools) and performs additional trace logging on touches.
@@ -66,7 +66,7 @@ Adds `printAllInstances()` to AUI's shared pointer type (`_`) which prints stack
 When evaluates to `true`, libraries are built as shared, as static otherwise.
 
 When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false` 
-(see [cross-compiling](docs/Crosscompiling.md))
+(see [cross-compiling](crosscompiling.md))
 
 ### AUI_IOS_CODE_SIGNING_REQUIRED
 Disables code signing step on iOS.

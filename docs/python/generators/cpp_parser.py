@@ -296,7 +296,8 @@ class _Parser:
                     if visibility != 'private':
                         if self.last_token[1] in [';', '{', '=']:
                             clazz.fields.append(CppVariable(name=name, type_str=type_str, doc=self._consume_doc(), visibility=visibility))
-                            self.last_token = next(self.iterator)
+                            if self.last_token[1] != ';':
+                                self.last_token = next(self.iterator)
                             continue
                         if self.last_token[1] == '(':
                             clazz.methods.append(CppFunction(name=name, return_type=type_str, doc=self._consume_doc(), visibility=visibility, template_clause=template_clause, args=self._skip_special_clause(), modifiers_before=modifiers_before))
@@ -904,6 +905,21 @@ public:
      * @brief Test field 2
      */
     AString field2{};
+    
+    /**
+     * @brief Test field 3
+     */
+    AString field3;
+    
+    /**
+     * @brief Test field 4
+     */
+    AString field4 = "hello";
+    
+    /**
+     * @brief Test field 5
+     */
+    AString field5{"hello"};
 };
 }
     """)]
@@ -913,6 +929,9 @@ public:
     assert [str(i) for i in clazz[0].fields] == [
         str(CppVariable(name="field1", type_str="AString", doc="@brief Test field 1")),
         str(CppVariable(name="field2", type_str="AString", doc="@brief Test field 2")),
+        str(CppVariable(name="field3", type_str="AString", doc="@brief Test field 3")),
+        str(CppVariable(name="field4", type_str="AString", doc="@brief Test field 4")),
+        str(CppVariable(name="field5", type_str="AString", doc="@brief Test field 5")),
     ]
 
 def test_macro1():

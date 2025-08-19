@@ -13,7 +13,7 @@ elements, such as buttons, labels, and text inputs.
 
 ## Layout
 
-[Layout](layout-managers) is flexible and customizable way of managing your views in a logical and visually
+[Layout](layout-managers.md) is flexible and customizable way of managing your views in a logical and visually
 appealing manner. From simple linear layouts to complex grid-based adaptive arrangements.
 
 ![](imgs/Screenshot_20210714_172900.png)
@@ -45,7 +45,7 @@ UI and application data objects.
 
 ## Devtools
 
-[AUI Devtools](docs/Devtools.md) provide a set of features that makes it easier to design, test, and debug your UI
+[AUI Devtools](devtools.md) provide a set of features that makes it easier to design, test, and debug your UI
 components. With visual debugging tools, and more, you can streamline your development workflow and focus on building
 amazing user experiences.
 
@@ -56,4 +56,4 @@ amazing user experiences.
 - [All Views](useful_views)
 - [ASS](ass)
     - [Selectors](ass_selectors)
-    - [Properties](ass_properties)
+    - [Properties](ass_properties.md)

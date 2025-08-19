@@ -28,7 +28,7 @@ aui_link(YOUR_APP PUBLIC aui::core
                          aui::views)
 ```
 
-## Prebuilt packages
+## Prebuilt packages { #PREBUILT_PACKAGES }
 
 AUI Boot is a source-first package manager, however, it can pull precompiled packages instead of building them locally.
 At the moment, GitHub Releases page with carefully formatted archive names is the only supported option. AUI follows
@@ -39,7 +39,7 @@ To use a precompiled binary, you must specify a tag of a released version from
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
 set up a development and building with AUI.
 
-If you would like to force AUI Boot to use precompiled binaries only, you can set [AUIB_FORCE_PRECOMPILED](AUIB_FORCE_PRECOMPILED):
+If you would like to force AUI Boot to use precompiled binaries only, you can set [AUIB_FORCE_PRECOMPILED](#AUIB_FORCE_PRECOMPILED):
 
 ```shell
 cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
@@ -47,7 +47,7 @@ cmake .. -DAUIB_FORCE_PRECOMPILED=TRUE
 
 This way AUI Boot will raise an error if it can't resolve dependency without compiling it.
 
-If usage of precompiled binaries break your build for whatever reason, you can set [AUIB_NO_PRECOMPILED](AUIB_NO_PRECOMPILED):
+If usage of precompiled binaries break your build for whatever reason, you can set [AUIB_NO_PRECOMPILED](#AUIB_NO_PRECOMPILED):
 
 ```shell
 cmake .. -DAUIB_NO_PRECOMPILED=TRUE
@@ -350,15 +350,15 @@ validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_
 It is useful when some package root is implicitly defined in your project somewhere and aui.boot does not know about it,
 thus does not forward.
 
-## Variables
+## Variables { #AUIB_VARIABLES }
 
 See [aui-configure-flags.md] on how to set variables.
 
-### AUIB_ALL_AS (=FALSE|TRUE)
+### AUIB_ALL_AS (=FALSE|TRUE) { #AUIB_ALL_AS }
 
 Equivalent of setting [AUIB_LIB_AS] for every single library present in the project.
 
-### AUIB_<PackageName>_AS (=FALSE|TRUE)
+### AUIB_<PackageName>_AS (=FALSE|TRUE) { #AUIB_LIB_AS }
 
 Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. This means that the library
 becomes a part of your project, within your `build/` directory. This allows changing the library's code seamlessly.
@@ -445,13 +445,13 @@ this, you need to:
     from a repository.
 
 
-### AUIB_DISABLE (=FALSE|TRUE) { #AUIB_ADD_SUBDIRECTORY }
+### AUIB_DISABLE (=FALSE|TRUE) { #AUIB_DISABLE }
 
 Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
 ### AUIB_SKIP_REPOSITORY_WAIT (=FALSE|TRUE)
 
-Disables "Waiting for repository" [lock](REPO_LOCK).
+Disables "Waiting for repository".
 
 ### AUIB_NO_PRECOMPILED (=FALSE|TRUE)  { #AUIB_NO_PRECOMPILED }
 
@@ -467,7 +467,7 @@ The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-suf
 Boot. This means that the dependencies required for building these packages are included in the package (`tar.gz`)
 archive in the `deps/` dir.
 
-See [aui_boot_producing_packages]
+See [AUIB_PRODUCING_PACKAGES]
 
 ### AUIB_VALIDATION_LEVEL
 
@@ -516,7 +516,7 @@ All checks are disabled.
 
 #### AUIB_VALIDATION_LEVEL 2
 
-*Covers scenario*: `cmake --install .` of *dependency* produces a [relocatable binary package](PREBUILT_PACKAGES).
+*Covers scenario*: `cmake --install .` of *dependency* produces a [relocatable binary package](#PREBUILT_PACKAGES).
 
 *Requirements*:
 
@@ -566,7 +566,7 @@ Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 
 Because `libcurl` is not a part of AUI, it uses standard CMake's function to find `OpenSSL` (`find_package`).
 
-## Producing packages with dependencies managed by AUI Boot
+## Producing packages with dependencies managed by AUI Boot { #AUIB_PRODUCING_PACKAGES }
 
 AUI distributions [published on our GitHub releases page](https://github.com/aui-framework/aui/releases) are produced with help of AUI Boot.
 
@@ -650,7 +650,7 @@ Contains dependencies source code (if any), downloaded by `auib_import`.
 - `~/.aui/repo/<PackageName>/src/FETCHED` - indicates the latest download is successful.
 - `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
 
-If the dependency imported as a [subdirectory](AUIB_ADD_SUBDIRECTORY), these paths are used instead:
+If the dependency imported as a [subdirectory](#AUIB_ADD_SUBDIRECTORY), these paths are used instead:
 
 - `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>` - a copy of source to be used by CMake's `add_subdirectory`.
   The second `<PackageName>` helps IDEs such as CLion to identify dependency name.

@@ -456,7 +456,7 @@ public:
 }   // namespace constraint
 
 /**
- * @brief Clamps the possible values for a number to the specified range: [min;max]
+ * @brief Clamps the possible values for a number to the specified range: `[min;max]`
  * @ingroup useful_templates
  * @tparam UnderlyingType any arithmetic type
  * @tparam min minimum possible value

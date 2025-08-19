@@ -45,7 +45,7 @@
  * @details
  * Silences the unused variable compiler warning.
  *
- * Can be used to force [=] lambda to capture a variable.
+ * Can be used to force `[=]` lambda to capture a variable.
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
 

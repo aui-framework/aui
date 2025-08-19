@@ -203,4 +203,4 @@ The script above produces a file `artifacts/<APP_NAME>-VERSION-macos-ARCH.dmg`, 
 
 `-DAUI_BUILD_FOR=...` implies `AUI_APP_PACKAGING`, no further configuration is needed.
 
-Please refer to [cross-compiling](docs/Crosscompiling.md).
+Please refer to [cross-compiling](crosscompiling.md).

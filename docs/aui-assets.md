@@ -10,7 +10,7 @@ can't be viewed or changed as easily as files lying around in user's filesystem.
 
 To refer to an asset file, prefix the path with colon character. See [AUrl] for more info.
 
-## aui_compile_assets
+## aui_compile_assets { #aui_compile_assets }
 
 Assets can be enabled for your target with `aui_compile_assets` function in your `CMakeLists.txt`:
 
@@ -30,7 +30,7 @@ cp test.txt assets/test.txt
 
 !!! danger "Pitfall"
     
-    Please invoke [CMake configure](BUILD_CACHE_INVALIDATION) each time you add/remove files in `assets/`!
+    Please invoke [CMake configure](troubleshoot-list.md#BUILD_CACHE_INVALIDATION) each time you add/remove files in `assets/`!
     Otherwise, these files will not appear in your program.
 
 
@@ -51,7 +51,7 @@ _new<AView>() AUI_WITH_STYLE {
 },
 ```
 
-See also [examples/minimal-ui-template-with-assets.md] for a complete minimal example.
+See also [minimal-ui-template-with-assets.md] for a complete minimal example.
 
 ## How does it work
 

@@ -109,7 +109,7 @@ examples when defining public API templates and macros.
 
 ## Improving compiler error messages techniques
 
-### Try to break your templates
+### Try to break your templates { #TRY_TO_BREAK }
 
 After considering actions listed below, try your types/traits/concepts against various awkward types/arguments/use 
 cases.
@@ -168,7 +168,7 @@ This makes it obvious what does this overload do.
 ## .clang-format
 
 clang-format is a de facto standard tool to auto format (C++) code with style described by `.clang-format` file that
-typically located inside your project's root directory. AUI [has such file](CLANG_FORMAT).
+typically located inside your project's root directory. AUI [has such file](#CLANG_FORMAT).
 
 Since AUI abuses C++'s syntax, it's important to set up appropriate auto formatting, or you will often find yourself
 struggling with AUI's DSL especially in large portions of layout, despite the fact we recommend to decompose large
@@ -200,7 +200,7 @@ When it comes to `clang-format` there's one an unobvious feature when using AUI'
 
 See the difference? The second example lacks one comma. If we try to trigger `clang-format`
 (<kbd>ALT</kbd>+<kbd>CTRL</kbd>+<kbd>L</kbd> in **CLion**), we'll get the following results (assuming AUI's
-[CLANG_FORMAT] ".clang-format"):
+[".clang-format"](#CLANG_FORMAT)):
 
 === "With Trailing Comma"
      
@@ -230,7 +230,7 @@ In some scenarios clang-format may fight against you, especially with complicate
 
 <!-- aui:snippet aui.json/tests/JsonFieldsTest.cpp clang_format_toggle -->
 
-### AUI's .clang-format
+### AUI's .clang-format { #CLANG_FORMAT }
 
 Place this `.clang-format` file in root of your project.
 

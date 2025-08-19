@@ -8,7 +8,7 @@ devices.
     
     At the moment, support of macOS in AUI Framework is in early stage and lacks a lot of features.
 
-macOS shares its XNU kernel and codebase with [ios].
+macOS shares its XNU kernel and codebase with [ios.md].
 
 Due to closed nature of Apple platforms, a single macOS machine is considered as the only option for AUI/application
 development for all supported platforms at once:
@@ -24,7 +24,7 @@ development for all supported platforms at once:
 - You'd want to support both architectures - `x86_64` and Apple Silicon `arm64` by producing universal binaries
 - Application menu is located in system's top bar instead of being inside the window
 - macOS hardware offers high density displays (marketing name: Retina), so you need to use density-independent dimension
-  units such as [_dp](AMetric)
+  units such as [_dp]
 - Apple laptops include high quality touchpads with high resolution scroll and possibility for multitouch gestures
 
 ## AUI implementation specifics
