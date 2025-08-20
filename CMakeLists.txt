@@ -8,6 +8,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
+if (MINGW AND NOT AUI_IGNORE_MINGW)
+    message(FATAL_ERROR "MinGW is not supported")
+endif()
+
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
 set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location" FORCE)
 
@@ -197,12 +201,12 @@ auib_precompiled_binary()
 # test aui.boot on ci/cd
 add_subdirectory(test/)
 
-# [configure file example]
+# [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
-# [configure file example]
+# [configure_file_example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

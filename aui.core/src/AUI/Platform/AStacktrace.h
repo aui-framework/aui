@@ -124,8 +124,9 @@ public:
      * @brief Creates stacktrace of the current thread.
      * @param skipFrames number of frames to skip.
      * @param maxFrames max number of frames.
-     * @note A call to <code>AStacktrace::capture</code> is always skipped in the stacktrace.
      * @return
+     * @details
+     * A call to <code>AStacktrace::capture</code> is always skipped in the stacktrace.
      */
     static AStacktrace capture(unsigned skipFrames = 0, unsigned maxFrames = 128) noexcept;
 

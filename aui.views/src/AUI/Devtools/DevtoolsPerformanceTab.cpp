@@ -352,7 +352,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                 Vertical::Expanding {
                     treeView,
                 }
-            ),
+            ).build() with_style { Visibility::UNREACHABLE },
         } AUI_LET {
             connect(mState, [=](const State& state) {
                 using namespace ass;

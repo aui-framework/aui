@@ -125,18 +125,18 @@ endif()
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
-    # [RPATH apple]
+    # [rpath_apple]
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
-    # [RPATH apple]
+    # [rpath_apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
     endif()
-    # [RPATH linux]
+    # [rpath_linux]
     set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-    # [RPATH linux]
+    # [rpath_linux]
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
@@ -906,11 +906,10 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endforeach()
 
-
-                if(MSVC)
-                    # force msvc compiler to parallel build
-                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
-                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+ 
+                # force msvc compiler to parallel build
+                if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                           # MSVC but exclude clang-cl
+                    set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS "-MP")   # Parallel compilation
                 endif()
 
                 if (IOS)

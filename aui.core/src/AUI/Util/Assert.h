@@ -46,11 +46,11 @@ namespace aui::assertion::detail {
  * @sa AUI_ASSERTX
  * @sa AUI_ASSERT_NO_CONDITION
  *
- * @code{cpp}
+ * ```cpp
  * int v = 2 + 2;
  * AUI_ASSERT(v >= 0); // does not trigger
  * AUI_ASSERT(v != 4); // triggers
- * @endcode
+ * ```
  */
 #define AUI_ASSERT(condition) AUI_IMPL_ASSERT(condition)
 
@@ -65,11 +65,11 @@ namespace aui::assertion::detail {
  * applications.
  * @sa AUI_ASSERT
  *
- * @code{cpp}
+ * ```cpp
  * int v = 2 + 2;
  * AUI_ASSERTX(v >= 0, "positive value expected"); // does not trigger
  * AUI_ASSERTX(v != 4, "4 is unacceptable value"); // triggers
- * @endcode
+ * ```
  */
 #define AUI_ASSERTX(condition, what) AUI_IMPL_ASSERTX(condition, what)
 
@@ -83,13 +83,13 @@ namespace aui::assertion::detail {
  * applications.
  * @sa AUI_ASSERT
  *
- * @code{cpp}
+ * ```cpp
  * switch (i) {
  *   case 0: // ...
  *   default:
  *     AUI_ASSERT_NO_CONDITION("invalid i");
  * }
- * @endcode
+ * ```
  */
 #define AUI_ASSERT_NO_CONDITION(what) AUI_IMPL_FAIL(what)
 

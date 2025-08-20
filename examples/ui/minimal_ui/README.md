@@ -1,17 +1,24 @@
 # Minimal UI Template
 
-@auiexample{ui}
+<!-- aui:example ui -->
 Minimal UI boilerplate template.
 
-@image html docs/imgs/minimal-template.png
+![](imgs/minimal-template.png)
 
-# Source Files
-## Project Structure
+## Source Code
+### Project Structure
 
-@mermaid{project_structure_minimal_example}
+```mermaid
+graph TD
+    A[project_template_ui] --> B[CMakeLists.txt]
+A --> C[src/]
+C --> D[MainWindow.h]
+C --> E[MainWindow.cpp]
+C --> F[main.cpp]
+```
 
 ---
-## CMakeLists.txt
+### CMakeLists.txt
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
@@ -42,7 +49,7 @@ aui_executable(${PROJECT_NAME})
 aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 ```
 
-## src/MainWindow.h
+### src/MainWindow.h
 
 ```cpp
 #pragma once
@@ -54,7 +61,7 @@ public:
     MainWindow();
 };
 ```
-## src/MainWindow.cpp
+### src/MainWindow.cpp
 ```cpp
 #include "MainWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -84,7 +91,7 @@ MainWindow::MainWindow(): AWindow("Project template app", 300_dp, 200_dp) {
 }
 ```
 
-## src/main.cpp
+### src/main.cpp
 ```cpp
 #include <AUI/Platform/Entry.h>
 #include "MainWindow.h"

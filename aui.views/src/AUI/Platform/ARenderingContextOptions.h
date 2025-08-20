@@ -37,12 +37,12 @@ AUI_ENUM_FLAG(ARenderContextFlags) {
  * @ingroup views
  * @details
  * By default, AUI uses the following settings:
- * @code{cpp}
+ * ```cpp
  * ARenderingContextOptions::set({
  *    OpenGL {},
  *    Software {},
  * });
- * @endcode
+ * ```
  * You may call this before initializating windows in order to define your own settings and priorities.
  *
  * The priority can be overridden by `--aui-renderer=GRAPHICS_API` argument passed to your application.

@@ -24,7 +24,7 @@ namespace ass {
      * @brief Controls the padding of AView.
      * @ingroup ass_properties
      * @details
-     * See @ref "AUI Box Model".
+     * See [aui-box-model].
      */
     struct Padding {
         unset_wrap<AMetric> left;

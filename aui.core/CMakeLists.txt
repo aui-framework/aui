@@ -148,15 +148,15 @@ auib_import(simdutf https://github.com/simdutf/simdutf
         CMAKE_ARGS -DSIMDUTF_TESTS=OFF -DSIMDUTF_TOOLS=OFF)
 aui_link(aui.core PRIVATE simdutf::simdutf)
 
-# [auib_import examples]
+# [auib_import_examples]
 auib_import(fmt https://github.com/fmtlib/fmt
-            VERSION 9.1.0
+            VERSION 11.2.0
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
 auib_import(range-v3 https://github.com/ericniebler/range-v3
         VERSION 0.12.0
         CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
-# [auib_import examples]
+# [auib_import_examples]
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 

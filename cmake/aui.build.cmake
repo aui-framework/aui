@@ -204,9 +204,15 @@ endif()
 
 function(aui_add_properties AUI_MODULE_NAME)
     if(MSVC)
-        set_target_properties(${AUI_MODULE_NAME} PROPERTIES
-                LINK_FLAGS "/force:MULTIPLE"
-                COMPILE_FLAGS "/MP /utf-8")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/MP /utf-8")
+        else() # clang-cl does not support /MP
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/utf-8")
+        endif()
     endif()
 
     if(NOT ANDROID)
@@ -1130,6 +1136,29 @@ function(aui_module AUI_MODULE_NAME)
             COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
             VERBATIM
         )
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(APPLE)
+            add_custom_command(
+                TARGET ${AUI_MODULE_NAME}
+                POST_BUILD
+                COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+                ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Sxl>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+                COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+                VERBATIM
+            )
+        else()
+            add_custom_command(
+                TARGET ${AUI_MODULE_NAME}
+                POST_BUILD
+                COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+                ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-g>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-x>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+                COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+                VERBATIM
+            )
+        endif()
     endif()
 endfunction(aui_module)
 
@@ -1734,7 +1763,7 @@ endmacro()
 
 if (MINGW OR UNIX)
     # strip for release
-    if (NOT(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang"))
+    if (NOT(CMAKE_CXX_COMPILER_ID MATCHES "(AppleClang|Clang)"))
 	    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
 	    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
         set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -s")

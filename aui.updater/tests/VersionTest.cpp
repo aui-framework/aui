@@ -1,10 +1,7 @@
 #include <gmock/gmock.h>
 #include <AUI/Updater/Semver.h>
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/updater_semver.h
-// @struct aui::updater::Semver
-
-TEST(VersionTest, Parsing_version) { // HEADER_H1
+TEST(VersionTest, Parsing_version) { // HEADER_H2
     // Up to 3 numbers split with dots are supported:
     //AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(aui::updater::Semver::fromString("1.2.3"), (aui::updater::Semver{ 1, 2, 3 }));

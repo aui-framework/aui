@@ -276,7 +276,8 @@ protected:
 
     /**
      * @brief Constructor for custom initialization logic
-     * @note Please call windowNativePreInit
+     * @details
+     * Please call windowNativePreInit
      */
     AWindow(std::nullptr_t) {}
 

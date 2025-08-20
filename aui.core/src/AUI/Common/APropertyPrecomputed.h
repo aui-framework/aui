@@ -19,25 +19,25 @@
 
 /**
  * @brief Readonly property that holds a value computed by an expression.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by the C++ function specified in its constructor, typically a C++ lambda expression.
  *
- * See @ref property_system "property system" for usage info.
+ * See [property system](property-system.md) for usage info.
  *
- * Despite properties offer @ref UIDataBindingTest_Label_via_declarative_projection "projection methods", you might
+ * Despite properties offer [projection methods](property-system.md#UIDataBindingTest_Label_via_declarative_projection), you might
  * want to track and process values of several properties.
  *
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
- * Its value is determined by a @ref aui::react "reactive" expression specified in `APropertyPrecomputed<T>`'s
+ * Its value is determined by a [reactive](aui::react) expression specified in `APropertyPrecomputed<T>`'s
  * constructor, typically a C++ lambda.
  *
  * It's convenient to access values from another properties inside the expression. The properties accessed during
  * invocation of the expression are tracked behind the scenes so they become dependencies of `APropertyPrecomputed`
  * automatically. If one of the tracked properties fires `changed` signal, `APropertyPrecomputed` invalidates its
- * `T`. `APropertyPrecomputed` follows @ref aui::lazy "lazy semantics" so the expression is re-evaluated and the new
+ * `T`. `APropertyPrecomputed` follows [lazy semantics](aui::lazy) so the expression is re-evaluated and the new
  * result is applied to `APropertyPrecomputed` as soon as the latter is accessed for the next time.
  *
  * In other words, it allows to specify relationships between different object properties and reactively update
@@ -46,6 +46,8 @@
  *
  * `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
  * value with `value()` method or implicit conversion `operator T()` as with other properties.
+ *
+ * <!-- aui:parse_tests aui.core/tests/PropertyPrecomputed.cpp -->
  */
 template<typename T>
 struct APropertyPrecomputed final : aui::react::DependencyObserver {
@@ -106,7 +108,7 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
     }
 
     /**
-     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]

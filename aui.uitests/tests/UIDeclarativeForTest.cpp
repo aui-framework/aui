@@ -107,9 +107,6 @@ TEST_F(UIDeclarativeForTest, Example) {
 }
 
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/foreach.h
-// @class AForEachUI
-
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
@@ -126,7 +123,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
               .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // A static range like in the example above will not blow up the machine because AForEachUI is wrapped with a
-    // @ref AScrollArea, thus it is not required to evaluate the whole range, which is infinite in our case.
+    // [AScrollArea], thus it is not required to evaluate the whole range, which is infinite in our case.
     //
     // An attempt to update AForEachUI with a large range still can lead to high resource consumption, due to need of
     // recomposition.
@@ -142,12 +139,12 @@ TEST_F(UIDeclarativeForTest, Performance) {
 
 /**********************************************************************************************************************/
 //
-// # Initialization {#AFOREACHUI_UPDATE}
+// ## Initialization { #AFOREACHUI_UPDATE }
 //
-// This section explains how to initialize @ref AUI_DECLARATIVE_FOR, manage lifetime of containers and how to make them
+// This section explains how to initialize [AUI_DECLARATIVE_FOR], manage lifetime of containers and how to make them
 // reactive.
 //
-// In @ref AUI_DECLARATIVE_FOR, a potentially @ref aui::react "reactive" expression evaluating to *range* and the lambda
+// In [AUI_DECLARATIVE_FOR], a potentially [reactive](aui::react) expression evaluating to *range* and the lambda
 // that creates a new views are both lambdas with capture default by value `[=]`. This means that:
 //
 // 1. All mentioned *local* variables are captured by copying.
@@ -160,7 +157,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
 //
 // An attempt to go out of the scenarios listed below will likely lead to a `static_assert` with a link to this section.
 
-TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H3
     // The most straightforward way is using constant global data:
 #ifdef AUI_ENTRY
 #undef AUI_ENTRY
@@ -194,7 +191,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data) { // HEADER_H2
 
 TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     static constexpr auto COLORS = { "Red", "Green", "Blue", "Black", "White" };
-    // It's a good idea to wrap AForEachUI with an @ref AScrollArea.
+    // It's a good idea to wrap AForEachUI with an [AScrollArea].
     // AUI_DOCS_CODE_BEGIN
     mWindow-> // HIDE
     setContents(Vertical {
@@ -211,13 +208,15 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
     EXPECT_TRUE(By::text("Red").one());
     EXPECT_TRUE(By::text("White").one());
 
-    // @image html docs/imgs/UIDeclarativeForTest.Constant_global_data2_.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Constant_global_data2_.png)
+    // </figure>
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<const char*>>().size(), 0);
 }
 
-TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H3
     // Most generators, ranges and views are expected to work.
     // AUI_DOCS_CODE_BEGIN
     mWindow-> // HIDE
@@ -231,13 +230,15 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H2
     // AUI_DOCS_CODE_END
 
     validateOrder();
-    // @image html docs/imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Infinite_ranges_and_views_.png)
+    // </figure>
     saveScreenshot("");
 
     EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
 }
 
-TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
+TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H3
     // When using locals, their immediate values are copied during initialization of AUI_DECLARATIVE_FOR.
     // AUI_DOCS_CODE_BEGIN
     auto items = AVector<AString> { "Hello", "World", "Test" };
@@ -264,13 +265,15 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H2
     EXPECT_FALSE(By::text("Bruh").one());
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
-    // @image html docs/imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Transferring_ownership_by_copying_.png)
+    // </figure>
     saveScreenshot("");
 }
 
-TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
+TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H3
     // If your container lives inside your class, its value is not copied but referenced. To avoid unobserved iterator
-    // invalidation and content changes, @ref AUI_DECLARATIVE_FOR requires borrowed containers to be constant. There's a
+    // invalidation and content changes, [AUI_DECLARATIVE_FOR] requires borrowed containers to be constant. There's a
     // compile-time check to verify this requirement that does work in most cases, like this one.
     //
     // AUI_DOCS_CODE_BEGIN
@@ -295,30 +298,34 @@ TEST_F(UIDeclarativeForTest, Borrowing_constant_containers) {// HEADER_H2
         ();
 
     //
-    // @image html docs/imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Borrowing_constant_containers_.png)
+    // </figure>
+    //
     uitest::frame();
     saveScreenshot("");
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 
     //
     // Marking the borrowed container as const effectively saves you from unintended borrowed data changes. If you'd
-    // like to change the container or view options and @ref AUI_DECLARATIVE_FOR to respond to the changes, read the section
+    // like to change the container or view options and [AUI_DECLARATIVE_FOR] to respond to the changes, read the section
     // below.
 }
 
-TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
-    // The reason why @ref AUI_DECLARATIVE_FOR is so restrictive about using borrowed non-const data is because it stores
+TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
+    // The reason why [AUI_DECLARATIVE_FOR] is so restrictive about using borrowed non-const data is because it stores
     // *range*'s iterators under the hood. Various containers have different rules on iterator invalidation, but, since
     // it accepts any type of *range*, we consider using its iterators after a modifying access to the container or a
     // view as unsafe:
-    // - visual presentation by @ref AUI_DECLARATIVE_FOR might seem unresponsive to borrowed data changes,
+    //
+    // - visual presentation by [AUI_DECLARATIVE_FOR] might seem unresponsive to borrowed data changes,
     // - may lead to program crash.
     //
-    // To address this issue, we provide a convenient @ref property_system "way" to make iterator invalidation
+    // To address this issue, we provide a convenient [way](property-system.md) to make iterator invalidation
     // *observable*:
     //
     // - wrap the container with `AProperty`,
-    // - dereference `mColors` in @ref AUI_DECLARATIVE_FOR clause.
+    // - dereference `mColors` in [AUI_DECLARATIVE_FOR] clause.
     //
     // AUI_DOCS_CODE_BEGIN
     class MyWindow: public AWindow {
@@ -350,7 +357,9 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
 
 
     //
-    // @image html docs/imgs/UIDeclarativeForTest.Reactive_lists_1.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Reactive_lists_1.png)
+    // </figure>
     uitest::frame();
     saveScreenshot("1");
     EXPECT_TRUE(By::text("Red").one());
@@ -360,7 +369,9 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H2
     // Upon clicking "Add A new color" button, the "A new color" label will appear in the list.
     By::text("Add A new color").perform(click());
     //
-    // @image html docs/imgs/UIDeclarativeForTest.Reactive_lists_2.png
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.Reactive_lists_2.png)
+    // </figure>
     uitest::frame();
     saveScreenshot("2");
     EXPECT_TRUE(By::text("A new color").one());

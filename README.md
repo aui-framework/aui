@@ -13,23 +13,23 @@ programming languages and external compilers.
 
 [Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
-# Quickstart
+## Quickstart
 
-## Linux dependencies
+### Linux dependencies
 
 If you are using Linux, install following dependencies:
 
-### Debian/Ubuntu
+#### Debian/Ubuntu
 ```bash
 sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
 ```
 
-### Fedora
+#### Fedora
 ```bash
 sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel git cmake g++
 ```
 
-## AUI App Template ⚡
+### AUI App Template ⚡
 
 Use our setup-free repository templates for quick start:
 
@@ -49,7 +49,7 @@ To link AUI to your project, use the following CMake script. This script is self
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION v7.1.2)
+set(AUI_VERSION v9.5.0)
 
 # Use AUI.Boot
 file(
@@ -110,7 +110,7 @@ guide](https://aui-framework.github.io/develop/md_docs_2Getting_01started_01with
 
 Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html) to set up the project.
 
-# Key features
+## Key features
 - Extended common types (containers, strings, streams, etc...)
 - Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
 - Resource compiler (assets)
@@ -212,7 +212,7 @@ our repo.
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
-# Licensing
+## Licensing
 
 Please refer to [LICENSE](https://github.com/aui-framework/aui/blob/master/LICENSE).
 
@@ -229,7 +229,7 @@ As for the latter, you are welcome to upstream your changes (i.e., propose your 
 
 You are not obligated to disclose your own sources nor release your own project under the same terms (License).
 
-# Maintaining
+## Maintaining
 
 The AUI framework is maintained by Alexey Titov ([Alex2772](https://github.com/Alex2772), alex2772sc 'at' gmail.com)
 with contributions from many other people. Join our [Discord community](https://discord.gg/jq2WySpg6m) for voice
@@ -240,7 +240,7 @@ Let us know if your contribution is not listed or mentioned incorrectly, and we'
 The project evolves fast and inconsistently, possibly breaking backward compatibility. The APIs likely to be
 changed/removed are marked in docs as experimental. Consult with our migration guides on release pages.
 
-# Contributing
+## Contributing
 
 You are welcome to open issues and pull requests on our GitHub repository. This project is maintained by a team of
 volunteers on a reasonable-effort basis. As such, we can accept your issue, but we can't guarantee resolution. It's all
@@ -249,6 +249,6 @@ best to help you merge your changes to upstream.
 
 Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/master/CONTRIBUTING.md)
 
-# Star History
+## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=aui-framework/aui&type=Date)](https://star-history.com/#aui-framework/aui&Date)

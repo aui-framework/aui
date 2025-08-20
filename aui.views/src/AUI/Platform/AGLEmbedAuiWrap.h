@@ -14,6 +14,9 @@
 
 #include "AEmbedAuiWrap.h"
 
+/**
+ * @brief Embed AUI into OpenGL rendering context
+ */
 class API_AUI_VIEWS AGLEmbedAuiWrap: public AEmbedAuiWrap {
 public:
     AGLEmbedAuiWrap();

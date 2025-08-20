@@ -266,20 +266,32 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
+    HWND parentHwnd = nullptr;
+
+    bool isModal = !!(mWindowStyle & WindowStyle::MODAL);
+
+    if (isModal && mParentWindow) {
+        parentHwnd = mParentWindow->mHandle;
+    }
+
+    if (mHandle) {
+        ShowWindow(mHandle, SW_HIDE);
+        DestroyWindow(mHandle);
+        mHandle = nullptr;
+    }
 
     getWindowManager().mWindows.removeFirst(mSelfHolder);
     setLayout(nullptr);
 
-    // parent window should be activated BEFORE child is closed.
-    if (mHandle) {
-        if (mParentWindow) {
-            EnableWindow(mParentWindow->mHandle, true);
-            BringWindowToTop(mParentWindow->mHandle);
+    // Schedule object destruction
+    AThread::current()->enqueue([self = std::move(mSelfHolder), parentHwnd, isModal]() mutable noexcept {
+        self = nullptr;
+        if (parentHwnd && IsWindow(parentHwnd) && isModal) {
+            // Parent window should be activated BEFORE child is closed.
+            EnableWindow(parentHwnd, true);
+            SetActiveWindow(parentHwnd);
+            SetForegroundWindow(parentHwnd);
         }
-    }
-
-    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
-        s = nullptr;
     });
 }
 

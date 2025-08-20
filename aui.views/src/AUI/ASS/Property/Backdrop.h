@@ -51,17 +51,17 @@ namespace ass {
              * Performance benefit of downscale factor { .radius = 6_dp, .downscale = x } in comparison to
              * { .radius = 6_dp * x, .downscale = 1 } is x^2.
              *
-             * @code{cpp}
+             * ```cpp
              * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 6_dp, .downscale = 4 } },
              * }
-             * @endcode
+             * ```
              * is visually approximately same as
-             * @code{cpp}
+             * ```cpp
              * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 24_dp } },
              * }
-             * @endcode
+             * ```
              * but 16 times cheaper.
              */
             int downscale = 1;
