@@ -127,7 +127,7 @@ static char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) 
     return result;
 }
 
-AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) noexcept {
+AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) {
     switch (encoding) {
         case AStringEncoding::UTF8: {
             super::resize(bytes.size());
@@ -151,7 +151,7 @@ AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) noe
     }
 }
 
-AString::AString(AChar c) noexcept {
+AString::AString(AChar c) {
     push_back(c);
 }
 

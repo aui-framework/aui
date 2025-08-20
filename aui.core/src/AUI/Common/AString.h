@@ -60,6 +60,10 @@ public:
 
     using super::super;
 
+    AString(const AString& other) : super(other) {}
+
+    AString(AString&& other) noexcept : super(std::move(other)) {}
+
     AString(std::span<const std::byte> bytes, AStringEncoding encoding);
 
     AString(super&& other) : super(std::move(other)) {}
@@ -429,11 +433,11 @@ public:
         return super::empty();
     }
     [[nodiscard]] size_type size() const noexcept;
-    char16_t operator[](size_type index) const
+    char operator[](size_type index) const
     {
         return super::at(index);
     }
-    char16_t& operator[](size_type index)
+    char& operator[](size_type index)
     {
         return super::at(index);
     }
@@ -447,35 +451,35 @@ public:
         super::clear();
     }
 
-    char16_t& front() noexcept
+    char& front() noexcept
     {
         return super::front();
     }
-    char16_t& back() noexcept
+    char& back() noexcept
     {
         return super::back();
     }
-    const char16_t& front() const noexcept
+    const char& front() const noexcept
     {
         return super::front();
     }
-    const char16_t& back() const noexcept
+    const char& back() const noexcept
     {
         return super::back();
     }
-    char16_t& first() noexcept
+    char& first() noexcept
     {
         return super::front();
     }
-    char16_t& last() noexcept
+    char& last() noexcept
     {
         return super::back();
     }
-    const char16_t& first() const noexcept
+    const char& first() const noexcept
     {
         return super::front();
     }
-    const char16_t& last() const noexcept
+    const char& last() const noexcept
     {
         return super::back();
     }
@@ -541,13 +545,25 @@ public:
         return super::rend();
     }
 
+    AString& append(char c) noexcept
+    {
+        // TODO: implement
+        return *this;
+    }
+
+    AString& append(AChar c) noexcept
+    {
+        // TODO: implement
+        return *this;
+    }
+
     AString& append(const AString& s) noexcept
     {
         super::append(s);
         return *this;
     }
 
-    AString& append(size_t count, char16_t ch) noexcept
+    AString& append(size_t count, char ch) noexcept
     {
         super::append(count, ch);
         return *this;
@@ -636,7 +652,13 @@ inline AString operator+(const AString& l, const AString& r) noexcept
     x.append(r);
     return x;
 }
-inline AString operator+(const AString& l, char16_t r) noexcept
+inline AString operator+(const AString& l, char r) noexcept
+{
+    auto x = l;
+    x.append(r);
+    return x;
+}
+inline AString operator+(const AString& l, AChar r) noexcept
 {
     auto x = l;
     x.append(r);
@@ -674,7 +696,7 @@ struct std::hash<AString>
 {
     size_t operator()(const AString& t) const noexcept
     {
-        return std::hash<std::u16string>()(t);
+        return std::hash<std::string>()(t);
     }
 };
 
