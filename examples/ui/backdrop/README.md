@@ -10,5 +10,3 @@ principles.
 
 In this example, a combination of [ass::Backdrop] -enabled view and [AScrollArea] is used. To raise the
 [ass::Backdrop] above the [AScrollArea], [AStackedLayout] layout is used.
-
-<!-- aui:include examples/ui/backdrop/src/main.cpp -->
