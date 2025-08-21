@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: AUI Framework
-site_url: https://aui-framework.github.io/
+site_url: https://aui-framework.github.io/develop/
 site_author: Alex2772
 site_description: Cross-platform base for C++ UI apps
 use_directory_urls: true
