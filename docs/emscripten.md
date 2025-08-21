@@ -1,3 +1,7 @@
+---
+icon: material/web
+---
+
 # Emscripten (WebAssembly)
 
 @page emscripten Emscripten (WebAssembly)

@@ -1,3 +1,7 @@
+---
+icon: fontawesome/brands/linux
+---
+
 # Linux (-based desktop OSes)
 
 !!! note

@@ -141,7 +141,7 @@ nav:
     - windows.md
     - linux.md
     - macos.md
-    - ':fontawesome-brands-android: Android': android.md
+    - android.md
     - ios.md
     - emscripten.md
 

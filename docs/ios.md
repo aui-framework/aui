@@ -1,3 +1,7 @@
+---
+icon: simple/ios
+---
+
 # iOS (operating system)
 
 iOS is an operating system developed by Apple, designed for their mobile devices such as iPhone, iPad, and iPod touch.
