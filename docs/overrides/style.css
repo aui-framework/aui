@@ -256,3 +256,31 @@ th, td {
     bottom: 0;
     border-right: .05rem solid var(--md-default-fg-color--lightest);
 }
+
+.md-footer__inner {
+    display: flex;
+    gap: 16px;
+    padding: 0;
+}
+
+.md-footer__link {
+    max-width: 60%;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+    width: 100%;
+    padding: 16px;
+    line-height: 1.2;
+}
+
+.md-footer__link .md-footer__button {
+    padding: 0;
+    margin: 0;
+}
+
+.md-footer__direction {
+    color: var(--md-accent-bg-color--light);
+}
+
+.md-footer__title {
+    margin: 0;
+}
