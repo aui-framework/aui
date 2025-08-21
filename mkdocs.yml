@@ -100,14 +100,14 @@ theme:
     - scheme: slate
       primary: black
       toggle:
-        icon: material/toggle-switch
+        icon: octicons/moon-16
         name: Switch to light mode
 
     # Palette toggle for light mode
     - scheme: default
       primary: black
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: octicons/sun-16
         name: Switch to dark mode
 
 
@@ -141,7 +141,7 @@ nav:
     - windows.md
     - linux.md
     - macos.md
-    - android.md
+    - ':fontawesome-brands-android: Android': android.md
     - ios.md
     - emscripten.md
 

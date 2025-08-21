@@ -146,11 +146,14 @@
           {% endif %}
         {% endif %}
       {% endblock %}
-      <main class="md-main" data-md-component="main">
-        <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" {{ hidden }}>
-          <div class="md-sidebar__scrollwrap">
-            <div class="md-sidebar__inner">
-              {% include "partials/nav.html" %}
+      <main class="md-main" data-md-component="main" style="position: relative;">
+        <!-- .md-grid wrapper is needed for index.ts from material for mkdocs  -->
+        <div class="md-grid aui-sidebar">
+          <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" {{ hidden }}>
+            <div class="md-sidebar__scrollwrap">
+              <div class="md-sidebar__inner">
+                {% include "partials/nav.html" %}
+              </div>
             </div>
           </div>
         </div>
@@ -160,7 +163,7 @@
               {% if page.meta and page.meta.hide %}
                 {% set hidden = "hidden" if "navigation" in page.meta.hide %}
               {% endif %}
-              <div class="md-sidebar md-sidebar--primary">
+              <div class="md-sidebar md-sidebar--primary" style="z-index: -9999">
                 <!-- fake sidebar to maintain centering -->
               </div>
             {% endif %}
