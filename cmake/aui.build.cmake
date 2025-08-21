@@ -325,11 +325,19 @@ endmacro()
 
 macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
-        auib_import(benchmark https://github.com/google/benchmark
-                    VERSION v1.8.3
-                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
-                    LINK STATIC)
-        set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+            auib_import(benchmark https://github.com/google/benchmark
+                        VERSION v1.7.1
+                        CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                        LINK STATIC)
+            set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        else()
+            auib_import(benchmark https://github.com/google/benchmark
+                        VERSION v1.8.3
+                        CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                        LINK STATIC)
+            set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        endif()
     endif()
 endmacro()
 
