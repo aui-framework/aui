@@ -19,13 +19,81 @@
 
 /* make contents a little bit wider */
 .md-grid {
+    max-width: 45rem;
+}
+main .md-grid {
     max-width: 70rem;
 }
 
-/* i want the copyright notice and the social links on the same line. */
-@media screen and (min-width: 45em) {
-    .md-copyright {
-        width: 60em;
+/* shrink titlebar */
+[dir=ltr] .md-header__title {
+    margin-left: 0;
+}
+
+[dir=rtl] .md-header__title {
+    margin-right: 0;
+}
+
+/* disable the shitty transition in title bar*/
+.md-header__title--active .md-header__topic {
+    z-index: unset;
+    opacity: 1;
+    transform: none;
+}
+.md-header__title--active .md-header__topic+.md-header__topic {
+    display: none;
+}
+
+@media screen and (min-width: 60em) {
+    .md-search__form {
+        background-color: #00000042;
+        border-radius: .1rem;
+        height: 1.4rem;
+    }
+}
+
+.md-header__button.md-logo {
+    margin: 0 .2rem;
+    padding: 0 .4rem;
+}
+
+.md-header__title {
+    flex-grow: 1;
+    font-size: .9rem;
+    height: 2rem;
+    line-height: 2rem;
+}
+
+.md-header .md-icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+.md-search__icon {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.md-header__button {
+    margin: 0 .2rem;
+    padding: 0 .4rem;
+}
+[data-md-toggle=search]:checked~.md-header .md-header__option {
+    max-width: none;
+    opacity: 1;
+    transition: max-width 0ms, opacity 0ms;
+}
+.md-header__inner {
+    border-bottom: 1px solid var(--md-code-bg-color);
+}
+
+@media screen and (min-width: 60em) {
+    .md-search {
+        padding-right: 1rem;
+    }
+}
+@media screen and (max-width: 76.2344em) {
+    .md-header__button.md-logo {
+        display: block;
     }
 }
 
@@ -172,4 +240,47 @@ th, td {
     width: auto;
     max-width: 100%;
     max-height: 40vh;
+}
+
+/* i want the copyright notice and the social links on the same line. */
+@media screen and (min-width: 45em) {
+    .md-copyright {
+        width: 60em;
+    }
+}
+
+.aui-sidebar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    border-right: .05rem solid var(--md-default-fg-color--lightest);
+}
+
+.md-footer__inner {
+    display: flex;
+    gap: 16px;
+    padding: 0;
+}
+
+.md-footer__link {
+    max-width: 60%;
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+    width: 100%;
+    padding: 16px;
+    line-height: 1.2;
+}
+
+.md-footer__link .md-footer__button {
+    padding: 0;
+    margin: 0;
+}
+
+.md-footer__direction {
+    color: var(--md-accent-bg-color--light);
+}
+
+.md-footer__title {
+    margin: 0;
 }

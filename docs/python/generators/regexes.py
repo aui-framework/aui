@@ -35,7 +35,7 @@ assert LOCATION_FILE.match('    <location file="aui.core/src/AUI/Common/APropert
 AUI_EXAMPLE = re.compile('<!-- aui:example (.+) -->')
 assert AUI_EXAMPLE.match("<!-- aui:example app -->").group(1) == "app"
 
-PAGE_TITLE = re.compile('# (.+)')
+PAGE_TITLE = re.compile('^# (.+)')
 assert PAGE_TITLE.match('# AUI Framework').group(1) == "AUI Framework"
 
 HEADING_ANCHOR = re.compile('[#]{1,6} (.+) (\{ #(\S+) ?(\S*) \})')

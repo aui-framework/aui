@@ -1,3 +1,7 @@
+---
+icon: fontawesome/brands/windows
+---
+
 # Windows (operating system)
 
 Windows is a family of operating systems developed by Microsoft. It was first released in 1985 and has since become the

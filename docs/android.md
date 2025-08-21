@@ -1,3 +1,7 @@
+---
+icon: fontawesome/brands/android
+---
+
 # Android (operating system)
 
 Android is a mobile operating system primarily developed by Google. It's the most widely used operating system in the
