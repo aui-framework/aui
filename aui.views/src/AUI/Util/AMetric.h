@@ -28,6 +28,9 @@ class AString;
  * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
  * define lines of exact one or two pixels wide.
  *
+ * To handle high-density displays in AUI properly, business logic operates on `AMetric` (logical pixels) level only.
+ * `AMetric` values are translated to physical pixels on [layout-managers] and [AView] level.
+ *
  * ## Initialization
  * Recommended way is to use operator literal format:
  * ```cpp

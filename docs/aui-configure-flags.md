@@ -54,7 +54,7 @@ libssl.so.1.0.0: no version information available (required by openssl)
 ```
 
 ### AUI_NO_HIDPI
-Disables HIDPI.
+Disables HIDPI. ([windows] only)
 
 ### AUI_NO_TESTS
 Disables tests.

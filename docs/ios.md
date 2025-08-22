@@ -18,3 +18,4 @@ iOS shares its XNU kernel and codebase with [macos].
 
 - iOS is easier to support than [android] due to limited number of devices and OS versions
 - You'd need a [macos] machine to build and run an iOS app
+- smartphones come with high density displays, so you need to use density-independent dimension units such as [_dp]
