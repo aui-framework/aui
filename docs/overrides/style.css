@@ -264,7 +264,6 @@ th, td {
 }
 
 .md-footer__link {
-    max-width: 60%;
     border: 1px solid var(--md-default-fg-color--lightest);
     border-radius: 4px;
     width: 100%;
@@ -283,4 +282,14 @@ th, td {
 
 .md-footer__title {
     margin: 0;
+}
+
+@media screen and (max-width: 44.9844em) {
+    .md-footer__link--prev .md-footer__title {
+        display: block;
+    }
+
+    .md-footer__inner:not([hidden]) {
+        flex-direction: column;
+    }
 }
