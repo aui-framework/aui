@@ -16,10 +16,11 @@
 #include "AUI/Platform/AClipboard.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/AWindowManager.h"
+#include "AUI/Platform/android/OSAndroid.h"
 
 
 void AClipboard::copyToClipboard(const AString &text) {
-    // stub
+    com::github::aui::android::Platform::copyToClipboard(text);
 }
 
 bool AClipboard::isEmpty() {
