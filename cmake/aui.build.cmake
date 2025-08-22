@@ -226,10 +226,17 @@ endfunction(aui_add_properties)
 # gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
+        if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+            auib_import(GTest https://github.com/google/googletest
+                VERSION v1.17.0
+                CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
+                LINK STATIC) # Enforce /MT
+        else()
         auib_import(GTest https://github.com/google/googletest
-                    VERSION v1.14.0
+                    VERSION v1.17.0
                     CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
                     LINK STATIC)
+        endif()
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
