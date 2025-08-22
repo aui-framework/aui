@@ -313,11 +313,15 @@ th, td {
 }
 
 .md-footer__direction {
-    color: var(--md-accent-bg-color--light);
+    color: var(--md-code-fg-color);
 }
 
 .md-footer__title {
     margin: 0;
+}
+
+.md-typeset th {
+    border-bottom: 1px solid var(--md-accent-fg-color);
 }
 
 @media screen and (max-width: 44.9844em) {
