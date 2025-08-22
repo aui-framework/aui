@@ -41,10 +41,6 @@ if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
         )
     endif()
 
-    if (NOT(TARGET benchmark_main OR TARGET benchmark))
-    link_libraries(YY_Thunks)
-    endif()
-
     set(VC_LTL_VERSION v5.2.2)
     set(WindowsTargetPlatformMinVersion "5.1.2600.0")
     set(SupportLTL                      "ucrt")

@@ -35,4 +35,6 @@ if (TARGET GTest::gmock)
 endif()
 
 aui_enable_tests(aui.uitests)
+if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
 aui_enable_benchmarks(aui.uitests)
+endif()
