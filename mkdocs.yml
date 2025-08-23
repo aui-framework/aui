@@ -94,6 +94,7 @@ theme:
     - content.action.edit
     - content.code.copy
     - content.code.annotate # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
+    - content.tabs.link # sync same labels across all pages
 
   palette:
     # Palette toggle for dark mode (which is by default)
@@ -147,6 +148,7 @@ nav:
     - emscripten.md
 
   - 'Other':
+      - packaging.md
       - aui-command-line-arguments.md
       - runtime-dependency-resolution.md
       - forking-aui.md
