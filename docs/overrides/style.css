@@ -93,7 +93,7 @@ main .md-grid {
 }
 
 .md-header__button.md-logo {
-    margin: 0 .2rem;
+    margin: 0 .15rem;
     padding: 0 .4rem;
 }
 
@@ -114,7 +114,7 @@ main .md-grid {
 }
 
 .md-header__button {
-    margin: 0 .2rem;
+    margin: 0 .15rem;
     padding: 0 .4rem;
 }
 [data-md-toggle=search]:checked~.md-header .md-header__option {
