@@ -83,7 +83,6 @@ theme:
   features:
     - navigation.instant
     - navigation.tracking
-    - navigation.top
     - navigation.footer
     - navigation.prune
     - toc.follow
