@@ -949,15 +949,6 @@ function(auib_import AUI_MODULE_NAME URL)
                             ANDROID_NDK
                             CMAKE_ANDROID_NDK
                     )
-                #else()
-                # if(MSVC)
-                #     message(STATUS "[AUI.Boot] Trying to forward CMAKE_C_STANDARD_LIBRARIES_INIT CMAKE_CXX_STANDARD_LIBRARIES_INIT")
-
-                #     list(APPEND _forwardable_vars
-                #             CMAKE_C_STANDARD_LIBRARIES_INIT
-                #             CMAKE_CXX_STANDARD_LIBRARIES_INIT
-                #     )
-                # endif()
                 endif()
 
                 get_cmake_property(CACHE_VARS CACHE_VARIABLES)
