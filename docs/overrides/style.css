@@ -333,3 +333,31 @@ th, td {
         flex-direction: column;
     }
 }
+
+#aui-instant-preview-container {
+    position: relative;
+}
+
+.aui-instant-preview-content {
+    position: absolute;
+    top: 1.5rem;
+    left: -10vw;
+    right: 0;
+    width: 30vw;
+    max-height: 50vw;
+    overflow: scroll;
+    padding: 16px;
+    background: var(--md-admonition-bg-color);
+    box-shadow: 0 12px 64px #000;
+    z-index: 999;
+    font-size: .64rem;
+}
+
+.aui-instant-preview-content h2 {
+    margin: 0;
+}
+
+.js a[aui-instant-preview] {
+    border-bottom: 1px dotted #888c;
+}
+
