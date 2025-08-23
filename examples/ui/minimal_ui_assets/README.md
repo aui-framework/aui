@@ -27,7 +27,7 @@ graph TD
 cmake_minimum_required(VERSION 3.16)
 project(project_template_assets_ui)
 
-set(AUI_VERSION v7.0.1)
+set(AUI_VERSION v8.0.0-rc.8)
 
 # Use AUI.Boot
 file(

@@ -21,7 +21,8 @@ If you are using Linux, install following dependencies:
 
 #### Debian/Ubuntu
 ```bash
-sudo apt update && sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
+sudo apt update
+sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
 ```
 
 #### Fedora

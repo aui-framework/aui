@@ -38,6 +38,9 @@ extra:
 extra_css:
   - overrides/style.css
 
+extra_javascript:
+  - javascripts/extra.js
+
 markdown_extensions:
   - toc:
       permalink: '#'

@@ -10,12 +10,65 @@
     
 === ":material-microsoft-visual-studio-code: VS Code"
     
-    Install following extensions:
+    1. Install following extensions:
     
-    | Extension                                                                                                  | Description                                                           |
-    | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-    | [cpp tools pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack)    | Introduces basic C/C++ support and CMake integration.                 |
-    | [vscode-clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) | C++ language server for extensive code navigation, autocomplete, etc. |
+       | Extension                                                                                                  | Description                                                           |
+       | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+       | [cpp tools pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack)    | Introduces basic C/C++ support and CMake integration.                 |
+       | [vscode-clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) | C++ language server for extensive code navigation, autocomplete, etc. |
+    
+    2. Add these lines to your `settings.json` (++f1++ `> Preferences: Open User Settings (JSON)`):
+       
+       ```json title="settings.json"
+       "clangd.arguments": [
+           "--compile-commands-dir=build/"
+       ],
+       ```
+
+---
+
+## OS prerequirements
+
+=== ":fontawesome-brands-windows: Windows"
+    
+    Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot.
+    Also, if you use :simple-clion: CLion:
+
+    1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
+    2. Press `+`.
+    3. Choose Visual Studio. CLion should pick up it automatically.
+    
+    ![](imgs/Screenshot_20250823_201044.png)
+    
+    1. Select Visual Studio.
+    2. Press "arrow up" button to raise priority. **Visual Studio compiler should be by default!**
+    3. Press OK.
+    
+    ![](imgs/Screenshot_20250823_201915.png)
+
+=== "macOS"
+
+    Install Xcode.
+
+
+=== ":fontawesome-brands-ubuntu: Ubuntu"
+
+    Install following dependencies:
+
+    ```bash
+    sudo apt update
+    sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
+    ```
+
+=== ":fontawesome-brands-fedora: Fedora"
+    
+    Install following dependencies:
+
+    ```bash
+    sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel git cmake g++
+    ```
+
+---
 
 ## Installation
 
@@ -60,7 +113,7 @@ to free you from dependency management and focus you right to development of you
         auib_import(
             aui https://github.com/aui-framework/aui 
             COMPONENTS core views
-            VERSION v7.1.2
+            VERSION v8.0.0-rc.8
             )
         
         
@@ -109,7 +162,9 @@ to free you from dependency management and focus you right to development of you
     <!-- aui:include examples/ui/button/src/main.cpp title="src/main.cpp" -->
 
 
-!!! note "In case CMake or IDE don't recognize a new CPP file"
+!!! note "Why CMake or IDE doesn't recognize a new CPP file?"
+
+    This indicates that the IDE's build system needs to be initialized or refreshed.
     
     [Reload](troubleshoot-list.md#BUILD_CACHE_INVALIDATION) CMake project to hook up a newly added CPP file:
 
@@ -119,13 +174,16 @@ to free you from dependency management and focus you right to development of you
 
     === ":material-microsoft-visual-studio-code: VS Code"
         
-        ++f1++ `>CMake: Configure`. If it asks for a toolchain, choose `Unspecified`.
+        1. Please make sure you have followed setup procedure listed in the beginning on this page.
+        2. ++f1++ `>CMake: Configure`. If it asks for a toolchain, choose `Unspecified`.
 
     === ":octicons-terminal-16: Terminal"
 
         ```bash
         cmake -S . -B build
         ```
+
+---
 
 ## Build and Run Your App
 

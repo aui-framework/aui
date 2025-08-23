@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.16)
 project(AUI)
 
 if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported")
+    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
 endif()
 
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
