@@ -51,7 +51,7 @@ static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
     static ALogger l;
 #else
-    static ALogger l(std::move(path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
+    static ALogger l(std::move(path.valueOr("aui.{}.log"_format(AProcess::self()->getPid())))); //APath::getDefaultPath(APath::TEMP).makeDirs() /
 #endif
     return l;
 }

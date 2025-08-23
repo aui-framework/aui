@@ -85,6 +85,45 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
+        // --- Extra diagnostics ---
+        auto vendor   = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        auto renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        auto version  = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+        auto glsl     = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+        ALogger::info(LOG_TAG) << "VENDOR: " << vendor;
+        ALogger::info(LOG_TAG) << "RENDERER: " << renderer;
+        ALogger::info(LOG_TAG) << "GL_VERSION: " << version;
+        ALogger::info(LOG_TAG) << "GLSL_VERSION: " << glsl;
+
+        bool badGPU =
+            (strstr(vendor, "Microsoft") && strstr(renderer, "GDI Generic")) ||
+            (strstr(vendor, "VMware")    && atof(version) < 3.0);
+
+        if (badGPU) {
+            throw AException("Unsupported OpenGL driver: " + std::string(vendor) + " / " + std::string(renderer));
+        }
+
+        GLint maxAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+        ALogger::info(LOG_TAG) << "GL_MAX_VERTEX_ATTRIBS: " << maxAttribs;
+
+        GLint maxTexSize = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        ALogger::info(LOG_TAG) << "GL_MAX_TEXTURE_SIZE: " << maxTexSize;
+
+        GLint maxSamples = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        ALogger::info(LOG_TAG) << "GL_MAX_SAMPLES: " << maxSamples;
+
+        // Check what extensions are actually exposed
+        const GLubyte* exts = glGetString(GL_EXTENSIONS);
+        if (exts)
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
+        else
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
+
+
         if (!glewExperimental) {
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
