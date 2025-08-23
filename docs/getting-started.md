@@ -108,24 +108,25 @@ to free you from dependency management and focus you right to development of you
     
     <!-- aui:include examples/ui/button/src/main.cpp title="src/main.cpp" -->
 
-    !!! note "In case CMake or IDE don't recognize a new CPP file"
-        
-        [Reload](troubleshoot-list.md#BUILD_CACHE_INVALIDATION) CMake project to hook up a newly added CPP file:
-   
-        === ":simple-clion: CLion"
-            
-            `File` > `Reload CMake Project` or right-click on `CMakeLists.txt` > `Load/Reload CMake project`.
 
-        === ":material-microsoft-visual-studio-code: VS Code"
-            
-            ++f1++ `>CMake: Configure`. If it asks for a toolchain, choose `Unspecified`.
-
-        === ":octicons-terminal-16: Terminal"
-
-            ```bash
-            cmake -S . -B build
-            ```
+!!! note "In case CMake or IDE don't recognize a new CPP file"
     
+    [Reload](troubleshoot-list.md#BUILD_CACHE_INVALIDATION) CMake project to hook up a newly added CPP file:
+
+    === ":simple-clion: CLion"
+        
+        `File` > `Reload CMake Project` or right-click on `CMakeLists.txt` > `Load/Reload CMake project`.
+
+    === ":material-microsoft-visual-studio-code: VS Code"
+        
+        ++f1++ `>CMake: Configure`. If it asks for a toolchain, choose `Unspecified`.
+
+    === ":octicons-terminal-16: Terminal"
+
+        ```bash
+        cmake -S . -B build
+        ```
+
 ## Build and Run Your App
 
 === ":simple-clion: CLion"
