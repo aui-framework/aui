@@ -10,7 +10,7 @@ and tablets is Windows 11, while certain older versions are still supported and 
 
 ## Windows XP support
 
-- Compatibility with modern C++ (C++20 standard or newer) is provided by [YY_Thunks](https://github.com/Chuyu-Team/YY-Thunks) project (span, concepts).
+- Compatibility with modern C++ (MSVC v143+ C++20 standard or newer) is provided by [YY_Thunks](https://github.com/Chuyu-Team/YY-Thunks) project (span, concepts).
 - [AUI.Boot](https://github.com/aui-framework/aui/blob/develop/aui.boot.cmake) relies over v141_xp toolset and cl.exe compiler with **UCRT** runtime that are specified by winxp-x86.cmake cmake toolchain file.
 - [google/benchmark](https://github.com/google/benchmark) is removed, as v141_xp toolset was unable to build that dependency, because `#include <versionhelpers.h>` is missing.
 - Windows XP support lower bound is SP2, as SP1 is not supported.
