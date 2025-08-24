@@ -26,16 +26,6 @@ endif()
 
 add_subdirectory(3rdparty)
 
-if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-    include(../WinXPuseLTL5.cmake)
-    aui_link(aui.image PRIVATE aui::core lunasvg::lunasvg WebP::webp WebP::webpdemux YY_Thunks)
-    if(BUILD_SHARED_LIBS)
-        set_target_properties(aui.image PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:DllMainCRTStartupForYY_Thunks")
-    else()
-        set_target_properties(aui.image PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
-    endif()
-else()
-    aui_link(aui.image PRIVATE aui::core lunasvg::lunasvg WebP::webp WebP::webpdemux)
-endif()
+aui_link(aui.image PRIVATE aui::core lunasvg::lunasvg WebP::webp WebP::webpdemux)
 
 aui_enable_tests(aui.image)

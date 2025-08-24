@@ -16,13 +16,7 @@ aui_executable(aui.example.views)
 aui_compile_assets(aui.example.views)
 
 # [aui_link]
-if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-    include(../../../WinXPuseLTL5.cmake)
-    aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl YY_Thunks)
-    set_target_properties(aui.example.views PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01 /ENTRY:WinMainCRTStartup")
-else()
-    aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl)
-endif()
+aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio aui::curl)
 # [aui_link]
 
 # [aui_app]

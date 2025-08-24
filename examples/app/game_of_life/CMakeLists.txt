@@ -17,11 +17,5 @@ endif ()
 #             COMPONENTS core views json)
 
 aui_executable(aui.example.game_of_life)
-if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-    include(../../../WinXPuseLTL5.cmake)
-    aui_link(aui.example.game_of_life PRIVATE aui::views YY_Thunks)
-    set_target_properties(aui.example.game_of_life PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01 /ENTRY:WinMainCRTStartup")
-else()
-    aui_link(aui.example.game_of_life PRIVATE aui::views)
-endif()
+aui_link(aui.example.game_of_life PRIVATE aui::views)
 

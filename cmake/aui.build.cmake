@@ -232,10 +232,10 @@ macro(_aui_import_gtest)
                 CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
                 LINK STATIC) # Enforce /MT
         else()
-        auib_import(GTest https://github.com/google/googletest
-                    VERSION v1.17.0
-                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
-                    LINK STATIC)
+            auib_import(GTest https://github.com/google/googletest
+                        VERSION v1.17.0
+                        CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
+                        LINK STATIC)
         endif()
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
@@ -709,6 +709,17 @@ function(aui_executable AUI_MODULE_NAME)
         else()
             add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
         endif()
+
+        if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+            include(../WinXPuseLTL5.cmake)
+            include(../WinXPuseYYThunks.cmake)
+            target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+            if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01 /ENTRY:WinMainCRTStartup")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.02 /ENTRY:WinMainCRTStartup")
+            endif()
+        endif()
     endif()
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
@@ -1123,6 +1134,32 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     get_target_property(_type ${AUI_MODULE_NAME} TYPE)
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(../WinXPuseLTL5.cmake)
+        include(../WinXPuseYYThunks.cmake)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            endif()
+        else()
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            endif()
+        endif()
+    endif()
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")

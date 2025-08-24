@@ -21,39 +21,6 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STR
 
 include(FetchContent)
 
-if(NOT(TARGET YY_Thunks))
-    if(NOT DEFINED yy_thunks_SOURCE_DIR)
-        set(YY_Thunks_VERSION v1.1.7)
-        FetchContent_Declare(yy_thunks
-            URL https://github.com/Chuyu-Team/YY-Thunks/releases/download/${YY_Thunks_VERSION}/YY-Thunks-Objs.zip
-            DOWNLOAD_EXTRACT_TIMESTAMP true
-        )
-        FetchContent_MakeAvailable(yy_thunks)
-    endif()
-
-    add_library(YY_Thunks INTERFACE)
-
-    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
-        target_link_libraries(YY_Thunks INTERFACE
-            "${yy_thunks_SOURCE_DIR}/objs/x64/YY_Thunks_for_WinXP.obj")
-    else()
-        target_link_libraries(YY_Thunks INTERFACE
-            "${yy_thunks_SOURCE_DIR}/objs/x86/YY_Thunks_for_WinXP.obj")
-    endif()
-
-    install(TARGETS YY_Thunks
-        EXPORT YY_ThunksTarget
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-    )
-
-    install(EXPORT YY_ThunksTarget
-        FILE YY_ThunksTarget.cmake
-        NAMESPACE YY_Thunks::
-        DESTINATION lib/cmake/YY_Thunks
-    )
-endif()
 
 set(VC_LTL_VERSION v5.2.2)
 set(WindowsTargetPlatformMinVersion "5.1.2600.0")
@@ -66,12 +33,6 @@ FetchContent_Declare(vc_ltl
 )
 FetchContent_MakeAvailable(vc_ltl)
 include("${vc_ltl_SOURCE_DIR}/VC-LTL helper for cmake.cmake")
-
-if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:\"mainCRTStartup\"" CACHE STRING "" FORCE)
-else()
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02 /ENTRY:\"mainCRTStartup\"" CACHE STRING "" FORCE)
-endif()
 
 message(STATUS "Windows XP MSVC Toolchain configured")
 message(STATUS "  Platform Toolset: ${CMAKE_GENERATOR_TOOLSET}")

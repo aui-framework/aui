@@ -25,6 +25,9 @@
 #include <AUI/GL/State.h>
 #include "AUI/Util/kAUI.h"
 
+#include <tuple>
+#include <string_view>
+
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
@@ -85,23 +88,27 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
-        // --- Extra diagnostics ---
-        auto vendor   = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
-        auto renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
-        auto version  = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-        auto glsl     = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+        using namespace std::string_view_literals;
+
+        auto vendor   = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+        auto renderer = std::string_view(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+        auto version  = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+        auto glsl     = std::string_view(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
 
         ALogger::info(LOG_TAG) << "VENDOR: " << vendor;
         ALogger::info(LOG_TAG) << "RENDERER: " << renderer;
         ALogger::info(LOG_TAG) << "GL_VERSION: " << version;
         ALogger::info(LOG_TAG) << "GLSL_VERSION: " << glsl;
 
-        bool badGPU =
-            (strstr(vendor, "Microsoft") && strstr(renderer, "GDI Generic")) ||
-            (strstr(vendor, "VMware")    && atof(version) < 3.0);
+        static constexpr auto BLACK_LIST = std::array {
+            std::make_tuple("VMware"sv, "Gallium"sv),
+            std::make_tuple("Microsoft"sv, "GDI Generic"sv),
+        };
 
-        if (badGPU) {
-            throw AException("Unsupported OpenGL driver: " + std::string(vendor) + " / " + std::string(renderer));
+        for (const auto&[blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
+            if (vendor.find(blacklistedVendor) != std::string_view::npos && renderer.find(blacklistedRenderer) != std::string_view::npos) {
+                throw AException("Blacklisted OpenGL driver: {} / {}"_format(vendor, renderer));
+            }
         }
 
         GLint maxAttribs = 0;

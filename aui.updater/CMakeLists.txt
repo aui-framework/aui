@@ -1,17 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 aui_module(aui.updater EXPORT aui)
-if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-    include(../WinXPuseLTL5.cmake)
-    aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json YY_Thunks)
-    if(BUILD_SHARED_LIBS)
-		set_target_properties(aui.updater PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:DllMainCRTStartupForYY_Thunks")
-	else()
-		set_target_properties(aui.updater PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
-	endif()
-else()
-    aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json)
-endif()
+aui_link(aui.updater PRIVATE aui::core aui::crypt aui::curl aui::json)
 
 aui_get_package_name_and_arch(_default_qualifier)
 target_compile_definitions(aui.updater PRIVATE AUI_DEFAULT_PACKAGE_QUALIFIER="${_default_qualifier}-portable")
