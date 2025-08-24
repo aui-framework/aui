@@ -37,7 +37,6 @@ AFontManager::AFontManager()
 }
 
 
-
 AString AFontManager::getPathToFont(const AString& font) {
 
     try {
