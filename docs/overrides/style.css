@@ -333,3 +333,70 @@ th, td {
         flex-direction: column;
     }
 }
+
+@keyframes popup-pre-delay {
+    from {
+        display: none;
+    }
+    to {
+        display: none;
+    }
+}
+@keyframes popup-appear {
+    from {
+        display: block;
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+}
+@keyframes popup-disappear {
+    to {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#aui-instant-preview-popup {
+    position: absolute;
+    right: 8px;
+    z-index: 999;
+    max-width: 600px;
+    padding: 8px;
+    animation: popup-pre-delay 0.4s;
+}
+
+#aui-instant-preview-popup.appear {
+    animation: popup-appear 0.2s ease-out;
+}
+#aui-instant-preview-popup.hide {
+    animation: popup-disappear 0.2s ease-out;
+}
+
+.aui-instant-preview-inner {
+    font-size: .64rem;
+    overflow: scroll;
+    background: var(--md-admonition-bg-color);
+    box-shadow: 0 12px 32px #000a;
+    border-radius: 4px;
+    padding: 16px;
+    max-height: 30vw;
+    border: 1px solid var(--md-accent-fg-color--transparent);
+}
+
+#aui-instant-preview-popup h1 {
+    margin: 0;
+}
+
+.js a[aui-instant-preview] {
+    border-bottom: 1px dotted #888c;
+}
+
