@@ -22,18 +22,17 @@
 AFontManager::AFontManager()
     : mFreeType(_new<FreeType>())
 {
-    AString segoePath = getPathToFont("segoeui");
-    if (!APath(segoePath.toStdString()).isRegularFileExists())
-    {
-        AString tahomaPath = getPathToFont("tahoma");
-        if (APath(tahomaPath.toStdString()).isRegularFileExists()) {
-            segoePath = tahomaPath;
+    auto fontPath = [] {
+        for (auto name : {"segoeui", "tahoma"}) {
+            APath path = getPathToFont(name);
+            if (path.isRegularFileExists()) {
+                return path;
+            }
         }
-        else {
-            throw AException("No segoeui or tahoma .ttf font is installed into Windows/Fonts folder.");
-        }
-    }
-    mDefaultFont = loadFont(AUrl::file(segoePath));
+        throw AException("No segoeui or tahoma .ttf font is installed into Windows/Fonts folder.");
+    }();
+
+    mDefaultFont = loadFont(AUrl::file(fontPath));
 }
 
 
