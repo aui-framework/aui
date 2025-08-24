@@ -22,7 +22,7 @@
 AFontManager::AFontManager()
     : mFreeType(_new<FreeType>())
 {
-    auto fontPath = [] {
+    auto fontPath = [this] {
         for (auto name : {"segoeui", "tahoma"}) {
             APath path = getPathToFont(name);
             if (path.isRegularFileExists()) {
