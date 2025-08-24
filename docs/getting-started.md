@@ -31,6 +31,10 @@
 
 === ":fontawesome-brands-windows: Windows"
     
+    Install Windows updates.
+
+    ![](imgs/Screenshot_20250824_154056.png)
+    
     Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot.
     Also, if you use :simple-clion: CLion:
 
@@ -190,6 +194,7 @@ to free you from dependency management and focus you right to development of you
 === ":simple-clion: CLion"
   
     `Run` -> `Run "project name"` or green arrow in top right corner.
+    
     ![](imgs/Screenshot_2025-08-23_05.57.36.png)
 
 === ":material-microsoft-visual-studio-code: VS Code"
