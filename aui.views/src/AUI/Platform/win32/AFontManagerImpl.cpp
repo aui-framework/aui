@@ -19,11 +19,23 @@
 #include "AUI/Font/FreeType.h"
 #include <AUI/IO/APath.h>
 
-AFontManager::AFontManager() :
-        mFreeType(_new<FreeType>()),
-        mDefaultFont(loadFont(AUrl::file(getPathToFont("segoeui"))))
+AFontManager::AFontManager()
+    : mFreeType(_new<FreeType>())
 {
+    AString segoePath = getPathToFont("segoeui");
+    if (!APath(segoePath.toStdString()).isRegularFileExists())
+    {
+        AString tahomaPath = getPathToFont("tahoma");
+        if (APath(tahomaPath.toStdString()).isRegularFileExists()) {
+            segoePath = tahomaPath;
+        }
+        else {
+            throw AException("No segoeui or tahoma .tff font is installed into Windows/Fonts folder.");
+        }
+    }
+    mDefaultFont = loadFont(AUrl::file(segoePath));
 }
+
 
 
 AString AFontManager::getPathToFont(const AString& font) {
