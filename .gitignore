@@ -346,4 +346,10 @@ healthchecksdb
 
 .run/
 
-winxp5/
+# Build artifacts Windows OS
+*.exe
+*.dll
+*.lib
+
+# Notes app settings
+*.json
