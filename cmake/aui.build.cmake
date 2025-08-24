@@ -716,17 +716,6 @@ function(aui_executable AUI_MODULE_NAME)
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
 
-    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-        include(WinXPuseLTL5)
-        include(WinXPuseYYThunks)
-        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
-        if (CMAKE_SIZEOF_VOID_P EQUAL 4)
-            set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01 /ENTRY:WinMainCRTStartup")
-        else()
-            set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.02 /ENTRY:WinMainCRTStartup")
-        endif()
-    endif()
-
     aui_add_properties(${AUI_MODULE_NAME})
 
     if (SRCS_TESTS_TMP)
@@ -735,6 +724,17 @@ function(aui_executable AUI_MODULE_NAME)
     endif()
 
     aui_common(${AUI_MODULE_NAME})
+
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(WinXPuseLTL5)
+        include(WinXPuseYYThunks)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01")
+        else()
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.02")
+        endif()
+    endif()
 
     if (AUIE_EXPORT)
         install(
