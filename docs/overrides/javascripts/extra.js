@@ -19,28 +19,61 @@ req.addEventListener("load", async () => {
         const search_index = JSON.parse(await req.response.text());
         console.log(search_index);
         document.querySelectorAll(".md-content p a, .md-content table a, .md-content code a").forEach(element => {
-            const href = element.getAttribute("href");
+            let href = element.getAttribute("href");
             if (!href) {
                 return;
             }
-            let target = null;
+            if (!href.startsWith("../")) {
+                return;
+            }
+            href = href.substring(3);
+            let target = [];
             for (const i of search_index["docs"]) {
                 if (i.location.length === 0) {
                     continue;
                 }
-                if (href.endsWith("/" + i.location)) {
-                    target = i;
-                    element.setAttribute("aui-instant-preview", "");
-                    break;
+                if (i.location.startsWith(href)) {
+                    target.push(i);
                 }
             }
+            if (target.length === 0) {
+                return;
+            }
+            element.setAttribute("aui-instant-preview", "");
             element.addEventListener("mouseenter", () => {
-                element.insertAdjacentHTML("beforebegin", `<span id="aui-instant-preview-container"><div class="aui-instant-preview-content"><h2>${target.title}</h2>${target.text}</div></span>`);
-            });
+                let prev = document.querySelector("#aui-instant-preview-popup");
+                if (prev != null) {
+                    prev.remove();
+                }
+                let popup = document.createElement("div")
+                popup.id = "aui-instant-preview-popup";
+                let contents = `<a href="${element.getAttribute('href')}" style="opacity:0;font-size: .8rem;">${element.innerHTML}</a><div class="aui-instant-preview-inner">`;
+                for (const i of target) {
+                    if (target.length === 0) {
+                        contents += `<h1>${i.title}</h1>${i.text}`;
+                    } else {
+                        contents += `<h2>${i.title}</h2>${i.text}`;
+                    }
+                }
+                contents += `</div>`;
+                popup.innerHTML = contents;
+                let position = element.getBoundingClientRect();
+                const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                popup.style.left = `${scrollX + position.left - 8}px`;
+                popup.style.top = `${scrollY + position.top}px`;
+                document.body.appendChild(popup);
 
-            element.addEventListener("mouseleave", () => {
-                // Handle mouseleave
-                // document.querySelector("#aui-instant-preview-container").remove();
+                popup.addEventListener("mouseleave", () => {
+                    popup.addEventListener('animationend', () => popup.remove(), {once: true});
+                });
+                popup.addEventListener("animationend", () => {
+                    popup.classList.add("appear")
+                    popup.addEventListener("mouseleave", () => {
+                        popup.classList.remove("appear")
+                        popup.classList.add("hide");
+                    });
+                });
             });
         });
 

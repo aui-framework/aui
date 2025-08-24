@@ -139,9 +139,6 @@ def gen_pages():
 
             has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
-            if has_detailed_description:
-                print('[More...](#detailed-description)', file=fos)
-
             print('<table>', file=fos)
             for type_entry in [('Header:', f'<code>#include &lt;{parse_entry.location.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
                 print(f'<tr><td>{type_entry[0]}</td><td>{type_entry[1]}</td></tr>', file=fos)
