@@ -12,7 +12,7 @@ and tablets is Windows 11, while certain older versions are still supported and 
 
 - If **[ucrtbase.dll](https://github.com/Chuyu-Team/VC-LTL5/releases/download/v5.2.2/VC-LTL.Redist.Dlls.zip)** is missing, download and place it next to folder where it is missing. 
 - Compatibility with modern C++ (MSVC v143+ C++20 standard or newer) is provided by **[YY_Thunks](https://github.com/Chuyu-Team/YY-Thunks)** project (span, concepts).
-- [AUI.Boot](https://github.com/aui-framework/aui/blob/develop/aui.boot.cmake) relies over v141_xp toolset and cl.exe compiler with **UCRT** runtime that are specified by winxp-x86.cmake cmake toolchain file.
+- [AUI.Boot](https://github.com/aui-framework/aui/blob/develop/aui.boot.cmake) relies over v141_xp toolset and cl.exe compiler with **UCRT** runtime by **[VC-LTL5](https://github.com/Chuyu-Team/VC-LTL5)**, that are specified by winxp-x86.cmake cmake toolchain file.
 - [google/benchmark](https://github.com/google/benchmark) is removed, as v141_xp toolset was unable to build that dependency, because `#include <versionhelpers.h>` is missing.
 - Windows XP support lower bound is SP2, as SP1 is not supported.
 - In order to bring your own dependencies you would need to use /MT /MTd MSVC runtime and acquire **UCRT** runtime by **[VC-LTL5](https://github.com/Chuyu-Team/VC-LTL5)**.
