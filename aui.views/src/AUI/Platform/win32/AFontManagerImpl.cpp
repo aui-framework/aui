@@ -30,7 +30,7 @@ AFontManager::AFontManager()
             segoePath = tahomaPath;
         }
         else {
-            throw AException("No segoeui or tahoma .tff font is installed into Windows/Fonts folder.");
+            throw AException("No segoeui or tahoma .ttf font is installed into Windows/Fonts folder.");
         }
     }
     mDefaultFont = loadFont(AUrl::file(segoePath));
