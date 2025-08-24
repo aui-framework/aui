@@ -354,13 +354,5 @@ healthchecksdb
 # Application settings
 *.json
 
-# Build artifacts Windows OS
-*.exe
-*.dll
-*.lib
-
-# Notes app settings
-*.json
-
 # mkdocs output
 site/

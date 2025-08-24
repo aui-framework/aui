@@ -24,7 +24,7 @@
  * The macro should be called in any function/method which is not being optimized out (i.e. in destructor).
  *
  * Basic usage:
- * @code{cpp}
+ * ```cpp
  * struct SomeClass {
  * public:
  *   ~SomeClass() {
@@ -35,7 +35,7 @@
  *     ...
  *   }
  * }
- * @endcode
+ * ```
  */
 #define AUI_NO_OPTIMIZE_OUT(object) { auto unused = &object ; }
 
@@ -45,7 +45,7 @@
  * @details
  * Silences the unused variable compiler warning.
  *
- * Can be used to force [=] lambda to capture a variable.
+ * Can be used to force `[=]` lambda to capture a variable.
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
 

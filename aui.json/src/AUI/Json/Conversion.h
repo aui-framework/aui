@@ -143,7 +143,8 @@ struct AJsonConvFieldDescriptor;
 
 /**
  * @brief Json fields definition.
- * @code{.cpp}
+ * @details
+ * ```cpp
  * struct SomeModel {
  *     type1 field1;
  *     type2 field2;
@@ -155,22 +156,21 @@ struct AJsonConvFieldDescriptor;
  *     (field2, "name2")
  *     ...
  * )
- * @endcode
+ * ```
  *
  * Also, flags can be set:
  *
- * @code{.cpp}
+ * ```cpp
  * AJSON_FIELDS(SomeModel,
  *     (field1, "name1")
  *     (field2, "name2", AJsonFieldFlags::OPTIONAL)
  *     ...
  * )
- * @endcode
+ * ```
  *
- * @see AJsonFieldFlags
+ * See also AJsonFieldFlags.
  *
- * @example
- * @code{.cpp}
+ * ```cpp
  * struct SomeModel {
  *     int value1;
  *     AString value2;
@@ -187,7 +187,7 @@ struct AJsonConvFieldDescriptor;
  *     AJSON_FIELDS_ENTRY(value1)
  *     AJSON_FIELDS_ENTRY(value2)
  * )
- * @endcode
+ * ```
  */
 #define AJSON_FIELDS(N, ...) \
 template<> struct AJsonConvFieldDescriptor<N>: N { \
@@ -205,9 +205,10 @@ template<> struct AJsonConvFieldDescriptor<N>: N { \
 #define AJSON_FIELDS_ENTRY(name) (name, AUI_PP_STRINGIZE(name))
 
 /**
- * Simplified conversion for class fields.
- * @note Use <a href="AJSON_FIELDS">AJSON_FIELDS</a> macro.
+ * @brief Simplified conversion for class fields.
  * @tparam T class type.
+ * @details
+ * Use <a href="AJSON_FIELDS">AJSON_FIELDS</a> macro.
  */
 template<typename T>
 struct AJsonConv<T, std::enable_if_t<aui::is_complete<AJsonConvFieldDescriptor<T>>>> {

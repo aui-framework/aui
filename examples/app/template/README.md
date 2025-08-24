@@ -1,12 +1,12 @@
-# App Template ⚡ {#example_app_template}
+# App Template ⚡
 
-@auiexample{app}
-GitHub-hosted app project with CI/CD building, @ref "docs/Writing tests.md" "testing", releasing,
-@ref updater "auto updating", code quality checking and more.
+<!-- aui:example app -->
+GitHub-hosted app project with CI/CD building, [testing](writing-tests.md), releasing,
+[auto updating](updater.md), code quality checking and more.
 
-@image html afljskfllkaf.gif
+![](imgs/afljskfllkaf.gif)
 
-# Source Files
+## Source Code
 
 This example is located outside AUI's source tree. Checkout its
 [repository](https://github.com/aui-framework/example_app).

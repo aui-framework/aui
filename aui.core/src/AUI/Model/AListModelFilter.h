@@ -81,8 +81,9 @@ public:
 
     /**
      * @brief Performs filtering for currently unfiltered elements.
-     * @note If you guarantee, that filter's previous results is a subset of filter's new results, you should use this
-     *       function instead of <a href="#invalidate">invalidate</a> because it's faster.
+     * @details
+     * If you guarantee, that filter's previous results is a subset of filter's new results, you should use this
+     * function instead of [invalidate] because it's faster.
      */
     void lazyInvalidate() {
         auto ranges = this->rangesIncluding([&](size_t i) {

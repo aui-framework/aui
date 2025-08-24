@@ -1,0 +1,402 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+[data-md-color-scheme="slate"] {
+    /* footer bg is used in the notice - i don't like how the default grayish color combines with other grayish color of
+    the header. */
+    --md-footer-bg-color: #000;
+    --md-footer-bg-color--dark: #000;
+    --md-hue: 225deg;
+    --md-default-fg-color: hsla(var(--md-hue), 15%, 90%, 0.82);
+    --md-default-fg-color--light: hsla(var(--md-hue), 15%, 90%, 0.56);
+    --md-default-fg-color--lighter: hsla(var(--md-hue), 15%, 90%, 0.32);
+    --md-default-fg-color--lightest: hsla(var(--md-hue), 15%, 90%, 0.12);
+    --md-default-bg-color: hsla(var(--md-hue), 10%, 12%, 1);
+    --md-default-bg-color--light: hsla(var(--md-hue), 15%, 14%, 0.54);
+    --md-default-bg-color--lighter: hsla(var(--md-hue), 15%, 14%, 0.26);
+    --md-default-bg-color--lightest: hsla(var(--md-hue), 15%, 14%, 0.07);
+    --md-code-fg-color: hsla(var(--md-hue), 18%, 86%, 0.82);
+    --md-code-bg-color: hsla(var(--md-hue), 15%, 18%, 1);
+    --md-code-hl-color: #2977ff;
+    --md-code-hl-color--light: #2977ff1a;
+    --md-code-hl-number-color: #e6695b;
+    --md-code-hl-special-color: #f06090;
+    --md-code-hl-function-color: #c973d9;
+    --md-code-hl-constant-color: #9383e2;
+    --md-code-hl-keyword-color: #6791e0;
+    --md-code-hl-string-color: #2fb170;
+    --md-code-hl-name-color: var(--md-code-fg-color);
+    --md-code-hl-operator-color: var(--md-default-fg-color--light);
+    --md-code-hl-punctuation-color: var(--md-default-fg-color--light);
+    --md-code-hl-comment-color: var(--md-default-fg-color--light);
+    --md-code-hl-generic-color: var(--md-default-fg-color--light);
+    --md-code-hl-variable-color: var(--md-default-fg-color--light);
+    --md-typeset-color: var(--md-default-fg-color);
+    --md-typeset-kbd-color: hsla(var(--md-hue), 15%, 90%, 0.12);
+    --md-typeset-kbd-accent-color: hsla(var(--md-hue), 15%, 90%, 0.2);
+    --md-typeset-kbd-border-color: hsla(var(--md-hue), 15%, 14%, 1);
+    --md-typeset-mark-color: #4287ff4d;
+    --md-typeset-table-color: hsla(var(--md-hue), 15%, 95%, 0.12);
+    --md-typeset-table-color--light: hsla(var(--md-hue), 15%, 95%, 0.035);
+    --md-admonition-fg-color: var(--md-default-fg-color);
+    --md-admonition-bg-color: var(--md-default-bg-color);
+    --md-shadow-z1: 0 0.2rem 0.5rem #0000000d, 0 0 0.05rem #0000001a;
+    --md-shadow-z2: 0 0.2rem 0.5rem #00000040, 0 0 0.05rem #00000040;
+    --md-shadow-z3: 0 0.2rem 0.5rem #0006, 0 0 0.05rem #00000059;
+    color-scheme: dark;
+    --md-typeset-a-color: #007db1 !important;
+    --md-accent-fg-color: #258dc2;
+    --md-accent-fg-color--transparent: #007bb330;
+}
+
+/* make contents a little bit wider */
+.md-grid {
+    max-width: 45rem;
+}
+main .md-grid {
+    max-width: 70rem;
+}
+
+/* shrink titlebar */
+[dir=ltr] .md-header__title {
+    margin-left: 0;
+}
+
+[dir=rtl] .md-header__title {
+    margin-right: 0;
+}
+
+/* disable the shitty transition in title bar*/
+.md-header__title--active .md-header__topic {
+    z-index: unset;
+    opacity: 1;
+    transform: none;
+}
+.md-header__title--active .md-header__topic+.md-header__topic {
+    display: none;
+}
+
+@media screen and (min-width: 60em) {
+    .md-search__form {
+        background-color: #00000042;
+        border-radius: .1rem;
+        height: 1.4rem;
+    }
+}
+
+.md-header__button.md-logo {
+    margin: 0 .15rem;
+    padding: 0 .4rem;
+}
+
+.md-header__title {
+    flex-grow: 1;
+    font-size: .9rem;
+    height: 2rem;
+    line-height: 2rem;
+}
+
+.md-header .md-icon svg {
+    width: 1rem;
+    height: 1rem;
+}
+.md-search__icon {
+    width: 0.8rem;
+    height: 0.8rem;
+}
+
+.md-header__button {
+    margin: 0 .15rem;
+    padding: 0 .4rem;
+}
+[data-md-toggle=search]:checked~.md-header .md-header__option {
+    max-width: none;
+    opacity: 1;
+    transition: max-width 0ms, opacity 0ms;
+}
+.md-header {
+    border-bottom: 1px solid var(--md-code-bg-color);
+}
+
+@media screen and (min-width: 60em) {
+    .md-search {
+        padding-right: 1rem;
+    }
+}
+@media screen and (max-width: 76.2344em) {
+    .md-header__button.md-logo {
+        display: block;
+    }
+}
+
+/* permalink is not visible upon hover by default. */
+.md-typeset .headerlink {
+    opacity: 0.8;
+}
+
+/* blur !*/
+header.md-header.md-header--shadow {
+    backdrop-filter: blur(10px);
+    background-color: #14151ae0;
+
+}
+
+/* tables */
+th, td {
+    border: 1px solid var(--md-typeset-table-color);
+    border-spacing: 0;
+    border-bottom: none;
+    border-left: none;
+    border-top: none;
+}
+
+.md-typeset__table table:not([class]) {
+    font-size: .74rem;
+    border-right: none;
+}
+
+.md-typeset__table table:not([class]) td,
+.md-typeset__table table:not([class]) th {
+    padding: 9px;
+}
+
+.md-typeset table:not([class]) tbody tr:hover {
+    background-color: var(--md-default-bg-color);
+}
+
+
+.md-typeset__table tr:nth-child(2n), .md-typeset__table th {
+    background-color: #f8f8f8 !important;
+}
+
+[data-md-color-scheme="slate"] .md-typeset__table tr:nth-child(2n), .md-typeset__table th {
+    background-color: var(--md-typeset-table-color--light) !important;
+}
+
+
+/* badges stolen from material for mkdocs docs :) */
+.md-typeset .mdx-badge {
+    font-size: .85em;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__icon {
+    border-bottom-left-radius: .1rem;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__icon {
+    border-top-left-radius: .1rem;
+}
+.md-typeset .mdx-badge__icon {
+    background: var(--md-accent-fg-color--transparent);
+    padding: .2rem;
+}
+
+[dir=ltr] .md-typeset .mdx-badge__text {
+    border-bottom-right-radius: .1rem;
+}
+[dir=ltr] .md-typeset .mdx-badge__text {
+    border-top-right-radius: .1rem;
+}
+.md-typeset .mdx-badge__text {
+    box-shadow: 0 0 0 1px inset var(--md-accent-fg-color--transparent);
+    padding: .2rem .3rem;
+}
+
+/* center images */
+.md-typeset p:has(> img) {
+    text-align: center;
+}
+
+/* classes.md */
+.class-index .item {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    padding: 20px;
+    justify-content: space-between;
+    gap: 20px;
+}
+.class-index p {
+    margin: 0;
+}
+.class-index .item .list {
+    column-width: 250px;
+    flex: 1 1 200px;
+    min-width: 350px;
+}
+
+.class-index > .item:nth-child(2n) {
+    background: var(--md-code-bg-color);
+}
+
+.class-index .item .letter {
+    font-size: 2em;
+    line-height: 1.2;
+}
+
+.class-index-title {
+    background: var(--md-accent-fg-color--transparent);
+    text-align: center;
+    padding: 8px;
+    font-size: 1.1em;
+}
+
+
+/* doxygen-style dl lists (arguments, returns, etc) */
+.doxygen-dl dt {
+    font-weight: bold;
+}
+
+.doxygen-dl th, .doxygen-dl td {
+    padding: 2px;
+}
+
+.doxygen-dl table, .doxygen-dl tr {
+    background: none !important;
+    border: none !important;
+}
+
+.doxygen-dl dd {
+    padding: 0;
+    margin: 0;
+}
+
+/* links in code */
+.md-code__content a {
+    color: var(--md-typeset-color);
+    font-weight: bold;
+    word-break: break-word;
+}
+
+.md-typeset img, .md-typeset video {
+    width: auto;
+    max-width: 100%;
+    max-height: 40vh;
+}
+
+/* i want the copyright notice and the social links on the same line. */
+@media screen and (min-width: 45em) {
+    .md-copyright {
+        width: 60em;
+    }
+}
+
+.md-sidebar--primary .md-sidebar__scrollwrap {
+    border-right: .05rem solid var(--md-default-fg-color--lightest);
+}
+
+.md-footer__inner {
+    display: flex;
+    gap: 16px;
+    padding: 0;
+}
+
+.md-footer__link {
+    border: 1px solid var(--md-default-fg-color--lightest);
+    border-radius: 4px;
+    width: 100%;
+    padding: 16px;
+    line-height: 1.2;
+}
+
+.md-footer__link .md-footer__button {
+    padding: 0;
+    margin: 0;
+}
+
+.md-footer__direction {
+    color: var(--md-code-fg-color);
+}
+
+.md-footer__title {
+    margin: 0;
+}
+
+.md-typeset th {
+    border-bottom: 1px solid var(--md-accent-fg-color);
+}
+
+@media screen and (max-width: 44.9844em) {
+    .md-footer__link--prev .md-footer__title {
+        display: block;
+    }
+
+    .md-footer__inner:not([hidden]) {
+        flex-direction: column;
+    }
+}
+
+@keyframes popup-pre-delay {
+    from {
+        display: none;
+    }
+    to {
+        display: none;
+    }
+}
+@keyframes popup-appear {
+    from {
+        display: block;
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    to {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+}
+@keyframes popup-disappear {
+    to {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+#aui-instant-preview-popup {
+    position: absolute;
+    right: 8px;
+    z-index: 999;
+    max-width: 600px;
+    padding: 8px;
+    animation: popup-pre-delay 0.4s;
+}
+
+#aui-instant-preview-popup.appear {
+    animation: popup-appear 0.2s ease-out;
+}
+#aui-instant-preview-popup.hide {
+    animation: popup-disappear 0.2s ease-out;
+}
+
+.aui-instant-preview-inner {
+    font-size: .64rem;
+    overflow: scroll;
+    background: var(--md-admonition-bg-color);
+    box-shadow: 0 12px 32px #000a;
+    border-radius: 4px;
+    padding: 16px;
+    max-height: 30vw;
+    border: 1px solid var(--md-accent-fg-color--transparent);
+}
+
+#aui-instant-preview-popup h1 {
+    margin: 0;
+}
+
+.js a[aui-instant-preview] {
+    border-bottom: 1px dotted #888c;
+}
+

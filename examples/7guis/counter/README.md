@@ -1,9 +1,9 @@
 # 7GUIs Counter
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Simple counter.
 
-@image html docs/imgs/Screenshot_20250401_081123.png
+![](imgs/Screenshot_20250401_081123.png)
 
 Challenge: Understanding the basic ideas of a language/toolkit.
 
@@ -14,9 +14,9 @@ Counter serves as a gentle introduction to the basics of the language, paradigm 
 applications imaginable. Thus, Counter reveals the required scaffolding and how the very basic features work together to
 build a GUI application. A good solution will have almost no scaffolding.
 
-@include examples/7guis/counter/src/main.cpp
+<!-- aui:include examples/7guis/counter/src/main.cpp -->
 
-# Comparison to Jetpack Compose
+## Comparison to Jetpack Compose
 
 Here's implementation of the same app with Jetpack Compose:
 
@@ -53,7 +53,7 @@ fun Counter() {
 }
 ```
 
-@image html docs/imgs/Screenshot_20250401_081455.png
+![](imgs/Screenshot_20250401_081455.png)
 
 |           | AUI                                                                           | Kotlin                            |
 |-----------|-------------------------------------------------------------------------------|-----------------------------------|

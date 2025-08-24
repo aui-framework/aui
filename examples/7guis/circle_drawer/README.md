@@ -1,9 +1,9 @@
 # 7GUIs Circle Drawer
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Undo, redo, dialog control.
 
-@image html docs/imgs/Screenshot_20250401_090701.png
+![](imgs/Screenshot_20250401_090701.png)
 
 Challenges: undo/redo, custom drawing, dialog control.
 
@@ -22,5 +22,3 @@ functionality for a GUI application can be solved. In an ideal solution the undo
 just comes out as a natural consequence of the language / toolkit / paradigm. Moreover, Circle Drawer tests how dialog
 control, i.e. keeping the relevant context between several successive GUI interaction steps, is achieved in the source
 code. Last but not least, the ease of custom drawing is tested.
-
-@include examples/7guis/circle_drawer/src/main.cpp

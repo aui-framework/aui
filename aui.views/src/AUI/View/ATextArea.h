@@ -36,9 +36,9 @@ class API_AUI_VIEWS AScrollArea;
  * the entire application pages scrollable with other content rather than using nested scrolls just for text area.
  *
  * If you want to make AScrollArea scrollable, it can be placed inside a AScrollArea:
- * @code{cpp}
+ * ```cpp
  * AScrollArea::Builder().withContents(_new<AScrollArea>())
- * @endcode
+ * ```
  *
  * This is why it does not offer default styling - you would probably want to style AScrollArea as if it were text
  * input.

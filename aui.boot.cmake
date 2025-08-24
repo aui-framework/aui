@@ -178,18 +178,18 @@ endif()
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
-    # [RPATH apple]
+    # [rpath_apple]
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
-    # [RPATH apple]
+    # [rpath_apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
     endif()
-    # [RPATH linux]
+    # [rpath_linux]
     set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-    # [RPATH linux]
+    # [rpath_linux]
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES

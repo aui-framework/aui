@@ -1,23 +1,33 @@
 # Minimal UI Template with Assets
 
-@auiexample{ui}
-Minimal UI boilerplate template with @ref assets.
+<!-- aui:example ui -->
+Minimal UI boilerplate template with [aui-assets].
 
-@image html docs/imgs/minimal-assets-template.png
+![](imgs/minimal-assets-template.png)
 
-# Source Files
-## Project Structure
+## Source Code
+### Project Structure
 
-@mermaid{project_structure_minimal_assets_example}
+
+```mermaid
+graph TD
+    A[project_template_assets_ui] --> B[CMakeLists.txt]
+    A --> C[src/]
+    C --> D[MainWindow.h]
+    C --> E[MainWindow.cpp]
+    C --> F[main.cpp]
+    A --> G[assets/img/]
+    G --> H[logo.svg]
+```
 
 ---
-## CMakeLists.txt
+### CMakeLists.txt
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
 project(project_template_assets_ui)
 
-set(AUI_VERSION v7.0.1)
+set(AUI_VERSION v8.0.0-rc.8)
 
 # Use AUI.Boot
 file(
@@ -42,7 +52,7 @@ aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views)
 aui_compile_assets(${PROJECT_NAME})
 ```
 
-## src/MainWindow.h
+### src/MainWindow.h
 
 ```cpp
 #pragma once
@@ -54,7 +64,7 @@ public:
     MainWindow();
 };
 ```
-## src/MainWindow.cpp
+### src/MainWindow.cpp
 ```cpp
 #include "MainWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -86,7 +96,7 @@ MainWindow::MainWindow(): AWindow("Project template app", 300_dp, 200_dp) {
 }
 ```
 
-## src/main.cpp
+### src/main.cpp
 ```cpp
 #include <AUI/Platform/Entry.h>
 #include "MainWindow.h"

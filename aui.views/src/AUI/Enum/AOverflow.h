@@ -29,7 +29,8 @@ enum class AOverflow {
 
     /**
      * @brief Overflowed contents are hidden. Suitable for lists with scroll.
-     * @note On GPU accelerated renderer, HIDDEN does 2 extra draw calls thus decreasing performance a little bit.
+     * @details
+     * On GPU accelerated renderer, HIDDEN does 2 extra draw calls thus decreasing performance a little bit.
      * Prefer VISIBLE if possible.
      */
     HIDDEN,

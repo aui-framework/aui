@@ -58,12 +58,12 @@ namespace ass {
      * `ass::type_of`.
      *
      * For example:
-     * @code{cpp}
+     * ```cpp
      * {
      *   t<AButton>(),
      *   BackgroundSolid(...),
      * }
-     * @endcode
+     * ```
      * This will select all `AButton`s.
      *
      */

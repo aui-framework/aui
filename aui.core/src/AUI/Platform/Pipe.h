@@ -57,7 +57,7 @@ public:
 
 
     /**
-     * @brief Out pipe. Also known as pipe[0].
+     * @brief Out pipe. Also known as `pipe[0]`.
      */
     [[nodiscard]]
     pipe_t out() const noexcept {
@@ -65,7 +65,7 @@ public:
     }
 
     /**
-     * @brief In pipe. Also known as pipe[1].
+     * @brief In pipe. Also known as `pipe[1]`.
      */
     [[nodiscard]]
     pipe_t in() const noexcept {
@@ -73,12 +73,12 @@ public:
     }
 
     /**
-     * @brief Close out. Also known as close(pipe[0])
+     * @brief Close out. Also known as `close(pipe[0])`
      */
     void closeOut() noexcept;
 
     /**
-     * @brief Close in. Also known as close(pipe[1])
+     * @brief Close in. Also known as `close(pipe[1])`
      */
     void closeIn() noexcept;
 
@@ -110,12 +110,12 @@ public:
 
 private:
     /**
-     * @brief Out pipe. Also known as pipe[0].
+     * @brief Out pipe. Also known as `pipe[0]`.
      */
     pipe_t mOut;
 
     /**
-     * @brief In pipe. Also known as pipe[1].
+     * @brief In pipe. Also known as `pipe[1]`.
      */
     pipe_t mIn;
 };

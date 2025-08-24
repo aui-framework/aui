@@ -35,6 +35,11 @@ object Platform {
         AuiView.ourCurrentSurface?.requestRender()
     }
 
+
+    @JvmStatic
+    fun copyToClipboard(text: String) {
+    }
+
     @JvmStatic
     private fun showKeyboard(iKeyboardType: Int, iKeyboardAction: Int, isPassword: Boolean) {
         // TODO

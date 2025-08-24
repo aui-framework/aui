@@ -32,7 +32,7 @@
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
- * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
+ * Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:

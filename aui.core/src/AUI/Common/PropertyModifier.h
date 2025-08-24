@@ -15,12 +15,13 @@ namespace aui {
 /**
  * @brief Temporary transparent object that gains write access to underlying property's value, notifying about value
  * changes when destructed.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
  * PropertyModifier is a result of `writeScope()` method of writeable properties. Also, it is used inside non-const
  * operator implementations (see below). It gains transparent writeable handle to property's value, and calls `notify()`
  * method on associated property upon PropertyModifier destruction.
  *
+ * <!-- aui:parse_tests aui.core/tests/PropertyModifierTest.cpp -->
  */
 template<typename Property>
 class PropertyModifier;

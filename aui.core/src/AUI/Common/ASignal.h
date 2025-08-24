@@ -144,6 +144,12 @@ private:
 
 }   // namespace aui::detail::signal
 
+/**
+ * @brief Signal field which can be subscribed to.
+ * @tparam Args Arguments of the signal.
+ * @details
+ * <!-- aui:index_alias emits -->
+ */
 template <typename... Args>
 class ASignal final : public AAbstractSignal {
     static_assert(
@@ -571,7 +577,7 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
  * @brief A signal declaration.
  * @tparam Args signal arguments
  * @ingroup signal_slot
- * See @ref signal_slot "signal-slot system" for more info.
+ * See [signal_slot] "signal-slot system" for more info.
  */
 template <typename... Args>
 using emits = ASignal<Args...>;

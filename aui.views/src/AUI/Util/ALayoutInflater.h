@@ -20,10 +20,9 @@ public:
      * @details Used when usage of AViewContainer::setContents is not possible (see AViewContainer::setContents)
      * @param root container to wrap with
      * @param view view to be wrapped
-     * @note
+     * @details
      * Clears contents of <code>root</code>.
      *
-     * @note
      * Stolen from Android.
      */
     static void inflate(aui::no_escape<AViewContainer> root, const _<AView>& view);

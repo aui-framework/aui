@@ -2,7 +2,7 @@
 #include <AUI/UITest.h>
 
 #ifdef Status
-// leaked from xlib
+/* leaked from xlib */
 #undef Status
 #endif
 
@@ -34,8 +34,6 @@ protected:
     _<AWindow> mTestWindow;
 };
 
-namespace {
-
 class MyUpdater : public AUpdater {
 public:
     MyUpdater() {
@@ -56,10 +54,6 @@ public:
     MOCK_METHOD(AFuture<void>, downloadUpdateImpl, (const APath& unpackedUpdateDir), (override));
 };
 
-}   // namespace
-
-// AUI_DOCS_OUTPUT: doxygen/intermediate/updater_status_test.h
-// @property AUpdater::status
 
 TEST_F(UpdaterStatusTest, Test1) {
     auto mUpdater = _new<MyUpdater>();

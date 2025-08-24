@@ -31,7 +31,7 @@ API_AUI_CORE void evaluationLoop();
 /**
  * @brief Forbids copy of your class.
  *
- * @code{cpp}
+ * ```cpp
  * class MyObject: public aui::noncopyable {
  * private:
  *     void* mResource;
@@ -40,7 +40,7 @@ API_AUI_CORE void evaluationLoop();
  * MyObject obj1;
  * MyObject obj2 = obj1; // error
  * MyObject obj3 = std::move(obj); // but this one is ok
- * @endcode
+ * ```
  */
 struct noncopyable {
     noncopyable() = default;
@@ -138,7 +138,7 @@ public:
  *
  * If initialized with `nullptr` itself, throws a compile-time error.
  *
- * @code{cpp}
+ * ```cpp
  * void render(aui::non_null<_<AView>> view) {
  *     view->render();
  * }
@@ -147,7 +147,7 @@ public:
  * someView = nullptr;
  * render(someView); // assertion failure in runtime
  * render(nullptr); // compile-time error
- * @endcode
+ * ```
  */
 template <typename T>
 struct non_null : non_null_lateinit<T> {
@@ -456,7 +456,7 @@ public:
 }   // namespace constraint
 
 /**
- * @brief Clamps the possible values for a number to the specified range: [min;max]
+ * @brief Clamps the possible values for a number to the specified range: `[min;max]`
  * @ingroup useful_templates
  * @tparam UnderlyingType any arithmetic type
  * @tparam min minimum possible value

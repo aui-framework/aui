@@ -15,6 +15,9 @@
 #include "AEmbedAuiWrap.h"
 #include "SoftwareRenderingContext.h"
 
+/**
+ * @brief Embed AUI into OpenGL context
+ */
 class API_AUI_VIEWS ASoftwareEmbedAuiWrap: public AEmbedAuiWrap {
 private:
     SoftwareRenderingContext* mContext;

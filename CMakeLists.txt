@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.16)
 project(AUI)
 
 if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported")
+    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
 endif()
 
 if(MSVC)
@@ -209,12 +209,12 @@ auib_precompiled_binary()
 # test aui.boot on ci/cd
 add_subdirectory(test/)
 
-# [configure file example]
+# [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
-# [configure file example]
+# [configure_file_example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

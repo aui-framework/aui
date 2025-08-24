@@ -17,7 +17,7 @@
 
 /**
  * @brief Places views in a row.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  * @details
  *
  * |             |                               |
@@ -26,7 +26,7 @@
  *
  * Horizontal layout manager places views in a row, fitting their height to the container's height.
  * Has a `Horizontal` shortcut that allows easy usage in UI building:
- * @code{cpp}
+ * ```cpp
  * setContents(
  *   Horizontal {
  *     _new<AButton>("1"),
@@ -34,7 +34,7 @@
  *     _new<AButton>("3"),
  *   }
  * );
- * @endcode
+ * ```
  *
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png">
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">

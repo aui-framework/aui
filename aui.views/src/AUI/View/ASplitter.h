@@ -36,7 +36,6 @@
  * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there should be at
  * least 1 view with expanding. If there's no such view, ASplitter adds ASpacerFixed to the end.
  *
- * @note
  * Valid expandings should be applied before constructing ASplitter. ASplitter does not support changing expanding on
  * the fly.
  *
