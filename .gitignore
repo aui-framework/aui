@@ -352,7 +352,8 @@ healthchecksdb
 *.lib
 
 # Application settings
-*.json
+notes.json
+install.json
 
 # mkdocs output
 site/
