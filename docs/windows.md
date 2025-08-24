@@ -8,6 +8,14 @@ Windows is a family of operating systems developed by Microsoft. It was first re
 most popular desktop operating system worldwide, with a market share of about 70%. The latest version for consumer PCs
 and tablets is Windows 11, while certain older versions are still supported and maintained by Microsoft.
 
+## Windows XP support
+
+- Compatibility with modern C++ (C++20 standard or newer) is provided by [YY_Thunks](https://github.com/Chuyu-Team/YY-Thunks) project (span, concepts).
+- [AUI.Boot](https://github.com/aui-framework/aui/blob/develop/aui.boot.cmake) relies over v141_xp toolset and cl.exe compiler with **UCRT** runtime that are specified by winxp-x86.cmake cmake toolchain file.
+- [google/benchmark](https://github.com/google/benchmark) is removed, as v141_xp toolset was unable to build that dependency, because `#include <versionhelpers.h>` is missing.
+- Windows XP support lower bound is SP2, as SP1 is not supported.
+- In order to bring your own dependencies you would need to use /MT /MTd MSVC runtime and acquire **UCRT** runtime by **[VC-LTL5](https://github.com/Chuyu-Team/VC-LTL5)**.
+- If you are searching for v141_xp toolset download link take a look here https://aka.ms/vs/16/release/vs_buildtools.exe.
 
 ## Key considerations
 
