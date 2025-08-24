@@ -41,39 +41,38 @@ req.addEventListener("load", async () => {
             }
             element.setAttribute("aui-instant-preview", "");
             element.addEventListener("mouseenter", () => {
-                let prev = document.querySelector("#aui-instant-preview-popup");
-                if (prev != null) {
-                    prev.remove();
-                }
-                let popup = document.createElement("div")
-                popup.id = "aui-instant-preview-popup";
-                let contents = `<a href="${element.getAttribute('href')}" style="opacity:0;font-size: .8rem;">${element.innerHTML}</a><div class="aui-instant-preview-inner">`;
-                for (const i of target) {
-                    if (target.length === 0) {
-                        contents += `<h1>${i.title}</h1>${i.text}`;
-                    } else {
-                        contents += `<h2>${i.title}</h2>${i.text}`;
+                let timeout = setTimeout(() => {
+                    let prev = document.querySelector("#aui-instant-preview-popup");
+                    if (prev != null) {
+                        prev.remove();
                     }
-                }
-                contents += `</div>`;
-                popup.innerHTML = contents;
-                let position = element.getBoundingClientRect();
-                const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
-                const scrollY = window.pageYOffset || document.documentElement.scrollTop;
-                popup.style.left = `${scrollX + position.left - 8}px`;
-                popup.style.top = `${scrollY + position.top}px`;
-                document.body.appendChild(popup);
+                    let popup = document.createElement("div")
+                    popup.id = "aui-instant-preview-popup";
+                    let contents = `<a href="${element.getAttribute('href')}" style="opacity:0;font-size: .8rem;">${element.innerHTML}</a><div class="aui-instant-preview-inner">`;
+                    for (const i of target) {
+                        if (target.length === 0) {
+                            contents += `<h1>${i.title}</h1>${i.text}`;
+                        } else {
+                            contents += `<h2>${i.title}</h2>${i.text}`;
+                        }
+                    }
+                    contents += `</div>`;
+                    popup.innerHTML = contents;
+                    let position = element.getBoundingClientRect();
+                    const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+                    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+                    popup.style.left = `${scrollX + position.left - 8}px`;
+                    popup.style.top = `${scrollY + position.top}px`;
+                    document.body.appendChild(popup);
 
-                popup.addEventListener("mouseleave", () => {
-                    popup.addEventListener('animationend', () => popup.remove(), {once: true});
-                });
-                popup.addEventListener("animationend", () => {
-                    popup.classList.add("appear")
                     popup.addEventListener("mouseleave", () => {
-                        popup.classList.remove("appear")
                         popup.classList.add("hide");
+                        popup.addEventListener('animationend', () => popup.remove(), {once: true});
                     });
-                });
+                }, 400);
+                element.addEventListener("mouseleave", () => {
+                    clearTimeout(timeout);
+                }, {once: true});
             });
         });
 
