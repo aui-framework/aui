@@ -42,6 +42,8 @@ set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/helpers")
+
 cmake_policy(SET CMP0072 NEW)
 
 if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
@@ -711,7 +713,6 @@ function(aui_executable AUI_MODULE_NAME)
         endif()
 
         if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-            list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/helpers")
             include(WinXPuseLTL5)
             include(WinXPuseYYThunks)
             target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
@@ -1136,7 +1137,6 @@ function(aui_module AUI_MODULE_NAME)
 
     get_target_property(_type ${AUI_MODULE_NAME} TYPE)
     if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-        list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/helpers")
         include(WinXPuseLTL5)
         include(WinXPuseYYThunks)
         target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
