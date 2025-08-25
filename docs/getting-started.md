@@ -50,7 +50,7 @@
     
     ![](imgs/Screenshot_20250823_201915.png)
 
-=== "macOS"
+=== ":material-apple-finder: macOS"
 
     Install Xcode.
 

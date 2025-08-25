@@ -1,5 +1,5 @@
 ---
-icon: simple/macos
+icon: material/apple-finder
 ---
 
 # macOS (operating system)
