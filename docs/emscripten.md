@@ -1,5 +1,5 @@
 ---
-icon: material/web
+icon: assets/wasm
 ---
 
 # Emscripten (WebAssembly)

@@ -1,5 +1,5 @@
 ---
-icon: fontawesome/brands/linux
+icon: assets/linux
 ---
 
 # Linux (-based desktop OSes)

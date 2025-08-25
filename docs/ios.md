@@ -1,5 +1,5 @@
 ---
-icon: simple/ios
+icon: assets/iphoneos
 ---
 
 # iOS (operating system)

@@ -1,5 +1,5 @@
 ---
-icon: simple/macos
+icon: assets/macos
 ---
 
 # macOS (operating system)

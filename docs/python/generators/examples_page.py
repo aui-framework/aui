@@ -21,40 +21,43 @@ from docs.python.generators import regexes, common
 
 def examine():
     EXAMPLES_DIR = Path.cwd() / "examples"
+    EXAMPLES_DIR = EXAMPLES_DIR.as_posix()
 
     examples_lists = {}
 
     for root, dirs, files in os.walk(EXAMPLES_DIR):
         for file in files:
-            if not file == "README.md":
+            if file != "README.md":
                 continue
+
             example_path = str(Path(root).relative_to(EXAMPLES_DIR))
-            if not "/" in example_path:
+            if "/" not in example_path and "\\" not in example_path:
                 continue
-            example_path = example_path.replace("/", "_")
+
+            example_path = example_path.replace(os.sep, "_")
 
             def collect_srcs(top):
                 for root, dirs, files in os.walk(top):
                     for f in files:
-                        if any([f.endswith(i) for i in ['.h', 'cpp', 'CMakeLists.txt']]):
+                        if any(f.endswith(ext) for ext in ['.h', 'cpp', 'CMakeLists.txt']):
                             yield Path(root) / f
-            srcs = [i for i in collect_srcs(root)]
+
+            srcs = list(collect_srcs(root))
 
             input_file = Path(root) / file
-            with open(input_file, 'r') as fis:
+            with open(input_file, 'r', encoding='utf-8') as fis:
                 title = fis.readline()
                 assert title.startswith("# ")
                 title = title.lstrip("# ").rstrip("\n")
                 if "{" in title:
                     id = title[title.find("{#")+2:title.find("}")]
-                    title= title[:title.find("{#")]
+                    title = title[:title.find("{#")]
                 else:
                     id = title.lower()
                     for i in [" ", "_"]:
                         id = id.replace(i, "-")
-                    id = "".join(filter(lambda x: str.isalnum(x) or x == '-', id))
+                    id = "".join(ch for ch in id if ch.isalnum() or ch == '-')
                     id = id.strip('-')
-                    id = f"{id}"
 
                 category = None
                 description = ""
@@ -66,8 +69,9 @@ def examine():
                             description_line = description_line.strip("\n")
                             if not description_line:
                                 break
-                            description = description + " " + description_line
-                description = description.strip(" ")
+                            description += " " + description_line
+
+                description = description.strip()
                 if not id:
                     raise RuntimeError(f"no id provided in {input_file}")
                 if not category:
@@ -75,17 +79,14 @@ def examine():
                 if not description:
                     raise RuntimeError(f"no description provided in {input_file}")
 
-                current_category_list = examples_lists.get(category, [])
-                current_category_list.append({
+                examples_lists.setdefault(category, []).append({
                     'id': id,
                     'title': title,
                     'description': description,
                     'page_path': input_file,
                     'srcs': srcs,
                 })
-                examples_lists[category] = current_category_list
 
-                assert category is not None
     return examples_lists
 
 
