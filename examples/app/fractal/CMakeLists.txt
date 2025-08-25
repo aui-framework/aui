@@ -8,4 +8,3 @@ aui_executable(aui.example.fractal)
 aui_compile_assets(aui.example.fractal)
 
 aui_link(aui.example.fractal PRIVATE aui::core aui::views)
-

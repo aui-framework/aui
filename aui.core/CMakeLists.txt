@@ -7,7 +7,9 @@ option(AUI_ENABLE_DEATH_TESTS "Enable GTest death tests" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
+if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
 aui_enable_benchmarks(aui.core)
+endif()
 
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -100,6 +102,7 @@ endif()
 if (WIN32)
     aui_link(aui.core PRIVATE kernel32 psapi)
 endif()
+
 if (UNIX AND NOT APPLE)
     find_package(Threads REQUIRED)
     aui_link(aui.core PRIVATE Threads::Threads dl)

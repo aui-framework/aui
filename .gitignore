@@ -346,5 +346,14 @@ healthchecksdb
 
 .run/
 
+# Build artifacts Windows OS
+*.exe
+*.dll
+*.lib
+
+# Application settings
+notes.json
+install.json
+
 # mkdocs output
 site/

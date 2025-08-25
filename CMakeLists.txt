@@ -12,6 +12,16 @@ if (MINGW AND NOT AUI_IGNORE_MINGW)
     message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
 endif()
 
+if(MSVC)
+    if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+    else()                                 # MD / MDd
+        if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
+        endif()
+    endif()
+endif()
+
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
 set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location" FORCE)
 

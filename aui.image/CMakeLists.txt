@@ -25,5 +25,7 @@ if(NOT MSVC OR (MSVC_VERSION GREATER_EQUAL 1900))
 endif()
 
 add_subdirectory(3rdparty)
+
 aui_link(aui.image PRIVATE aui::core lunasvg::lunasvg WebP::webp WebP::webpdemux)
+
 aui_enable_tests(aui.image)

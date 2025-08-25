@@ -42,6 +42,8 @@ set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/helpers")
+
 cmake_policy(SET CMP0072 NEW)
 
 if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
@@ -226,10 +228,17 @@ endfunction(aui_add_properties)
 # gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
-        auib_import(GTest https://github.com/google/googletest
-                    VERSION v1.14.0
-                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
-                    LINK STATIC)
+        if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+            auib_import(GTest https://github.com/google/googletest
+                VERSION v1.17.0
+                CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
+                LINK STATIC) # Enforce /MT
+        else()
+            auib_import(GTest https://github.com/google/googletest
+                        VERSION v1.17.0
+                        CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
+                        LINK STATIC)
+        endif()
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
@@ -325,11 +334,13 @@ endmacro()
 
 macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
-        auib_import(benchmark https://github.com/google/benchmark
-                    VERSION v1.8.3
-                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
-                    LINK STATIC)
-        set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
+            auib_import(benchmark https://github.com/google/benchmark
+                        VERSION v1.8.3
+                        CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                        LINK STATIC)
+            set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        endif()
     endif()
 endmacro()
 
@@ -700,6 +711,7 @@ function(aui_executable AUI_MODULE_NAME)
         else()
             add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
         endif()
+
     endif()
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
@@ -712,6 +724,25 @@ function(aui_executable AUI_MODULE_NAME)
     endif()
 
     aui_common(${AUI_MODULE_NAME})
+
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(WinXPuseLTL5)
+        include(WinXPuseYYThunks)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (AUIE_WIN32_SUBSYSTEM_CONSOLE)
+            if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02")
+            endif()
+        else()
+            if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.02")
+            endif()
+        endif()
+    endif()
 
     if (AUIE_EXPORT)
         install(
@@ -1114,6 +1145,32 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     get_target_property(_type ${AUI_MODULE_NAME} TYPE)
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(WinXPuseLTL5)
+        include(WinXPuseYYThunks)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            endif()
+        else()
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            endif()
+        endif()
+    endif()
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
@@ -1780,6 +1837,11 @@ endif()
 #    endif()
 #endif()
 
+if (AUI_BUILD_FOR STREQUAL "winxp")
+    # [cmake] -> YY_THUNKS MSVC .obj -> cmake(x86|x64)
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.winxp.cmake)
+endif()
 
 if (AUI_BUILD_FOR STREQUAL "android")
     # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)

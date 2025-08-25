@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
 aui_module(aui.audio WHOLEARCHIVE EXPORT aui)
+if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
 aui_enable_benchmarks(aui.audio)
+endif()
 add_subdirectory(3rdparty/ogg)
 aui_link(aui.audio PUBLIC aui::core)
 

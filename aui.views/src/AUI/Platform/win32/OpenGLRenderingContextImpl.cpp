@@ -25,6 +25,9 @@
 #include <AUI/GL/State.h>
 #include "AUI/Util/kAUI.h"
 
+#include <tuple>
+#include <string_view>
+
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
@@ -84,6 +87,49 @@ void OpenGLRenderingContext::init(const Init& init) {
         makeCurrent(fakeWindow.mDC);
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
+
+        using namespace std::string_view_literals;
+
+        auto vendor   = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
+        auto renderer = std::string_view(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
+        auto version  = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
+        auto glsl     = std::string_view(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+
+        ALogger::info(LOG_TAG) << "VENDOR: " << vendor;
+        ALogger::info(LOG_TAG) << "RENDERER: " << renderer;
+        ALogger::info(LOG_TAG) << "GL_VERSION: " << version;
+        ALogger::info(LOG_TAG) << "GLSL_VERSION: " << glsl;
+
+        static constexpr auto BLACK_LIST = std::array {
+            std::make_tuple("VMware"sv, "Gallium"sv),
+            std::make_tuple("Microsoft"sv, "GDI Generic"sv),
+        };
+
+        for (const auto&[blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
+            if (vendor.find(blacklistedVendor) != std::string_view::npos && renderer.find(blacklistedRenderer) != std::string_view::npos) {
+                throw AException("Blacklisted OpenGL driver: {} / {}"_format(vendor, renderer));
+            }
+        }
+
+        GLint maxAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+        ALogger::info(LOG_TAG) << "GL_MAX_VERTEX_ATTRIBS: " << maxAttribs;
+
+        GLint maxTexSize = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        ALogger::info(LOG_TAG) << "GL_MAX_TEXTURE_SIZE: " << maxTexSize;
+
+        GLint maxSamples = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        ALogger::info(LOG_TAG) << "GL_MAX_SAMPLES: " << maxSamples;
+
+        // Check what extensions are actually exposed
+        const GLubyte* exts = glGetString(GL_EXTENSIONS);
+        if (exts)
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
+        else
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
+
 
         if (!glewExperimental) {
             glewExperimental = true;
