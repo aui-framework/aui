@@ -150,6 +150,7 @@ nav:
     - emscripten.md
 
   - 'Other':
+      - app-icon.md
       - packaging.md
       - aui-command-line-arguments.md
       - runtime-dependency-resolution.md

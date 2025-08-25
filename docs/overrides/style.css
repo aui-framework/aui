@@ -362,7 +362,7 @@ th, td {
     right: 8px;
     z-index: 999;
     max-width: 600px;
-    padding: 8px;
+    padding: 0 8px 8px;
     animation: popup-appear 0.2s;
 }
 
