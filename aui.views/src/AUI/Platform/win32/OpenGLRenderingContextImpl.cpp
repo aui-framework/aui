@@ -111,7 +111,9 @@ void OpenGLRenderingContext::init(const Init& init) {
                     };
 
             UINT iNumFormats;
-
+            if (!wglChoosePixelFormatARB) {
+                throw AException("wglChoosePixelFormatARB is not available");
+            }
             wglChoosePixelFormatARB(mWindowDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
             AUI_ASSERT(iNumFormats);
             DescribePixelFormat(mWindowDC, pxf, sizeof(pfd), &pfd);
