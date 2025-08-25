@@ -466,6 +466,32 @@ function(_auib_find_git)
     set(GIT_EXECUTABLE ${GIT_EXECUTABLE} PARENT_SCOPE)
 endfunction()
 
+# Helper function to run execute_process with real-time output while saving to log file
+function(_auib_execute_process_with_log)
+    set(options "")
+    set(oneValueArgs RESULT_VARIABLE WORKING_DIRECTORY OUTPUT_FILE)
+    set(multiValueArgs COMMAND)
+    cmake_parse_arguments(PARSE_ARGV 0 ARG "${options}" "${oneValueArgs}" "${multiValueArgs}")
+    
+    # Use ECHO_OUTPUT_VARIABLE and ECHO_ERROR_VARIABLE (CMake 3.18+) for real-time output while capturing to file
+    # This provides the equivalent of 'tee' functionality natively in CMake
+    execute_process(
+        COMMAND ${ARG_COMMAND}
+        WORKING_DIRECTORY "${ARG_WORKING_DIRECTORY}"
+        RESULT_VARIABLE ${ARG_RESULT_VARIABLE}
+        OUTPUT_VARIABLE _captured_output
+        ERROR_VARIABLE _captured_output
+        ECHO_OUTPUT_VARIABLE
+        ECHO_ERROR_VARIABLE
+    )
+    
+    # Write the captured output to the log file
+    file(WRITE "${ARG_OUTPUT_FILE}" "${_captured_output}")
+    
+    # Propagate the result variable to parent scope
+    set(${ARG_RESULT_VARIABLE} ${${ARG_RESULT_VARIABLE}} PARENT_SCOPE)
+endfunction()
+
 function(_auib_postprocess_check_hardcoded_paths _cmake_file)
     file(READ ${_cmake_file} _contents)
 
@@ -969,7 +995,8 @@ function(auib_import AUI_MODULE_NAME URL)
                 file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
                 file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                 message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
-                execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
+                _auib_execute_process_with_log(
+                        COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
@@ -980,7 +1007,8 @@ function(auib_import AUI_MODULE_NAME URL)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
                     file(REMOVE_RECURSE ${DEP_BINARY_DIR})
                     file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
-                    execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
+                    _auib_execute_process_with_log(
+                            COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                             RESULT_VARIABLE STATUS_CODE
                             OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
@@ -998,11 +1026,8 @@ function(auib_import AUI_MODULE_NAME URL)
                     LIST(APPEND _flags "--parallel") # --parallel breaks multithread build for MSVC
                 endif()
 
-                execute_process(COMMAND
-                        ${CMAKE_COMMAND}
-                        --build ${DEP_BINARY_DIR} ${_flags}
-                        --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
+                _auib_execute_process_with_log(
+                        COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} ${_flags} --config ${CMAKE_BUILD_TYPE}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
@@ -1014,15 +1039,12 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
 
                 message(STATUS "Installing ${AUI_MODULE_NAME}")
-                execute_process(COMMAND
-                        ${CMAKE_COMMAND}
-                        --install .
-                        --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
+                _auib_execute_process_with_log(
+                        COMMAND ${CMAKE_COMMAND} --install . --config ${CMAKE_BUILD_TYPE}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
                         OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log
-                        OUTPUT_QUIET)
+                )
                 _auib_dump_with_prefix("[Installing ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
