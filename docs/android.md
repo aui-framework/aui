@@ -1,5 +1,5 @@
 ---
-icon: assets/android
+icon: fontawesome/brands/android
 ---
 
 # Android (operating system)

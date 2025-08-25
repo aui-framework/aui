@@ -1,5 +1,5 @@
 ---
-icon: assets/windows
+icon: fontawesome/brands/windows
 ---
 
 # Windows (operating system)
