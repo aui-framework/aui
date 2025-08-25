@@ -22,7 +22,7 @@ import pymdownx
 from docs.python.generators import cpp_parser
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 
-CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
+CPP_BRIEF_LINE = re.compile(r'(\s*\@\w+) ?(.*)')
 assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
 assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
 assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
