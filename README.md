@@ -11,7 +11,7 @@ The project is inspired by Qt and aims to provide developers with the best possi
 to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
 programming languages and external compilers.
 
-[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
+[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/master/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
 
 # Quickstart
 
@@ -35,13 +35,13 @@ Use our setup-free repository templates for quick start:
 
 1. [Minimal UI](https://github.com/aui-framework/example_minimal_ui) - an absolute minimum to start a graphical UI application, without any boilerplate.
 2. [Minimal UI with assets](https://github.com/aui-framework/example_assets_ui) - same as above but with assets.
-3. [Full-fledged App Template](https://aui-framework.github.io/develop/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
+3. [Full-fledged App Template](https://aui-framework.github.io/master/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
    testing, releasing, auto updating, code quality checking and more.
 
 ## Integrating AUI to existing CMake project
 
 To link AUI to your project, use the following CMake script. This script is self sufficient and does not require additional setup, AUI is imported to your project thanks to
-[AUI.Boot](https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html).
+[AUI.Boot](https://aui-framework.github.io/master/md_docs_2AUI_01Boot.html).
 
 `CMakeLists.txt`:
 ```cmake
@@ -106,9 +106,9 @@ Result:
 
 
 Visit [layout building page](https://aui-framework.github.io/master/group__layout__managers.html) and our [introduction
-guide](https://aui-framework.github.io/develop/md_docs_2Getting_01started_01with_01AUI.html) for more info.
+guide](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) for more info.
 
-Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html) to set up the project.
+Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/master/md_docs_2IDE_01Plugins.html) to set up the project.
 
 # Key features
 - Extended common types (containers, strings, streams, etc...)
@@ -177,7 +177,7 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 ## IDE Plugins
 
-[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html)
+[Refer to documentation page](https://aui-framework.github.io/master/md_docs_2IDE_01Plugins.html)
 
 ## Projects using AUI
 
@@ -190,7 +190,7 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 ## Examples
 
-Check the [examples](https://aui-framework.github.io/develop/examples.html) page in our
+Check the [examples](https://aui-framework.github.io/master/examples.html) page in our
 [docs](https://aui-framework.github.io) or [examples/](https://github.com/aui-framework/aui/tree/master/examples) dir in
 our repo.
 
