@@ -433,6 +433,8 @@ def _scan():
             # Match if ANY folder in the path starts with "aui."
             if not any(part.startswith('aui.') for part in root_path.parts):
                 continue
+            if any(part.lower() == 'test' for part in root_path.parts):
+                continue
             if "aui.toolbox" in root_path.as_posix():
                 continue
             if not file.endswith('.h'):
