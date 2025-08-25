@@ -54,7 +54,7 @@ class AOptionalPrinter(gdb.ValuePrinter):
 def AOptional_lookup(val):
     if _aui_disable_formatting:
         return
-    pattern = re.compile('^AOptional<(.*)>$')
+    pattern = re.compile(r'^AOptional<(.*)>$')
     if pattern.match(str(val.type.tag)):
         return AOptionalPrinter(val)
 
