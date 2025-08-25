@@ -56,7 +56,11 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
 
-    AUI_ASSERT(mHandle == hwnd);
+    if (mHandle != hwnd) {
+        // TODO: reimplement destroyNativeWindow so throwing an exception in OpenGLRenderingContext::init actually
+        // matters
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
     static glm::ivec2 lastWindowSize;
 
@@ -434,7 +438,7 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    AThread::current() << [&]() {
+    AThread::current() << [this, self = shared_from_this()]() {
         redraw();
     };
 
