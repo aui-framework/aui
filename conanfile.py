@@ -25,17 +25,24 @@ class AUIRecipe(ConanFile):
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False]}
+    options = {
+        "shared": [True, False],
+        "fPIC": [True, False]
+    }
     default_options = {
-        "shared": False, "fPIC": True,
+        "shared": False,
+        "fPIC": True,
         "fmt/*:header_only": True,
     }
 
+    implements = ["auto_shared_fpic"]
+
     # Sources are located in the same place as this recipe, copy them to the recipe
     exports_sources = "CMakeLists.txt", "aui.*", "cmake/*", "platform/*"
-    def config_options(self):
-        if self.settings.os == "Windows":
-            del self.options.fPIC
+
+    @property
+    def _min_cppstd(self):
+        return 20
 
     def layout(self):
         cmake_layout(self)
@@ -75,13 +82,14 @@ class AUIRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
+        tc.cache_variables["AUI_INSTALL_RUNTIME_DEPENDENCIES"] = False
+        tc.cache_variables["AUIB_NO_PRECOMPILED"] = True
+        tc.cache_variables["AUIB_DISABLE"] = True
         tc.generate()
 
     def build(self):
         cmake = CMake(self)
-        cmake.configure(variables={
-            'AUIB_DISABLE': True
-        })
+        cmake.configure()
         cmake.build()
 
     def package(self):
