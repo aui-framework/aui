@@ -42,7 +42,7 @@ class AUIRecipe(ConanFile):
 
     @property
     def _min_cppstd(self):
-        return 20
+        return "20"
 
     def layout(self):
         cmake_layout(self)
