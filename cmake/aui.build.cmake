@@ -1641,13 +1641,6 @@ macro(aui_app)
 
         message(STATUS XCTestFound:${XCTest_FOUND})
 
-        set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
-        )
-
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
-
-        target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
         # Locate system libraries on iOS
