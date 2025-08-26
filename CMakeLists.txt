@@ -78,9 +78,13 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
-auib_import(ZLIB https://github.com/aui-framework/zlib
-            VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
-            CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+if(AUIB_DISABLE)
+    find_package(ZLIB REQUIRED)
+else()
+    auib_import(ZLIB https://github.com/aui-framework/zlib
+                VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
+                CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+endif()
 
 # define all components
 define_aui_component(core)
@@ -209,7 +213,9 @@ auib_precompiled_binary()
 # [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
-add_subdirectory(test/)
+if(NOT AUIB_DISABLE)
+    add_subdirectory(test/)
+endif()
 
 # [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)

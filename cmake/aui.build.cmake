@@ -228,16 +228,20 @@ endfunction(aui_add_properties)
 # gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
-        if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
-            auib_import(GTest https://github.com/google/googletest
-                VERSION v1.17.0
-                CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
-                LINK STATIC) # Enforce /MT
+        if(AUIB_DISABLE)
+            find_package(GTest REQUIRED CONFIG)
         else()
-            auib_import(GTest https://github.com/google/googletest
-                        VERSION v1.17.0
-                        CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
-                        LINK STATIC)
+            if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+                auib_import(GTest https://github.com/google/googletest
+                    VERSION v1.17.0
+                    CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
+                    LINK STATIC) # Enforce /MT
+            else()
+                auib_import(GTest https://github.com/google/googletest
+                            VERSION v1.17.0
+                            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
+                            LINK STATIC)
+            endif()
         endif()
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
@@ -335,10 +339,14 @@ endmacro()
 macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
         if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
-            auib_import(benchmark https://github.com/google/benchmark
-                        VERSION v1.8.3
-                        CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
-                        LINK STATIC)
+            if(AUIB_DISABLE)
+                find_package(benchmark REQUIRED CONFIG)
+            else()
+                auib_import(benchmark https://github.com/google/benchmark
+                            VERSION v1.8.3
+                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                            LINK STATIC)
+            endif()
             set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
         endif()
     endif()
