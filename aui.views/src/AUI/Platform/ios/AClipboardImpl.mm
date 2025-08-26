@@ -1,5 +1,5 @@
 /*
- * AUI Framework - Declarative UI toolkit for modern C++20
+* AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
@@ -9,16 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
-
+#import <UIKit/UIKit.h>
 #include "AUI/Platform/AClipboard.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AWindowManager.h"
-// TODO apple
-void AClipboard::copyToClipboard(const AString &text) {
 
+void AClipboard::copyToClipboard(const AString &text) {
+    @autoreleasepool {
+        [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.toStdString().c_str()];
+    }
 }
 
 bool AClipboard::isEmpty() {
