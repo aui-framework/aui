@@ -20,14 +20,14 @@ from pathlib import Path
 
 from docs.python.generators import cpp_tokenizer, regexes
 
-CPP_CLASS_DEF = re.compile('class( API_\S+)? ([a-zA-Z0-9_$]+)')
+CPP_CLASS_DEF = re.compile(r'class( API_\S+)? ([a-zA-Z0-9_$]+)')
 assert CPP_CLASS_DEF.match('class Test').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test;').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test {').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test: Base {').group(2) == "Test"
 
-CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
+CPP_COMMENT_LINE = re.compile(r'\s*\* ?(.*)')
 assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
 assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
@@ -425,19 +425,31 @@ def _parse(input: str, location = None | Path):
 
 def _scan():
     contents = []
+
     for root, dirs, files in os.walk('.'):
+        root_path = Path(root)
+
         for file in files:
-            if not root.startswith('./aui.'):
+            # Match if ANY folder in the path starts with "aui."
+            if not any(part.startswith('aui.') for part in root_path.parts):
                 continue
-            if "aui.toolbox" in str(root):
+            if any(part.lower() == 'test' for part in root_path.parts):
+                continue
+            if "aui.toolbox" in root_path.as_posix():
                 continue
             if not file.endswith('.h'):
                 continue
-            if "3rdparty" in root:
+            if "3rdparty" in root_path.as_posix():
                 continue
-            full_path = Path(root) / file
+
+            full_path = root_path / file
             try:
-                contents += [i for i in _parse(full_path.read_text(), location=full_path)]
+                contents += [
+                    i for i in _parse(
+                        full_path.read_text(encoding='utf-8', errors='ignore'),
+                        location=full_path
+                    )
+                ]
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
     return contents

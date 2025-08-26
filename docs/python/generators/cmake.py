@@ -35,7 +35,7 @@ def define_env(env):
 
         with open(file, 'r') as fis:
             def find():
-                REGEX = re.compile("\\$\\{" + varname + "\\}")
+                REGEX = re.compile(r"\\$\\{" + varname + "\\}")
                 for l in fis.readlines():
                     l = l.strip()
                     if l.startswith("#"):
