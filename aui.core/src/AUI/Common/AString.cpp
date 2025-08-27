@@ -156,10 +156,10 @@ AString::AString(AChar c) {
 }
 
 void AString::push_back(AChar c) noexcept {
-    insertAll(::toUtf8(c));
+    // TODO: insertAll(::toUtf8(c));
 }
 
-AByteBuffer AString::getBytes(AStringEncoding encoding) const noexcept {
+AByteBuffer AString::getBytes(AStringEncoding encoding) const {
     AByteBuffer bytes;
     if (super::empty()) return bytes;
     switch (encoding) {
@@ -170,17 +170,17 @@ AByteBuffer AString::getBytes(AStringEncoding encoding) const noexcept {
         case AStringEncoding::UTF16: {
             size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
             bytes.resize(words * 2);
-            simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data()));
+            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())));
         } break;
         case AStringEncoding::UTF32: {
             size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
             bytes.resize(words * 4);
-            simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data()));
+            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())));
         } break;
         case AStringEncoding::LATIN1: {
             size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
             bytes.resize(words);
-            simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data()));
+            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())));
         } break;
     }
     return std::move(bytes);
@@ -1151,7 +1151,7 @@ void AString::resizeToNullTerminator() {
     resize(end - data());
 }
 
-AString::size_type AString::size() const noexcept {
+AString::size_type AString::length() const noexcept {
     return simdutf::count_utf8(super::data(), super::size());
 }
 
@@ -1194,11 +1194,6 @@ AString AString::processEscapes() const {
     return result;
 }
 
-AString& AString::removeAll(AChar c) noexcept {
-    //erase(std::remove(begin(), end(), c), end());
-    return *this;
-}
-
 AString AString::excessSpacesRemoved() const noexcept {
     AString s;
     s.reserve(length() + 1);
@@ -1218,8 +1213,8 @@ AString AString::excessSpacesRemoved() const noexcept {
 }
 
 template<typename T>
-AOptional<T> AString::toNumberImpl() const noexcept {
-    if (empty()) return std::nullopt;
+AOptional<T> toNumberImpl(const AStringView& str) noexcept {
+    if (str.empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;
     bool negative = false;
@@ -1244,12 +1239,12 @@ AOptional<T> AString::toNumberImpl() const noexcept {
                 }
             }
         } else {
-            auto i = begin();
+            auto i = str.begin();
             if (*i == '-') {
                 negative = true;
                 ++i;
             }
-            for (; i != end(); ++i) {
+            for (; i != str.end(); ++i) {
                 value *= 10;
                 if (value < prevValue) { // overflow check
                     return std::nullopt;
@@ -1267,12 +1262,12 @@ AOptional<T> AString::toNumberImpl() const noexcept {
         bool fractionalPart = false;
         double fractionalPower = 0.1;
 
-        auto i = begin();
+        auto i = str.begin();
         if (*i == '-') {
             negative = true;
             ++i;
         }
-        for (; i != end(); ++i) {
+        for (; i != str.end(); ++i) {
             auto c = *i;
             if (c >= '0' && c <= '9') {
                 T digitValue = c - '0';
@@ -1297,24 +1292,28 @@ AOptional<T> AString::toNumberImpl() const noexcept {
     return negative ? -value : value;
 }
 
-AOptional<int> AString::toInt() const noexcept {
-    return toNumberImpl<int>();
+AOptional<int32_t> AString::toInt() const noexcept {
+    return toNumberImpl<int32_t>();
 }
 
 AOptional<int64_t> AString::toLongInt() const noexcept {
     return toNumberImpl<int64_t>();
 }
 
-AOptional<unsigned> AString::toUInt() const noexcept {
-    return toNumberImpl<unsigned>();
+AOptional<uint32_t> AString::toUInt() const noexcept {
+    return toNumberImpl<uint32_t>();
 }
 
-AOptional<double> AString::toDouble() const noexcept {
-    return toNumberImpl<double>();
+AOptional<uint64_t> AString::toULong() const noexcept {
+    return toNumberImpl<uint64_t>();
 }
 
 AOptional<float> AString::toFloat() const noexcept {
     return toNumberImpl<float>();
+}
+
+AOptional<double> AString::toDouble() const noexcept {
+    return toNumberImpl<double>();
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
