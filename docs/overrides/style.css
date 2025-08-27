@@ -389,3 +389,64 @@ th, td {
     border-bottom: 1px dotted #888c;
 }
 
+.views-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 32px;
+  margin-top: 32px;
+}
+.views-card-outer {
+  background: var(--md-default-bg-color);
+  border-radius: 20px;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 2px 8px 0 #0001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 260px;
+}
+
+.views-card {
+  background: #f0f0f0;
+  border-radius: 20px;
+  padding: 32px 24px 24px 24px;
+  box-shadow: 0 2px 8px 0 #0001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 100%;
+  min-height: 50%;
+  aspect-ratio: 108 / 61;
+  /* min-height: 260px; */
+}
+
+.views-card img {
+  max-width: 180px;
+  max-height: 80px;
+  margin-bottom: 24px;
+  border-radius: 8px;
+  box-shadow: 0 1px 4px 0 #0001;
+}
+.views-card-title {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin-bottom: 8px;
+  text-align: center;
+}
+.views-card-desc {
+  color: inherit;
+  font-size: 1em;
+  text-align: center;
+  margin-bottom: 16px;
+}
+.views-card-link {
+  margin-top: auto;
+  color: #2962ff;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.views-card-link:hover {
+  color: #0039cb;
+  text-decoration: underline;
+}
