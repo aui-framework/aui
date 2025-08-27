@@ -400,10 +400,14 @@ th, td {
     border-bottom: 1px dotted #888c;
 }
 
+
 .views-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 32px;
+    /* Ensures consistent spacing between all cards, even if the last row is not full */
+    justify-items: stretch;
+    align-items: stretch;
 }
 
 .views-card-outer {
@@ -413,7 +417,11 @@ th, td {
     align-items: center;
     min-height: 260px;
     text-align: left;
-    margin-bottom: 16px;
+    /* Remove margin-bottom to avoid double spacing with grid gap */
+    margin: 0;
+    /* Ensure full width in grid cell */
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .md-typeset .views-card-outer .views-card-title a {
