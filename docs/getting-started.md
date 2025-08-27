@@ -93,6 +93,17 @@ to free you from dependency management and focus you right to development of you
     
     and open that directory in your IDE.
 
+    ??? tip "Recommended: Create a new repo"
+    
+        From [app-template] repository, you can generate a completely separate repo with clean git history:
+        
+        1. Open [http://github.com/aui-framework/example_app](http://github.com/aui-framework/example_app)
+        2. Click `Create a new repository`.
+            
+           ![](imgs/Screenshot_20250827_113904.png)
+        
+        3. Clone your own repo into IDE.
+
 === "Manual Setup"
     
     AUI provides support to several package managers, to choose at your own.
