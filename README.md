@@ -194,11 +194,12 @@ Check the [examples](https://aui-framework.github.io/master/examples.html) page 
 [docs](https://aui-framework.github.io) or [examples/](https://github.com/aui-framework/aui/tree/master/examples) dir in
 our repo.
 
-![Fractal](https://sun9-42.userapi.com/impf/WruyOdMmMBrRfpjJ7QrhFepZj7obL3VMGxNSaw/Tr8XxKqdVV8.jpg?size=1261x740&quality=96&proxy=1&sign=f6b851a26a7c40a5f1c22367a34f4c71&type=album)
+![Fractal](https://github.com/user-attachments/assets/6c67cfb2-adba-42e9-9201-0b87b2dbb3b8)
 
-![Views](https://sun9-37.userapi.com/impg/1JYHdZ7PlYsCPvZnP3qeObUT4anFIH5GDghEEA/_JOtAwNfaLI.jpg?size=1261x1007&quality=96&sign=46300730d3b638ea9300e0238f8a511a&type=album)
+![Views](https://github.com/user-attachments/assets/f0071fe4-c7d4-4d02-b677-2c02be51edd1)
 
-![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
+![Minesweeper](https://github.com/user-attachments/assets/3299da4c-6ae3-4be8-9714-f01622a38fb2)
+
 
 # Licensing
 
