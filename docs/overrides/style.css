@@ -1,3 +1,10 @@
+.views-card-outer:focus-within,
+.views-card-outer > a:focus,
+.views-card-outer > a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
@@ -452,6 +459,22 @@ th, td {
 
 .md-typeset .views-card-outer .views-card-title a:hover {
     text-decoration: underline;
+}
+
+.views-card-outer > a:focus-visible {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.views-card-outer:focus-within {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.views-card {
+    border-color: #f0f0f0 !important;
 }
 
 .views-card {
