@@ -125,8 +125,9 @@ def _generate_useful_views_group_page(doxygen, fos):
         if c.name in aview_names_set:
             continue
         if f"@ingroup useful_views" in c.doc:
-            page_url = getattr(c, 'page_url', None)
-            if page_url:
+            if hasattr(c, 'namespaced_name'):
+                slugged_name = c.namespaced_name().lower().replace('::', '_')
+                c.page_url = f'{slugged_name}.md'
                 normal_views.append(c)
 
     normal_views.sort(key=lambda c: c.name.lower())
@@ -140,15 +141,16 @@ def _generate_useful_views_group_page(doxygen, fos):
         else:
             img_path = '../imgs/logo_black.svg'
             brief_text = brief
+        url_base = group_item.page_url[:-3] if getattr(group_item, 'page_url', None) else ''
         print(f'''<div class="views-card-outer">
-    <a href="../{group_item.name}">
+    <a href="../{url_base}">
         <div class="views-card">
             <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
         </div>
     </a>
     <div class="views-card-title">{group_item.name}</div>
     <div class="views-card-desc">{brief_text}</div>
-    <a class="views-card-link" href="../{group_item.name}">Learn more</a>
+    <a class="views-card-link" href="../{url_base}">Learn more</a>
 </div>''', file=fos)
 
     print('\n</div>', file=fos)
