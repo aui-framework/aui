@@ -9,8 +9,32 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 1/28/2022.
-//
-
 #include "AChar.h"
+
+AStaticVector<char, 4> AChar::toUtf8() const noexcept {
+    if (mValue <= 0x7F) {
+        return { static_cast<char>(mValue) };
+    }
+    if (mValue <= 0x7FF) {
+        return { static_cast<char>(0xC0 | (mValue >> 6)), static_cast<char>(0x80 | (mValue & 0x3F)) };
+    }
+    if (mValue <= 0xFFFF) {
+        if (mValue >= 0xD800 && mValue <= 0xDFFF) {
+            return {}; // Invalid Unicode code point
+        }
+        return {
+            static_cast<char>(0xE0 | (mValue >> 12)),
+            static_cast<char>(0x80 | ((mValue >> 6) & 0x3F)),
+            static_cast<char>(0x80 | (mValue & 0x3F))
+        };
+    }
+    if (mValue <= 0x10FFFF) {
+        return {
+            static_cast<char>(0xF0 | (mValue >> 18)),
+            static_cast<char>(0x80 | ((mValue >> 12) & 0x3F)),
+            static_cast<char>(0x80 | ((mValue >> 6) & 0x3F)),
+            static_cast<char>(0x80 | (mValue & 0x3F))
+        };
+    }
+    return {}; // Invalid Unicode code point
+}
