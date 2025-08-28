@@ -74,8 +74,7 @@ def _generate_useful_views_group_page(doxygen, fos):
     """
     Generates docs/useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
     """
-    print('<div class="grid cards" markdown>', file=fos)
-    print(' ', file=fos)
+    print('<div class="views-grid">', file=fos)
     for group_item in cpp_parser.index:
         if not hasattr(group_item, 'doc'):
             continue
@@ -84,11 +83,18 @@ def _generate_useful_views_group_page(doxygen, fos):
         if f"@ingroup useful_views" not in group_item.doc:
             continue
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
-        print(f"""
-<div>{group_item.namespaced_name()}</div>
-<div>{brief}</div>
-""", file=fos)
-
-    print('</div>', file=fos)
-
-    # ...existing code...
+        page_url = getattr(group_item, 'page_url', None)
+        if not page_url:
+            page_url = group_item.namespaced_name().lower().replace('::', '_') + '.md'
+        img_path = f'../imgs/Views/{group_item.name}.png'
+        print(f'''<div class="views-card-outer">
+    <div class="views-card">
+        <a href="{page_url}">
+            <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
+        </a>
+    </div>
+    <div class="views-card-title">{group_item.name}</div>
+    <div class="views-card-desc">{brief}</div>
+    <a class="views-card-link" href="{page_url}">Learn more</a>
+</div>''', file=fos)
+    print('\n</div>', file=fos)
