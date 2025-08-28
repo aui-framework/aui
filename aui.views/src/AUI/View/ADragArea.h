@@ -20,6 +20,9 @@
 
 /**
  * @brief Wrapping container to drag views inside of it.
+ *
+ * ![](imgs/Views/ADragArea.png)
+ *
  * @details Contained views must be either wrapped by convertToDraggable or have an ADragArea::ADraggableHandle inside.
  * @ingroup useful_views
  */

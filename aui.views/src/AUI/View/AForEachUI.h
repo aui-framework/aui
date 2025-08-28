@@ -129,6 +129,9 @@ concept RangeFactory = requires(Factory&& factory) {
 
 /**
  * @brief Customizable lists display.
+ *
+ * ![](imgs/Views/AForEachUI.png)
+ *
  * @ingroup useful_views
  * @details
  * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.

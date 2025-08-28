@@ -23,6 +23,9 @@ class AListViewContainer;
 
 /**
  * @brief Displays a list model of strings.
+ *
+ * ![](imgs/Views/AListView.png)
+ *
  * @ingroup useful_views
  */
 class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {

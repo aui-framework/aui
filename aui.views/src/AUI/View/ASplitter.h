@@ -22,6 +22,9 @@
 
 /**
  * @brief A resizeable horizontal or vertical layout.
+ *
+ * ![](imgs/Views/ASplitter.png)
+ *
  * @ingroup useful_views
  * @details
  * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views

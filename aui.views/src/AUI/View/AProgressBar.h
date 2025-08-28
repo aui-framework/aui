@@ -17,6 +17,9 @@
 
 /**
  * @brief A progress bar.
+ *
+ * ![](imgs/Views/AProgressBar.png)
+ *
  * @ingroup useful_views
  * @details
  * A progress bar is used to express a long operation (i.e. file copy) with known progress and reassure the user that

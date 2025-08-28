@@ -17,9 +17,12 @@
 
 /**
  * @brief Editable field with text to receive a text input from the user.
+ *
+ * ![](imgs/ATextField.gif)
+ *
  * @ingroup useful_views
  * @details
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ATextField.gif">
+ * ![](imgs/ATextField.gif)
  */
 class API_AUI_VIEWS ATextField : public AAbstractTextField {
 public:

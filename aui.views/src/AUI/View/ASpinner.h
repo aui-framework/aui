@@ -16,6 +16,9 @@
 
 /**
  * @brief Circular infinite progress indicator.
+ *
+ * ![](imgs/Views/ASpinner.png)
+ *
  * @ingroup useful_views
  * @details
  * Rotates its contents as it renders.

@@ -19,6 +19,9 @@
 
 /**
  * @brief A text field for numbers with increase/decrease buttons.
+ *
+ * ![](imgs/Views/ADoubleNumberPicker.png)
+ *
  * @ingroup useful_views
  */
 class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {

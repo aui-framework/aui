@@ -23,6 +23,9 @@
 
 /**
  * @brief Button with text, which can be pushed to make some action.
+ *
+ * ![](imgs/Views/AButton.png)
+ *
  * @ingroup useful_views
  * @details
  * Button is a fundamental view which can be pushed to make some action.

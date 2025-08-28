@@ -31,6 +31,9 @@ struct A2DTransform {
 
 /**
  * @brief Handles and processes the multitouch scale, transform and rotation events based on two-finger gestures.
+ *
+ * ![](imgs/Views/A2FingerTransformArea.png)
+ *
  * @ingroup useful_views
  * @details
  * Represents a translucent area that handles and processes multi-finger transformation gestures (i.e. pinch-to-zoom,

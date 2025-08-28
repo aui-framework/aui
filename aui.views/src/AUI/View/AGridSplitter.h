@@ -18,6 +18,9 @@
 
 /**
  * @brief A resizable grid layout.
+ *
+ * ![](imgs/Views/AGridSplitter.png)
+ *
  * @ingroup useful_views
  * @details
  * AGridSplitter represents a grid layout which can be resized by user. Unlike ASplitter, works in both directions.

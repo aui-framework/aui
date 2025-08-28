@@ -23,6 +23,9 @@
 
 /**
  * @brief A text field with "..." button prompting path to a file.
+ *
+ * ![](imgs/Views/AFileChooserView.png)
+ *
  * @ingroup useful_views
  */
 class API_AUI_VIEWS AFileChooserView: public AViewContainerBase {
@@ -70,6 +73,9 @@ public:
 
 /**
  * @brief A text field with "..." button prompting path to a dir.
+ *
+ * ![](imgs/Views/ADirChooserView.png)
+ *
  * @ingroup useful_views
  */
 class API_AUI_VIEWS ADirChooserView: public AViewContainerBase {
