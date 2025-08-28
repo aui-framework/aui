@@ -157,7 +157,7 @@ void AString::push_back(AChar c) noexcept {
     append(c);
 }
 
-AByteBuffer AString::getBytes(AStringEncoding encoding) const {
+AByteBuffer AString::encode(AStringEncoding encoding) const {
     AByteBuffer bytes;
     if (super::empty()) return bytes;
     switch (encoding) {
@@ -288,6 +288,53 @@ AString::operator AStringView() const noexcept {
 
 AString::size_type AString::length() const noexcept {
     return simdutf::count_utf8(super::data(), super::size());
+}
+
+AString AString::trimLeft(char symbol) const
+{
+    for (auto i = byte_begin(); i != byte_end(); ++i)
+    {
+        if (*i != symbol)
+        {
+            return { i, byte_end() };
+        }
+    }
+    return {};
+}
+
+AString AString::trimRight(char symbol) const
+{
+    for (auto i = byte_rbegin(); i != byte_rend(); ++i)
+    {
+        if (*i != symbol)
+        {
+            return { byte_begin(), i.base() };
+        }
+    }
+    return {};
+}
+
+AString AString::trim(char symbol) const
+{
+    auto left = byte_begin();
+    auto right = byte_end();
+
+    while (left != right && *left == symbol)
+    {
+        ++left;
+    }
+
+    if (left != right)
+    {
+        auto riter = byte_rbegin();
+        while (riter.base() != left && *riter == symbol)
+        {
+            ++riter;
+        }
+        right = riter.base();
+    }
+
+    return { left, right };
 }
 
 /*AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {

@@ -58,7 +58,7 @@ public:
             AString s = __FUNCTION__;
         #endif
         auto b = s.find("with T = ") + 9;
-        return { s.begin() + b, s.end() - 1 };
+        return { s.byte_begin() + b, s.byte_end() - 1 };
 #endif
     }
 
@@ -66,7 +66,7 @@ public:
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {
-            return {s.begin() + p + 2, s.end()};
+            return {s.byte_begin() + p + 2, s.byte_end()};
         }
         return s;
     }

@@ -52,11 +52,11 @@ private:
     mutable bool cache_valid_;
 
 public:
-    AStringUtf8Iterator() noexcept
+    constexpr AStringUtf8Iterator() noexcept
         : data_(nullptr), begin_(nullptr), end_(nullptr),
           byte_pos_(0), cached_value_(0), cache_valid_(false) {}
 
-    AStringUtf8Iterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
+    constexpr AStringUtf8Iterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
         : data_(data), begin_(begin), end_(end),
           byte_pos_(pos), cached_value_(0), cache_valid_(false) {}
 
@@ -127,9 +127,9 @@ private:
     AStringUtf8Iterator base_iterator_;
 
 public:
-    explicit AStringUtf8ReverseIterator() noexcept = default;
+    explicit constexpr AStringUtf8ReverseIterator() noexcept = default;
 
-    explicit AStringUtf8ReverseIterator(AStringUtf8Iterator it) noexcept
+    explicit constexpr AStringUtf8ReverseIterator(AStringUtf8Iterator it) noexcept
         : base_iterator_(it) {
         --base_iterator_;
     }
@@ -288,7 +288,27 @@ public:
 
     void push_back(AChar c) noexcept;
 
-    AByteBuffer getBytes(AStringEncoding encoding) const;
+    /**
+     * @brief Encodes the string into a byte buffer using the specified encoding.
+     * @sa bytes
+     */
+    AByteBuffer encode(AStringEncoding encoding) const;
+
+    /**
+     * @brief Returns a view of the raw UTF-8 encoded byte data.
+     * @sa encode
+     */
+    constexpr std::span<std::byte> bytes() noexcept {
+        return {(std::byte*) byte_begin().base(), (std::byte*) byte_end().base()};
+    }
+
+    /**
+     * @brief Returns a view of the raw UTF-8 encoded byte data.
+     * @sa encode
+     */
+    constexpr std::span<const std::byte> bytes() const noexcept {
+        return {(const std::byte*) byte_begin().base(), (const std::byte*) byte_end().base()};
+    }
 
     /// Compatibility method
     std::string toStdString() const {
@@ -297,17 +317,27 @@ public:
 
     operator AStringView() const noexcept;
 
-    /// Returns the number of bytes in the UTF-8 encoded string
+    /**
+     * @brief Returns the number of bytes in the UTF-8 encoded string
+     * @sa length
+     */
     constexpr size_type sizeBytes() const noexcept {
         return size();
     }
 
-    /// Returns the number of Unicode characters in the string
+    /**
+     * @brief Returns the number of Unicode characters in the string
+     * @sa sizeBytes
+     */
     size_type length() const noexcept;
 
     constexpr AString substr(size_type pos = 0, size_type n = npos) const {
         return AString(super::substr(pos, n));
     }
+
+    AString trimLeft(char symbol = ' ') const;
+    AString trimRight(char symbol = ' ') const;
+    AString trim(char symbol = ' ') const;
 
     AString& operator=(const AString& other) {
         std::string& ul = *this;
@@ -370,147 +400,147 @@ public:
     template<typename... Args>
     AString format(Args&&... args) const;
 
-    utf8_iterator utf8_begin() noexcept {
+    constexpr utf8_iterator utf8_begin() noexcept {
         return utf8_iterator(data(), data(), data() + size(), 0);
     }
 
-    utf8_const_iterator utf8_begin() const noexcept {
+    constexpr utf8_const_iterator utf8_begin() const noexcept {
         return utf8_const_iterator(data(), data(), data() + size(), 0);
     }
 
-    utf8_const_iterator utf8_cbegin() const noexcept {
+    constexpr utf8_const_iterator utf8_cbegin() const noexcept {
         return utf8_begin();
     }
 
-    utf8_iterator utf8_end() noexcept {
+    constexpr utf8_iterator utf8_end() noexcept {
         return utf8_iterator(data(), data(), data() + size(), size());
     }
 
-    utf8_const_iterator utf8_end() const noexcept {
+    constexpr utf8_const_iterator utf8_end() const noexcept {
         return utf8_const_iterator(data(), data(), data() + size(), size());
     }
 
-    utf8_const_iterator utf8_cend() const noexcept {
+    constexpr utf8_const_iterator utf8_cend() const noexcept {
         return utf8_end();
     }
 
-    utf8_reverse_iterator utf8_rbegin() noexcept {
+    constexpr utf8_reverse_iterator utf8_rbegin() noexcept {
         return utf8_reverse_iterator(utf8_end());
     }
 
-    utf8_const_reverse_iterator utf8_rbegin() const noexcept {
+    constexpr utf8_const_reverse_iterator utf8_rbegin() const noexcept {
         return utf8_const_reverse_iterator(utf8_end());
     }
 
-    utf8_const_reverse_iterator utf8_crbegin() const noexcept {
+    constexpr utf8_const_reverse_iterator utf8_crbegin() const noexcept {
         return utf8_rbegin();
     }
 
-    utf8_reverse_iterator utf8_rend() noexcept {
+    constexpr utf8_reverse_iterator utf8_rend() noexcept {
         return utf8_reverse_iterator(utf8_begin());
     }
 
-    utf8_const_reverse_iterator utf8_rend() const noexcept {
+    constexpr utf8_const_reverse_iterator utf8_rend() const noexcept {
         return utf8_const_reverse_iterator(utf8_begin());
     }
 
-    utf8_const_reverse_iterator utf8_crend() const noexcept {
+    constexpr utf8_const_reverse_iterator utf8_crend() const noexcept {
         return utf8_rend();
     }
 
-    iterator begin() noexcept {
+    constexpr iterator begin() noexcept {
         return utf8_begin();
     }
 
-    const_iterator begin() const noexcept {
+    constexpr const_iterator begin() const noexcept {
         return utf8_begin();
     }
 
-    const_iterator cbegin() const noexcept {
+    constexpr const_iterator cbegin() const noexcept {
         return utf8_begin();
     }
 
-    iterator end() noexcept {
+    constexpr iterator end() noexcept {
         return utf8_end();
     }
 
-    const_iterator end() const noexcept {
+    constexpr const_iterator end() const noexcept {
         return utf8_end();
     }
 
-    const_iterator cend() const noexcept {
+    constexpr const_iterator cend() const noexcept {
         return utf8_end();
     }
 
-    reverse_iterator rbegin() noexcept {
+    constexpr reverse_iterator rbegin() noexcept {
         return utf8_rbegin();
     }
 
-    const_reverse_iterator rbegin() const noexcept {
+    constexpr const_reverse_iterator rbegin() const noexcept {
         return utf8_rbegin();
     }
 
-    const_reverse_iterator crbegin() const noexcept {
+    constexpr const_reverse_iterator crbegin() const noexcept {
         return utf8_rbegin();
     }
 
-    reverse_iterator rend() noexcept {
+    constexpr reverse_iterator rend() noexcept {
         return utf8_rend();
     }
 
-    const_reverse_iterator rend() const noexcept {
+    constexpr const_reverse_iterator rend() const noexcept {
         return utf8_rend();
     }
 
-    const_reverse_iterator crend() const noexcept {
+    constexpr const_reverse_iterator crend() const noexcept {
         return utf8_rend();
     }
 
-    byte_iterator byte_begin() noexcept {
+    constexpr byte_iterator byte_begin() noexcept {
         return super::begin();
     }
 
-    byte_const_iterator byte_begin() const noexcept {
+    constexpr byte_const_iterator byte_begin() const noexcept {
         return super::begin();
     }
 
-    byte_const_iterator byte_cbegin() const noexcept {
+    constexpr byte_const_iterator byte_cbegin() const noexcept {
         return super::cbegin();
     }
 
-    byte_iterator byte_end() noexcept {
+    constexpr byte_iterator byte_end() noexcept {
         return super::end();
     }
 
-    byte_const_iterator byte_end() const noexcept {
+    constexpr byte_const_iterator byte_end() const noexcept {
         return super::end();
     }
 
-    byte_const_iterator byte_cend() const noexcept {
+    constexpr byte_const_iterator byte_cend() const noexcept {
         return super::cend();
     }
 
-    byte_reverse_iterator byte_rbegin() noexcept {
+    constexpr byte_reverse_iterator byte_rbegin() noexcept {
         return super::rbegin();
     }
 
-    byte_const_reverse_iterator byte_rbegin() const noexcept {
+    constexpr byte_const_reverse_iterator byte_rbegin() const noexcept {
         return super::rbegin();
     }
 
-    byte_const_reverse_iterator byte_crbegin() const noexcept {
+    constexpr byte_const_reverse_iterator byte_crbegin() const noexcept {
         return super::crbegin();
     }
 
-    byte_reverse_iterator byte_rend() noexcept {
+    constexpr byte_reverse_iterator byte_rend() noexcept {
         return super::rend();
     }
 
-    byte_const_reverse_iterator byte_rend() const noexcept {
+    constexpr byte_const_reverse_iterator byte_rend() const noexcept {
         return super::rend();
     }
 
-    byte_const_reverse_iterator byte_crend() const noexcept {
+    constexpr byte_const_reverse_iterator byte_crend() const noexcept {
         return super::crend();
     }
 
