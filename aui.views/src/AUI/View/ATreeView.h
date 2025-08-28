@@ -25,9 +25,9 @@
 /**
  * @brief Displays a tree model of strings.
  *
- * ![](imgs/Views/ATreeView.png)
+ * ![](imgs/views/ATreeView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */

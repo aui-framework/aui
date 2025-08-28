@@ -18,9 +18,9 @@
 /**
  * @brief A titled frame
  *
- * ![](imgs/Views/AGroupBox.png)
+ * ![](imgs/views/AGroupBox.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  * @details
  * Group box provides a frame and a customizable title on top.
  *

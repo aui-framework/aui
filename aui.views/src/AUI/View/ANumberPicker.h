@@ -20,7 +20,7 @@
 /**
  * @brief A text field for numbers with increase/decrease buttons.
  *
- * ![](imgs/Views/ANumberPicker.png)
+ * ![](imgs/views/ANumberPicker.png)
  *
  * @ingroup views_input
  */

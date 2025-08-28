@@ -22,9 +22,9 @@
 /**
  * @brief Simple view to draw an IDrawable.
  *
- * ![](imgs/Views/ADrawableView.png)
+ * ![](imgs/views/ADrawableView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_indication
  * @details
  * ADrawableView brings you more control over the drawable. This is useful for drawables with extended interface
  * (i.e., AAnimatedImage).

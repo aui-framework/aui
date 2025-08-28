@@ -20,9 +20,9 @@
 /**
  * @brief A horizontal line.
  *
- * ![](imgs/Views/AHDividerView.png)
+ * ![](imgs/views/AHDividerView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_arrangement
  */
 class API_AUI_VIEWS AHDividerView: public ADividerView {
 public:

@@ -21,9 +21,9 @@
 /**
  * @brief A vertical line.
  *
- * ![](imgs/Views/AVDividerView.png)
+ * ![](imgs/views/AVDividerView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_arrangement
  */
 class API_AUI_VIEWS AVDividerView: public ADividerView {
 public:

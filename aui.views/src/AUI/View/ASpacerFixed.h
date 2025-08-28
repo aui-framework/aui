@@ -17,7 +17,7 @@
 
 /**
  * @brief Fixed-size view which is useful in UI building.
- * @ingroup views_actions
+ * @ingroup views_arrangement
  * @details
  *
  * ASpacerFixed is fixed size blank view which acquires specified space in `Horizontal` and `Vertical` layouts. For the

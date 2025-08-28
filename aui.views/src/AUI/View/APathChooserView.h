@@ -24,7 +24,7 @@
 /**
  * @brief A text field with "..." button prompting path to a file.
  *
- * ![](imgs/Views/AFileChooserView.png)
+ * ![](imgs/views/AFileChooserView.png)
  *
  * @ingroup views_input
  */
@@ -74,7 +74,7 @@ public:
 /**
  * @brief A text field with "..." button prompting path to a dir.
  *
- * ![](imgs/Views/ADirChooserView.png)
+ * ![](imgs/views/ADirChooserView.png)
  *
  * @ingroup views_input
  */

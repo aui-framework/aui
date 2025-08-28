@@ -67,9 +67,9 @@ public:
 /**
  * @brief A single scrollbar
  *
- * ![](imgs/Views/AScrollbar.png)
+ * ![](imgs/views/AScrollbar.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  * @see AScrollArea
  * @see ASlider
  */

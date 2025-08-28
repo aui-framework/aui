@@ -24,7 +24,7 @@
 /**
  * @brief Button with text, which can be pushed to make some action.
  *
- * ![](imgs/Views/AButton.png)
+ * ![](imgs/views/AButton.png)
  *
  * @ingroup views_actions
  * @details

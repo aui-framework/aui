@@ -25,7 +25,7 @@
 /**
  * @brief A group of radio buttons.
  *
- * ![](imgs/Views/ARadioGroup.png)
+ * ![](imgs/views/ARadioGroup.png)
  *
  * @ingroup views_input
  * @details

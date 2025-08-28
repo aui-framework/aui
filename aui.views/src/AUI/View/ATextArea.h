@@ -27,7 +27,7 @@ class API_AUI_VIEWS AScrollArea;
 /**
  * @brief Multiline text input area.
  *
- * ![](imgs/Views/ATextArea.png)
+ * ![](imgs/views/ATextArea.png)
  *
  * @ingroup views_input
  * @details

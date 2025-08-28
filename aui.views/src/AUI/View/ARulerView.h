@@ -24,9 +24,9 @@
 /**
  * @brief A Photoshop-like ruler for measuring display units.
  *
- * ![](imgs/Views/ARulerView.png)
+ * ![](imgs/views/ARulerView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  */
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:

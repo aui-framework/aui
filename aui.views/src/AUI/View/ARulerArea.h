@@ -17,9 +17,9 @@
 /**
  * @brief Photoshop-like ruler area for measuring display units.
  *
- * ![](imgs/Views/ARulerArea.png)
+ * ![](imgs/views/ARulerArea.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  * @details
  * Consists of vertical and horizontal [rulers](arulerview.md).
  */

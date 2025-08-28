@@ -53,7 +53,7 @@ amazing user experiences.
 
 ## API Reference
 
-- [All Views](useful_views.md)
+- [All Views](views.md)
 - [ASS](ass.md)
     - [Selectors](ass_selectors.md)
     - [Properties](ass_properties.md)

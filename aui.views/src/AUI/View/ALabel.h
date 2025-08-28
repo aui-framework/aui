@@ -16,9 +16,9 @@
 /**
  * @brief Represents a simple single-line text display view.
  *
- * ![](imgs/Views/ALabel.png)
+ * ![](imgs/views/ALabel.png)
  *
- * @ingroup views_actions
+ * @ingroup views_indication
  * @details
  * ALabel is used for displaying nonformatted single-line text.
  */

@@ -23,7 +23,7 @@
 /**
  * @brief A button with dropdown list.
  *
- * ![](imgs/Views/ADropdownList.png)
+ * ![](imgs/views/ADropdownList.png)
  *
  * @ingroup views_input
  */

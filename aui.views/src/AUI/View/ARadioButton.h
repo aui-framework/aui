@@ -34,7 +34,7 @@ public:
 /**
  * @brief A radio button.
  *
- * ![](imgs/Views/ARadioButton.png)
+ * ![](imgs/views/ARadioButton.png)
  *
  * @ingroup views_input
  * @details

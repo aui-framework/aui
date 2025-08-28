@@ -113,6 +113,7 @@ def _find_undocumented_aviews():
 
 
 def define_env(env):
+    is_odd = False
 
     @env.macro
     def group(name):
@@ -120,7 +121,12 @@ def define_env(env):
         Generates docs/useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
         """
         with io.StringIO() as fos:
-            print('<div class="views-grid">', file=fos)
+            nonlocal is_odd
+            is_odd_str = "background: var(--md-code-bg-color)" if is_odd else ""
+            is_odd = not is_odd
+            print(f'<div class="views-grid">', file=fos)
+            if is_odd_str:
+                print('<div class="odd-overlay"></div>', file=fos)
 
             views = []
             match name:

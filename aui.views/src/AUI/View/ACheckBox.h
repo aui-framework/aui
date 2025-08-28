@@ -19,7 +19,7 @@
 /**
  * @brief A check box (without label).
  *
- * ![](imgs/Views/ACheckBox.png)
+ * ![](imgs/views/ACheckBox.png)
  *
  * @ingroup views_input
  * @details
@@ -79,7 +79,7 @@ private:
 /**
  * @brief View container with a checkbox.
  *
- * ![](imgs/Views/ACheckBoxWrapper.png)
+ * ![](imgs/views/ACheckBoxWrapper.png)
  * @ingroup views_input
  * @details
  * For a checkbox itself, see [ACheckBox].

@@ -416,6 +416,17 @@ th, td {
     justify-items: stretch;
     align-items: stretch;
     width: 100%;
+    position: relative;
+}
+
+.views-grid .odd-overlay {
+    background: var(--md-code-bg-color);
+    position: absolute;
+    top: -4rem;
+    left: -1.4rem;
+    right: -1.4rem;
+    bottom: 0;
+    z-index: -1;
 }
 
 @media screen and (min-width: 600px) {
@@ -431,9 +442,6 @@ th, td {
 }
 
 .views-card-outer {
-    background: var(--md-default-bg-color);
-    border-radius: 16px;
-    box-shadow: 0 2px 8px 0 #0001;
     align-items: center;
     min-height: 220px;
     text-align: left;

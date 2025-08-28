@@ -135,7 +135,7 @@ nav:
     - 'Handling HiDPI': ametric.md
 
   - 'Views':
-    - 'Overview': views-overview.md
+    - 'Overview': views.md
 
   - 'Styling':
     - ass.md

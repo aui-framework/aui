@@ -20,7 +20,7 @@
 
 /**
  * @brief Like ATabView but without tabs line.
- * @ingroup views_actions
+ * @ingroup views_containment
  */
 class API_AUI_VIEWS APageView: public AViewContainerBase {
 private:

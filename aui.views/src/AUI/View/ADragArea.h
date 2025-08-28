@@ -21,10 +21,10 @@
 /**
  * @brief Wrapping container to drag views inside of it.
  *
- * ![](imgs/Views/ADragArea.png)
+ * ![](imgs/views/ADragArea.png)
  *
  * @details Contained views must be either wrapped by convertToDraggable or have an ADragArea::ADraggableHandle inside.
- * @ingroup views_actions
+ * @ingroup views_containment
  */
 class API_AUI_VIEWS ADragArea: public AViewContainer {
 private:

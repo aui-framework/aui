@@ -17,9 +17,9 @@
 /**
  * @brief HTML-capable text container.
  *
- * ![](imgs/Views/AText.png)
+ * ![](imgs/views/AText.png)
  *
- * @ingroup views_actions
+ * @ingroup views_indication
  * @details
  * Used to display rich text or large texts.
  *

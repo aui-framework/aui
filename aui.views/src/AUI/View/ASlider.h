@@ -18,7 +18,7 @@
 /**
  * @brief Slider control.
  *
- * ![](imgs/Views/ASlider.png)
+ * ![](imgs/views/ASlider.png)
  *
  * @ingroup views_input
  */

@@ -52,9 +52,9 @@ public:
 /**
  * @brief Tab host
  *
- * ![](imgs/Views/ATabView.png)
+ * ![](imgs/views/ATabView.png)
  *
- * @ingroup views_actions
+ * @ingroup views_containment
  * @details
  * Used for screen space saving by grouping views.
  *
