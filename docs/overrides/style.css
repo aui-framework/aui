@@ -430,11 +430,23 @@ th, td {
     align-items: center;
     min-height: 220px;
     text-align: left;
-    margin: 0 auto 60% auto;
-    width: 100%;
-    max-width: 320px;
-    max-height: 200px;
-    box-sizing: border-box;
+    margin: 0 auto 15% auto;
+}
+
+@media screen and (min-width: 600px) {
+    .views-card-outer {
+        margin: 0 auto 30% auto;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .views-card-outer {
+        margin: 0 auto 60% auto;
+        width: 100%;
+        max-width: 320px;
+        max-height: 200px;
+        box-sizing: border-box;
+    }
 }
 
 .md-typeset .views-card-outer .views-card-title a {
