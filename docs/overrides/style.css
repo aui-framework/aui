@@ -401,26 +401,27 @@ th, td {
 }
 
 
+
 .views-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 32px;
-    /* Ensures consistent spacing between all cards, even if the last row is not full */
-    justify-items: stretch;
+    gap: 24px;
+    justify-items: center;
     align-items: stretch;
+    width: 100%;
 }
 
 .views-card-outer {
     background: var(--md-default-bg-color);
-    border-radius: 20px;
+    border-radius: 16px;
     box-shadow: 0 2px 8px 0 #0001;
     align-items: center;
-    min-height: 260px;
+    min-height: 220px;
     text-align: left;
-    /* Remove margin-bottom to avoid double spacing with grid gap */
-    margin: 0;
-    /* Ensure full width in grid cell */
+    margin: 0 auto 60% auto;
     width: 100%;
+    max-width: 320px;
+    max-height: 200px;
     box-sizing: border-box;
 }
 
@@ -434,13 +435,16 @@ th, td {
 
 .views-card {
     background: #f0f0f0;
-    border-radius: 20px;
-    padding: 32px;
+    border-radius: 16px;
+    border: 2px solid;
+    padding: 20px;
     box-shadow: 0 2px 8px 0 #0001;
-    min-width: 100%;
+    width: 100%;
+    max-width: 320px;
+    max-height: 200px;
     min-height: 50%;
     aspect-ratio: 108 / 61;
-    /* min-height: 260px; */
+    box-sizing: border-box;
 }
 
 .views-card img {

@@ -1,4 +1,4 @@
-# Useful Views
+# Overview
 
 This page provides an overview of the most commonly used views in AUI Framework, each with a screenshot and a short description. Click on a view name to see its detailed documentation.
 
