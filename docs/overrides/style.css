@@ -406,7 +406,7 @@ th, td {
     display: grid;
     grid-template-columns: 1fr;
     gap: 24px;
-    justify-items: center;
+    justify-items: stretch;
     align-items: stretch;
     width: 100%;
 }
@@ -430,18 +430,18 @@ th, td {
     align-items: center;
     min-height: 220px;
     text-align: left;
-    margin: 0 auto 15% auto;
+    margin: 0 0 15% 0;
 }
 
 @media screen and (min-width: 600px) {
     .views-card-outer {
-        margin: 0 auto 30% auto;
+        margin: 0 0 30% 0;
     }
 }
 
 @media screen and (min-width: 900px) {
     .views-card-outer {
-        margin: 0 auto 60% auto;
+        margin: 0 0 60% 0;
         width: 100%;
         max-width: 320px;
         max-height: 200px;
