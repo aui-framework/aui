@@ -430,21 +430,15 @@ th, td {
     align-items: center;
     min-height: 220px;
     text-align: left;
-    margin: 0 0 15% 0;
 }
 
-@media screen and (min-width: 600px) {
+/* @media screen and (min-width: 600px) {
     .views-card-outer {
-        margin: 0 0 30% 0;
     }
-}
+} */
 
 @media screen and (min-width: 900px) {
     .views-card-outer {
-        margin: 0 0 40% 0;
-        width: 100%;
-        max-width: 320px;
-        max-height: 200px;
         box-sizing: border-box;
     }
 }
@@ -464,9 +458,6 @@ th, td {
     padding: 20px;
     box-shadow: 0 2px 8px 0 #0001;
     width: 100%;
-    max-width: 320px;
-    max-height: 200px;
-    min-height: 50%;
     aspect-ratio: 108 / 61;
     box-sizing: border-box;
 }
