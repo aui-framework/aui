@@ -24,6 +24,157 @@
 #include <AUI/Common/AOptional.h>
 #include <fmt/core.h>
 
+namespace aui::detail {
+
+char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept;
+
+size_t getPrevCharStart(const char* data, size_t pos) noexcept;
+
+}
+
+/**
+ * @brief UTF-8 forward iterator for AString
+ */
+class AStringUtf8Iterator {
+public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = char32_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const char32_t*;
+    using reference = char32_t;
+
+private:
+    const char* data_;
+    const char* begin_;
+    const char* end_;
+    size_t byte_pos_;
+    mutable char32_t cached_value_;
+    mutable bool cache_valid_;
+
+public:
+    AStringUtf8Iterator() noexcept
+        : data_(nullptr), begin_(nullptr), end_(nullptr),
+          byte_pos_(0), cached_value_(0), cache_valid_(false) {}
+
+    AStringUtf8Iterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
+        : data_(data), begin_(begin), end_(end),
+          byte_pos_(pos), cached_value_(0), cache_valid_(false) {}
+
+    char32_t operator*() const noexcept {
+        if (!cache_valid_) {
+            size_t temp_pos = byte_pos_;
+            cached_value_ = aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
+            cache_valid_ = true;
+        }
+        return cached_value_;
+    }
+
+    AStringUtf8Iterator& operator++() noexcept {
+        if (byte_pos_ < static_cast<size_t>(end_ - begin_)) {
+            size_t temp_pos = byte_pos_;
+            aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
+            byte_pos_ = temp_pos;
+        }
+        cache_valid_ = false;
+        return *this;
+    }
+
+    AStringUtf8Iterator operator++(int) noexcept {
+        AStringUtf8Iterator temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+    AStringUtf8Iterator& operator--() noexcept {
+        if (byte_pos_ > 0) {
+            byte_pos_ = aui::detail::getPrevCharStart(data_, byte_pos_);
+        }
+        cache_valid_ = false;
+        return *this;
+    }
+
+    AStringUtf8Iterator operator--(int) noexcept {
+        AStringUtf8Iterator temp = *this;
+        --(*this);
+        return temp;
+    }
+
+    bool operator==(const AStringUtf8Iterator& other) const noexcept {
+        return data_ == other.data_ && byte_pos_ == other.byte_pos_;
+    }
+
+    bool operator!=(const AStringUtf8Iterator& other) const noexcept {
+        return !(*this == other);
+    }
+
+    size_t getBytePos() const noexcept {
+        return byte_pos_;
+    }
+};
+
+/**
+ * @brief UTF-8 reverse iterator for AString
+ */
+class AStringUtf8ReverseIterator {
+public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = char32_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const char32_t*;
+    using reference = char32_t;
+
+private:
+    AStringUtf8Iterator base_iterator_;
+
+public:
+    explicit AStringUtf8ReverseIterator() noexcept = default;
+
+    explicit AStringUtf8ReverseIterator(AStringUtf8Iterator it) noexcept
+        : base_iterator_(it) {
+        --base_iterator_;
+    }
+
+    AStringUtf8Iterator base() const noexcept {
+        AStringUtf8Iterator temp = base_iterator_;
+        ++temp;
+        return temp;
+    }
+
+    char32_t operator*() const noexcept {
+        return *base_iterator_;
+    }
+
+    AStringUtf8ReverseIterator& operator++() noexcept {
+        --base_iterator_;
+        return *this;
+    }
+
+    AStringUtf8ReverseIterator operator++(int) noexcept {
+        AStringUtf8ReverseIterator temp = *this;
+        ++(*this);
+        return temp;
+    }
+
+    AStringUtf8ReverseIterator& operator--() noexcept {
+        ++base_iterator_;
+        return *this;
+    }
+
+    AStringUtf8ReverseIterator operator--(int) noexcept {
+        AStringUtf8ReverseIterator temp = *this;
+        --(*this);
+        return temp;
+    }
+
+    bool operator==(const AStringUtf8ReverseIterator& other) const noexcept {
+        return base_iterator_ == other.base_iterator_;
+    }
+
+    bool operator!=(const AStringUtf8ReverseIterator& other) const noexcept {
+        return !(*this == other);
+    }
+};
+
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
@@ -54,11 +205,23 @@ private:
 
 public:
 
-    using iterator = super::iterator;
     using value_type = super::value_type;
-    using const_iterator = super::const_iterator;
-    using reverse_iterator = super::reverse_iterator;
-    using const_reverse_iterator = super::const_reverse_iterator;
+
+    using utf8_iterator = AStringUtf8Iterator;
+    using utf8_const_iterator = AStringUtf8Iterator;
+    using utf8_reverse_iterator = AStringUtf8ReverseIterator;
+    using utf8_const_reverse_iterator = AStringUtf8ReverseIterator;
+
+    using byte_iterator = super::iterator;
+    using byte_const_iterator = super::const_iterator;
+    using byte_reverse_iterator = super::reverse_iterator;
+    using byte_const_reverse_iterator = super::const_reverse_iterator;
+
+    using iterator = utf8_iterator;
+    using const_iterator = utf8_const_iterator;
+    using reverse_iterator = utf8_reverse_iterator;
+    using const_reverse_iterator = utf8_const_reverse_iterator;
+
     auto constexpr static NPOS = super::npos;
 
     static AString numberHex(int i);
@@ -207,6 +370,150 @@ public:
     template<typename... Args>
     AString format(Args&&... args) const;
 
+    utf8_iterator utf8_begin() noexcept {
+        return utf8_iterator(data(), data(), data() + size(), 0);
+    }
+
+    utf8_const_iterator utf8_begin() const noexcept {
+        return utf8_const_iterator(data(), data(), data() + size(), 0);
+    }
+
+    utf8_const_iterator utf8_cbegin() const noexcept {
+        return utf8_begin();
+    }
+
+    utf8_iterator utf8_end() noexcept {
+        return utf8_iterator(data(), data(), data() + size(), size());
+    }
+
+    utf8_const_iterator utf8_end() const noexcept {
+        return utf8_const_iterator(data(), data(), data() + size(), size());
+    }
+
+    utf8_const_iterator utf8_cend() const noexcept {
+        return utf8_end();
+    }
+
+    utf8_reverse_iterator utf8_rbegin() noexcept {
+        return utf8_reverse_iterator(utf8_end());
+    }
+
+    utf8_const_reverse_iterator utf8_rbegin() const noexcept {
+        return utf8_const_reverse_iterator(utf8_end());
+    }
+
+    utf8_const_reverse_iterator utf8_crbegin() const noexcept {
+        return utf8_rbegin();
+    }
+
+    utf8_reverse_iterator utf8_rend() noexcept {
+        return utf8_reverse_iterator(utf8_begin());
+    }
+
+    utf8_const_reverse_iterator utf8_rend() const noexcept {
+        return utf8_const_reverse_iterator(utf8_begin());
+    }
+
+    utf8_const_reverse_iterator utf8_crend() const noexcept {
+        return utf8_rend();
+    }
+
+    iterator begin() noexcept {
+        return utf8_begin();
+    }
+
+    const_iterator begin() const noexcept {
+        return utf8_begin();
+    }
+
+    const_iterator cbegin() const noexcept {
+        return utf8_begin();
+    }
+
+    iterator end() noexcept {
+        return utf8_end();
+    }
+
+    const_iterator end() const noexcept {
+        return utf8_end();
+    }
+
+    const_iterator cend() const noexcept {
+        return utf8_end();
+    }
+
+    reverse_iterator rbegin() noexcept {
+        return utf8_rbegin();
+    }
+
+    const_reverse_iterator rbegin() const noexcept {
+        return utf8_rbegin();
+    }
+
+    const_reverse_iterator crbegin() const noexcept {
+        return utf8_rbegin();
+    }
+
+    reverse_iterator rend() noexcept {
+        return utf8_rend();
+    }
+
+    const_reverse_iterator rend() const noexcept {
+        return utf8_rend();
+    }
+
+    const_reverse_iterator crend() const noexcept {
+        return utf8_rend();
+    }
+
+    byte_iterator byte_begin() noexcept {
+        return super::begin();
+    }
+
+    byte_const_iterator byte_begin() const noexcept {
+        return super::begin();
+    }
+
+    byte_const_iterator byte_cbegin() const noexcept {
+        return super::cbegin();
+    }
+
+    byte_iterator byte_end() noexcept {
+        return super::end();
+    }
+
+    byte_const_iterator byte_end() const noexcept {
+        return super::end();
+    }
+
+    byte_const_iterator byte_cend() const noexcept {
+        return super::cend();
+    }
+
+    byte_reverse_iterator byte_rbegin() noexcept {
+        return super::rbegin();
+    }
+
+    byte_const_reverse_iterator byte_rbegin() const noexcept {
+        return super::rbegin();
+    }
+
+    byte_const_reverse_iterator byte_crbegin() const noexcept {
+        return super::crbegin();
+    }
+
+    byte_reverse_iterator byte_rend() noexcept {
+        return super::rend();
+    }
+
+    byte_const_reverse_iterator byte_rend() const noexcept {
+        return super::rend();
+    }
+
+    byte_const_reverse_iterator byte_crend() const noexcept {
+        return super::crend();
+    }
+
 private:
     size_type size() const noexcept {
         return super::size();
@@ -305,6 +612,15 @@ public:
         return substr(size() - suffix.size()) == suffix;
     }
 
+};
+
+template<>
+struct std::hash<AStringView>
+{
+    size_t operator()(const AStringView& t) const noexcept
+    {
+        return std::hash<std::string_view>()(t);
+    }
 };
 
 inline AString::AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
