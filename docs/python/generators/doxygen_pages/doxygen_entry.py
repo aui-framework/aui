@@ -75,19 +75,64 @@ def _generate_useful_views_group_page(doxygen, fos):
     Generates docs/useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
     """
     print('<div class="views-grid">', file=fos)
-    for group_item in cpp_parser.index:
-        if not hasattr(group_item, 'doc'):
-            continue
-        if not hasattr(group_item, 'name'):
-            continue
-        if f"@ingroup useful_views" not in group_item.doc:
-            continue
 
+    name_to_class = {c.name: c for c in cpp_parser.index if hasattr(c, 'name')}
+
+    def get_aview_family(cls, name_to_class, family_set):
+        if not hasattr(cls, 'base_classes'):
+            return
+        family_set.add(cls.name)
+        for base in getattr(cls, 'base_classes', []):
+            if base in name_to_class:
+                get_aview_family(name_to_class[base], name_to_class, family_set)
+
+    def is_derived_from_AView(cls, name_to_class):
+        visited = set()
+        def check(c):
+            if not hasattr(c, 'base_classes'):
+                return False
+            if c.name == 'AView':
+                return True
+            for base in getattr(c, 'base_classes', []):
+                if base == 'AView':
+                    return True
+                if base in name_to_class and base not in visited:
+                    visited.add(base)
+                    if check(name_to_class[base]):
+                        return True
+            return False
+        return check(cls)
+
+    aview_family_names = set()
+    for c in cpp_parser.index:
+        if not hasattr(c, 'name') or not hasattr(c, 'doc'):
+            continue
+        if is_derived_from_AView(c, name_to_class):
+            get_aview_family(c, name_to_class, aview_family_names)
+
+
+    for extra in ("AViewContainer", "AViewContainerBase"):
+        if extra in name_to_class:
+            aview_family_names.add(extra)
+
+    aview_family = sorted((name_to_class[n] for n in aview_family_names if n in name_to_class), key=lambda c: c.name.lower())
+
+    normal_views = []
+    aview_names_set = set(n for n in aview_family_names)
+    for c in cpp_parser.index:
+        if not hasattr(c, 'name') or not hasattr(c, 'doc'):
+            continue
+        if c.name in aview_names_set:
+            continue
+        if f"@ingroup useful_views" in c.doc:
+            page_url = getattr(c, 'page_url', None)
+            if page_url:
+                normal_views.append(c)
+
+    normal_views.sort(key=lambda c: c.name.lower())
+
+    for group_item in normal_views + aview_family:
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
-        page_url = getattr(group_item, 'page_url', None)
-        if not page_url:
-            continue
-
         img_match = re.search(r'!\[.*?\]\((.*?)\)', brief)
         if img_match:
             img_path = f'../{img_match.group(1)}'
@@ -95,7 +140,6 @@ def _generate_useful_views_group_page(doxygen, fos):
         else:
             img_path = '../imgs/logo_black.svg'
             brief_text = brief
-
         print(f'''<div class="views-card-outer">
     <a href="../{group_item.name}">
         <div class="views-card">
@@ -106,4 +150,5 @@ def _generate_useful_views_group_page(doxygen, fos):
     <div class="views-card-desc">{brief_text}</div>
     <a class="views-card-link" href="../{group_item.name}">Learn more</a>
 </div>''', file=fos)
+
     print('\n</div>', file=fos)

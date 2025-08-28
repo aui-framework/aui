@@ -107,6 +107,7 @@ class CppClass:
         self.generic_kind = None # 'class' | 'struct'
         self.page_url = None
         self.types = []
+        self.base_classes = []  # List of base class names (strings)
 
     def namespaced_name(self):
         return "::".join(self.namespace + [self.name])
@@ -340,6 +341,33 @@ class _Parser:
         clazz.name = self.last_token[1]
         clazz.doc = self._consume_doc()
         clazz.location = self.location
+
+        # Parse base classes (e.g., class Foo : public Bar, public Baz)
+        if self.last_token[1] == ':':
+            base_classes = []
+            self.last_token = next(self.iterator)
+            while self.last_token[1] not in '{;':
+                # skip access specifiers
+                if self.last_token[1] in ['public', 'protected', 'private', ',']:
+                    self.last_token = next(self.iterator)
+                    continue
+                # base class name
+                if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                    base_name = self.last_token[1]
+                    # handle namespaced base classes
+                    while True:
+                        peek = next(self.iterator)
+                        if peek[1] == '::':
+                            base_name += '::' + next(self.iterator)[1]
+                        else:
+                            self.last_token = peek
+                            break
+                    base_classes.append(base_name)
+                    continue
+                self.last_token = next(self.iterator)
+            clazz.base_classes = base_classes
+        else:
+            clazz.base_classes = []
 
         while self.last_token[1] not in '{;':
             self.last_token = next(self.iterator)
