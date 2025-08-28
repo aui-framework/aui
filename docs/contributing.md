@@ -150,6 +150,7 @@ To generate documentation, run the following command from the root of AUI reposi
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
+git checkout develop # we do development on develop branch only
 
 # if you want to use venv
 python3 -m venv .venv
