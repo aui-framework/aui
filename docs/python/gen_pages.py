@@ -19,3 +19,4 @@ import mkdocs_gen_files
 
 examples_page.gen_pages()
 doxygen.gen_pages()
+doxygen.generate_useful_views_md()

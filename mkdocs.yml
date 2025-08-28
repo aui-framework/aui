@@ -136,6 +136,7 @@ nav:
 
   - 'Views':
     - 'Overview': useful_views_new.md
+    - 'DEBUG': generate_useful_views.md
 
   - 'Styling':
     - ass.md

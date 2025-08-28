@@ -346,3 +346,62 @@ def gen_pages():
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)
+
+def generate_useful_views_md():
+    """
+    Generates docs/generate_useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
+    """
+    import mkdocs_gen_files
+    from docs.python.generators import cpp_parser
+    import re
+    from pathlib import Path
+
+
+    # Use the same logic as classes.md: iterate cpp_parser.index for CppClass, filter for AView and its subclasses
+    from docs.python.generators.cpp_parser import CppClass
+
+
+    # Only include classes present as view-cards in useful_views.md
+    ref_path = Path(__file__).parent.parent / 'useful_views.md'
+    view_classes = []
+    if ref_path.exists():
+        ref_text = ref_path.read_text(encoding='utf-8')
+        import re
+        ref_names = set(re.findall(r'<div class="views-card-title">([A-Za-z0-9_]+)</div>', ref_text))
+        print('DEBUG: Reference view names:', ref_names)
+        # Only keep classes that are present as view-cards in useful_views.md
+        all_classes = [i for i in cpp_parser.index if isinstance(i, CppClass)]
+        class_map = {clazz.name: clazz for clazz in all_classes}
+        for name in sorted(ref_names):
+            if name in class_map:
+                view_classes.append(class_map[name])
+
+    output_path = 'generate_useful_views.md'
+    with mkdocs_gen_files.open(output_path, 'w', encoding='utf-8') as f:
+            if ref_names:
+                all_classes = [i for i in cpp_parser.index if isinstance(i, CppClass)]
+                class_map = {clazz.name: clazz for clazz in all_classes}
+                for name in sorted(ref_names):
+                    if name in class_map:
+                        view_classes.append(class_map[name])
+                # Fallback: generate slugged URL as in gen_pages
+                page_url = clazz.namespaced_name().lower().replace('::', '_') + '.md'
+            # Use @brief from doc as description
+            desc = ''
+            if hasattr(clazz, 'doc') and clazz.doc:
+                doxygen = parse_doxygen(clazz.doc)
+                desc = next((i[1] for i in doxygen if i[0] == '@brief'), '')
+            img_path = f'../imgs/Views/{clazz.name}.png'
+            f.write(f'''<div class="views-card-outer">
+    <div class="views-card">
+        <a href="{page_url}">
+            <img src="{img_path}" alt="{clazz.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
+        </a>
+    </div>
+    <div class="views-card-title">{clazz.name}</div>
+    <div class="views-card-desc">{desc}</div>
+    <a class="views-card-link" href="{page_url}">Learn more</a>
+</div>\n''')
+        f.write('\n</div>\n')
+
+    # ...existing code...
