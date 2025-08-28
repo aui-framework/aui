@@ -9,6 +9,8 @@
 
 from pathlib import Path
 
+from docs.python.generators import regexes
+
 
 def determine_extension(f: Path):
     extension = f.suffix
@@ -46,3 +48,23 @@ def strip_indentation(code: list[str]):
     """
     min_leading_spaces = min([len(i) - len(i.lstrip()) for i in code if i.strip()])
     return [line[min_leading_spaces:] for line in code]
+
+def parse_doxygen(comment):
+    output = [['', '']]
+    if comment is None:
+        return output
+    iterator = iter(comment.split('\n'))
+
+    for i in iterator:
+        if m := regexes.CPP_BRIEF_LINE.match(i):
+            section_name = m.group(1)
+            output.append([section_name, ''])
+            output[-1][1] += m.group(2)
+            continue
+        output[-1][1] += "\n" + i
+    output = [i for i in filter(lambda x: x[1] != '', output)]
+    for output_line in output:
+        output_line[1] = output_line[1].strip()
+
+    return output
+
