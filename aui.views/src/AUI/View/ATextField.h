@@ -18,11 +18,11 @@
 /**
  * @brief Editable field with text to receive a text input from the user.
  *
- * ![](imgs/ATextField.gif)
+ * ![](imgs/Views/ATextField.gif)
  *
  * @ingroup useful_views
  * @details
- * ![](imgs/ATextField.gif)
+ * ![](imgs/Views/ATextField.gif)
  */
 class API_AUI_VIEWS ATextField : public AAbstractTextField {
 public:

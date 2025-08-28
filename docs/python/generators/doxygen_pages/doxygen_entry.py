@@ -82,11 +82,20 @@ def _generate_useful_views_group_page(doxygen, fos):
             continue
         if f"@ingroup useful_views" not in group_item.doc:
             continue
+
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
         page_url = getattr(group_item, 'page_url', None)
         if not page_url:
-            page_url = group_item.namespaced_name().lower().replace('::', '_') + '.md'
-        img_path = f'../imgs/Views/{group_item.name}.png'
+            continue
+
+        img_match = re.search(r'!\[.*?\]\((.*?)\)', brief)
+        if img_match:
+            img_path = f'../{img_match.group(1)}'
+            brief_text = brief[:img_match.start()].rstrip()
+        else:
+            img_path = '../imgs/logo_black.svg'
+            brief_text = brief
+
         print(f'''<div class="views-card-outer">
     <a href="../{group_item.name}">
         <div class="views-card">
@@ -94,7 +103,7 @@ def _generate_useful_views_group_page(doxygen, fos):
         </div>
     </a>
     <div class="views-card-title">{group_item.name}</div>
-    <div class="views-card-desc">{brief}</div>
+    <div class="views-card-desc">{brief_text}</div>
     <a class="views-card-link" href="../{group_item.name}">Learn more</a>
 </div>''', file=fos)
     print('\n</div>', file=fos)
