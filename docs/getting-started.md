@@ -10,14 +10,14 @@
     
 === ":material-microsoft-visual-studio-code: VS Code"
     
-    1. Install following extensions:
+    - Install following extensions:
     
        | Extension                                                                                                  | Description                                                           |
        | ---------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
        | [cpp tools pack](https://marketplace.visualstudio.com/items?itemName=ms-vscode.cpptools-extension-pack)    | Introduces basic C/C++ support and CMake integration.                 |
        | [vscode-clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) | C++ language server for extensive code navigation, autocomplete, etc. |
     
-    2. Add these lines to your `settings.json` (++f1++ `> Preferences: Open User Settings (JSON)`):
+    - Add these lines to your `settings.json` (++f1++ `> Preferences: Open User Settings (JSON)`):
        
        ```json title="settings.json"
        "clangd.arguments": [

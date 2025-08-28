@@ -155,7 +155,6 @@ nav:
       - aui-command-line-arguments.md
       - runtime-dependency-resolution.md
       - forking-aui.md
-      - contributing.md
 
   - Reference:
       - 'Installation methods':
@@ -169,3 +168,6 @@ nav:
           - aui_module.md
           - aui-configure-flags.md
           - app-build-overview.md
+
+  - contributing.md
+
