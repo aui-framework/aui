@@ -127,6 +127,12 @@ static char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) 
     return result;
 }
 
+AString AString::numberHex(int i) {
+    char buf[32];
+    std::snprintf(buf, sizeof(buf), "%x", static_cast<unsigned>(i));
+    return buf;
+}
+
 AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) {
     switch (encoding) {
         case AStringEncoding::UTF8: {
@@ -136,19 +142,31 @@ AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) {
         case AStringEncoding::UTF16: {
             size_t size = simdutf::utf8_length_from_utf16(reinterpret_cast<const char16_t*>(bytes.data()), bytes.size() / 2);
             super::resize(size);
-            simdutf::convert_utf16_to_utf8(reinterpret_cast<const char16_t*>(bytes.data()), bytes.size() / 2, data());
+            super::resize(simdutf::convert_utf16_to_utf8(reinterpret_cast<const char16_t*>(bytes.data()), bytes.size() / 2, data()));
         } break;
         case AStringEncoding::UTF32: {
             size_t size = simdutf::utf8_length_from_utf32(reinterpret_cast<const char32_t*>(bytes.data()), bytes.size() / 4);
             super::resize(size);
-            simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(bytes.data()), bytes.size() / 4, data());
+            super::resize(simdutf::convert_utf32_to_utf8(reinterpret_cast<const char32_t*>(bytes.data()), bytes.size() / 4, data()));
         } break;
         case AStringEncoding::LATIN1: {
             size_t size = simdutf::utf8_length_from_latin1(reinterpret_cast<const char*>(bytes.data()), bytes.size());
             super::resize(size);
-            simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(bytes.data()), bytes.size(), data());
+            super::resize(simdutf::convert_latin1_to_utf8(reinterpret_cast<const char*>(bytes.data()), bytes.size(), data()));
         } break;
     }
+}
+
+AString::AString(const char16_t* utf16_bytes, size_type length) {
+    size_t size = simdutf::utf8_length_from_utf16(utf16_bytes, length);
+    super::resize(size);
+    super::resize(simdutf::convert_utf16_to_utf8(utf16_bytes, length, data()));
+}
+
+AString::AString(const char32_t* utf32_bytes, size_type length) {
+    size_t size = simdutf::utf8_length_from_utf32(utf32_bytes, length);
+    super::resize(size);
+    super::resize(simdutf::convert_utf32_to_utf8(utf32_bytes, length, data()));
 }
 
 AString::AString(AChar c) {
@@ -156,7 +174,7 @@ AString::AString(AChar c) {
 }
 
 void AString::push_back(AChar c) noexcept {
-    // TODO: insertAll(::toUtf8(c));
+    append(c);
 }
 
 AByteBuffer AString::getBytes(AStringEncoding encoding) const {
@@ -186,28 +204,7 @@ AByteBuffer AString::getBytes(AStringEncoding encoding) const {
     return std::move(bytes);
 }
 
-AStringVector AString::split(AChar c) const noexcept
-{
-    if (empty()) {
-        return {};
-    }
-    AStringVector result;
-    result.reserve(length() / 10);
-    for (size_type s = 0;;)
-    {
-        auto next = super::find(c, s);
-        if (next == npos)
-        {
-            result << substr(s);
-            break;
-        }
-
-        result << substr(s, next - s);
-        s = next + 1;
-    }
-    return result;
-}
-
+/*
 AString AString::trimLeft(char16_t symbol) const noexcept
 {
     for (auto i = begin(); i != end(); ++i)
@@ -297,36 +294,81 @@ AString AString::replacedAll(const AString& from, const AString& to) const
     return result;
 }
 
-AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
-    int result = 0;
-    const auto NUMBER_LAST = std::min(int('0' + int(base) - 1), int('9'));
-    const auto LETTER_LAST = 'a' + int(base) - 11;
-    const auto LETTER_LAST_CAPITAL = 'A' + int(base) - 11;
-    for (auto c : *this) {
-        if (c >= '0' && c <= NUMBER_LAST) {
-            result = result * base + (c - '0');
-            continue;
-        }
-
-        if (int(base) > 10) {
-            if (c >= 'a' && c <= LETTER_LAST) {
-                result = result * base + (c - 'a' + 10);
-                continue;
-            }
-
-            if (c >= 'A' && c <= LETTER_LAST_CAPITAL) {
-                result = result * base + (c - 'A' + 10);
-                continue;
-            }
-        }
-        return std::nullopt;
+void AString::resizeToNullTerminator() {
+    const char* end = data();
+    while (*end) {
+        ++end;
     }
+    resize(end - data());
+}*/
 
+AString::operator AStringView() const noexcept {
+    return {static_cast<const std::string&>(*this)};
+}
+
+AString::size_type AString::length() const noexcept {
+    return simdutf::count_utf8(super::data(), super::size());
+}
+
+/*AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
+    if (length() > s) {
+        return substr(0, s) + stringAtEnd;
+    }
+    return *this;
+}
+
+AString AString::processEscapes() const {
+    AString result;
+    result.reserve(length());
+    bool doEscape = false;
+    for (auto& c : *this) {
+        if (doEscape) {
+            doEscape = false;
+            switch (c) {
+                case '\\':
+                    result << '\\';
+                    break;
+                case 'n':
+                    result << '\n';
+                    break;
+                default:
+                    result << c;
+            }
+        } else if (c == '\\') {
+            doEscape = true;
+        } else {
+            result << c;
+        }
+    }
     return result;
 }
 
-std::string AString::toStdString() const noexcept
-{
+AString AString::excessSpacesRemoved() const noexcept {
+    AString s;
+    s.reserve(length() + 1);
+    bool prevWasSpace = false;
+    for (auto c : *this) {
+        if (c == ' ') {
+            if (prevWasSpace) {
+                continue;
+            }
+            prevWasSpace = true;
+        } else {
+            prevWasSpace = false;
+        }
+        s << c;
+    }
+    return s;
+}*/
+
+AString& AString::append(char c) {
+    super::append(&c, 1);
+    return *this;
+}
+
+AString& AString::append(AChar c) {
+    auto utf8c = ::toUtf8(c);
+    super::append(utf8c.begin(), utf8c.end());
     return *this;
 }
 
@@ -1143,86 +1185,39 @@ AString AString::lowercase() const {
     return buf;
 }
 
-void AString::resizeToNullTerminator() {
-    const char* end = data();
-    while (*end) {
-        ++end;
+AStringVector AString::split(AChar c) const {
+    if (empty()) {
+        return {};
     }
-    resize(end - data());
-}
-
-AString::size_type AString::length() const noexcept {
-    return simdutf::count_utf8(super::data(), super::size());
-}
-
-AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
-    if (length() > s) {
-        return substr(0, s) + stringAtEnd;
-    }
-    return *this;
-}
-
-AString AString::numberHex(int i) noexcept {
-    char buf[32];
-    std::snprintf(buf, sizeof(buf), "%x", static_cast<unsigned>(i));
-    return buf;
-}
-
-AString AString::processEscapes() const {
-    AString result;
-    result.reserve(length());
-    bool doEscape = false;
-    for (auto& c : *this) {
-        if (doEscape) {
-            doEscape = false;
-            switch (c) {
-                case '\\':
-                    result << '\\';
-                    break;
-                case 'n':
-                    result << '\n';
-                    break;
-                default:
-                    result << c;
-            }
-        } else if (c == '\\') {
-            doEscape = true;
-        } else {
-            result << c;
+    auto utf8c = ::toUtf8(c);
+    if (utf8c.empty()) return {};
+    std::string separator_utf8(utf8c.begin(), utf8c.end());
+    AStringVector result;
+    result.reserve(length() / 10);
+    for (size_type s = 0;;) {
+        auto next = super::find(separator_utf8, s);
+        if (next == npos) {
+            result << substr(s);
+            break;
         }
+
+        result << substr(s, next - s);
+        s = next + separator_utf8.length();
     }
     return result;
 }
 
-AString AString::excessSpacesRemoved() const noexcept {
-    AString s;
-    s.reserve(length() + 1);
-    bool prevWasSpace = false;
-    for (auto c : *this) {
-        if (c == ' ') {
-            if (prevWasSpace) {
-                continue;
-            }
-            prevWasSpace = true;
-        } else {
-            prevWasSpace = false;
-        }
-        s << c;
-    }
-    return s;
-}
-
 template<typename T>
-AOptional<T> toNumberImpl(const AStringView& str) noexcept {
+static AOptional<T> toNumber(const AStringView& str) noexcept {
     if (str.empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;
     bool negative = false;
 
     if constexpr (std::is_integral_v<T>) {
-        if (startsWith("0x") || startsWith("0X")) {
+        if (str.startsWith("0x") || str.startsWith("0X")) {
             // hex
-            for (auto c : substr(2)) {
+            for (auto c : str.substr(2)) {
                 value *= 16;
                 if (value < prevValue) { // overflow check
                     return std::nullopt;
@@ -1293,27 +1288,55 @@ AOptional<T> toNumberImpl(const AStringView& str) noexcept {
 }
 
 AOptional<int32_t> AString::toInt() const noexcept {
-    return toNumberImpl<int32_t>();
+    return toNumber<int32_t>(*this);
 }
 
-AOptional<int64_t> AString::toLongInt() const noexcept {
-    return toNumberImpl<int64_t>();
+AOptional<int64_t> AString::toLong() const noexcept {
+    return toNumber<int64_t>(*this);
 }
 
 AOptional<uint32_t> AString::toUInt() const noexcept {
-    return toNumberImpl<uint32_t>();
+    return toNumber<uint32_t>(*this);
 }
 
 AOptional<uint64_t> AString::toULong() const noexcept {
-    return toNumberImpl<uint64_t>();
+    return toNumber<uint64_t>(*this);
 }
 
 AOptional<float> AString::toFloat() const noexcept {
-    return toNumberImpl<float>();
+    return toNumber<float>(*this);
 }
 
 AOptional<double> AString::toDouble() const noexcept {
-    return toNumberImpl<double>();
+    return toNumber<double>(*this);
+}
+
+AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
+    int result = 0;
+    const auto NUMBER_LAST = std::min(int('0' + int(base) - 1), int('9'));
+    const auto LETTER_LAST = 'a' + int(base) - 11;
+    const auto LETTER_LAST_CAPITAL = 'A' + int(base) - 11;
+    for (auto c : *this) {
+        if (c >= '0' && c <= NUMBER_LAST) {
+            result = result * base + (c - '0');
+            continue;
+        }
+
+        if (int(base) > 10) {
+            if (c >= 'a' && c <= LETTER_LAST) {
+                result = result * base + (c - 'a' + 10);
+                continue;
+            }
+
+            if (c >= 'A' && c <= LETTER_LAST_CAPITAL) {
+                result = result * base + (c - 'A' + 10);
+                continue;
+            }
+        }
+        return std::nullopt;
+    }
+
+    return result;
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

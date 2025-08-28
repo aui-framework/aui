@@ -61,6 +61,42 @@ public:
     using const_reverse_iterator = super::const_reverse_iterator;
     auto constexpr static NPOS = super::npos;
 
+    static AString numberHex(int i);
+
+    template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
+    static AString number(T i) noexcept {
+        if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
+            if (i) return "true";
+            return "false";
+        } else {
+            auto v = std::to_string(i);
+            if constexpr (std::is_floating_point_v<T>) {
+                // remove trailing zeros
+                v.erase(v.find_last_not_of('0') + 1, std::u16string::npos);
+                v.erase(v.find_last_not_of('.') + 1, std::u16string::npos);
+            }
+            return v;
+        }
+    }
+
+    static constexpr auto TO_NUMBER_BASE_BIN = 2;
+    static constexpr auto TO_NUMBER_BASE_OCT = 8;
+    static constexpr auto TO_NUMBER_BASE_DEC = 10;
+    static constexpr auto TO_NUMBER_BASE_HEX = 16;
+
+    template<class T>
+    constexpr static size_type strLength(const T* str) noexcept {
+        if (str == nullptr) {
+            return 0;
+        }
+
+        size_type length = 0;
+        while (str[length] != T()) {
+            ++length;
+        }
+        return length;
+    }
+
     using super::super;
 
     AString(const AString& other) : super(other) {}
@@ -69,9 +105,17 @@ public:
 
     AString(std::span<const std::byte> bytes, AStringEncoding encoding);
 
+    AString(const char16_t* utf16_bytes, size_type length);
+
+    AString(const char16_t* utf16_bytes) : AString(utf16_bytes, strLength(utf16_bytes)) {}
+
+    AString(const char32_t* utf32_bytes, size_type length);
+
+    AString(const char32_t* utf32_bytes) : AString(utf32_bytes, strLength(utf32_bytes)) {}
+
     explicit AString(AStringView view);
 
-    AString(super&& other) : super(std::move(other)) {}
+    constexpr AString(super&& other) : super(std::move(other)) {}
 
     AString(AChar c);
 
@@ -88,13 +132,51 @@ public:
         return *this;
     }
 
+    operator AStringView() const noexcept;
+
     /// Returns the number of bytes in the UTF-8 encoded string
-    size_type sizeBytes() const noexcept {
+    constexpr size_type sizeBytes() const noexcept {
         return size();
     }
 
     /// Returns the number of Unicode characters in the string
     size_type length() const noexcept;
+
+    constexpr AString substr(size_type pos = 0, size_type n = npos) const {
+        return AString(super::substr(pos, n));
+    }
+
+    AString& operator=(const AString& other) {
+        std::string& ul = *this;
+        ul = other;
+        return *this;
+    }
+
+    AString& operator=(AString&& other) noexcept {
+        std::string& ul = *this;
+        ul = std::move(other);
+        return *this;
+    }
+
+    using super::append;
+
+    AString& append(char c);
+
+    AString& append(AChar c);
+
+    AString uppercase() const;
+
+    AString lowercase() const;
+
+    AStringVector split(AChar c) const;
+
+    bool startsWith(AStringView prefix) const noexcept;
+
+    bool endsWith(AStringView suffix) const noexcept;
+
+    bool toBool() const {
+        return sizeBytes() == 4 && lowercase() == "true";
+    }
 
     AOptional<int32_t> toInt() const noexcept;
 
@@ -107,6 +189,23 @@ public:
     AOptional<float> toFloat() const noexcept;
 
     AOptional<double> toDouble() const noexcept;
+
+    /**
+     * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
+     * @sa toNumberOrException
+     */
+    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
+
+    /**
+     * @brief Returns the string converted to an int using base. Throws an exception if the conversion fails.
+     * @sa toNumber
+     */
+    int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
+        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
+    template<typename... Args>
+    AString format(Args&&... args) const;
 
 private:
     size_type size() const noexcept {
@@ -183,5 +282,37 @@ inline void PrintTo(const AString& s, std::ostream* stream) {
 }
 
 class AStringView: public std::string_view {
+private:
+    using super = std::string_view;
+
+public:
+
+    using super::super;
+
+    constexpr AStringView(std::string_view str) noexcept : super(str) {}
+
+    bool startsWith(AStringView prefix) const noexcept {
+        if (prefix.size() > size()) {
+            return false;
+        }
+        return substr(0, prefix.size()) == prefix;
+    }
+
+    bool endsWith(AStringView suffix) const noexcept {
+        if (suffix.size() > size()) {
+            return false;
+        }
+        return substr(size() - suffix.size()) == suffix;
+    }
 
 };
+
+inline AString::AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
+
+inline bool AString::startsWith(AStringView prefix) const noexcept {
+    return static_cast<AStringView>(*this).startsWith(prefix);
+}
+
+inline bool AString::endsWith(AStringView suffix) const noexcept {
+    return static_cast<AStringView>(*this).endsWith(suffix);
+}
