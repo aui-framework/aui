@@ -441,7 +441,7 @@ th, td {
 
 @media screen and (min-width: 900px) {
     .views-card-outer {
-        margin: 0 0 60% 0;
+        margin: 0 0 30% 0;
         width: 100%;
         max-width: 320px;
         max-height: 200px;
