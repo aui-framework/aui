@@ -87,7 +87,7 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     counter = 0;
     for (auto& fp : paths) {
         auto& dlError = dlErrors[counter];
-        diagnostic += " - " + fp + " -> " + (dlError.empty() ? "not found" : dlError) + "\n";
+        diagnostic += " - " + fp + " -> " + AString(dlError.empty() ? "not found" : dlError) + "\n";
         ++counter;
     }
 

@@ -328,9 +328,9 @@ public:
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction);
 
-    static AByteBuffer fromString(const AStringView& string);
-    static AByteBuffer fromHexString(const AStringView& string);
-    static AByteBuffer fromBase64String(const AStringView& encodedString);
+    static AByteBuffer fromString(AStringView string);
+    static AByteBuffer fromHexString(AStringView string);
+    static AByteBuffer fromBase64String(AStringView encodedString);
 };
 
 API_AUI_CORE std::ostream& operator<<(std::ostream& o, AByteBufferView buffer);

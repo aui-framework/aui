@@ -24,7 +24,7 @@ AString AByteBufferView::toBase64String() const {
     return result;
 }
 
-AByteBuffer AByteBuffer::fromBase64String(const AStringView& base64) {
+AByteBuffer AByteBuffer::fromBase64String(AStringView base64) {
     AByteBuffer buffer(simdutf::maximal_binary_length_from_base64(base64.data(), base64.size()));
     simdutf::result r = simdutf::base64_to_binary(base64.data(), base64.size(), buffer.data());
     if (r.error) {
