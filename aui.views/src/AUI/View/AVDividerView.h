@@ -23,7 +23,7 @@
  *
  * ![](imgs/Views/AVDividerView.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  */
 class API_AUI_VIEWS AVDividerView: public ADividerView {
 public:

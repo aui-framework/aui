@@ -24,7 +24,7 @@
  * ![](imgs/Views/ADragArea.png)
  *
  * @details Contained views must be either wrapped by convertToDraggable or have an ADragArea::ADraggableHandle inside.
- * @ingroup useful_views
+ * @ingroup views_actions
  */
 class API_AUI_VIEWS ADragArea: public AViewContainer {
 private:

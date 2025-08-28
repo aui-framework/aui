@@ -19,7 +19,7 @@
  *
  * ![](imgs/Views/ARulerArea.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Consists of vertical and horizontal [rulers](arulerview.md).
  */

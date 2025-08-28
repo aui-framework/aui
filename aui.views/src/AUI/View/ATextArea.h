@@ -29,7 +29,7 @@ class API_AUI_VIEWS AScrollArea;
  *
  * ![](imgs/Views/ATextArea.png)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  * @details
  * Word breaking text area.
  *

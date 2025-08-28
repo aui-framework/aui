@@ -20,7 +20,7 @@
  *
  * ![](imgs/Views/ASlider.png)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ASlider: public AViewContainerBase {
 public:

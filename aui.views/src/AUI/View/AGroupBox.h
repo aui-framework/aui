@@ -20,7 +20,7 @@
  *
  * ![](imgs/Views/AGroupBox.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Group box provides a frame and a customizable title on top.
  *

@@ -19,7 +19,7 @@
  *
  * ![](imgs/Views/ASpinner.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Rotates its contents as it renders.
  *

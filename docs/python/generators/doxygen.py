@@ -17,9 +17,8 @@ import re
 
 import mkdocs_gen_files
 
-from docs.python.generators import cpp_parser, common
+from docs.python.generators import cpp_parser, common, group_page
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
-from docs.python.generators.doxygen_pages import doxygen_entry
 
 log = logging.getLogger('mkdocs')
 
@@ -41,7 +40,7 @@ def gen_pages():
                 continue
 
         if isinstance(parse_entry, DoxygenEntry):
-            doxygen_entry.handle_doxygen_entry(parse_entry)
+            group_page.handle_doxygen_entry(parse_entry)
             continue
 
         slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
@@ -259,7 +258,7 @@ def gen_pages():
 
         print('<div class="class-index" markdown>', file=f)
         for letter, classes2 in classes_alphabet:
-            print('<div class="item" markdown>', file=f)
+            print('<div class="item odd-highlight" markdown>', file=f)
             print(f'<div class="letter" id="{letter.lower()}">{letter}</div>', file=f)
             print('<div class="list" markdown>', file=f)
             for c in sorted(classes2, key=lambda x: x.name):

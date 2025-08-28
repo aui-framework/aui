@@ -34,7 +34,7 @@ struct A2DTransform {
  *
  * ![](imgs/Views/A2FingerTransformArea.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Represents a translucent area that handles and processes multi-finger transformation gestures (i.e. pinch-to-zoom,
  * move, rotate). A2FingerTransformArea is a container, so the transformed view should be somewhere inside.

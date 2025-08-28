@@ -22,7 +22,7 @@
  *
  * ![](imgs/Views/ANumberPicker.png)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ANumberPicker : public AViewContainerBase {
 private:

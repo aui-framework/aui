@@ -26,7 +26,7 @@
  *
  * ![](imgs/Views/AButton.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Button is a fundamental view which can be pushed to make some action.
  *

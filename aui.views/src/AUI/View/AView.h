@@ -57,12 +57,6 @@ class AAssHelper;
 class AStylesheet;
 
 /**
- * @defgroup useful_views Views
- * @ingroup views
- * @brief All ready-to-use views
- */
-
-/**
  * @brief Base class of all UI objects.
  *
  * @details
@@ -71,8 +65,6 @@ class AStylesheet;
 *  keys and buttons, mouse wheel, etc...
  *
  * Analogue to Qt's QWidget, Android's View.
- *
- * @ingroup useful_views
  */
 class API_AUI_VIEWS AView: public AObject
 {

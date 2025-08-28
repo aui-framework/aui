@@ -25,7 +25,7 @@
  *
  * ![](imgs/Views/ASplitter.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views
  * may be controlled by a single splitter.

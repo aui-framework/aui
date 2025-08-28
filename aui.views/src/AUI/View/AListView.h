@@ -26,7 +26,7 @@ class AListViewContainer;
  *
  * ![](imgs/Views/AListView.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  */
 class API_AUI_VIEWS AListView : public AScrollArea, public AListModelObserver<AString>::IListModelListener {
     friend class AListItem;

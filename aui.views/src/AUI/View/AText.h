@@ -19,7 +19,7 @@
  *
  * ![](imgs/Views/AText.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Used to display rich text or large texts.
  *

@@ -20,7 +20,7 @@
  *
  * ![](imgs/Views/ATextField.gif)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  * @details
  * ![](imgs/Views/ATextField.gif)
  */

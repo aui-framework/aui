@@ -20,7 +20,7 @@
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * AScrollArea should have expanding, or fixed size, or max size to be set in order to define it's sizing rules, as it's
  * size cannot be defined by it's contents for obvious reasons.

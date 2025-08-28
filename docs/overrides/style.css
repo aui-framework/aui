@@ -251,7 +251,7 @@ th, td {
     min-width: 350px;
 }
 
-.class-index > .item:nth-child(2n) {
+.odd-highlight:nth-child(2n) {
     background: var(--md-code-bg-color);
 }
 

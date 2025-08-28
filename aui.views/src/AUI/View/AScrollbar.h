@@ -69,7 +69,7 @@ public:
  *
  * ![](imgs/Views/AScrollbar.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @see AScrollArea
  * @see ASlider
  */

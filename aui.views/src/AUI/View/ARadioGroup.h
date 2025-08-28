@@ -27,7 +27,7 @@
  *
  * ![](imgs/Views/ARadioGroup.png)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  * @details
  * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a [view container](aviewcontainer.md) it
  * places the initialized radio buttons to itself.

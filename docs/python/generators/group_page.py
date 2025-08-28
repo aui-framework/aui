@@ -6,6 +6,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import io
 import re
 
 import mkdocs_gen_files
@@ -29,11 +30,7 @@ def handle_doxygen_entry(parse_entry: DoxygenEntry):
             for type_entry in [i for i in doxygen if i[0] == '@brief']:
                 print(type_entry[1], file=fos)
 
-            match group_id:
-                case 'useful_views':
-                    _generate_useful_views_group_page(doxygen, fos)
-                case _:
-                    _generate_regular_group_page(doxygen, fos, group_id)
+            _generate_regular_group_page(doxygen, fos, group_id)
 
         mkdocs_gen_files.set_edit_path(output, '..' / parse_entry.location)
         break
@@ -70,11 +67,7 @@ def _generate_regular_group_page(doxygen, fos, group_id):
     print('</div>', file=fos)
 
 
-def _generate_useful_views_group_page(doxygen, fos):
-    """
-    Generates docs/useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
-    """
-    print('<div class="views-grid">', file=fos)
+def _find_undocumented_aviews():
 
     name_to_class = {c.name: c for c in cpp_parser.index if hasattr(c, 'name')}
 
@@ -115,42 +108,56 @@ def _generate_useful_views_group_page(doxygen, fos):
         if extra in name_to_class:
             aview_family_names.add(extra)
 
-    aview_family = sorted((name_to_class[n] for n in aview_family_names if n in name_to_class), key=lambda c: c.name.lower())
+    return sorted((name_to_class[n] for n in aview_family_names if n in name_to_class), key=lambda c: c.name.lower())
 
-    normal_views = []
-    aview_names_set = set(n for n in aview_family_names)
-    for c in cpp_parser.index:
-        if not hasattr(c, 'name') or not hasattr(c, 'doc'):
-            continue
-        if c.name in aview_names_set:
-            continue
-        if f"@ingroup useful_views" in c.doc:
-            if hasattr(c, 'namespaced_name'):
-                slugged_name = c.namespaced_name().lower().replace('::', '_')
-                c.page_url = f'{slugged_name}.md'
-                normal_views.append(c)
 
-    normal_views.sort(key=lambda c: c.name.lower())
 
-    for group_item in normal_views + aview_family:
-        brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
-        img_match = re.search(r'!\[.*?\]\((.*?)\)', brief)
-        if img_match:
-            img_path = f'../{img_match.group(1)}'
-            brief_text = brief[:img_match.start()].rstrip()
-        else:
-            img_path = '../imgs/logo_black.svg'
-            brief_text = brief
-        url_base = group_item.page_url[:-3] if getattr(group_item, 'page_url', None) else ''
-        print(f'''<div class="views-card-outer">
-    <a href="../{url_base}">
-        <div class="views-card">
-            <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
-        </div>
-    </a>
-    <div class="views-card-title">{group_item.name}</div>
-    <div class="views-card-desc">{brief_text}</div>
-    <a class="views-card-link" href="../{url_base}">Learn more</a>
-</div>''', file=fos)
+def define_env(env):
 
-    print('\n</div>', file=fos)
+    @env.macro
+    def group(name):
+        """
+        Generates docs/useful_views.md with cards for each view class derived from AView (from AView.h), using @brief and page links, matching the style of useful_views_new.md.
+        """
+        with io.StringIO() as fos:
+            print('<div class="views-grid">', file=fos)
+
+            views = []
+            match name:
+                case 'views_other':
+                    views = _find_undocumented_aviews()
+                case _:
+                    for c in cpp_parser.index:
+                        if not hasattr(c, 'name') or not hasattr(c, 'doc'):
+                            continue
+                        if f"@ingroup {name}" in c.doc:
+                            if hasattr(c, 'namespaced_name'):
+                                slugged_name = c.namespaced_name().lower().replace('::', '_')
+                                c.page_url = f'{slugged_name}.md'
+                                views.append(c)
+
+            views.sort(key=lambda c: c.name.lower())
+
+            for group_item in views:
+                brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
+                img_match = re.search(r'!\[.*?\]\((.*?)\)', brief)
+                if img_match:
+                    img_path = f'../{img_match.group(1)}'
+                    brief_text = brief[:img_match.start()].rstrip()
+                else:
+                    img_path = '../imgs/logo_black.svg'
+                    brief_text = brief
+                url_base = group_item.page_url[:-3] if getattr(group_item, 'page_url', None) else ''
+                print(f'''<div class="views-card-outer">
+            <a href="../{url_base}">
+                <div class="views-card">
+                    <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
+                </div>
+            </a>
+            <div class="views-card-title">{group_item.name}</div>
+            <div class="views-card-desc">{brief_text}</div>
+            <a class="views-card-link" href="../{url_base}">Learn more</a>
+        </div>''', file=fos)
+
+            print('\n</div>', file=fos)
+            return fos.getvalue()

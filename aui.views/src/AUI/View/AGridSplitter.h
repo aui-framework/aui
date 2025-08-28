@@ -21,7 +21,7 @@
  *
  * ![](imgs/Views/AGridSplitter.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * AGridSplitter represents a grid layout which can be resized by user. Unlike ASplitter, works in both directions.
  * AGridSplitter can be constructed with AGridSplitter::Builder.

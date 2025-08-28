@@ -18,7 +18,7 @@
  *
  * ![](imgs/Views/ALabel.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * ALabel is used for displaying nonformatted single-line text.
  */

@@ -20,7 +20,7 @@
  *
  * ![](imgs/Views/ASpinnerV2.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * ![](imgs/Screenshot_20250205_061349.png)
  *

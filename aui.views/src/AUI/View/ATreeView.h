@@ -27,7 +27,7 @@
  *
  * ![](imgs/Views/ATreeView.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */

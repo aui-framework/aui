@@ -54,7 +54,7 @@ public:
  *
  * ![](imgs/Views/ATabView.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * Used for screen space saving by grouping views.
  *

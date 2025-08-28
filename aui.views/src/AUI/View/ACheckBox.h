@@ -21,7 +21,7 @@
  *
  * ![](imgs/Views/ACheckBox.png)
  *
- * @ingroup useful_views
+ * @ingroup views_input
  * @details
  * Checkbox is a checkable button that is typically used to enable/disable some action.
  *
@@ -80,7 +80,7 @@ private:
  * @brief View container with a checkbox.
  *
  * ![](imgs/Views/ACheckBoxWrapper.png)
- * @ingroup useful_views
+ * @ingroup views_input
  * @details
  * For a checkbox itself, see [ACheckBox].
  */

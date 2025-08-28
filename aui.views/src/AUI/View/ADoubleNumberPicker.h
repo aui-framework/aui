@@ -22,7 +22,7 @@
  *
  * ![](imgs/Views/ADoubleNumberPicker.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  */
 class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
    private:

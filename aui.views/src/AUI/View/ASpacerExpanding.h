@@ -15,7 +15,7 @@
 
 /**
  * @brief Expanding view which is useful in UI building.
- * @ingroup useful_views
+ * @ingroup views_actions
  * @details
  * AExpandingSpacer is an expanding blank view which tries acquire space as much as possible.
  *

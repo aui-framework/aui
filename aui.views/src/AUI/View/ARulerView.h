@@ -26,7 +26,7 @@
  *
  * ![](imgs/Views/ARulerView.png)
  *
- * @ingroup useful_views
+ * @ingroup views_actions
  */
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:
