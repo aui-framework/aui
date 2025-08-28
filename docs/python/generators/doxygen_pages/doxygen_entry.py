@@ -88,13 +88,13 @@ def _generate_useful_views_group_page(doxygen, fos):
             page_url = group_item.namespaced_name().lower().replace('::', '_') + '.md'
         img_path = f'../imgs/Views/{group_item.name}.png'
         print(f'''<div class="views-card-outer">
-    <a href="{page_url}">
+    <a href="../{group_item.name}">
         <div class="views-card">
             <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
         </div>
     </a>
     <div class="views-card-title">{group_item.name}</div>
     <div class="views-card-desc">{brief}</div>
-    <a class="views-card-link" href="{page_url}">Learn more</a>
+    <a class="views-card-link" href="../{group_item.name}">Learn more</a>
 </div>''', file=fos)
     print('\n</div>', file=fos)
