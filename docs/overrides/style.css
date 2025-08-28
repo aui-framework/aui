@@ -404,11 +404,23 @@ th, td {
 
 .views-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 24px;
     justify-items: center;
     align-items: stretch;
     width: 100%;
+}
+
+@media screen and (min-width: 600px) {
+    .views-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .views-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
 }
 
 .views-card-outer {
