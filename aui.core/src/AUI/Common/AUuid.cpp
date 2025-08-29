@@ -107,7 +107,7 @@ AUuid AUuid::fromString(const AString& string) {
         std::array<uint8_t, 16> v;
         aui::zero(v);
         size_t i = 0;
-        for (auto c : string) {
+        for (auto c : string.bytes()) {
             while (c >= 255) {
                 v[i++] = c;
                 c >>= 8;

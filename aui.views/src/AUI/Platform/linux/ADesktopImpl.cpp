@@ -40,7 +40,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
 
     if (!startingLocation.empty()) {
         AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer = startingLocation.toUtf8(); const auto &byte : buffer) {
+        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.sizeBytes()); const auto& byte : buffer) {
             locationBytes.push_back(byte);
         }
 
@@ -117,7 +117,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &starting
 
     if (!startingLocation.empty()) {
         AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer = startingLocation.toUtf8(); const auto &byte : buffer) {
+        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.sizeBytes()); const auto &byte : buffer) {
             locationBytes.push_back(byte);
         }
 

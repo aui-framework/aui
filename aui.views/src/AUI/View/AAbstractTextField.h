@@ -90,7 +90,7 @@ protected:
 
     size_t length() const override;
 
-    bool typeableInsert(size_t at, char16_t toInsert) override;
+    bool typeableInsert(size_t at, AChar toInsert) override;
 
     AString getDisplayText() override;
 

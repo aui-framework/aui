@@ -60,7 +60,7 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", 
     .withLowSpeedLimit(1)
     .withCustomRequest("GET")
     .withHeaderCallback([this](AByteBufferView v) {
-        auto asStr = AString::fromUtf8(v);
+        auto asStr = AString(v.toStdStringView());
         if (asStr.startsWith("Sec-WebSocket-Accept: ")) {
             asStr = asStr.trimRight('\n').trimRight('\r');
             auto serverKeyBase64 = asStr.substr(asStr.find(": ") + 2);
@@ -133,7 +133,7 @@ std::size_t AWebsocket::onDataSend(char* dst, std::size_t maxLen) {
 AString AWebsocket::generateKeyString() {
     AString s;
     s.resize(16);
-    for (auto& v : s) {
+    for (auto& v : static_cast<std::string&>(s)) {
         v = std::uniform_int_distribution(int('a'), int('z'))(gRandomEngine);
     }
     return s;

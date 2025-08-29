@@ -112,7 +112,7 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
     if (begin >= mContents.length()) {
         return;
     }
-    mContents.erase(mContents.begin() + begin, mContents.begin() + end);
+    mContents.erase(mContents.bytes().begin() + begin, mContents.bytes().begin() + end);
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
@@ -127,7 +127,7 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     return true;
 }
 
-bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, AChar toInsert) {
     if (!mIsEditable) {
         return false;
     }

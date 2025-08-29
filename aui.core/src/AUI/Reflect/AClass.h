@@ -33,7 +33,7 @@ public:
         auto name = s.substr(openTag, closeTag - openTag);
         name = name.substr(name.rfind(' ') + 1);
         if (name.endsWith(" &"))
-            name = name.substr(0, name.length() - 2);
+            name = name.substr(0, name.size() - 2);
         return name;
 #elif AUI_COMPILER_CLANG
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
@@ -58,7 +58,7 @@ public:
             AString s = __FUNCTION__;
         #endif
         auto b = s.find("with T = ") + 9;
-        return { s.byte_begin() + b, s.byte_end() - 1 };
+        return { s.bytes().begin() + b, s.bytes().end() - 1 };
 #endif
     }
 
@@ -66,7 +66,7 @@ public:
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {
-            return {s.byte_begin() + p + 2, s.byte_end()};
+            return {s.bytes().begin() + p + 2, s.bytes().end()};
         }
         return s;
     }

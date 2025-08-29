@@ -99,7 +99,7 @@ AVector<_<AProcess>> AProcess::all() {
 #if !AUI_PLATFORM_APPLE
 _<AProcess> AProcess::self() {
     char buf[0x100];
-    return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
+    return _new<AOtherProcess>(*AString(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }

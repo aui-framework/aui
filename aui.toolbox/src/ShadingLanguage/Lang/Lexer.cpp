@@ -252,7 +252,7 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                                 mTokenizer.reverseByte();
                                 auto n = mTokenizer.readChar();
                                 if (n == 'D') {
-                                    result << IdentifierToken{AString{char16_t(c), char16_t('D')}};
+                                    result << IdentifierToken{AString::number(i) + AString{'D'}};
                                     break;
                                 }
                                 mTokenizer.reverseByte();

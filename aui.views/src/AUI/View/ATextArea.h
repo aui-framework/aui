@@ -74,7 +74,7 @@ public:
 protected:
     void typeableErase(size_t begin, size_t end) override;
     bool typeableInsert(size_t at, const AString& toInsert) override;
-    bool typeableInsert(size_t at, char16_t toInsert) override;
+    bool typeableInsert(size_t at, AChar toInsert) override;
     size_t typeableFind(char16_t c, size_t startPos) override;
     size_t typeableReverseFind(char16_t c, size_t startPos) override;
     size_t length() const override;

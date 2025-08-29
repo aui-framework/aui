@@ -22,14 +22,14 @@ void AMimedData::setText(const AString& text) {
 
 AOptional<AString> AMimedData::text() const {
     if (auto v = findFirstOccurrence({"text/plain","text/utf8",})) {
-        return AString::fromUtf8(*v);
+        return AString(v->toStdStringView());
     }
     return std::nullopt;
 }
 
 AOptional<AVector<AUrl>> AMimedData::urls() const {
     if (auto v = findFirstOccurrence({"text/uri-list",})) {
-        return AString::fromUtf8(*v).split('\n').filter([](const AString& url) { return !url.empty(); }).map([](const AString& entry) {
+        return AString(v->toStdStringView()).split('\n').filter([](const AString& url) { return !url.empty(); }).map([](const AString& entry) {
             return AUrl(entry);
         });
     }

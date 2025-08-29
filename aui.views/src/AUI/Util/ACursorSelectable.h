@@ -64,7 +64,7 @@ public:
         if (!hasSelection())
             return {};
         auto t = getText();
-    	return {t.begin() + selection().begin, t.begin() + selection().end };
+    	return {t.bytes().begin() + selection().begin, t.bytes().begin() + selection().end };
     }
 
     /**

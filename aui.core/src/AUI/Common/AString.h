@@ -48,25 +48,19 @@ private:
     const char* begin_;
     const char* end_;
     size_t byte_pos_;
-    mutable char32_t cached_value_;
-    mutable bool cache_valid_;
 
 public:
     constexpr AStringUtf8Iterator() noexcept
         : data_(nullptr), begin_(nullptr), end_(nullptr),
-          byte_pos_(0), cached_value_(0), cache_valid_(false) {}
+          byte_pos_(0) {}
 
     constexpr AStringUtf8Iterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
         : data_(data), begin_(begin), end_(end),
-          byte_pos_(pos), cached_value_(0), cache_valid_(false) {}
+          byte_pos_(pos) {}
 
-    char32_t operator*() const noexcept {
-        if (!cache_valid_) {
-            size_t temp_pos = byte_pos_;
-            cached_value_ = aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
-            cache_valid_ = true;
-        }
-        return cached_value_;
+    AChar operator*() const noexcept {
+        size_t temp_pos = byte_pos_;
+        return aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
     }
 
     AStringUtf8Iterator& operator++() noexcept {
@@ -75,7 +69,6 @@ public:
             aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
             byte_pos_ = temp_pos;
         }
-        cache_valid_ = false;
         return *this;
     }
 
@@ -89,7 +82,6 @@ public:
         if (byte_pos_ > 0) {
             byte_pos_ = aui::detail::getPrevCharStart(data_, byte_pos_);
         }
-        cache_valid_ = false;
         return *this;
     }
 
@@ -109,6 +101,20 @@ public:
 
     size_t getBytePos() const noexcept {
         return byte_pos_;
+    }
+
+    AStringUtf8Iterator& operator=(std::string::iterator it) noexcept {
+        if (begin_ != nullptr) {
+            byte_pos_ = it - std::string::iterator(const_cast<char*>(begin_));
+        }
+        return *this;
+    }
+
+    AStringUtf8Iterator& operator=(std::string::const_iterator it) noexcept {
+        if (begin_ != nullptr) {
+            byte_pos_ = it - std::string::const_iterator(begin_);
+        }
+        return *this;
     }
 };
 
@@ -173,6 +179,115 @@ public:
     bool operator!=(const AStringUtf8ReverseIterator& other) const noexcept {
         return !(*this == other);
     }
+
+    AStringUtf8ReverseIterator& operator=(std::string::reverse_iterator it) noexcept {
+        base_iterator_ = it.base();
+        --base_iterator_;
+        return *this;
+    }
+
+    AStringUtf8ReverseIterator& operator=(std::string::const_reverse_iterator it) noexcept {
+        base_iterator_ = it.base();
+        --base_iterator_;
+        return *this;
+    }
+};
+
+class AStringView: public std::string_view {
+private:
+    using super = std::string_view;
+
+public:
+    using bytes_type = super;
+
+    using iterator = AStringUtf8Iterator;
+    using const_iterator = AStringUtf8Iterator;
+    using reverse_iterator = AStringUtf8ReverseIterator;
+    using const_reverse_iterator = AStringUtf8ReverseIterator;
+
+    using super::super;
+
+    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super((const char*) utf8_str, length) {}
+
+    constexpr AStringView(const char8_t* utf8_str) noexcept : super((const char*) utf8_str) {}
+
+    constexpr AStringView(std::string_view str) noexcept : super(str) {}
+
+    bool startsWith(AStringView prefix) const noexcept {
+        if (prefix.size() > size()) {
+            return false;
+        }
+        return substr(0, prefix.size()) == prefix;
+    }
+
+    bool endsWith(AStringView suffix) const noexcept {
+        if (suffix.size() > size()) {
+            return false;
+        }
+        return substr(size() - suffix.size()) == suffix;
+    }
+
+    std::string_view bytes() const noexcept {
+        return *this;
+    }
+
+    iterator begin() const noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
+    }
+
+    iterator end() const noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), size());
+    }
+
+    const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    const_iterator cend() const noexcept {
+        return end();
+    }
+
+    reverse_iterator rbegin() const noexcept {
+        return AStringUtf8ReverseIterator(end());
+    }
+
+    reverse_iterator rend() const noexcept {
+        return AStringUtf8ReverseIterator(begin());
+    }
+
+    const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
+    }
+
+    const_reverse_iterator crend() const noexcept {
+        return rend();
+    }
+
+    AChar first() const {
+        if (empty()) {
+            return AChar();
+        }
+        return *begin();
+    }
+
+    AChar last() const {
+        if (empty()) {
+            return AChar();
+        }
+        auto it = end();
+        --it;
+        return *it;
+    }
+
+};
+
+template<>
+struct std::hash<AStringView>
+{
+    size_t operator()(const AStringView& t) const noexcept
+    {
+        return std::hash<std::string_view>()(t);
+    }
 };
 
 class API_AUI_CORE AStringVector;
@@ -185,8 +300,6 @@ enum class AStringEncoding : uint8_t {
     UTF32 = 2,
     LATIN1 = 3,
 };
-
-class AStringView;
 
 /**
  * @brief Represents a Unicode character string.
@@ -206,21 +319,12 @@ private:
 public:
 
     using value_type = super::value_type;
+    using bytes_type = super;
 
-    using utf8_iterator = AStringUtf8Iterator;
-    using utf8_const_iterator = AStringUtf8Iterator;
-    using utf8_reverse_iterator = AStringUtf8ReverseIterator;
-    using utf8_const_reverse_iterator = AStringUtf8ReverseIterator;
-
-    using byte_iterator = super::iterator;
-    using byte_const_iterator = super::const_iterator;
-    using byte_reverse_iterator = super::reverse_iterator;
-    using byte_const_reverse_iterator = super::const_reverse_iterator;
-
-    using iterator = utf8_iterator;
-    using const_iterator = utf8_const_iterator;
-    using reverse_iterator = utf8_reverse_iterator;
-    using const_reverse_iterator = utf8_const_reverse_iterator;
+    using iterator = AStringUtf8Iterator;
+    using const_iterator = AStringUtf8Iterator;
+    using reverse_iterator = AStringUtf8ReverseIterator;
+    using const_reverse_iterator = AStringUtf8ReverseIterator;
 
     auto constexpr static NPOS = super::npos;
 
@@ -235,8 +339,8 @@ public:
             auto v = std::to_string(i);
             if constexpr (std::is_floating_point_v<T>) {
                 // remove trailing zeros
-                v.erase(v.find_last_not_of('0') + 1, std::u16string::npos);
-                v.erase(v.find_last_not_of('.') + 1, std::u16string::npos);
+                v.erase(v.find_last_not_of('0') + 1, std::string::npos);
+                v.erase(v.find_last_not_of('.') + 1, std::string::npos);
             }
             return v;
         }
@@ -268,6 +372,14 @@ public:
 
     AString(std::span<const std::byte> bytes, AStringEncoding encoding);
 
+    AString(const char* utf8_bytes, size_type length);
+
+    AString(const char* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
+
+    AString(const char8_t* utf8_bytes, size_type length) : AString((const char*) utf8_bytes, length) {}
+
+    AString(const char8_t* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
+
     AString(const char16_t* utf16_bytes, size_type length);
 
     AString(const char16_t* utf16_bytes) : AString(utf16_bytes, strLength(utf16_bytes)) {}
@@ -276,11 +388,17 @@ public:
 
     AString(const char32_t* utf32_bytes) : AString(utf32_bytes, strLength(utf32_bytes)) {}
 
-    explicit AString(AStringView view);
+    AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
+
+    AString(std::string_view view) : super(view) {}
+
+    constexpr AString(const super& other) : super(other) {}
 
     constexpr AString(super&& other) : super(std::move(other)) {}
 
     AString(AChar c);
+
+    AString(size_type n, AChar c);
 
     ~AString() = default;
 
@@ -298,21 +416,40 @@ public:
      * @brief Returns a view of the raw UTF-8 encoded byte data.
      * @sa encode
      */
-    constexpr std::span<std::byte> bytes() noexcept {
-        return {(std::byte*) byte_begin().base(), (std::byte*) byte_end().base()};
+    constexpr bytes_type& bytes() noexcept {
+        return *this;
     }
 
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.
      * @sa encode
      */
-    constexpr std::span<const std::byte> bytes() const noexcept {
-        return {(const std::byte*) byte_begin().base(), (const std::byte*) byte_end().base()};
+    constexpr const bytes_type& bytes() const noexcept {
+        return *this;
     }
 
-    /// Compatibility method
-    std::string toStdString() const {
+    /**
+     * @brief Compatibility method. Guarantees std::string with UTF-8
+     * @sa bytes
+     */
+    std::string& toStdString() & {
         return *this;
+    }
+
+    /**
+     * @brief Compatibility method. Guarantees std::string with UTF-8
+     * @sa bytes
+     */
+    const std::string& toStdString() const& {
+        return *this;
+    }
+
+    /**
+     * @brief Compatibility method. Guarantees std::string with UTF-8
+     * @sa bytes
+     */
+    std::string&& toStdString() && {
+        return std::move(*this);
     }
 
     operator AStringView() const noexcept;
@@ -357,30 +494,112 @@ public:
 
     AString& append(AChar c);
 
+    AString& operator<<(char c) noexcept
+    {
+        append(c);
+        return *this;
+    }
+
+    AString& operator<<(AChar c) noexcept
+    {
+        append(c);
+        return *this;
+    }
+
     AString uppercase() const;
 
     AString lowercase() const;
 
     AStringVector split(AChar c) const;
 
-    bool startsWith(AStringView prefix) const noexcept;
+    AString& replaceAll(char from, char to);
 
-    bool endsWith(AStringView suffix) const noexcept;
+    AString& replaceAll(AStringView from, AStringView to);
 
+    AString replacedAll(AChar from, AChar to) const;
+
+    AString replacedAll(AStringView from, AStringView to) const;
+
+    AString processEscapes() const;
+
+    /**
+     * @brief Resizes the string to the length of its null-terminated content while preserving capacity.
+     * @sa shrink_to_fit
+     */
+    void resizeToNullTerminator();
+
+    bool contains(char c) const noexcept;
+
+    bool startsWith(AChar prefix) const noexcept;
+
+    bool startsWith(AStringView prefix) const noexcept {
+        return static_cast<AStringView>(*this).startsWith(prefix);
+    }
+
+    bool endsWith(AChar prefix) const noexcept;
+
+    bool endsWith(AStringView suffix) const noexcept {
+        return static_cast<AStringView>(*this).endsWith(suffix);
+    }
+
+    /**
+     * @brief Converts the string to boolean value.
+     * @return If the string equals to "true", true returned, false otherwise.
+     */
     bool toBool() const {
         return sizeBytes() == 4 && lowercase() == "true";
     }
 
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     AOptional<int32_t> toInt() const noexcept;
 
+    /**
+     * @brief Converts the string to long value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to long is not possible, nullopt is returned.
+     */
     AOptional<int64_t> toLong() const noexcept;
 
+    /**
+     * @brief Converts the string to unsigned int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to unsigned int is not possible, exception is thrown.
+     */
     AOptional<uint32_t> toUInt() const noexcept;
 
+    /**
+     * @brief Converts the string to unsigned long value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to unsigned long is not possible, exception is thrown.
+     */
     AOptional<uint64_t> toULong() const noexcept;
 
+    /**
+     * @brief Converts the string to a float number.
+     * @return The string converted to a float number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     AOptional<float> toFloat() const noexcept;
 
+    /**
+     * @brief Converts the string to a double number.
+     * @return The string converted to a double number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     AOptional<double> toDouble() const noexcept;
 
     /**
@@ -389,10 +608,30 @@ public:
      */
     AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
 
-    /**
-     * @brief Returns the string converted to an int using base. Throws an exception if the conversion fails.
-     * @sa toNumber
-     */
+    int32_t toIntOrException() const {
+        return toInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
+    int64_t toLongOrException() const {
+        return toLong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
+    uint32_t toUIntOrException() const {
+        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
+    uint64_t toULongOrException() const {
+        return toULong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    }
+
+    float toFloatOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad float: {}", toStdString()).c_str());
+    }
+
+    double toDoubleOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
+    }
+
     int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
     }
@@ -400,157 +639,81 @@ public:
     template<typename... Args>
     AString format(Args&&... args) const;
 
-    constexpr utf8_iterator utf8_begin() noexcept {
-        return utf8_iterator(data(), data(), data() + size(), 0);
+    iterator begin() noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
     }
 
-    constexpr utf8_const_iterator utf8_begin() const noexcept {
-        return utf8_const_iterator(data(), data(), data() + size(), 0);
+    iterator end() noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), size());
     }
 
-    constexpr utf8_const_iterator utf8_cbegin() const noexcept {
-        return utf8_begin();
+    const_iterator begin() const noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
     }
 
-    constexpr utf8_iterator utf8_end() noexcept {
-        return utf8_iterator(data(), data(), data() + size(), size());
+    const_iterator end() const noexcept {
+        return AStringUtf8Iterator(data(), data(), data() + size(), size());
     }
 
-    constexpr utf8_const_iterator utf8_end() const noexcept {
-        return utf8_const_iterator(data(), data(), data() + size(), size());
+    const_iterator cbegin() const noexcept {
+        return begin();
     }
 
-    constexpr utf8_const_iterator utf8_cend() const noexcept {
-        return utf8_end();
+    const_iterator cend() const noexcept {
+        return end();
     }
 
-    constexpr utf8_reverse_iterator utf8_rbegin() noexcept {
-        return utf8_reverse_iterator(utf8_end());
+    reverse_iterator rbegin() noexcept {
+        return AStringUtf8ReverseIterator(end());
     }
 
-    constexpr utf8_const_reverse_iterator utf8_rbegin() const noexcept {
-        return utf8_const_reverse_iterator(utf8_end());
+    reverse_iterator rend() noexcept {
+        return AStringUtf8ReverseIterator(begin());
     }
 
-    constexpr utf8_const_reverse_iterator utf8_crbegin() const noexcept {
-        return utf8_rbegin();
+    const_reverse_iterator rbegin() const noexcept {
+        return AStringUtf8ReverseIterator(end());
     }
 
-    constexpr utf8_reverse_iterator utf8_rend() noexcept {
-        return utf8_reverse_iterator(utf8_begin());
+    const_reverse_iterator rend() const noexcept {
+        return AStringUtf8ReverseIterator(begin());
     }
 
-    constexpr utf8_const_reverse_iterator utf8_rend() const noexcept {
-        return utf8_const_reverse_iterator(utf8_begin());
+    const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
     }
 
-    constexpr utf8_const_reverse_iterator utf8_crend() const noexcept {
-        return utf8_rend();
+    const_reverse_iterator crend() const noexcept {
+        return rend();
     }
 
-    constexpr iterator begin() noexcept {
-        return utf8_begin();
+    AChar first() const {
+        if (empty()) {
+            return AChar();
+        }
+        return *begin();
     }
 
-    constexpr const_iterator begin() const noexcept {
-        return utf8_begin();
+    AChar last() const {
+        if (empty()) {
+            return AChar();
+        }
+        auto it = end();
+        --it;
+        return *it;
     }
 
-    constexpr const_iterator cbegin() const noexcept {
-        return utf8_begin();
-    }
-
-    constexpr iterator end() noexcept {
-        return utf8_end();
-    }
-
-    constexpr const_iterator end() const noexcept {
-        return utf8_end();
-    }
-
-    constexpr const_iterator cend() const noexcept {
-        return utf8_end();
-    }
-
-    constexpr reverse_iterator rbegin() noexcept {
-        return utf8_rbegin();
-    }
-
-    constexpr const_reverse_iterator rbegin() const noexcept {
-        return utf8_rbegin();
-    }
-
-    constexpr const_reverse_iterator crbegin() const noexcept {
-        return utf8_rbegin();
-    }
-
-    constexpr reverse_iterator rend() noexcept {
-        return utf8_rend();
-    }
-
-    constexpr const_reverse_iterator rend() const noexcept {
-        return utf8_rend();
-    }
-
-    constexpr const_reverse_iterator crend() const noexcept {
-        return utf8_rend();
-    }
-
-    constexpr byte_iterator byte_begin() noexcept {
-        return super::begin();
-    }
-
-    constexpr byte_const_iterator byte_begin() const noexcept {
-        return super::begin();
-    }
-
-    constexpr byte_const_iterator byte_cbegin() const noexcept {
-        return super::cbegin();
-    }
-
-    constexpr byte_iterator byte_end() noexcept {
-        return super::end();
-    }
-
-    constexpr byte_const_iterator byte_end() const noexcept {
-        return super::end();
-    }
-
-    constexpr byte_const_iterator byte_cend() const noexcept {
-        return super::cend();
-    }
-
-    constexpr byte_reverse_iterator byte_rbegin() noexcept {
-        return super::rbegin();
-    }
-
-    constexpr byte_const_reverse_iterator byte_rbegin() const noexcept {
-        return super::rbegin();
-    }
-
-    constexpr byte_const_reverse_iterator byte_crbegin() const noexcept {
-        return super::crbegin();
-    }
-
-    constexpr byte_reverse_iterator byte_rend() noexcept {
-        return super::rend();
-    }
-
-    constexpr byte_const_reverse_iterator byte_rend() const noexcept {
-        return super::rend();
-    }
-
-    constexpr byte_const_reverse_iterator byte_crend() const noexcept {
-        return super::crend();
-    }
-
-private:
+//private: // non private because ASerializable
     size_type size() const noexcept {
         return super::size();
     }
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept
+{
+    return static_cast<const std::string&>(l) + static_cast<const std::string&>(r);
+}
+inline AString operator+(const AString& l, const std::string& r) noexcept
 {
     return static_cast<const std::string&>(l) + r;
 }
@@ -612,53 +775,7 @@ template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
     }
 };
 
-
 // gtest printer for AString
 inline void PrintTo(const AString& s, std::ostream* stream) {
     *stream << s.toStdString();
-}
-
-class AStringView: public std::string_view {
-private:
-    using super = std::string_view;
-
-public:
-
-    using super::super;
-
-    constexpr AStringView(std::string_view str) noexcept : super(str) {}
-
-    bool startsWith(AStringView prefix) const noexcept {
-        if (prefix.size() > size()) {
-            return false;
-        }
-        return substr(0, prefix.size()) == prefix;
-    }
-
-    bool endsWith(AStringView suffix) const noexcept {
-        if (suffix.size() > size()) {
-            return false;
-        }
-        return substr(size() - suffix.size()) == suffix;
-    }
-
-};
-
-template<>
-struct std::hash<AStringView>
-{
-    size_t operator()(const AStringView& t) const noexcept
-    {
-        return std::hash<std::string_view>()(t);
-    }
-};
-
-inline AString::AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
-
-inline bool AString::startsWith(AStringView prefix) const noexcept {
-    return static_cast<AStringView>(*this).startsWith(prefix);
-}
-
-inline bool AString::endsWith(AStringView suffix) const noexcept {
-    return static_cast<AStringView>(*this).endsWith(suffix);
 }

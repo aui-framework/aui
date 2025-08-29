@@ -57,7 +57,7 @@ namespace aui::enumerate::basic {
             } else {
                 begin += 8;
             }
-            AString result = {s.begin() + begin, s.begin() + end};
+            AString result = {s.bytes().begin() + begin, s.bytes().begin() + end};
 
 
             for (size_t p; (p = result.find("::")) != AString::NPOS;) {

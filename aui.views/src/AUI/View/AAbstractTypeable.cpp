@@ -222,7 +222,7 @@ void AAbstractTypeable::copyToClipboard() const {
     AClipboard::copyToClipboard(selectedText());
 }
 
-void AAbstractTypeable::enterChar(char16_t c)
+void AAbstractTypeable::enterChar(AChar c)
 {
     if (AInput::isKeyDown(AInput::LBUTTON) ||
         AInput::isKeyDown(AInput::LCONTROL) ||

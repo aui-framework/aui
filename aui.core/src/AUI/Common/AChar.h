@@ -32,6 +32,8 @@ private:
 public:
     constexpr static char32_t INVALID_CHAR = 0xFFFD;
 
+    constexpr AChar() : mValue(0) {}
+
     constexpr AChar(char c) : mValue(static_cast<char32_t>(static_cast<unsigned char>(c))) {}
 
     constexpr AChar(char8_t c): mValue(static_cast<char32_t>(c)) {}

@@ -169,7 +169,7 @@ protected:
      * unchanged as like if <code>typeableInsert</code> have not been called.
      */
     [[nodiscard]]
-    virtual bool typeableInsert(size_t at, char16_t toInsert) = 0;
+    virtual bool typeableInsert(size_t at, AChar toInsert) = 0;
     virtual size_t typeableFind(char16_t c, size_t startPos = -1) = 0;
     virtual size_t typeableReverseFind(char16_t c, size_t startPos = -1) = 0;
     virtual void updateSelectionOnTextSet(const AString& t);
@@ -181,7 +181,7 @@ protected:
      * Char enter implementation. Should be called in onCharEntered.
      * @param c
      */
-    void enterChar(char16_t c);
+    void enterChar(AChar c);
 
     AString getDisplayText() override;
     AMenuModel composeContextMenuImpl();

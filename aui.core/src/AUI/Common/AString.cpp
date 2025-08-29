@@ -19,34 +19,6 @@
 // utf8 stuff has a lot of magic
 // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
 
-static AStaticVector<char, 4> toUtf8(char32_t i) noexcept {
-    if (i <= 0x7F) {
-        return { static_cast<char>(i) };
-    }
-    if (i <= 0x7FF) {
-        return { static_cast<char>(0xC0 | (i >> 6)), static_cast<char>(0x80 | (i & 0x3F)) };
-    }
-    if (i <= 0xFFFF) {
-        if (i >= 0xD800 && i <= 0xDFFF) {
-            return {}; // Invalid Unicode code point
-        }
-        return {
-            static_cast<char>(0xE0 | (i >> 12)),
-            static_cast<char>(0x80 | ((i >> 6) & 0x3F)),
-            static_cast<char>(0x80 | (i & 0x3F))
-        };
-    }
-    if (i <= 0x10FFFF) {
-        return {
-            static_cast<char>(0xF0 | (i >> 18)),
-            static_cast<char>(0x80 | ((i >> 12) & 0x3F)),
-            static_cast<char>(0x80 | ((i >> 6) & 0x3F)),
-            static_cast<char>(0x80 | (i & 0x3F))
-        };
-    }
-    return {}; // Invalid Unicode code point
-}
-
 namespace aui::detail {
 
 char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept {
@@ -137,6 +109,12 @@ AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) {
     }
 }
 
+AString::AString(const char* utf8_bytes, size_type length) {
+    if (simdutf::validate_utf8(utf8_bytes, length)) {
+        *this = std::string(utf8_bytes, length);
+    }
+}
+
 AString::AString(const char16_t* utf16_bytes, size_type length) {
     size_t size = simdutf::utf8_length_from_utf16(utf16_bytes, length);
     super::resize(size);
@@ -151,6 +129,11 @@ AString::AString(const char32_t* utf32_bytes, size_type length) {
 
 AString::AString(AChar c) {
     push_back(c);
+}
+
+AString::AString(size_type n, AChar c) {
+    auto utf8c = c.toUtf8();
+
 }
 
 void AString::push_back(AChar c) noexcept {
@@ -184,8 +167,15 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
     return std::move(bytes);
 }
 
-/*
-AString AString::trimLeft(char16_t symbol) const noexcept
+AString::operator AStringView() const noexcept {
+    return {static_cast<const std::string&>(*this)};
+}
+
+AString::size_type AString::length() const noexcept {
+    return simdutf::count_utf8(super::data(), super::size());
+}
+
+AString AString::trimLeft(char symbol) const
 {
     for (auto i = begin(); i != end(); ++i)
     {
@@ -197,118 +187,13 @@ AString AString::trimLeft(char16_t symbol) const noexcept
     return {};
 }
 
-AString AString::trimRight(char16_t symbol) const noexcept
+AString AString::trimRight(char symbol) const
 {
     for (auto i = rbegin(); i != rend(); ++i)
     {
         if (*i != symbol)
         {
-            return { begin(),i.base() };
-        }
-    }
-    return {};
-}
-
-AString& AString::replaceAll(char16_t from, char16_t to) noexcept {
-    for (auto& s : *this) {
-        if (s == from)
-            s = to;
-    }
-    return *this;
-}
-
-AString& AString::replaceAll(const AString& from, const AString& to) {
-    for (size_type next = 0;;)
-    {
-        next = find(from, next);
-        if (next == NPOS)
-        {
-            return *this;
-        }
-
-        auto fromLength = from.length();
-        auto toLength = to.length();
-
-        if (fromLength == toLength) {
-            for (auto c : to) {
-                *(begin() + next++) = c;
-            }
-        } else if (fromLength < toLength) {
-            const auto diff = toLength - fromLength;
-            for (auto c : aui::range(to.begin(), to.end() - diff)) {
-                *(begin() + next++) = c;
-            }
-            next = std::distance(begin(), insert(begin() + next, to.begin() + fromLength, to.end())) + 1;
-        } else {
-            for (auto c : to) {
-                *(begin() + next++) = c;
-            }
-            const auto diff = fromLength - toLength;
-            erase(begin() + next, begin() + next + diff);
-        }
-    }
-    return *this;
-}
-
-AString AString::replacedAll(const AString& from, const AString& to) const
-{
-    AString result;
-
-    result.reserve(size());
-
-    for (size_type pos = 0;;)
-    {
-        auto next = find(from, pos);
-        if (next == NPOS)
-        {
-            result.insert(result.end(), begin() + pos, end());
-            return result;
-        }
-
-        result.insert(result.end(), begin() + pos, begin() + next);
-        result.insert(result.end(), to.begin(), to.end());
-
-        pos = next + from.length();
-    }
-
-    return result;
-}
-
-void AString::resizeToNullTerminator() {
-    const char* end = data();
-    while (*end) {
-        ++end;
-    }
-    resize(end - data());
-}*/
-
-AString::operator AStringView() const noexcept {
-    return {static_cast<const std::string&>(*this)};
-}
-
-AString::size_type AString::length() const noexcept {
-    return simdutf::count_utf8(super::data(), super::size());
-}
-
-AString AString::trimLeft(char symbol) const
-{
-    for (auto i = byte_begin(); i != byte_end(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return { i, byte_end() };
-        }
-    }
-    return {};
-}
-
-AString AString::trimRight(char symbol) const
-{
-    for (auto i = byte_rbegin(); i != byte_rend(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return { byte_begin(), i.base() };
+            return { begin(), i.base() };
         }
     }
     return {};
@@ -316,8 +201,8 @@ AString AString::trimRight(char symbol) const
 
 AString AString::trim(char symbol) const
 {
-    auto left = byte_begin();
-    auto right = byte_end();
+    auto left = begin();
+    auto right = end();
 
     while (left != right && *left == symbol)
     {
@@ -326,7 +211,7 @@ AString AString::trim(char symbol) const
 
     if (left != right)
     {
-        auto riter = byte_rbegin();
+        auto riter = rbegin();
         while (riter.base() != left && *riter == symbol)
         {
             ++riter;
@@ -342,32 +227,6 @@ AString AString::trim(char symbol) const
         return substr(0, s) + stringAtEnd;
     }
     return *this;
-}
-
-AString AString::processEscapes() const {
-    AString result;
-    result.reserve(length());
-    bool doEscape = false;
-    for (auto& c : *this) {
-        if (doEscape) {
-            doEscape = false;
-            switch (c) {
-                case '\\':
-                    result << '\\';
-                    break;
-                case 'n':
-                    result << '\n';
-                    break;
-                default:
-                    result << c;
-            }
-        } else if (c == '\\') {
-            doEscape = true;
-        } else {
-            result << c;
-        }
-    }
-    return result;
 }
 
 AString AString::excessSpacesRemoved() const noexcept {
@@ -394,7 +253,7 @@ AString& AString::append(char c) {
 }
 
 AString& AString::append(AChar c) {
-    auto utf8c = ::toUtf8(c);
+    auto utf8c = c.toUtf8();
     super::append(utf8c.begin(), utf8c.end());
     return *this;
 }
@@ -1216,7 +1075,7 @@ AStringVector AString::split(AChar c) const {
     if (empty()) {
         return {};
     }
-    auto utf8c = ::toUtf8(c);
+    auto utf8c = c.toUtf8();
     if (utf8c.empty()) return {};
     std::string separator_utf8(utf8c.begin(), utf8c.end());
     AStringVector result;
@@ -1234,8 +1093,138 @@ AStringVector AString::split(AChar c) const {
     return result;
 }
 
+AString& AString::replaceAll(char from, char to) {
+    if (empty()) return *this;
+    for (size_t i = 0; i < sizeBytes(); ++i) {
+        if ((*this)[i] == from) {
+            (*this)[i] = to;
+        }
+    }
+    return *this;
+}
+
+AString& AString::replaceAll(AStringView from, AStringView to) {
+    if (empty()) return *this;
+    for (size_type next = 0;;)
+    {
+        next = find(from, next);
+        if (next == NPOS)
+        {
+            return *this;
+        }
+
+        auto fromLength = from.size();
+        auto toLength = to.size();
+
+        if (fromLength == toLength) {
+            for (auto c : to) {
+                *(bytes().begin() + next++) = c;
+            }
+        } else if (fromLength < toLength) {
+            const auto diff = toLength - fromLength;
+            for (auto c : aui::range(to.bytes().begin(), to.bytes().end() - diff)) {
+                *(bytes().begin() + next++) = c;
+            }
+            next = std::distance(bytes().begin(), insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
+        } else {
+            for (auto c : to) {
+                *(bytes().begin() + next++) = c;
+            }
+            const auto diff = fromLength - toLength;
+            erase(bytes().begin() + next, bytes().begin() + next + diff);
+        }
+    }
+    return *this;
+}
+
+AString AString::replacedAll(AChar from, AChar to) const {
+    if (empty()) return {};
+    AString copy;
+    copy.reserve(sizeBytes());
+    for (auto c : *this) {
+        if (c == from) {
+            copy << to;
+        } else {
+            copy << c;
+        }
+    }
+    return copy;
+}
+
+AString AString::replacedAll(AStringView from, AStringView to) const {
+    AString result;
+
+    result.reserve(size());
+
+    for (size_type pos = 0;;)
+    {
+        auto next = find(from, pos);
+        if (next == NPOS)
+        {
+            result.insert(result.bytes().end(), bytes().begin() + pos, bytes().end());
+            return result;
+        }
+
+        result.insert(result.bytes().end(), bytes().begin() + pos, bytes().begin() + next);
+        result.insert(result.bytes().end(), to.bytes().begin(), to.bytes().end());
+
+        pos = next + from.length();
+    }
+
+    return result;
+}
+
+AString AString::processEscapes() const {
+    AString result;
+    result.reserve(length());
+    bool doEscape = false;
+    for (auto& c : static_cast<const std::string&>(*this)) {
+        if (doEscape) {
+            doEscape = false;
+            switch (c) {
+                case '\\':
+                    result << '\\';
+                    break;
+                case 'n':
+                    result << '\n';
+                    break;
+                default:
+                    result << c;
+            }
+        } else if (c == '\\') {
+            doEscape = true;
+        } else {
+            result << c;
+        }
+    }
+    return result;
+}
+
+void AString::resizeToNullTerminator() {
+    char* current = data();
+    char* end = current;
+    while (*end != '\0') {
+        ++end;
+    }
+    resize(end - current);
+}
+
+bool AString::contains(char c) const noexcept {
+    return find(c) != npos;
+}
+
+bool AString::startsWith(AChar prefix) const noexcept {
+    auto utf8p = prefix.toUtf8();
+    return startsWith(AStringView(utf8p.begin(), utf8p.end()));
+}
+
+bool AString::endsWith(AChar suffix) const noexcept {
+    auto utf8s = suffix.toUtf8();
+    return endsWith(AStringView(utf8s.begin(), utf8s.end()));
+}
+
 template<typename T>
-static AOptional<T> toNumber(const AStringView& str) noexcept {
+static AOptional<T> toNumber(AStringView str) noexcept {
     if (str.empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;

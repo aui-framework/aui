@@ -18,7 +18,7 @@
 AString AJson::toString(const AJson& json) {
     AByteBuffer buffer;
     aui::serialize(buffer, json);
-    return AString::fromUtf8(buffer);
+    return AString(buffer.data(), buffer.size());
 }
 
 AJson AJson::fromString(const AString& json) {
@@ -30,7 +30,7 @@ AJson AJson::fromBuffer(AByteBufferView buffer) {
     try {
         return aui::deserialize<AJson>(AByteBufferInputStream(buffer));
     } catch (...) {
-        throw AJsonException("While parsing:\n" + AString::fromUtf8(buffer), std::current_exception());
+        throw AJsonException("While parsing:\n" + AString(buffer.data(), buffer.size()), std::current_exception());
     }
 }
 

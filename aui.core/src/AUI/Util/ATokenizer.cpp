@@ -127,7 +127,7 @@ T ATokenizer::readIntImpl() {
     mTemporaryAStringBuffer.clear();
     auto value = [&] {
         if constexpr(sizeof(T) > 4) {
-            return mTemporaryAStringBuffer.toLongInt().valueOr(0);
+            return mTemporaryAStringBuffer.toLong().valueOr(0);
         } else {
             return mTemporaryAStringBuffer.toInt().valueOr(0);
         }
