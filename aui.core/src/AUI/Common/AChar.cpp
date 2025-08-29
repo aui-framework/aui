@@ -11,6 +11,8 @@
 
 #include "AChar.h"
 
+#include <AUI/Common/AStaticVector.h>
+
 AStaticVector<char, 4> AChar::toUtf8() const noexcept {
     if (mValue <= 0x7F) {
         return { static_cast<char>(mValue) };

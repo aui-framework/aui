@@ -11,7 +11,10 @@
 
 #pragma once
 
-#include <AUI/Common/AStaticVector.h>
+#include <cstddef>
+
+template <typename StoredType, std::size_t MaxSize>
+class AStaticVector;
 
 /**
  * @brief Represents a single 32-bit char.
