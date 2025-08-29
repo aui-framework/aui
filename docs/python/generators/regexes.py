@@ -52,3 +52,8 @@ assert MACRO_DEFINE.match('#define AUI_HELLO()').group(1) == "AUI_HELLO"
 HREF_INJECT = re.compile(r'(<[^>]*>|[\w\'_\.:]+(\(\))?|.)', flags=re.S)
 assert HREF_INJECT.match('AProcess::self()->hello').group(1) == 'AProcess::self()'
 assert HREF_INJECT.match('AProcess::self->hello').group(1) == 'AProcess::self'
+
+CPP_BRIEF_LINE = re.compile(r'(\s*\@\w+) ?(.*)')
+assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
+assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
+assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"

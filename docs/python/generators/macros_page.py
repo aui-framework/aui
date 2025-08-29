@@ -6,7 +6,7 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
-from docs.python.generators import cpp_parser, doxygen
+from docs.python.generators import cpp_parser, common
 from docs.python.generators.cpp_parser import CppMacro
 
 
@@ -18,5 +18,5 @@ def define_env(env):
         for i in macros:
             output += f"\n\n---\n\n"
             output += f"`{i.name}`\n\n"
-            output += "\n".join([i[1] for i in doxygen.parse_doxygen(i.doc) if i[0] == "@brief"])
+            output += "\n".join([i[1] for i in common.parse_doxygen(i.doc) if i[0] == "@brief"])
         return output

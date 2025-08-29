@@ -15,8 +15,10 @@
 
 /**
  * @brief Represents a simple single-line text display view.
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ALabel.png)
+ *
+ * @ingroup views_indication
  * @details
  * ALabel is used for displaying nonformatted single-line text.
  */

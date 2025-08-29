@@ -1,3 +1,10 @@
+.views-card-outer:focus-within,
+.views-card-outer > a:focus,
+.views-card-outer > a:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+}
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
@@ -61,6 +68,7 @@
 .md-grid {
     max-width: 45rem;
 }
+
 main .md-grid {
     max-width: 70rem;
 }
@@ -80,7 +88,8 @@ main .md-grid {
     opacity: 1;
     transform: none;
 }
-.md-header__title--active .md-header__topic+.md-header__topic {
+
+.md-header__title--active .md-header__topic + .md-header__topic {
     display: none;
 }
 
@@ -108,6 +117,7 @@ main .md-grid {
     width: 1rem;
     height: 1rem;
 }
+
 .md-search__icon {
     width: 0.8rem;
     height: 0.8rem;
@@ -117,11 +127,13 @@ main .md-grid {
     margin: 0 .15rem;
     padding: 0 .4rem;
 }
-[data-md-toggle=search]:checked~.md-header .md-header__option {
+
+[data-md-toggle=search]:checked ~ .md-header .md-header__option {
     max-width: none;
     opacity: 1;
     transition: max-width 0ms, opacity 0ms;
 }
+
 .md-header {
     border-bottom: 1px solid var(--md-code-bg-color);
 }
@@ -131,6 +143,7 @@ main .md-grid {
         padding-right: 1rem;
     }
 }
+
 @media screen and (max-width: 76.2344em) {
     .md-header__button.md-logo {
         display: block;
@@ -194,6 +207,7 @@ th, td {
 [dir=ltr] .md-typeset .mdx-badge__icon {
     border-top-left-radius: .1rem;
 }
+
 .md-typeset .mdx-badge__icon {
     background: var(--md-accent-fg-color--transparent);
     padding: .2rem;
@@ -202,9 +216,11 @@ th, td {
 [dir=ltr] .md-typeset .mdx-badge__text {
     border-bottom-right-radius: .1rem;
 }
+
 [dir=ltr] .md-typeset .mdx-badge__text {
     border-top-right-radius: .1rem;
 }
+
 .md-typeset .mdx-badge__text {
     box-shadow: 0 0 0 1px inset var(--md-accent-fg-color--transparent);
     padding: .2rem .3rem;
@@ -224,16 +240,18 @@ th, td {
     justify-content: space-between;
     gap: 20px;
 }
+
 .class-index p {
     margin: 0;
 }
+
 .class-index .item .list {
     column-width: 250px;
     flex: 1 1 200px;
     min-width: 350px;
 }
 
-.class-index > .item:nth-child(2n) {
+.odd-highlight:nth-child(2n) {
     background: var(--md-code-bg-color);
 }
 
@@ -389,3 +407,121 @@ th, td {
     border-bottom: 1px dotted #888c;
 }
 
+
+
+.views-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    justify-items: stretch;
+    align-items: stretch;
+    width: 100%;
+    position: relative;
+}
+
+.views-grid .odd-overlay {
+    background: var(--md-code-bg-color);
+    position: absolute;
+    top: -4rem;
+    left: -1.4rem;
+    right: -1.4rem;
+    bottom: 0;
+    z-index: -1;
+}
+
+@media screen and (min-width: 600px) {
+    .views-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .views-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.views-card-outer {
+    align-items: center;
+    min-height: 220px;
+    text-align: left;
+    margin: 0 0 32px 0;
+}
+
+@media screen and (min-width: 600px) {
+    .views-card-outer {
+        margin: 0 0 32px 0;
+    }
+}
+
+@media screen and (min-width: 900px) {
+    .views-card-outer {
+        box-sizing: border-box;
+        margin: 0 0 32px 0;
+    }
+}
+
+.md-typeset .views-card-outer .views-card-title a {
+    color: var(--md-default-fg-color);
+}
+
+.md-typeset .views-card-outer .views-card-title a:hover {
+    text-decoration: underline;
+}
+
+.views-card-outer > a:focus-visible {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.views-card-outer:focus-within {
+    outline: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+}
+
+.views-card {
+    border-color: #f0f0f0 !important;
+}
+
+.views-card {
+    background: #f0f0f0;
+    border-radius: 16px;
+    border: 2px solid;
+    padding: 20px;
+    box-shadow: 0 2px 8px 0 #0001;
+    width: 100%;
+    aspect-ratio: 108 / 61;
+    box-sizing: border-box;
+}
+
+.views-card img {
+    object-fit: scale-down;
+    width: 100%;
+    height: 100%;
+}
+
+.views-card-title {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin: 8px 0;
+}
+
+.views-card-desc {
+    color: inherit;
+    font-size: 1em;
+    margin-bottom: 16px;
+}
+
+.views-card-link {
+    color: #2962ff;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.views-card-link:hover {
+    color: #0039cb;
+    text-decoration: underline;
+}

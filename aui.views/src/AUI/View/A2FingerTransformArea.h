@@ -31,7 +31,10 @@ struct A2DTransform {
 
 /**
  * @brief Handles and processes the multitouch scale, transform and rotation events based on two-finger gestures.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/A2FingerTransformArea.png)
+ *
+ * @ingroup views_containment
  * @details
  * Represents a translucent area that handles and processes multi-finger transformation gestures (i.e. pinch-to-zoom,
  * move, rotate). A2FingerTransformArea is a container, so the transformed view should be somewhere inside.
