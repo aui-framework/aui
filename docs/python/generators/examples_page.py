@@ -14,49 +14,10 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import io
 import os
-import mkdocs_gen_files
 from pathlib import Path
-from typing import Any
 
 from docs.python.generators import regexes, common
 
-
-def collect_srcs(top: str):
-    for root, _, files in os.walk(top):
-        for f in files:
-            if f.endswith(('.h', 'cpp', 'CMakeLists.txt')):
-                yield Path(root) / f
-
-def get_id(title: str) -> str:
-    assert title.startswith("# ")
-
-    title = title.lstrip("# ").rstrip("\n")
-
-    if "{" in title:
-        id = title[title.find("{#")+2:title.find("}")]
-        title = title[:title.find("{#")]
-
-    else:
-        id = title.lower()
-        for i in " _":
-            id = id.replace(i, "-")
-            
-        id = "".join(ch for ch in id if ch.isalnum() or ch == '-')
-        id = id.strip('-')
-
-    return id
-
-def descriptions(readlines: list[str]):
-    description = ""
-    for line in readlines:
-        if m := regexes.AUI_EXAMPLE.match(line):
-            category = m.group(1)
-            for description_line in readlines:
-                description_line = description_line.strip("\n")
-                description += " " + description_line
-    description = description.strip()
-
-    return category, description
 
 def examine():
     EXAMPLES_DIR = Path.cwd() / "examples"
@@ -64,25 +25,53 @@ def examine():
 
     examples_lists = {}
 
-    for root, _, files in os.walk(EXAMPLES_DIR):
+    for root, dirs, files in os.walk(EXAMPLES_DIR):
         for file in files:
             if file != "README.md":
                 continue
 
             example_path = str(Path(root).relative_to(EXAMPLES_DIR))
-            if os.sep not in example_path:
+            if "/" not in example_path and "\\" not in example_path:
                 continue
 
             example_path = example_path.replace(os.sep, "_")
+
+            def collect_srcs(top):
+                for root, dirs, files in os.walk(top):
+                    for f in files:
+                        if any(f.endswith(ext) for ext in ['.h', 'cpp', 'CMakeLists.txt']):
+                            yield Path(root) / f
 
             srcs = list(collect_srcs(root))
 
             input_file = Path(root) / file
             with open(input_file, 'r', encoding='utf-8') as fis:
                 title = fis.readline()
-                id = get_id(title)
-                category, description = descriptions(fis.readlines())
+                assert title.startswith("# ")
+                title = title.lstrip("# ").rstrip("\n")
+                if "{" in title:
+                    id = title[title.find("{#")+2:title.find("}")]
+                    title = title[:title.find("{#")]
+                else:
+                    id = title.lower()
+                    for i in [" ", "_"]:
+                        id = id.replace(i, "-")
+                    id = "".join(ch for ch in id if ch.isalnum() or ch == '-')
+                    id = id.strip('-')
 
+                category = None
+                description = ""
+                it = iter(fis.readlines())
+                for line in it:
+                    if m := regexes.AUI_EXAMPLE.match(line):
+                        category = m.group(1)
+                        for description_line in it:
+                            description_line = description_line.strip("\n")
+                            if not description_line:
+                                break
+                            description += " " + description_line
+
+                description = description.strip()
                 if not id:
                     raise RuntimeError(f"no id provided in {input_file}")
                 if not category:
@@ -98,15 +87,12 @@ def examine():
                     'srcs': srcs,
                 })
 
-    if not examples_lists:
-        raise RuntimeError("no examples provided")
-
     return examples_lists
 
 
-
 examples_lists = examine()
-
+if not examples_lists:
+    raise RuntimeError("no examples provided")
 
 def define_env(env):
     @env.macro
@@ -132,27 +118,23 @@ def example(category: str):
 """
 
 def gen_pages():
+    import mkdocs_gen_files
     for category_name, category in examples_lists.items():
         for example in category:
             id = example['id']
             page_path = example['page_path']
-
             mkdocs_gen_files.set_edit_path(f"{id}.md", '..' / page_path.relative_to(Path.cwd()))
-
             with mkdocs_gen_files.open(f"{id}.md", "w") as fos:
                 with io.open(page_path, 'r', encoding='utf-8') as fis:
                     contents = fis.read()
-
                     print(contents, file=fos, end='')
 
                     if not example['srcs']:
                         if "## Source Code" not in contents:
                             raise RuntimeError(f'{page_path} contains neither "## Source Code" section nor source files.')
                         continue
-
                     print('\n## Source Code\n\n', file=fos)
                     print(f'[ <!-- aui:icon octicons-link-external-16 --> Repository ](https://github.com/aui-framework/aui/tree/master/{page_path.relative_to(Path.cwd())})\n', file=fos)
-                    
                     for f in example['srcs']:
                         filename = f.relative_to(page_path.parent)
                         print(f'\n### {filename}\n', file=fos)
@@ -170,5 +152,5 @@ def gen_pages():
 
                         for line in skip_license(iter(f.read_text().splitlines())):
                             print(f'{line}', file=fos)
-                        print('```', file=fos)
+                        print(f'```', file=fos)
 
