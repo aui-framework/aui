@@ -90,10 +90,16 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         using namespace std::string_view_literals;
 
-        auto vendor   = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VENDOR)));
-        auto renderer = std::string_view(reinterpret_cast<const char*>(glGetString(GL_RENDERER)));
-        auto version  = std::string_view(reinterpret_cast<const char*>(glGetString(GL_VERSION)));
-        auto glsl     = std::string_view(reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+        auto handle = [](auto* str) -> std::string_view {
+            if (str == nullptr) {
+                return "unknown";
+            }
+            return reinterpret_cast<const char*>(str);
+        };
+        auto vendor   = handle(glGetString(GL_VENDOR));
+        auto renderer = handle(glGetString(GL_RENDERER));
+        auto version  = handle(glGetString(GL_VERSION));
+        auto glsl     = handle(glGetString(GL_SHADING_LANGUAGE_VERSION));
 
         ALogger::info(LOG_TAG) << "VENDOR: " << vendor;
         ALogger::info(LOG_TAG) << "RENDERER: " << renderer;
