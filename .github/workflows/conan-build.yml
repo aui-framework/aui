@@ -40,7 +40,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: MSVC ${{ matrix.toolset }} - Windows - ${{ matrix.build-type }}
+    name: MSVC ${{ matrix.toolset }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
