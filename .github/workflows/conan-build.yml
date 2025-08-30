@@ -101,7 +101,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -222,7 +227,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -320,7 +330,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -401,7 +416,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -483,7 +503,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
@@ -585,7 +610,12 @@ jobs:
       - name: Get Conan home
         id: get-conan-home
         shell: bash
-        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+        run: |
+          if [ "$RUNNER_OS" == "Windows" ]; then
+            echo "conan-home=C:\\Users\\runneradmin\\.conan2 >> $GITHUB_OUTPUT
+          else
+            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+          fi
 
       - name: Cache Conan packages
         uses: actions/cache@v4
