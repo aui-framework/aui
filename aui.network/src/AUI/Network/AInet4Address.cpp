@@ -115,7 +115,13 @@ bool AInet4Address::operator<(const AInet4Address& r) const {
 AString AInet4Address::toString() const {
 	uint8_t* bytes = (uint8_t*)&mAddr;
 	char buf[32];
-	sprintf(buf, "%d.%d.%d.%d:%d", bytes[0], bytes[1], bytes[2], bytes[3], mPort);
+	std::snprintf(buf, sizeof(buf), "%u.%u.%u.%u:%u",
+		static_cast<unsigned>(bytes[0]),
+		static_cast<unsigned>(bytes[1]),
+		static_cast<unsigned>(bytes[2]),
+		static_cast<unsigned>(bytes[3]),
+		static_cast<unsigned>(mPort)
+	);
 	return buf;
 }
 

@@ -74,6 +74,8 @@
 // Note: we're glossing over how the sub-sample handling works with
 // |virtual_source_idx_|, etc.
 
+// NOLINTBEGIN(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)
+
 #ifdef UNSAFE_BUFFERS_BUILD
 // TODO(crbug.com/40285824): Remove this and convert code to safer constructs.
 #pragma allow_unsafe_buffers
@@ -554,3 +556,5 @@ float SincResampler::Convolve_NEON(const int kernel_size,
 #endif
 
 }  // namespace media
+
+// NOLINTEND(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)

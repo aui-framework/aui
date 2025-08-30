@@ -87,9 +87,9 @@ public:
      * @brief Performs paste operation (CTRL+V) from system clipboard.
      * @details
      * Effectively:
-     * @code{cpp}
+     * ```cpp
      * paste(AClipboard::pasteFromClipboard());
-     * @endcode
+     * ```
      */
     void pasteFromClipboard();
 
@@ -155,8 +155,9 @@ protected:
     /**
      * Inserts string.
      * @return true, if successfully inserted; false otherwise
-     * @note when insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
-     *       unchanged as like if <code>typeableInsert</code> have not been called.
+     * @details
+     * When insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
+     * unchanged as like if <code>typeableInsert</code> have not been called.
      */
     [[nodiscard]]
     virtual bool typeableInsert(size_t at, const AString& toInsert) = 0;
@@ -164,8 +165,8 @@ protected:
     /**
      * Inserts string.
      * @return true, if successfully inserted; false otherwise
-     * @note when insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
-     *       unchanged as like if <code>typeableInsert</code> have not been called.
+     * When insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
+     * unchanged as like if <code>typeableInsert</code> have not been called.
      */
     [[nodiscard]]
     virtual bool typeableInsert(size_t at, char16_t toInsert) = 0;

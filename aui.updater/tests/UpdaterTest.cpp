@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <range/v3/all.hpp>
 #include <AUI/Updater/AUpdater.h>
@@ -30,7 +32,6 @@ TEST(UpdaterTest, getInstallationDirectory) {
         AFuture<void> checkForUpdatesImpl() override { return AFuture<void>(); }
     } myUpdater;
 
-    // clang-format off
     EXPECT_EQ(
         myUpdater.getInstallationDirectory(
             { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
@@ -39,7 +40,6 @@ TEST(UpdaterTest, getInstallationDirectory) {
                                     "/home/alex2772/CLionProjects/example_app/cmake-build-debug"
         );
 
-    // malformed structure
     EXPECT_ANY_THROW(
         myUpdater.getInstallationDirectory(
             { .selfProcessExePath = "/tmp/__aui_update_example_app/download/bin/example_app",
@@ -53,13 +53,11 @@ TEST(UpdaterTest, getInstallationDirectory) {
               .updaterDir         = "/tmp/__aui_update_example_app/download",
               .originExe          = "/home/alex2772/CLionProjects/example_app/cmake-build-debug/example_app.exe" }),
                                     "/home/alex2772/CLionProjects/example_app/cmake-build-debug");
-
-    // clang-format on
 }
 
 #ifdef AUI_UPDATER_TEST
 TEST(UpdaterTest, ApplyUpdate) {
-    // test update installation scenario
+    /* test update installation scenario */
 
     auto updaterPath = [] {
         auto selfDir = AProcess::self()->getPathToExecutable().parent();
@@ -73,22 +71,22 @@ TEST(UpdaterTest, ApplyUpdate) {
         return APath();
     }();
     APathOwner temporary(APath::nextRandomTemporary());
-    auto tempDir = APath(temporary) / "white space";   // white space to check everything is ok on Win
+    auto tempDir = APath(temporary) / "white space";   /* white space to check everything is ok on Win */
     tempDir.makeDirs();
     auto tempDirUpdater = tempDir / updaterPath.filename();
 
-    // set up "downloaded" update
+    /* set up "downloaded" update */
     APath::copy(updaterPath, tempDirUpdater);
     tempDirUpdater.chmod(0755);
     auto dependencyPath = updaterPath.parent() / "dependency.txt";
     dependencyPath.removeFileRecursive();
     AFileOutputStream(tempDir / "dependency.txt") << aui::serialize_sized(AString("1234"));
 
-    // first launch. --test= flag instructs aui.updater.test to apply update from the specified dir.
-    // this launch will launch a copy of aui.updater.test from tempDir and copy itself along with the dependency.txt
-    // back to updaterPath.
+    /* first launch. --test= flag instructs aui.updater.test to apply update from the specified dir.
+       this launch will launch a copy of aui.updater.test from tempDir and copy itself along with the dependency.txt
+       back to updaterPath.*/
     {
-        // check that dependency.txt does not exist ("no update applied").
+        /* check that dependency.txt does not exist ("no update applied"). */
         EXPECT_FALSE(dependencyPath.isRegularFileExists());
 
         AProcess::ArgStringList args;
@@ -101,13 +99,13 @@ TEST(UpdaterTest, ApplyUpdate) {
         EXPECT_EQ(process->waitForExitCode(), 0);
     }
 
-    // wait a little bit to apply the update.
+    /* wait a little bit to apply the update. */
     AThread::sleep(1s);
     {
-        // check that dependency.txt appeared.
+        /* check that dependency.txt appeared. */
         EXPECT_TRUE(dependencyPath.isRegularFileExists());
 
-        // perform "app normal lifecycle". In case of aui.updater.test, it will check for dependency.txt.
+        /* perform "app normal lifecycle". In case of aui.updater.test, it will check for dependency.txt. */
         auto process = AProcess::create({
           .executable = updaterPath,
           .workDir = updaterPath.parent(),
@@ -125,52 +123,8 @@ TEST(UpdaterTest, ApplyUpdate) {
 
 #define AUI_ENTRY static int fake_entry(const AStringVector& args)
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/updater.h
-// @defgroup updater aui::updater
-// @brief Deliver updates on non-centralized distribution methods
-// @details
-// @experimental
-// This module is purposed for delivering updates to your end users on distribution methods that do not support that by
-// themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
-// your website). Here's small breakdown:
 //
-// | Platform      | Distribution method           | Auto updating solution |
-// | ------------- | ----------------------------- | ---------------------- |
-// | @ref windows  | Installer/exe                 | @ref updater           |
-// | @ref windows  | Microsoft Store (used rarely) | Microsoft Store        |
-// | @ref linux    | Portables                     | @ref updater           |
-// | @ref linux    | Flatpak                       | Flathub                |
-// | @ref macos    | DMG (*.app)                   | -                      |
-// | @ref macos    | Apple App Store               | Apple App Store        |
-// | @ref android  | APK                           | Google Play Store      |
-// | @ref ios      | IPA                           | Apple App Store        |
-//
-// @note
-// "Portable" means that you distribute your app as a single executable file (i.e., a single file with all dependencies
-// packed into it), usually not requiring to "install" it to the system.
-//
-// `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
-// privileges). If that's not your case, you'll need to update your @ref INNOSETUP "installer configuration" to install
-// to user's directory (i.e., in `AppData`).
-//
-// @note
-// Check out our @ref example_app_template for a GitHub-hosted app template with auto update implemented.
-//
-// # Supported platforms
-// `aui::updater` supports the following platforms:
-// - **Windows** - @ref PORTABLE_WINDOWS "portables" only, installers to user's directory only (@ref INNOSETUP)
-// - **Linux** - portables only
-//
-// On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
-// executable is not writeable, or running on a non-supported platform, `AUpdater` stubs it's methods (i.e., they do
-// nothing). You can check that the `aui::updater` functionality is engaged by calling `AUpdater::isAvailable()`.
-//
-// Updating process requires the initial application running instance to be stopped to replace its files with newer
-// ones. Additionally, the updater process starts the newer version of the application after replacing the files
-// (applying/deploying an update). To minimize downtime for end-users, the replacement should be seamless and quick and
-// thus the deployment process just copies newer files (overwriting old ones), it does not involve network operations.
-//
-// # Getting started
+// ## Getting started
 //
 // `AUpdater` lives inside entrypoint of your application. It needs you to pass program arguments. It might decide
 // to terminate process execution via std::exit.
@@ -203,110 +157,113 @@ AUI_ENTRY {
 // You can pass updater instance to your window (as shown in the example) and display update information from
 // `AUpdater::status` and perform the update when requested.
 //
-// # Observing update progress
+// ## Observing update progress
 //
-// @copydetails AUpdater::status
+// See [AUpdater::status]
 //
-// # Update process
+// ## Update process
 //
-// ## Checking for updates
+// ### Checking for updates
 //
-// AUpdater expects @ref AUpdater::checkForUpdates to be called to check for updates. It can be called once per some
-// period of time. It calls user-defined @ref AUpdater::checkForUpdatesImpl to perform an update checking.
+// AUpdater expects [AUpdater::checkForUpdates()] to be called to check for updates. It can be called once per some
+// period of time. It calls user-defined [AUpdater::checkForUpdatesImpl()] to perform an update checking.
 //
 // The update steps are reported by changing `AUpdater::status` property.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"];
-// a -> u [label = "handleStartup(...)", URL = "@ref AUpdater::handleStartup"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
-// a <- u [label = "control flow"];
+// ```mermaid
+// sequenceDiagram
+//  autonumber
+//  participant a as Your App
+//  participant u as AUpdater
 //
-// --- [label="App Normal Lifecycle"];
-// ...;
-// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
-// a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
+//  a->>u: handleStartup(...)
+//  u-->>a: status = AUpdater::StatusIdle
+//  u-->>a: control flow
 //
-// ...;
-// --- [label="Update published"];
-// ...;
-// a -> u [label = "checkForUpdates()", URL = "@ref AUpdater::checkForUpdates"];
-// a <- u [label = "status = AUpdater::StatusCheckingForUpdates", URL = "@ref AUpdater::StatusCheckingForUpdates"];
-// a <- u [label = "control flow"];
-// u box u [label = "checkForUpdatesImpl()", URL = "@ref AUpdater::checkForUpdatesImpl"];
-// u box u [label = "update was found"];
-// a <- u [label = "status = AUpdater::StatusIdle", URL = "@ref AUpdater::StatusIdle"];
-// ...;
-// @endmsc
+//  Note over a,u: App Normal Lifecycle
+//  a->>u: checkForUpdates()
+//  u-->>a: status = AUpdater::StatusCheckingForUpdates
+//  u-->>a: control flow
+//  u->>u: checkForUpdatesImpl()
+//  u-->>a: status = AUpdater::StatusIdle
+//
+//  Note over a,u: update published
+//  a->>u: checkForUpdates()
+//  u-->>a: status = AUpdater::StatusCheckingForUpdates
+//  u-->>a: control flow
+//  u->>u: checkForUpdatesImpl()
+//  Note over u: update was found
+//  u-->>a: status = AUpdater::StatusIdle
+// ```
 //
 // You might want to store update check results (i.e., download url) in your implementation of
-// @ref AUpdater::checkForUpdatesImpl so your @ref AUpdater::downloadUpdateImpl might reuse this information.
+// AUpdater::checkForUpdatesImpl so your [AUpdater::downloadUpdateImpl] might reuse this information.
 //
-// ## Downloading the update
+// ### Downloading the update
 //
-// When an update is found, your app should call @ref AUpdater::downloadUpdate to download and unpack the update. It is
-// up to you to decide when to download an update. If you wish, you can call @ref AUpdater::downloadUpdate in
-// @ref AUpdater::checkForUpdatesImpl to proceed to download process right after update was found (see
-// @ref UPDATER_WORKFLOWS for more information about update workflow decisions). It calls
-// user-defined @ref AUpdater::downloadUpdateImpl which might choose to call default
+// When an update is found, your app should call [AUpdater::downloadUpdate] to download and unpack the update. It is
+// up to you to decide when to download an update. If you wish, you can call AUpdater::downloadUpdate in
+// [AUpdater::checkForUpdatesImpl] to proceed to download process right after update was found (see
+// [UPDATER_WORKFLOWS] for more information about update workflow decisions). It calls
+// user-defined [AUpdater::downloadUpdateImpl] which might choose to call default
 // `AUpdater::downloadAndUnpack(<YOUR DOWNLOAD URL>, unpackedUpdateDir)`.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"];
-// ...;
-// a -> u [label = "downloadUpdate()", URL = "@ref AUpdater::downloadUpdate"];
-// a <- u [label = "status = AUpdater::StatusDownloading", URL = "@ref AUpdater::StatusDownloading"];
-// u box u [label = "downloadUpdateImpl()", URL = "@ref AUpdater::downloadUpdateImpl"];
-// a <- u [label = "status = AUpdater::StatusWaitingForApplyAndRestart", URL = "@ref AUpdater::StatusWaitingForApplyAndRestart"];
-// --- [label="Your App Prompts User to Update"];
-// ...;
-// @endmsc
+// ``` mermaid
+// sequenceDiagram
+//    autonumber
+//    participant a as Your App
+//    participant u as AUpdater
 //
-// ## Applying (deploying) the update
+//    a->>u: downloadUpdate()
+//    u-->>a: status = AUpdater::StatusDownloading
+//    u->>u: downloadUpdateImpl()
+//    u-->>a: status = AUpdater::StatusWaitingForApplyAndRestart
 //
-// At this moment, AUpdater waits @ref AUpdater::applyUpdateAndRestart to be called. When
-// @ref AUpdater::applyUpdateAndRestart is called (i.e., when user accepted update installation), AUpdater executes the
+//    Note over a,u: Your App Prompts User to Update
+// ```
+//
+// ### Applying (deploying) the update
+//
+// At this moment, AUpdater waits [AUpdater::applyUpdateAndRestart()] to be called. When
+// [AUpdater::applyUpdateAndRestart()] is called (i.e., when user accepted update installation), AUpdater executes the
 // newer copy of your app downloaded before with a special command line argument which is handled by
-// @ref AUpdater::handleStartup in that executable. The initial app process is finished, closing your app window as
+// [AUpdater::handleStartup()] in that executable. The initial app process is finished, closing your app window as
 // well. From now, your app is in "downtime" state, so we need to apply the update and reopen app back again as quickly
 // as possible. This action is required to perform update installation. The copy then replaces old application (where it
 // actually installed) with itself (that is, the downloaded, newer copy). After operation is complete, it passes the
 // control back to the updated application executable. At last, the newly updated application performs a cleanup after
 // update.
 //
-// @msc
-// a[label = "Your App"],
-// u[label = "AUpdater", URL = "@ref AUpdater"],
-// da[label = "Newer Copy of Your App"],
-// du[label = "AUpdater in App Copy", URL = "@ref AUpdater"];
-// a :> u [label = "applyUpdateAndRestart()", URL = "@ref AUpdater::applyUpdateAndRestart"];
-// u :> da [label = "Execute with update arg"];
-// u box u [label = "exit(0)"];
-// a box u [label = "Process Finished"];
-// da box du [label = "Process Started"];
-// da -> du [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
-// du box du [label = "AUpdater::deployUpdate(...)", URL = "@ref AUpdater::deployUpdate"];
-// a <: du [label = "Execute"];
-// du box du [label = "exit(0)"];
-// da box du [label = "Process Finished"];
-// a box u [label = "Process Started"];
-// a -> u [label = "handleStartup", URL = "@ref AUpdater::handleStartup"];
-// u box u [label = "cleanup download dir"];
-// a box u [label="App Normal Lifecycle"];
-// ...;
-// @endmsc
+// ``` mermaid
+// sequenceDiagram
+//    autonumber
+//    participant a as Your App
+//    participant u as AUpdater
+//    u -->> a: applyUpdateAndRestart()
+//    create participant da as Your App Copy
+//    u -->> da: Execute with update arg
+//    u -->> u: exit(0)
+//    Note over a,u: Process Finished
+//    create participant du as AUpdater Copy
+//    da -->> du: handleStartup
+//    du -->> du: deployUpdate(...)
+//    du -->> a: Execute
+//    destroy du
+//    du -->> da: exit(0)
+//    destroy da
+//    da-->a:
+//    Note over a,u: Process Started
+//    a -->> u: handleStartup
+//    u -->> u: cleanup download dir
+//    a --x u: App Normal Lifecycle
+// ```
 //
 // After these operations complete, your app is running in its normal lifecycle.
 //
 
 TEST(UpdaterTest, ExampleCase) { EXPECT_EQ(fake_entry({}), 0); }
 
-TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H1
+TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
     // AUpdater is an abstract class; it needs some functions to be implemented by you.
     //
     // In this example, let's implement auto update from GitHub release pages.
@@ -409,15 +366,15 @@ TEST(UpdaterTest, WaitForProcess) {
 }
 
 
-// # Updater workflows {#UPDATER_WORKFLOWS}
+// ## Updater workflows { #UPDATER_WORKFLOWS }
 // When using AUpdater for your application, you need to consider several factors including usability, user experience,
 // system resources, and particular needs of your project.
 //
 // Either way, you might want to implement a way to disable auto update feature in your application.
 //
-// ## Prompt user on every step
+// ### Prompt user on every step
 //
-// This approach is implemented in AUI's @ref example_app_template.
+// This approach is implemented in AUI's [app-template].
 //
 // The updater checks for updater periodically or upon user request and informs the user that an update is available.
 // The user then decides whether to proceed with update or not. If they agree the application will download and install
@@ -433,9 +390,9 @@ TEST(UpdaterTest, WaitForProcess) {
 // it checks for updates in background and pops the message box if update was found, **even if user is focused on
 // another application or away from keyboard**.
 //
-// ## Silent download
+// ### Silent download
 //
-// This approach is implemented in @ref example_app_auigram, as well as in official Qt-based Telegram Desktop client.
+// This approach is implemented in [aui-telegram-client-auigram], as well as in official Qt-based Telegram Desktop client.
 //
 // The updater silently downloads the update in the background while the user continues working within the application
 // or even other tasks. The update then is applied automatically upon restart.

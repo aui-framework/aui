@@ -72,9 +72,9 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     auto contentView  = [static_cast<NSWindow*>(window.mHandle) contentView];
     [contentView setWantsBestResolutionOpenGLSurface:YES];
-    [ourContext setView:contentView];
+    [static_cast<NSOpenGLContext*>(ourContext) setView:contentView];
 
-    [ourContext makeCurrentContext];
+    [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
@@ -97,7 +97,7 @@ void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     CommonRenderingContext::beginPaint(window);
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
-        [ourContext setView:contentView];
+        [static_cast<NSOpenGLContext*>(ourContext) setView:contentView];
     }
 
     beginFramebuffer(window.getSize());
@@ -109,10 +109,10 @@ void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
-        [ourContext setView:contentView];
+        [static_cast<NSOpenGLContext*>(ourContext) setView:contentView];
     }
     GLint swapInterval = 0;
-    [static_cast<NSOpenGLContext*>(ourContext) setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
+    [static_cast<NSOpenGLContext*>(ourContext) setValues:&swapInterval forParameter:NSOpenGLContextParameterSwapInterval];
 }
 
 void OpenGLRenderingContext::endResize(AWindowBase& window) {

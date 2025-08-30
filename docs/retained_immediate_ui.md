@@ -2,7 +2,7 @@
 
 This page describes specifics and differences of retained and immediate mode UIs, and how the latter was adopted to AUI.
 
-# Retained Mode UI {#retained}
+# Retained Mode UI { #retained_ui }
 
 Retained Mode UI is the traditional approach to building user interfaces that most developers are familiar with. In this
 model, UI elements are created and persist in memory as a tree or graph structure. Think of it like arranging furniture
@@ -42,7 +42,7 @@ When you create a button or a window in retained mode, it continues to exist eve
 state, properties, and position. This approach is what powers most desktop applications, web browsers, and mobile apps.
 Systems like Qt Widgets, GTK, Swing, WinAPI, or the HTML DOM are classic examples of retained mode UIs.
 
-# Immediate Mode UI {#immediate}
+# Immediate Mode UI { #immediate_ui }
 
 Immediate Mode UI takes a radically different approach. Instead of maintaining persistent UI elements, it rebuilds the
 entire interface from scratch every frame. Imagine having to redraw everything on a whiteboard multiple times per
@@ -152,9 +152,7 @@ properties, the latter control the state.
 In the examples above, we've used @ref AButton for retained mode UI, and its declarative notation,
 @ref declarative::Button , which accepts properties to control it. The latter is a *declarative contract*.
 
-@dontinclude aui.views/src/AUI/View/AButton.h
-@skip struct Button {
-@until };
+<!-- aui:snippet aui.views/src/AUI/View/AButton.h declarative_example -->
 
 The declarative contracts are implemented as C++ structures, taking advantage of C++20's aggregate initialization to
 provide a named-argument syntax. This makes the view's requirements and capabilities immediately obvious to developers

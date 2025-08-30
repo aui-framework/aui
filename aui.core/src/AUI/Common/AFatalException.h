@@ -21,14 +21,17 @@
  * @brief An exception that thrown when non-c++ unhandled error occurs (i.e. access violation).
  * @ingroup core
  * @details
- * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not as it
- * uses compiler-specific flags and hacks. See @ref "AFatalException_Platform_support" for further info.
+ * !!! note
+ *
+ *     AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not as it
+ *     uses compiler-specific flags and hacks. See [AFatalException_Platform_support] for further info.
  *
  * Translation to throwing AFatalException recovers the application from crashed state, providing you ability to handle
  * such errors and continue normal application execution. However, still recommended to handle such errors with
  * setGlobalHandler() to at least save user data.
  *
- * # Platform support {#AFatalException_Platform_support}
+ * ## Platform support { #AFatalException_Platform_support }
+ *
  * | Platform | Translation to throwing AFatalException | setGlobalHandler() |
  * |----------|-----------------------------------------|--------------------|
  * | Windows  | MSVC                                    | +                  |

@@ -11,13 +11,14 @@ concurrency:
 
 env:
   GIT_SUBMODULE_STRATEGY: recursive
+  REPO_RELEASE_BASE: ${{ github.server_url }}/${{ github.repository }}
 
 permissions:
   contents: write
 
 jobs:
-  deployment-tests-full:
-    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (full)
+  deployment-tests-windows-ubuntu:
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (Windows / Linux (Ubuntu))
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -56,7 +57,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
@@ -75,9 +76,54 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+
+      # Build your program with the given configuration
+      - name: Run tests
+        working-directory: ${{github.workspace}}/build
+        run: ctest . -C ${{matrix.debug_or_release}} -VV
+
+  deployment-tests-fedora:
+    name: Deployment test ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} (Linux (Fedora))
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+        arch: [x86_64]
+        include:
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+
+    runs-on: ${{ matrix.os }}
+    container: fedora:latest
+
+    steps:
+      - name: Install build dependencies (Fedora)
+        run: |
+          dnf -y update
+          dnf -y install git libstdc++ libstdc++-static cmake gcc-c++ make pkgconf glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Extract tag
+        shell: bash
+        run: echo "TAG=${GITHUB_REF##*/}" >> "$GITHUB_ENV"
+
+      - name: Configure CMake
+        run: cmake -G "${{ matrix.generator }}" -B build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_TEST_DEPLOY_VERSION="${{ env.TAG }}" -DAUI_TEST_DEPLOY_REPO="${{ env.REPO_RELEASE_BASE }}" -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        working-directory: ${{ github.workspace }}
 
       - name: Run tests
-        # Build your program with the given configuration
-        working-directory: ${{github.workspace}}/build
+        working-directory: ${{ github.workspace }}/build
         run: ctest . -C ${{matrix.debug_or_release}} -VV

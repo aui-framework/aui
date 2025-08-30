@@ -22,7 +22,10 @@
 
 /**
  * @brief A resizeable horizontal or vertical layout.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ASplitter.png)
+ *
+ * @ingroup views_containment
  * @details
  * ASplitter lets the user control the size of child views by dragging the boundary between them. Any number of views
  * may be controlled by a single splitter.
@@ -36,7 +39,6 @@
  * ASplitter tends to reclaim space from non-expanding views in favour to expanding views. As such, there should be at
  * least 1 view with expanding. If there's no such view, ASplitter adds ASpacerFixed to the end.
  *
- * @note
  * Valid expandings should be applied before constructing ASplitter. ASplitter does not support changing expanding on
  * the fly.
  *

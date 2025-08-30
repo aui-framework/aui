@@ -34,8 +34,8 @@ class AObject;
  * the object does to communicate. It does not know or care whether anything is receiving the signals it emits. This is
  * true information encapsulation, and ensures that the object can be used as a software component.
  *
- * @ref emits "Signal declarations" are special public fields of any class that inherit from AObject.
- * @code{cpp}
+ * Signal declarations ([emits]) are special public fields of any class that inherit from AObject.
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -51,21 +51,21 @@ class AObject;
  * private:
  *   int mValue = 0;
  * };
- * @endcode
+ * ```
  *
  * They can specify arguments:
- * @code{cpp}
+ * ```cpp
  * emits<int> valueChanged;
  * ...
  * emit valueChanged(mValue);
- * @endcode
+ * ```
  *
  * Any member function of a class can be used as a slot.
  *
  * You can connect as many signals as you want to a single slot, and a signal can be connected to as many slots as you
  * need.
  *
- * # Signals
+ * ## Signals
  * Signals are publicly accessible fields that notify an object's client when its internal state has changed in some way
  * that might be interesting or significant. These signals can be emitted from various locations, but it is generally
  * recommended to only emit them from within the class that defines the signal and its subclasses.
@@ -75,7 +75,7 @@ class AObject;
  * true and \c emit was called on a different thread, \c emit queues slot execution to the AEventLoop associated with
  * receiver's thread. All AView have this behaviour enabled by default.
  *
- * # Slots
+ * ## Slots
  * A slot is triggered by the emission of a related signal. Slot is no more than a regular class method with a signal
  * connected to it.
  *
@@ -95,9 +95,9 @@ class AObject;
  * The trade-off between the signals and slots mechanism's simplicity and flexibility compared to pure function calls or
  * callbacks is well-justified for most applications, given its minimal performance cost that users won't perceive.
  *
- * # Basic example
+ * ## Basic example
  * Let's use \c Counter from our previous example:
- * @code{cpp}
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -136,68 +136,69 @@ class AObject;
  *   app->run();
  *   return 0;
  * }
- * @endcode
+ * ```
  *
  * If `connect(mCounter->valueChanged, this, &MyApp::printCounter);` looks too long for you, you can use
- * @ref AUI_SLOT "AUI_SLOT" macro:
- * @code{cpp}
+ * [AUI_SLOT] macro:
+ * ```cpp
  * connect(mCounter->valueChanged, AUI_SLOT(this)::printCounter);
- * @endcode
+ * ```
  *
- * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with @ref me "me":
- * @code{cpp}
+ * Furthermore, when connecting to `this`, AUI_SLOT(this) can be replaced with [me]:
+ * ```cpp
  * connect(mCounter->valueChanged, me::printCounter);
- * @endcode
+ * ```
  *
  * Lambda can be used as a slot either:
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, this, [](int value) {
  *   ALogger::info("MyApp") << value;
  * });
- * @endcode
+ * ```
  *
  * As with methods, `this` can be omitted:
- * @code{cpp}
+ * ```cpp
  * connect(mCounter->valueChanged, [](int value) {
  *   ALogger::info("MyApp") << value;
  * });
- * @endcode
+ * ```
  *
  *
- * # UI example
+ * ## UI example
  * Knowing basics of signal slots, you can now utilize UI signals:
- * @code{cpp}
+ * ```cpp
  * mOkButton = _new<AButton>("OK");
  * ...
  * connect(mOkButton->clicked, [] { // the signal is connected to "this" object
  *     ALogger::info("Example") << "The button was clicked";
  * });
- * @endcode
+ * ```
  *
- * @note
- * In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
- * a memory leak:
- * @code
- * mOkButton = _new<AButton>("OK");
- * ...
- * connect(mOkButton->clicked, [view] { // WRONG!!!
- *     view->setText("clicked");
- * });
- * @endcode
- * Do this way:
- * @code
- * mOkButton = _new<AButton>("OK");
- * ...
- * connect(mOkButton->clicked, [view = view.get()] { // ok
- *     view->setText("clicked");
- * });
- * @endcode
+ * !!! bug "Pitfall"
  *
- * ## Going further
+ *     In lambda, do not capture shared pointer (AUI's _) of signal emitter or receiver object by value. This would cause
+ *     a memory leak:
+ *     ```
+ *     mOkButton = _new<AButton>("OK");
+ *     ...
+ *     connect(mOkButton->clicked, [view] { // WRONG!!!
+ *         view->setText("clicked");
+ *     });
+ *     ```
+ *     Do this way:
+ *     ```
+ *     mOkButton = _new<AButton>("OK");
+ *     ...
+ *     connect(mOkButton->clicked, [view = view.get()] { // ok
+ *         view->setText("clicked");
+ *     });
+ *     ```
+ *
+ * ### Going further
  * Let's take our previous example with `Counter` and make an UI app. Signal slot reveals it's power when your objects
  * have small handy functions, so lets add `increase` method to our counter:
  *
- * @code{cpp}
+ * ```cpp
  * class Counter: public AObject {
  * public:
  *   Counter() = default;
@@ -245,12 +246,12 @@ class AObject;
  *   app->show();
  *   return 0;
  * }
- * @endcode
+ * ```
  *
  * This way, by clicking on "Increase", it would increase the counter and immediately display value via label.
  *
- * Let's make things more declarative and use @ref AUI_LET "AUI_LET" syntax to set up connections:
- * @code{cpp}
+ * Let's make things more declarative and use [AUI_LET] syntax to set up connections:
+ * ```cpp
  * MyApp() {
  *   using namespace declarative;
  *   setContents(Vertical {
@@ -264,31 +265,31 @@ class AObject;
  *     },
  *   });
  * }
- * @endcode
+ * ```
  *
- * See also @ref property_system for making reactive UI's on trivial data.
+ * See also [property-system] for making reactive UI's on trivial data.
  *
- * # Arguments
+ * ## Arguments
  * If signal declares arguments (i.e, like AView::keyPressed), you can accept them:
- * @code{cpp}
+ * ```cpp
  * view = _new<ATextField>();
  * ...
  * connect(view->keyPressed, [](AInput::Key k) { // the signal is connected to "this" object
  *     ALogger::info("Example") << "Key was pressed: " << k;
  * });
- * @endcode
+ * ```
  *
  * The signals and slots mechanism is type safe: The signature of a signal must match the signature of the receiving
  * slot. Also, a slot may have a shorter signature than the signal it receives because it can ignore extra arguments:
- * @code{cpp}
+ * ```cpp
  * view = _new<ATextField>();
  * ...
  * connect(view->keyPressed, [] { // the signal is connected to "this" object
  *     ALogger::info("Example") << "Key was pressed";
  * });
- * @endcode
+ * ```
  *
- * # Differences between Qt and AUI implementation
+ * ## Differences between Qt and AUI implementation
  * Suppose we want to emit <code>statusChanged</code> signal with a string argument and connect it with
  * <code>showMessage</code> slot:
  * <table>
@@ -300,56 +301,56 @@ class AObject;
  *   <tr>
  *     <td>Signal declaration</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     signals:
  *       void statusChanged(QString str);
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     signals:
  *       emits<AString> statusChanged;
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Slot declaration</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     slots:
  *       void showMessage(QString str);
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       void showMessage(AString str);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Connect from <code>this</code> to <code>this</code></td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *     connect(this, SIGNAL(statusChanged(QString), this, SLOT(showMessage(QString)));
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       connect(statusChanged, me::showMessage);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  *   <tr>
  *     <td>Connect from the <code>emitter</code> object to the <code>sender</code> object</td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *      QObject::connect(emitter, SIGNAL(statusChanged(QString), receiver, SLOT(showMessage(QString)));
- *     @endcode
+ *     ```
  *     </td>
  *     <td>
- *     @code{cpp}
+ *     ```cpp
  *       AObject::connect(emitter->statusChanged, AUI_SLOT(receiver)::showMessage);
- *     @endcode
+ *     ```
  *     </td>
  *   </tr>
  * </table>

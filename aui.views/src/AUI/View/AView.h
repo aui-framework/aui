@@ -57,12 +57,6 @@ class AAssHelper;
 class AStylesheet;
 
 /**
- * @defgroup useful_views Views
- * @ingroup views
- * @brief All ready-to-use views
- */
-
-/**
  * @brief Base class of all UI objects.
  *
  * @details
@@ -143,7 +137,7 @@ public:
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
      *        AViews in the same container.
      * @details
-     * It does affect expanding environment inside the container. See expanding @ref layout_managers "layout managers"
+     * It does affect expanding environment inside the container. See expanding [layout managers](layout-managers.md)
      * for more info.
      *
      * It does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
@@ -219,9 +213,9 @@ public:
      * @brief The center point position of the view relatively to top left corner of the window.
      * @details
      * Useful in UI tests:
-     * @code{cpp}
+     * ```cpp
      * mWindow->onPointerMove(mView->getCenterPointInWindow()); // triggers on pointer move over the view through window
-     * @endcode
+     * ```
      */
     [[nodiscard]]
     glm::ivec2 getCenterPointInWindow() const noexcept
@@ -252,7 +246,7 @@ public:
     /**
      * @brief Marks this view it requires a layout update.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout-managers] for more info.
      */
     virtual void markMinContentSizeInvalid();
 
@@ -349,7 +343,7 @@ public:
     }
 
     /**
-     * @brief Returns the @ref AView::mMargin "margin".
+     * @brief Returns the [margin](AView::mMargin).
      * @return margin
      * @details
      * @copydetails AView::mMargin
@@ -362,7 +356,7 @@ public:
     }
 
     /**
-     * @brief Sets the @ref AView::mMargin "margin".
+     * @brief Sets the [margin](AView::mMargin).
      * @param margin margin
      * @details
      * @copydetails AView::mMargin
@@ -381,7 +375,7 @@ public:
     virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
-     * @brief Returns the @ref AView::mPadding "padding".
+     * @brief Returns the [padding](AView::mPadding).
      * @return padding
      */
     [[nodiscard]]
@@ -392,7 +386,7 @@ public:
     }
 
     /**
-     * @brief Sets the @ref AView::mPadding "padding".
+     * @brief Sets the [padding](AView::mPadding).
      * @param padding padding
      * @details
      * @copydetails AView::mPadding
@@ -532,7 +526,7 @@ public:
 
     /**
      * @brief Changes the expanding of view.
-     * @sa layout_managers
+     * @sa layout-managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
@@ -548,7 +542,7 @@ public:
 
     /**
      * @brief Changes the expanding of view.
-     * @sa layout_managers
+     * @sa layout-managers
      * @sa mExpanding
      * @sa ass::Expanding
      */
@@ -602,7 +596,7 @@ public:
     /**
      * @brief Sets position and size of the view.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout-managers] for more info.
      */
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
@@ -707,7 +701,8 @@ public:
     /**
      * @brief Requests focus for this AView.
      * @param needFocusChainUpdate if true, focus chain for new focused view will be updated
-     * @note if needFocusChainUpdate is false you need to control focus chain targets outside the focus function
+     * @details
+     * If needFocusChainUpdate is false you need to control focus chain targets outside the focus function
      */
      void focus(bool needFocusChainUpdate = true);
 
@@ -785,10 +780,10 @@ public:
      * Handles touch screen gesture event.
      * @param origin position where the event(s) started to occur from.
      * @param event gesture event.
-     * @note The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click and
-     *       scroll.
      * @see transformGestureEventsToDesktop
      * @return true, if consumed (handled). True value prevents click.
+     * @details The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click
+     * and scroll.
      */
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
@@ -799,7 +794,6 @@ public:
      * @param pos event position
      * @param event event description
      * @details
-     * @note
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
@@ -817,7 +811,6 @@ public:
      * @brief Called on pointer (mouse) released event.
      * @param event event
      * @details
-     * @note
      * To handle clicks, you should use AView::clicked signal instead. View still receives pointer move and released
      * events even if cursor goes outside the view boundaries, or other exclusive event appeared (i.e. scrollarea
      * scroll). AView::clicked emitted only if release event occurred inside view and no other event has prevented
@@ -1088,14 +1081,14 @@ protected:
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
      * @details
-     * See @ref "AUI Box Model".
+     * See [aui-box-model].
      */
     ABoxFields mMargin;
 
     /**
      * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
      * @details
-     * See @ref "AUI Box Model".
+     * See [aui-box-model].
      */
     ABoxFields mPadding;
 
@@ -1232,14 +1225,16 @@ private:
 
     /**
      * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
-     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
+     * @details
+     * This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabledn
      */
     bool mMouseEntered = false;
 
     /**
      * @brief Determines if pressing the view allows triggering click on other views
-     * @note By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
-     *       if this flag is set to false, allows to click on others views without releasing pointer from this view
+     * @details
+     * By default on mobile platforms AUI will block clicks if there more than one pointer on screen,
+     * if this flag is set to false, allows to click on others views without releasing pointer from this view
      */
     bool mBlockClicksWhenPressed = true;
 

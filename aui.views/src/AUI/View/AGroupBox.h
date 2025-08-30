@@ -17,11 +17,12 @@
 
 /**
  * @brief A titled frame
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AGroupBox.png)
+ *
+ * @ingroup views_containment
  * @details
  * Group box provides a frame and a customizable title on top.
- *
- * See @ref declarative::GroupBox for a declarative form and examples.
  *
  * If the title is a checkbox then it's checked state used to enable/disable the elements of this group box.
  *

@@ -16,9 +16,12 @@
 
 /**
  * @brief Photoshop-like ruler area for measuring display units.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ARulerArea.png)
+ *
+ * @ingroup views_containment
  * @details
- * Consists of vertical and horizontal @ref ARulerView "rulers".
+ * Consists of vertical and horizontal [rulers](arulerview.md).
  */
 class API_AUI_VIEWS ARulerArea: public AViewContainerBase, public IFontView {
 private:

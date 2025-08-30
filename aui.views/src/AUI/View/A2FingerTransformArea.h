@@ -31,7 +31,10 @@ struct A2DTransform {
 
 /**
  * @brief Handles and processes the multitouch scale, transform and rotation events based on two-finger gestures.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/A2FingerTransformArea.png)
+ *
+ * @ingroup views_containment
  * @details
  * Represents a translucent area that handles and processes multi-finger transformation gestures (i.e. pinch-to-zoom,
  * move, rotate). A2FingerTransformArea is a container, so the transformed view should be somewhere inside.
@@ -41,7 +44,7 @@ struct A2DTransform {
  * A2FingerTransformArea to transforming routines, including limit handling.
  *
  * Consider the following example, where the transformation is applied through ASS styles:
- * @code{cpp}
+ * ```cpp
  * 
  * _<AView> multitouchDemo() {
  *   return _new<A2FingerTransformArea>() AUI_LET {
@@ -68,7 +71,7 @@ struct A2DTransform {
  *       });
  *   };
  * }
- * @endcode
+ * ```
  *
  * This example renders to the following result:
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/a2fingertransformarea.gif">

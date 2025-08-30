@@ -23,6 +23,7 @@ using namespace std::chrono_literals;
 
 static constexpr high_resolution_clock::duration MAX_DURATION = 60s;
 
+/// [example]
 class TimerWindow : public AWindow {
 public:
     TimerWindow() : AWindow("AUI - 7GUIs - Timer", 300_dp, 50_dp) {
@@ -80,6 +81,7 @@ private:
 
     void reset() { mStartTime = high_resolution_clock::now(); }
 };
+/// [example]
 
 AUI_ENTRY {
     _new<TimerWindow>()->show();

@@ -1,21 +1,36 @@
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+* Copyright (C) 2020-2025 Alex2772 and Contributors
+*
+* SPDX-License-Identifier: MPL-2.0
+*
+* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
+
 #pragma once
 
 #include <AUI/Common/detail/property.h>
 
 /**
  * @brief Property implementation to use with custom getter/setter.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
  * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
  *
- * See @ref property_system "property system" for usage examples.
+ * See [property system](property-system.md) for usage examples.
  *
- * # Performance considerations
+ * ## Performance considerations
+ *
  * APropertyDef [does not involve](https://godbolt.org/z/cYTrc3PPf ) extra runtime overhead between assignment and
  * getter/setter.
+ *
+ * <!-- aui:parse_tests aui.core/tests/PropertyDefTest.cpp -->
  */
 template <
     typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
@@ -37,7 +52,7 @@ struct APropertyDef {
      * @details
      * The setter implementation typically emits `changed` signal. If it is, it must emit changes only if value is
      * actually changed.
-     * @code{cpp}
+     * ```cpp
      * void setValue(int value) {
      *   if (mValue == value) {
      *     return;
@@ -45,7 +60,7 @@ struct APropertyDef {
      *   mValue = value;
      *   emit mValueChanged(valueChanged);
      * }
-     * @endcode
+     * ```
      */
     Setter set;
     using GetterReturnT = decltype(std::invoke(get, base));
@@ -101,7 +116,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a readonly @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <aui::invocable<const Underlying&> Projection>
     [[nodiscard]]
@@ -110,7 +125,7 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a bidirectional @ref UIDataBindingTest_Label_via_declarative_projection "projection" of this property.
+     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
      */
     template <
         aui::invocable<const Underlying&> ProjectionRead,

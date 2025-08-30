@@ -191,7 +191,7 @@ namespace declarative {
  * @brief Extra styles wrapper.
  * @ingroup views
  * @details
- * @code{cpp}
+ * ```cpp
  * Button { "Default button" },
  * Style{
  *     {
@@ -202,7 +202,7 @@ namespace declarative {
  *     Button { "Red button" },
  *     Button { "Another red button" },
  * }),
- * @endcode
+ * ```
  */
 struct Style {
 public:

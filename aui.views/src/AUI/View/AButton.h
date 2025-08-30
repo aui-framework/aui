@@ -23,58 +23,71 @@
 
 /**
  * @brief Button with text, which can be pushed to make some action.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AButton.png)
+ *
+ * @ingroup views_actions
  * @details
  * Button is a fundamental view which can be pushed to make some action.
  *
- * @image html docs/imgs/AButton.gif "The button view being pressed."
+ * <figure markdown="span">
+ * ![](imgs/AButton.gif)
+ * <figcaption>The button view being pressed.</figcaption>
+ * </figure>
+ *
+ * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
+ * disappears, making an illusion of pressing.
+ *
+ * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
+ * user presses `Enter`, the button is pushed automatically.
+ *
+ * Button usually contains text only, but in practice any view can be put in it.
  *
  * Starting from AUI 8.0.0, AButton itself does not render text; instead, it's a styled container, which is populated
  * with any views by the user, i.e., ALabel. `Button { .content = "Text" }` does exactly this. AButton used to have
  * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
  * options of customization.
  *
- * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
- * disappears, making an illusion of pressing.
- *
  * # Button with a lambda handler
  *
  * This button executes the lambda upon click.
  *
- * @snippet examples/ui/button1/src/main.cpp AButton example
+ * <!-- aui:snippet examples/ui/button1/src/main.cpp AButton_example -->
  *
- * @image html docs/imgs/Screenshot_20250715_091801.png "Button with a lambda."
+ * ![imgs/Screenshot_20250715_091801.png]
  *
  * # Button with a signal-slot handler
  *
  * This button executes the member function upon click.
  *
- * @snippet examples/ui/button2/src/main.cpp AButton example
+ * <!-- aui:snippet examples/ui/button2/src/main.cpp AButton_example -->
  *
- * @image html docs/imgs/Screenshot_20250715_091801.png "Button with a signal-slot."
+ * ![](imgs/Screenshot_20250715_091801.png) "Button with a signal-slot."
  *
  * # Default button
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
  * user presses `Enter`, the button is pushed automatically.
  *
- * @snippet examples/ui/button_default/src/main.cpp AButton example
+ * <!-- aui:snippet examples/ui/button_default/src/main.cpp AButton_example -->
  *
- * @image html docs/imgs/Screenshot_20250719_130434.png A default button.
+ * ![](imgs/Screenshot_20250719_130434.png) A default button.
  *
  * # Button with icon
  *
  * Button usually contains text only, but in practice any view can be put in it.
  *
- * @snippet examples/ui/button_icon/src/main.cpp AButton example
+ * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
  *
- * @image html docs/imgs/Screenshot_20250719_130034.png Button with an icon.
+ * ![](imgs/Screenshot_20250719_130034.png) Button with an icon.
  *
  * # Styling a button
  *
  * AButton is styled as follows:
  *
- * @snippet aui.views/src/AUI/ASS/AStylesheet.cpp AButton
+ * <!-- aui:snippet aui.views/src/AUI/ASS/AStylesheet.cpp AButton -->
+ *
+ * See @ref declarative::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AViewContainer {
 public:
@@ -114,6 +127,8 @@ private:
 };
 
 namespace declarative {
+
+/// [declarative_example]
 /**
  * @declarativeformof{AButton}
  */
@@ -139,6 +154,7 @@ struct Button {
         return button;
     }
 };
+/// [declarative_example]
 }   // namespace declarative
 
 namespace ass::button {

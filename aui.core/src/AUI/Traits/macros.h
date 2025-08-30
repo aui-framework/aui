@@ -24,7 +24,7 @@
  * The macro should be called in any function/method which is not being optimized out (i.e. in destructor).
  *
  * Basic usage:
- * @code{cpp}
+ * ```cpp
  * struct SomeClass {
  * public:
  *   ~SomeClass() {
@@ -35,7 +35,7 @@
  *     ...
  *   }
  * }
- * @endcode
+ * ```
  */
 #define AUI_NO_OPTIMIZE_OUT(object) { auto unused = &object ; }
 
@@ -45,37 +45,35 @@
  * @details
  * Silences the unused variable compiler warning.
  *
- * Can be used to force [=] lambda to capture a variable.
+ * Can be used to force `[=]` lambda to capture a variable.
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
 
 
 /**
- * @brief Explicitly denotes a @ref aui::react "reactive" expression.
+ * @brief Explicitly denotes a [reactive](react.md) expression.
  * @ingroup useful_macros
+ * @ingroup react
  * @details
- * AUI_REACT is a core component of AUI Framework's @ref aui::react "reactive" reactive programming model. It's used to
- * create @ref aui::react "reactive" expressions that automatically update UI elements when their dependent values
+ * AUI_REACT is a core component of AUI Framework's [reactive](react.md) reactive programming model. It's used to
+ * create [reactive](react.md) expressions that automatically update UI elements when their dependent values
  * change.
  *
  * The expression is a C++ expression that depends on AProperty values:
  *
- * @code{cpp}
+ * ```cpp
  * AUI_REACT(expression)
- * @endcode
+ * ```
  *
  * # Basic example
  *
  * This creates a label that automatically updates when property `mCounter` changes:
  *
- * @dontinclude examples/7guis/counter/src/main.cpp
- * @skip setContent
- * @until );
+ * <!-- aui:snippet examples/7guis/counter/src/main.cpp counter -->
  *
  * # Formatted label example
  *
- * @dontinclude examples/7guis/timer/src/main.cpp
- * @skipline AUI_REACT
+ * <!-- aui:snippet examples/7guis/timer/src/main.cpp example -->
  *
  * # Implementation details
  *
@@ -86,7 +84,7 @@
  * 2. Sets up observers for all dependent properties.
  * 3. Re-evaluates when dependencies change.
  *
- * The macros itself consists of a lambda syntax with forced [=] capture and explicit `decltype(auto)` return type.
+ * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
  */
 #define AUI_REACT(expression) [=]() -> decltype(auto) { return (expression); }
 

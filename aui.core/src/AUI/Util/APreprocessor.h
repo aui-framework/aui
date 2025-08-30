@@ -48,14 +48,14 @@
 /**
  * @brief Evaluates to the number of arguments after expansion.
  * @details
- * @code{cpp}
+ * ```cpp
  * #define PAIR x, y
  *
  * AUI_PP_NARG() => 1
  * AUI_PP_NARG(x) => 1
  * AUI_PP_NARG(x, y) => 2
  * AUI_PP_NARG(PAIR) => 2
- * @endcode
+ * ```
  *
  * Requires: the number of arguments after expansion is at most 15.
  * @ingroup useful_macros
@@ -102,18 +102,18 @@
  * - the number of arguments after expansion is at most 15.
  * - If the argument is a macro, it must be able to be called with one argument.
  *
- * ### Implementation details
+ * ## Implementation details
  *
  * There is one case when it generates a compile error: if the argument is macro
  * that cannot be called with one argument.
  *
- * @code{cpp}
+ * ```cpp
  * #define M(a, b)  // it doesn't matter what it expands to
  *
  * // Expected: expands to `0`.
  * // Actual: compile error.
  * AUI_PP_IS_EMPTY(M)
- * @endcode
+ * ```
  *
  * There are 4 cases tested:
  *
@@ -141,10 +141,10 @@
 /**
  * @brief Similar to AUI_PP_IF but takes _Then and _Else in parentheses.
  * @details
- * @code{cpp}
+ * ```cpp
  * AUI_PP_GENERIC_IF(1, (a, b, c), (d, e, f)) => a, b, c
  * AUI_PP_GENERIC_IF(0, (a, b, c), (d, e, f)) => d, e, f
- * @endcode
+ * ```
  * @ingroup useful_macros
  */
 #define AUI_PP_GENERIC_IF(_Cond, _Then, _Else) \
@@ -153,14 +153,14 @@
 /**
  * @brief Evaluates to the number of arguments after expansion. Identifies 'empty' as 0.
  * @details
- * @code{cpp}
+ * ```cpp
  * #define PAIR x, y
  *
  * AUI_PP_NARG0() => 0
  * AUI_PP_NARG0(x) => 1
  * AUI_PP_NARG0(x, y) => 2
  * AUI_PP_NARG0(PAIR) => 2
- * @endcode
+ * ```
  *
  * Requires:
  * - the number of arguments after expansion is at most 15.

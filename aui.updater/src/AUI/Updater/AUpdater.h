@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #pragma once
 
@@ -18,20 +20,75 @@
 #include <AUI/Platform/AProcess.h>
 
 /**
+ * @defgroup updater aui::updater
+ * @brief Deliver updates on non-centralized distribution methods
+ * @details
+ * <!-- aui:experimental -->
+ *
+ * This module is purposed for delivering updates to your end users on distribution methods that do not support that by
+ * themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
+ * your website). Here's small breakdown:
+ *
+ * | Platform      | Distribution method           | Auto updating solution |
+ * | ------------- | ----------------------------- | ---------------------- |
+ * | @ref windows  | Installer/exe                 | @ref updater           |
+ * | @ref windows  | Microsoft Store (used rarely) | Microsoft Store        |
+ * | @ref linux    | Portables                     | @ref updater           |
+ * | @ref linux    | Flatpak                       | Flathub                |
+ * | @ref macos    | DMG (*.app)                   | -                      |
+ * | @ref macos    | Apple App Store               | Apple App Store        |
+ * | @ref android  | APK                           | Google Play Store      |
+ * | @ref ios      | IPA                           | Apple App Store        |
+ *
+ * ??? note "What is portable?"
+ *
+ *     Portable is a term used to describe a software distribution method that does not require the user to install
+ *     the software on their computer.
+ *
+ *     Portable software is typically distributed as a single executable file (i.e., a single file with all
+ *     dependencies packed into it), usually not requiring to "install" it to the system.
+ *
+ * `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
+ * privileges). If that's not your case, you'll need to update your installer configuration ([INNOSETUP]) to install
+ * to user's directory (i.e., in `AppData`).
+ *
+ * !!! note
+ *
+ *     Check out our [app-template] for a GitHub-hosted app template with auto update implemented.
+ *
+ * ## Supported platforms
+ *
+ * `aui::updater` supports the following platforms:
+ *
+ * - **Windows** - portables ([PORTABLE_WINDOWS]) only, installers to user's directory only ([INNOSETUP])
+ * - **Linux** - portables only
+ *
+ * On a supported platform, `aui::updater` checks if the app executable is writable by the current user. If the
+ * executable is not writeable, or running on a non-supported platform, `AUpdater` stubs it's methods (i.e., they do
+ * nothing). You can check that the `aui::updater` functionality is engaged by calling `AUpdater::isAvailable()`.
+ *
+ * Updating process requires the initial application running instance to be stopped to replace its files with newer
+ * ones. Additionally, the updater process starts the newer version of the application after replacing the files
+ * (applying/deploying an update). To minimize downtime for end-users, the replacement should be seamless and quick and
+ * thus the deployment process just copies newer files (overwriting old ones), it does not involve network operations.
+ *
+ * <!-- aui:parse_tests aui.updater/tests/UpdaterTest.cpp -->
+ */
+
+/**
  * @brief Updater class.
  * @ingroup updater
  * @details
-// @experimental
- * AUpdater follows strategy pattern, i.e., you are excepted to call its functions but the behaviour and conditions
- * are yours.
+ * <!-- aui:experimental -->
+ * AUpdater follows a strategy pattern, i.e., you are excepted to call its functions, but the behavior and conditions
+ * are up to you.
  *
- * Refer to @ref updater for update process overview.
+ * Refer to [aui::updater] for the update process overview.
  */
 class API_AUI_UPDATER AUpdater : public AObject {
 public:
     /**
      * @brief Data required to launch installation child process.
-     * @sa f
      */
     struct InstallCmdline {
         /**
@@ -95,13 +152,13 @@ public:
      *
      * This function handles following arguments to your application:
      * - `--aui-updater-origin` -
-     * - `--aui-updater-wait-for-process` - maps to @ref AUpdater::handleWaitForProcess that instructs AUpdater to wait
+     * - `--aui-updater-wait-for-process` - maps to [AUpdater::handleWaitForProcess()] that instructs AUpdater to wait
      *   the specified process to finish before processing next argument(s).
-     * - `--aui-updater-cleanup` - maps to @ref AUpdater::handlePostUpdateCleanup and returns control flow to normal
+     * - `--aui-updater-cleanup` - maps to [AUpdater::handlePostUpdateCleanup()] and returns control flow to normal
      *   execution of your application (last updating step)
      * - `--aui-updater-failed` - reports last error occurred while update deployment. See AUpdater::getLastDeploymentError().
      *
-     * Refer to @ref updater for update process overview.
+     * Refer to [aui::updater] for update process overview.
      */
     virtual void handleStartup(const AStringVector& applicationArguments);
 
@@ -110,11 +167,11 @@ public:
      * @details
      * Basically about replacing files (no network operations will be performed).
      *
-     * Requires @ref status = StatusWaitingForApplyAndRestart, otherwise has no effect.
+     * Requires [AUpdater::status] = StatusWaitingForApplyAndRestart, otherwise has no effect.
      *
      * Terminates current process with `std::exit(0)`
      *
-     * # Debugging update deployment
+     * ### Debugging update deployment
      *
      * You can locate update deployment logs by locating deployment process id (pid). The PID is printed by this
      * function:
@@ -196,25 +253,29 @@ public:
      * `status` is updated in UI thread only.
      *
      * `status` is designed in such a way the user can use their own custom status types or any of predefined ones:
-     * - @ref AUpdater::StatusIdle
-     * - @ref AUpdater::StatusCheckingForUpdates
-     * - @ref AUpdater::StatusDownloading
-     * - @ref AUpdater::StatusWaitingForApplyAndRestart
-     * - @ref AUpdater::StatusNotAvailable
+     *
+     * - [AUpdater::StatusIdle]
+     * - [AUpdater::StatusCheckingForUpdates]
+     * - [AUpdater::StatusDownloading]
+     * - [AUpdater::StatusWaitingForApplyAndRestart]
+     * - [AUpdater::StatusNotAvailable]
      *
      * These statuses might be set by AUpdater itself.
+     *
+     * <!-- aui:parse_tests aui.updater/tests/UpdaterStatusTest.cpp -->
      */
     AProperty<std::any> status;
 
     /**
-     * @brief Sets `status` to @ref StatusCheckingForUpdates and calls checkForUpdatesImpl, implemented by user.
+     * @brief Sets `status` to [AUpdater::StatusCheckingForUpdates] and calls AUpdater::checkForUpdatesImpl, implemented
+     * by user.
      * @details
-     * Requires @ref status = StatusIdle, otherwise has no effect.
+     * Requires [AUpdater::status] = StatusIdle, otherwise has no effect.
      */
     void checkForUpdates();
 
     /**
-     * @brief Sets `status` to @ref StatusDownloading and calls downloadUpdateImpl, implemented by user.
+     * @brief Sets `status` to [AUpdater::StatusDownloading] and calls AUpdater::downloadUpdateImpl, implemented by user.
      * @details
      * An implementation might expect to checkForUpdates to be called first.
      */
@@ -226,7 +287,7 @@ public:
     /**
      * @brief Checks that updater functionality is available.
      * @details
-     * For cases when AUpdater is available see @ref updater
+     * For cases when AUpdater is available see [aui::updater]
      */
     static bool isAvailable();
 
@@ -250,7 +311,7 @@ protected:
      * The function is called by AUpdater::handleStartup. If triggerUpdateOnStartup succeeds, it should terminate
      * execution of the current process.
      *
-     * Requires @ref status = StatusWaitingForApplyAndRestart.
+     * Requires [AUpdater::status] = StatusWaitingForApplyAndRestart.
      *
      * If you'd like to disable applying downloaded update on startup, stub this function.
      */
@@ -283,7 +344,7 @@ protected:
     /**
      * @brief Being called by downloadUpdateImpl, reports download percentage to `status`.
      * @details
-     * Requires @ref status = StatusDownloading, otherwise has no effect. Updates the value in UI thread.
+     * Requires [AUpdater::status] = StatusDownloading, otherwise has no effect. Updates the value in UI thread.
      */
     void reportDownloadedPercentage(aui::float_within_0_1 progress);
 

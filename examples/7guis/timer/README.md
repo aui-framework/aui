@@ -1,9 +1,9 @@
 # 7GUIs Timer
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Timer example.
 
-@image html docs/imgs/Screenshot_20250401_085438.png
+![](imgs/Screenshot_20250401_085438.png)
 
 Challenges: concurrency, competing user/signal interactions, responsiveness.
 
@@ -19,5 +19,3 @@ user’s interactions with the GUI application. This also means that the solutio
 interactions is tested. The fact that slider adjustments must be reflected immediately moreover tests the responsiveness
 of the solution. A good solution will make it clear that the signal is a timer tick and, as always, has not much
 scaffolding.
-
-@include examples/7guis/timer/src/main.cpp

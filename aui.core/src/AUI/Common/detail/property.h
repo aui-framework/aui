@@ -112,7 +112,7 @@ struct PropertyReadWriteProjection: PropertyReadProjection {
         this->wrappedProperty.notify();
     }
 private:
-    friend class API_AUI_CORE ::AObject;
+    friend class ::AObject;
 
     /**
      * @brief Makes a callable that assigns value to this property.

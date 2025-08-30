@@ -14,10 +14,13 @@
 #include <AUI/Common/AObjectBase.h>
 
 /**
- * @brief Reactive expressions
+ * @defgroup react Reactive expressions
  * @details
  * Implements reactive expressions.
- * @sa APropertyPrecomputed
+ */
+
+/**
+ * @brief Reactive expressions namespace.
  */
 namespace aui::react {
 struct DependencyObserver : AObjectBase {

@@ -13,7 +13,7 @@
 
 /**
  * @defgroup profiling Profiling
- * @brief Performance profiling set of @ref docs/Devtools.md
+ * @brief Performance profiling set of [devtools]
  * @details
  * Performance profiling capabilities are disabled by default. Compile with -DAUI_PROFILING=TRUE in order to enable.
  */

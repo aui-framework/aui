@@ -56,7 +56,11 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
 
-    AUI_ASSERT(mHandle == hwnd);
+    if (mHandle != hwnd) {
+        // TODO: reimplement destroyNativeWindow so throwing an exception in OpenGLRenderingContext::init actually
+        // matters
+        return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
 
     static glm::ivec2 lastWindowSize;
 
@@ -266,20 +270,32 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
+    HWND parentHwnd = nullptr;
+
+    bool isModal = !!(mWindowStyle & WindowStyle::MODAL);
+
+    if (isModal && mParentWindow) {
+        parentHwnd = mParentWindow->mHandle;
+    }
+
+    if (mHandle) {
+        ShowWindow(mHandle, SW_HIDE);
+        DestroyWindow(mHandle);
+        mHandle = nullptr;
+    }
 
     getWindowManager().mWindows.removeFirst(mSelfHolder);
     setLayout(nullptr);
 
-    // parent window should be activated BEFORE child is closed.
-    if (mHandle) {
-        if (mParentWindow) {
-            EnableWindow(mParentWindow->mHandle, true);
-            BringWindowToTop(mParentWindow->mHandle);
+    // Schedule object destruction
+    AThread::current()->enqueue([self = std::move(mSelfHolder), parentHwnd, isModal]() mutable noexcept {
+        self = nullptr;
+        if (parentHwnd && IsWindow(parentHwnd) && isModal) {
+            // Parent window should be activated BEFORE child is closed.
+            EnableWindow(parentHwnd, true);
+            SetActiveWindow(parentHwnd);
+            SetForegroundWindow(parentHwnd);
         }
-    }
-
-    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
-        s = nullptr;
     });
 }
 
@@ -422,7 +438,7 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    AThread::current() << [&]() {
+    AThread::current() << [this, self = shared_from_this()]() {
         redraw();
     };
 

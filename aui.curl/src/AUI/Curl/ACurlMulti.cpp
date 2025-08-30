@@ -53,7 +53,11 @@ void ACurlMulti::run(bool infinite) {
         AThread::interruptionPoint();
 
         if (status) {
+            #if defined(FMT_VERSION) && (FMT_VERSION < 100000)
             throw ACurl::Exception("curl poll failed: {}"_format(status));
+            #else
+            throw ACurl::Exception(fmt::format("curl poll failed: {}", static_cast<int>(status)));
+            #endif
         }
 
         int messagesLeft;

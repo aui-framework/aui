@@ -17,7 +17,7 @@
 
 namespace aui {
     /**
-     * @experimental
+     * <!-- aui:experimental -->
      */
     template<typename Type>
     using member [[deprecated("aui::member moved to aui::reflect::member")]] = aui::reflect::member<Type>;

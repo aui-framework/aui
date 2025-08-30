@@ -16,34 +16,33 @@
 
 /**
  * @brief Represents a simple single-line text display view.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ALabel.png)
+ *
+ * @ingroup views_indication
  * @details
  * Label is a basic UI component designed primarily for displaying text in a single line. While you can add line breaks
  * using `\n` to create multi-line text, it's better to use @ref AText instead, which has proper line-breaking
  * capabilities.
- *
- * @image html docs/imgs/ALabel.png A label.
- *
- * @snippet examples/7guis/temperature_converter/src/main.cpp window
- * @ref example_7guis_temperature_converter "Full example"
+ * <!-- aui:snippet examples/7guis/temperature_converter/src/main.cpp window -->
  *
  * Labels can be used to populate AButton (which is a bare container):
  *
- * @snippet examples/ui/button_icon/src/main.cpp AButton example
+ * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
  *
  * # Coloring a label
  *
- * @snippet examples/ui/views/src/ExampleWindow.cpp label coloring
+ * <!-- aui:snippet examples/ui/views/src/ExampleWindow.cpp label_coloring -->
  *
  * # Dynamic text in a label
  *
- * You can use @ref property_system "properties" to bind a label to a variable:
+ * You can use [property-system] to bind a label to a variable:
  *
- * @snippet examples/7guis/counter/src/main.cpp counter
+ * <!-- aui:snippet examples/7guis/counter/src/main.cpp counter -->
  *
- * @ref example_7guis_counter "Full example"
+ * [Full example](7guis-counter.md)
  *
- * @image html docs/imgs/Screenshot_20250401_081123.png
+ * ![](imgs/Screenshot_20250401_081123.png)
  *
  */
 class API_AUI_VIEWS ALabel: public AAbstractLabel {

@@ -21,6 +21,7 @@ namespace com::github::aui::android {
         AUI_JNI_STATIC_METHOD(void, setMobileScreenOrientation, ((int) orientation))
         AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
         AUI_JNI_STATIC_METHOD(void, showMessageBox, ((const AString&) title, (const AString&) message))
+        AUI_JNI_STATIC_METHOD(void, copyToClipboard, ((const AString&) text))
     };
 }
 

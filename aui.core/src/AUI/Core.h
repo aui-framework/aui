@@ -32,13 +32,15 @@
  * @defgroup core aui::core
  * @brief Main central library.
  * @details
- * Some additional features:
- * - @ref AAbstractThread::interrupt() "interruptable threads"
- * - @ref AI18n "i18n"
- * - @ref ALogger "logging"
+ * `aui::core` is the main module of AUI. All other modules are built on top of `aui::core`. It implements several basic
+ * features:
+ *
+ * - [interruptable threads](AAbstractThread::interrupt())
+ * - [i18n](ai18n.md)
+ * - [logging](alogger.md)
  * - data models
  * - trait classes
- * - @ref AUrl "urls"
+ * - [urls](aurl.md)
  */
 
 
@@ -48,8 +50,6 @@
  * @ingroup core
  * @brief A set of functionality that introduces non-standard syntax which seems like the language features.
  * @details
- * @note
- * For build-time macros, see @ref "docs/Macros.md".
  */
 
 /**
@@ -63,7 +63,7 @@
  * @ingroup core
  * @brief Basic reflection capabilities.
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * This component provides functionality for reflection and introspection of classes and their members in compile-time.
  * Some runtime methods are also available.
  */

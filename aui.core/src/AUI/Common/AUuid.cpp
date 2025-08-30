@@ -54,48 +54,48 @@ uint8_t AUuid::fromHex(char c) {
 
 AString AUuid::toString() const {
     char str[40];
-    sprintf(str,
-            "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-            mData[0],
-            mData[1],
-            mData[2],
-            mData[3],
-            mData[4],
-            mData[5],
-            mData[6],
-            mData[7],
-            mData[8],
-            mData[9],
-            mData[10],
-            mData[11],
-            mData[12],
-            mData[13],
-            mData[14],
-            mData[15]
-            );
+    std::snprintf(str, sizeof(str),
+        "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
+        static_cast<unsigned>(mData[0]),
+        static_cast<unsigned>(mData[1]),
+        static_cast<unsigned>(mData[2]),
+        static_cast<unsigned>(mData[3]),
+        static_cast<unsigned>(mData[4]),
+        static_cast<unsigned>(mData[5]),
+        static_cast<unsigned>(mData[6]),
+        static_cast<unsigned>(mData[7]),
+        static_cast<unsigned>(mData[8]),
+        static_cast<unsigned>(mData[9]),
+        static_cast<unsigned>(mData[10]),
+        static_cast<unsigned>(mData[11]),
+        static_cast<unsigned>(mData[12]),
+        static_cast<unsigned>(mData[13]),
+        static_cast<unsigned>(mData[14]),
+        static_cast<unsigned>(mData[15])
+    );
     return AString(str, str + 36);
 }
 
 AString AUuid::toRawString() const {
     char str[40];
-    sprintf(str,
-            "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
-            mData[0],
-            mData[1],
-            mData[2],
-            mData[3],
-            mData[4],
-            mData[5],
-            mData[6],
-            mData[7],
-            mData[8],
-            mData[9],
-            mData[10],
-            mData[11],
-            mData[12],
-            mData[13],
-            mData[14],
-            mData[15]
+    std::snprintf(str, sizeof(str),
+        "%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x",
+        static_cast<unsigned>(mData[0]),
+        static_cast<unsigned>(mData[1]),
+        static_cast<unsigned>(mData[2]),
+        static_cast<unsigned>(mData[3]),
+        static_cast<unsigned>(mData[4]),
+        static_cast<unsigned>(mData[5]),
+        static_cast<unsigned>(mData[6]),
+        static_cast<unsigned>(mData[7]),
+        static_cast<unsigned>(mData[8]),
+        static_cast<unsigned>(mData[9]),
+        static_cast<unsigned>(mData[10]),
+        static_cast<unsigned>(mData[11]),
+        static_cast<unsigned>(mData[12]),
+        static_cast<unsigned>(mData[13]),
+        static_cast<unsigned>(mData[14]),
+        static_cast<unsigned>(mData[15])
     );
     return AString(str, str + 32);
 }

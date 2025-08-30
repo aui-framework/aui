@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// NOLINTBEGIN(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)
+
 #ifndef MEDIA_BASE_SINC_RESAMPLER_H_
 #define MEDIA_BASE_SINC_RESAMPLER_H_
 
@@ -321,3 +323,5 @@ private:
 }  // namespace media
 
 #endif  // MEDIA_BASE_SINC_RESAMPLER_H_
+
+// NOLINTEND(bugprone-integer-division,bugprone-unhandled-self-assignment,modernize-use-std-numbers)

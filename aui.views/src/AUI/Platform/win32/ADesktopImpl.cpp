@@ -30,164 +30,148 @@ glm::ivec2 ADesktop::getMousePosition() {
     return {p.x, p.y};
 }
 
-void ADesktop::setMousePos(const glm::ivec2& pos) {
-    SetCursorPos(pos.x, pos.y);
-}
-
+void ADesktop::setMousePos(const glm::ivec2& pos) { SetCursorPos(pos.x, pos.y); }
 
 AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
-    AUI_NULLSAFE(parent)->blockUserInput();
-    return AUI_THREADPOOL noexcept {
-        APath result;
+    _<AAbstractThread> ui;
+    if (auto* w = dynamic_cast<AWindow*>(parent))
+        ui = w->getThread();
+    else
+        ui = AThread::current();
+
+    AFuture<APath> promise;
+
+    ui->enqueue([promise, parent, startingLocation]() mutable {
         Ole::inst();
-        IFileOpenDialog *pFileOpen;
+        APath result;
 
+        IFileOpenDialog* dlg = nullptr;
         // Create the FileOpenDialog object.
-        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-                                   IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+        HRESULT hr = CoCreateInstance(
+            CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileOpenDialog, reinterpret_cast<void**>(&dlg));
+        if (SUCCEEDED(hr)) {
+            ARaiiHelper release = [&] { dlg->Release(); };
+            dlg->SetOptions(FOS_PICKFOLDERS);
 
-        AUI_ASSERT(SUCCEEDED(hr));
-
-
-        ARaiiHelper d = [&] {
-            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
-                    parent->blockUserInput(false);
-
-                    pFileOpen->Release();
-                });
-        };
-
-        pFileOpen->SetOptions(FOS_PICKFOLDERS);
-        {
-            IShellItem* psiFolder = nullptr;
-            for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
-                APath current = i;
-                current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(aui::win32::toWchar(current), nullptr, IID_IShellItem,
-                                            reinterpret_cast<void**>(&psiFolder));
-            }
-            if (psiFolder) {
-                pFileOpen->SetFolder(psiFolder);
-                psiFolder->Release();
-            }
-        }
-
-
-        HWND nativeParentWindow;
-        if (auto d = dynamic_cast<AWindow*>(parent)) {
-            nativeParentWindow = d->nativeHandle();
-        } else {
-            nativeParentWindow = nullptr;
-        }
-
-        hr = pFileOpen->Show(nativeParentWindow);
-
-        // Get the file name from the dialog box.
-        if (SUCCEEDED(hr))
-        {
-            IShellItem *pItem;
-            hr = pFileOpen->GetResult(&pItem);
-            if (SUCCEEDED(hr))
-            {
-                PWSTR pszFilePath;
-                hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-
-                // Display the file name to the user.
-                if (SUCCEEDED(hr))
-                {
-                    result = aui::win32::fromWchar(pszFilePath);
-                    CoTaskMemFree(pszFilePath);
+            if (!startingLocation.empty()) {
+                IShellItem* psiFolder = nullptr;
+                for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+                    APath current = i;
+                    current.replaceAll('/', '\\');
+                    SHCreateItemFromParsingName(
+                        aui::win32::toWchar(current), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
-                pItem->Release();
+                if (psiFolder) {
+                    dlg->SetFolder(psiFolder);
+                    psiFolder->Release();
+                }
+            }
+
+            HWND owner = nullptr;
+            if (auto* win = dynamic_cast<AWindow*>(parent))
+                owner = win->nativeHandle();
+
+            hr = dlg->Show(owner);
+            // Get the file name from the dialog box.
+            if (SUCCEEDED(hr)) {
+                IShellItem* item = nullptr;
+                if (SUCCEEDED(dlg->GetResult(&item))) {
+                    PWSTR psz = nullptr;
+                    // Display the file name to the user.
+                    if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &psz))) {
+                        result = aui::win32::fromWchar(psz);
+                        CoTaskMemFree(psz);
+                    }
+                    item->Release();
+                }
             }
         }
 
-        return result;
-    };
+        promise.supplyValue(result);   // resolves with {} on cancel or error
+    });
+
+    return promise;
 }
 
 AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    AUI_NULLSAFE(parent)->blockUserInput();
-    return AUI_THREADPOOL noexcept {
-        APath result;
+    _<AAbstractThread> ui;
+    if (auto* w = dynamic_cast<AWindow*>(parent))
+        ui = w->getThread();
+    else
+        ui = AThread::current();
+
+    AFuture<APath> promise;
+
+    ui->enqueue([promise, parent, startingLocation, extensions]() mutable {
         Ole::inst();
-        IFileOpenDialog *pFileOpen;
+        APath result;
 
+        IFileOpenDialog* dlg = nullptr;
         // Create the FileOpenDialog object.
-        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
-                                   IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+        HRESULT hr = CoCreateInstance(
+            CLSID_FileOpenDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileOpenDialog, reinterpret_cast<void**>(&dlg));
+        if (SUCCEEDED(hr)) {
+            ARaiiHelper release = [&] { dlg->Release(); };
 
+            // Build filters
+            AVector<COMDLG_FILTERSPEC> filter;
+            AVector<AString> storage;
+            filter.reserve(extensions.size());
+            storage.reserve(extensions.size() * 2);
 
-        ARaiiHelper d = [&] {
-            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
-                    parent->blockUserInput(false);
-
-                    pFileOpen->Release();
-                });
-        };
-
-        AUI_ASSERT(SUCCEEDED(hr));
-        AVector<COMDLG_FILTERSPEC> filter;
-        AVector<AString> storage;
-        filter.reserve(extensions.size());
-        storage.reserve(extensions.size() * 2);
-        for (auto& ext : extensions) {
-            auto extFilter = "*." + ext.extension;
-            storage << extFilter;
-            storage << ext.name + " (" + extFilter + ")";
-            filter << COMDLG_FILTERSPEC{ aui::win32::toWchar(*(storage.end()-1)), aui::win32::toWchar(*(storage.end()-2)) };
-        }
-
-
-        hr = pFileOpen->SetFileTypes(filter.size(), filter.data());
-        AUI_ASSERTX(SUCCEEDED(hr), "SetFileTypes failed, please validate extensions list.");
-
-        {
-            IShellItem* psiFolder = nullptr;
-            for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
-                APath current = i;
-                current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(aui::win32::toWchar(current), nullptr, IID_IShellItem,
-                                            reinterpret_cast<void**>(&psiFolder));
+            for (const auto& ext : extensions) {
+                auto extMask = "*." + ext.extension;
+                storage << extMask;
+                storage << ext.name + " (" + extMask + ")";
+                filter << COMDLG_FILTERSPEC {
+                    aui::win32::toWchar(*(storage.end() - 1)), aui::win32::toWchar(*(storage.end() - 2))
+                };
             }
-            if (psiFolder) {
-                pFileOpen->SetFolder(psiFolder);
-                psiFolder->Release();
+
+            if (!filter.empty()) {
+                dlg->SetFileTypes(static_cast<UINT>(filter.size()), filter.data());
+                dlg->SetFileTypeIndex(1);
             }
-        }
 
-        HWND nativeParentWindow;
-        if (auto d = dynamic_cast<AWindow*>(parent)) {
-            nativeParentWindow = d->nativeHandle();
-        } else {
-            nativeParentWindow = nullptr;
-        }
-
-        hr = pFileOpen->Show(nativeParentWindow);
-
-        // Get the file name from the dialog box.
-        if (SUCCEEDED(hr))
-        {
-            IShellItem *pItem;
-            hr = pFileOpen->GetResult(&pItem);
-            if (SUCCEEDED(hr))
-            {
-                PWSTR pszFilePath;
-                hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
-
-                // Display the file name to the user.
-                if (SUCCEEDED(hr))
-                {
-                    result = aui::win32::fromWchar(pszFilePath);
-                    CoTaskMemFree(pszFilePath);
+            // Set starting folder
+            if (!startingLocation.empty()) {
+                IShellItem* psiFolder = nullptr;
+                for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+                    APath current = i;
+                    current.replaceAll('/', '\\');
+                    SHCreateItemFromParsingName(
+                        aui::win32::toWchar(current), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
-                pItem->Release();
+                if (psiFolder) {
+                    dlg->SetFolder(psiFolder);
+                    psiFolder->Release();
+                }
+            }
+
+            HWND owner = nullptr;
+            if (auto* win = dynamic_cast<AWindow*>(parent))
+                owner = win->nativeHandle();
+
+            hr = dlg->Show(owner);
+            // Get the file name from the dialog box.
+            if (SUCCEEDED(hr)) {
+                IShellItem* item = nullptr;
+                if (SUCCEEDED(dlg->GetResult(&item))) {
+                    PWSTR psz = nullptr;
+                    // Display the file name to the user.
+                    if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &psz))) {
+                        result = aui::win32::fromWchar(psz);
+                        CoTaskMemFree(psz);
+                    }
+                    item->Release();
+                }
             }
         }
 
+        promise.supplyValue(result);   // cancels with empty path
+    });
 
-        return result;
-    };
+    return promise;
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {

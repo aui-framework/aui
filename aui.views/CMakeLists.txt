@@ -9,10 +9,14 @@ find_package(OpenGL)
 auib_use_system_libs_end()
 
 if (OPENGL_FOUND OR ANDROID OR IOS)
-    auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
-                CONFIG_ONLY
-                CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
-    )
+    if(AUIB_DISABLE)
+        find_package(freetype REQUIRED CONFIG)
+    else()
+        auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
+                    CONFIG_ONLY
+                    CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
+        )
+    endif()
 
     if (NOT TARGET Freetype::Freetype)
         message(FATAL_ERROR "Freetype not imported")
@@ -20,9 +24,13 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 
     if (AUI_PLATFORM_WIN OR AUI_PLATFORM_LINUX OR AUI_PLATFORM_MACOS)
-        auib_import(GLEW https://github.com/aui-framework/glew-cmake
-                CMAKE_WORKING_DIR "build/cmake"
-                VERSION a369771e17c2b18fef91597c6a9050077c77dbef)
+        if(AUIB_DISABLE)
+            find_package(GLEW REQUIRED)
+        else()
+            auib_import(GLEW https://github.com/aui-framework/glew-cmake
+                    CMAKE_WORKING_DIR "build/cmake"
+                    VERSION 602a62803452a0d95fb41f4099fc5804dc5746ee) # 2.2.0
+        endif()
     endif ()
 
     aui_module(aui.views EXPORT aui)
@@ -84,7 +92,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     auisl_shader(aui.views square_sector.fsh)
     auisl_shader(aui.views line_solid_dashed.fsh)
 
-    target_compile_definitions(aui.views PRIVATE UNICODE=1)
+    target_compile_definitions(aui.views PRIVATE
+        $<$<OR:$<PLATFORM_ID:MinGW>,$<PLATFORM_ID:Windows>>:UNICODE=1>
+        $<$<CXX_COMPILER_ID:AppleClang>:GL_SILENCE_DEPRECATION=1>
+    )
     if (AUI_SHOW_TOUCHES)
         target_compile_definitions(aui.views PUBLIC AUI_SHOW_TOUCHES=1)
     endif ()
