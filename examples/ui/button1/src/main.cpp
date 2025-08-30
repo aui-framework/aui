@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/// [AButton example]
+/// [AButton_example]
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -29,5 +29,5 @@ AUI_ENTRY {
     window->show();
     return 0;
 }
-/// [AButton example]
+/// [AButton_example]
 

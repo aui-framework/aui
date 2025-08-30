@@ -48,40 +48,42 @@
  * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
  * options of customization.
  *
- * # Button with a lambda handler
+ * ## Button with a lambda handler
  *
  * This button executes the lambda upon click.
  *
  * <!-- aui:snippet examples/ui/button1/src/main.cpp AButton_example -->
  *
- * ![imgs/Screenshot_20250715_091801.png]() "Basic button."
+ * ![](imgs/Screenshot_20250715_091801.png)
  *
- * # Button with a signal-slot handler
+ * ## Button with a signal-slot handler
  *
  * This button executes the member function upon click.
  *
  * <!-- aui:snippet examples/ui/button2/src/main.cpp AButton_example -->
  *
- * ![](imgs/Screenshot_20250715_091801.png) "Button with a signal-slot."
+ * ![](imgs/Screenshot_20250715_091801.png)
  *
- * # Default button
+ * ## Default button
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
  * user presses `Enter`, the button is pushed automatically.
  *
  * <!-- aui:snippet examples/ui/button_default/src/main.cpp AButton_example -->
  *
- * ![](imgs/Screenshot_20250719_130434.png) A default button.
+ * ![](imgs/Screenshot_20250719_130434.png).
  *
- * # Button with icon
+ * ## Button with icon
  *
- * Button usually contains text only, but in practice any view can be put in it.
+ * While buttons typically display text, they are actually flexible containers that can hold any view component. This
+ * means you can place various UI elements inside a button, such as images, icons, custom layouts, or combinations of
+ * different views.
  *
  * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
  *
- * ![](imgs/Screenshot_20250719_130034.png) Button with an icon.
+ * ![](imgs/Screenshot_20250719_130034.png)
  *
- * # Styling a button
+ * ## Styling a button
  *
  * AButton is styled as follows:
  *

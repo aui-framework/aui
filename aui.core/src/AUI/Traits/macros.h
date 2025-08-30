@@ -65,17 +65,17 @@
  * AUI_REACT(expression)
  * ```
  *
- * # Basic example
+ * ## Basic example
  *
  * This creates a label that automatically updates when property `mCounter` changes:
  *
  * <!-- aui:snippet examples/7guis/counter/src/main.cpp counter -->
  *
- * # Formatted label example
+ * ## Formatted label example
  *
  * <!-- aui:snippet examples/7guis/timer/src/main.cpp example -->
  *
- * # Implementation details
+ * ### Implementation details
  *
  * When used in declarative UI building, `AUI_REACT` creates an instance of `APropertyPrecomputed<T>` behind the scenes,
  * which:

@@ -23,7 +23,7 @@ public:
     MainWindow() : AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
           Horizontal {
-            /// [AButton example]
+            /// [AButton_example]
             Button {
               .content =
                   Horizontal {
@@ -33,7 +33,7 @@ public:
                   },
               .onClick = { me::onClick },
             },
-            /// [AButton example]
+            /// [AButton_example]
           },
         });
     }

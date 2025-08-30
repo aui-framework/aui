@@ -30,11 +30,11 @@
  *
  * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
  *
- * # Coloring a label
+ * ## Coloring a label
  *
  * <!-- aui:snippet examples/ui/views/src/ExampleWindow.cpp label_coloring -->
  *
- * # Dynamic text in a label
+ * ## Dynamic text in a label
  *
  * You can use [property-system] to bind a label to a variable:
  *

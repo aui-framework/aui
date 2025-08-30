@@ -20,13 +20,13 @@ class MainWindow: public AWindow {
 public:
     MainWindow(): AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
-            /// [AButton example]
+            /// [AButton_example]
             Button {
                 .content = "Click me",
                 .onClick = {me::onClick},
                 .isDefault = true,
             },
-            /// [AButton example]
+            /// [AButton_example]
         });
     }
 

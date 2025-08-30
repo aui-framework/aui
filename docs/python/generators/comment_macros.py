@@ -91,7 +91,7 @@ def _snippet(args: str):
     section = [i for i in find_section()]
     if not section:
         log.warning(f"Can't find section '{section_name}' in {file_path}")
-        section = f"/* can't find section: {args} */"
+        section = [f"/* can't find section: {args} in {file_path} */"]
 
     section = "\n".join(common.strip_indentation(section))
 
