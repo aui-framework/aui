@@ -24,6 +24,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2025]
+        os-name: [Windows]
         toolset: [142, 143]
         cppstd: ['20']
         build-type: [Debug, Release]
@@ -40,7 +41,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: MSVC ${{ matrix.toolset }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: MSVC ${{ matrix.toolset }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -161,6 +162,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        os-name: [Linux]
         cppstd: ['20']
         build-type: [Debug, Release]
         include:
@@ -171,7 +173,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: Clang ${{ matrix.clang-version }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: Clang ${{ matrix.clang-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
@@ -273,6 +275,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        os-name: [Linux]
         cppstd: ['20']
         build-type: [Debug, Release]
         include:
@@ -283,7 +286,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: GCC ${{ matrix.gcc-version }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: GCC ${{ matrix.gcc-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
@@ -376,6 +379,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-14]
+        os-name: [MacOS]
         cppstd: ['20']
         build-type: [Debug, Release]
         arch: ['x86_64', 'armv8']
@@ -387,7 +391,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -463,6 +467,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-14]
+        os-name: [MacOS]
         cppstd: ['20']
         build-type: [Debug, Release]
         arch: ['armv8']
@@ -474,7 +479,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -560,12 +565,12 @@ jobs:
           ctest --list-presets
           ctest --preset ${{ matrix.cmake-preset }}
 
-
   test-on-android-linux:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        os-name: [Linux]
         cppstd: ['20']
         build-type: [Debug, Release]
         arch: ['armv7', 'armv8']
@@ -577,7 +582,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
+    name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
