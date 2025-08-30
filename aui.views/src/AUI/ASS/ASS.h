@@ -21,10 +21,10 @@
  * @brief CSS-like styling system
  * @details
  * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
- * of rules. A rule consists of a @ref ass_selectors and a list of @ref ass_properties . Selector is a basic matcher
- * that determines whether apply a rule to the specific @ref AView "view" or not. Selector is the first statement in a
- * rule and further statements are @ref ass_properties "style properties".
- * @ref ass_properties "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * of rules. A rule consists of a [ass_selectors] and a list of [ass_properties] . Selector is a basic matcher
+ * that determines whether apply a rule to the specific [view](aview.md) or not. Selector is the first statement in a
+ * rule and further statements are [style properties](ass_properties.md).
+ * [Property](ass_properties.md) controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
@@ -34,21 +34,21 @@
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{css}
+ *       ```css
  *       AButton {
  *         background: red;
  *         color: white;
  *       }
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       {
  *         t<AButton>(),
  *         BackgroundColor { AColor::RED },
  *         TextColor { AColor::WHITE },
  *       },
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
  *       Set all buttons' background to red and text color to white
@@ -56,19 +56,19 @@
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{css}
+ *       ```css
  *       ATextField::hover {
  *         border: 1px solid #00f;
  *       }
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       {
  *         t<ATextField>::hover(),
  *         Border { 1_dp, 0x0000ff_rgb },
  *       },
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
  *       Set all text fields' border to #00f (blue) on hover
@@ -80,7 +80,7 @@
  * Global stylesheet is applied to the whole program.
  *
  * Somewhere in your entry point, you may write:
- * @code{cpp}
+ * ```cpp
  * AStylesheet::global().addRules({
  *   {
  *     t<ALabel>(),
@@ -93,12 +93,12 @@
  *     TextAlign::CENTER,
  *   },
  * });
- * @endcode
+ * ```
  *
  * ## Using container stylesheet
  * Container stylesheet is applied only to children (both direct and indirect) of the container.
  *
- * @code{cpp}
+ * ```cpp
  * container->setExtraStylesheet({
  *   {
  *     t<ALabel>(),
@@ -111,29 +111,29 @@
  *     TextAlign::CENTER,
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Using with_style
+ * ## Using AUI_WITH_STYLE
  * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue
- * background, using with_style:
+ * background, using AUI_WITH_STYLE:
  *
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * setContents(Centered{
- *   Label { "Hello" } with_style {
+ *   Label { "Hello" } AUI_WITH_STYLE {
  *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
- *   Label { "World" } with_style {
+ *   Label { "World" } AUI_WITH_STYLE {
  *     BackgroundSolid { 0x0000ff_rgb },
  *   },
  * })
- * @endcode
+ * ```
  *
  * ## Using setCustomStyle
- * In case with_style is not applicable, you may use setCustomStyle instead.
+ * In case AUI_WITH_STYLE is not applicable, you may use setCustomStyle instead.
  *
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  *
  * auto l = _new<ALabel>("Hello world");
@@ -142,13 +142,13 @@
  *   TextAlign::CENTER,
  * }),
  * setContents(Centered{ l });
- * @endcode
+ * ```
  *
- * # Selectors
+ * ## Selectors
  * As said earlier, first statement in a rule is selector. Here's some examples.
  *
- * ## Select all ALabels
- * @code{cpp}
+ * ### Select all ALabels
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -157,10 +157,10 @@
  *     TextAlign::CENTER,
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Select all ASS name
- * @code{cpp}
+ * ### Select all ASS name
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -177,10 +177,10 @@
  * setContents(Centered {
  *     _new<AView>() << ".highlight",
  * });
- * @endcode
+ * ```
  *
- * ## Select all ALabel's or AButton's
- * @code{cpp}
+ * ### Select all ALabel's or AButton's
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -189,10 +189,10 @@
  *     TextAlign::CENTER,
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Select all labels with ASS name
- * @code{cpp}
+ * ### Select all labels with ASS name
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -206,10 +206,10 @@
  *     Label { "Not highlighted" },
  *     Button { "Not highlighted either" },
  * });
- * @endcode
+ * ```
  *
- * ## Select indirect child
- * @code{cpp}
+ * ### Select indirect child
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -228,11 +228,11 @@
  *         Label { "Not highlighted" },
  *     },
  * });
- * @endcode
+ * ```
  *
- * ## Select direct child
+ * ### Select direct child
  * Works faster than selecting indirect child
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -251,16 +251,16 @@
  *         Label { "Not highlighted" },
  *     },
  * } << ".highlight_container");
- * @endcode
+ * ```
  *
  * ## Sub selectors
  * Sub selector is kind of a selector that depends on view's state (i.e, pressed or focused). Sub selectors, as well as
  * other selectors don't replace previous rules entirely. Instead, they extend existing rules. However, same properties
  * are replaced.
  *
- * ## Hover sub selector
+ * ### Hover sub selector
  * Hovered view is a view below mouse cursor.
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -269,11 +269,11 @@
  *     TextAlign::CENTER,
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Active sub selector
+ * ### Active sub selector
  * Active view is a pressed view.
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -281,11 +281,11 @@
  *     BackgroundSolid { AColor::RED },
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Focus sub selector
+ * ### Focus sub selector
  * Focused view is a view that was clicked and currently receiving keyboard input.
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -294,11 +294,11 @@
  *     TextColor { AColor::RED },
  *   },
  * });
- * @endcode
+ * ```
  *
- * ## Disabled sub selector
+ * ### Disabled sub selector
  * Disabled view is a view with AView::setEnabled(false) thus not able to change it's state.
- * @code{cpp}
+ * ```cpp
  * using namespace ass;
  * AStylesheet::global().addRules({
  *   {
@@ -307,13 +307,13 @@
  *     TextColor { AColor::RED },
  *   },
  * });
- * @endcode
+ * ```
  *
- * # Box Model (Padding, Margin)
+ * ### Box Model (Padding, Margin)
  *
- * See @ref "docs/ASS Box Model.md".
+ * See [aui-box-model].
  *
- * # ASS Refenence
+ * ## ASS Refenence
  * See below for declarations and selectors.
  *
  */

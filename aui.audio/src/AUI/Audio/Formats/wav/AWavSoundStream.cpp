@@ -14,7 +14,7 @@ AWavSoundStream::AWavSoundStream(aui::non_null<_unique<IInputStream>> stream) : 
 AAudioFormat AWavSoundStream::info() {
     return AAudioFormat {
         .channelCount = static_cast<AChannelFormat>(mHeader.numChannels),
-        .sampleRate = static_cast<unsigned int>(mHeader.sampleRate),
+        .sampleRate = static_cast<uint32_t>(mHeader.sampleRate),
         .sampleFormat = static_cast<uint8_t>(mHeader.bitsPerSample) == 24 ? ASampleFormat::I24 : ASampleFormat::I16,
     };
 }

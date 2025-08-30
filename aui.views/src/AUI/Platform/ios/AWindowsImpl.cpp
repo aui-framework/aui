@@ -44,7 +44,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(aui::ptr::shared_from_this(this)));
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -67,11 +67,11 @@ bool AWindow::isMinimized() const {
 }
 
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(sharedPtr()))) {
-        getWindowManager().mWindows << _cast<AWindow>(sharedPtr());
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
+        getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
     }
     try {
-        mSelfHolder = _cast<AWindow>(sharedPtr());
+        mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
     } catch (...) {
         mSelfHolder = nullptr;
     }

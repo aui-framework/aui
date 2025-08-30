@@ -25,14 +25,14 @@
 
 _<AChildProcess>
 AProcess::create(AProcess::ProcessCreationInfo args) {
-    auto p = aui::ptr::manage(new AChildProcess);
+    auto p = aui::ptr::manage_shared(new AChildProcess);
     p->mInfo = std::move(args);
     return p;
 }
 
 int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory,
                                  ASubProcessExecutionFlags flags) {
-    auto p = aui::ptr::manage(new AChildProcess);
+    auto p = aui::ptr::manage_shared(new AChildProcess);
     p->mInfo = {
         .executable = std::move(applicationFile),
         .args = ArgSingleString { std::move(args) },

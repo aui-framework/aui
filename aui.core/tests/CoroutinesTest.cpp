@@ -24,7 +24,7 @@ using namespace std::chrono_literals;
 
 
 AFuture<int> longTask() {
-    return async {
+    return AUI_THREADPOOL {
         AThread::sleep(10ms); // long tamssk
         return 228;
     };
@@ -40,7 +40,7 @@ TEST(Coroutines, CoAwait) {
 }
 
 AFuture<int> longTaskException() {
-    return async -> int {
+    return AUI_THREADPOOL -> int {
         AThread::sleep(10ms); // long tamssk
         throw AException("Whoops! Something bad happened");
     };

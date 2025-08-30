@@ -26,7 +26,7 @@ public:
 
         setContents(
             Vertical {
-                mBigContent = _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
+                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp } },
                 mBottomLabel = _new<ALabel>("Bottom"),
             }
         );
@@ -49,7 +49,7 @@ protected:
     public:
         TestWindow(): AWindow("Test window", 200_dp, 100_dp) {
             setContents(Vertical {
-                    mScrollArea = AScrollArea::Builder().withContents(mMockedContainer = _new<MockedViewContainer>()).withExpanding().build() with_style {
+                    mScrollArea = AScrollArea::Builder().withContents(mMockedContainer = _new<MockedViewContainer>()).withExpanding().build() AUI_WITH_STYLE {
                         ass::MinSize(100_dp),
                     }
             });

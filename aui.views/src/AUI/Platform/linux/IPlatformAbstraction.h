@@ -15,19 +15,19 @@
  * achieved through a platform abstraction layer that isolates the core application logic from the specifics of the
  * underlying UI implementation.
  *
- * # Supported UI Backends
+ * ## Supported UI Backends
  *
  * Currently, the framework supports the following UI backends:
  * - **Adwaita:** modern UI toolkit based on GTK, commonly used in GNOME.
  * - **GTK:** widely available widget toolkit.
  * - **X11:** legacy windowing system (used as a fallback).
  *
- * # API Selection and Prioritization
+ * ## API Selection and Prioritization
  *
  * The framework determines the preferred UI backend based on an `initializationOrder` defined within
- * @ref APlatformAbstractionOptions. The order prioritizes backends, attempting to initialize them sequentially.
+ * [APlatformAbstractionOptions]. The order prioritizes backends, attempting to initialize them sequentially.
  *
- * # Dynamic Loading
+ * ## Dynamic Loading
  *
  * To minimize dependencies and enhance compatibility, the framework utilizes dynamic loading for certain UI backends.
  * For example, the Adwaita backend loads the `libadwaita-1.so` library at runtime using `dlopen`.

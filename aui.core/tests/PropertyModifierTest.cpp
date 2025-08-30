@@ -30,8 +30,6 @@ public:
 };
 }
 
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property_modifier.h
-// @class aui::PropertyModifier
 //
 // Non-const operators of properties such as non-const versions of `operator=`, `operator+=`, `operator-=` have a side
 // effect of emitting `changed` signal upon operation completion. This ensures that modifying access to the property can
@@ -41,7 +39,7 @@ TEST_F(PropertyModifierTest, Write_operators_observable1) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN
     AProperty<int> counter = 0;
-    AObject::connect(counter.changed, slot(observer)::observeInt);
+    AObject::connect(counter.changed, AUI_SLOT(observer)::observeInt);
     EXPECT_CALL(observer, observeInt(1)).Times(1);
     counter += 1; // observable by observeInt
     // AUI_DOCS_CODE_END
@@ -51,20 +49,22 @@ TEST_F(PropertyModifierTest, Write_operators_observable2) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
     EXPECT_CALL(observer, observeString("Hello world"_as)).Times(1);
     name += " world"; // observable by observeString
     // AUI_DOCS_CODE_END
 }
 
 //
-// @note Make sure your read-only operators (such as `operator+`, `operator-`) have marked const, otherwise property
-// would treat them as a writing access, resulting in unwanted signaling `changed` upon each access.
+// !!! note
+//
+//     Make sure your read-only operators (such as `operator+`, `operator-`) have marked const, otherwise property
+//     would treat them as a writing access, resulting in unwanted signaling `changed` upon each access.
 TEST_F(PropertyModifierTest, Write_operators_const_access) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN
     AProperty<int> counter = 0;
-    AObject::connect(counter.changed, slot(observer)::observeInt);
+    AObject::connect(counter.changed, AUI_SLOT(observer)::observeInt);
     EXPECT_CALL(observer, observeInt(testing::_)).Times(0);
     int nextCounter = counter + 1; // read-only access; noone is notified
     // AUI_DOCS_CODE_END
@@ -81,7 +81,7 @@ TEST_F(PropertyModifierTest, Write_operators_prefer_const_access) {
     // AUI_DOCS_CODE_BEGIN
     EXPECT_CALL(observer, observeString(testing::_)).Times(0);
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
 
     [[maybe_unused]] // HIDE
     // returns const pointer
@@ -89,14 +89,14 @@ TEST_F(PropertyModifierTest, Write_operators_prefer_const_access) {
     // AUI_DOCS_CODE_END
 }
 
-// @ref property_system is designed in such a way you would explicitly express a modifying operation via binary equals
+// [property-system] is designed in such a way you would explicitly express a modifying operation via binary equals
 // operator (and favours such as `+=`, `-=`):
 //
 TEST_F(PropertyModifierTest, Write_operators_write_equals) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
 
     EXPECT_CALL(observer, observeString("Test"_as)).Times(1);
     name = "Test";
@@ -104,13 +104,13 @@ TEST_F(PropertyModifierTest, Write_operators_write_equals) {
 }
 
 // However, it is still possible to achieve non-const version of `operator->`. To do this, you need a
-// @ref aui::PropertyModifier object that grants such access:
+// [aui::PropertyModifier] object that grants such access:
 
 TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow1) {
     LogObserver observer;
     // AUI_DOCS_CODE_BEGIN
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
 
     EXPECT_CALL(observer, observeString("Hell"_as)).Times(1);
     name.writeScope()->removeAll('o');
@@ -124,7 +124,7 @@ TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow1) {
 TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow2) {
     LogObserver observer;
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
 
     // AUI_DOCS_CODE_BEGIN
     // WRONG WAY
@@ -137,14 +137,14 @@ TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow2) {
 }
 
 //
-// The right way is to create @ref aui::PropertyModifier just once. This will produce exactly one notification, ensuring
+// The right way is to create [aui::PropertyModifier] just once. This will produce exactly one notification, ensuring
 // that modifications to the property are performed atomically. This means that all operations within
-// the scope of @ref aui::PropertyModifier produced by `writeScope()` will be treated as one unit, and only one change
+// the scope of [aui::PropertyModifier] produced by `writeScope()` will be treated as one unit, and only one change
 // notification will be emitted.
 TEST_F(PropertyModifierTest, Write_operators_write_operator_arrow3) {
     LogObserver observer;
     AProperty<AString> name = "Hello";
-    AObject::connect(name.changed, slot(observer)::observeString);
+    AObject::connect(name.changed, AUI_SLOT(observer)::observeString);
 
     // AUI_DOCS_CODE_BEGIN
     // RIGHT WAY

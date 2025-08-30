@@ -19,15 +19,15 @@
 class AViewContainer;
 
 /**
- * @brief Layout manager is an object that manages placement and size of @ref AView "views" inside
- * @ref AViewContainer "containers".
- * @defgroup layout_managers Layout Managers
+ * @brief Layout manager is an object that manages placement and size of [views](aview.md) inside
+ * [containers](aviewcontainer.md).
+ * @defgroup layout-managers Layout Managers
  * @ingroup views
  * @details In AUI, layout building consists of layout managers. Layout manager determines position and size of
- * @ref AViewContainer "container"'s children @ref AView "views". A @ref AViewContainer "container" is a @ref AView
- * "view" that consists of other @ref AView "views", called children. In general, layout manager does not allow going
- * beyond the border of the @ref AViewContainer "container". A @ref AViewContainer "container" can be a child of an
- * another @ref AViewContainer "container" i.e., nesting is allowed.
+ * [container](aviewcontainer.md)'s children [views](aview.md). A [container](aviewcontainer.md) is a [AView]
+ * "view" that consists of other [views](aview.md), called children. In general, layout manager does not allow going
+ * beyond the border of the [container](aviewcontainer.md). A [container](aviewcontainer.md) can be a child of an
+ * another [container](aviewcontainer.md) i.e., nesting is allowed.
  *
  * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
  *
@@ -38,12 +38,17 @@ class AViewContainer;
  * - Respecting view margins and alignment
  * - Supporting expanding/stretching of views
  *
+ * !!! note
+ *
+ *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with
+ *     [Expanding](#EXPANDING) property, to get better understanding on how does layout work in AUI.
+ *
  * Common layout managers include:
  *
  * - **AHorizontalLayout** - Arranges views in a horizontal row
  * - **AVerticalLayout** - Arranges views in a vertical column
- * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
  * - **AStackedLayout** - Centers views, displaying them on top of each other
+ * - **AAdvancedGridLayout** - Arranges views in a grid with customizable cell sizing
  *
  * Key concepts:
  *
@@ -51,15 +56,16 @@ class AViewContainer;
  *    - Considering minimum sizes of child views
  *    - Adding margins and spacing
  *    - Respecting fixed size constraints
+ *    - Following [aui-box-model].
  *
- * 2. **@ref EXPANDING "Expanding Views"** - Children can expand to fill available space of their parent:
- *    - Set via @ref AView::setExpanding or @ref ass::Expanding on a child
- *    - Requires parent to have @ref ass::FixedSize or @ref ass::MinSize or @ref EXPANDING set to take effect
+ * 2. **[Expanding Views](#EXPANDING)** - Children can expand to fill available space of their parent:
+ *    - Set via [AView::setExpanding()] or [ass::Expanding] on a child
+ *    - Requires parent to have [ass::FixedSize] or [ass::MinSize] or [EXPANDING] set to take effect
  *    - Independent for horizontal/vertical directions
- *    - Ignored if @ref ass::FixedSize is set
+ *    - Ignored if [ass::FixedSize] is set
  *
  * 3. **Spacing** - Configurable gaps between views:
- *    - Set via @ref ALayout::setSpacing() or @ref ass::LayoutSpacing of the parent view
+ *    - Set via [ALayout::setSpacing()] or [ass::LayoutSpacing] of the parent view
  *    - Part of minimum size calculations of the parent view
  *    - Applied uniformly between its child views
  *
@@ -76,12 +82,12 @@ class AViewContainer;
  * 6. **Relativeness** - children position is relative to parent's position, not an absolute position within a window.
  *
  * 7. **Nesting** - you can nest containers into containers, and so on. When we say "container", it means a
- *    @ref AViewContainer. When we say "Vertical", we imply a @ref AViewContainer with @ref AVerticalLayout as the
+ *    [AViewContainer]. When we say "Vertical", we imply a [AViewContainer] with [AVerticalLayout] as the
  *    layout manager.
  *
- * # Layout Examples
+ * ## Layout Examples
  *
- * @ref AHorizontalLayout "Horizontal" layout:
+ * [Horizontal](ahorizontallayout.md) layout:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -89,7 +95,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Horizontal {
  *           _new<AButton>("1"),
@@ -97,13 +103,13 @@ class AViewContainer;
  *           _new<AButton>("3"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png" /></td>
  *   </tr>
  * </table>
  *
- * @ref AVerticalLayout "Vertical" layout:
+ * [Vertical](averticallayout.md) layout:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -111,7 +117,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("1"),
@@ -119,7 +125,7 @@ class AViewContainer;
  *           _new<AButton>("3"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png" /></td>
  *   </tr>
@@ -133,7 +139,7 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
@@ -144,16 +150,44 @@ class AViewContainer;
  *           _new<AButton>("Down"),
  *         }
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_041807.png" /></td>
  *   </tr>
  * </table>
  *
- * # Expanding {#EXPANDING}
+ * [Stacked](astackedlayout.md) layout:
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       ```cpp
+ *       setContents(
+ *         Stacked {
+ *           _new<AView>() AUI_WITH_STYLE { BackgroundSolid(0xff0000_rgb), Expanding() },
+ *           Label { "Test" },
+ *         }
+ *       );
+ *       ```
+ *     </td>
+ *     <td>
+ *  ![](imgs/Screenshot_20250625_011101.png)
+ *     </td>
+ *   </tr>
+ * </table>
+ *
+ * ## Expanding { #EXPANDING }
  * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
  * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
  * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
+ *
+ * !!! note
+ *
+ *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with
+ *     [Expanding](#EXPANDING) property, to get better understanding on how does layout work in AUI.
  *
  * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
  *
@@ -172,7 +206,7 @@ class AViewContainer;
  * order to make container larger than minimum possible size, you can specify FixedSize or MinSize or Expanding to the
  * container.
  *
- * You can use ass::Expanding @ref ass "ASS" property, or AView::setExpanding method to specify Expanding:
+ * You can use ass::Expanding [ASS](ass.md) property, or AView::setExpanding method to specify Expanding:
  * <table>
  *   <tr>
  *     <th>Code</th>
@@ -180,20 +214,20 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
  *           Horizontal {
  *             _new<AButton>("Left"),
  *             _new<AButton>("Center"),
- *             _new<AButton>("Right") let { it->setExpanding(); },
+ *             _new<AButton>("Right") AUI_LET { it->setExpanding(); },
  *                  // alias to it->setExpanding(2) ^^^^^^
  *           },
  *           _new<AButton>("Down"),
- *         } with_style { MinSize { 300_dp, {} } },
+ *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_172900.png" /></td>
  *   </tr>
@@ -207,19 +241,19 @@ class AViewContainer;
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       setContents(
  *         Vertical {
  *           _new<AButton>("Up"),
  *           Horizontal {
  *               _new<AButton>("Left"),
- *               _new<AButton>("Center") let { it->setExpanding(); },
+ *               _new<AButton>("Center") AUI_LET { it->setExpanding(); },
  *               _new<AButton>("Right"),
  *           },
  *           _new<AButton>("Down"),
- *         } with_style { MinSize { 300_dp, {} } },
+ *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
  *       );
- *       @endcode
+ *       ```
  *     </td>
  *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_174121.png" /></td>
  *   </tr>
@@ -229,26 +263,27 @@ class AViewContainer;
  * any positive value it would occupy all free space in the container. If there is a view with expanding equal to 1 and
  * another view with expanding equal to 2 the first view would occupy one third of free space, the second view would
  * occupy two thirds of free space:
- * @code{cpp}
+ * ```cpp
  * Vertical {
- *   _new<AButton>("Left") let { it->setExpanding(1); },
- *   _new<AButton>("Right") let { it->setExpanding(2); }, // will be twice as big as "Left"
+ *   _new<AButton>("Left") AUI_LET { it->setExpanding(1); },
+ *   _new<AButton>("Right") AUI_LET { it->setExpanding(2); }, // will be twice as big as "Left"
  * }
- * @endcode
+ * ```
  *
  * You can use ASpacerExpanding as blank expanding view:
- * @code{cpp}
+ * ```cpp
  * Vertical {
  *   _new<AButton>("Left"),
  *   SpacerExpanding(),
  *   _new<AButton>("Right"),
  * }
- * @endcode
+ * ```
  *
- * @note
- * FixedSize nullifies Expanding's action (on per axis basic).
+ * !!! note
  *
- * # Implementation details
+ *     FixedSize nullifies Expanding's action (on per axis basic).
+ *
+ * ## Implementation details
  *
  * The process of applying position and size involves several key functions:
  * ```
@@ -271,39 +306,40 @@ class AViewContainer;
  *                                 └─> AView::setGeometry()
  * ```
  *
- * ## Applying size
+ * ### Applying size
  *
- * - Size of each view in tree is @ref SIZE_CALCULATION "calculated" on this phase
- * - @ref AView::redraw "AWindow::redraw" - geometry is applied before rendering
- * - @ref AViewContainerBase::applyGeometryToChildrenIfNecessary "applyGeometryToChildrenIfNecessary" - applies geometry
+ * - Size of each view in tree is [calculated](#SIZE_CALCULATION) on this phase
+ * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
+ * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
  *   only if really needed (i.e., if there were a resize event, or views were added or removed)
- * - @ref AViewContainerBase::applyGeometryToChildren "applyGeometryToChildren" - applies geometry to its children with
+ * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
  *   no preconditions
- * - @ref ALayout::onResize - implemented by layout manager, whose have their own algorithms of arranging views
- * - @ref AView::setGeometry "setGeometry" - sets geometry of a view (which might be a container)
+ * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
+ * - [AView::setGeometry] - sets geometry of a view (which might be a container)
  *
- * ## Size calculation {#SIZE_CALCULATION}
+ * ### Size calculation { #SIZE_CALCULATION }
  *
- * - Layout manager queries **Minimum size** which is determined with @ref AView::getMinimumSize and cached until the
- *   view or its children call @ref AView::markMinContentSizeInvalid. It considers:
- *     - Children minimum sizes (if any)
- *     - Padding
- *     - @ref ass::LayoutSpacing
- *     - Other constraints such as @ref ass::FixedSize
+ * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
+ *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:
+ *     - Children's minimum sizes (if any). A child includes its [ass::Padding] to its minimum size.
+ *     - Children's [ass::Margin]
+ *     - Container's [ass::Padding]
+ *     - Container's [ass::LayoutSpacing]
+ *     - Other constraints such as [ass::FixedSize]
  * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
- *   views a share of free space if available. Unlike minimum size, @ref EXPANDING ratio does not depend on children's
- *   @ref EXPANDING ratios.
+ *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
+ *   [EXPANDING] ratios.
  *
- * ## Special cases
+ * ### Special cases
  *
- * - **@ref AScrollArea**: requires special handling for viewport positioning and size compensation
- * - **@ref AForEachUI**: manages view inflation/deflation based on visibility
+ * - **[AScrollArea]**: requires special handling for viewport positioning and size compensation
+ * - **[AForEachUI]**: manages view inflation/deflation based on visibility
  * - **Performance Optimizations**: Views outside viewport may be left unupdated to improve performance
  */
 
 /**
  * @brief Base class for all layout managers.
- * @ingroup layout_managers
+ * @ingroup layout-managers
  */
 class API_AUI_VIEWS ALayout : public AObject {
 public:
@@ -317,7 +353,7 @@ public:
      * @param width width of the container, add padding if necessary.
      * @param height height of the container, add padding if necessary.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout-managers] for more info.
      */
     virtual void onResize(int x, int y, int width, int height) = 0;
 

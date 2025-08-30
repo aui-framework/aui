@@ -7,7 +7,9 @@ option(AUI_ENABLE_DEATH_TESTS "Enable GTest death tests" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
+if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
 aui_enable_benchmarks(aui.core)
+endif()
 
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -22,6 +24,7 @@ else()
     )
 endif()
 target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
+target_compile_definitions(aui.core PUBLIC GLM_ENABLE_EXPERIMENTAL=1)
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
@@ -49,8 +52,12 @@ if (NOT WIN32)
     endif()
 
     if (AUI_PLATFORM_LINUX)
-        auib_import(backtrace https://github.com/aui-framework/libbacktrace
-                    VERSION a5a32e3cc8e22a9fc40689a884b032c52ee3f88e)
+        if(AUIB_DISABLE)
+            find_package(libbacktrace REQUIRED CONFIG)
+        else()
+            auib_import(backtrace https://github.com/aui-framework/libbacktrace
+                        VERSION a5a32e3cc8e22a9fc40689a884b032c52ee3f88e)
+        endif()
         set(_use_backtrace TRUE)
     else()
 
@@ -84,13 +91,17 @@ endif()
 
 if(_use_backtrace)
     message(STATUS "Stacktrace backend: backtrace")
-    aui_link(aui.core PRIVATE backtrace)
+    if(AUIB_DISABLE)
+        aui_link(aui.core PRIVATE libbacktrace)
+    else()
+        aui_link(aui.core PRIVATE backtrace)
+    endif()
     target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
 elseif(_use_unwind)
     message(STATUS "Stacktrace backend: unwind")
     target_compile_definitions(aui.core PRIVATE AUI_USE_UNWIND=1)
 elseif(WIN32)
-    aui_link(aui.core PRIVATE dbghelp shlwapi.lib)
+    aui_link(aui.core PRIVATE dbghelp shell32 shlwapi.lib)
     message(STATUS "Stacktrace backend: dbghelp")
 else()
     message(STATUS "Stacktrace backend: none")
@@ -99,6 +110,7 @@ endif()
 if (WIN32)
     aui_link(aui.core PRIVATE kernel32 psapi)
 endif()
+
 if (UNIX AND NOT APPLE)
     find_package(Threads REQUIRED)
     aui_link(aui.core PRIVATE Threads::Threads dl)
@@ -143,15 +155,20 @@ if (AUI_SHARED_PTR_FIND_INSTANCES)
 endif()
 
 
-# [auib_import examples]
-auib_import(fmt https://github.com/fmtlib/fmt
-            VERSION 9.1.0
-            CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
+# [auib_import_examples]
+if(AUIB_DISABLE)
+    find_package(fmt REQUIRED CONFIG)
+    find_package(range-v3 REQUIRED CONFIG)
+else()
+    auib_import(fmt https://github.com/fmtlib/fmt
+                VERSION 11.2.0
+                CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
-auib_import(range-v3 https://github.com/ericniebler/range-v3
-        VERSION 0.12.0
-        CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
-# [auib_import examples]
+    auib_import(range-v3 https://github.com/ericniebler/range-v3
+            VERSION 0.12.0
+            CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
+endif()
+# [auib_import_examples]
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 

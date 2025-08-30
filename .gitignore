@@ -11,6 +11,8 @@
 *.sln.docstates
 
 build/
+# CLion build directory
+/cmake-**
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -343,3 +345,15 @@ ASALocalRun/
 healthchecksdb
 
 .run/
+
+# Build artifacts Windows OS
+*.exe
+*.dll
+*.lib
+
+# Application settings
+notes.json
+install.json
+
+# mkdocs output
+site/

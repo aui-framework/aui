@@ -226,7 +226,7 @@ APath APath::absolute() const {
     buf.removeBackSlashes();
     return buf;
 #else
-    auto rawPath = aui::ptr::make_unique_with_deleter(realpath(toStdString().c_str(), nullptr), free);
+    auto rawPath = aui::ptr::manage_unique(realpath(toStdString().c_str(), nullptr), free);
     if (!rawPath) {
         aui::impl::lastErrorToException("could not find absolute file " + *this);
     }
@@ -352,7 +352,7 @@ APath APath::workingDir() {
 #include <pwd.h>
 
 APath APath::workingDir() {
-    auto cwd = aui::ptr::make_unique_with_deleter(getcwd(nullptr, 0), free);
+    auto cwd = aui::ptr::manage_unique(getcwd(nullptr, 0), free);
     if (!cwd) {
         aui::impl::lastErrorToException("could not find workingDir");
     }
@@ -366,7 +366,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             return APath::workingDir() / "__aui_appdata";
         case TEMP: {
             auto dir = APath::workingDir() / "__aui_tmp";
-            do_once {
+            AUI_DO_ONCE {
                 // we have to clean up it by ourselves.
                 dir.removeFileRecursive();
             }

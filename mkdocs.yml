@@ -1,0 +1,173 @@
+# yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
+site_name: AUI Framework
+site_url: https://aui-framework.github.io/develop/
+site_author: Alex2772
+site_description: Cross-platform base for C++ UI apps
+use_directory_urls: true
+repo_url: https://github.com/aui-framework/aui
+repo_name: aui-framework/aui
+edit_uri: edit/develop/docs/
+copyright: >
+  © 2025 AUI Framework Contributors. Documentation contributions included herein are the copyrights of their respective
+  owners. The documentation provided herein is licensed under the terms of the GNU Free Documentation License version
+  1.3 as published by the Free Software Foundation. All trademarks are property of their respective owners.
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/python/gen_pages.py
+  - macros:
+      module_name: docs/python/mymodule
+      include_dir: docs/python
+      on_error_fail: true
+      on_undefined: strict
+      j2_block_start_string: '{{{% '
+      j2_block_end_string: ' %}}}'
+      j2_variable_start_string: '{{% '
+      j2_variable_end_string: ' %}}'
+
+extra:
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/jq2WySpg6m
+    - icon: fontawesome/brands/github
+      link: https://github.com/aui-framework/aui
+
+extra_css:
+  - overrides/style.css
+
+extra_javascript:
+  - javascripts/extra.js
+
+markdown_extensions:
+  - toc:
+      permalink: '#'
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - admonition
+  - pymdownx.blocks.caption
+  - pymdownx.details
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.critic
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.tilde
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+
+hooks:
+  - docs/python/hooks.py
+
+theme:
+  name: material
+  favicon: assets/favicon.ico
+  custom_dir: docs/overrides
+  logo: assets/logo.svg
+  icon:
+    repo: fontawesome/brands/github
+  features:
+#    - navigation.instant # disabled due to preview
+    - navigation.tracking
+    - navigation.footer
+    - navigation.prune
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - announce.dismiss
+    - content.action.view
+    - content.action.edit
+    - content.code.copy
+    - content.code.annotate # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
+    - content.tabs.link # sync same labels across all pages
+
+  palette:
+    # Palette toggle for dark mode (which is by default)
+    - scheme: slate
+      primary: black
+      toggle:
+        icon: octicons/moon-16
+        name: Switch to light mode
+
+    # Palette toggle for light mode
+    - scheme: default
+      primary: black
+      toggle:
+        icon: octicons/sun-16
+        name: Switch to dark mode
+
+
+nav:
+  - Home: index.md
+  - getting-started.md
+  - examples.md
+
+  - Introduction:
+    - aui-assets.md
+    - writing-tests.md
+    - code-style.md
+    - troubleshoot-list.md
+    - crosscompiling.md
+
+  - 'UI Architecture':
+    - ui-building-overview.md
+    - layout-managers.md
+    - signal_slot.md
+    - property-system.md
+    - devtools.md
+    - 'Handling HiDPI': ametric.md
+
+  - 'Views':
+    - 'Overview': views.md
+
+  - 'Styling':
+    - ass.md
+    - ass_properties.md
+
+  - 'Platform Specifics':
+    - windows.md
+    - linux.md
+    - macos.md
+    - android.md
+    - ios.md
+    - emscripten.md
+
+  - 'Other':
+      - app-icon.md
+      - packaging.md
+      - aui-command-line-arguments.md
+      - runtime-dependency-resolution.md
+      - forking-aui.md
+
+  - Reference:
+      - 'Installation methods':
+        - aui.boot.md
+      - classes.md
+      - macros.md
+      - CMake:
+          - aui_app.md
+          - aui_executable.md
+          - aui_link.md
+          - aui_module.md
+          - aui-configure-flags.md
+          - app-build-overview.md
+
+  - contributing.md
+

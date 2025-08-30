@@ -47,7 +47,7 @@ float PlatformAbstractionX11::platformGetDpiRatio() {
       XrmValue value;
       char* type = nullptr;
 
-      auto db = aui::ptr::make_unique_with_deleter(XrmGetStringDatabase(resourceString), XrmDestroyDatabase);
+      auto db = aui::ptr::manage_unique(XrmGetStringDatabase(resourceString), XrmDestroyDatabase);
 
       if (XrmGetResource(db.get(), "Xft.dpi", "String", &type, &value)) {
           if (value.addr) {

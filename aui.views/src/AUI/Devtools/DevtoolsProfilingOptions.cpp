@@ -22,7 +22,7 @@ using namespace declarative;
 namespace {
 _<AView> coloredRect(AColor c) {
     return Centered {
-        _new<AView>() with_style {
+        _new<AView>() AUI_WITH_STYLE {
           BackgroundSolid { c },
           FixedSize { 10_pt },
         }
@@ -37,7 +37,7 @@ _<AView> makeLink(AString text, AUrl destination) {
 }
 
 _<ALabel> header(AString title) {
-    return Label { std::move(title) } with_style { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
+    return Label { std::move(title) } AUI_WITH_STYLE { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
 }
 }   // namespace
 
@@ -75,7 +75,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
 
           header("Scale"),
           Vertical {
-            _new<ASlider>() let {
+            _new<ASlider>() AUI_LET {
                     it->value() = 1.f / 3.f;
                     connect(it->value(), [targetWindow, it](float v) {
                         it->value() = glm::round(v * 6) / 6.f;
@@ -107,7 +107,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
               { "In addition to your monitor DPI adjustments, changes scaling factor with AWindow::setScalingParams "
                 "API. In this setting, 100% takes no effect." }),
         }
-        << ".items" with_style {
+        << ".items" AUI_WITH_STYLE {
                       MaxSize { 700_dp, {} },
                     }) });
     setExtraStylesheet(

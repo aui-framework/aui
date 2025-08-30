@@ -46,7 +46,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(aui::ptr::shared_from_this(this)));
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -169,7 +169,7 @@ namespace {
 }
 
 void AWindowManager::loop() {
-    do_once {
+    AUI_DO_ONCE {
         emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onResize);
         emscripten_set_mousemove_callback("#canvas", nullptr, false, onMouseMove);
         emscripten_set_mousedown_callback("#canvas", nullptr, false, onMousePressed);
@@ -194,11 +194,11 @@ void AWindowManager::loop() {
     }, this, 0, true);
 }
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(sharedPtr()))) {
-        getWindowManager().mWindows << _cast<AWindow>(sharedPtr());
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
+        getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
     }
     try {
-        mSelfHolder = _cast<AWindow>(sharedPtr());
+        mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
     } catch (...) {
         mSelfHolder = nullptr;
     }

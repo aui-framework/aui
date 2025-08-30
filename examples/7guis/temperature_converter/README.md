@@ -1,9 +1,9 @@
 # 7GUIs Temperature Converter
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Fahrenheit to Celsius and vice versa.
 
-@image html docs/imgs/wrjikjkedkncbjw.webp
+![](imgs/wrjikjkedkncbjw.webp)
 
 Challenges: bidirectional data flow, user-provided text input.
 
@@ -17,9 +17,9 @@ Temperature Converter increases the complexity of Counter by having bidirectiona
 Fahrenheit inputs and the need to check the user input for validity. A good solution will make the bidirectional
 dependency very clear with minimal boilerplate code.
 
-@include examples/7guis/temperature_converter/src/main.cpp
+<!-- aui:include examples/7guis/temperature_converter/src/main.cpp -->
 
-# Comparison to Jetpack Compose
+## Comparison to Jetpack Compose
 
 Here's implementation of the same app with Jetpack Compose:
 

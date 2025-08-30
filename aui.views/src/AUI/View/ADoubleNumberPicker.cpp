@@ -54,8 +54,8 @@ ADoubleNumberPicker::ADoubleNumberPicker()
 
     auto c = _new<AViewContainer>();
     c->addAssName(".up-down-wrapper");
-    auto up = _new<AButton>() let { it->setDefault(); it  << ".up"; };
-    auto down = _new<AButton>() let { it->setDefault(); it  << ".down"; };
+    auto up = _new<AButton>() AUI_LET { it->setDefault(); it  << ".up"; };
+    auto down = _new<AButton>() AUI_LET { it->setDefault(); it  << ".down"; };
     c->setLayout(std::make_unique<AVerticalLayout>());
     c->setExpanding({ 0, 0 });
     c->addView(up);

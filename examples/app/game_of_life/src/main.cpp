@@ -42,7 +42,7 @@ public:
         }
 
         connect(mTimer->fired, me::frame);
-        connect(isRunning.changed, slot(mTimer)::setRunning);
+        connect(isRunning.changed, AUI_SLOT(mTimer)::setRunning);
     }
 
     void frame() {
@@ -185,10 +185,10 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              _new<AButton>("Randomize") let {
-                      connect(it->clicked, slot(mCells)::randomize);
+              _new<AButton>("Randomize") AUI_LET {
+                      connect(it->clicked, AUI_SLOT(mCells)::randomize);
                   },
-              _new<AButton>() let {
+              _new<AButton>() AUI_LET {
                       it & mCells.isRunning > [](AButton& b, bool isRunning) {
                           b.setText(isRunning ? "Pause" : "Run");
                       };
@@ -197,7 +197,7 @@ public:
             },
           },
           Centered {
-            _new<CellsView>(aui::ptr::fake(&mCells)) with_style {
+            _new<CellsView>(aui::ptr::fake_shared(&mCells)) AUI_WITH_STYLE {
                   Expanding(),
                   BackgroundSolid(AColor::BLACK),
                 },

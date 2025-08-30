@@ -51,17 +51,17 @@ namespace ass {
              * Performance benefit of downscale factor { .radius = 6_dp, .downscale = x } in comparison to
              * { .radius = 6_dp * x, .downscale = 1 } is x^2.
              *
-             * @code{cpp}
-             * view with_style {
+             * ```cpp
+             * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 6_dp, .downscale = 4 } },
              * }
-             * @endcode
+             * ```
              * is visually approximately same as
-             * @code{cpp}
-             * view with_style {
+             * ```cpp
+             * view AUI_WITH_STYLE {
              *   Backdrop { Backdrop::GaussianBlur { .radius = 24_dp } },
              * }
-             * @endcode
+             * ```
              * but 16 times cheaper.
              */
             int downscale = 1;
@@ -88,8 +88,11 @@ namespace ass {
             API_AUI_VIEWS GaussianBlurCustom findOptimalParams() const;
         };
 
-        using Any = std::variant<GaussianBlur, GaussianBlurCustom>;
-        using Preprocessed = std::variant<GaussianBlurCustom>;
+        struct LiquidFluid {
+        };
+
+        using Any = std::variant<GaussianBlur, GaussianBlurCustom, LiquidFluid>;
+        using Preprocessed = std::variant<GaussianBlurCustom, LiquidFluid>;
         AVector<Any> effects;
 
         Backdrop(std::initializer_list<Any> effects): effects(std::move(effects)) {}

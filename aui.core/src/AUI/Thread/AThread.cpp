@@ -162,7 +162,7 @@ void AAbstractThread::resetInterruptFlag() {}
 
 void AThread::start() {
     assert(mThread == nullptr);
-    auto t = _cast<AThread>(sharedPtr());
+    auto t = aui::ptr::shared_from_this(this);
     updateThreadName();
     mThread = new std::thread([&, t]() {
         threadStorage() = t;
@@ -198,7 +198,7 @@ const _<AAbstractThread>& AThread::current() {
     auto& t = threadStorage();
     if (t == nullptr)   // abstract thread
     {
-        t = aui::ptr::manage(new CurrentThread(std::this_thread::get_id()));
+        t = aui::ptr::manage_shared(new CurrentThread(std::this_thread::get_id()));
     }
 
     return t;

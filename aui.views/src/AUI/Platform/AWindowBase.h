@@ -81,7 +81,6 @@ public:
      * It is userful when you open a modal window and you want the user to complete the action in the modal window first
      * in order to continue interacting with the parent window.
      *
-     * @note
      * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
      * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
      */
@@ -161,7 +160,8 @@ public:
     /**
      * @brief Returns current dpi ratio
      * @see ScalingParams, scaling params affects dpi ratio
-     * @note dpi ratio value is rounded to 0.25
+     * @details
+     * dpi ratio value is rounded to 0.25
      */
     float getDpiRatio()
     {
@@ -192,12 +192,18 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
+#if defined(__clang__)
 #pragma clang diagnostic push
+#endif
+#if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
+#endif
     virtual void redraw() {
         AView::redraw();
     }
+#if defined(__clang__)
 #pragma clang diagnostic pop
+#endif
 
     virtual void focusNextView();
     virtual void flagRedraw();
@@ -216,7 +222,7 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      * @details
-     * @code{cpp}
+     * ```cpp
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
@@ -226,12 +232,12 @@ public:
      * });
      *
      * surfaceContainer->pack();
-     * @endcode
+     * ```
      *
      * To create overlapping surface below some `view`, use AView::getPositionInWindow:
-     * @code{cpp}
+     * ```cpp
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
-     * @endcode
+     * ```
      */
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
@@ -280,7 +286,7 @@ public:
         return tmp;
     }
     void closeOverlappingSurface(AOverlappingSurface* surface) {
-        if (mOverlappingSurfaces.erase(aui::ptr::fake(surface)) > 0) {
+        if (mOverlappingSurfaces.erase(aui::ptr::fake_shared(surface)) > 0) {
             closeOverlappingSurfaceImpl(surface);
         }
     }
@@ -337,8 +343,9 @@ public:
     static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
 
     /**
-     * @note FPS is captured every second
      * @return Last captured FPS
+     * @details
+     * FPS is captured every second
      */
     size_t getFps() {
         return mLastCapturedFps;
@@ -355,7 +362,8 @@ public:
         float scalingFactor = 1.f;
         /**
          * @brief If set, DPI ratio will be adjusted to be small enough for proper displaying layout of given size.
-         * @note Size in dp
+         * @details
+         * Size in dp
          */
         AOptional<glm::uvec2> minimalWindowSizeDp = std::nullopt;
     };

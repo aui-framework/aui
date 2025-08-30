@@ -20,7 +20,7 @@
 
 /**
  * @brief A scrollable container with vertical and horizontal scrollbars.
- * @ingroup useful_views
+ * @ingroup views_containment
  * @details
  * AScrollArea should have expanding, or fixed size, or max size to be set in order to define it's sizing rules, as it's
  * size cannot be defined by it's contents for obvious reasons.
@@ -32,7 +32,7 @@
  *
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
- * @note Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
+ * Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
@@ -159,7 +159,7 @@ public:
         }
 
         _<AScrollArea> build() {
-            return aui::ptr::manage(new AScrollArea(*this));
+            return aui::ptr::manage_shared(new AScrollArea(*this));
         }
 
         operator _<AView>() {

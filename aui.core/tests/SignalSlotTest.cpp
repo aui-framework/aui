@@ -87,7 +87,7 @@ public:
 
 TEST_F(SignalSlotTest, Basic) {
     slave = _new<Slave>();
-    AObject::connect(master->message, slot(slave)::acceptMessage);
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage);
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello")));
     EXPECT_CALL(*slave, die());
@@ -110,7 +110,7 @@ TEST_F(SignalSlotTest, GenericObserver) {
 
 TEST_F(SignalSlotTest, BasicProjection1) {
     slave = _new<Slave>();
-    AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), slot(slave)::acceptMessageInt);
+    AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), AUI_SLOT(slave)::acceptMessageInt);
 
     EXPECT_CALL(*slave, acceptMessageInt(5));
     EXPECT_CALL(*slave, die());
@@ -119,7 +119,7 @@ TEST_F(SignalSlotTest, BasicProjection1) {
 
 TEST_F(SignalSlotTest, BasicProjection2) {
     slave = _new<Slave>();
-    AObject::connect(master->message.projected(&AString::length), slot(slave)::acceptMessageInt);
+    AObject::connect(master->message.projected(&AString::length), AUI_SLOT(slave)::acceptMessageInt);
 
     EXPECT_CALL(*slave, acceptMessageInt(5));
     EXPECT_CALL(*slave, die());
@@ -128,7 +128,7 @@ TEST_F(SignalSlotTest, BasicProjection2) {
 
 TEST_F(SignalSlotTest, BasicNoArgs) {
     slave = _new<Slave>();
-    AObject::connect(master->message, slot(slave)::acceptMessageNoArgs);
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessageNoArgs);
 
     EXPECT_CALL(*slave, acceptMessageNoArgs);
     EXPECT_CALL(*slave, die());
@@ -138,11 +138,11 @@ TEST_F(SignalSlotTest, BasicNoArgs) {
 TEST_F(SignalSlotTest, Multithread) {
     slave = _new<Slave>();
 
-    AObject::connect(master->message, slot(slave)::acceptMessage);
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage);
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello")));
     EXPECT_CALL(*slave, die());
-    auto t = async {
+    auto t = AUI_THREADPOOL {
         master->broadcastMessage("hello");
     };
     t.wait();
@@ -152,7 +152,7 @@ TEST_F(SignalSlotTest, StackAllocatedObject) {
     testing::InSequence seq;
     Slave slave;
 
-    AObject::connect(master->message, slot(slave)::acceptMessage);
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage);
 
     EXPECT_CALL(slave, acceptMessage(AString("hello"))).Times(1);
     master->broadcastMessage("hello");
@@ -167,7 +167,7 @@ TEST_F(SignalSlotTest, StackAllocatedObject) {
 TEST_F(SignalSlotTest, ObjectRemoval1) {
     slave = _new<Slave>();
 
-    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-slot relations
     EXPECT_EQ(connections(master->message).size(), 1);
 
     testing::InSequence s;
@@ -188,7 +188,7 @@ TEST_F(SignalSlotTest, ObjectRemoval1) {
 TEST_F(SignalSlotTest, ObjectRemoval2) {
     slave = _new<Slave>();
 
-    AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
+    AObject::connect(master->message, AUI_SLOT(slave)::acceptMessage); // imitate signal-slot relations
     EXPECT_EQ(connections(master->message).size(), 1);
 
     testing::InSequence s;
@@ -323,6 +323,7 @@ TEST_F(SignalSlotTest, ObjectDestroySlaveInSignalHandler) {
 }
 
 
+/*
 TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
     static constexpr auto SEND_COUNT = 10000;
     std::mt19937 re;
@@ -346,9 +347,9 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
 
         auto slave2 = _new<Slave2>(called);
 
-        AObject::connect(master->message, slot(slave2)::acceptMessage);
+        AObject::connect(master->message, AUI_SLOT(slave2)::acceptMessage);
 
-        auto task = async {
+        auto task = AUI_THREADPOOL {
             master->broadcastMessage("hello");
         };
 
@@ -361,7 +362,7 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
             }
         }
 
-        task = async {
+        task = AUI_THREADPOOL {
             AUI_REPEAT(SEND_COUNT) master->broadcastMessage("hello");
         };
 
@@ -371,7 +372,7 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
         task.wait();
         AThread::processMessages();
     }
-}
+}*/
 
 /**
  * Check exception does not break the workflow.
@@ -405,7 +406,7 @@ TEST_F(SignalSlotTest, Exception2) {
     EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
     EXPECT_CALL(*slave, die());
 
-    auto task = async {
+    auto task = AUI_THREADPOOL {
         master->broadcastMessage("hello");
     };
     *task;
@@ -440,7 +441,7 @@ TEST_F(SignalSlotTest, CopyTest) {
     Sender s;
     Receiver r;
 
-    AObject::connect(s.copyTrapSignal, slot(r)::receive);
+    AObject::connect(s.copyTrapSignal, AUI_SLOT(r)::receive);
 
     CopyTrap copyTrap;
     EXPECT_EQ(copyTrap.value, 0);

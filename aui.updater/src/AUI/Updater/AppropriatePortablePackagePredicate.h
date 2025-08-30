@@ -8,7 +8,7 @@ namespace aui::updater {
      * @brief Determines whether the passed package name is a portable package that matches current arch and platform.
      * @ingroup updater
      * @details
-     *
+     * <!-- aui:parse_tests aui.updater/tests/AppropriatePredicateTest.cpp -->
      */
     struct API_AUI_UPDATER AppropriatePortablePackagePredicate {
         /**

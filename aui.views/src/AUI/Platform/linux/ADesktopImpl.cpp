@@ -32,7 +32,7 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 }
 
 AFuture<APath>
-ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, const AVector<FileExtension> &extensions) {
+ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
@@ -62,6 +62,26 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
     const auto unsubscribe = ADBus::inst().addSignalListener(
         std::move(p), "org.freedesktop.portal.Request", "Response",
         [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
+            // The following results get returned via the :ref:`org.freedesktop.portal.Request::Response` signal:
+            //
+            //  * ``uris`` (``as``)
+            //
+            //    An array of strings containing the uris of the selected files. All URIs
+            //    have the ``file://`` scheme.
+            //
+            //  * ``choices`` (``a(ss)``)
+            //
+            //    An array of pairs of strings, the first string being the ID of a
+            //    combobox that was passed into this call, the second string being
+            //    the selected option.
+            //
+            //    Example: ``[('encoding', 'utf8'), ('reencode', 'true')]``
+            //
+            //  * ``current_filter`` (``(sa(us))``)
+            //
+            //    The filter that was selected. This may match a filter in the
+            //    filter list or another filter that was applied unconditionally.
+
             try {
                 if (const auto c = results.contains("uris")) {
                     if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
@@ -80,8 +100,10 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
         });
 
     f.onFinally([parent, unsubscribe]() {
-        unsubscribe();
-        AUI_NULLSAFE(parent)->blockUserInput(false);
+        AThread::current()->enqueue([=] {
+          unsubscribe();
+          AUI_NULLSAFE(parent)->blockUserInput(false);
+        });
     });
 
     return f;

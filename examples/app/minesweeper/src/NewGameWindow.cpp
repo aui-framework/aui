@@ -62,7 +62,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper)
       _form({
         {
           "Cells by width:"_as,
-          mWidth = _new<ANumberPicker>() let {
+          mWidth = _new<ANumberPicker>() AUI_LET {
                        it->setMin(8);
                        it->setMax(25);
                    },
@@ -70,20 +70,20 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper)
         {
           "Cells by height:"_as,
           mHeight =
-              _new<ANumberPicker>() let {
+              _new<ANumberPicker>() AUI_LET {
                   it->setMin(8);
                   it->setMax(25);
               },
         },
         {
           "Mines count:"_as,
-          mMines = _new<ANumberPicker>() let { it->setMin(8); },
+          mMines = _new<ANumberPicker>() AUI_LET { it->setMin(8); },
         },
       }),
       mDifficultyLabel = _new<ALabel>(),
       Horizontal {
         _new<ASpacerExpanding>(),
-        _new<AButton>("Start game") let {
+        _new<AButton>("Start game") AUI_LET {
                 it->setDefault();
                 connect(it->clicked, me::begin);
             },

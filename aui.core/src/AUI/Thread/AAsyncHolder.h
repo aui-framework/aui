@@ -20,7 +20,7 @@
  * @brief Holds a set of futures keeping them valid.
  * @ingroup core
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * Unlike AFutureSet, AAsyncHolder is intended to hold void futures (AFuture<void>), however, non-void types can be also
  * supported (but with extra overhead). When AFuture's task is complete, the AFuture is removed from AAsyncHolder.
  *

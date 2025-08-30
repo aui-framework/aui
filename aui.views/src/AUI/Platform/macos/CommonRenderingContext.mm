@@ -57,9 +57,9 @@ void CommonRenderingContext::init(const Init& init) {
             auto myCtx = reinterpret_cast<CommonRenderingContext *>(ctx);
             if (!myCtx->mFrameScheduled)
             {
-                std::shared_ptr<AView>* windowSharedPtr = nullptr;
+                std::shared_ptr<AWindow>* windowSharedPtr = nullptr;
                 try {
-                    if (auto sharedPtr = myCtx->mWindow->sharedPtr()) {
+                    if (auto sharedPtr = aui::ptr::shared_from_this(myCtx->mWindow)) {
                         windowSharedPtr = new std::shared_ptr(std::move(sharedPtr));
                     } else {
                         return kCVReturnSuccess;

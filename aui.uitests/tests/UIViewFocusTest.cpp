@@ -19,7 +19,7 @@ protected:
             _<AViewContainer> inner;
             auto container = Centered {
                     inner = Vertical {
-                            _new<AButton>("Say hello") let { it->setDefault(); }
+                            _new<AButton>("Say hello") AUI_LET { it->setDefault(); }
                     }
             };
 

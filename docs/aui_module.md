@@ -44,7 +44,7 @@ The target is compiled as a static library, regardless of `BUILD_SHARED_LIBS`.
 The target is a dynamically loadable AUI plugin.
 
 
-### WHOLEARCHIVE
+### WHOLEARCHIVE { #WHOLEARCHIVE }
 
 The target is compiled with `wholearchive` compiler-specific flag, forcing all unused variables to be included to the 
-binary. This may be required by AUI assets.
+binary. This may be required by [aui-assets].

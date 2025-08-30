@@ -18,13 +18,33 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
+#include "AUI/Layout/AStackedLayout.h"
+#include "AUI/Util/UIBuildingHelpers.h"
 
 /**
  * @brief Button with text, which can be pushed to make some action.
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AButton.png)
+ *
+ * @ingroup views_actions
  * @details
- * See @ref declarative::Button for a declarative form and examples.
+ * Button is a fundamental view which can be pushed to make some action.
+ *
+ * <figure markdown="span">
+ * ![](imgs/AButton.gif)
+ * <figcaption>The button view being pressed.</figcaption>
+ * </figure>
+ *
+ * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
+ * disappears, making an illusion of pressing.
+ *
+ * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
+ * user presses `Enter`, the button is pushed automatically.
+ *
+ * Button usually contains text only, but in practice any view can be put in it.
+ *
+ * <!-- aui:include examples/ui/button/src/main.cpp -->
+ *
  */
 class API_AUI_VIEWS AButton : public AAbstractLabel {
 public:
@@ -68,44 +88,44 @@ namespace declarative {
 /**
  * @declarativeformof{AButton}
  */
-struct Button : aui::ui_building::view_container_layout<AHorizontalLayout, AButtonEx> {
+struct Button : aui::ui_building::view_container_layout<AStackedLayout, AButtonEx> {
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
-    Button(AString text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { std::move(text) } }) {}
+    Button(AString text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { std::move(text) } }) {}
 
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
-    Button(const char* text) : layouted_container_factory<AHorizontalLayout, AButtonEx>({ Label { text } }) {}
+    Button(const char* text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { text } }) {}
 
     /**
      * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button {
      *   Icon { ":img/cart.svg" },
      *   Label { "Cart" },
      * }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     template <typename... Views>
     Button(Views&&... views)
-        : layouted_container_factory<AHorizontalLayout, AButtonEx>(std::forward<Views>(views)...) {}
+        : layouted_container_factory<AStackedLayout, AButtonEx>(Horizontal { std::forward<Views>(views)... } ) {}
 };
 }   // namespace declarative
 
@@ -139,7 +159,7 @@ private:
 
             if (auto c = dynamic_cast<AButton*>(view)) {
                 c->defaultState.clearAllOutgoingConnectionsWith(helper.get());
-                AObject::connect(c->defaultState, slot(helper)::onInvalidateStateAss);
+                AObject::connect(c->defaultState, AUI_SLOT(helper)::onInvalidateStateAss);
             }
         }
     };

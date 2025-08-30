@@ -3,14 +3,14 @@
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Url/AUrl.h>
-#include <AUI/Audio/ASoundResampler.h>
+#include <AUI/Audio/AAudioResampler.h>
 #include <AUI/Audio/VolumeLevel.h>
 
 /**
  * @brief Interface for audio playback.
  * @ingroup audio
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
@@ -55,8 +55,8 @@ public:
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    const _<ASoundResampler>& resampledStream() const noexcept {
-        return mResampledStream;
+    AAudioResampler& resamplerStream() {
+        return *mResamplerStream;
     }
 
     /**
@@ -114,7 +114,7 @@ signals:
 
 protected:
     bool isInitialized() const noexcept {
-        return mResampledStream != nullptr;
+        return mResamplerStream != std::nullopt;
     }
 
     void initialize();
@@ -125,13 +125,13 @@ protected:
         }
     }
 
-    void release();
+    void reset();
 
 private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
     AOptional<AUrl> mUrl;
     _<ISoundInputStream> mSourceStream;
-    _<ASoundResampler> mResampledStream;
+    AOptional<AAudioResampler> mResamplerStream;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
 

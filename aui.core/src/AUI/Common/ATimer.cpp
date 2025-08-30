@@ -34,7 +34,7 @@ void ATimer::start()
 {
     if (!mTimer) {
         ATimer::scheduler();
-        mTimer = scheduler().timer(mPeriod, [this, self = weakPtr()] {
+        mTimer = scheduler().timer(mPeriod, [this, self = aui::ptr::weak_from_this(this)] {
             if (auto v = self.lock()) {
                 // this is valid
                 emit fired;

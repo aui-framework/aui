@@ -28,7 +28,7 @@ Specify additional source files to be passed to `add_executable`. The value is n
 
 ### COMPILE_ASSETS
 
-If evaluates to true, calls `aui_compile_assets()` for `<target-name>`.
+If evaluates to true, calls `aui_compile_assets()` for `<target-name>`. See [aui-assets].
 
 
 ### EXPORT
@@ -40,7 +40,7 @@ Adds the resulting target to CMake export `<export-name>`.
 
 The resulting `.exe` file would open console window, regardless of whether the application opens it's own window or not.
 
-### WHOLEARCHIVE {#WHOLEARCHIVE}
+### WHOLEARCHIVE
 
 The target is compiled with `wholearchive` compiler-specific flag, forcing all unused variables to be included to the
-binary. This may be required by AUI assets.
+binary. This may be required by [aui-assets].

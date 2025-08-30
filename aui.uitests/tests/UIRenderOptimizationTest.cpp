@@ -49,11 +49,11 @@ class UIRenderOptimizationTest: public testing::UITest {
             TestWindow() {
                 setContents(Centered {
                     mScroll = AScrollArea::Builder().withContents(Vertical {
-                        mTop = _new<ViewMock>() with_style { ass::FixedSize { 10_px } },
+                        mTop = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 10_px } },
                         // big enough to push away bottom view
-                        mCenter = _new<ViewMock>() with_style { ass::FixedSize { 1000_px } }, 
-                        mBottom = _new<ViewMock>() with_style { ass::FixedSize { 10_px } },
-                    }).build() with_style { ass::FixedSize(200_px) },
+                        mCenter = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 1000_px } }, 
+                        mBottom = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 10_px } },
+                    }).build() AUI_WITH_STYLE { ass::FixedSize(200_px) },
                 });
 
                 pack();

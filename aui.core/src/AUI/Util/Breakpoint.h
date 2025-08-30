@@ -19,9 +19,9 @@
  * @details
  * If debugger is not present, behaviour is undefined.
  *
- * @code{cpp}
+ * ```cpp
  * AUI_BREAKPOINT(); // stops debugger here.
- * @endcode
+ * ```
  */
 #define AUI_BREAKPOINT() AUI_IMPL_BREAKPOINT
 

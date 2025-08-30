@@ -65,7 +65,7 @@ public:
         setLayout(std::make_unique<AHorizontalLayout>());
 
         if (hasChildren) {
-            addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) let {
+            addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) AUI_LET {
                 it << ".list-item-icon";
                 connect(it->clicked, me::toggleCollapse);
             });
@@ -135,7 +135,7 @@ public:
     {
         if (selected) {
             AUI_NULLSAFE(mTreeView->mPrevSelection.lock())->setSelected(false);
-            mTreeView->mPrevSelection = _cast<ItemView>(AView::sharedPtr());
+            mTreeView->mPrevSelection = aui::ptr::shared_from_this(this);
             mTreeView->handleSelected(this);
         } else {
             mTreeView->mPrevSelection.reset();

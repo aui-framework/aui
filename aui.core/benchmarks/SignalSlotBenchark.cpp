@@ -30,7 +30,7 @@ public:
 static void SignalSlot(benchmark::State& state) {
     auto emitter = _new<Emitter>();
     auto receiver = _new<Receiver>();
-    AObject::connect(emitter->test, slot(receiver)::receive);
+    AObject::connect(emitter->test, AUI_SLOT(receiver)::receive);
 
     for (auto _ : state) {
         emitter->makeSignal();

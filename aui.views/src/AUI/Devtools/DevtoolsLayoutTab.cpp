@@ -72,10 +72,11 @@ public:
             return ATreeModelIndex::ROOT;
         }
         std::size_t row = 0;
+        auto shared = aui::ptr::shared_from_this(view.ptr());
         if (auto p = view->getParent()) {
-            row = p->getViews().indexOf(view->sharedPtr()).valueOr(0);
+            row = p->getViews().indexOf(shared).valueOr(0);
         }
-        return ATreeModelIndex(row, 0, view->sharedPtr());
+        return ATreeModelIndex(row, 0, shared);
     }
 
     size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
@@ -122,13 +123,13 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
       },
       ASplitter::Horizontal()
           .withItems({
-            mViewHierarchyTree = _new<ATreeView>() with_style { MinSize { 300_dp }, Expanding {} },
+            mViewHierarchyTree = _new<ATreeView>() AUI_WITH_STYLE { MinSize { 300_dp }, Expanding {} },
             Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
           })
           .withExpanding(),
     });
 
-    auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
+    auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake_shared(targetWindow));
     mViewHierarchyTree->setModel(model);
     connect(mViewHierarchyTree->itemSelected, [this](const ATreeModelIndex& index) {
         mViewPropertiesView->setTargetView(index.as<_<AView>>());

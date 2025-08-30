@@ -19,8 +19,8 @@ permissions:
   contents: write
 
 jobs:
-  doxygen:
-    name: "Doxygen"
+  documentation:
+    name: "Documentation"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -30,24 +30,21 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install python3 graphviz
-          wget https://www.doxygen.nl/files/doxygen-1.13.1.linux.bin.tar.gz
-          tar -xzvf doxygen-1.13.1.linux.bin.tar.gz
+          sudo apt-get install python3
 
       - name: Generate docs
         run: |
-          export PATH=$PATH:doxygen-1.13.1/bin/
-          python3 -m pip install -r doxygen/requirements.txt 
-          python3 doxygen/docs.py
+          python3 -m pip install -r docs/python/requirements.txt 
+          mkdocs build --strict --use-directory-urls
 
       - name: Debug
-        run: tree -aI .
+        run: tree -aI site
 
       - name: Deploy
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
         uses: peaceiris/actions-gh-pages@v3
         with:
-          publish_dir: ./doxygen/out/html
+          publish_dir: ./site
           destination_dir: ${{ github.ref_name }}
           external_repository: aui-framework/aui-framework.github.io
           publish_branch: main
@@ -163,20 +160,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest, macos-14]
+        os: [windows-latest, ubuntu-latest, macos-14]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         compiler: ["default", "clang"]
         exclude:
-          - os: windows-2019
+          - os: windows-latest
             compiler: "clang"
           - os: macos-latest
             compiler: "clang" # default only
         include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: ubuntu-latest
             generator: "Ninja"
@@ -191,9 +188,9 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
@@ -203,7 +200,7 @@ jobs:
           submodules: true
 
       # Cache AUI boot directory/build
-      # [cache example]
+      # [cache_example]
       - name: Cache AUI.BOOT deps
         id: cache-aui-boot
         uses: actions/cache@v3
@@ -218,7 +215,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      # [cache example]
+      # [cache_example]
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
@@ -283,13 +280,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         include:
-          - os: windows-2019
-            generator: "Visual Studio 16 2019"
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
@@ -384,7 +381,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, windows-2019]
+        os: [windows-latest, ubuntu-latest, windows-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
 

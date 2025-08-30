@@ -28,12 +28,12 @@ namespace ass {
      * @brief Wraps another selector matching Selected views.
      * @ingroup ass_selectors
      * @details
-     * @code{cpp}
+     * ```cpp
      * {
      *   Selected(t<ACheckBox>()),
      *   BackgroundImage {":uni/svg/checkbox.svg" },
      * },
-     * @endcode
+     * ```
      *
      * The view must implement ass::ISelectable.
      */
@@ -65,7 +65,7 @@ namespace ass {
             mWrapped->setupConnections(view, helper);
 
             view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
-            AObject::connect(view->customCssPropertyChanged, slot(helper)::onInvalidateStateAss);
+            AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);
         }
     };
 }

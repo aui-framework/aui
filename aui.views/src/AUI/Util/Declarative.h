@@ -154,10 +154,10 @@ public:
     struct Expanding : view_helper<Expanding>, layouted_container_factory_impl<Layout, Container> {
     public:
         template <typename... Views>
-        Expanding(Views&&... views) : layouted_container_factory_impl<Layout>(std::forward<Views>(views)...) {}
+        Expanding(Views&&... views) : layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...) {}
 
         _<Container> operator()() {
-            return layouted_container_factory_impl<Layout>::operator()() let { it->setExpanding(); };
+            return layouted_container_factory_impl<Layout, Container>::operator()() AUI_LET { it->setExpanding(); };
         }
     };
 };
@@ -208,7 +208,7 @@ namespace declarative {
  * @brief Extra styles wrapper.
  * @ingroup views
  * @details
- * @code{cpp}
+ * ```cpp
  * Button { "Default button" },
  * Style{
  *     {
@@ -219,7 +219,7 @@ namespace declarative {
  *     Button { "Red button" },
  *     Button { "Another red button" },
  * }),
- * @endcode
+ * ```
  */
 struct Style {
 public:

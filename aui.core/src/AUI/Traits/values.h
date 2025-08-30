@@ -31,7 +31,7 @@ API_AUI_CORE void evaluationLoop();
 /**
  * @brief Forbids copy of your class.
  *
- * @code{cpp}
+ * ```cpp
  * class MyObject: public aui::noncopyable {
  * private:
  *     void* mResource;
@@ -40,7 +40,7 @@ API_AUI_CORE void evaluationLoop();
  * MyObject obj1;
  * MyObject obj2 = obj1; // error
  * MyObject obj3 = std::move(obj); // but this one is ok
- * @endcode
+ * ```
  */
 struct noncopyable {
     noncopyable() = default;
@@ -84,37 +84,85 @@ public:
     }
 };
 
+/**
+ * @brief A contract that enforces non-nullable initialization at a later point in time.
+ * @tparam T wrapped pointer-like type
+ * @details
+ * Same as aui::non_null but allows default ctor. This is particularly useful for scenarios where initial setup data is
+ * unavailable at object creation time, but you require a guarantee that the value will be assigned before it is
+ * accessed.
+ *
+ * If initialized with a value that equals to `nullptr`, issues a runtime assertion failure.
+ *
+ * If initialized with `nullptr` itself, throws a compile-time error.
+ */
 template <typename T>
 struct non_null_lateinit {
 private:
-    void checkForNull() const { AUI_ASSERTX(value != nullptr, "this value couldn't be null"); }
+    static_assert(!std::is_reference_v<T>, "====================> aui::non_null: reference type is not allowed");
+    void checkForNull() const { AUI_ASSERTX(value != nullptr, "this value couldn't be nullptr"); }
 
 public:
     T value;
     non_null_lateinit() {}
 
-    non_null_lateinit(T value) : value(std::move(value)) { checkForNull(); }
+    template <convertible_to<T> F>
+    non_null_lateinit(F&& value) : value(std::forward<F>(value)) {
+        static_assert(
+            !std::is_same_v<std::decay_t<F>, std::nullptr_t>, "====================> aui::non_null: this value couldn't be nullptr");
+        checkForNull();
+    }
 
-    operator T() const noexcept {
+    operator const T&() const noexcept {
         checkForNull();
         return value;
     }
+
+    operator T&() noexcept {
+        checkForNull();
+        return value;
+    }
+
     auto operator->() const {
         checkForNull();
         return &*value;
     }
 };
 
+/**
+ * @brief A contract that enforces non-nullable initialization.
+ * @tparam T wrapped pointer-like type
+ * @details
+ *
+ * If initialized with a value that equals to `nullptr`, issues a runtime assertion failure.
+ *
+ * If initialized with `nullptr` itself, throws a compile-time error.
+ *
+ * ```cpp
+ * void render(aui::non_null<_<AView>> view) {
+ *     view->render();
+ * }
+ *
+ * render(someView); // ok
+ * someView = nullptr;
+ * render(someView); // assertion failure in runtime
+ * render(nullptr); // compile-time error
+ * ```
+ */
 template <typename T>
 struct non_null : non_null_lateinit<T> {
-    non_null(T value) : non_null_lateinit<T>(std::move(value)) {}
+    template <convertible_to<T> F>
+    non_null(F&& value) : non_null_lateinit<T>(std::forward<F>(value)) {}
+
+    non_null() = delete;   // disallow the default ctor inherited from lateinit.
 };
 
 /**
- * @brief Does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and etc without overhead
+ * @brief A funcntion contract that does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and
+ * etc without overhead
  *
  * @details
- * Promises that the contained object wouldn't be copied/moved/referenced outside of the function where the
+ * Promises that the contained object wouldn't be copied/moved/referenced outside the function where the
  * no_escape came to; thus does not take responsibility of deleting the object. This allows to accept any kind of
  * lifetimes: lvalue and rvalue references, pointers, unique_ptr and shared_ptr without ref counter modification.
  *
@@ -200,7 +248,12 @@ public:
         }
         if (std::holds_alternative<std::nullopt_t>(value)) {
             setEvaluationLoopTrap();
-            value = initializer();
+            try {
+                value = initializer();
+            } catch (...) {
+                value = std::nullopt;
+                throw;
+            }
             return std::get<T>(value);
         }
         detail::evaluationLoop();
@@ -403,7 +456,7 @@ public:
 }   // namespace constraint
 
 /**
- * @brief Clamps the possible values for a number to the specified range: [min;max]
+ * @brief Clamps the possible values for a number to the specified range: `[min;max]`
  * @ingroup useful_templates
  * @tparam UnderlyingType any arithmetic type
  * @tparam min minimum possible value

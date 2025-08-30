@@ -25,9 +25,12 @@ class AString;
 class AConditionVariable;
 
 /**
- * @brief Represents an abstract thread. Not all threads are created through AThread - these are interfaced with
- *        AAbstractThread.
+ * @brief Represents an abstract thread which might be not created with AThread.
  * @ingroup core
+ * @details
+ * Not all threads are created through AThread - these are interfaced with AAbstractThread.
+ *
+ * @see AThread::current()
  */
 class API_AUI_CORE AAbstractThread {
     friend class IEventLoop;
@@ -96,7 +99,7 @@ public:
     }
 
     /**
-     * @brief Enqueue message to make. Helper function for async, asyncX, ui, uiX
+     * @brief Enqueue message to make. Helper function for AUI_THREADPOOL, AUI_THREADPOOL_X, ui, uiX
      * @tparam Callable callable
      * @param fun callable function
      */
@@ -237,7 +240,7 @@ public:
      * If the interruption flag is raised for the caller thread then flag is reset and AThread::Interrupted exception is
      * thrown, efficiently stopping the task execution and safely freeing resources with C++'s RAII feature.
      *
-     * async, asyncX, AThreadPool::enqueue, AUI_ENTRY handle AThread::Interrupted, so throwing AThread::Interrupted is
+     * AUI_THREADPOOL, AUI_THREADPOOL_X, AThreadPool::enqueue, AUI_ENTRY handle AThread::Interrupted, so throwing AThread::Interrupted is
      * safe.
      */
     static void interruptionPoint();

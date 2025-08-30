@@ -53,7 +53,7 @@ protected:
             setContents(Vertical {
                 mSlider1 = _new<ASlider>(),
                 mSlider2 = _new<SliderMock>(),
-            } with_style { MinSize { 200_dp, {} } });
+            } AUI_WITH_STYLE { MinSize { 200_dp, {} } });
 
             pack();
         }

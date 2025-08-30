@@ -17,8 +17,9 @@
 enum class ATouchscreenKeyboardPolicy {
     /**
      * @brief Touchscreen keyboard will be requested if a view that got focused wants a keyboard and will be hidden otherwise
-     * @note Default policy for touchscreen keyboard behaviour
      * @see AView::wantsTouchscreenKeyboard()
+     * @details
+     * Default policy for touchscreen keyboard behaviour
      */
     SHOWN_IF_NEEDED,
     /**

@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <range/v3/range_fwd.hpp> // range-v3 breaks by AUI's let, lol so forward it
+#include <range/v3/range_fwd.hpp>
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Thread/AFuture.h>
 #include <type_traits>
@@ -28,14 +28,14 @@
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       connect(clicked, this, &MyObject::handleClicked);
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       connect(clicked, me::handleClicked);
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
@@ -71,21 +71,21 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       connect(clicked, myObject, &MyObject::handleClicked);
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
- *       connect(clicked, slot(myObject)::handleClicked);
- *       @endcode
+ *       ```cpp
+ *       connect(clicked, AUI_SLOT(myObject)::handleClicked);
+ *       ```
  *     </td>
  *   </tr>
  * </table>
  *
- * @note If you are intended to reference this-> object, consider using @ref #me instead.
+ * If you are intended to reference this-> object, consider using [me] instead.
  */
-#define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
+#define AUI_SLOT(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name.
@@ -93,7 +93,7 @@ namespace aui::impl::slot {
  * @param object object to perform operations on
  * @param lambda code executed in the context of an object (as its member function)
  * @details
- * @note It's an analogue to <code>with</code>, <code>apply</code> in Kotlin.
+ * It's an analogue to <code>with</code>, <code>apply</code> in Kotlin.
  *
  *
  *<table>
@@ -103,7 +103,7 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       class Worker {
  *       public:
  *         void buildHouse();
@@ -115,10 +115,10 @@ namespace aui::impl::slot {
  *       worker->buildHouse();
  *       worker->plantTree();
  *       worker->raiseSon();
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       class Worker {
  *       public:
  *         void buildHouse();
@@ -132,7 +132,7 @@ namespace aui::impl::slot {
  *         plantTree();
  *         raiseSon();
  *       });
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
@@ -156,7 +156,7 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       class SomeObject {
  *       public:
  *         emits<> someSignal;
@@ -164,10 +164,10 @@ namespace aui::impl::slot {
  *       ...
  *       auto obj = _new<SomeObject>();
  *       (*obj) ^ obj->someSignal();
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       class SomeObject {
  *       public:
  *         emits<> someSignal;
@@ -175,7 +175,7 @@ namespace aui::impl::slot {
  *       ...
  *       auto obj = _new<SomeObject>();
  *       AUI_EMIT_FOREIGN_SIGNAL(obj)->someSignal();
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
@@ -187,10 +187,10 @@ namespace aui::impl::slot {
  * @ingroup useful_macros
  * @details
  * This example prints "Hello world\n":
- * @code{cpp}
+ * ```cpp
  * AUI_DEFER { printf(" world\n") };
  * printf("Hello");
- * @endcode
+ * ```
  * @sa ARaiiHelper
  */
 #define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_,  __LINE__) = [&]
@@ -202,9 +202,10 @@ namespace aui::impl::slot {
  * @ingroup useful_macros
  * @param T object type to perform operations on
  * @param lambda code executed in the context of an object (as its member function)
- * @note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * @details
- * `let` allows to call methods of newly created objects right in place. For example:
+ * Analogue to <code>with</code>, <code>apply</code> in Kotlin.
+ *
+ * `AUI_LET` allows to call methods of newly created objects right in place. For example:
  *
  * <table>
  *   <tr>
@@ -213,15 +214,15 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       auto tf = _new<ATextField>();
  *       tf->setText("Hello!");
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
- *       auto tf = _new<ATextField>() let { it->setText("Hello!"); };
- *       @endcode
+ *       ```cpp
+ *       auto tf = _new<ATextField>() AUI_LET { it->setText("Hello!"); };
+ *       ```
  *     </td>
  *   </tr>
  * </table>
@@ -235,7 +236,7 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       auto tf1 = _new<ATextField>();
  *       tf1->setText("Hello!");
  *       auto tf2 = _new<ATextField>();
@@ -245,66 +246,68 @@ namespace aui::impl::slot {
  *           tf1,
  *           tf2,
  *       });
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       // clean, less code and easy to understand
  *       setContents(Vertical {
- *           _new<ATextField>() let { it->setText("Hello!") },
- *           _new<ATextField>() let { it->setText("World!") },
+ *           _new<ATextField>() AUI_LET { it->setText("Hello!") },
+ *           _new<ATextField>() AUI_LET { it->setText("World!") },
  *       });
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
  */
-#define let ^ [&](const auto& it)
+#define AUI_LET ^ [&](const auto& it)
 
 /**
  * @brief Allows to define a style to the view right in place.
  * @ingroup useful_macros
  * @details
- * @code{cpp}
+ * ```cpp
  * #include <AUI/ASS/ASS.h>
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   _new<ALabel>("Red text!") with_style { TextColor { AColor::RED } },
+ *   _new<ALabel>("Red text!") AUI_WITH_STYLE { TextColor { AColor::RED } },
  * });
- * @endcode
+ * ```
  *
  * Also applicable to declarative-style views:
- * @code{cpp}
+ * ```cpp
  * #include <AUI/ASS/ASS.h>
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   Label { "Red text!" } with_style { TextColor { AColor::RED } },
+ *   Label { "Red text!" } AUI_WITH_STYLE { TextColor { AColor::RED } },
  * });
- * @endcode
+ * ```
  */
-#define with_style & ass::PropertyListRecursive
+#define AUI_WITH_STYLE & ass::PropertyListRecursive
 
 /**
- * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
- * asyncX, does now allow to set lambda's capture. Lambda's capture is `[=]`.
+ * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
+ * AUI_THREADPOOL_X, does now allow to set lambda's capture. Lambda's capture is `[=]`.
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `async` task is either cancelled or removed from
+ * @details
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
- * @details
- * <p>Example without a return value</p>
- * @code{cpp}
- * auto task = async {
+ * Example without a return value:
+ * ```cpp
+ * auto task = AUI_THREADPOOL {
  *   AThread::sleep(1000); // a long task
  * };
- * @endcode
- * <p>Example with a return value</p>
- * @code{cpp}
- * auto futureStatus = async {
+ * ```
+ *
+ * Example with a return value:
+ *
+ * ```cpp
+ * auto futureStatus = AUI_THREADPOOL {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -312,11 +315,11 @@ namespace aui::impl::slot {
  *   return status;
  * };
  * int status = *futureStatus;
- * @endcode
+ * ```
  *
  * Lambda operators are supported:
- * @code{cpp}
- * auto futureStatus = async mutable noexcept {
+ * ```cpp
+ * auto futureStatus = AUI_THREADPOOL mutable noexcept {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -324,30 +327,32 @@ namespace aui::impl::slot {
  *   return status;
  * };
  * int status = *futureStatus;
- * @endcode
+ * ```
  */
-#define async AThreadPool::global() * [=]()
+#define AUI_THREADPOOL AThreadPool::global() * [=]()
 
 
 /**
- * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
- * async, allows to set lambda's capture but you should always specify lambda's capture.
+ * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
+ * AUI_THREADPOOL, allows to set lambda's capture but you should always specify lambda's capture.
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
- * @note When <code>AFuture<T></code> is destroyed, the corresponding `async` task is either cancelled or removed from
+ * @details
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
  * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
- * @details
- * <p>Example without a return value</p>
- * @code{cpp}
- * auto task = asyncX [&] {
+ * Example without a return value:
+ *
+ * ```cpp
+ * auto task = AUI_THREADPOOL_X [&] {
  *   AThread::sleep(1000); // a long task
  * };
- * @endcode
- * <p>Example with a return value</p>
- * @code{cpp}
- * auto futureStatus = asyncX [&] {
+ * ```
+ *
+ * Example with a return value:
+ * ```cpp
+ * auto futureStatus = AUI_THREADPOOL_X [&] {
  *   int status;
  *   ...
  *   AThread::sleep(1000); // a long task
@@ -355,9 +360,9 @@ namespace aui::impl::slot {
  *   return status;
  * };
  * int status = *futureStatus;
- * @endcode
+ * ```
  */
-#define asyncX AThreadPool::global() *
+#define AUI_THREADPOOL_X AThreadPool::global() *
 
 /**
  * @brief Executes following function call or {} block once per program execution
@@ -370,37 +375,37 @@ namespace aui::impl::slot {
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       static bool done = false;
  *       if (!done) {
  *           done = true;
  *           std::printf("Only once!");
  *       }
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
- *       do_once {
+ *       ```cpp
+ *       AUI_DO_ONCE {
  *           std::printf("Only once!");
  *       }
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
  */
-#define do_once if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
+#define AUI_DO_ONCE if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
  * @brief Executes lambda on main thread.
  * @ingroup useful_macros
  */
-#define ui_thread (*AThread::main()) * [=]()
+#define AUI_UI_THREAD (*AThread::main()) * [=]()
 
 /**
  * @brief Executes lambda on main thread. Allows to determine lambda's capture.
  * @ingroup useful_macros
  */
-#define ui_threadX (*AThread::main()) *
+#define AUI_UI_THREAD_X (*AThread::main()) *
 
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

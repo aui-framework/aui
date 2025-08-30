@@ -23,7 +23,7 @@ class AView;
  * @brief Rendering view to texture storage interface.
  * @see IRenderer::newRenderViewToTexture
  */
-class IRenderViewToTexture {
+class API_AUI_VIEWS IRenderViewToTexture {
 public:
 
     /**

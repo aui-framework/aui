@@ -55,7 +55,7 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
         to->addView(_container<AVerticalLayout>({
                                                     caption,
                                                     _new<ASpacerExpanding>(),
-                                            }) let { it->setExpanding({1, 1}); });
+                                            }) AUI_LET { it->setExpanding({1, 1}); });
     } else {
         to->setLayout(std::make_unique<AVerticalLayout>());
         to->addView(caption);

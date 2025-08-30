@@ -18,7 +18,10 @@
 
 /**
  * @brief A resizable grid layout.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AGridSplitter.png)
+ *
+ * @ingroup views_containment
  * @details
  * AGridSplitter represents a grid layout which can be resized by user. Unlike ASplitter, works in both directions.
  * AGridSplitter can be constructed with AGridSplitter::Builder.
@@ -44,7 +47,7 @@ public:
         }
 
         _<AView> build() {
-            auto splitter = aui::ptr::manage(new AGridSplitter);
+            auto splitter = aui::ptr::manage_shared(new AGridSplitter);
             if (mAddSpacers) {
                 for (auto& row: mItems) {
                     row.push_back(_new<ASpacerExpanding>());

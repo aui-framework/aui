@@ -68,12 +68,12 @@ void AForEachUIBase::applyGeometryToChildren() {
         return;
     }
 
-    if (mViews.empty()) {
+    if (getViews().empty()) {
         return;
     }
     //    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
     viewport->compensateLayoutUpdatesByScroll(
-        mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+        getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
@@ -81,8 +81,8 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     AViewContainerBase::onViewGraphSubtreeChanged();
 
     AUI_DEFER {
-        // if parent @ref AUI_DECLARATIVE_FOR was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
-        // on parent's @ref AUI_DECLARATIVE_FOR subrange, so we put our views to shared cache.
+        // if parent [AUI_DECLARATIVE_FOR] was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
+        // on parent's [AUI_DECLARATIVE_FOR] subrange, so we put our views to shared cache.
         putOurViewsToSharedCache();
     };
 
@@ -145,12 +145,12 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     AUI_ASSERT(opts.forward || opts.backward);
 
 #if AUI_DEBUG
-    const auto prevViewsCount = mViews.size();
+    const auto prevViewsCount = getViews().size();
     AUI_DEFER {
-        if (glm::abs(int(prevViewsCount) - int(mViews.size())) > POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD) {
+        if (glm::abs(int(prevViewsCount) - int(getViews().size())) > POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD) {
             ALogger::warn(LOG_TAG)
                 << "It appears like a large update to inflated AForEachUIBase views caused (view count "
-                << prevViewsCount << " -> " << mViews.size()
+                << prevViewsCount << " -> " << getViews().size()
                 << "), which signals about a potential performance issue. If you really intend to work with >"
                 << POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD
                 << " views visible, you might end up ignoring this warning (it appears on debug build only). "
@@ -173,30 +173,30 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
                 const auto uninflateFrom =
                     lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + viewport->getSize() * 3;
                 auto firstValidView =
-                    ranges::find_if(mViews | ranges::views::reverse, [&](const _<AView>& view) {
+                    ranges::find_if(getViews() | ranges::views::reverse, [&](const _<AView>& view) {
                         return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
                     }).base();
-                if (firstValidView == mViews.end()) {
+                if (firstValidView == getViews().end()) {
                     return;
                 }
-                removeViews({ firstValidView, mViews.end() });
+                removeViews({ firstValidView, getViews().end() });
             }();
         }
         if (opts.forward) {
             [&] {
                 const auto uninflateFrom =
                     lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - viewport->getSize() * 2;
-                auto firstValidView = ranges::find_if(mViews, [&](const _<AView>& view) {
+                auto firstValidView = ranges::find_if(getViews(), [&](const _<AView>& view) {
                     return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
                 });
-                if (firstValidView == mViews.begin()) {
+                if (firstValidView == getViews().begin()) {
                     return;
                 }
-                if (firstValidView == mViews.end()) {
+                if (firstValidView == getViews().end()) {
                     return;
                 }
 
-                removeViews({ mViews.begin(), firstValidView });
+                removeViews({ getViews().begin(), firstValidView });
             }();
         }
     }
@@ -205,16 +205,16 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     // append new views
     if (opts.backward && mCache && !mCache->items.empty() && mViewsModelCapabilities.implementsOperatorMinusMinus) {
         auto inflateTill =
-            lastScroll - glm::ivec2(INFLATE_STEP_PX) - posWithinSlidingSurface - mViews.first()->getPosition();
+            lastScroll - glm::ivec2(INFLATE_STEP_PX) - posWithinSlidingSurface - getViews().first()->getPosition();
         for (auto it = mCache->items.first().iterator;
              it != mViewsModel.begin() && glm::all(glm::lessThanEqual(inflateTill, glm::ivec2(0)));) {
             --it;
-            auto prevFirstView = mViews.first();
+            auto prevFirstView = getViews().first();
             addView(it, 0);
 
             viewport->compensateLayoutUpdatesByScroll(
                 prevFirstView, [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
-            auto diff = prevFirstView->getPosition() - mViews.first()->getPosition();
+            auto diff = prevFirstView->getPosition() - getViews().first()->getPosition();
             inflateTill += diff;
 
             if (it == mViewsModel.begin()) {
@@ -237,8 +237,8 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             return mViewsModel.begin();
         }();
         for (; it != end; ++it) {
-            if (!mViews.empty()) {
-                const auto& lastView = mViews.last();
+            if (!getViews().empty()) {
+                const auto& lastView = getViews().last();
                 if (glm::any(glm::greaterThanEqual(lastView->getPosition() + lastView->getSize(), inflateTill))) {
                     break;
                 }
@@ -246,7 +246,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it);
             needsMinSizeUpdate = true;
             viewport->compensateLayoutUpdatesByScroll(
-                mViews.first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+                getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
         }
     }
 
@@ -281,7 +281,7 @@ void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> ind
         }
         return;
     }
-    AUI_ASSERT(mViews.size() == mCache->items.size());
+    AUI_ASSERT(getViews().size() == mCache->items.size());
     Cache::LazyListItemInfo entry { *iterator };
     if (index) {
         AViewContainerBase::addView(*index, entry.view);
@@ -296,13 +296,13 @@ void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> ind
     mCache->items.insert(at, std::move(entry));
 }
 
-void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::iterator> iterators) {
+void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators) {
     if (!mCache) {
         AViewContainerBase::removeViews(iterators);
         return;
     }
-    AUI_ASSERT(mViews.size() == mCache->items.size());
-    auto idx = std::distance(mViews.begin(), iterators.begin());
+    AUI_ASSERT(getViews().size() == mCache->items.size());
+    auto idx = std::distance(getViews().begin(), iterators.begin());
     auto size = iterators.size();
     AViewContainerBase::removeViews(iterators);
     mCache->items.erase(mCache->items.begin() + idx, mCache->items.begin() + idx + size);

@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Logging/ALogger.h>
@@ -26,9 +28,8 @@ public:
 };
 
 namespace {
-// AUI_DOCS_OUTPUT: doxygen/intermediate/reactive.h
-// @class APropertyPrecomputed
-// # Declaration
+//
+// ## Declaration
 // Declare a property with custom expression determining it's value as follows:
 // AUI_DOCS_CODE_BEGIN
 /// [APropertyPrecomputed User]
@@ -65,14 +66,14 @@ TEST_F(PropertyPrecomputedTest, APropertyPrecomputed) {
 
     // Usage:
     // AUI_DOCS_CODE_BEGIN
-    auto u = aui::ptr::manage(new User {
+    auto u = aui::ptr::manage_shared(new User {
         .name = "Emma",
         .surname = "Watson",
     });
 
     auto observer = _new<LogObserver>();
     EXPECT_CALL(*observer, log(AString("Emma Watson"))).Times(1);
-    AObject::connect(u->fullName, slot(observer)::log);
+    AObject::connect(u->fullName, AUI_SLOT(observer)::log);
     // AUI_DOCS_CODE_END
     EXPECT_EQ(u->fullName, "Emma Watson");
     //
@@ -88,7 +89,7 @@ TEST_F(PropertyPrecomputedTest, APropertyPrecomputed) {
     EXPECT_EQ(u->fullName, "Emma Stone");
 }
 
-TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
+TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H2
     // Any C++ callable evaluating to `T` can be used as an expression for `APropertyPrecomputed<T>`. However, to
     // formulate correct expression, some rules must be satisfied.
     //
@@ -144,7 +145,7 @@ TEST_F(PropertyPrecomputedTest, Valid_Expressions) { // HEADER_H1
 TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
     //
     // The expression should not read from the property it's a binding for, including other referenced
-    // APropertyPrecomputes. Otherwise, there's an infinite evaluation loop, and @ref AEvaluationLoopException is
+    // APropertyPrecomputes. Otherwise, there's an infinite evaluation loop, and [AEvaluationLoopException] is
     // thrown.
 
     AOptional<APropertyPrecomputed<int>> v1 ,v2;
@@ -153,20 +154,23 @@ TEST_F(PropertyPrecomputedTest, Evaluation_Loop) {
     EXPECT_THROW({ [[maybe_unused]] auto unused = **v1;}, AEvaluationLoopException);
 }
 
-// # Copying and moving APropertyPrecomputed
-// @warning
-// Despite the underlying value and factory callback are both copy constructible and movable, the **copy and move
-// constructor are explicitly deleted** to avoid potential object lifetime errors created by the lambda capture and
-// prevent non-intuitive behaviour.
+// ## Copying and moving APropertyPrecomputed
 //
-// @snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed User
+// !!! warning
+
+//     Despite the underlying value and factory callback are both copy constructible and movable, the **copy and move
+//     constructor are explicitly deleted** to avoid potential object lifetime errors created by the lambda capture and
+//     prevent non-intuitive behavior.
+//
+//
+// <!-- aui:snippet aui.core/tests/PropertyPrecomputed.cpp APropertyPrecomputed --> User
 //
 // If copy construction of `APropertyPrecomputed` were possible, consider the following code:
-// @code{cpp}
+// ```cpp
 // User user { .name = "Hello" };
 // auto copy = user;             // WON'T COMPILE
 // auto moved = std::move(user); // WON'T COMPILE
-// @endcode
+// ```
 // `copy` has copied factory function of `user`, which refers to fields of `user`, not to `copy`'s fields. Copy
 // construction of a class or struct discards default values of all fields - this is the way `APropertyPrecomputed`'s
 // factory function is set to APropertyPrecomputed.

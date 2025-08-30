@@ -19,7 +19,7 @@
 
 /**
  * @brief Inner component of AScrollArea that manages rendering and event handling with custom offset (scroll).
- * @ingroup useful_views
+ * @ingroup views_containment
  * @details
  * This view is intended to store only one single view with setContents()/contents() methods.
  *
@@ -40,7 +40,11 @@ public:
     }
 
     void applyGeometryToChildren() override;
-  
+
+    bool consumesClick(const glm::ivec2& position) override {
+        return true;
+    }
+
     void setScroll(glm::uvec2 scroll) {
         if (mScroll == scroll) [[unlikely]] {
             return;

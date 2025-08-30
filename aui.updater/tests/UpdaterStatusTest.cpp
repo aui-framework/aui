@@ -2,7 +2,7 @@
 #include <AUI/UITest.h>
 
 #ifdef Status
-// leaked from xlib
+/* leaked from xlib */
 #undef Status
 #endif
 
@@ -34,8 +34,6 @@ protected:
     _<AWindow> mTestWindow;
 };
 
-namespace {
-
 class MyUpdater : public AUpdater {
 public:
     MyUpdater() {
@@ -56,10 +54,6 @@ public:
     MOCK_METHOD(AFuture<void>, downloadUpdateImpl, (const APath& unpackedUpdateDir), (override));
 };
 
-}   // namespace
-
-// AUI_DOCS_OUTPUT: doxygen/intermediate/updater_status_test.h
-// @property AUpdater::status
 
 TEST_F(UpdaterStatusTest, Test1) {
     auto mUpdater = _new<MyUpdater>();
@@ -70,7 +64,7 @@ TEST_F(UpdaterStatusTest, Test1) {
       // AUI_DOCS_CODE_BEGIN
       CustomLayout {} & mUpdater->status.readProjected([&updater = mUpdater](const std::any& status) -> _<AView> {
           if (std::any_cast<AUpdater::StatusIdle>(&status)) {
-              return _new<AButton>("Check for updates").connect(&AView::clicked, slot(updater)::checkForUpdates);
+              return _new<AButton>("Check for updates").connect(&AView::clicked, AUI_SLOT(updater)::checkForUpdates);
           }
           if (std::any_cast<AUpdater::StatusCheckingForUpdates>(&status)) {
               return Label { "Checking for updates..." };
@@ -83,7 +77,7 @@ TEST_F(UpdaterStatusTest, Test1) {
           }
           if (std::any_cast<AUpdater::StatusWaitingForApplyAndRestart>(&status)) {
               return _new<AButton>("Apply update and restart")
-                  .connect(&AView::clicked, slot(updater)::applyUpdateAndRestart);
+                  .connect(&AView::clicked, AUI_SLOT(updater)::applyUpdateAndRestart);
           }
           return nullptr;
       }),

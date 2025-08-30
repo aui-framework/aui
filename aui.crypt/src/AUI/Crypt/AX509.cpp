@@ -50,5 +50,5 @@ _<AX509> AX509::fromPEM(AByteBufferView buffer)
 	if (rsa == nullptr)
 		throw AException("Could not create x509 certificate");
 
-	return aui::ptr::manage(new AX509(rsa));
+	return aui::ptr::manage_shared(new AX509(rsa));
 }

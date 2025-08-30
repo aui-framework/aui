@@ -54,7 +54,7 @@ protected:
         uitest::frame();
     }
 
-    _<ATextArea> mTextArea = _new<ATextArea>() with_style { FixedSize { 300_dp, {} }, LineHeight { 1.f } } let {
+    _<ATextArea> mTextArea = _new<ATextArea>() AUI_WITH_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
         it->setText("hello world!\nsecond line");
     };
 
@@ -104,8 +104,8 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextArea, CursorClickPos1) {
-    By::type<ATextArea>().perform(click({25_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(4));
+    By::type<ATextArea>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
+            .check(selectionMatches(3));
 }
 
 /**
@@ -113,7 +113,7 @@ TEST_F(UITextArea, CursorClickPos1) {
  */
 TEST_F(UITextArea, CursorClickPos2) {
     By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(8));
+            .check(selectionMatches(7));
 }
 
 /**
@@ -365,7 +365,7 @@ TEST_F(UITextArea, NextLineCursorPos) {
 
 TEST_F(UITextArea, ScrollAreaFollowsCursor) {
     AWindow::current()->setContents(Centered {
-        AScrollArea::Builder().withContents(mTextArea).build() with_style { FixedSize(200_dp, 100_dp) },
+        AScrollArea::Builder().withContents(mTextArea).build() AUI_WITH_STYLE { FixedSize(200_dp, 100_dp) },
     });
     mTextArea->setText("");
     By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));

@@ -45,10 +45,15 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/View/ATextArea.h"
 #include "AUI/View/ASpinnerV2.h"
+#include "AUI/View/ATextField.h"
 
 AStylesheet::AStylesheet() {
     using namespace ass;
     using namespace std::chrono_literals;
+
+    static auto getOsThemeColorLighter = [&]() -> AColor {
+        return glm::mix(glm::vec4(getOsThemeColor()), glm::vec4(AColor::WHITE), 0.17f);
+    };
 
     addRules({
         // COMMON VIEWS ======================================
@@ -56,7 +61,7 @@ AStylesheet::AStylesheet() {
         {
             t<AView>(),
             TextColor { 0x0_rgb },
-            FontSize {9_pt},
+            FontSize {10_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
             MaxSize {99999999_dp, 99999999_dp },
@@ -128,12 +133,12 @@ AStylesheet::AStylesheet() {
         // AButton
         {
             { t<AButton>(), c(".btn")},
-                BackgroundSolid {0xffffff_rgb},
-            Padding {3_dp, 6_dp},
+            BackgroundSolid {0xffffff_rgb},
+            Padding {3_dp, 5_dp},
             Margin {2_dp, 4_dp},
-            MinSize {60_dp, {} },
+            MinSize {60_dp, 22_dp },
             Border { 1_dp, 0xcacaca_rgb },
-            BorderRadius {4_dp},
+            BorderRadius {5_dp},
             ATextAlign::CENTER,
             VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
@@ -147,12 +152,11 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            t<AButtonEx>(),
+            t<AButtonEx>() > t<AViewContainer>(),
             LayoutSpacing { 2_dp },
-            MinSize { 2_dp },
         },
         {
-            t<AButtonEx>() > t<ALabel>(),
+            t<AButtonEx>() >> t<ALabel>(),
             Margin { 0 },
             Padding { 0 },
         },
@@ -161,8 +165,8 @@ AStylesheet::AStylesheet() {
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
-                            {0.f, getOsThemeColor().lighter(0.15f)},
-                            {0.f, getOsThemeColor().darker(0.15f)},
+                            {0.f, getOsThemeColorLighter()},
+                            {0.f, getOsThemeColor()},
                     },
             } },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
@@ -181,8 +185,8 @@ AStylesheet::AStylesheet() {
             { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient { ALinearGradientBrush{
                     .colors = {
-                            {0.f, getOsThemeColor().lighter(0.15f)},
-                            {0.f, getOsThemeColor().darker(0.15f)},
+                            {0.f, getOsThemeColorLighter()},
+                            {1.f, getOsThemeColor()},
                     },
             } },
         },
@@ -211,7 +215,7 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0xa0a0a0_rgb },
             BorderRadius { 4_dp },
             Margin { 2_dp, 4_dp },
-            MinSize { 100_dp, 17_dp },
+            MinSize { 100_dp, 22_dp },
             AOverflow::HIDDEN,
         },
         {
@@ -233,12 +237,12 @@ AStylesheet::AStylesheet() {
         // ANumberPicker
         {
             c(".number-picker"),
-            MinSize { 60_dp, {} },
+            MinSize { 60_dp, 22_dp },
+            Padding { 1_px },
             AOverflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
-            Padding { 1_px },
             Margin { 0 },
             LayoutSpacing { 1_px },
             //BackgroundSolid { 0xf0f0f0_rgb }
@@ -267,31 +271,35 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp, 1_dp, 1_dp, 0 },
+            Margin { 1_dp },
             Border { 1_dp, 0x333333_rgb },
-            FixedSize { 13_dp, 13_dp },
+            FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },
-        },
-        {
-            t<ACheckBox>::hover(),
-            Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage { {}, 0x0078d7_rgb },
+            BorderRadius { 3_dp },
         },
         {
             t<ACheckBox>::active(),
-            BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_dp, 0x005499_rgb },
-            BackgroundImage { {}, 0x005499_rgb },
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
             Selected(t<ACheckBox>()),
-            BackgroundImage {":uni/svg/checkbox.svg" },
+            BackgroundImage { ":uni/svg/checkbox.svg", getOsThemeColor().readableBlackOrWhite() },
+            Border { nullptr },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
+        },
+        {
+          t<ACheckBox>::active() && Selected(t<ACheckBox>()),
+          BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
+          BackgroundGradient { getOsThemeColorLighter().lighter(0.3f), getOsThemeColor(), 180_deg },
         },
         {
             t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { {}, 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
+        },
+        {
+            Selected(t<ACheckBox>()) && t<ACheckBox>::disabled(),
+            BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
 
         // ARulerView
@@ -329,36 +337,35 @@ AStylesheet::AStylesheet() {
         {
             t<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 3_dp, 1_dp, 1_dp, 0 },
+            Margin { 1_dp },
             Border { 1_dp, 0x333333_rgb },
-            FixedSize { 13_dp, 13_dp },
-            BorderRadius { 6_dp },
+            FixedSize { 14_dp, 14_dp },
+            BorderRadius { 7_dp },
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
-            t<ARadioButtonInner>::hover(),
-            Border { 1_dp, 0x0078d7_rgb },
-            BackgroundImage { {}, 0x0078d7_rgb },
-        },
-        {
-            t<ARadioButtonInner>::hover(),
-            BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_dp, 0x005499_rgb },
-            BackgroundImage { {}, 0x005499_rgb },
+            t<ARadioButton>::active() > t<ARadioButtonInner>(),
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
             Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
-            BackgroundImage {":uni/svg/radio.svg" },
+            BackgroundImage { ":uni/svg/radio.svg", getOsThemeColor().readableBlackOrWhite() },
+            Border { nullptr },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            t<ARadioButton>::disabled() > t<AAbstractLabel>(),
-            TextColor { 0xa0a0a0_rgb },
+            Selected(t<ARadioButtonInner>::active()) > t<ARadioButtonInner>(),
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
+            BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            t<ARadioButton>::disabled() > t<ARadioButtonInner>(),
+            { t<ARadioButtonInner>::disabled(), (t<ARadioButton>::disabled() > t<ARadioButtonInner>()) },
             BackgroundSolid { 0xe5e5e5_rgb },
-            BackgroundImage { {}, 0xa0a0a0_rgb },
-            Border { 1_dp, 0xa0a0a0_rgb },
+            Border { 1_px, 0xa0a0a0_rgb },
+        },
+        {
+            { (Selected(t<ARadioButton>::disabled()) > t<ARadioButtonInner>()) },
+            BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
 
         // ADropdownList
@@ -437,7 +444,8 @@ AStylesheet::AStylesheet() {
             class_of(".window-title") >> class_of(".title"),
             Margin { 0 },
             Padding { 7_dp },
-            TextColor { 0xffffff_rgb }
+            TextColor { 0xffffff_rgb },
+            FontSize { 9_pt },
         },
         {
             class_of(".window-title") >> class_of(".default"),
@@ -661,7 +669,7 @@ AStylesheet::AStylesheet() {
             c(".agroupbox-inner"),
             Border { 2_dp, 0x30808080_argb },
             BorderRadius { 4_dp },
-            Padding { 8_dp, 6_dp },
+            Padding { 10_dp, 8_dp },
             Margin { 0, 4_dp},
             AOverflow::HIDDEN,
         },
@@ -705,8 +713,12 @@ AColor AStylesheet::getOsThemeColor() {
     static AColor osThemeColor = impl();
 
     return osThemeColor;
+#elif AUI_PLATFORM_LINUX
+    return 0x1a6acb_rgb; // adwaita accent color
+#elif AUI_PLATFORM_APPLE
+    return 0x057aff_rgb;
 #else
-    return 0x3e3e3e_rgb;
+    return 0x1a6acb_rgb;
 #endif
 }
 

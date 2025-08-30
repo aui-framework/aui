@@ -20,7 +20,8 @@
  * @brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
  *        (insert, update, select, delete)
  * @tparam Model ORM model.
- * @note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
+ * @details
+ * Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
  */
 template<typename Model>
 struct ASqlModel {
@@ -138,7 +139,7 @@ struct ASqlModel {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
-        return aui::ptr::manage(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+        return aui::ptr::manage_shared(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
             : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), expression));
     }
 
@@ -165,7 +166,7 @@ struct ASqlModel {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
-        return aui::ptr::manage(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+        return aui::ptr::manage_shared(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
             : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), {}));
     }
 

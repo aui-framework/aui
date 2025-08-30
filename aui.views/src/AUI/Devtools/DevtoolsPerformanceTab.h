@@ -22,22 +22,18 @@ public:
     DevtoolsPerformanceTab(AWindowBase* targetWindow);
 
 #if AUI_PROFILING
-    struct Model {
-        struct Running {};
-        struct Paused {};
+    struct Running {};
+    struct Paused {};
 
-        using State = std::variant<Running, Paused>;
-        State state = Running{};
-    };
-    ADataBinding<Model> mModel;
+    using State = std::variant<Running, Paused>;
+    AProperty<State> mState = Running{};
 
     void toggleRunPause() {
-        if (std::holds_alternative<Model::Running>(mModel->state)) {
-            mModel.setValue(&Model::state, Model::Paused{});
+        if (std::holds_alternative<Running>(*mState)) {
+            mState = Paused{};
         } else {
-            mModel.setValue(&Model::state, Model::Running{});
+            mState = Running{};
         }
-
     }
 #endif
 

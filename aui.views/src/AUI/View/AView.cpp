@@ -101,11 +101,11 @@ void AView::drawStencilMask(ARenderContext ctx)
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
-            if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
+            if (mBorderRadius > 0) {
                 ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     mBorderRadius);
+                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
                 ctx.render.rectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
@@ -150,6 +150,14 @@ void AView::render(ARenderContext ctx)
 
     ensureAssUpdated();
 
+    // draw list
+    for (unsigned i = 0; i <= int(ass::prop::PropertySlot::SHADOW); ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+        if (auto w = mAss[i]) {
+            w->renderFor(this, ctx);
+        }
+    }
+
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
@@ -159,8 +167,10 @@ void AView::render(ARenderContext ctx)
     }
 
     // draw list
-    for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
-        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+    for (unsigned i = unsigned(ass::prop::PropertySlot::SHADOW) + 1u; i < unsigned(ass::prop::PropertySlot::COUNT);
+         ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT))
+            continue;
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
         }
@@ -266,12 +276,12 @@ bool AView::hasFocus() const
 
 int AView::getMinimumWidth() {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x, mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x + mPadding.horizontal(), mMinSize.x, mMaxSize.x)) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight() {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y, mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y + mPadding.vertical(), mMinSize.y, mMaxSize.y)) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -560,11 +570,11 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
 
 void AView::focus(bool needFocusChainUpdate) {
     // holding reference here
-    auto mySharedPtr = sharedPtr();
+    auto mySharedPtr = aui::ptr::shared_from_this(this);
 
     notifyParentChildFocused(mySharedPtr);
 
-    ui_threadX [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+    AUI_UI_THREAD_X [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
         auto window = mySharedPtr->getWindow();
         if (!window) {
             return;
@@ -737,7 +747,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = sharedPtr()](IRenderer& renderer) {
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
             if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
                 // dead interface?
                 return;
@@ -818,7 +828,7 @@ AString AView::debugString() const {
 }
 
 void AView::forceUpdateLayoutRecursively() {
-    do_once {
+    AUI_DO_ONCE {
         ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
     }
     mMarkedMinContentSizeInvalid = true;

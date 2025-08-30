@@ -69,7 +69,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     _<AViewContainer> dst = Vertical {
         Horizontal {
           Vertical {
-            _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize { 14_pt } },
+            _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
             Horizontal {
               Label { addressStr },
               Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
@@ -80,7 +80,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             CheckBoxWrapper { Label { "Enabled" } } && targetView->enabled(),
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             Horizontal {
-              Button { "Add \"DevtoolsTest\" stylesheet name" } let {
+              Button { "Add \"DevtoolsTest\" stylesheet name" } AUI_LET {
                       it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
                       connect(it->clicked, [=] {
                           targetView->addAssName("DevtoolsTest");
@@ -100,7 +100,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                  }),
             GroupBox {
               Label { "Visibility" },
-              _new<ARadioGroup>() let {
+              _new<ARadioGroup>() AUI_LET {
                   static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
                       POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
@@ -151,12 +151,12 @@ void ViewPropertiesView::displayApplicableRule(
     const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style { Opacity { 0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_WITH_STYLE { Opacity { 0.7f } });
     }
     dst->addView(Horizontal {
       _new<ALabel>("},") << ".declaration_br",
     });
-    dst->addView(_new<AHDividerView>() with_style {
+    dst->addView(_new<AHDividerView>() AUI_WITH_STYLE {
       BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
 }
 

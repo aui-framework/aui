@@ -21,7 +21,7 @@ using namespace ass;
 
 ASlider::ASlider() {
     setContents(Stacked {
-        mProgress = _new<AProgressBar>() with_style {
+        mProgress = _new<AProgressBar>() AUI_WITH_STYLE {
             Expanding{1, 0},
         },
         mHandle = _new<Handle>()

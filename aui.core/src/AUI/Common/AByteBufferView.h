@@ -16,10 +16,18 @@
 /**
  * @brief Acts like std::string_view but for AByteBuffer.
  * @ingroup core
- * @note don't use const reference of AByteBufferView. Passing by const reference forces compiler to use memory instead
- * of registers.
- * @note AByteBufferView is intended for const access to memory data. As a function argument, consider to use
- * `std::span<std::byte>` instead for non-const access.
+ * @details
+ *
+ * !!! note
+ *
+ *     don't use const reference of AByteBufferView. Passing by const reference forces compiler to use memory instead
+ *     of registers.
+ *
+ *
+ * !!! note
+ *
+ *     AByteBufferView is intended for const access to memory data. As a function argument, consider to use
+ *     `std::span<std::byte>` instead for non-const access.
  */
 class API_AUI_CORE AByteBufferView {
 private:
@@ -54,12 +62,12 @@ public:
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset /* to end */) const noexcept {
+    AByteBufferView slice(std::size_t offset /* to end */) const {
         return slice(offset, size() - offset);
     }
 
     [[nodiscard]]
-    AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
+    AByteBufferView slice(std::size_t offset, std::size_t size) const {
         AUI_ASSERTX(offset + size <= mSize, "out of bounds");
         return { mBuffer + offset, size };
     }
@@ -117,7 +125,12 @@ inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {
     lhs << "[";
     for (const auto b : rhs) {
         char buf[8];
+        #if defined(FMT_VERSION) && (FMT_VERSION < 100000)
         lhs.write(buf, std::distance(std::begin(buf), fmt::format_to(buf, " {:02x}", b)));
+        #else
+        auto end = fmt::format_to(buf, " {:02x}", b);
+        lhs.write(buf, end - buf);
+        #endif
     }
     lhs << " ]";
 

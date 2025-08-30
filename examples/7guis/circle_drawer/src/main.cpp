@@ -145,7 +145,7 @@ protected:
                           "", 200_dp, 50_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL);
                       radiusPopup->setContents(Vertical {
                         Label { "Adjust diameter of circle at {}."_format(circle->position) },
-                        _new<ASlider>() let {
+                        _new<ASlider>() AUI_LET {
                                 it->setValue(circle->radius / MAX_RADIUS);
                                 connect(
                                     it->valueChanging, [this, circle](aui::float_within_0_1 s) {
@@ -221,17 +221,17 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              Button { "Undo" } let {
+              Button { "Undo" } AUI_LET {
                   connect(it->clicked, me::undo);
                   it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
               },
-              Button { "Redo" } let {
+              Button { "Redo" } AUI_LET {
                 connect(it->clicked, me::redo);
                 it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
               },
             },
           },
-          _new<CircleDrawArea>(aui::ptr::fake(&mState)),
+          _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
         });
     }
 

@@ -40,7 +40,7 @@ _<ATcpSocket> ATcpServerSocket::accept()
 	socklen_t addrlen = sizeof(addr);
 	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), &addrlen);
 
-	return aui::ptr::manage(new ATcpSocket(s, addr));
+	return aui::ptr::manage_shared(new ATcpSocket(s, addr));
 }
 
 ATcpServerSocket::ATcpServerSocket(uint16_t serverPort)

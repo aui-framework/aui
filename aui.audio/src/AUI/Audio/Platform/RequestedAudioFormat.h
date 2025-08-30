@@ -5,8 +5,6 @@
 #pragma once
 
 #include <cstdint>
-#include "AUI/Audio/AChannelFormat.h"
-#include "AUI/Audio/ASampleFormat.h"
 #include "AUI/Audio/AAudioFormat.h"
 #include "AUI/Traits/platform.h"
 

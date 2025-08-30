@@ -105,7 +105,7 @@ TEST_F(UIPointerBehaviour, ClickTest) {
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked());
 
-    AObject::connect(mContainer->clicked, slot(mView)::onDummyTest);
+    AObject::connect(mContainer->clicked, AUI_SLOT(mView)::onDummyTest);
 
     By::type<ViewMock>().perform(click());
 }
@@ -192,7 +192,7 @@ TEST_F(UIPointerBehaviour, FrontLayerClickTest) {
     EXPECT_CALL(*mView, onDummyTest()).Times(1);
 
     auto anotherBullshit = By::text("Another bullshit");
-    AObject::connect(anotherBullshit.one()->clicked, slot(mView)::onDummyTest);
+    AObject::connect(anotherBullshit.one()->clicked, AUI_SLOT(mView)::onDummyTest);
 
     anotherBullshit.perform(click());
 }

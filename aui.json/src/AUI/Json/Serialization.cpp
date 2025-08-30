@@ -186,6 +186,6 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
 }
 
 void ASerializable<AJson>::read(IInputStream& is, AJson& dst) {
-    ATokenizer t(aui::ptr::fake(&is));
+    ATokenizer t(aui::ptr::fake_shared(&is));
     dst = ::read(t);
 }

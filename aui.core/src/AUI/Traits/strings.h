@@ -69,10 +69,10 @@ struct AStringFormatHelper {
  * @brief String literal format caller (see example) (https://fmt.dev/11.1/syntax/)
  * @ingroup core
  * @details
- * @code{cpp}
+ * ```cpp
  * "Hello {}!"_format("world") // -> "Hello world!"
  * "test {:.2}"_format(1.2f)   // -> "test 1.2"
- * @endcode
+ * ```
  */
 inline AStringFormatHelper operator""_format(const char* str, size_t len)
 {

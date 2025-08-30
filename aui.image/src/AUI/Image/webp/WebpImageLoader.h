@@ -13,6 +13,9 @@
 
 #include "AUI/Image/IImageLoader.h"
 
+#include <webp/decode.h>
+#include <webp/encode.h>
+#include <webp/demux.h>
 class WebpImageLoader : public IImageLoader {
 public:
     bool matches(AByteBufferView buffer) override;
@@ -20,4 +23,6 @@ public:
     _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
 
     _<AImage> getRasterImage(AByteBufferView buffer) override;
+
+    API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, const WebPConfig& config);
 };

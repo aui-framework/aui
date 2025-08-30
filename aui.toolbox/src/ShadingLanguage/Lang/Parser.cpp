@@ -95,7 +95,11 @@ _<AST> Parser::parseShader() {
                                 break;
 
                             default:
+                                #if defined(FMT_VERSION) && (FMT_VERSION < 100000)
                                 reportUnexpectedErrorAndSkip("expected using, class, struct, input, output, inter, uniform, entry keywords"_format(keywordType));
+                                #else
+                                reportUnexpectedErrorAndSkip(fmt::format("expected using, class, struct, input, output, inter, uniform, entry keywords {}", keywordType));
+                                #endif
                         }
                         break;
                     }
@@ -1163,7 +1167,7 @@ AString Parser::parseTypename() {
 }
 
 _<INode> Parser::parseEntry() {
-    return aui::ptr::manage(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
+    return aui::ptr::manage_shared(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
 }
 
 _<INode> Parser::parseImportStatement() {

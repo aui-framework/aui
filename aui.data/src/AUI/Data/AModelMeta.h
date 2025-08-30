@@ -56,6 +56,6 @@ struct AModelMeta: AModelMetaBase<T> {
 
 #define A_META(name) template<> struct AModelMeta< name >: AModelMetaBase< name >
 #define A_FIELDS static AMap<AString, _<AField<Model>>> getFields()
-#define A_FIELD(name) {#name, AField<Model>::make(&Model:: name )},
+#define A_FIELD(name) { #name, AField<Model>::make(&Model:: name ) },
 #define A_SQL_TABLE(name) static AString getSqlTable() { return name;}
 

@@ -21,9 +21,9 @@
 #include "AWindowBase.h"
 
 /**
- * Helper for applications with custom window initialization.
- * @note This class is abstract; use <a href="AGLEmbedAuiWrap">AGLEmbedAuiWrap</a> or
- *       <a href="ASoftwareEmbedAuiWrap">ASoftwareEmbedAuiWrap</a> instead.
+ * @brief Helper for applications with custom window initialization.
+ * @details
+ * This class is abstract; use [AGLEmbedAuiWrap] or [ASoftwareEmbedAuiWrap] instead.
  */
 class API_AUI_VIEWS AEmbedAuiWrap: public IEventLoop {
 private:

@@ -66,7 +66,10 @@ public:
 
 /**
  * @brief A single scrollbar
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AScrollbar.png)
+ *
+ * @ingroup views_containment
  * @see AScrollArea
  * @see ASlider
  */

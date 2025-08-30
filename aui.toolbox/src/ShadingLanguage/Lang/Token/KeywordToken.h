@@ -101,4 +101,11 @@ public:
     static Type fromName(const AString& name);
 };
 
+#if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
+template <> struct fmt::formatter<KeywordToken::Type> : fmt::formatter<const char*> {
+    auto format(KeywordToken::Type type, fmt::format_context& ctx) const {
+        return fmt::formatter<const char*>::format(KeywordToken(type).getName(), ctx);
+    }
+};
+#endif
 

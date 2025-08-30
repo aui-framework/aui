@@ -19,7 +19,7 @@
 using namespace declarative;
 
 auto myPicker() {
-    return _new<ANumberPicker>() let {
+    return _new<ANumberPicker>() AUI_LET {
         it->setMin(-999);
         it->setMax(999);
     };
@@ -30,13 +30,13 @@ public:
     TemperatureConverterWindow() : AWindow("AUI - 7GUIs - TempConv", 300_dp, 50_dp) {
         setContents(Centered {
           Horizontal {
-            myPicker() let {
+            myPicker() AUI_LET {
                 biConnect(it->value(), mCelsius);
                 it->focus();
             },
             Label { "°C" },
-            Label { "=" } with_style { Margin { {}, 16_dp } },
-            myPicker() let { biConnect(it->value(), mFahrenheit); },
+            Label { "=" } AUI_WITH_STYLE { Margin { {}, 16_dp } },
+            myPicker() AUI_LET { biConnect(it->value(), mFahrenheit); },
             Label { "°F" },
           },
         });

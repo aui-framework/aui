@@ -107,7 +107,7 @@ _<ARsa> ARsa::generate(int bits) {
         RSA_free(rsa);
         throw AException("RSA_generate_key_ex failed: {}"_format(r));
     }
-    return aui::ptr::manage(new ARsa(rsa, bne));
+    return aui::ptr::manage_shared(new ARsa(rsa, bne));
 }
 
 _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
@@ -119,7 +119,7 @@ _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
     if (rsa == nullptr)
         throw AException("Could not create RSA private key");
 
-    return aui::ptr::manage(new ARsa(rsa, nullptr));
+    return aui::ptr::manage_shared(new ARsa(rsa, nullptr));
 }
 
 _<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
@@ -131,5 +131,5 @@ _<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
     if (rsa == nullptr)
         throw AException("Could not create RSA public key");
 
-    return aui::ptr::manage(new ARsa(rsa, nullptr));
+    return aui::ptr::manage_shared(new ARsa(rsa, nullptr));
 }

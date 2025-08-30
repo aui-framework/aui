@@ -115,29 +115,38 @@ namespace aui {
     struct ptr {
         /**
          * @brief Creates unique_ptr from raw pointer and a deleter.
+         * @tparam T The type of the object to manage.
+         * @tparam Deleter The type of the custom deleter function or functor.
+         * @param ptr A raw pointer to the object that the unique pointer will manage.
+         * @param deleter A custom deleter that will be used to destroy the managed object.
+         * @return A unique pointer that takes ownership of the raw pointer using the specified deleter.
          * @details
+         * Creates a unique pointer with a custom deleter.
+         *
          * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
-         * By using this function, lifetime of the pointer is delegated to std::unique_ptr. The wrapped pointer will
-         * be freed by specified Deleter. Default deleter is std::default_delete. You may want to specialize
-         * `std::default_delete<T>` struct in order to specify default deleter for T, in this case you can omit deleter
+         * By using this function, the lifetime of the pointer is delegated to std::unique_ptr. Specified Deleter will
+         * free the wrapped pointer. The default deleter is std::default_delete. You may want to specialize
+         * `std::default_delete<T>` struct to specify a default deleter for T, in this case you can omit the deleter
          * argument of this function.
          */
         template<typename T, typename Deleter = std::default_delete<T>>
-        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter = Deleter{}) {
+        static _unique<T, Deleter> manage_unique(T* ptr, Deleter deleter = Deleter{}) {
             return { ptr, std::move(deleter) };
         }
 
         /**
-         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
+         * returned.
          * @tparam T any type
          * @param raw raw pointer to manage memory of
          * @return shared pointer
          */
         template<typename T>
-        static _<T> manage(T* raw);
+        static _<T> manage_shared(T* raw);
 
         /**
-         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
+         * returned, with a deleter functor.
          * @tparam T any type
          * @tparam Deleter object implementing <code>operator()(T*)</code>
          * @param raw raw pointer to manage memory of
@@ -145,34 +154,64 @@ namespace aui {
          * @return shared pointer
          */
         template<typename T, typename Deleter>
-        static _<T> manage(T* raw, Deleter deleter);
-
-        /**
-         * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
-         * @tparam T any type
-         * @param raw raw pointer to manage memory of
-         * @return unique pointer
-         */
-        template<typename T>
-        static _unique<T> unique(T* raw);
+        static _<T> manage_shared(T* raw, Deleter deleter);
 
         /**
          * @brief Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
-         * when some function accept shared pointer but you have only raw one.
-         * @tparam T any type
-         * @param raw raw pointer to manage memory of
-         * @return shared pointer
+         * when some function accepts a shared pointer but you have only a raw one.
+         * @tparam T any type.
+         * @param raw raw pointer to manage memory of.
+         * @return shared pointer.
          */
         template<typename T>
-        static _<T> fake(T* raw);
+        static _<T> fake_shared(T* raw);
+
+        /**
+         * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
+         * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
+         * @param raw pointer to the `T` class.
+         * @return Shared pointer.
+         * @details
+         * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
+         * is lost, requiring manual downcasting.
+         *
+         * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
+         * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
+         */
+        template <typename T>
+        static _<T> shared_from_this(T* raw) {
+            return _<T>(raw->shared_from_this(), raw);
+        }
+
+        /**
+         * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
+         * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
+         * @param raw pointer to the `T` class.
+         * @return Weak pointer.
+         * @details
+         * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
+         * is lost, requiring manual downcasting.
+         *
+         * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
+         * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
+         */
+        template <typename T>
+        static _weak<T> weak_from_this(T* raw) {
+            // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
+            // although i dont understand reasons behind it
+            return _weak<T>(shared_from_this(raw));
+        }
     };
 }
 
 
 /**
  * @brief @brief An std::weak_ptr with AUI extensions.
- * @note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
- *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
+ * @details
+ * !!! note
+ *
+ *     Of course, it is not good tone to define a class with _ type but it significantly increases coding speed. Instead
+ *     of writing every time std::shared_ptr you should write only the _ symbol.
  */
 template<typename T>
 class _ : public std::shared_ptr<T>
@@ -421,22 +460,18 @@ public:
 
 namespace aui {
     template<typename T>
-    _<T> ptr::manage(T* raw) {
+    _<T> ptr::manage_shared(T* raw) {
         return _<T>(raw, std::nullopt);
     }
 
     template<typename T>
-    _<T> ptr::fake(T* raw) {
+    _<T> ptr::fake_shared(T* raw) {
         return _<T>(std::shared_ptr<void>{}, raw);
     }
 
     template<typename T, typename Deleter>
-    _<T> ptr::manage(T* raw, Deleter deleter) {
+    _<T> ptr::manage_shared(T* raw, Deleter deleter) {
         return _<T>(raw, deleter);
-    }
-    template<typename T>
-    _unique<T> ptr::unique(T* raw) {
-        return _unique<T>(raw);
     }
 }
 
@@ -484,34 +519,34 @@ inline _<TO> _cast(std::shared_ptr<FROM>&& object)
  *   </tr>
  *   <tr>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       if (getAnimator()) getAnimator()->postRender(this);
- *       @endcode
+ *       ```
  *     </td>
  *     <td>
- *       @code{cpp}
+ *       ```cpp
  *       AUI_NULLSAFE(getAnimator())->postRender(this);
- *       @endcode
+ *       ```
  *     </td>
  *   </tr>
  * </table>
  *
  * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>AUI_NULLSAFE</code> expands to:
  *
- * @code{cpp}
+ * ```cpp
  * if (auto& _tmp = (getAnimator())) _tmp->postRender(this);
- * @endcode
+ * ```
  *
  * Since `AUI_NULLSAFE` is a macro that expands to `if`, you can use `else` keyword:
  *
- * @code{cpp}
+ * ```cpp
  * AUI_NULLSAFE(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
- * @endcode
+ * ```
  *
  * and even combine multiple `AUI_NULLSAFE` statements:
  *
- * @code{cpp}
+ * ```cpp
  * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
- * @endcode
+ * ```
  */
 #define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

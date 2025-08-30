@@ -127,7 +127,7 @@ public:
      * @param begin range begin
      * @param end range end
      * @param functor a functor of the following signature:
-     * @code{cpp} Result(Iterator begin, Iterator end) @endcode
+     * ```cpp Result(Iterator begin, Iterator end) ```
      *
      * @return future set per thread (i.e. for 8 items on a 4-core processor there will be 4 futures)
      *
@@ -176,7 +176,7 @@ public:
  * @ingroup core
  * @tparam T future's return type
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * AFutureSet involves functions to efficiently manage multiple AFutures.
  *
  * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
@@ -219,7 +219,7 @@ public:
      *
      * The thread on which your callback will be called is undefined.
      *
-     * @note AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
+     * AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
      * temporary object is created to keep track of the task completeness.
      */
     template <aui::invocable OnComplete>

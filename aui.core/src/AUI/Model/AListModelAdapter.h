@@ -67,6 +67,6 @@ public:
 namespace AModels {
     template <typename ItemTo, typename Container, typename Adapter>
     auto adapt(const _<Container>& other, Adapter&& adapter) -> _<AListModelAdapter<ItemTo, typename Container::value_type, Adapter>> {
-        return aui::ptr::manage(new AListModelAdapter<ItemTo, typename Container::value_type, Adapter>(other, std::forward<Adapter>(adapter)));
+        return aui::ptr::manage_shared(new AListModelAdapter<ItemTo, typename Container::value_type, Adapter>(other, std::forward<Adapter>(adapter)));
     }
 }

@@ -42,6 +42,8 @@ set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
 set(CMAKE_CXX_STANDARD 20)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/helpers")
+
 cmake_policy(SET CMP0072 NEW)
 
 if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
@@ -204,9 +206,15 @@ endif()
 
 function(aui_add_properties AUI_MODULE_NAME)
     if(MSVC)
-        set_target_properties(${AUI_MODULE_NAME} PROPERTIES
-                LINK_FLAGS "/force:MULTIPLE"
-                COMPILE_FLAGS "/MP /utf-8")
+        if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/MP /utf-8")
+        else() # clang-cl does not support /MP
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                    LINK_FLAGS "/force:MULTIPLE"
+                    COMPILE_FLAGS "/utf-8")
+        endif()
     endif()
 
     if(NOT ANDROID)
@@ -220,10 +228,21 @@ endfunction(aui_add_properties)
 # gtest
 macro(_aui_import_gtest)
     if (NOT TARGET GTest::gtest)
-        auib_import(GTest https://github.com/google/googletest
-                    VERSION v1.14.0
-                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
-                    LINK STATIC)
+        if(AUIB_DISABLE)
+            find_package(GTest REQUIRED CONFIG)
+        else()
+            if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+                auib_import(GTest https://github.com/google/googletest
+                    VERSION v1.17.0
+                    CMAKE_ARGS -Dgtest_force_shared_crt=FALSE
+                    LINK STATIC) # Enforce /MT
+            else()
+                auib_import(GTest https://github.com/google/googletest
+                            VERSION v1.17.0
+                            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
+                            LINK STATIC)
+            endif()
+        endif()
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
@@ -319,11 +338,17 @@ endmacro()
 
 macro(_aui_import_google_benchmark)
     if (NOT TARGET benchmark::benchmark)
-        auib_import(benchmark https://github.com/google/benchmark
-                    VERSION v1.8.3
-                    CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
-                    LINK STATIC)
-        set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        if(NOT(MSVC AND AUI_BUILD_FOR STREQUAL "winxp"))
+            if(AUIB_DISABLE)
+                find_package(benchmark REQUIRED CONFIG)
+            else()
+                auib_import(benchmark https://github.com/google/benchmark
+                            VERSION v1.8.3
+                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                            LINK STATIC)
+            endif()
+            set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
+        endif()
     endif()
 endmacro()
 
@@ -694,6 +719,7 @@ function(aui_executable AUI_MODULE_NAME)
         else()
             add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
         endif()
+
     endif()
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
@@ -706,6 +732,25 @@ function(aui_executable AUI_MODULE_NAME)
     endif()
 
     aui_common(${AUI_MODULE_NAME})
+
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(WinXPuseLTL5)
+        include(WinXPuseYYThunks)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (AUIE_WIN32_SUBSYSTEM_CONSOLE)
+            if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02")
+            endif()
+        else()
+            if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:WINDOWS,5.02")
+            endif()
+        endif()
+    endif()
 
     if (AUIE_EXPORT)
         install(
@@ -1108,6 +1153,32 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     get_target_property(_type ${AUI_MODULE_NAME} TYPE)
+    if (MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
+        include(WinXPuseLTL5)
+        include(WinXPuseYYThunks)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE YY_Thunks)
+        if (CMAKE_SIZEOF_VOID_P EQUAL 4)
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.01 /SUBSYSTEM:WINDOWS,5.01")
+            endif()
+        else()
+            if(_type STREQUAL "SHARED_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02 /ENTRY:DllMainCRTStartupForYY_Thunks")
+            elseif(_type STREQUAL "STATIC_LIBRARY")
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            elseif(_type STREQUAL "EXECUTABLE") # Assume toolbox and other AUI components are console
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02")
+            else()
+                set_target_properties(${AUI_MODULE_NAME} PROPERTIES LINK_FLAGS "/SUBSYSTEM:CONSOLE,5.02 /SUBSYSTEM:WINDOWS,5.02")
+            endif()
+        endif()
+    endif()
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
@@ -1117,6 +1188,41 @@ function(aui_module AUI_MODULE_NAME)
             else()
                 target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${AUI_MODULE_NAME}>,--no-whole-archive>")
             endif()
+        endif()
+    endif()
+    if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+        add_custom_command(
+            TARGET ${AUI_MODULE_NAME}
+            POST_BUILD
+            COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+            ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-x>
+					$<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-S>
+                    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+            COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+            VERBATIM
+        )
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        if(APPLE)
+            add_custom_command(
+                TARGET ${AUI_MODULE_NAME}
+                POST_BUILD
+                COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+                ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-Sxl>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+                COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+                VERBATIM
+            )
+        else()
+            add_custom_command(
+                TARGET ${AUI_MODULE_NAME}
+                POST_BUILD
+                COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+                ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-g>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-x>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
+                COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
+                VERBATIM
+            )
         endif()
     endif()
 endfunction(aui_module)
@@ -1210,6 +1316,15 @@ macro(aui_app)
     set(multiValueArgs )
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
+    struct AUIAppInfo {
+        AUIAppInfo() {
+            aui::app_info::name = \"${APP_NAME}\";
+        }
+    }; AUIAppInfo auiAppInfo;")
+
+    target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
 
     # defaults
     # ios
@@ -1534,13 +1649,6 @@ macro(aui_app)
 
         message(STATUS XCTestFound:${XCTest_FOUND})
 
-        set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
-        )
-
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
-
-        target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
         # Locate system libraries on iOS
@@ -1713,8 +1821,12 @@ endmacro()
 
 if (MINGW OR UNIX)
     # strip for release
-    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
-    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+    if (NOT(CMAKE_CXX_COMPILER_ID MATCHES "(AppleClang|Clang)"))
+	    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
+	    set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
+        set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -s")
+        set(CMAKE_CXX_FLAGS_MINSIZEREL "${CMAKE_CXX_FLAGS_MINSIZEREL} -s")
+    endif()
 endif()
 
 
@@ -1726,6 +1838,11 @@ endif()
 #    endif()
 #endif()
 
+if (AUI_BUILD_FOR STREQUAL "winxp")
+    # [cmake] -> YY_THUNKS MSVC .obj -> cmake(x86|x64)
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.winxp.cmake)
+endif()
 
 if (AUI_BUILD_FOR STREQUAL "android")
     # [cmake] -> gradle -> cmake(x86|mips|arm|arm64)

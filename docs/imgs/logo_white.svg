@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!--
+  - AUI Framework - Declarative UI toolkit for modern C++17
+  - Copyright (C) 2020-2023 Alex2772
+  -
+  - This library is free software; you can redistribute it and/or
+  - modify it under the terms of the GNU Lesser General Public
+  - License as published by the Free Software Foundation; either
+  - version 2 of the License, or (at your option) any later version.
+  -
+  - This library is distributed in the hope that it will be useful,
+  - but WITHOUT ANY WARRANTY; without even the implied warranty of
+  - MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+  - Lesser General Public License for more details.
+  -
+  - You should have received a copy of the GNU Lesser General Public
+  - License along with this library. If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+
+<svg
+   version="1.1"
+   id="Layer_1"
+   x="0px"
+   y="0px"
+   width="256px"
+   height="256px"
+   viewBox="0 0 256 256"
+   enable-background="new 0 0 256 256"
+   xml:space="preserve"
+   sodipodi:docname="logo_white.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><defs
+   id="defs8" /><sodipodi:namedview
+   id="namedview8"
+   pagecolor="#ffffff"
+   bordercolor="#000000"
+   borderopacity="0.25"
+   inkscape:showpageshadow="2"
+   inkscape:pageopacity="0.0"
+   inkscape:pagecheckerboard="0"
+   inkscape:deskcolor="#d1d1d1"
+   showgrid="true"
+   showguides="true"
+   inkscape:zoom="2.5832321"
+   inkscape:cx="92.519755"
+   inkscape:cy="116.32714"
+   inkscape:window-width="2560"
+   inkscape:window-height="1380"
+   inkscape:window-x="0"
+   inkscape:window-y="0"
+   inkscape:window-maximized="1"
+   inkscape:current-layer="Layer_1"><inkscape:grid
+     id="grid8"
+     units="px"
+     originx="0"
+     originy="0"
+     spacingx="1.6"
+     spacingy="1.6"
+     empcolor="#0099e5"
+     empopacity="0.30196078"
+     color="#0099e5"
+     opacity="0.14901961"
+     empspacing="5"
+     enabled="true"
+     visible="true" /><sodipodi:guide
+     position="-16,128"
+     orientation="0,-1"
+     id="guide8"
+     inkscape:locked="false" /><sodipodi:guide
+     position="128,208"
+     orientation="1,0"
+     id="guide9"
+     inkscape:locked="false" /></sodipodi:namedview>
+
+
+<linearGradient
+   id="SVGID_1_"
+   gradientUnits="userSpaceOnUse"
+   x1="147.332"
+   y1="13.8965"
+   x2="103.1122"
+   y2="104.5606"
+   gradientTransform="matrix(0.93333854,0,0,-1,10.710772,259.7978)">
+	<stop
+   offset="0"
+   style="stop-color:#305491"
+   id="stop2" />
+	<stop
+   offset="1"
+   style="stop-color:#0071AF"
+   id="stop3" />
+</linearGradient>
+
+<linearGradient
+   id="SVGID_2_"
+   gradientUnits="userSpaceOnUse"
+   x1="263.9697"
+   y1="93.1396"
+   x2="99.4414"
+   y2="217.1206"
+   gradientTransform="matrix(0.9361271,0,0,-0.98903308,10.359721,257.15899)">
+	<stop
+   offset="0"
+   style="stop-color:#0076B7"
+   id="stop4" />
+	<stop
+   offset="1"
+   style="stop-color:#0084AC"
+   id="stop5" />
+</linearGradient>
+
+<g
+   id="g7"
+   style="display:inline"
+   transform="translate(2.9370013,3.321001)">
+	<path
+   fill="#ffffff"
+   d="m 45.308,98.091 -2.36,-7.461 -11.189,5.434 -2.507,9.823 -10.408,5.053 12.894,-49.936 13.555,-6.582 13.098,37.317 z M 33.939,85.47 40.697,82.187 37.318,71.158 Z"
+   id="path5" />
+	<path
+   fill="#ffffff"
+   d="m 95.16,30.21 v 28.925 c 0,5.482 -1.556,10.18 -4.666,14.09 -3.111,3.909 -7.165,7.078 -12.163,9.504 -5.262,2.555 -9.49,3.456 -12.682,2.703 C 62.456,84.678 60.86,81.699 60.86,76.494 V 46.865 l 13.034,-6.33 v 28.062 c 0,2.092 0.422,3.41 1.266,3.96 0.844,0.551 2.192,0.376 4.044,-0.523 1.545,-0.75 2.811,-1.71 3.798,-2.883 0.987,-1.173 1.577,-2.242 1.77,-3.212 0.194,-0.968 0.291,-2.721 0.291,-5.26 V 35.112 Z"
+   id="path6" />
+	<path
+   fill="#ffffff"
+   d="m 114.833,20.659 v 43.675 l -12.82,6.226 V 26.883 Z"
+   id="path7" />
+</g>
+<linearGradient
+   id="SVGID_3_"
+   gradientUnits="userSpaceOnUse"
+   x1="23.3418"
+   y1="204.1484"
+   x2="114.7414"
+   y2="63.4053"
+   gradientTransform="matrix(0.93333334,0,0,1,10.710802,2.8740001)">
+	<stop
+   offset="0"
+   style="stop-color:#3889B4"
+   id="stop7" />
+	<stop
+   offset="1"
+   style="stop-color:#1390CF"
+   id="stop8" />
+</linearGradient>
+
+<path
+   style="fill:#ffffff;stroke:none;stroke-width:1.003;fill-opacity:1"
+   d="M 128,8.0000001 240,64.000001 V 192 L 128,247.99969 16,192 V 128 L 128,72.000001 Z"
+   id="path1" /></svg>

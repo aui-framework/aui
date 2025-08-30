@@ -1,9 +1,9 @@
 # 7GUIs Flight Booker
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Flight Booker.
 
-@image html docs/imgs/wjhsdflksdnjv.webp
+![](imgs/wjhsdflksdnjv.webp)
 
 Challenge: Constraints.
 
@@ -20,9 +20,7 @@ within a widget on the other hand. Such constraints are very common in everyday 
 good solution for Flight Booker will make the constraints clear, succinct and explicit in the source code and not hidden
 behind a lot of scaffolding.
 
-@include examples/7guis/flight_booker/src/main.cpp
-
-# Regex Library
+## Regex Library
 
 For validation in this example, we've chosen using regex technology, as it's fairly simple and extensible way to
 make parsers.
@@ -31,9 +29,7 @@ Despite STL provides regex implementation, it varies from compiler to compiler, 
 only, and some platforms may even lack builtin regex library. To avoid possible issues, custom implementation should be
 used.
 
-Although AUI does not provide a regex parser on its own, nothing stops you from @ref AUI_BOOT_3RDPARTY "using AUI.Boot"
+Although AUI does not provide a regex parser on its own, nothing stops you from [using AUI.Boot](aui.boot.md#AUI_BOOT_3RDPARTY)
 in order to pull awesome 3rdparty implementation of your choice that suits your exact needs. For this example, we've
 chosen [ctre](https://github.com/hanickadot/compile-time-regular-expressions), as it evaluates the regex expression at
 compile-time, emitting effective code, as if we were validating the string manually.
-
-@include examples/7guis/flight_booker/CMakeLists.txt

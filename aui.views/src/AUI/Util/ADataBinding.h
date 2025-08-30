@@ -26,13 +26,13 @@
  * @brief Defines how View handles properties of FieldType type.
  * @details
  * Example specialization:
- * @code{cpp}
+ * ```cpp
  * template<>
  * struct ADataBindingDefault<ALabel, AString> {
  * public:
  *     static auto property(const _<ALabel>& view) { return view->text(); }
  * };
- * @endcode
+ * ```
  */
 template<typename View, typename FieldType>
 struct ADataBindingDefault {
@@ -138,7 +138,7 @@ public:
  * @brief Data binding implementation.
  * @tparam Model Your model type.
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  * <p>
  * If const reference of your model passed, ADataBinding will create and manage its own copy of your model.
  * </p>
@@ -148,15 +148,15 @@ public:
  * </p>
  *
  * <p>Example:</p>
- * @code{cpp}
+ * ```cpp
  * _new<ATextField>() && dataBinding(&User::username)
- * @endcode
+ * ```
  * <p>This code will bind ATextField with username field in the User model.</p>
  *
  * <p>Another example:</p>
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20230705_173329.png">
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Recording_20230705_at_17.51.14.gif">
- * @code{cpp}
+ * ```cpp
  * class MyWindow: public AWindow {
  * public:
  *     MyWindow(): AWindow("Test") {
@@ -173,7 +173,7 @@ public:
  *
  *         setContents(Centered {
  *             Vertical {
- *                 Label { } let {
+ *                 Label { } AUI_LET {
  *                     data->addObserver(&Model::value, [it](int v) {
  *                         it->setText("{}"_format(v));
  *                     });
@@ -192,9 +192,9 @@ public:
  *         });
  *     }
  * };
- * @endcode
+ * ```
  * <p>Here, we use getEditableModel() in order to change data in our model and notifyUpdate() to notify.</p>
- * <p>Also, we use @ref #let construction to define custom format for label.</p>
+ * <p>Also, we use [AUI_LET] construction to define custom format for label.</p>
  *
  */
 template <typename Model>
@@ -243,7 +243,7 @@ public:
      * @param setterLambda lambda which accepts reference to your view type and const reference to data (see examples).
      * @details
      * View type is deduces from the first argument of your lambda.
-     * @code{cpp}
+     * ```cpp
      * struct Model {
      *   AString text;
      * };
@@ -251,7 +251,7 @@ public:
      * _new<ALabel>() && model(&Model::text, [](ALabel& view, const AString& data) {
      *    view.setText(data);
      * });
-     * @endcode
+     * ```
      */
     template<typename ModelField, typename SetterLambda>
     auto operator()(ModelField(Model::*field), SetterLambda setterLambda) {

@@ -19,7 +19,10 @@
 
 /**
  * @brief A text field for numbers with increase/decrease buttons.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ANumberPicker.png)
+ *
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ANumberPicker : public AViewContainerBase {
 private:

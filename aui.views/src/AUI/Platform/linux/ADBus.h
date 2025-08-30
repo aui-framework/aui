@@ -252,7 +252,7 @@ namespace aui::dbus {
             dbus_message_iter_recurse(iter, &sub);
 
             AMap<K, V> result;
-            for (;;) {
+            do {
                 AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
                 DBusMessageIter item;
                 dbus_message_iter_recurse(&sub, &item);
@@ -260,10 +260,12 @@ namespace aui::dbus {
                 if (!dbus_message_iter_next(&item)) {
                     throw AException("bad dict");
                 }
+                if (k == "current_filter") { // TODO dirty hack of OpenFile
+                    continue;
+                }
                 auto v = aui::dbus::iter_get<V>(&item);
                 result[k] = v;
-                if (!dbus_message_iter_next(&sub)) break;
-            }
+            } while (dbus_message_iter_next(&sub));
 
             return result;
         }
@@ -350,7 +352,7 @@ public:
                         const AString& interface,
                         const AString& method,
                         const Args&... args) {
-        auto msg = aui::ptr::make_unique_with_deleter(dbus_message_new_method_call(bus.toStdString().c_str(),
+        auto msg = aui::ptr::manage_unique(dbus_message_new_method_call(bus.toStdString().c_str(),
                                                                                    path.toStdString().c_str(),
                                                                                    interface.toStdString().c_str(),
                                                                                    method.toStdString().c_str()),
@@ -371,7 +373,7 @@ public:
             aui::dbus::iter_append(&dbusArgs, v);
         }, args...);
 
-        auto pending = aui::ptr::make_unique_with_deleter([&] {
+        auto pending = aui::ptr::manage_unique([&] {
             DBusPendingCall* pending;
             if (!dbus_connection_send_with_reply(mConnection, msg.get(), &pending, -1)) { // -1 is default timeout
                 throw ADBus::Exception(formatError("dbus_connection_send_with_reply failed"));

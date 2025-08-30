@@ -27,7 +27,7 @@ namespace aui {
      * @details
      * Typical usage:
      *
-     * @code{cpp}
+     * ```cpp
      * AVector<int> container = { ... };
      * aui::parallel(container.begin(),
      *               container.end(),
@@ -37,7 +37,7 @@ namespace aui {
      *         // *it
      *     }
      * };
-     * @endcode
+     * ```
      *
      * @see <code>AUI_PARALLEL_MP</code>
      */
@@ -70,7 +70,7 @@ namespace aui {
  * @brief Shortcut to aui::parallel.
  * @details
  * Typical usage:
- * @code{cpp}
+ * ```cpp
  * AVector<int> container = { ... };
  * auto tasks = AUI_PARALLEL_MP(container) {
  *     for (auto it = begin; it != end; ++it) {
@@ -78,7 +78,7 @@ namespace aui {
  *     }
  * };
  * tasks.wait();
- * @endcode
+ * ```
  *
  * @see aui::parallel
  */
