@@ -29,16 +29,16 @@
  * themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
  * your website). Here's small breakdown:
  *
- * | Platform      | Distribution method           | Auto updating solution |
- * | ------------- | ----------------------------- | ---------------------- |
- * | @ref windows  | Installer/exe                 | @ref updater           |
- * | @ref windows  | Microsoft Store (used rarely) | Microsoft Store        |
- * | @ref linux    | Portables                     | @ref updater           |
- * | @ref linux    | Flatpak                       | Flathub                |
- * | @ref macos    | DMG (*.app)                   | -                      |
- * | @ref macos    | Apple App Store               | Apple App Store        |
- * | @ref android  | APK                           | Google Play Store      |
- * | @ref ios      | IPA                           | Apple App Store        |
+ * | Platform   | Distribution method           | Auto updating solution |
+ * | ---------- | ----------------------------- | ---------------------- |
+ * | [windows]  | Installer/exe                 | [updater]              |
+ * | [windows]  | Microsoft Store (used rarely) | Microsoft Store        |
+ * | [linux]    | Portables                     | [updater]              |
+ * | [linux]    | Flatpak                       | Flathub                |
+ * | [macos]    | DMG (*.app)                   | -                      |
+ * | [macos]    | Apple App Store               | Apple App Store        |
+ * | [android]  | APK                           | Google Play Store      |
+ * | [ios]      | IPA                           | Apple App Store        |
  *
  * ??? note "What is portable?"
  *

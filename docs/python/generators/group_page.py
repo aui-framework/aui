@@ -58,9 +58,9 @@ def _generate_regular_group_page(doxygen, fos, group_id):
         print(f"""
 -   __{group_item.namespaced_name()}__
 
----
+    ---
 
-{brief}
+    {brief}
 
 """, file=fos)
 
