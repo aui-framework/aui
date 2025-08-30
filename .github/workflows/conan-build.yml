@@ -103,7 +103,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
@@ -229,7 +229,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
@@ -332,7 +332,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
@@ -418,7 +418,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
@@ -505,7 +505,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
@@ -612,7 +612,7 @@ jobs:
         shell: bash
         run: |
           if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=C:\\Users\\runneradmin\\.conan2" >> $GITHUB_OUTPUT
+            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
           else
             echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
           fi
