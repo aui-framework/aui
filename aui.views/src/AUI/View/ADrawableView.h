@@ -20,7 +20,7 @@
 #include "AView.h"
 
 /**
- * @brief Simple view to draw an IDrawable.
+ * @brief Simple view to draw images.
  *
  * ![](imgs/views/ADrawableView.png)
  *

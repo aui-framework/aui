@@ -46,6 +46,35 @@ def gen_pages():
         slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
         parse_entry.page_url = f'{slugged_name}.md'
         with mkdocs_gen_files.open(parse_entry.page_url, 'w') as fos:
+
+            def _parse_page_metadata():
+                """
+                Finds the following block in the doxygen comment:
+
+                ---
+                title: Custom title
+                icon: custom-icon
+                ---
+
+                https://squidfunk.github.io/mkdocs-material/reference/#setting-the-page-icon
+                """
+
+                iterator = iter(parse_entry.doc.splitlines())
+                for i in iterator:
+                    if i == '---':
+                        print('---', file=fos)
+                        for j in iterator:
+                            print(j, file=fos)
+
+                            if m := re.match('title: (\w+)', j):
+                                # hack: use the overrided name if it exists
+                                parse_entry.overview_page_title = m.group(1)
+
+                            if j == '---':
+                                print('', file=fos)
+                                return
+            _parse_page_metadata()
+
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
             doxygen = common.parse_doxygen(parse_entry.doc)

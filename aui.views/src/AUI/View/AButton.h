@@ -22,6 +22,11 @@
 #include <AUI/Util/Declarative/Containers.h>
 
 /**
+ * ---
+ * title: Button
+ * icon: material/button-pointer
+ * ---
+ *
  * @brief Button with text, which can be pushed to make some action.
  *
  * ![](imgs/views/AButton.png)
