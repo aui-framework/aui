@@ -98,6 +98,19 @@ jobs:
           conan --version
           conan profile detect
 
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
+
       - name: Install dependencies
         if: matrix.toolset == 142
         run: >
@@ -206,6 +219,19 @@ jobs:
           conan --version
           conan profile detect
 
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
+
       - name: Install dependencies
         run: >
           conan install . \
@@ -291,6 +317,19 @@ jobs:
           conan --version
           conan profile detect
 
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
+
       - name: Install dependencies
         run: >
           conan install . \
@@ -358,6 +397,19 @@ jobs:
         run: |
           conan --version
           conan profile detect
+
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
 
       - name: Install dependencies
         run: >
@@ -427,6 +479,19 @@ jobs:
         run: |
           conan --version
           conan profile detect
+
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
 
       - name: Create Conan profile
         run: |
@@ -516,6 +581,19 @@ jobs:
         run: |
           conan --version
           conan profile detect
+
+      - name: Get Conan home
+        id: get-conan-home
+        shell: bash
+        run: echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
+
+      - name: Cache Conan packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
+          restore-keys: |
+            conan-${{ runner.os }}-
 
       - name: Create Conan Android profile
         run: |
