@@ -1218,7 +1218,8 @@ function(aui_module AUI_MODULE_NAME)
                 POST_BUILD
                 COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
                 ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-g>
-                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-x>
+                        $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<STREQUAL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},TYPE>,STATIC_LIBRARY>>:--strip-unneeded>
+                        $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<NOT:$<STREQUAL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},TYPE>,STATIC_LIBRARY>>>:-x>
                         $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
                 COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
                 VERBATIM

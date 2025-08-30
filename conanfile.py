@@ -27,12 +27,14 @@ class AUIRecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     options = {
         "shared": [True, False],
-        "fPIC": [True, False]
+        "fPIC": [True, False],
+        "ios_sign": [True, False]
     }
     default_options = {
         "shared": False,
         "fPIC": True,
         "fmt/*:header_only": True,
+        "ios_sign": False,
     }
 
     implements = ["auto_shared_fpic"]
@@ -55,7 +57,7 @@ class AUIRecipe(ConanFile):
         self.requires("gtest/1.17.0")
         self.requires("benchmark/1.9.4")
         # Audio
-        self.requires("opus/1.5.2")
+        self.requires("opus/1.4")
         if self.settings.os == "Android":
             self.requires("oboe/1.8.0")
         # Core
@@ -70,9 +72,10 @@ class AUIRecipe(ConanFile):
         # Image
         self.requires("lunasvg/3.0.1")
         self.requires("libwebp/1.5.0")
-        #Views
+        # Views
         self.requires("freetype/2.13.3")
-        self.requires("glew/2.2.0")
+        if str(self.settings.os) in {"Windows", "Linux", "Macos"}:
+            self.requires("glew/2.2.0")
 
     def validate(self):
         if self.settings.get_safe("compiler.cppstd"):
@@ -82,9 +85,12 @@ class AUIRecipe(ConanFile):
         deps = CMakeDeps(self)
         deps.generate()
         tc = CMakeToolchain(self)
+        tc.cache_variables["AUI_BUILD_EXAMPLES"] = False
         tc.cache_variables["AUI_INSTALL_RUNTIME_DEPENDENCIES"] = False
         tc.cache_variables["AUIB_NO_PRECOMPILED"] = True
         tc.cache_variables["AUIB_DISABLE"] = True
+        if self.settings.os == "iOS":
+            tc.cache_variables["AUI_IOS_CODE_SIGNING_REQUIRED"] = self.options.ios_sign
         tc.generate()
 
     def build(self):
