@@ -23,6 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        os: [windows-2025]
         toolset: [142, 143]
         cppstd: ['20']
         build-type: [Debug, Release]
@@ -39,8 +40,8 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: MSVC ${{ matrix.toolset }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
-    runs-on: windows-2025
+    name: MSVC ${{ matrix.toolset }} - Windows - ${{ matrix.build-type }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -170,7 +171,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: Clang ${{ matrix.clang-version }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    name: Clang ${{ matrix.clang-version }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
@@ -282,7 +283,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: GCC ${{ matrix.gcc-version }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    name: GCC ${{ matrix.gcc-version }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
@@ -386,7 +387,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -473,7 +474,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -576,7 +577,7 @@ jobs:
           - build-type: Release
             cmake-preset: conan-release
 
-    name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - ${{ matrix.os }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
       image: ubuntu:25.04
