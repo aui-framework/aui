@@ -54,7 +54,7 @@
  *
  * <!-- aui:snippet examples/ui/button1/src/main.cpp AButton_example -->
  *
- * ![imgs/Screenshot_20250715_091801.png]
+ * ![imgs/Screenshot_20250715_091801.png]() "Basic button."
  *
  * # Button with a signal-slot handler
  *
