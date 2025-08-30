@@ -1,4 +1,4 @@
-name: 00-Build Conanfile
+name: Build Conanfile
 
 on:
   push:
