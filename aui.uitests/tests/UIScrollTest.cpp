@@ -28,8 +28,8 @@ public:
 
         setContents(
             Vertical {
-                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp } },
-                mBottomLabel = _new<ALabel>("Bottom"),
+                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp }, Margin { 8_dp } },
+                mBottomLabel = _new<ALabel>("Bottom") AUI_WITH_STYLE { Margin { 8_dp } },
             }
         );
         *this << ".container";
