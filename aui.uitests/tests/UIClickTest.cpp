@@ -55,8 +55,8 @@ protected:
                                      onButtonClicked();
                                  })
                         .connect(&AView::clickedRightOrLongPressed, this, [&] { onButtonClickedRightOrLongPressed(); })
-                        .connect(&AView::doubleClicked, this, [&] { onButtonDoubleClicked(); }) let { it->setDefault(); },
-                mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); },
+                        .connect(&AView::doubleClicked, this, [&] { onButtonDoubleClicked(); }) AUI_LET { it->setDefault(); },
+                mHelloLabel = _new<ALabel>("Hello!") AUI_LET { it->setVisibility(Visibility::INVISIBLE); },
               },
             });
 

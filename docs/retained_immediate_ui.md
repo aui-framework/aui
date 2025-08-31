@@ -18,7 +18,7 @@ public:
             // instead of invoking a contract that
             // explicitly describes what the view
             // expects to receive and give
-            mButton = _new<AButton>("0") let {
+            mButton = _new<AButton>("0") AUI_LET {
                 connect(it->clicked, me::increase);
             },
         });

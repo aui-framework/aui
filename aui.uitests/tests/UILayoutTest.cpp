@@ -59,19 +59,24 @@ TEST_F(UILayoutTest, SmallCorner1) {
         }
     };
 
-    auto cornerLabel = _new<View>("26") with_style {
-        ATextAlign::RIGHT, FontSize { 8_dp }, LineHeight { 9.68 },           MinSize(12_dp, 8_dp),
-        Padding(0),        Margin(0),         BackgroundSolid(0xff00ff_rgb),
+    auto cornerLabel = _new<View>("26") AUI_WITH_STYLE {
+        ATextAlign::RIGHT,
+        FontSize { 8_dp },
+        LineHeight { 9.68 },
+        MinSize(12_dp, 8_dp),
+        Padding(0),
+        Margin(0),
+        BackgroundSolid(0xff00ff_rgb),
     };
     _<AView> box = Horizontal {
-        SpacerExpanding() with_style { MinSize(0) }, Vertical {
-            SpacerExpanding() with_style { MinSize(0) },
+        SpacerExpanding() AUI_WITH_STYLE { MinSize(0) }, Vertical {
+            SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
             cornerLabel,
-        } with_style {
+        } AUI_WITH_STYLE {
             MinSize(0)
         }
     } << "Box"
-    with_style {
+    AUI_WITH_STYLE {
         FixedSize(22_dp),
         BackgroundSolid(0xffffff_rgb),
     };
@@ -85,8 +90,8 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
 TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
-      Button { "1", []{} } with_style { Expanding {} },
-    } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { "1" } AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
     auto b = By::type<AButton>().one();
 
     // checks the buttons margins are perfectly equal
@@ -95,29 +100,29 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
 }
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
-      Button { "1", []{} } with_style { Expanding {} },
-      Button { "2", []{} } with_style { Expanding {} },
-    } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { "1" } AUI_WITH_STYLE { Expanding {} },
+      Button { "2" } AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
-      ButtonEx { { Label { "1" } }, []{} } with_style { Expanding {} },
-      ButtonEx { { Label { "2" } }, []{} } with_style { Expanding {} },
-      ButtonEx { { Label { "3" } }, []{} } with_style { Expanding {} },
-      ButtonEx { { Label { "4" } }, []{} } with_style { Expanding {} },
-    } with_style { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { "1" } AUI_WITH_STYLE { Expanding {} },
+      Button { "2" } AUI_WITH_STYLE { Expanding {} },
+      Button { "3" } AUI_WITH_STYLE { Expanding {} },
+      Button { "4" } AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
-    By::type<AButtonEx>().check(sameWidth(), "widths of the buttons are not equal");
+    By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding_minsize" with_style { Expanding {}, MinSize { 200_dp, {} } },
-      _new<AView>() << ".expanding" with_style { Expanding {} },
-    } with_style { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -125,9 +130,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding" with_style { Expanding {} },
-      _new<AView>() << ".expanding_minsize" with_style { Expanding {}, MinSize { 200_dp, {} } },
-    } with_style { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
+      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -135,9 +140,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize2) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding_maxsize" with_style { Expanding {}, MaxSize { 100_dp, {} } },
-        _new<AView>() << ".expanding" with_style { Expanding {} },
-    } with_style { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
@@ -145,9 +150,9 @@ TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize2) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding" with_style { Expanding {} },
-        _new<AView>() << ".expanding_maxsize" with_style { Expanding {}, MaxSize { 100_dp, {} } },
-    } with_style { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
+        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");

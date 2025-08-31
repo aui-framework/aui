@@ -643,6 +643,7 @@ bool AViewContainerBase::capturesFocus() {
 }
 
 bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    AView::onGesture(origin, event);
     auto p = getViewAt(origin);
     if (p && p->enabled())
         return p->onGesture(origin - p->getPosition(), event);
