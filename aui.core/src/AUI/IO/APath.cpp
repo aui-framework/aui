@@ -221,11 +221,12 @@ APath APath::absolute() const {
     }
 #ifdef WIN32
     AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-    APath buf;
-    buf.resize(0x1000);
-    if (_wfullpath(aui::win32::toWchar(buf), reinterpret_cast<const wchar_t*>(pathU16.data()), buf.length()) == nullptr) {
+    AByteBuffer bufU16;
+    bufU16.resize(0x1000 * 2);
+    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), reinterpret_cast<const wchar_t*>(pathU16.data()), bufU16.size() * 2) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
+    APath buf(reinterpret_cast<const char16_t*>(bufU16.data()));
     buf.resizeToNullTerminator();
     buf.removeBackSlashes();
     return buf;
@@ -321,33 +322,35 @@ APath APath::withoutUppermostFolder() const {
 #include <shlobj.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
-    APath result;
-    result.resize(MAX_PATH);
+    AByteBuffer resultU16;
+    resultU16.resize(MAX_PATH * sizeof(wchar_t));
     switch (path) {
         case APPDATA:
-            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         case TEMP:
-            GetTempPath(result.length(), aui::win32::toWchar(result));
+            GetTempPath(MAX_PATH, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         case HOME:
-            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
+            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         default:
             AUI_ASSERT(0);
     }
+    APath result(reinterpret_cast<const char16_t*>(resultU16.data()));
     result.resizeToNullTerminator();
     result.removeBackSlashes();
     return result;
 }
 
 APath APath::workingDir() {
-    APath p;
-    p.resize(0x800);
-    p.resize(GetCurrentDirectory(p.length(), aui::win32::toWchar(p)));
+    AByteBuffer resultU16;
+    resultU16.resize(0x800 * 2);
+    resultU16.resize(GetCurrentDirectory(resultU16.size() * 2, reinterpret_cast<wchar_t*>(resultU16.data())));
+    APath p(reinterpret_cast<const char16_t*>(resultU16.data()));
     p.removeBackSlashes();
     return p;
 }
