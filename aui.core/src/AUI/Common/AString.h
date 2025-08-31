@@ -130,16 +130,28 @@ public:
         return byte_pos_;
     }
 
-    AUtf8ConstIterator& operator=(std::string::iterator it) noexcept {
+    AUtf8ConstIterator& operator=(const std::string::iterator& it) noexcept {
         if (begin_ != nullptr) {
+#if defined(AUI_COMPILER_MSVC)
+            std::string::iterator iterator;
+            iterator._Ptr = begin_;
+            byte_pos_ = it - iterator;
+#else
             byte_pos_ = it - std::string::iterator(const_cast<char*>(begin_));
+#endif
         }
         return *this;
     }
 
-    AUtf8ConstIterator& operator=(std::string::const_iterator it) noexcept {
+    AUtf8ConstIterator& operator=(const std::string::const_iterator& it) noexcept {
         if (begin_ != nullptr) {
+#if defined(AUI_COMPILER_MSVC)
+            std::string::const_iterator iterator;
+            iterator._Ptr = begin_;
+            byte_pos_ = it - iterator;
+#else
             byte_pos_ = it - std::string::const_iterator(begin_);
+#endif
         }
         return *this;
     }
@@ -160,9 +172,9 @@ private:
     AUtf8ConstIterator base_iterator_;
 
 public:
-    explicit constexpr AUtf8ConstReverseIterator() noexcept = default;
+    explicit AUtf8ConstReverseIterator() noexcept = default;
 
-    explicit constexpr AUtf8ConstReverseIterator(AUtf8ConstIterator it) noexcept
+    explicit AUtf8ConstReverseIterator(AUtf8ConstIterator it) noexcept
         : base_iterator_(it) {
         --base_iterator_;
     }
@@ -605,11 +617,15 @@ public:
 
     operator AStringView() const noexcept;
 
+    AStringView view() const noexcept {
+        return this->operator AStringView();
+    }
+
     /**
      * @brief Returns the number of bytes in the UTF-8 encoded string
      * @sa length
      */
-    constexpr size_type sizeBytes() const noexcept {
+    size_type sizeBytes() const noexcept {
         return size();
     }
 
@@ -671,6 +687,8 @@ public:
 
     AString replacedAll(AStringView from, AStringView to) const;
 
+    AString& removeAll(AChar c);
+
     AString processEscapes() const;
 
     /**
@@ -684,13 +702,13 @@ public:
     bool startsWith(AChar prefix) const noexcept;
 
     bool startsWith(AStringView prefix) const noexcept {
-        return static_cast<AStringView>(*this).startsWith(prefix);
+        return view().startsWith(prefix);
     }
 
     bool endsWith(AChar prefix) const noexcept;
 
     bool endsWith(AStringView suffix) const noexcept {
-        return static_cast<AStringView>(*this).endsWith(suffix);
+        return view().endsWith(suffix);
     }
 
     /**
@@ -861,6 +879,8 @@ public:
         return *(begin() + i);
     }
 
+    iterator erase(const_iterator it);
+
 //private: // non private because ASerializable
     size_type size() const noexcept {
         return super::size();
@@ -936,33 +956,4 @@ template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
 // gtest printer for AString
 inline void PrintTo(const AString& s, std::ostream* stream) {
     *stream << s.toStdString();
-}
-
-namespace std {
-
-template<>
-struct iterator_traits<AUtf8ConstIterator>
-{
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = AChar;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const AChar*;
-    using reference = AChar;
-};
-
-template<>
-struct iterator_traits<AUtf8ConstReverseIterator>
-{
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = AChar;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const AChar*;
-    using reference = AChar;
-};
-
-template<>
-inline constexpr bool ranges::enable_view<AString> = true;
-
-template<>
-inline constexpr bool ranges::enable_borrowed_range<AString> = true;
 }

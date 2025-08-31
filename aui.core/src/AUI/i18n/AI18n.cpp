@@ -15,6 +15,7 @@
 
 #include "AI18n.h"
 
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Url/AUrl.h>
@@ -93,14 +94,12 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
 #include <windows.h>
 
 ALanguageCode AI18n::userLanguage() {
-    AString result;
-    result.resize(LOCALE_NAME_MAX_LENGTH);
-    int len = GetUserDefaultLocaleName(aui::win32::toWchar(result), result.length());
+    AByteBuffer resultU16(LOCALE_NAME_MAX_LENGTH * sizeof(wchar_t));
+    int len = GetUserDefaultLocaleName(reinterpret_cast<wchar_t*>(resultU16.data()), LOCALE_NAME_MAX_LENGTH);
     if (len == 0) {
         aui::impl::lastErrorToException("could not get user language");
     }
-    result.resize(len - 1);
-    return result;
+    return AString(reinterpret_cast<const char16_t*>(resultU16.data()), len);
 }
 
 #else

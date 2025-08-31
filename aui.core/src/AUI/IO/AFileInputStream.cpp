@@ -12,11 +12,13 @@
 #include <AUI/Platform/ErrorToException.h>
 #include "AFileInputStream.h"
 
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AString.h"
 
 AFileInputStream::AFileInputStream(const AString& path) {
 #if AUI_PLATFORM_WIN
-    _wfopen_s(&mFile, aui::win32::toWchar(path), L"rb");
+    AByteBuffer pathU16 = path.encode(AStringEncoding::UTF16);
+    _wfopen_s(&mFile, reinterpret_cast<const wchar_t*>(pathU16.data()), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif

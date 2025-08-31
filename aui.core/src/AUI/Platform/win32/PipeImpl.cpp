@@ -13,6 +13,7 @@
 #include <AUI/Traits/strings.h>
 #include <cassert>
 #include "AUI/Common/AException.h"
+#include "AUI/Common/AByteBuffer.h"
 #include <atomic>
 
 static std::uintptr_t nextUniqueId() noexcept {
@@ -33,7 +34,8 @@ Pipe::Pipe() {
 
     constexpr auto BUFFER_SIZE = 4096;
     auto pipeName = R"(\\.\Pipe\AuiAnonPipe.{}.{})"_format(GetCurrentProcessId(), nextUniqueId());
-    mOut = CreateNamedPipe(aui::win32::toWchar(pipeName),
+    AByteBuffer pipeNameU16 = pipeName.encode(AStringEncoding::UTF16);
+    mOut = CreateNamedPipe(reinterpret_cast<const wchar_t*>(pipeNameU16.data()),
                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                            PIPE_TYPE_BYTE | PIPE_WAIT,
                            1,
@@ -45,7 +47,7 @@ Pipe::Pipe() {
     if (!mOut) {
         throw AException("CreateNamedPipe failed");
     }
-    mIn = CreateFile(aui::win32::toWchar(pipeName),
+    mIn = CreateFile(reinterpret_cast<const wchar_t*>(pipeNameU16.data()),
                      GENERIC_WRITE | FILE_FLAG_OVERLAPPED,
                      false, // no sharing
                      &securityAttributes,

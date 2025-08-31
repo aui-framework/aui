@@ -11,6 +11,8 @@
 
 #include <cassert>
 #include "AProgramModule.h"
+
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AString.h"
 
 #if AUI_PLATFORM_WIN
@@ -40,7 +42,8 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-    auto lib = LoadLibrary(aui::win32::toWchar(fullname));
+    AByteBuffer pathU16 = fullname.encode(AStringEncoding::UTF16);
+    auto lib = LoadLibrary(reinterpret_cast<const wchar_t*>(pathU16.data()));
     if (!lib) {
         throw LoadException(
             "Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));

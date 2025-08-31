@@ -399,7 +399,7 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
 }
 
 AString::operator AStringView() const noexcept {
-    return {static_cast<const std::string&>(*this)};
+    return {bytes().data(), bytes().size()};
 }
 
 AString::size_type AString::length() const noexcept {
@@ -1362,7 +1362,7 @@ AString& AString::replaceAll(AStringView from, AStringView to) {
                 *(bytes().begin() + next++) = c;
             }
             const auto diff = fromLength - toLength;
-            erase(bytes().begin() + next, bytes().begin() + next + diff);
+            super::erase(bytes().begin() + next, bytes().begin() + next + diff);
         }
     }
     return *this;
@@ -1403,6 +1403,17 @@ AString AString::replacedAll(AStringView from, AStringView to) const {
     }
 
     return result;
+}
+
+AString& AString::removeAll(AChar c) {
+    for (auto it = begin(); it != end();) {
+        if (*it == c) {
+            it = erase(it);
+        } else {
+            ++it;
+        }
+    }
+    return *this;
 }
 
 AString AString::processEscapes() const {
@@ -1535,27 +1546,27 @@ static AOptional<T> toNumber(AStringView str) noexcept {
 }
 
 AOptional<int32_t> AString::toInt() const noexcept {
-    return toNumber<int32_t>(*this);
+    return ::toNumber<int32_t>(*this);
 }
 
 AOptional<int64_t> AString::toLong() const noexcept {
-    return toNumber<int64_t>(*this);
+    return ::toNumber<int64_t>(*this);
 }
 
 AOptional<uint32_t> AString::toUInt() const noexcept {
-    return toNumber<uint32_t>(*this);
+    return ::toNumber<uint32_t>(*this);
 }
 
 AOptional<uint64_t> AString::toULong() const noexcept {
-    return toNumber<uint64_t>(*this);
+    return ::toNumber<uint64_t>(*this);
 }
 
 AOptional<float> AString::toFloat() const noexcept {
-    return toNumber<float>(*this);
+    return ::toNumber<float>(*this);
 }
 
 AOptional<double> AString::toDouble() const noexcept {
-    return toNumber<double>(*this);
+    return ::toNumber<double>(*this);
 }
 
 AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
@@ -1584,6 +1595,22 @@ AOptional<int> AString::toNumber(aui::ranged_number<int, 2, 36> base) const noex
     }
 
     return result;
+}
+
+auto AString::erase(const_iterator it) -> iterator {
+    if (it == cend()) {
+        return end();
+    }
+
+    size_type byte_pos = it.getBytePos();
+
+    size_type temp_pos = byte_pos;
+    aui::detail::decodeUtf8At(data(), temp_pos, size());
+    size_type char_byte_length = temp_pos - byte_pos;
+
+    super::erase(byte_pos, char_byte_length);
+
+    return iterator(this, byte_pos);
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)
