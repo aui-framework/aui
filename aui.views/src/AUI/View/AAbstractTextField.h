@@ -65,7 +65,7 @@ public:
 
     const AString& getText() const override;
 
-    void onCharEntered(char16_t c) override;
+    void onCharEntered(AChar c) override;
 
     void setSize(glm::ivec2 size) override;
 

@@ -109,7 +109,7 @@ namespace aui::detail {
         }
 
         glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.bytes().begin(), mWord.bytes().begin() + characterIndex), 0};
+            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + characterIndex), 0};
         }
 
         void appendTo(AString& dst) override {

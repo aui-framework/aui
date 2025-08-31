@@ -131,9 +131,9 @@ namespace {
     };
 
 
-    constexpr auto stringToEntriesView(ATextArea* thiz) {
+    /*constexpr auto stringToEntriesView(ATextArea* thiz) {
         return ranges::views::filter([](auto c) { return c != '\r'; })
-               | ranges::views::chunk_by([](char16_t prev, char16_t next) {
+               | ranges::views::chunk_by([](AChar prev, AChar next) {
             if (prev == '\n' || next == '\n') {
                 return false;
             }
@@ -155,7 +155,7 @@ namespace {
             }
             return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
         });
-    }
+    }*/
 }
 
 
@@ -169,14 +169,14 @@ ATextArea::ATextArea(const AString& text) :
 }
 
 void ATextArea::setText(const AString& t) {
-    auto entries = t
+    /*auto entries = t
                    | stringToEntriesView(this)
                    | ranges::to<Entries>();
     mEngine.setEntries(std::move(entries));
 
     AAbstractTypeable::setText(t);
     performLayout();
-    mCompiledText = t;
+    mCompiledText = t;*/
 }
 
 ATextArea::~ATextArea() {
@@ -249,9 +249,9 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
         }
         target = splitIfNecessary({ target, relativeIndex });
     }
-    for (auto i: toInsert | stringToEntriesView(this)) {
+    /*for (auto i: toInsert | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
-    }
+    }*/
 
     return true;
 }
@@ -273,7 +273,7 @@ ATextArea::Iterator ATextArea::splitIfNecessary(EntityQueryResult at) {
     return target;
 }
 
-bool ATextArea::typeableInsert(size_t at, char16_t toInsert) {
+bool ATextArea::typeableInsert(size_t at, AChar toInsert) {
     mCompiledText.reset();
     AUI_DEFER { performLayout(); };
     auto entity = getLeftEntity(at);
@@ -369,7 +369,7 @@ size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
     return AString::NPOS;
 }
 
-void ATextArea::onCharEntered(char16_t c) {
+void ATextArea::onCharEntered(AChar c) {
     AAbstractTypeableView<ATextBase>::onCharEntered(c);
     enterChar(c);
     if (textChanging) emit textChanging(text());

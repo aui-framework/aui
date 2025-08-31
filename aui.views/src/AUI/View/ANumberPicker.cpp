@@ -19,7 +19,7 @@
 bool ANumberPicker::ANumberPickerField::isValidText(const AString& text) {
     if (text.length() > 10)
         return false;
-    for (auto& c: text) {
+    for (auto c : text) {
         if ((c < '0' || c > '9') && c != '-')
             return false;
     }

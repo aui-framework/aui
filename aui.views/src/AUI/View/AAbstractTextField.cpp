@@ -92,7 +92,7 @@ void AAbstractTextField::setSuffix(const AString& s) {
 
 AString AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
-        return AString(mContents.length(), L'•');
+        return AString(mContents.length(), AChar(U'•'));
     }
     return mContents;
 }
@@ -155,7 +155,7 @@ void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextField::onCharEntered(char16_t c) {
+void AAbstractTextField::onCharEntered(AChar c) {
     mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;

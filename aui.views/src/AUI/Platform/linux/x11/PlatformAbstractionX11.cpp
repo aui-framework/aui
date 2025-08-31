@@ -152,25 +152,34 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         window = locateWindow(ev.xkey.window);
                         int count = 0;
                         KeySym keysym = 0;
-                        char buf[0x20];
+                        char buf[0x20] {'\0'};
                         Status status = 0;
                         auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get());
                         if (!x11ctx) {
                             break;
                         }
                         count = Xutf8LookupString(
-                            (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym, &status);
+                            (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, &status);
 
                         if (count > 0) {
-                            switch (buf[0]) {
-                                case 27:
-                                    break;   // esc
-                                case 127:
-                                    break;   // del
-                                default:
-                                    AString s(buf);
-                                    AUI_ASSERT(!s.empty());
-                                    window->onCharEntered(s[0]);
+                            if (count == 1) {
+                                switch (buf[0]) {
+                                    case 27:
+                                        break; // esc
+                                    case 127:
+                                        break; // del
+                                    default:
+                                        if (buf[0] >= 32) { // ASCII
+                                            window->onCharEntered(AChar(buf[0]));
+                                        }
+                                }
+                            } else {
+                                AString s(buf);
+                                if (!s.empty()) { // Valid UTF-8
+                                    for (AChar c : s) {
+                                        window->onCharEntered(c);
+                                    }
+                                }
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));

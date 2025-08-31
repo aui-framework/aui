@@ -30,12 +30,14 @@ char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcep
 
 size_t getPrevCharStart(const char* data, size_t pos) noexcept;
 
+std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index);
+
 }
 
 /**
  * @brief UTF-8 forward iterator for AString
  */
-class AStringUtf8Iterator {
+class AUtf8ConstIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = char32_t;
@@ -50,11 +52,11 @@ private:
     size_t byte_pos_;
 
 public:
-    constexpr AStringUtf8Iterator() noexcept
+    constexpr AUtf8ConstIterator() noexcept
         : data_(nullptr), begin_(nullptr), end_(nullptr),
           byte_pos_(0) {}
 
-    constexpr AStringUtf8Iterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
+    constexpr AUtf8ConstIterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
         : data_(data), begin_(begin), end_(end),
           byte_pos_(pos) {}
 
@@ -63,7 +65,7 @@ public:
         return aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
     }
 
-    AStringUtf8Iterator& operator++() noexcept {
+    AUtf8ConstIterator& operator++() noexcept {
         if (byte_pos_ < static_cast<size_t>(end_ - begin_)) {
             size_t temp_pos = byte_pos_;
             aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
@@ -72,30 +74,55 @@ public:
         return *this;
     }
 
-    AStringUtf8Iterator operator++(int) noexcept {
-        AStringUtf8Iterator temp = *this;
+    AUtf8ConstIterator operator++(int) noexcept {
+        AUtf8ConstIterator temp = *this;
         ++(*this);
         return temp;
     }
 
-    AStringUtf8Iterator& operator--() noexcept {
+    AUtf8ConstIterator& operator--() noexcept {
         if (byte_pos_ > 0) {
             byte_pos_ = aui::detail::getPrevCharStart(data_, byte_pos_);
         }
         return *this;
     }
 
-    AStringUtf8Iterator operator--(int) noexcept {
-        AStringUtf8Iterator temp = *this;
+    AUtf8ConstIterator operator--(int) noexcept {
+        AUtf8ConstIterator temp = *this;
         --(*this);
         return temp;
     }
 
-    bool operator==(const AStringUtf8Iterator& other) const noexcept {
+    AUtf8ConstIterator& operator+=(int n) noexcept {
+        if (n > 0) {
+            ++(*this);
+        } else if (n < 0) {
+            --(*this);
+        }
+        return *this;
+    }
+
+    AUtf8ConstIterator& operator-=(int n) noexcept {
+        return *this += (-n);
+    }
+
+    AUtf8ConstIterator operator+(int n) const noexcept {
+        AUtf8ConstIterator result = *this;
+        result += n;
+        return result;
+    }
+
+    AUtf8ConstIterator operator-(int n) const noexcept {
+        AUtf8ConstIterator result = *this;
+        result -= n;
+        return result;
+    }
+
+    bool operator==(const AUtf8ConstIterator& other) const noexcept {
         return data_ == other.data_ && byte_pos_ == other.byte_pos_;
     }
 
-    bool operator!=(const AStringUtf8Iterator& other) const noexcept {
+    bool operator!=(const AUtf8ConstIterator& other) const noexcept {
         return !(*this == other);
     }
 
@@ -103,14 +130,14 @@ public:
         return byte_pos_;
     }
 
-    AStringUtf8Iterator& operator=(std::string::iterator it) noexcept {
+    AUtf8ConstIterator& operator=(std::string::iterator it) noexcept {
         if (begin_ != nullptr) {
             byte_pos_ = it - std::string::iterator(const_cast<char*>(begin_));
         }
         return *this;
     }
 
-    AStringUtf8Iterator& operator=(std::string::const_iterator it) noexcept {
+    AUtf8ConstIterator& operator=(std::string::const_iterator it) noexcept {
         if (begin_ != nullptr) {
             byte_pos_ = it - std::string::const_iterator(begin_);
         }
@@ -121,7 +148,7 @@ public:
 /**
  * @brief UTF-8 reverse iterator for AString
  */
-class AStringUtf8ReverseIterator {
+class AUtf8ConstReverseIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = char32_t;
@@ -130,18 +157,18 @@ public:
     using reference = char32_t;
 
 private:
-    AStringUtf8Iterator base_iterator_;
+    AUtf8ConstIterator base_iterator_;
 
 public:
-    explicit constexpr AStringUtf8ReverseIterator() noexcept = default;
+    explicit constexpr AUtf8ConstReverseIterator() noexcept = default;
 
-    explicit constexpr AStringUtf8ReverseIterator(AStringUtf8Iterator it) noexcept
+    explicit constexpr AUtf8ConstReverseIterator(AUtf8ConstIterator it) noexcept
         : base_iterator_(it) {
         --base_iterator_;
     }
 
-    AStringUtf8Iterator base() const noexcept {
-        AStringUtf8Iterator temp = base_iterator_;
+    AUtf8ConstIterator base() const noexcept {
+        AUtf8ConstIterator temp = base_iterator_;
         ++temp;
         return temp;
     }
@@ -150,47 +177,160 @@ public:
         return *base_iterator_;
     }
 
-    AStringUtf8ReverseIterator& operator++() noexcept {
+    AUtf8ConstReverseIterator& operator++() noexcept {
         --base_iterator_;
         return *this;
     }
 
-    AStringUtf8ReverseIterator operator++(int) noexcept {
-        AStringUtf8ReverseIterator temp = *this;
+    AUtf8ConstReverseIterator operator++(int) noexcept {
+        AUtf8ConstReverseIterator temp = *this;
         ++(*this);
         return temp;
     }
 
-    AStringUtf8ReverseIterator& operator--() noexcept {
+    AUtf8ConstReverseIterator& operator--() noexcept {
         ++base_iterator_;
         return *this;
     }
 
-    AStringUtf8ReverseIterator operator--(int) noexcept {
-        AStringUtf8ReverseIterator temp = *this;
+    AUtf8ConstReverseIterator operator--(int) noexcept {
+        AUtf8ConstReverseIterator temp = *this;
         --(*this);
         return temp;
     }
 
-    bool operator==(const AStringUtf8ReverseIterator& other) const noexcept {
+    bool operator==(const AUtf8ConstReverseIterator& other) const noexcept {
         return base_iterator_ == other.base_iterator_;
     }
 
-    bool operator!=(const AStringUtf8ReverseIterator& other) const noexcept {
+    bool operator!=(const AUtf8ConstReverseIterator& other) const noexcept {
         return !(*this == other);
     }
 
-    AStringUtf8ReverseIterator& operator=(std::string::reverse_iterator it) noexcept {
+    AUtf8ConstReverseIterator& operator=(std::string::reverse_iterator it) noexcept {
         base_iterator_ = it.base();
         --base_iterator_;
         return *this;
     }
 
-    AStringUtf8ReverseIterator& operator=(std::string::const_reverse_iterator it) noexcept {
+    AUtf8ConstReverseIterator& operator=(std::string::const_reverse_iterator it) noexcept {
         base_iterator_ = it.base();
         --base_iterator_;
         return *this;
     }
+};
+
+
+class AUtf8MutableIterator {
+public:
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = char32_t;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const char32_t*;
+    using reference = char32_t;
+
+private:
+    AString* string_;
+    size_t byte_pos_;
+
+    /**
+     * @brief Get the byte length of UTF-8 character at current position
+     */
+    size_t getCurrentCharByteLength() const noexcept;
+
+    /**
+     * @brief Get the byte length needed to encode a char32_t in UTF-8
+     */
+    static size_t getEncodedByteLength(char32_t codepoint) noexcept;
+
+    /**
+     * @brief Encode a char32_t to UTF-8 bytes
+     */
+    static size_t encodeUtf8(char32_t codepoint, char* buffer) noexcept;
+
+public:
+    AUtf8MutableIterator() noexcept;
+    AUtf8MutableIterator(AString* str, size_t pos) noexcept;
+
+    /**
+     * @brief Dereference operator - returns current character
+     */
+    AChar operator*() const noexcept;
+
+    /**
+     * @brief Assignment operator - replaces current character
+     * @param c The character to assign at current position
+     * @return Reference to this iterator
+     */
+    AUtf8MutableIterator& operator=(AChar c);
+
+    /**
+     * @brief Pre-increment operator
+     */
+    AUtf8MutableIterator& operator++() noexcept;
+
+    /**
+     * @brief Post-increment operator
+     */
+    AUtf8MutableIterator operator++(int) noexcept;
+
+    /**
+     * @brief Pre-decrement operator
+     */
+    AUtf8MutableIterator& operator--() noexcept;
+
+    /**
+     * @brief Post-decrement operator
+     */
+    AUtf8MutableIterator operator--(int) noexcept;
+
+    /**
+     * @brief Advance this iterator by n characters forward (in-place)
+     * @param n Number of characters to advance (can be negative for backward movement)
+     * @return Reference to this iterator
+     */
+    AUtf8MutableIterator& operator+=(int n) noexcept;
+
+    AUtf8MutableIterator& operator-=(int n) noexcept {
+        return *this += (-n);
+    }
+
+    AUtf8MutableIterator operator+(int n) const noexcept {
+        AUtf8MutableIterator result = *this;
+        result += n;
+        return result;
+    }
+
+    AUtf8MutableIterator operator-(int n) const noexcept {
+        AUtf8MutableIterator result = *this;
+        result -= n;
+        return result;
+    }
+
+    /**
+     * @brief Equality comparison
+     */
+    bool operator==(const AUtf8MutableIterator& other) const noexcept;
+
+    /**
+     * @brief Inequality comparison
+     */
+    bool operator!=(const AUtf8MutableIterator& other) const noexcept;
+
+    /**
+     * @brief Get current byte position
+     */
+    size_t getBytePos() const noexcept;
+
+    /**
+     * @brief Get pointer to the string
+     */
+    AString* getString() const noexcept;
+
+    /**
+     * @brief Convert to const iterator
+     */
+    operator AUtf8ConstIterator() const noexcept;
 };
 
 class AStringView: public std::string_view {
@@ -200,10 +340,10 @@ private:
 public:
     using bytes_type = super;
 
-    using iterator = AStringUtf8Iterator;
-    using const_iterator = AStringUtf8Iterator;
-    using reverse_iterator = AStringUtf8ReverseIterator;
-    using const_reverse_iterator = AStringUtf8ReverseIterator;
+    using iterator = AUtf8ConstIterator;
+    using const_iterator = AUtf8ConstIterator;
+    using reverse_iterator = AUtf8ConstReverseIterator;
+    using const_reverse_iterator = AUtf8ConstReverseIterator;
 
     using super::super;
 
@@ -232,11 +372,11 @@ public:
     }
 
     iterator begin() const noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
+        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
     }
 
     iterator end() const noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), size());
+        return AUtf8ConstIterator(data(), data(), data() + size(), size());
     }
 
     const_iterator cbegin() const noexcept {
@@ -248,11 +388,11 @@ public:
     }
 
     reverse_iterator rbegin() const noexcept {
-        return AStringUtf8ReverseIterator(end());
+        return AUtf8ConstReverseIterator(end());
     }
 
     reverse_iterator rend() const noexcept {
-        return AStringUtf8ReverseIterator(begin());
+        return AUtf8ConstReverseIterator(begin());
     }
 
     const_reverse_iterator crbegin() const noexcept {
@@ -321,10 +461,10 @@ public:
     using value_type = super::value_type;
     using bytes_type = super;
 
-    using iterator = AStringUtf8Iterator;
-    using const_iterator = AStringUtf8Iterator;
-    using reverse_iterator = AStringUtf8ReverseIterator;
-    using const_reverse_iterator = AStringUtf8ReverseIterator;
+    using iterator = AUtf8MutableIterator;
+    using const_iterator = AUtf8ConstIterator;
+    using reverse_iterator = AUtf8ConstReverseIterator;
+    using const_reverse_iterator = AUtf8ConstReverseIterator;
 
     auto constexpr static NPOS = super::npos;
 
@@ -400,11 +540,22 @@ public:
 
     AString(size_type n, AChar c);
 
+    AString(std::initializer_list<AChar> il) {
+        reserve(il.size());
+        for (AChar c : il) {
+            push_back(c);
+        }
+    }
+
     ~AString() = default;
 
     using super::push_back;
 
     void push_back(AChar c) noexcept;
+
+    void insert(size_type pos, AChar c);
+
+    void insert(size_type pos, AStringView str);
 
     /**
      * @brief Encodes the string into a byte buffer using the specified encoding.
@@ -640,19 +791,19 @@ public:
     AString format(Args&&... args) const;
 
     iterator begin() noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
+        return AUtf8MutableIterator(this, 0);
     }
 
     iterator end() noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), size());
+        return AUtf8MutableIterator(this, size());
     }
 
     const_iterator begin() const noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), 0);
+        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
     }
 
     const_iterator end() const noexcept {
-        return AStringUtf8Iterator(data(), data(), data() + size(), size());
+        return AUtf8ConstIterator(data(), data(), data() + size(), size());
     }
 
     const_iterator cbegin() const noexcept {
@@ -664,19 +815,19 @@ public:
     }
 
     reverse_iterator rbegin() noexcept {
-        return AStringUtf8ReverseIterator(end());
+        return AUtf8ConstReverseIterator(end());
     }
 
     reverse_iterator rend() noexcept {
-        return AStringUtf8ReverseIterator(begin());
+        return AUtf8ConstReverseIterator(begin());
     }
 
     const_reverse_iterator rbegin() const noexcept {
-        return AStringUtf8ReverseIterator(end());
+        return AUtf8ConstReverseIterator(end());
     }
 
     const_reverse_iterator rend() const noexcept {
-        return AStringUtf8ReverseIterator(begin());
+        return AUtf8ConstReverseIterator(begin());
     }
 
     const_reverse_iterator crbegin() const noexcept {
@@ -701,6 +852,13 @@ public:
         auto it = end();
         --it;
         return *it;
+    }
+
+    AChar operator[](size_type i) const {
+        if (empty()) {
+            return AChar();
+        }
+        return *(begin() + i);
     }
 
 //private: // non private because ASerializable
@@ -778,4 +936,33 @@ template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
 // gtest printer for AString
 inline void PrintTo(const AString& s, std::ostream* stream) {
     *stream << s.toStdString();
+}
+
+namespace std {
+
+template<>
+struct iterator_traits<AUtf8ConstIterator>
+{
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = AChar;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const AChar*;
+    using reference = AChar;
+};
+
+template<>
+struct iterator_traits<AUtf8ConstReverseIterator>
+{
+    using iterator_category = std::bidirectional_iterator_tag;
+    using value_type = AChar;
+    using difference_type = std::ptrdiff_t;
+    using pointer = const AChar*;
+    using reference = AChar;
+};
+
+template<>
+inline constexpr bool ranges::enable_view<AString> = true;
+
+template<>
+inline constexpr bool ranges::enable_borrowed_range<AString> = true;
 }

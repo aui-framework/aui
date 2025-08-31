@@ -123,10 +123,10 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         aui::lambda_overloaded {
           [](const ArgSingleString& singleString) {
               auto split = singleString.arg.split(' ');
-              return split | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return split | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
           [](const ArgStringList& singleString) {
-              return singleString.list | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return singleString.list | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
         },
         mInfo.args);

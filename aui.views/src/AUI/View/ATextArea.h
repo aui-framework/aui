@@ -63,7 +63,7 @@ public:
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;
     void render(ARenderContext context) override;
-    void onCharEntered(char16_t c) override;
+    void onCharEntered(AChar c) override;
     glm::ivec2 getCursorPosition() override;
     void setSize(glm::ivec2 size) override;
 

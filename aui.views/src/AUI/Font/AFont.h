@@ -81,7 +81,7 @@ private:
         return mCharData[FontKey{size, fr}];
     }
 
-    Character renderGlyph(const FontEntry& fs, long glyph);
+    Character renderGlyph(const FontEntry& fs, AChar glyph);
 
 public:
     AFont(AFontManager* fm, const AString& path);
@@ -96,7 +96,7 @@ public:
 
     AFont(const AFont&) = delete;
 
-    Character& getCharacter(const FontEntry& charset, long glyph);
+    Character& getCharacter(const FontEntry& charset, AChar glyph);
 
     float length(const FontEntry& charset, const AString& text);
 

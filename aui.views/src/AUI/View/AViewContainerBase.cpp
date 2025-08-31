@@ -671,7 +671,7 @@ void AViewContainerBase::onKeyUp(AInput::Key key) {
     AUI_NULLSAFE(focusChainTarget())->onKeyUp(key);
 }
 
-void AViewContainerBase::onCharEntered(char16_t c) {
+void AViewContainerBase::onCharEntered(AChar c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
 }

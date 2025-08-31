@@ -77,6 +77,226 @@ size_t getPrevCharStart(const char* data, size_t pos) noexcept {
     return prev_pos;
 }
 
+inline size_t utf8_char_length(unsigned char first_byte) {
+    if ((first_byte & 0x80) == 0) return 1; // 0xxxxxxx
+    if ((first_byte & 0xE0) == 0xC0) return 2; // 110xxxxx
+    if ((first_byte & 0xF0) == 0xE0) return 3; // 1110xxxx
+    if ((first_byte & 0xF8) == 0xF0) return 4; // 11110xxx
+    return 0; // Invalid UTF-8
+}
+
+std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index) {
+    size_t byte_pos = 0;
+    size_t char_count = 0;
+
+    while (byte_pos < utf8_str.size()) {
+        if (char_count == unicode_index) {
+            return byte_pos;
+        }
+
+        size_t char_len = utf8_char_length(static_cast<unsigned char>(utf8_str[byte_pos]));
+
+        if (char_len == 0 || byte_pos + char_len > utf8_str.size()) {
+            return std::nullopt;
+        }
+
+        byte_pos += char_len;
+        char_count++;
+    }
+
+    if (char_count == unicode_index) {
+        return byte_pos;
+    }
+
+    return std::nullopt;
+}
+
+}
+
+size_t AUtf8MutableIterator::getCurrentCharByteLength() const noexcept {
+    if (!string_ || byte_pos_ >= string_->size()) {
+        return 0;
+    }
+
+    const char* data = string_->data();
+    unsigned char first_byte = static_cast<unsigned char>(data[byte_pos_]);
+
+    if (first_byte < 0x80) return 1;      // 0xxxxxxx
+    if (first_byte < 0xC0) return 1;      // Invalid continuation byte, treat as 1
+    if (first_byte < 0xE0) return 2;      // 110xxxxx
+    if (first_byte < 0xF0) return 3;      // 1110xxxx
+    if (first_byte < 0xF8) return 4;      // 11110xxx
+    return 1; // Invalid, treat as 1
+}
+
+size_t AUtf8MutableIterator::getEncodedByteLength(char32_t codepoint) noexcept {
+    if (codepoint <= 0x7F) return 1;
+    if (codepoint <= 0x7FF) return 2;
+    if (codepoint <= 0xFFFF) return 3;
+    if (codepoint <= 0x10FFFF) return 4;
+    return 3; // Invalid codepoint, encode as replacement character (3 bytes)
+}
+
+size_t AUtf8MutableIterator::encodeUtf8(char32_t codepoint, char* buffer) noexcept {
+    if (codepoint <= 0x7F) {
+        buffer[0] = static_cast<char>(codepoint);
+        return 1;
+    }
+    if (codepoint <= 0x7FF) {
+        buffer[0] = static_cast<char>(0xC0 | (codepoint >> 6));
+        buffer[1] = static_cast<char>(0x80 | (codepoint & 0x3F));
+        return 2;
+    }
+    if (codepoint <= 0xFFFF) {
+        buffer[0] = static_cast<char>(0xE0 | (codepoint >> 12));
+        buffer[1] = static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+        buffer[2] = static_cast<char>(0x80 | (codepoint & 0x3F));
+        return 3;
+    }
+    if (codepoint <= 0x10FFFF) {
+        buffer[0] = static_cast<char>(0xF0 | (codepoint >> 18));
+        buffer[1] = static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
+        buffer[2] = static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+        buffer[3] = static_cast<char>(0x80 | (codepoint & 0x3F));
+        return 4;
+    }
+
+    // Invalid codepoint, encode replacement character U+FFFD
+    buffer[0] = static_cast<char>(0xEF);
+    buffer[1] = static_cast<char>(0xBF);
+    buffer[2] = static_cast<char>(0xBD);
+    return 3;
+}
+
+AUtf8MutableIterator::AUtf8MutableIterator() noexcept
+    : string_(nullptr), byte_pos_(0) {}
+
+AUtf8MutableIterator::AUtf8MutableIterator(AString* str, size_t pos) noexcept
+    : string_(str), byte_pos_(pos) {}
+
+AChar AUtf8MutableIterator::operator*() const noexcept {
+    if (!string_ || byte_pos_ >= string_->size()) {
+        return AChar();
+    }
+
+    size_t temp_pos = byte_pos_;
+    return aui::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
+}
+
+AUtf8MutableIterator& AUtf8MutableIterator::operator=(AChar c) {
+    if (!string_ || byte_pos_ >= string_->size()) {
+        return *this;
+    }
+
+    char32_t new_codepoint = c.codepoint();
+    size_t current_char_bytes = getCurrentCharByteLength();
+    size_t new_char_bytes = getEncodedByteLength(new_codepoint);
+
+    char utf8_buffer[4];
+    size_t encoded_bytes = encodeUtf8(new_codepoint, utf8_buffer);
+
+    if (current_char_bytes == new_char_bytes) {
+        // Same byte length - simple replacement
+        std::memcpy(string_->data() + byte_pos_, utf8_buffer, encoded_bytes);
+    } else if (current_char_bytes > new_char_bytes) {
+        // New character is shorter - replace and shift left
+        std::memcpy(string_->data() + byte_pos_, utf8_buffer, encoded_bytes);
+
+        size_t shift_start = byte_pos_ + current_char_bytes;
+        size_t shift_end = string_->size();
+        size_t bytes_to_shift = shift_end - shift_start;
+
+        if (bytes_to_shift > 0) {
+            std::memmove(string_->data() + byte_pos_ + encoded_bytes,
+                       string_->data() + shift_start,
+                       bytes_to_shift);
+        }
+
+        string_->resize(string_->size() - (current_char_bytes - encoded_bytes));
+    } else {
+        // New character is longer - need to make space and shift right
+        size_t bytes_to_add = new_char_bytes - current_char_bytes;
+        size_t old_size = string_->size();
+        string_->resize(old_size + bytes_to_add);
+
+        size_t shift_start = byte_pos_ + current_char_bytes;
+        size_t bytes_to_shift = old_size - shift_start;
+
+        if (bytes_to_shift > 0) {
+            std::memmove(string_->data() + byte_pos_ + encoded_bytes,
+                       string_->data() + shift_start,
+                       bytes_to_shift);
+        }
+
+        std::memcpy(string_->data() + byte_pos_, utf8_buffer, encoded_bytes);
+    }
+
+    return *this;
+}
+
+AUtf8MutableIterator& AUtf8MutableIterator::operator++() noexcept {
+    if (string_ && byte_pos_ < string_->size()) {
+        size_t temp_pos = byte_pos_;
+        aui::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
+        byte_pos_ = temp_pos;
+    }
+    return *this;
+}
+
+AUtf8MutableIterator AUtf8MutableIterator::operator++(int) noexcept {
+    AUtf8MutableIterator temp = *this;
+    ++(*this);
+    return temp;
+}
+
+AUtf8MutableIterator& AUtf8MutableIterator::operator--() noexcept {
+    if (string_ && byte_pos_ > 0) {
+        byte_pos_ = aui::detail::getPrevCharStart(string_->data(), byte_pos_);
+    }
+    return *this;
+}
+
+AUtf8MutableIterator AUtf8MutableIterator::operator--(int) noexcept {
+    AUtf8MutableIterator temp = *this;
+    --(*this);
+    return temp;
+}
+
+AUtf8MutableIterator& AUtf8MutableIterator::operator+=(int n) noexcept {
+    if (n > 0) {
+        for (int i = 0; i < n && string_ && byte_pos_ < string_->size(); ++i) {
+            ++(*this);
+        }
+    } else if (n < 0) {
+        for (int i = 0; i > n && string_ && byte_pos_ > 0; --i) {
+            --(*this);
+        }
+    }
+    return *this;
+}
+
+bool AUtf8MutableIterator::operator==(const AUtf8MutableIterator& other) const noexcept {
+    return string_ == other.string_ && byte_pos_ == other.byte_pos_;
+}
+
+bool AUtf8MutableIterator::operator!=(const AUtf8MutableIterator& other) const noexcept {
+    return !(*this == other);
+}
+
+size_t AUtf8MutableIterator::getBytePos() const noexcept {
+    return byte_pos_;
+}
+
+AString* AUtf8MutableIterator::getString() const noexcept {
+    return string_;
+}
+
+AUtf8MutableIterator::operator AUtf8ConstIterator() const noexcept {
+    if (!string_) {
+        return AUtf8ConstIterator();
+    }
+    return AUtf8ConstIterator(string_->data(), string_->data(),
+                             string_->data() + string_->size(), byte_pos_);
 }
 
 AString AString::numberHex(int i) {
@@ -112,6 +332,8 @@ AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) {
 AString::AString(const char* utf8_bytes, size_type length) {
     if (simdutf::validate_utf8(utf8_bytes, length)) {
         *this = std::string(utf8_bytes, length);
+    } else {
+        *this = AString(length, AChar(AChar::INVALID_CHAR));
     }
 }
 
@@ -138,6 +360,15 @@ AString::AString(size_type n, AChar c) {
 
 void AString::push_back(AChar c) noexcept {
     append(c);
+}
+
+void AString::insert(size_type pos, AChar c) {
+    auto utf8c = c.toUtf8();
+    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value(), utf8c.begin(), utf8c.end());
+}
+
+void AString::insert(size_type pos, AStringView str) {
+    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value(), str.begin(), str.end());
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {
@@ -1125,7 +1356,7 @@ AString& AString::replaceAll(AStringView from, AStringView to) {
             for (auto c : aui::range(to.bytes().begin(), to.bytes().end() - diff)) {
                 *(bytes().begin() + next++) = c;
             }
-            next = std::distance(bytes().begin(), insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
+            next = std::distance(bytes().begin(), bytes().insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
         } else {
             for (auto c : to) {
                 *(bytes().begin() + next++) = c;
@@ -1161,12 +1392,12 @@ AString AString::replacedAll(AStringView from, AStringView to) const {
         auto next = find(from, pos);
         if (next == NPOS)
         {
-            result.insert(result.bytes().end(), bytes().begin() + pos, bytes().end());
+            result.bytes().insert(result.bytes().end(), bytes().begin() + pos, bytes().end());
             return result;
         }
 
-        result.insert(result.bytes().end(), bytes().begin() + pos, bytes().begin() + next);
-        result.insert(result.bytes().end(), to.bytes().begin(), to.bytes().end());
+        result.bytes().insert(result.bytes().end(), bytes().begin() + pos, bytes().begin() + next);
+        result.bytes().insert(result.bytes().end(), to.bytes().begin(), to.bytes().end());
 
         pos = next + from.length();
     }

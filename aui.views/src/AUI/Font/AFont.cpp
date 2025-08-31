@@ -65,7 +65,7 @@ glm::vec2 AFont::getKerning(wchar_t left, wchar_t right) {
     return {vec2.x >> 6, vec2.y >> 6};
 }
 
-AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
+AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int size = fs.first.size;
     FontRendering fr = fs.first.fr;
 
@@ -136,7 +136,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
     };
 }
 
-AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
+AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     auto& chars = charset.second.characters;
     if (chars.size() > glyph && chars[glyph]) {
         return *chars[glyph];

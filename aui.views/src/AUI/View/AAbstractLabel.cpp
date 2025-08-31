@@ -76,7 +76,7 @@ Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 
 template<class Iterator>
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    static constexpr auto ELLIPSIS = u'…';
+    static constexpr AChar ELLIPSIS = U'…';
     auto firstOverflowedIt = findFirstOverflowedIndex(
         begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({ELLIPSIS}) : 0));
     if (firstOverflowedIt == end) {
