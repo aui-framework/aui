@@ -14,9 +14,20 @@
 #include <AUI/Common/AObjectBase.h>
 
 /**
- * @defgroup react Reactive expressions
+ * @defgroup reactive Reactive expressions
  * @details
- * Implements reactive expressions.
+ * Reactive expressions are a way to create dynamic values that automatically update when their dependencies change.
+ * They're particularly useful for creating computed properties that depend on other properties.
+ *
+ * ```cpp
+ * APropertyPrecomputed<int> sum = [&] {
+ *   return property1 + property2;  // automatically tracks dependencies
+ * };
+ * ```
+ *
+ * This creates a readonly property that computes its value based on other properties. Dependencies are automatically
+ * tracked when the expression accesses other properties. The value is recomputed lazily when accessed after
+ * dependencies change.
  */
 
 /**

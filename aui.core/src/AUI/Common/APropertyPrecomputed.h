@@ -20,7 +20,7 @@
 /**
  * @brief Readonly property that holds a value computed by an expression.
  * @ingroup property-system
- * @ingroup react
+ * @ingroup reactive
  * @details
  * <!-- aui:experimental -->
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.

@@ -16,7 +16,7 @@
 namespace declarative::contract {
 
 /**
- * @brief Denotes a potentially [reactive](react.md) value in declarative contracts.
+ * @brief Denotes a potentially reactive value in declarative contracts.
  * @tparam T Type of the value.
  * @details
  * A helper class that allows you to declare a value that can be either a constant or a reactive expression.

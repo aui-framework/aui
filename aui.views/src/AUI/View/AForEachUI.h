@@ -133,6 +133,7 @@ concept RangeFactory = requires(Factory&& factory) {
  * ![](imgs/views/AForEachUI.png)
  *
  * @ingroup views_containment
+ * @ingroup reactive
  * @details
  * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
  *
@@ -166,7 +167,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * ![](imgs/UIDeclarativeForTest.Example_.png)
  *
- * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially [reactive](aui::react) expression
+ * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially reactive expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
  * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
  * [AUI_DECLARATIVE_FOR] macro; the lambda's body (including curly braces) is left up to developer. The final

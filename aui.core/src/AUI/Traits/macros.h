@@ -51,12 +51,12 @@
 
 
 /**
- * @brief Explicitly denotes a [reactive](react.md) expression.
+ * @brief Explicitly denotes a [reactive](reactive.md) expression.
  * @ingroup useful_macros
- * @ingroup react
+ * @ingroup reactive
  * @details
- * AUI_REACT is a core component of AUI Framework's [reactive](react.md) reactive programming model. It's used to
- * create [reactive](react.md) expressions that automatically update UI elements when their dependent values
+ * AUI_REACT is a core component of AUI Framework's [reactive](reactive.md) reactive programming model. It's used to
+ * create [reactive](reactive.md) expressions that automatically update UI elements when their dependent values
  * change.
  *
  * The expression is a C++ expression that depends on AProperty values:
