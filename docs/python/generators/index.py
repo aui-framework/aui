@@ -56,5 +56,13 @@ def populate_mapping(markdown: str, file: File):
 
 def find_page(name: str) -> MappingEntry | None:
     global _mapping
-    return _mapping.get(name)
+    if m := _mapping.get(name):
+        return m
+
+    # hack: try to find a class in the namespace whose are commonly used with "using namespace".
+    for namespace in ["ass", "declarative"]:
+        if m := _mapping.get(f"{namespace}::{name}"):
+            return m
+
+    return None
 

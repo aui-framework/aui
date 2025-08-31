@@ -37,11 +37,14 @@ inline decltype(auto) operator*(const aui::PropertyModifier<T>& t) {
     return t.value();
 }
 
-#define AUI_DETAIL_BINARY_OP(op)                                                                                   \
-template<typename T, typename Rhs>                                                                                 \
-inline decltype(auto) operator op (const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {/* writeScope forwarding op */ \
-    return *lhs op std::forward<Rhs>(rhs);                                                                         \
-}                                                                                                                  \
+#define AUI_DETAIL_BINARY_OP(op)                                                                                       \
+    template <typename T, typename Rhs>                                                                                \
+    inline decltype(auto) operator op(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) { /* writeScope forwarding op */ \
+        static_assert(                                                                                                 \
+            requires { *lhs op std::forward<Rhs>(rhs); },                                                              \
+            "AProperty: this binary operator is not defined for underlying type.");                                    \
+        return *lhs op std::forward<Rhs>(rhs);                                                                         \
+    }
 
 // keep in sync with detail/property.h
 
