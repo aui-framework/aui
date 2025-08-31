@@ -17,7 +17,7 @@ import re
 
 import mkdocs_gen_files
 
-from docs.python.generators import cpp_parser, common, group_page
+from docs.python.generators import cpp_parser, common, group_page, examples_page
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 
 log = logging.getLogger('mkdocs')
@@ -50,6 +50,55 @@ def gen_pages():
             print(f'', file=fos)
             doxygen = common.parse_doxygen(parse_entry.doc)
 
+            def _examples_for_symbol(names: list[str]):
+                try:
+                    index = examples_page.examples_index
+                except Exception:
+                    index = None
+
+                merged = []
+                seen = set()
+
+                if index is not None:
+                    for name in names:
+                        if not name:
+                            continue
+                        for ex in index.get(name, []):
+                            key = ex.get('id')
+                            if key in seen:
+                                continue
+                            seen.add(key)
+                            merged.append(ex)
+                    if merged:
+                        return merged
+
+                try:
+                    lists = examples_page.examples_lists
+                except Exception:
+                    return []
+
+                for category, items in lists.items():
+                    for ex in items:
+                        for src in ex.get('srcs', []):
+                            try:
+                                text = src.read_text(encoding='utf-8', errors='ignore')
+                            except Exception:
+                                continue
+                            for name in names:
+                                if not name:
+                                    continue
+                                if re.search(r"\b" + re.escape(name) + r"\b", text):
+                                    key = (ex['id'], ex['title'])
+                                    if key in seen:
+                                        break
+                                    seen.add(key)
+                                    merged.append(ex)
+                                    break
+                            else:
+                                continue
+                            break
+                return merged
+
 
             include_dir = parse_entry.location
             while include_dir.name != 'src':
@@ -61,6 +110,22 @@ def gen_pages():
 
             for type_entry in [i for i in doxygen if i[0] == '@brief']:
                 print(type_entry[1], file=fos)
+
+            # For non-class symbols (macros, free functions, enums), print examples at page level
+            if not isinstance(parse_entry, CppClass):
+                try:
+                    names_to_search = []
+                    if hasattr(parse_entry, 'namespaced_name'):
+                        names_to_search.append(parse_entry.namespaced_name())
+                    if hasattr(parse_entry, 'name'):
+                        names_to_search.append(parse_entry.name)
+                    exs = _examples_for_symbol(names_to_search)
+                    if exs:
+                        print('\n## Examples', file=fos)
+                        for ex in exs:
+                            print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                except Exception:
+                    pass
 
             has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
 
@@ -79,6 +144,28 @@ def gen_pages():
                 print('## Detailed Description', file=fos)
                 for type_entry in [i for i in doxygen if i[0] == '@details']:
                     print(type_entry[1], file=fos)
+
+            # collect class-level examples (don't print here; used as fallback per-method)
+            class_examples = []
+            try:
+                top_names = []
+                if hasattr(parse_entry, 'namespaced_name'):
+                    top_names.append(parse_entry.namespaced_name())
+                if hasattr(parse_entry, 'name'):
+                    top_names.append(parse_entry.name)
+                class_examples = _examples_for_symbol(top_names) or []
+            except Exception:
+                class_examples = []
+                pass
+
+            # For classes: print class-level examples once (used as fallback reference).
+            if isinstance(parse_entry, CppClass) and class_examples:
+                try:
+                    print('\n## Examples', file=fos)
+                    for ex in class_examples:
+                        print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                except Exception:
+                    pass
 
             def _render_invisible_header(toc, id, on_other_pages=None):
                 # hack: present the header as invisible block. The header will still appear in TOC and
@@ -112,6 +199,14 @@ def gen_pages():
                         for i in doxygen:
                             if i[0] in ['', '@details']:
                                 print(f'{i[1]}', file=fos)
+
+                        # Examples for nested types
+                        names_to_search = [full_name, type_entry.name]
+                        exs = _examples_for_symbol(names_to_search)
+                        if exs:
+                            print('\n## Examples', file=fos)
+                            for ex in exs:
+                                print(f"- [{ex['title']}]({ex['id']}.md) - {ex['description']}", file=fos)
 
                         # enums - see APath::DefaultPath
                         if hasattr(type_entry, 'enum_values'):
@@ -156,27 +251,35 @@ def gen_pages():
                             else:
                                 print('\n\n_Empty structure._', file=fos)
 
+
             if hasattr(parse_entry, 'fields'):
-                fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]
+                fields = [f for f in parse_entry.fields if f.visibility != 'private' and f.doc is not None]
                 if fields:
                     print('## Public fields and Signals', file=fos)
-                    for i in sorted(fields, key=lambda x: x.name):
+                    for field in sorted(fields, key=lambda x: x.name):
                         print('---', file=fos)
-                        full_name = f"{parse_entry.namespaced_name()}::{i.name}"
-                        _render_invisible_header(toc=i.name, id=full_name, on_other_pages=full_name)
-                        print(f'`#!cpp {i.type_str} {i.name}`\n\n', file=fos)
-                        doxygen = common.parse_doxygen(i.doc)
-                        for i in doxygen:
-                            if i[0] != '@brief':
+                        full_name = f"{parse_entry.namespaced_name()}::{field.name}"
+                        _render_invisible_header(toc=field.name, id=full_name, on_other_pages=full_name)
+                        print(f'`#!cpp {field.type_str} {field.name}`\n\n', file=fos)
+                        doxygen = common.parse_doxygen(field.doc)
+                        for d in doxygen:
+                            if d[0] != '@brief':
                                 continue
-                            print(i[1], file=fos)
+                            print(d[1], file=fos)
                         print('', file=fos)
-                        for i in doxygen:
-                            if i[0] == '@brief':
+                        for d in doxygen:
+                            if d[0] == '@brief':
                                 continue
-                            print(i[1], file=fos)
+                            print(d[1], file=fos)
                         print(f'\n', file=fos)
 
+                        # Examples for fields
+                        names_to_search = [full_name, field.name]
+                        exs = _examples_for_symbol(names_to_search)
+                        if exs:
+                            print('## Examples', file=fos)
+                            for ex in exs:
+                                print(f"- [{ex['title']}]({ex['id']}.md) - {ex['description']}", file=fos)
 
             if hasattr(parse_entry, 'methods'):
                 methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
@@ -234,6 +337,18 @@ def gen_pages():
                             for i in doxygen:
                                 if i[0] in ['', '@details']:
                                     print(f'{i[1]}', file=fos)
+
+                            # Examples for this overload: show method-specific examples only.
+                            try:
+                                method_full = f"{parse_entry.namespaced_name()}::{overload.name}"
+                                method_names = [method_full, overload.name]
+                                method_exs = _examples_for_symbol(method_names) or []
+                                if method_exs:
+                                    print('\n## Examples', file=fos)
+                                    for ex in method_exs:
+                                        print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            except Exception:
+                                pass
 
 
 

@@ -14,6 +14,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import io
 import os
+import re
 from pathlib import Path
 
 from docs.python.generators import regexes, common
@@ -93,6 +94,21 @@ def examine():
 examples_lists = examine()
 if not examples_lists:
     raise RuntimeError("no examples provided")
+
+examples_index: dict[str, list[dict]] = {}
+for category, items in examples_lists.items():
+    for ex in items:
+        seen_tokens = set()
+        for src in ex.get('srcs', []):
+            try:
+                text = src.read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+                continue
+            for tok in re.findall(r"\b[A-Za-z_][A-Za-z0-9_:]*\b", text):
+                if tok in seen_tokens:
+                    continue
+                seen_tokens.add(tok)
+                examples_index.setdefault(tok, []).append(ex)
 
 def define_env(env):
     @env.macro
