@@ -39,7 +39,8 @@ def populate_mapping(markdown: str, file: File):
         if m := regexes.PAGE_TITLE.match(line_contents):
             if page_title:
                 # several H1 headings breaks TOC.
-                log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
+                src = file.abs_src_path or file.src_uri
+                log.warning(f"Doc file '{src}':{line_number+1} contains several H1 headings")
 
             page_title = m.group(1)
             _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)

@@ -33,6 +33,62 @@ def _format_token_sequence(tokens: list[str]):
     return output
 
 
+def embed_doc(nested, fos):
+    doxygen = common.parse_doxygen(nested.doc)
+
+    # todo add a check for @brief to exist
+    for i in [i for i in doxygen if i[0] == '@brief']:
+        print(i[1], file=fos)
+
+    for i in doxygen:
+        if i[0] in ['', '@details']:
+            print(f'{i[1]}', file=fos)
+
+    # enums - see APath::DefaultPath
+    if hasattr(nested, 'enum_values'):
+        print('<table markdown>', file=fos)
+        print('<tr markdown>', file=fos)
+        print('<th>Constant</th>', file=fos)
+        print('<th>Description</th>', file=fos)
+        print('</tr>', file=fos)
+        for v in nested.enum_values:
+            print('<tr markdown>', file=fos)
+            print('<td markdown>', file=fos)
+            print(f'`#!cpp {nested.name}::{v[0]}`', file=fos)
+            print('</td>', file=fos)
+            print('<td markdown>', file=fos)
+            for i in common.parse_doxygen(v[1]):
+                print(i[1], file=fos)
+            print('</td>', file=fos)
+            print('</tr>', file=fos)
+
+        print('</table>', file=fos)
+
+    # nested struct - see AUpdater::InstallCmdline
+    if hasattr(nested, 'fields'):
+        if nested.fields:
+            print('<table markdown>', file=fos)
+            print('<tr markdown>', file=fos)
+            print('<th>Field</th>', file=fos)
+            print('<th>Description</th>', file=fos)
+            print('</tr>', file=fos)
+            for v in nested.fields:
+                print('<tr markdown>', file=fos)
+                print('<td markdown>', file=fos)
+                print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
+                print('</td>', file=fos)
+                print('<td markdown>', file=fos)
+                for i in common.parse_doxygen(v.doc):
+                    print(i[1], file=fos)
+                print('</td>', file=fos)
+                print('</tr>', file=fos)
+
+            print('</table>', file=fos)
+        else:
+            print('\n\n_Empty structure._', file=fos)
+    pass
+
+
 def gen_pages():
     for parse_entry in cpp_parser.index:
         if hasattr(parse_entry, 'doc'):
@@ -123,67 +179,15 @@ def gen_pages():
                 if types:
                     print('', file=fos)
                     print('## Public Types', file=fos)
-                    for type_entry in types:
-                        full_name = f"{parse_entry.namespaced_name()}::{type_entry.name}"
-                        _render_invisible_header(toc=type_entry.name, id=full_name, on_other_pages=full_name)
+                    for nested in types:
                         print('', file=fos)
                         print('---', file=fos)
                         print('', file=fos)
-                        print(f'`{type_entry.generic_kind} {parse_entry.namespaced_name()}::{type_entry.name}`', file=fos)
+                        full_name = f"{parse_entry.namespaced_name()}::{nested.name}"
+                        _render_invisible_header(toc=nested.name, id=full_name, on_other_pages=full_name)
+                        print(f'`{nested.generic_kind} {parse_entry.namespaced_name()}::{nested.name}`', file=fos)
                         print(f'', file=fos)
-
-                        doxygen = common.parse_doxygen(type_entry.doc)
-
-                        # todo add a check for @brief to exist
-                        for i in [i for i in doxygen if i[0] == '@brief']:
-                            print(i[1], file=fos)
-
-                        for i in doxygen:
-                            if i[0] in ['', '@details']:
-                                print(f'{i[1]}', file=fos)
-
-                        # enums - see APath::DefaultPath
-                        if hasattr(type_entry, 'enum_values'):
-                            print('<table markdown>', file=fos)
-                            print('<tr markdown>', file=fos)
-                            print('<th>Constant</th>', file=fos)
-                            print('<th>Description</th>', file=fos)
-                            print('</tr>', file=fos)
-                            for v in type_entry.enum_values:
-                                print('<tr markdown>', file=fos)
-                                print('<td markdown>', file=fos)
-                                print(f'`#!cpp {type_entry.name}::{v[0]}`', file=fos)
-                                print('</td>', file=fos)
-                                print('<td markdown>', file=fos)
-                                for i in common.parse_doxygen(v[1]):
-                                    print(i[1], file=fos)
-                                print('</td>', file=fos)
-                                print('</tr>', file=fos)
-
-                            print('</table>', file=fos)
-
-                        # nested struct - see AUpdater::InstallCmdline
-                        if hasattr(type_entry, 'fields'):
-                            if type_entry.fields:
-                                print('<table markdown>', file=fos)
-                                print('<tr markdown>', file=fos)
-                                print('<th>Field</th>', file=fos)
-                                print('<th>Description</th>', file=fos)
-                                print('</tr>', file=fos)
-                                for v in type_entry.fields:
-                                    print('<tr markdown>', file=fos)
-                                    print('<td markdown>', file=fos)
-                                    print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
-                                    print('</td>', file=fos)
-                                    print('<td markdown>', file=fos)
-                                    for i in common.parse_doxygen(v.doc):
-                                        print(i[1], file=fos)
-                                    print('</td>', file=fos)
-                                    print('</tr>', file=fos)
-
-                                print('</table>', file=fos)
-                            else:
-                                print('\n\n_Empty structure._', file=fos)
+                        embed_doc(nested, fos)
 
             if hasattr(parse_entry, 'fields'):
                 fields = [i for i in parse_entry.fields if i.visibility != 'private' and i.doc is not None]

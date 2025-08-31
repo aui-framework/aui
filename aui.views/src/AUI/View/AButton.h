@@ -53,6 +53,12 @@
  * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
  * options of customization.
  *
+ * AButton supports both [retained and immediate modes](retained_immediate_ui.md).
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::Button -->
+ *
  * ## Button with a lambda handler
  *
  * This button executes the lambda upon click.
@@ -136,6 +142,10 @@ private:
 namespace declarative {
 
 /// [declarative_example]
+
+/**
+ * <!-- aui:no_dedicated_page -->
+ */
 struct Button {
     /**
      * @brief Content of the button.

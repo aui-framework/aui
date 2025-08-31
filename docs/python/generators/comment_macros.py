@@ -6,14 +6,15 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import io
 import logging
 import re
 from pathlib import Path
 
-from mkdocs.structure.files import Files, File
-from mkdocs.structure.pages import Page
+from mkdocs.structure.files import File
 
-from docs.python.generators import parse_tests, examples_page, common
+from docs.python.generators import parse_tests, examples_page, common, cpp_parser, doxygen
+from docs.python.generators.cpp_parser import CppClass
 
 log = logging.getLogger('mkdocs')
 
@@ -33,6 +34,8 @@ def handle_comment_macros(markdown: str, file: File):
             return "\n".join([f'{indentation}{i}' for i in _include(args).splitlines()])
         if type == "snippet":
             return _snippet(args)
+        if type == "steal_documentation":
+            return _steal_documentation(args)
         if type == "parse_tests":
             return parse_tests.parse_tests(Path(args))
         if type == "experimental":
@@ -102,6 +105,20 @@ def _snippet(args: str):
 ```
 """
 
+def _steal_documentation(args: str):
+    i = [i for i in cpp_parser.index if isinstance(i, CppClass) and i.namespaced_name() == args]
+    if not i:
+        log.warning(f"Can't find class '{args}' in index")
+        return f"Can't find class: {args} in index"
+    i = i[0]
+    if not "<!-- aui:no_dedicated_page -->" in i.doc:
+        log.warning(f"Docs of '{args}' are to be stolen but they must contain  <!-- aui:no_dedicated_page -->.")
+
+    with io.StringIO() as fos:
+        print(f'<!-- aui:index_alias {i.namespaced_name()} -->\n', file=fos)
+        print(f'`{i.generic_kind} {i.namespaced_name()}`', file=fos)
+        doxygen.embed_doc(i, fos)
+        return fos.getvalue()
 
 def _experimental(name):
     return """
