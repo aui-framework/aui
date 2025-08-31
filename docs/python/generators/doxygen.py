@@ -64,26 +64,17 @@ def embed_doc(nested, fos):
 
         print('</table>', file=fos)
 
-    # nested struct - see AUpdater::InstallCmdline
+    # nested struct - see AUpdater::InstallCmdline, AButton
     if hasattr(nested, 'fields'):
         if nested.fields:
-            print('<table markdown>', file=fos)
-            print('<tr markdown>', file=fos)
-            print('<th>Field</th>', file=fos)
-            print('<th>Description</th>', file=fos)
-            print('</tr>', file=fos)
+            print('<dl style="padding-left:1em" markdown>', file=fos)
             for v in nested.fields:
-                print('<tr markdown>', file=fos)
-                print('<td markdown>', file=fos)
-                print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
-                print('</td>', file=fos)
-                print('<td markdown>', file=fos)
+                print(f'<dt markdown>`#!cpp {v.type_str} {v.name}`</dt>', file=fos)
+                print(f'<dd markdown>', file=fos)
                 for i in common.parse_doxygen(v.doc):
                     print(i[1], file=fos)
-                print('</td>', file=fos)
-                print('</tr>', file=fos)
-
-            print('</table>', file=fos)
+                print('</dd>', file=fos)
+            print('</dl>', file=fos)
         else:
             print('\n\n_Empty structure._', file=fos)
     pass

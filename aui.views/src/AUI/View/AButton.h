@@ -44,7 +44,7 @@
  * disappears, making an illusion of pressing.
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
- * user presses `Enter`, the button is pushed automatically.
+ * user presses ++enter++, the button is pushed automatically.
  *
  * Button usually contains text only, but in practice any view can be put in it.
  *
@@ -78,7 +78,7 @@
  * ## Default button
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
- * user presses `Enter`, the button is pushed automatically.
+ * user presses ++enter++, the button is pushed automatically.
  *
  * <!-- aui:snippet examples/ui/button_default/src/main.cpp AButton_example -->
  *
@@ -164,7 +164,7 @@ struct Button {
     /**
      * @brief Determines if the button is default.
      * @details
-     * Default buttons are colored with user's accent color and respond to Enter key.
+     * Default buttons are colored with user's accent color and respond to ++enter++ key.
      */
     bool isDefault = false;
 
