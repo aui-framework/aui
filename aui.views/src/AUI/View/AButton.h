@@ -136,12 +136,26 @@ private:
 namespace declarative {
 
 /// [declarative_example]
-/**
- * @declarativeformof{AButton}
- */
 struct Button {
+    /**
+     * @brief Content of the button.
+     * @details
+     * Can be either a string (which will be wrapped in ALabel) or any view.
+     */
     std::variant<contract::In<AString>, _<AView>> content;
+
+    /**
+     * @brief Handler for button click event.
+     * @details
+     * Called when user clicks the button.
+     */
     contract::Slot<> onClick;
+
+    /**
+     * @brief Determines if the button is default.
+     * @details
+     * Default buttons are colored with user's accent color and respond to Enter key.
+     */
     bool isDefault = false;
 
     _<AButton> operator()() {
