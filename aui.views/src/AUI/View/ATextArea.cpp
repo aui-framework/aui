@@ -169,6 +169,7 @@ ATextArea::ATextArea(const AString& text) :
 }
 
 void ATextArea::setText(const AString& t) {
+    // TODO: fix this shit
     /*auto entries = t
                    | stringToEntriesView(this)
                    | ranges::to<Entries>();
@@ -318,7 +319,7 @@ bool ATextArea::typeableInsert(size_t at, AChar toInsert) {
     return true;
 }
 
-size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
+size_t ATextArea::typeableFind(AChar c, size_t startPos) {
     for (auto [it, relativeIndex] = getLeftEntity(startPos);
          it != entities().end(); startPos += (*it)->getCharacterCount() - relativeIndex, ++it, relativeIndex = 0) {
         if (relativeIndex == 0) {
@@ -342,7 +343,7 @@ size_t ATextArea::typeableFind(char16_t c, size_t startPos) {
     return AString::NPOS;
 }
 
-size_t ATextArea::typeableReverseFind(char16_t c, size_t startPos) {
+size_t ATextArea::typeableReverseFind(AChar c, size_t startPos) {
     for (auto [it, relativeIndex] = getLeftEntity(startPos);
          it != entities().end(); startPos -= relativeIndex, --it, relativeIndex = (*it)->getCharacterCount()) {
         if (relativeIndex == 1) {

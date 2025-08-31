@@ -170,8 +170,8 @@ protected:
      */
     [[nodiscard]]
     virtual bool typeableInsert(size_t at, AChar toInsert) = 0;
-    virtual size_t typeableFind(char16_t c, size_t startPos = -1) = 0;
-    virtual size_t typeableReverseFind(char16_t c, size_t startPos = -1) = 0;
+    virtual size_t typeableFind(AChar c, size_t startPos = -1) = 0;
+    virtual size_t typeableReverseFind(AChar c, size_t startPos = -1) = 0;
     virtual void updateSelectionOnTextSet(const AString& t);
 
     virtual void onCursorIndexChanged() = 0;

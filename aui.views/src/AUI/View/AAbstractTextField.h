@@ -84,9 +84,9 @@ protected:
 
     bool typeableInsert(size_t at, const AString& toInsert) override;
 
-    size_t typeableFind(char16_t c, size_t startPos) override;
+    size_t typeableFind(AChar c, size_t startPos) override;
 
-    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+    size_t typeableReverseFind(AChar c, size_t startPos) override;
 
     size_t length() const override;
 

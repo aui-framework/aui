@@ -132,7 +132,7 @@ public:
 
     AUtf8ConstIterator& operator=(const std::string::iterator& it) noexcept {
         if (begin_ != nullptr) {
-#if defined(AUI_COMPILER_MSVC)
+#if AUI_COMPILER_MSVC
             std::string::iterator iterator;
             iterator._Ptr = begin_;
             byte_pos_ = it - iterator;
@@ -145,7 +145,7 @@ public:
 
     AUtf8ConstIterator& operator=(const std::string::const_iterator& it) noexcept {
         if (begin_ != nullptr) {
-#if defined(AUI_COMPILER_MSVC)
+#if AUI_COMPILER_MSVC
             std::string::const_iterator iterator;
             iterator._Ptr = begin_;
             byte_pos_ = it - iterator;

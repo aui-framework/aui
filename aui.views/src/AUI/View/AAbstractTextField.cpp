@@ -112,7 +112,7 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
     if (begin >= mContents.length()) {
         return;
     }
-    mContents.erase(mContents.bytes().begin() + begin, mContents.bytes().begin() + end);
+    mContents.bytes().erase(mContents.bytes().begin() + begin, mContents.bytes().begin() + end);
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
@@ -121,7 +121,7 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
-        mContents.erase(at, toInsert.length()); // undo insert
+        mContents.bytes().erase(at, toInsert.length()); // undo insert
         return false;
     }
     return true;
@@ -133,17 +133,17 @@ bool AAbstractTextField::typeableInsert(size_t at, AChar toInsert) {
     }
     mContents.insert(at, toInsert);
     if (!isValidText(mContents)) {
-        mContents.erase(at, 1); // undo insert
+        mContents.bytes().erase(at, 1); // undo insert
         return false;
     }
     return true;
 }
 
-size_t AAbstractTextField::typeableFind(char16_t c, size_t startPos) {
+size_t AAbstractTextField::typeableFind(AChar c, size_t startPos) {
     return mContents.find(c, startPos);
 }
 
-size_t AAbstractTextField::typeableReverseFind(char16_t c, size_t startPos) {
+size_t AAbstractTextField::typeableReverseFind(AChar c, size_t startPos) {
     return mContents.rfind(c, startPos);
 }
 

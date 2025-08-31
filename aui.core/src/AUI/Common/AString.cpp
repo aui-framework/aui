@@ -355,7 +355,10 @@ AString::AString(AChar c) {
 
 AString::AString(size_type n, AChar c) {
     auto utf8c = c.toUtf8();
-
+    reserve(utf8c.size() * n);
+    for (size_t i = 0; i < n; i++) {
+        super::append(utf8c.begin(), utf8c.begin() + utf8c.size());
+    }
 }
 
 void AString::push_back(AChar c) noexcept {

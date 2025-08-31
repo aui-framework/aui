@@ -117,7 +117,7 @@ namespace aui::detail {
         }
 
         void erase(size_t begin, AOptional<size_t> end) override {
-            mWord.erase(mWord.bytes().begin() + begin, mWord.bytes().begin() + end.valueOr(mWord.length()));
+            mWord.bytes().erase(mWord.bytes().begin() + begin, mWord.bytes().begin() + end.valueOr(mWord.length()));
         }
     };
 
