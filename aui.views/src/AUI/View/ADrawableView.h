@@ -20,6 +20,11 @@
 #include "AView.h"
 
 /**
+ * ---
+ * title: Images
+ * icon: material/image
+ * ---
+ *
  * @brief Simple view to draw images.
  *
  * ![](imgs/views/ADrawableView.png)
@@ -41,6 +46,10 @@
  *
  * When applying ass::BackgroundImage, do not pass url to it, it's redundant for ADrawableView and would cause a debug
  * error.
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::Icon -->
  */
 class API_AUI_VIEWS ADrawableView : public AView {
 public:
@@ -105,7 +114,7 @@ public:
 namespace declarative {
 
 /**
- * @declarativeformof{ADrawableView}
+ * <!-- aui:no_dedicated_page -->
  */
 struct Icon : aui::ui_building::view<ADrawableIconView> {
     using aui::ui_building::view<ADrawableIconView>::view;

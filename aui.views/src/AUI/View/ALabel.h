@@ -15,6 +15,11 @@
 #include <AUI/Util/Declarative/Contracts.h>
 
 /**
+ * ---
+ * title: Label
+ * icon: material/format-text-variant
+ * ---
+ *
  * @brief Represents a simple single-line text display view.
  *
  * ![](imgs/views/ALabel.png)
@@ -24,11 +29,16 @@
  * Label is a basic UI component designed primarily for displaying text in a single line. While you can add line breaks
  * using `\n` to create multi-line text, it's better to use [AText] instead, which has proper line-breaking
  * capabilities.
+ *
  * <!-- aui:snippet examples/7guis/temperature_converter/src/main.cpp window -->
  *
  * Labels can be used to populate AButton (which is a bare container):
  *
  * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::Label -->
  *
  * ## Coloring a label
  *
@@ -53,22 +63,12 @@ public:
 
 namespace declarative {
 /**
- * @declarativeformof{ALabel}
+ * <!-- aui:no_dedicated_page -->
  */
 struct Label {
-   AOptional<contract::In<AString>> text;
-
-   _<ALabel> operator()() {
-       auto label = _new<ALabel>();
-       AUI_NULLSAFE(text)->bindTo(label->text());
-       return label;
-   }
-};
-
-/**
- * @declarativeformof{ALabel}
- */
-struct Text {
+    /**
+     * @brief Text to display.
+     */
     AOptional<contract::In<AString>> text;
 
     _<ALabel> operator()() {

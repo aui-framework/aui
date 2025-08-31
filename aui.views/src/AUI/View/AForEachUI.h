@@ -128,6 +128,11 @@ concept RangeFactory = requires(Factory&& factory) {
 
 
 /**
+ * ---
+ * title: Lists
+ * icon: material/view-list
+ * ---
+ *
  * @brief Customizable lists display.
  *
  * ![](imgs/views/AForEachUI.png)
@@ -142,6 +147,8 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
+ *
+ * ## API surface
  *
  * AForEachUI is created by using [AUI_DECLARATIVE_FOR] macro.
  *

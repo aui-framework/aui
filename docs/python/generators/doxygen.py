@@ -113,7 +113,7 @@ def gen_pages():
                         for j in iterator:
                             print(j, file=fos)
 
-                            if m := re.match('title: (\w+)', j):
+                            if m := re.match('title: (.+)', j):
                                 # hack: use the overrided name if it exists
                                 parse_entry.overview_page_title = m.group(1)
 

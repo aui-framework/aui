@@ -136,7 +136,6 @@ nav:
 
   - 'Views':
     - 'Overview': views.md
-    - abutton.md
 
   - 'Styling':
     - ass.md

@@ -17,6 +17,12 @@
 
 
 /**
+ *
+ * ---
+ * title: Check box
+ * icon: material/checkbox-outline
+ * ---
+ *
  * @brief A check box (without label).
  *
  * ![](imgs/views/ACheckBox.png)
@@ -28,6 +34,11 @@
  * For a checkbox with label, see [ACheckBoxWrapper].
  *
  * Whenever the checkbox is checked or unchecked, it emits checked() signal.
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::CheckBox -->
+ *
  */
 class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
 public:
@@ -160,14 +171,14 @@ public:
 
 namespace declarative {
     /**
-     * @declarativeformof{ACheckBox}
+     * <!-- aui:no_dedicated_page -->
      */
     struct CheckBox: aui::ui_building::view<ACheckBox> {
         CheckBox() = default;
     };
 
     /**
-     * @declarativeformof{ACheckBoxWrapper}
+     * <!-- aui:no_dedicated_page -->
      */
     struct CheckBoxWrapper: aui::ui_building::view<ACheckBoxWrapper> {
         /**

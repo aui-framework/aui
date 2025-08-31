@@ -33,6 +33,11 @@ public:
 
 
 /**
+ * ---
+ * title: Radio button
+ * icon: material/radiobox-marked
+ * ---
+ *
  * @brief A radio button.
  *
  * ![](imgs/views/ARadioButton.png)
