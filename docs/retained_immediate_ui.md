@@ -2,7 +2,7 @@
 
 This page describes specifics and differences of retained and immediate mode UIs, and how the latter was adopted to AUI.
 
-# Retained Mode UI { #retained_ui }
+## Retained Mode UI { #retained_ui }
 
 Retained Mode UI is the traditional approach to building user interfaces that most developers are familiar with. In this
 model, UI elements are created and persist in memory as a tree or graph structure. Think of it like arranging furniture
@@ -42,7 +42,7 @@ When you create a button or a window in retained mode, it continues to exist eve
 state, properties, and position. This approach is what powers most desktop applications, web browsers, and mobile apps.
 Systems like Qt Widgets, GTK, Swing, WinAPI, or the HTML DOM are classic examples of retained mode UIs.
 
-# Immediate Mode UI { #immediate_ui }
+## Immediate Mode UI { #immediate_ui }
 
 Immediate Mode UI takes a radically different approach. Instead of maintaining persistent UI elements, it rebuilds the
 entire interface from scratch every frame. Imagine having to redraw everything on a whiteboard multiple times per
@@ -86,12 +86,12 @@ ImGui::EndChild();
 ImGui::End();
 ```
 
-@image html docs/imgs/191055698-690a5651-458f-4856-b5a9-e8cc95c543e2.gif "Dear ImGui demo."
+![](imgs/191055698-690a5651-458f-4856-b5a9-e8cc95c543e2.gif)
 
 This approach is convenient for dynamic interfaces, at the cost of reevaluating layout each frame and drawing everything
 from scratch.
 
-# Practical Implications
+## Practical Implications
 
 Immediate mode UI can't be really used in most applications due to high resource consumption, especially on mobile
 platforms. However, the expressiveness and stateless approach give significant benefits in terms of software
@@ -134,7 +134,7 @@ private:
 Behind the scenes, these frameworks maintain a virtual representation of the UI (similar to retained mode) but update it
 efficiently through diffing algorithms. The visual representation is reevaluated only if the state is changed.
 
-They use sophisticated @ref property_system "state management systems" that track dependencies and trigger
+They use sophisticated [state management systems](property-system.md) that track dependencies and trigger
 recompositions only when needed. This is more efficient than pure immediate mode (which redraws everything) but more
 automated than traditional retained mode.
 
@@ -142,15 +142,15 @@ The key innovation is that they provide the mental model and simplicity of immed
 performance benefits of retained mode. This is why they're often called "declarative UI frameworks" rather than being
 categorized as either retained or immediate mode.
 
-# AUI specifics
+## AUI specifics
 
 AUI is historically a retained mode UI. However, it has adopted the "hybrid mode" concept. This is why most of AUI's
 views components provide "a traditional way", which consists of creating an object and maintaining its state manually
 via setters; and a "declarative way", which immediately describes the behavior and relationship of a view to the
 properties, the latter control the state.
 
-In the examples above, we've used @ref AButton for retained mode UI, and its declarative notation,
-@ref declarative::Button , which accepts properties to control it. The latter is a *declarative contract*.
+In the examples above, we've used [AButton] for retained mode UI, and its declarative notation,
+`declarative::Button`, which accepts properties to control it. The latter is a *declarative contract*.
 
 <!-- aui:snippet aui.views/src/AUI/View/AButton.h declarative_example -->
 
@@ -159,7 +159,7 @@ provide a named-argument syntax. This makes the view's requirements and capabili
 while reducing the amount of boilerplate code needed to create and manage views.
 
 AUI allows you to choose using between retained and declarative mode. Under the hood, both `_new<AButton>` and
-@ref declarative::Button evaluate to creating a new instance of `_<AButton>`, which allows you to fall back to retained
+[declarative::Button] evaluate to creating a new instance of `_<AButton>`, which allows you to fall back to retained
 mode in declarative UIs if necessary. Due to growing expectations in regard to dynamism and responsiveness, we strongly
 suggest using declarative mode only.
 

@@ -22,7 +22,7 @@
  * @ingroup views_indication
  * @details
  * Label is a basic UI component designed primarily for displaying text in a single line. While you can add line breaks
- * using `\n` to create multi-line text, it's better to use @ref AText instead, which has proper line-breaking
+ * using `\n` to create multi-line text, it's better to use [AText] instead, which has proper line-breaking
  * capabilities.
  * <!-- aui:snippet examples/7guis/temperature_converter/src/main.cpp window -->
  *

@@ -97,7 +97,7 @@ public:
     }
 };
 
-/// [label coloring]
+/// [label_coloring]
 static _<AView> link(const AString& url) {
     return Label { url } AUI_WITH_STYLE {
                TextColor { AColor::BLUE },
@@ -105,7 +105,7 @@ static _<AView> link(const AString& url) {
                ACursor::POINTER,
            } AUI_LET { AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [url] { APlatform::openUrl(url); }); };
 }
-/// [label coloring]
+/// [label_coloring]
 
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();

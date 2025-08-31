@@ -99,8 +99,6 @@
  * AButton is styled as follows:
  *
  * <!-- aui:snippet aui.views/src/AUI/ASS/AStylesheet.cpp AButton -->
- *
- * See @ref declarative::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AViewContainer {
 public:
