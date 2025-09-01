@@ -171,6 +171,26 @@ def gen_pages():
             doxygen = common.parse_doxygen(parse_entry.doc)
             page_examples: list[dict] = []
 
+            def _dedupe_examples_list(exs: list[dict]) -> list[dict]:
+                """Remove duplicate examples that refer to the same example id and same source path.
+
+                Keeps the first occurrence.
+                """
+                out = []
+                seen_pairs = set()
+                for ex in exs:
+                    exid = ex.get('id')
+                    try:
+                        src_rel = ex['src'].relative_to(Path.cwd())
+                    except Exception:
+                        src_rel = ex.get('src')
+                    key = (exid, str(src_rel))
+                    if key in seen_pairs:
+                        continue
+                    seen_pairs.add(key)
+                    out.append(ex)
+                return out
+
             def _examples_for_symbol(names: list[str]):
                 try:
                     index = examples_page.examples_index
@@ -302,6 +322,7 @@ def gen_pages():
             if isinstance(parse_entry, CppClass) and class_examples:
                 try:
                     exs = _examples_for_symbol_with_snippets([parse_entry.namespaced_name(), parse_entry.name])
+                    exs = _dedupe_examples_list(exs)
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
@@ -357,6 +378,7 @@ def gen_pages():
                         # Examples for nested types
                         names_to_search = [full_name, type_entry.name]
                         exs = _examples_for_symbol_with_snippets(names_to_search)
+                        exs = _dedupe_examples_list(exs)
                         if exs:
                             print('\n## Examples', file=fos)
                             for ex in exs:
@@ -442,6 +464,7 @@ def gen_pages():
                         # Examples for fields
                         names_to_search = [full_name, field.name]
                         exs = _examples_for_symbol_with_snippets(names_to_search)
+                        exs = _dedupe_examples_list(exs)
                         if exs:
                             print('## Examples', file=fos)
                             for ex in exs:
@@ -521,6 +544,7 @@ def gen_pages():
                                 method_full = f"{parse_entry.namespaced_name()}::{overload.name}"
                                 method_names = [method_full, overload.name]
                                 method_exs = _examples_for_symbol_with_snippets(method_names) or []
+                                method_exs = _dedupe_examples_list(method_exs)
                                 if method_exs:
                                     print('\n## Examples', file=fos)
                                     for ex in method_exs:
