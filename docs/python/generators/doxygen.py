@@ -147,6 +147,7 @@ def gen_pages():
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
             doxygen = common.parse_doxygen(parse_entry.doc)
+            page_examples: list[dict] = []
 
             def _examples_for_symbol(names: list[str]):
                 try:
@@ -209,7 +210,7 @@ def gen_pages():
             for type_entry in [i for i in doxygen if i[0] == '@brief']:
                 print(type_entry[1], file=fos)
 
-            # For non-class symbols (macros, free functions, enums), print examples at page level
+            # For non-class symbols (macros, free functions, enums), collect examples to print after Detailed Description
             if not isinstance(parse_entry, CppClass):
                 try:
                     names_to_search = []
@@ -219,21 +220,7 @@ def gen_pages():
                         names_to_search.append(parse_entry.name)
                     exs = _examples_for_symbol_with_snippets(names_to_search)
                     if exs:
-                        print('\n## Examples', file=fos)
-                        for ex in exs:
-                            try:
-                                src_rel = ex['src'].relative_to(Path.cwd())
-                            except Exception:
-                                src_rel = ex['src']
-                            extension = common.determine_extension(ex['src'])
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(file=fos)
-                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                            print(file=fos)
-                            print(f"    ```{extension}", file=fos)
-                            for line in ex['snippet'].splitlines():
-                                print(f"    {line}", file=fos)
-                            print(f"    ```", file=fos)
+                        page_examples.extend(exs)
                 except Exception:
                     pass
 
@@ -254,6 +241,22 @@ def gen_pages():
                 print('## Detailed Description', file=fos)
                 for type_entry in [i for i in doxygen if i[0] == '@details']:
                     print(type_entry[1], file=fos)
+
+            # Print page-level examples immediately after Detailed Description
+            if page_examples:
+                print('\n## Examples', file=fos)
+                for ex in page_examples:
+                    try:
+                        src_rel = ex['src'].relative_to(Path.cwd())
+                    except Exception:
+                        src_rel = ex['src']
+                    extension = common.determine_extension(ex['src'])
+                    print(f"??? note \"{src_rel}\"", file=fos)
+                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                    print(f"    ```{extension}", file=fos)
+                    for line in ex['snippet'].splitlines():
+                        print(f"    {line}", file=fos)
+                    print(f"    ```", file=fos)
 
             # collect class-level examples (don't print here; used as fallback per-method)
             class_examples = []

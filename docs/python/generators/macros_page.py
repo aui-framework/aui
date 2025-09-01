@@ -20,60 +20,67 @@ def define_env(env):
         for i in macros:
             output += f"\n\n---\n\n"
             output += f"`{i.name}`\n\n"
-            output += "\n".join([i[1] for i in common.parse_doxygen(i.doc) if i[0] == "@brief"])
-            try:
-                examples_lists = examples_page.examples_lists
-            except Exception:
-                examples_lists = {}
+            output += "\n".join([j[1] for j in common.parse_doxygen(i.doc) if j[0] == "@brief"])
+        return output
 
-            def _examples_for_name(name: str):
-                """Return matches as a list of tuples (category, example, src_path, snippet).
+    def _collect_examples_blocks():
+        """Collect examples for all macros and return list of rendered note blocks."""
+        examples_blocks = []
+        try:
+            examples_lists = examples_page.examples_lists
+        except Exception:
+            examples_lists = {}
 
-                snippet contains up to 2 lines before and after the matched line.
-                """
-                found = []
-                pat = re.compile(r"\\b" + re.escape(name) + r"\\b")
-                for cat, examples in examples_lists.items():
-                    for ex in examples:
-                        for src in ex.get('srcs', []):
-                            try:
-                                text = src.read_text(encoding='utf-8', errors='ignore')
-                            except Exception:
-                                continue
-                            m = pat.search(text)
-                            if not m:
-                                continue
-                            # Find line index of match
-                            lines = text.splitlines()
-                            cum = 0
-                            line_idx = 0
-                            pos = m.start()
-                            for i, l in enumerate(lines):
-                                if pos <= cum + len(l):
-                                    line_idx = i
-                                    break
-                                cum += len(l) + 1
+        macros = sorted([i for i in cpp_parser.index if isinstance(i, CppMacro)], key=lambda x: x.name)
 
-                            start = max(0, line_idx - 2)
-                            end = min(len(lines), line_idx + 3)
-                            snippet = '\n'.join(lines[start:end])
-                            found.append((cat, ex, Path(src), snippet))
-                return found
+        for i in macros:
+            name = i.name
+            pat = re.compile(r"\\b" + re.escape(name) + r"\\b")
+            for cat, examples in examples_lists.items():
+                for ex in examples:
+                    for src in ex.get('srcs', []):
+                        try:
+                            text = src.read_text(encoding='utf-8', errors='ignore')
+                        except Exception:
+                            continue
+                        if not pat.search(text):
+                            continue
+                        # find first match and build snippet
+                        m = pat.search(text)
+                        lines = text.splitlines()
+                        pos = m.start()
+                        cum = 0
+                        line_idx = 0
+                        for idx, l in enumerate(lines):
+                            if pos <= cum + len(l):
+                                line_idx = idx
+                                break
+                            cum += len(l) + 1
+                        start = max(0, line_idx - 2)
+                        end = min(len(lines), line_idx + 3)
+                        snippet = '\n'.join(lines[start:end])
+                        try:
+                            src_rel = Path(src).relative_to(Path.cwd())
+                        except Exception:
+                            src_rel = Path(src)
+                        extension = common.determine_extension(src)
+                        block = ''
+                        block += f"??? note \"{src_rel}\"\n"
+                        block += f"    [{ex['title']}]({ex['id']}.md) — {ex.get('description','')}\n"
+                        block += f"    ```{extension}\n"
+                        for line in snippet.splitlines():
+                            block += f"    {line}\n"
+                        block += f"    ```\n"
+                        examples_blocks.append(block)
+        return examples_blocks
 
-            matches = _examples_for_name(i.name)
-            if matches:
-                output += "\n\n## Examples\n\n"
-                for cat, ex, src, snippet in matches:
-                    try:
-                        src_rel = src.relative_to(Path.cwd())
-                    except Exception:
-                        src_rel = src
-                    extension = common.determine_extension(src)
-                    # Render a note block with the file path as title, link to example and snippet
-                    output += f"\n??? note \"{src_rel}\"\n\n"
-                    output += f"    [{ex['title']}]({ex['id']}.md) — {ex.get('description','')}\n\n"
-                    output += f"    ```{extension}\n"
-                    for line in snippet.splitlines():
-                        output += f"    {line}\n"
-                    output += f"    ```\n"
+    @env.macro
+    def list_macro_examples():
+        """Render the Examples section for macros — place this macro at the end of the page."""
+        blocks = _collect_examples_blocks()
+        if not blocks:
+            return ""
+        output = "\n\n## Examples\n\n"
+        for b in blocks:
+            output += f"\n{b}\n"
         return output
