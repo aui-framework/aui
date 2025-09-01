@@ -120,7 +120,7 @@ protected:
     AOptional<unsigned> mCursorSelection;
 
     virtual bool isLButtonPressed() = 0;
-    virtual AString getDisplayText() = 0;
+    virtual std::u32string getDisplayText() = 0;
     virtual void cursorSelectableRedraw() = 0;
     virtual void onSelectionChanged() = 0;
 

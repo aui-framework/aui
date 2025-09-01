@@ -200,6 +200,15 @@ AString ATextArea::getText() const {
     return *mCompiledText;
 }
 
+std::u32string ATextArea::getDisplayText() {
+    std::u32string compiledText;
+    compiledText.reserve(length());
+    for (const auto& e: entities()) {
+        e->appendTo(compiledText);
+    }
+    return compiledText;
+}
+
 void ATextArea::typeableErase(size_t begin, size_t end) {
     auto resolvedBegin = getLeftEntity(begin);
     if (resolvedBegin.iterator == entities().end()) {

@@ -74,7 +74,7 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 void AAbstractTextField::setText(const AString& t) {
     mHorizontalScroll = 0;
     auto utf32t = t.encode(AStringEncoding::UTF32);
-    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size()};
+    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size() / 4};
     if (t.empty()) {
         clearSelection();
     }
@@ -91,11 +91,11 @@ void AAbstractTextField::setSuffix(const AString& s) {
     invalidateFont();
 }
 
-AString AAbstractTextField::getDisplayText() {
+std::u32string AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
-        return AString(mContents.length(), AChar(U'•'));
+        return std::u32string(mContents.length(), U'•');
     }
-    return AString(mContents);
+    return mContents;
 }
 
 void AAbstractTextField::cursorSelectableRedraw() {
@@ -176,7 +176,8 @@ void AAbstractTextField::onCharEntered(AChar c) {
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getDisplayText() + mSuffix;
+        auto u32suffix = mSuffix.encode(AStringEncoding::UTF32);
+        auto text = getDisplayText() + std::u32string(reinterpret_cast<const char32_t*>(u32suffix.data()), u32suffix.size() / 4);
         updateTextAlignOffset();
         if (!text.empty()) {
             auto canvas = render.newMultiStringCanvas(getFontStyle());

@@ -92,7 +92,7 @@ protected:
 
     bool typeableInsert(size_t at, AChar toInsert) override;
 
-    AString getDisplayText() override;
+    std::u32string getDisplayText() override;
 
     void cursorSelectableRedraw() override;
 

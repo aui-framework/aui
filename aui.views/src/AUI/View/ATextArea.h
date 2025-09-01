@@ -59,6 +59,7 @@ public:
 
     AString toString() const override;
     AString getText() const override;
+    std::u32string getDisplayText() override;
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;

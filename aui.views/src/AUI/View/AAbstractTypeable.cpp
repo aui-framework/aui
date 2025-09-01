@@ -296,10 +296,6 @@ void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-AString AAbstractTypeable::getDisplayText() {
-    return getText();
-}
-
 void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {
     if (!isCursorBlinkVisible()) {
         return;

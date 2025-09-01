@@ -183,7 +183,6 @@ protected:
      */
     void enterChar(AChar c);
 
-    AString getDisplayText() override;
     AMenuModel composeContextMenuImpl();
     void handleKey(AInput::Key key);
 
