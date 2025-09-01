@@ -19,8 +19,106 @@ import mkdocs_gen_files
 
 from docs.python.generators import cpp_parser, common, group_page, examples_page
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
+from pathlib import Path
 
 log = logging.getLogger('mkdocs')
+
+
+def _examples_for_symbol_with_snippets(names: list[str]):
+    """Search examples index and lists for occurrences of provided names.
+
+    Returns list of dicts with keys: title, id, description, src (Path), snippet, category
+    """
+    results = []
+    try:
+        index = examples_page.examples_index
+    except Exception:
+        index = None
+
+    seen = set()
+
+    if index is not None:
+        for name in names:
+            if not name:
+                continue
+            for ex in index.get(name, []):
+                key = (ex.get('id'))
+                if key in seen:
+                    continue
+                # find the specific src that contains the token
+                for src in ex.get('srcs', []):
+                    try:
+                        text = src.read_text(encoding='utf-8', errors='ignore')
+                    except Exception:
+                        continue
+                    if re.search(r"\b" + re.escape(name) + r"\b", text):
+                        # build snippet
+                        lines = text.splitlines()
+                        m = re.search(r"\b" + re.escape(name) + r"\b", text)
+                        pos = m.start()
+                        cum = 0
+                        line_idx = 0
+                        for i, l in enumerate(lines):
+                            if pos <= cum + len(l):
+                                line_idx = i
+                                break
+                            cum += len(l) + 1
+                        start = max(0, line_idx - 2)
+                        end = min(len(lines), line_idx + 3)
+                        snippet = '\n'.join(lines[start:end])
+                        results.append({
+                            'title': ex['title'],
+                            'id': ex['id'],
+                            'description': ex['description'],
+                            'src': Path(src),
+                            'snippet': snippet,
+                        })
+                        seen.add(key)
+                        break
+    # fallback: scan lists manually
+    try:
+        lists = examples_page.examples_lists
+    except Exception:
+        lists = {}
+
+    for category, items in lists.items():
+        for ex in items:
+            for src in ex.get('srcs', []):
+                try:
+                    text = src.read_text(encoding='utf-8', errors='ignore')
+                except Exception:
+                    continue
+                for name in names:
+                    if not name:
+                        continue
+                    m = re.search(r"\b" + re.escape(name) + r"\b", text)
+                    if not m:
+                        continue
+                    key = (ex.get('id'), str(src))
+                    if key in seen:
+                        continue
+                    lines = text.splitlines()
+                    pos = m.start()
+                    cum = 0
+                    line_idx = 0
+                    for i, l in enumerate(lines):
+                        if pos <= cum + len(l):
+                            line_idx = i
+                            break
+                        cum += len(l) + 1
+                    start = max(0, line_idx - 2)
+                    end = min(len(lines), line_idx + 3)
+                    snippet = '\n'.join(lines[start:end])
+                    results.append({
+                        'title': ex['title'],
+                        'id': ex['id'],
+                        'description': ex['description'],
+                        'src': Path(src),
+                        'snippet': snippet,
+                        'category': category,
+                    })
+                    seen.add(key)
+    return results
 
 
 def _format_token_sequence(tokens: list[str]):
@@ -119,11 +217,23 @@ def gen_pages():
                         names_to_search.append(parse_entry.namespaced_name())
                     if hasattr(parse_entry, 'name'):
                         names_to_search.append(parse_entry.name)
-                    exs = _examples_for_symbol(names_to_search)
+                    exs = _examples_for_symbol_with_snippets(names_to_search)
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            try:
+                                src_rel = ex['src'].relative_to(Path.cwd())
+                            except Exception:
+                                src_rel = ex['src']
+                            extension = common.determine_extension(ex['src'])
+                            print(f"\n??? note \"{src_rel}\"", file=fos)
+                            print(file=fos)
+                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            print(file=fos)
+                            print(f"    ```{extension}", file=fos)
+                            for line in ex['snippet'].splitlines():
+                                print(f"    {line}", file=fos)
+                            print(f"    ```", file=fos)
                 except Exception:
                     pass
 
@@ -161,9 +271,23 @@ def gen_pages():
             # For classes: print class-level examples once (used as fallback reference).
             if isinstance(parse_entry, CppClass) and class_examples:
                 try:
-                    print('\n## Examples', file=fos)
-                    for ex in class_examples:
-                        print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                    exs = _examples_for_symbol_with_snippets([parse_entry.namespaced_name(), parse_entry.name])
+                    if exs:
+                        print('\n## Examples', file=fos)
+                        for ex in exs:
+                            try:
+                                src_rel = ex['src'].relative_to(Path.cwd())
+                            except Exception:
+                                src_rel = ex['src']
+                            extension = common.determine_extension(ex['src'])
+                            print(f"\n??? note \"{src_rel}\"", file=fos)
+                            print(file=fos)
+                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            print(file=fos)
+                            print(f"    ```{extension}", file=fos)
+                            for line in ex['snippet'].splitlines():
+                                print(f"    {line}", file=fos)
+                            print(f"    ```", file=fos)
                 except Exception:
                     pass
 
@@ -202,11 +326,23 @@ def gen_pages():
 
                         # Examples for nested types
                         names_to_search = [full_name, type_entry.name]
-                        exs = _examples_for_symbol(names_to_search)
+                        exs = _examples_for_symbol_with_snippets(names_to_search)
                         if exs:
                             print('\n## Examples', file=fos)
                             for ex in exs:
-                                print(f"- [{ex['title']}]({ex['id']}.md) - {ex['description']}", file=fos)
+                                try:
+                                    src_rel = ex['src'].relative_to(Path.cwd())
+                                except Exception:
+                                    src_rel = ex['src']
+                                extension = common.determine_extension(ex['src'])
+                                print(f"\n??? note \"{src_rel}\"", file=fos)
+                                print(file=fos)
+                                print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                print(file=fos)
+                                print(f"    ```{extension}", file=fos)
+                                for line in ex['snippet'].splitlines():
+                                    print(f"    {line}", file=fos)
+                                print(f"    ```", file=fos)
 
                         # enums - see APath::DefaultPath
                         if hasattr(type_entry, 'enum_values'):
@@ -275,11 +411,23 @@ def gen_pages():
 
                         # Examples for fields
                         names_to_search = [full_name, field.name]
-                        exs = _examples_for_symbol(names_to_search)
+                        exs = _examples_for_symbol_with_snippets(names_to_search)
                         if exs:
                             print('## Examples', file=fos)
                             for ex in exs:
-                                print(f"- [{ex['title']}]({ex['id']}.md) - {ex['description']}", file=fos)
+                                try:
+                                    src_rel = ex['src'].relative_to(Path.cwd())
+                                except Exception:
+                                    src_rel = ex['src']
+                                extension = common.determine_extension(ex['src'])
+                                print(f"\n??? note \"{src_rel}\"", file=fos)
+                                print(file=fos)
+                                print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                print(file=fos)
+                                print(f"    ```{extension}", file=fos)
+                                for line in ex['snippet'].splitlines():
+                                    print(f"    {line}", file=fos)
+                                print(f"    ```", file=fos)
 
             if hasattr(parse_entry, 'methods'):
                 methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
@@ -342,11 +490,23 @@ def gen_pages():
                             try:
                                 method_full = f"{parse_entry.namespaced_name()}::{overload.name}"
                                 method_names = [method_full, overload.name]
-                                method_exs = _examples_for_symbol(method_names) or []
+                                method_exs = _examples_for_symbol_with_snippets(method_names) or []
                                 if method_exs:
                                     print('\n## Examples', file=fos)
                                     for ex in method_exs:
-                                        print(f"- [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                        try:
+                                            src_rel = ex['src'].relative_to(Path.cwd())
+                                        except Exception:
+                                            src_rel = ex['src']
+                                        extension = common.determine_extension(ex['src'])
+                                        print(f"\n??? note \"{src_rel}\"", file=fos)
+                                        print(file=fos)
+                                        print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                        print(file=fos)
+                                        print(f"    ```{extension}", file=fos)
+                                        for line in ex['snippet'].splitlines():
+                                            print(f"    {line}", file=fos)
+                                        print(f"    ```", file=fos)
                             except Exception:
                                 pass
 
