@@ -10,7 +10,7 @@ Other platforms and configurations follow the same principles but with different
 - LIBRARY.dll refers to a binary (compiled) representation of LIBRARY
 - PROGRAM.exe refers to a binary (compiled) representation of PROGRAM (executable)
 
-Also, on this page, the build system is demonstrated on [minimal-ui-template-with-assets].
+Also, on this page, the build system is demonstrated on [minimal-ui-template-with-assets](minimal_ui_assets.md).
 
 ## Generic scenario { #BUILD_SCENARIO_GENERIC }
 

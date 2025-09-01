@@ -82,7 +82,7 @@ to free you from dependency management and focus you right to development of you
 
 === "AUI App Template"
     
-    You can use our [app-template] to set up a new project quickly with [CLANG_FORMAT], Github Actions and other
+    You can use our [app-template](https://github.com/aui-framework/example_app) to set up a new project quickly with [CLANG_FORMAT], Github Actions and other
     features out-of-the-box. The template is based on CMake and [aui.boot].
     
     Clone `https://github.com/aui-framework/example_app` with your IDE or via terminal:
@@ -95,7 +95,7 @@ to free you from dependency management and focus you right to development of you
 
     ??? tip "Recommended: Create a new repo"
     
-        From [app-template] repository, you can generate a completely separate repo with clean git history:
+    From the [app-template](https://github.com/aui-framework/example_app) repository, you can generate a completely separate repo with clean git history:
         
         1. Open [http://github.com/aui-framework/example_app](http://github.com/aui-framework/example_app)
         2. Click `Create a new repository`.

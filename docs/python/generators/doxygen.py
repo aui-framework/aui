@@ -266,8 +266,13 @@ def gen_pages():
 
             # Print page-level examples immediately after Detailed Description
             if page_examples:
+                printed_example_ids = set()
                 print('\n## Examples', file=fos)
                 for ex in page_examples:
+                    exid = ex.get('id')
+                    if exid in printed_example_ids:
+                        continue
+                    printed_example_ids.add(exid)
                     try:
                         src_rel = ex['src'].relative_to(Path.cwd())
                     except Exception:
