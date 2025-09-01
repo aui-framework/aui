@@ -44,6 +44,44 @@ def examine():
                             yield Path(root) / f
 
             srcs = list(collect_srcs(root))
+            # deduplicate source file list while preserving order
+            seen_srcs = set()
+            deduped_srcs = []
+            for p in srcs:
+                if p in seen_srcs:
+                    continue
+                seen_srcs.add(p)
+                deduped_srcs.append(p)
+            srcs = deduped_srcs
+
+            # Filter out trivial source files (only includes/using/guards).
+            def _is_trivial_source(p: Path) -> bool:
+                try:
+                    text = p.read_text(encoding='utf-8', errors='ignore')
+                except Exception:
+                    return True
+                non_blank_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+                if not non_blank_lines:
+                    return True
+                for ln in non_blank_lines:
+                    if ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                        continue
+                    if ln.startswith('#include'):
+                        continue
+                    if ln.startswith('using '):
+                        continue
+                    if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                        continue
+                    # found a non-trivial line
+                    return False
+                return True
+
+            srcs = [p for p in srcs if not _is_trivial_source(p)]
+
+            # If after filtering all source files are trivial, skip this example
+            # entirely — we don't want examples that only show includes/using.
+            if not srcs:
+                continue
 
             input_file = Path(root) / file
             with open(input_file, 'r', encoding='utf-8') as fis:
@@ -104,11 +142,43 @@ for category, items in examples_lists.items():
                 text = src.read_text(encoding='utf-8', errors='ignore')
             except Exception:
                 continue
-            for tok in re.findall(r"\b[A-Za-z_][A-Za-z0-9_:]*\b", text):
-                if tok in seen_tokens:
+
+            # Quick heuristic: skip trivial files that only contain includes,
+            # using-directives, braces, or preprocessor guards. This avoids
+            # treating examples that are only a header wrapper as usage.
+            non_blank_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+            is_trivial = True
+            for ln in non_blank_lines:
+                # skip comment lines
+                if ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
                     continue
-                seen_tokens.add(tok)
-                examples_index.setdefault(tok, []).append(ex)
+                # includes
+                if ln.startswith('#include'):
+                    continue
+                # using namespace or using std::
+                if ln.startswith('using '):
+                    continue
+                # simple braces or preprocessor guards
+                if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                    continue
+                # if we reach here, the file contains non-trivial content
+                is_trivial = False
+                break
+
+            if is_trivial:
+                continue
+
+            # iterate by lines and collect tokens; avoid tokens coming only
+            # from the same file multiple times by using seen_tokens
+            for line in text.splitlines():
+                for tok in re.findall(r"\b[A-Za-z_][A-Za-z0-9_:]*\b", line):
+                    if tok in seen_tokens:
+                        continue
+                    seen_tokens.add(tok)
+                    lst = examples_index.setdefault(tok, [])
+                    # avoid duplicates: append example only once per token
+                    if not any(existing.get('id') == ex.get('id') for existing in lst):
+                        lst.append(ex)
 
 def define_env(env):
     @env.macro

@@ -51,10 +51,10 @@ def _examples_for_symbol_with_snippets(names: list[str]):
                         text = src.read_text(encoding='utf-8', errors='ignore')
                     except Exception:
                         continue
-                    if re.search(r"\b" + re.escape(name) + r"\b", text):
-                        # build snippet
-                        lines = text.splitlines()
-                        m = re.search(r"\b" + re.escape(name) + r"\b", text)
+                    # prefer matches that occur in non-trivial lines (not includes/usings/comments)
+                    lines = text.splitlines()
+                    found = None
+                    for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
                         pos = m.start()
                         cum = 0
                         line_idx = 0
@@ -63,18 +63,30 @@ def _examples_for_symbol_with_snippets(names: list[str]):
                                 line_idx = i
                                 break
                             cum += len(l) + 1
-                        start = max(0, line_idx - 2)
-                        end = min(len(lines), line_idx + 3)
-                        snippet = '\n'.join(lines[start:end])
-                        results.append({
-                            'title': ex['title'],
-                            'id': ex['id'],
-                            'description': ex['description'],
-                            'src': Path(src),
-                            'snippet': snippet,
-                        })
-                        seen.add(key)
+                        ln = lines[line_idx].strip()
+                        # trivial line checks
+                        if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                            continue
+                        if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                            continue
+                        found = (m, line_idx)
                         break
+                    if not found:
+                        # no non-trivial match in this file
+                        continue
+                    m, line_idx = found
+                    start = max(0, line_idx - 2)
+                    end = min(len(lines), line_idx + 3)
+                    snippet = '\n'.join(lines[start:end])
+                    results.append({
+                        'title': ex['title'],
+                        'id': ex['id'],
+                        'description': ex['description'],
+                        'src': Path(src),
+                        'snippet': snippet,
+                    })
+                    seen.add(key)
+                    break
     # fallback: scan lists manually
     try:
         lists = examples_page.examples_lists
@@ -91,21 +103,31 @@ def _examples_for_symbol_with_snippets(names: list[str]):
                 for name in names:
                     if not name:
                         continue
-                    m = re.search(r"\b" + re.escape(name) + r"\b", text)
-                    if not m:
+                    # find all matches and prefer non-trivial-line matches
+                    lines = text.splitlines()
+                    found = None
+                    for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+                        pos = m.start()
+                        cum = 0
+                        line_idx = 0
+                        for i, l in enumerate(lines):
+                            if pos <= cum + len(l):
+                                line_idx = i
+                                break
+                            cum += len(l) + 1
+                        ln = lines[line_idx].strip()
+                        if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                            continue
+                        if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                            continue
+                        found = (m, line_idx)
+                        break
+                    if not found:
                         continue
+                    m, line_idx = found
                     key = (ex.get('id'), str(src))
                     if key in seen:
                         continue
-                    lines = text.splitlines()
-                    pos = m.start()
-                    cum = 0
-                    line_idx = 0
-                    for i, l in enumerate(lines):
-                        if pos <= cum + len(l):
-                            line_idx = i
-                            break
-                        cum += len(l) + 1
                     start = max(0, line_idx - 2)
                     end = min(len(lines), line_idx + 3)
                     snippet = '\n'.join(lines[start:end])
