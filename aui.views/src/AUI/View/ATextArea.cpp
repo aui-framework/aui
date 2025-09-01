@@ -60,7 +60,7 @@ namespace {
             return mPosition + glm::ivec2{mText->getFontStyle().getSpaceWidth() * characterIndex, 0};
         }
 
-        void appendTo(AString& dst) override {
+        void appendTo(std::u32string& dst) override {
             AUI_REPEAT(mCount) {
                 dst += ' ';
             }
@@ -131,7 +131,7 @@ namespace {
     };
 
 
-    /*constexpr auto stringToEntriesView(ATextArea* thiz) {
+    constexpr auto stringToEntriesView(ATextArea* thiz) {
         return ranges::views::filter([](auto c) { return c != '\r'; })
                | ranges::views::chunk_by([](AChar prev, AChar next) {
             if (prev == '\n' || next == '\n') {
@@ -155,7 +155,7 @@ namespace {
             }
             return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
         });
-    }*/
+    }
 }
 
 
@@ -169,15 +169,15 @@ ATextArea::ATextArea(const AString& text) :
 }
 
 void ATextArea::setText(const AString& t) {
-    // TODO: fix this shit
-    /*auto entries = t
+    auto u32str = t.encode(AStringEncoding::UTF32);
+    auto entries = u32str
                    | stringToEntriesView(this)
                    | ranges::to<Entries>();
     mEngine.setEntries(std::move(entries));
 
     AAbstractTypeable::setText(t);
     performLayout();
-    mCompiledText = t;*/
+    mCompiledText = t;
 }
 
 ATextArea::~ATextArea() {
@@ -188,14 +188,14 @@ AString ATextArea::toString() const {
     return text();
 }
 
-const AString& ATextArea::getText() const {
+AString ATextArea::getText() const {
     if (!mCompiledText) {
-        AString compiledText;
+        std::u32string compiledText;
         compiledText.reserve(length());
         for (const auto& e: entities()) {
             e->appendTo(compiledText);
         }
-        mCompiledText.emplace(std::move(compiledText));
+        mCompiledText.emplace(AString(compiledText));
     }
     return *mCompiledText;
 }
@@ -250,9 +250,10 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
         }
         target = splitIfNecessary({ target, relativeIndex });
     }
-    /*for (auto i: toInsert | stringToEntriesView(this)) {
+    auto u32toInsert = toInsert.encode(AStringEncoding::UTF32);
+    for (auto i: u32toInsert | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
-    }*/
+    }
 
     return true;
 }
@@ -315,7 +316,7 @@ bool ATextArea::typeableInsert(size_t at, AChar toInsert) {
     }
 
     insertImpl([&] { return std::make_unique<WordEntry>(this, AString(1, toInsert)); },
-               [&](WordEntry& e) { e.getWord().insert(entity.relativeIndex, toInsert); });
+               [&](WordEntry& e) { e.getWord().insert(e.getWord().begin() + entity.relativeIndex, toInsert); });
     return true;
 }
 

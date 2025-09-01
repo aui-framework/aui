@@ -54,10 +54,14 @@ AString Auisl::getName() {
 
 AString Auisl::getSignature() {
     using namespace ranges;
-    return "<target_platform {}> <auisl_file> <output_cpp>"_format(targetPlatforms()
-                                                                   | views::keys
-                                                                   | views::join(',')
-                                                                   | to<AString>());
+    AString platforms;
+    for (auto key : targetPlatforms() | views::keys) {
+        if (!platforms.empty()) {
+            platforms += ',';
+        }
+        platforms += key;
+    }
+    return "<target_platform {}> <auisl_file> <output_cpp>"_format(platforms);
 }
 
 AString Auisl::getDescription() {

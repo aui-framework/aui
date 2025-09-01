@@ -58,7 +58,7 @@ public:
     bool capturesFocus() override;
 
     AString toString() const override;
-    const AString& getText() const override;
+    AString getText() const override;
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;

@@ -659,7 +659,8 @@ public:
         mVertices.reserve(1000);
     }
 
-    void addString(const glm::ivec2& position, const AString& text) noexcept override {
+    template<class UnicodeString>
+    void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
@@ -672,7 +673,7 @@ public:
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            wchar_t c = *i;
+            AChar c = *i;
             if (c == ' ') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
@@ -740,6 +741,14 @@ public:
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
+    }
+
+    void addString(const glm::ivec2& position, AStringView text) noexcept override {
+        addStringT(position, text);
+    }
+
+    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
+        addStringT(position, text);
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {

@@ -53,7 +53,7 @@ public:
      *   text().</dd>
      * </dl>
      */
-    [[nodiscard]] virtual const AString& getText() const = 0;
+    [[nodiscard]] virtual AString getText() const = 0;
 
     /**
      * @return Text field text length.

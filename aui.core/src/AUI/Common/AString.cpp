@@ -379,23 +379,27 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
     if (super::empty()) return bytes;
     switch (encoding) {
         case AStringEncoding::UTF8: {
-            bytes.reserve(super::size());
+            bytes.reserve(super::size() + 1);
             bytes.write(super::data(), super::size());
+            bytes.data()[bytes.capacity() - 1] = '\0';
         } break;
         case AStringEncoding::UTF16: {
             size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-            bytes.resize(words * 2);
-            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())));
+            bytes.resize((words + 1) * 2);
+            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) + sizeof(char16_t));
+            reinterpret_cast<char16_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::UTF32: {
             size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
-            bytes.resize(words * 4);
-            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())));
+            bytes.resize((words + 1) * 4);
+            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) + sizeof(char32_t));
+            reinterpret_cast<char32_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::LATIN1: {
             size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
-            bytes.resize(words);
+            bytes.resize(words + 1);
             bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())));
+            bytes.data()[bytes.capacity() - 1] = '\0';
         } break;
     }
     return std::move(bytes);
@@ -1614,6 +1618,33 @@ auto AString::erase(const_iterator it) -> iterator {
     super::erase(byte_pos, char_byte_length);
 
     return iterator(this, byte_pos);
+}
+
+auto AString::erase(const_iterator begin, const_iterator end) -> iterator {
+    if (begin == cend() || begin == end) {
+        return iterator(this, begin == cend() ? size() : begin.getBytePos());
+    }
+
+    if (end == cend()) {
+        end = cend();
+    }
+
+    size_type begin_byte_pos = begin.getBytePos();
+    size_type end_byte_pos = end.getBytePos();
+
+    if (begin_byte_pos >= end_byte_pos) {
+        return iterator(this, begin_byte_pos);
+    }
+
+    size_type bytes_to_erase = end_byte_pos - begin_byte_pos;
+
+    super::erase(begin_byte_pos, bytes_to_erase);
+
+    return iterator(this, begin_byte_pos);
+}
+
+void AString::erase(size_t u_pos, size_t u_count) {
+    erase(begin() + u_pos, begin() + u_pos + u_count);
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

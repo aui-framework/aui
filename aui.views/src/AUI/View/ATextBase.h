@@ -24,7 +24,7 @@ namespace aui::detail {
     public:
         virtual size_t getCharacterCount() = 0;
         virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
-        virtual void appendTo(AString& dst) = 0;
+        virtual void appendTo(std::u32string& dst) = 0;
         virtual void erase(size_t begin, AOptional<size_t> end) {}
 
         struct StopLineScanningHint{};
@@ -68,29 +68,32 @@ namespace aui::detail {
             return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).advanceX, 0};
         }
 
-        void appendTo(AString& dst) override {
+        void appendTo(std::u32string& dst) override {
             dst += mChar;
         }
     };
     class WordEntry: public TextBaseEntry {
     protected:
         IFontView* mText;
-        AString mWord;
+        std::u32string mWord;
         glm::ivec2 mPosition{};
 
     public:
+        WordEntry(IFontView* text, std::u32string word)
+                : mText(text), mWord(std::move(word)) {}
+
         WordEntry(IFontView* text, AString word)
-                : mText(text), mWord(std::move(word)){}
+                : mText(text), mWord(reinterpret_cast<const char32_t*>(word.encode(AStringEncoding::UTF32).data())) {}
 
         glm::ivec2 getSize() override {
             return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
         }
 
-        const AString& getWord() const {
+        const std::u32string& getWord() const {
             return mWord;
         }
 
-        AString& getWord() {
+        std::u32string& getWord() {
             return mWord;
         }
 
@@ -112,12 +115,12 @@ namespace aui::detail {
             return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + characterIndex), 0};
         }
 
-        void appendTo(AString& dst) override {
+        void appendTo(std::u32string& dst) override {
             dst += mWord;
         }
 
         void erase(size_t begin, AOptional<size_t> end) override {
-            mWord.bytes().erase(mWord.bytes().begin() + begin, mWord.bytes().begin() + end.valueOr(mWord.length()));
+            mWord.erase(mWord.begin() + begin, mWord.begin() + end.valueOr(mWord.length()));
         }
     };
 
@@ -146,8 +149,8 @@ namespace aui::detail {
             throw AException("unimplemented");
         }
 
-        void appendTo(AString& dst) override {
-            dst += ' ';
+        void appendTo(std::u32string& dst) override {
+            dst += U' ';
         }
     };
 
@@ -176,8 +179,8 @@ namespace aui::detail {
             throw AException("unimplemented");
         }
 
-        void appendTo(AString& dst) override {
-            dst += '\n';
+        void appendTo(std::u32string& dst) override {
+            dst += U'\n';
         }
     };
 }

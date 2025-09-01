@@ -27,7 +27,7 @@ public:
     ~ATextField() override;
 
 protected:
-    bool isValidText(const AString& text) override;
+    bool isValidText(std::u32string_view text) override;
 };
 
 template <>

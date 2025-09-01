@@ -98,7 +98,9 @@ public:
 
     Character& getCharacter(const FontEntry& charset, AChar glyph);
 
-    float length(const FontEntry& charset, const AString& text);
+    float length(const FontEntry& charset, AStringView text);
+
+    float length(const FontEntry& charset, std::u32string_view text);
 
     template<class Iterator>
     float length(const FontEntry& charset, Iterator begin, Iterator end) {

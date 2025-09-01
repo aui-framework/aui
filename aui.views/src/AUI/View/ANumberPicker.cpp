@@ -16,11 +16,11 @@
 #include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/kAUI.h>
 
-bool ANumberPicker::ANumberPickerField::isValidText(const AString& text) {
+bool ANumberPicker::ANumberPickerField::isValidText(std::u32string_view text) {
     if (text.length() > 10)
         return false;
     for (auto c : text) {
-        if ((c < '0' || c > '9') && c != '-')
+        if ((c < U'0' || c > U'9') && c != U'-')
             return false;
     }
 

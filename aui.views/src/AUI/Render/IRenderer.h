@@ -193,11 +193,18 @@ public:
         }
 
         /**
-         * @brief Bakes a string with some position.
+         * @brief Bakes a UTF-8 string with some position.
          * @param position position
          * @param text text
          */
-        virtual void addString(const glm::ivec2& position, const AString& text) noexcept = 0;
+        virtual void addString(const glm::ivec2& position, AStringView text) noexcept = 0;
+
+        /**
+         * @brief Bakes a UTF-32 string with some position.
+         * @param position position
+         * @param text text
+         */
+        virtual void addString(const glm::ivec2& position, std::u32string_view text) noexcept = 0;
 
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.

@@ -63,7 +63,7 @@ public:
 
     bool handlesNonMouseNavigation() override;
 
-    const AString& getText() const override;
+    AString getText() const override;
 
     void onCharEntered(AChar c) override;
 
@@ -73,10 +73,10 @@ public:
 
 protected:
     _<IRenderer::IPrerenderedString> mPrerenderedString;
-    AString mContents;
+    std::u32string mContents;
     AString mSuffix;
 
-    virtual bool isValidText(const AString& text);
+    virtual bool isValidText(std::u32string_view text);
 
     void prerenderStringIfNeeded(IRenderer& render);
 

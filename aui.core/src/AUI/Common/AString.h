@@ -532,13 +532,19 @@ public:
 
     AString(const char8_t* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
+    AString(std::u8string_view utf8_string) : AString(utf8_string.data(), utf8_string.size()) {}
+
     AString(const char16_t* utf16_bytes, size_type length);
 
     AString(const char16_t* utf16_bytes) : AString(utf16_bytes, strLength(utf16_bytes)) {}
 
+    AString(std::u16string_view utf16_string) : AString(utf16_string.data(), utf16_string.size()) {}
+
     AString(const char32_t* utf32_bytes, size_type length);
 
     AString(const char32_t* utf32_bytes) : AString(utf32_bytes, strLength(utf32_bytes)) {}
+
+    AString(std::u32string_view utf32_string) : AString(utf32_string.data(), utf32_string.size()) {}
 
     AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
 
@@ -570,7 +576,7 @@ public:
     void insert(size_type pos, AStringView str);
 
     /**
-     * @brief Encodes the string into a byte buffer using the specified encoding.
+     * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
      * @sa bytes
      */
     AByteBuffer encode(AStringEncoding encoding) const;
@@ -595,7 +601,7 @@ public:
      * @brief Compatibility method. Guarantees std::string with UTF-8
      * @sa bytes
      */
-    std::string& toStdString() & {
+    std::string& toStdString() {
         return *this;
     }
 
@@ -603,16 +609,8 @@ public:
      * @brief Compatibility method. Guarantees std::string with UTF-8
      * @sa bytes
      */
-    const std::string& toStdString() const& {
+    const std::string& toStdString() const {
         return *this;
-    }
-
-    /**
-     * @brief Compatibility method. Guarantees std::string with UTF-8
-     * @sa bytes
-     */
-    std::string&& toStdString() && {
-        return std::move(*this);
     }
 
     operator AStringView() const noexcept;
@@ -880,6 +878,10 @@ public:
     }
 
     iterator erase(const_iterator it);
+
+    iterator erase(const_iterator begin, const_iterator end);
+
+    void erase(size_t u_pos, size_t u_count);
 
 //private: // non private because ASerializable
     size_type size() const noexcept {

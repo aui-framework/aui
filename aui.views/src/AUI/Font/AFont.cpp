@@ -150,7 +150,11 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     }
 }
 
-float AFont::length(const FontEntry& charset, const AString& text) {
+float AFont::length(const FontEntry& charset, AStringView text) {
+    return length(charset, text.begin(), text.end());
+}
+
+float AFont::length(const FontEntry& charset, std::u32string_view text) {
     return length(charset, text.begin(), text.end());
 }
 

@@ -73,7 +73,8 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 
 void AAbstractTextField::setText(const AString& t) {
     mHorizontalScroll = 0;
-    mContents = t;
+    auto utf32t = t.encode(AStringEncoding::UTF32);
+    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size()};
     if (t.empty()) {
         clearSelection();
     }
@@ -94,15 +95,15 @@ AString AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
         return AString(mContents.length(), AChar(U'•'));
     }
-    return mContents;
+    return AString(mContents);
 }
 
 void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 
-const AString& AAbstractTextField::getText() const {
-    return mContents;
+AString AAbstractTextField::getText() const {
+    return AString(mContents);
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
@@ -112,16 +113,17 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
     if (begin >= mContents.length()) {
         return;
     }
-    mContents.bytes().erase(mContents.bytes().begin() + begin, mContents.bytes().begin() + end);
+    mContents.erase(mContents.begin() + begin, mContents.begin() + end);
 }
 
 bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     if (!mIsEditable) {
         return false;
     }
-    mContents.insert(at, toInsert);
+    auto u32str = toInsert.encode(AStringEncoding::UTF32);
+    mContents.insert(mContents.begin() + at, u32str.begin(), u32str.end());
     if (!isValidText(mContents)) {
-        mContents.bytes().erase(at, toInsert.length()); // undo insert
+        mContents.erase(at, u32str.size()); // undo insert
         return false;
     }
     return true;
@@ -131,9 +133,9 @@ bool AAbstractTextField::typeableInsert(size_t at, AChar toInsert) {
     if (!mIsEditable) {
         return false;
     }
-    mContents.insert(at, toInsert);
+    mContents.insert(mContents.begin() + at, toInsert);
     if (!isValidText(mContents)) {
-        mContents.bytes().erase(at, 1); // undo insert
+        mContents.erase(at, 1); // undo insert
         return false;
     }
     return true;
@@ -169,7 +171,7 @@ void AAbstractTextField::onCharEntered(AChar c) {
         mCursorIndex = cursorIndexCopy;
         ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
     }
-    emit textChanging(mContents);
+    emit textChanging(AString(mContents));
 }
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
@@ -237,12 +239,12 @@ void AAbstractTextField::commitStyle() {
     onCursorIndexChanged();
 }
 
-bool AAbstractTextField::isValidText(const AString& text) {
+bool AAbstractTextField::isValidText(std::u32string_view text) {
     return true;
 }
 
 AString AAbstractTextField::toString() const {
-    return mContents;
+    return AString(mContents);
 }
 
 void AAbstractTextField::setSize(glm::ivec2 size) {
