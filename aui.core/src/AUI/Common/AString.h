@@ -132,26 +132,14 @@ public:
 
     AUtf8ConstIterator& operator=(const std::string::iterator& it) noexcept {
         if (begin_ != nullptr) {
-#if AUI_COMPILER_MSVC
-            std::string::iterator iterator;
-            iterator._Ptr = begin_;
-            byte_pos_ = it - iterator;
-#else
-            byte_pos_ = it - std::string::iterator(const_cast<char*>(begin_));
-#endif
+            byte_pos_ = it.base() - begin_;
         }
         return *this;
     }
 
     AUtf8ConstIterator& operator=(const std::string::const_iterator& it) noexcept {
         if (begin_ != nullptr) {
-#if AUI_COMPILER_MSVC
-            std::string::const_iterator iterator;
-            iterator._Ptr = begin_;
-            byte_pos_ = it - iterator;
-#else
-            byte_pos_ = it - std::string::const_iterator(begin_);
-#endif
+            byte_pos_ = it.base() - begin_;
         }
         return *this;
     }
