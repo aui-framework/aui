@@ -527,6 +527,42 @@ def gen_pages():
                     out.append(ex)
                 return out
 
+            def _compute_hl_lines(snippet: str, tokens: list[str]) -> str | None:
+                """Return a string of 1-based line numbers to highlight for mkdocs (e.g. '2 3'),
+                or None if no highlights.
+
+                Heuristic: mark any line in the snippet that contains a token or member-access
+                of the token (::, ->, ., call). Tokens that look like class::member will use
+                the member portion for matching.
+                """
+                if not snippet or not tokens:
+                    return None
+                lines = snippet.splitlines()
+                hits = []
+                for idx, line in enumerate(lines, start=1):
+                    for t in tokens:
+                        if not t:
+                            continue
+                        mem = t.split('::')[-1]
+                        mem_esc = re.escape(mem)
+                        # patterns: exact word, function call, qualified use, member access, AUI_SLOT
+                        if re.search(r"\b" + mem_esc + r"\b", line) or re.search(mem_esc + r"::", line) or re.search(r"\b" + mem_esc + r"\s*\(", line) or re.search(r"\b" + mem_esc + r"\s*->", line) or re.search(r"\b" + mem_esc + r"\s*\.", line) or re.search(r"AUI_SLOT\(\s*" + mem_esc + r"\s*\)", line):
+                            # avoid highlighting lines that are clearly declaration-only like 'auto drawable'
+                            if re.search(r"\b(auto|[A-Za-z_][\w:<>\	\s\*&]+)\s+" + mem_esc + r"\b", line):
+                                # if a declaration also contains a call/member access, keep it
+                                if not (re.search(r"\b" + mem_esc + r"\s*\(", line) or re.search(mem_esc + r"::", line) or re.search(r"\b" + mem_esc + r"\s*->", line) or re.search(r"\b" + mem_esc + r"\s*\.", line)):
+                                    continue
+                            hits.append(str(idx))
+                            break
+                if not hits:
+                    return None
+                # dedupe and sort
+                uniq = []
+                for h in hits:
+                    if h not in uniq:
+                        uniq.append(h)
+                return " ".join(uniq)
+
             def _filter_examples_by_relevance(exs: list[dict], names: list[str], strict: bool = True) -> list[dict]:
                 """Keep only examples whose snippet/title/src appears relevant for any of the provided names.
 
@@ -866,9 +902,17 @@ def gen_pages():
                         continue
                     printed_example_pairs.add(pair)
                     extension = common.determine_extension(ex['src'])
+                    # compute hl_lines for this snippet using name tokens
+                    tokens = []
+                    if hasattr(parse_entry, 'namespaced_name'):
+                        tokens.append(parse_entry.namespaced_name())
+                    if hasattr(parse_entry, 'name'):
+                        tokens.append(parse_entry.name)
+                    hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                    hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
                     print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                    print(f"    ```{extension}", file=fos)
+                    print(f"    ```{extension}{hl_attr}", file=fos)
                     for line in ex['snippet'].splitlines():
                         print(f"    {line}", file=fos)
                     print(f"    ```", file=fos)
@@ -912,9 +956,13 @@ def gen_pages():
                             printed_example_pairs.add(pair)
                             extension = common.determine_extension(ex['src'])
                             # emit admonition header with no blank line after it
+                            # compute hl_lines using class tokens
+                            tokens = [parse_entry.namespaced_name(), parse_entry.name]
+                            hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                            hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
                             print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                            print(f"    ```{extension}", file=fos)
+                            print(f"    ```{extension}{hl_attr}", file=fos)
                             for line in ex['snippet'].splitlines():
                                 print(f"    {line}", file=fos)
                             print(f"    ```", file=fos)
@@ -976,11 +1024,15 @@ def gen_pages():
                                     continue
                                 printed_example_pairs.add(pair)
                                 extension = common.determine_extension(ex['src'])
+                                # compute hl_lines using nested type tokens
+                                tokens = [full_name, type_entry.name]
+                                hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
                                 print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
                                 print(file=fos)
-                                print(f"    ```{extension}", file=fos)
+                                print(f"    ```{extension}{hl_attr}", file=fos)
                                 for line in ex['snippet'].splitlines():
                                     print(f"    {line}", file=fos)
                                 print(f"    ```", file=fos)
@@ -1072,11 +1124,14 @@ def gen_pages():
                                     continue
                                 printed_example_pairs.add(pair)
                                 extension = common.determine_extension(ex['src'])
+                                tokens = [field.name]
+                                hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
                                 print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
                                 print(file=fos)
-                                print(f"    ```{extension}", file=fos)
+                                print(f"    ```{extension}{hl_attr}", file=fos)
                                 for line in ex['snippet'].splitlines():
                                     print(f"    {line}", file=fos)
                                 print(f"    ```", file=fos)
@@ -1165,11 +1220,14 @@ def gen_pages():
                                         except Exception:
                                             src_rel = ex['src']
                                         extension = common.determine_extension(ex['src'])
+                                        tokens = [method_full, overload.name]
+                                        hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                        hl_attr = f' hl_lines="{hl}"' if hl else ''
                                         print(f"\n??? note \"{src_rel}\"", file=fos)
                                         print(file=fos)
                                         print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
                                         print(file=fos)
-                                        print(f"    ```{extension}", file=fos)
+                                        print(f"    ```{extension}{hl_attr}", file=fos)
                                         for line in ex['snippet'].splitlines():
                                             print(f"    {line}", file=fos)
                                         print(f"    ```", file=fos)
