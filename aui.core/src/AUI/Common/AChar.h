@@ -94,4 +94,14 @@ public:
     }
 };
 
+inline bool operator==(AChar lhs, AChar rhs) noexcept {
+    return lhs.codepoint() == rhs.codepoint();
+}
+inline bool operator==(AChar lhs, char rhs) noexcept {
+    return lhs == AChar(rhs);
+}
+inline bool operator==(char lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+
 static_assert(sizeof(AChar) == 4, "AChar should be exact 4 bytes");

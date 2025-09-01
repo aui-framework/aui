@@ -510,7 +510,11 @@ public:
 
     AString(AString&& other) noexcept : super(std::move(other)) {}
 
-    AString(std::span<const std::byte> bytes, AStringEncoding encoding);
+    AString(const char* bytes, size_t size_bytes, AStringEncoding encoding);
+
+    AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString((const char*) bytes.data(), bytes.size(), encoding) {}
+
+    AString(const AByteBuffer& buffer, AStringEncoding encoding = AStringEncoding::UTF8);
 
     AString(const char* utf8_bytes, size_type length);
 
@@ -684,6 +688,8 @@ public:
     void resizeToNullTerminator();
 
     bool contains(char c) const noexcept;
+
+    bool contains(AStringView str) const noexcept;
 
     bool startsWith(AChar prefix) const noexcept;
 

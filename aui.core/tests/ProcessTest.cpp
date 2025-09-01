@@ -75,7 +75,7 @@ TEST_F(ProcessTest, Stdout) {
         auto p = AProcess::create(i);
 
         AString accumulator;
-        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString(buffer.begin(), buffer.end()); });
         p->run();
         EXPECT_EQ(p->waitForExitCode(), 0);
         AThread::processMessages();
@@ -129,7 +129,7 @@ TEST_F(ProcessTest, StartDetached) {
         auto p = AProcess::create(i);
 
         AString accumulator;
-        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString(buffer.begin(), buffer.end()); });
         p->run(ASubProcessExecutionFlags::DETACHED);
         p->waitForExitCode();
         AThread::sleep(500ms);
@@ -175,7 +175,7 @@ TEST_F(ProcessTest, Launching_executable) { // HEADER_H2
     });
 
     AString accumulator;
-    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString(buffer.begin(), buffer.end()); });
 
     p->run();
 

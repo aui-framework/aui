@@ -74,7 +74,7 @@ TEST(Zlib, DecompressZip) {
         EXPECT_FALSE(called);
         called = true;
         EXPECT_EQ(e.name, "test.txt");
-        EXPECT_EQ(AString::fromLatin1(AByteBuffer::fromStream(e.open())), "1234\n");
+        EXPECT_EQ(AString(AByteBuffer::fromStream(e.open()), AStringEncoding::LATIN1), "1234\n");
     });
     EXPECT_TRUE(called);
 }
