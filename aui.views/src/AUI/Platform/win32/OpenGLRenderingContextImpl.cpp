@@ -25,6 +25,9 @@
 #include <AUI/GL/State.h>
 #include "AUI/Util/kAUI.h"
 
+#include <tuple>
+#include <string_view>
+
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
@@ -85,6 +88,55 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
+        using namespace std::string_view_literals;
+
+        auto handle = [](auto* str) -> std::string_view {
+            if (str == nullptr) {
+                return "unknown";
+            }
+            return reinterpret_cast<const char*>(str);
+        };
+        auto vendor   = handle(glGetString(GL_VENDOR));
+        auto renderer = handle(glGetString(GL_RENDERER));
+        auto version  = handle(glGetString(GL_VERSION));
+        auto glsl     = handle(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+        ALogger::info(LOG_TAG) << "VENDOR: " << vendor;
+        ALogger::info(LOG_TAG) << "RENDERER: " << renderer;
+        ALogger::info(LOG_TAG) << "GL_VERSION: " << version;
+        ALogger::info(LOG_TAG) << "GLSL_VERSION: " << glsl;
+
+        static constexpr auto BLACK_LIST = std::array {
+            std::make_tuple("VMware"sv, "Gallium"sv),
+            std::make_tuple("Microsoft"sv, "GDI Generic"sv),
+        };
+
+        for (const auto&[blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
+            if (vendor.find(blacklistedVendor) != std::string_view::npos && renderer.find(blacklistedRenderer) != std::string_view::npos) {
+                throw AException("Blacklisted OpenGL driver: {} / {}"_format(vendor, renderer));
+            }
+        }
+
+        GLint maxAttribs = 0;
+        glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+        ALogger::info(LOG_TAG) << "GL_MAX_VERTEX_ATTRIBS: " << maxAttribs;
+
+        GLint maxTexSize = 0;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTexSize);
+        ALogger::info(LOG_TAG) << "GL_MAX_TEXTURE_SIZE: " << maxTexSize;
+
+        GLint maxSamples = 0;
+        glGetIntegerv(GL_MAX_SAMPLES, &maxSamples);
+        ALogger::info(LOG_TAG) << "GL_MAX_SAMPLES: " << maxSamples;
+
+        // Check what extensions are actually exposed
+        const GLubyte* exts = glGetString(GL_EXTENSIONS);
+        if (exts)
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
+        else
+            ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
+
+
         if (!glewExperimental) {
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
@@ -111,7 +163,9 @@ void OpenGLRenderingContext::init(const Init& init) {
                     };
 
             UINT iNumFormats;
-
+            if (!wglChoosePixelFormatARB) {
+                throw AException("wglChoosePixelFormatARB is not available");
+            }
             wglChoosePixelFormatARB(mWindowDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
             AUI_ASSERT(iNumFormats);
             DescribePixelFormat(mWindowDC, pxf, sizeof(pfd), &pfd);

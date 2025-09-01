@@ -12,7 +12,7 @@ it in [AUIB_CACHE] folder for future reuse.
 See [AUI's repository](https://github.com/aui-framework/aui) to check out the import script with the latest version.
 
 ```cmake
-set(AUI_VERSION v6.2.1) # OLD!
+set(AUI_VERSION v8.0.0-rc.8) # OLD!
 
 file(
     DOWNLOAD 
@@ -35,7 +35,7 @@ At the moment, GitHub Releases page with carefully formatted archive names is th
 these rules, so AUI Boot can pull precompiled package of AUI.
 
 To use a precompiled binary, you must specify a tag of a released version from
-[releases page](https://github.com/aui-framework/aui/releases) (for example, `v6.2.1` or `v7.0.0-rc.2`). These packages
+[releases page](https://github.com/aui-framework/aui/releases) (for example, `v8.0.0-rc.8` or `v7.0.0-rc.2`). These packages
 are self-sufficient, i.e., all AUI's dependencies are packed into them, so it is the only downloadable thing you need to
 set up a development and building with AUI.
 
@@ -237,7 +237,7 @@ Also, you can consult with [Conan Recipes](https://github.com/conan-io/conan-cen
 AUI Boot does not have any hard dependencies on AUI, so it can be used to manage dependencies on non-AUI projects.
 
 ```cmake
-set(AUI_VERSION v6.2.1)
+set(AUI_VERSION v8.0.0-rc.8)
 
 file(
     DOWNLOAD 
@@ -428,7 +428,7 @@ this, you need to:
 2. In your `CMakeLists.txt`, make sure the **URL** points to your fork, if any:
     ```cmake
     auib_import(aui https://github.com/your-name/your-aui-fork
-                VERSION v7.0.0
+                VERSION v8.0.0-rc.8
     )
     ```
 3. Specify **commit hash** in `VERSION` field:

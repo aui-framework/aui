@@ -6,7 +6,7 @@ ease. See [getting-started] for quick start.
 
 ## Views
 
-[Views](useful_views.md) are basic units to build UIs with AUI. There is a wide range of pre-built views for common UI
+[Views](views.md) are basic units to build UIs with AUI. There is a wide range of pre-built views for common UI
 elements, such as buttons, labels, and text inputs.
 
 ![](imgs/Screenshot_20241218_144940.png)
@@ -53,7 +53,7 @@ amazing user experiences.
 
 ## API Reference
 
-- [All Views](useful_views.md)
+- [All Views](views.md)
 - [ASS](ass.md)
     - [Selectors](ass_selectors.md)
     - [Properties](ass_properties.md)

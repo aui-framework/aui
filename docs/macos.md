@@ -1,3 +1,7 @@
+---
+icon: material/apple-finder
+---
+
 # macOS (operating system)
 
 macOS is a series of proprietary operating systems developed by Apple for their own hardware. It's designed

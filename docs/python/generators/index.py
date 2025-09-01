@@ -26,10 +26,6 @@ class MappingEntry:
 def populate_mapping(markdown: str, file: File):
     global _mapping
     page_title = None
-    if m := regexes.PAGE_TITLE.match(markdown):
-        page_title = m.group(1)
-        _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
-        _mapping[file.name] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
 
     state_code = False
     for line_number, line_contents in enumerate(markdown.splitlines()):
@@ -39,9 +35,15 @@ def populate_mapping(markdown: str, file: File):
 
         if state_code:
             continue
-        if line_contents.startswith("# ") and line_number != 0:
-            # several H1 headings breaks TOC.
-            log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
+
+        if m := regexes.PAGE_TITLE.match(line_contents):
+            if page_title:
+                # several H1 headings breaks TOC.
+                log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
+
+            page_title = m.group(1)
+            _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
+            _mapping[file.name] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
 
         if m := regexes.HEADING_ANCHOR.match(line_contents):
             heading_title = m.group(4) or m.group(1)
@@ -54,5 +56,13 @@ def populate_mapping(markdown: str, file: File):
 
 def find_page(name: str) -> MappingEntry | None:
     global _mapping
-    return _mapping.get(name)
+    if m := _mapping.get(name):
+        return m
+
+    # hack: try to find a class in the namespace whose are commonly used with "using namespace".
+    for namespace in ["ass", "declarative"]:
+        if m := _mapping.get(f"{namespace}::{name}"):
+            return m
+
+    return None
 

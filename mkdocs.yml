@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: AUI Framework
-site_url: https://aui-framework.github.io/
+site_url: https://aui-framework.github.io/develop/
 site_author: Alex2772
 site_description: Cross-platform base for C++ UI apps
 use_directory_urls: true
@@ -37,6 +37,9 @@ extra:
 
 extra_css:
   - overrides/style.css
+
+extra_javascript:
+  - javascripts/extra.js
 
 markdown_extensions:
   - toc:
@@ -81,9 +84,8 @@ theme:
   icon:
     repo: fontawesome/brands/github
   features:
-    - navigation.instant
+#    - navigation.instant # disabled due to preview
     - navigation.tracking
-    - navigation.top
     - navigation.footer
     - navigation.prune
     - toc.follow
@@ -94,20 +96,21 @@ theme:
     - content.action.edit
     - content.code.copy
     - content.code.annotate # https://squidfunk.github.io/mkdocs-material/reference/code-blocks/#code-annotations
+    - content.tabs.link # sync same labels across all pages
 
   palette:
     # Palette toggle for dark mode (which is by default)
     - scheme: slate
       primary: black
       toggle:
-        icon: material/toggle-switch
+        icon: octicons/moon-16
         name: Switch to light mode
 
     # Palette toggle for light mode
     - scheme: default
       primary: black
       toggle:
-        icon: material/toggle-switch-off-outline
+        icon: octicons/sun-16
         name: Switch to dark mode
 
 
@@ -129,9 +132,10 @@ nav:
     - signal_slot.md
     - property-system.md
     - devtools.md
+    - 'Handling HiDPI': ametric.md
 
   - 'Views':
-    - 'useful_views.md'
+    - 'Overview': views.md
 
   - 'Styling':
     - ass.md
@@ -146,10 +150,11 @@ nav:
     - emscripten.md
 
   - 'Other':
+      - app-icon.md
+      - packaging.md
       - aui-command-line-arguments.md
       - runtime-dependency-resolution.md
       - forking-aui.md
-      - contributing.md
 
   - Reference:
       - 'Installation methods':
@@ -163,3 +168,6 @@ nav:
           - aui_module.md
           - aui-configure-flags.md
           - app-build-overview.md
+
+  - contributing.md
+

@@ -22,7 +22,10 @@
 
 /**
  * @brief A button with dropdown list.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ADropdownList.png)
+ *
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ADropdownList: public AButton {
 private:

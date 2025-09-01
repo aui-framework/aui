@@ -416,13 +416,15 @@ function(_auib_try_download_precompiled_binary)
         message(STATUS "GitHub detected, checking for precompiled package...")
     endif()
 
+    set(_diagnostics "")
     foreach(_binary_download_url ${_binary_download_urls})
         if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
             # since CMake 3.19 there's a way to check for file existence
 
             file(DOWNLOAD ${_binary_download_url} STATUS _status)
-            list(GET _status 0 _status)
-            if (NOT _status STREQUAL 0)
+            list(GET _status 0 _status_code)
+            if (NOT _status_code STREQUAL 0)
+                list(APPEND _diagnostics "\n${_binary_download_url} : ${_status}")
                 continue()
             endif()
         endif()
@@ -448,11 +450,8 @@ function(_auib_try_download_precompiled_binary)
             return()
         endif()
     endforeach()
-    if (AUIB_DEBUG_PRECOMPILED STREQUAL ${AUI_MODULE_NAME})
-        message(FATAL_ERROR "Precompiled binary for ${AUI_MODULE_NAME} is not available"
-                "\ntrace: download urls: ${_binary_download_urls}")
-    endif()
-    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
+    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available"
+            "\nNote: tried following urls: ${_diagnostics}")
 endfunction()
 
 function(_auib_dump_with_prefix PREFIX PATH)
@@ -928,6 +927,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_C_FLAGS
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
+                        CMAKE_GENERATOR_TOOLSET
                         CMAKE_VS_PLATFORM_NAME
                         CMAKE_BUILD_TYPE
                         CMAKE_CONFIGURATION_TYPES

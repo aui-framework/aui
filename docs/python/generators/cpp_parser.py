@@ -20,14 +20,14 @@ from pathlib import Path
 
 from docs.python.generators import cpp_tokenizer, regexes
 
-CPP_CLASS_DEF = re.compile('class( API_\S+)? ([a-zA-Z0-9_$]+)')
+CPP_CLASS_DEF = re.compile(r'class( API_\S+)? ([a-zA-Z0-9_$]+)')
 assert CPP_CLASS_DEF.match('class Test').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test;').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test {').group(2) == "Test"
 assert CPP_CLASS_DEF.match('class API_AUI_CORE Test: Base {').group(2) == "Test"
 
-CPP_COMMENT_LINE = re.compile('\s*\* ?(.*)')
+CPP_COMMENT_LINE = re.compile(r'\s*\* ?(.*)')
 assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
 assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
@@ -107,6 +107,7 @@ class CppClass:
         self.generic_kind = None # 'class' | 'struct'
         self.page_url = None
         self.types = []
+        self.base_classes = []  # List of base class names (strings)
 
     def namespaced_name(self):
         return "::".join(self.namespace + [self.name])
@@ -341,6 +342,33 @@ class _Parser:
         clazz.doc = self._consume_doc()
         clazz.location = self.location
 
+        # Parse base classes (e.g., class Foo : public Bar, public Baz)
+        if self.last_token[1] == ':':
+            base_classes = []
+            self.last_token = next(self.iterator)
+            while self.last_token[1] not in '{;':
+                # skip access specifiers
+                if self.last_token[1] in ['public', 'protected', 'private', ',']:
+                    self.last_token = next(self.iterator)
+                    continue
+                # base class name
+                if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
+                    base_name = self.last_token[1]
+                    # handle namespaced base classes
+                    while True:
+                        peek = next(self.iterator)
+                        if peek[1] == '::':
+                            base_name += '::' + next(self.iterator)[1]
+                        else:
+                            self.last_token = peek
+                            break
+                    base_classes.append(base_name)
+                    continue
+                self.last_token = next(self.iterator)
+            clazz.base_classes = base_classes
+        else:
+            clazz.base_classes = []
+
         while self.last_token[1] not in '{;':
             self.last_token = next(self.iterator)
         if self.last_token[1] == '{':
@@ -425,19 +453,31 @@ def _parse(input: str, location = None | Path):
 
 def _scan():
     contents = []
+
     for root, dirs, files in os.walk('.'):
+        root_path = Path(root)
+
         for file in files:
-            if not root.startswith('./aui.'):
+            # Match if ANY folder in the path starts with "aui."
+            if not any(part.startswith('aui.') for part in root_path.parts):
                 continue
-            if "aui.toolbox" in str(root):
+            if any(part.lower() == 'test' for part in root_path.parts):
+                continue
+            if "aui.toolbox" in root_path.as_posix():
                 continue
             if not file.endswith('.h'):
                 continue
-            if "3rdparty" in root:
+            if "3rdparty" in root_path.as_posix():
                 continue
-            full_path = Path(root) / file
+
+            full_path = root_path / file
             try:
-                contents += [i for i in _parse(full_path.read_text(), location=full_path)]
+                contents += [
+                    i for i in _parse(
+                        full_path.read_text(encoding='utf-8', errors='ignore'),
+                        location=full_path
+                    )
+                ]
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
     return contents

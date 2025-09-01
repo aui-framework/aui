@@ -10,7 +10,9 @@
  */
 
 #pragma once
+#ifndef __cplusplus
 extern "C" {
+#endif
 #if AUI_PLATFORM_ANDROID
 #include <GLES3/gl3.h>
 #include <GLES3/gl31.h>
@@ -27,4 +29,6 @@ extern "C" {
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
+#ifndef __cplusplus
 }
+#endif

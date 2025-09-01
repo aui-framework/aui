@@ -173,7 +173,7 @@ jobs:
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: ubuntu-latest
             generator: "Ninja"
@@ -190,7 +190,7 @@ jobs:
 
           - os: windows-latest
             generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
@@ -225,11 +225,20 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Setup clang
-        if: matrix.compiler == 'clang'
+      - name: Setup clang for macOS
+        if: matrix.compiler == 'clang' && runner.os == 'macOS'
         run: |
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
+
+      - name: Clang Toolchain Installation for Linux
+        if: matrix.compiler == 'clang' && runner.os == 'Linux'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20 all
+          echo "CC=clang-20" >> $GITHUB_ENV
+          echo "CXX=clang++-20" >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

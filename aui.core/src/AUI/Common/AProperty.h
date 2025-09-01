@@ -23,9 +23,12 @@
  * @brief Property System is a data binding mechanism based on [signal_slot] "signal-slot system".
  * @details
  * <!-- aui:experimental -->
- * AUI property system, a compiler-agnostic alternative to `__property` or `QProperty`. Based on
- * [signal_slot] "signal-slot system" for platform-independent C++ development. Unlike Qt, AUI's properties don't
- * involve external tools (like `moc`). They are written in pure C++.
+ * AUI property system, a compiler-agnostic framework to make observable variables. This is a pure C++ alternative to:
+ *
+ * - QProperty
+ * - RxJS
+ * - JavaRX
+ *
  *
  * !!! note
  *     This page is about presenting individual values. For lists, see [AForEachUI].

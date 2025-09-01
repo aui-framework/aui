@@ -35,7 +35,7 @@ def define_env(env):
 
         with open(file, 'r') as fis:
             def find():
-                REGEX = re.compile("\\$\\{" + varname + "\\}")
+                REGEX = re.compile(r"\\$\\{" + varname + "\\}")
                 for l in fis.readlines():
                     l = l.strip()
                     if l.startswith("#"):
@@ -56,7 +56,7 @@ def define_env(env):
 
     @env.macro
     def cmake_list_all_vars_containing(file, varname):
-        REGEX = re.compile(f'\(([A-Za-z_]+)( (.*)\))?( # (.*))?')
+        REGEX = re.compile(r'\(([A-Za-z_]+)( (.*)\))?( # (.*))?')
         with open(file, 'r') as fis:
             vars_set = [(i[0], i[2], i[4]) for i in REGEX.findall(fis.read()) if varname in f"{i}"]
         if not vars_set:

@@ -16,7 +16,10 @@
 
 /**
  * @brief HTML-capable text container.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AText.png)
+ *
+ * @ingroup views_indication
  * @details
  * Used to display rich text or large texts.
  *

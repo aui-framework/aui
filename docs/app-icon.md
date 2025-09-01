@@ -57,8 +57,7 @@ For that being said, a typical shape-agnostic app icon consists of:
 
 On the other hand, Windows and Linux applications tend to have non-uniform shapes.
 
-<div class="dark-mode-keep-imgs">
-<table>
+<table markdown>
 <tr>
 <th>Platform</th>
 <th>Sample Visuals</th>
@@ -67,14 +66,18 @@ On the other hand, Windows and Linux applications tend to have non-uniform shape
 <tr>
 <td colspan="3" style="text-align: center"><i> - forced shape trend - </i></td>
 </tr>
-<tr>
+<tr markdown>
 <td>Android</td>
-<td>![](imgs/icons_android.png) </td>
+<td markdown>
+![](imgs/icons_android.png)
+</td>
 <td><a href="https://developer.android.com/distribute/google-play/resources/icon-design-specifications">Google</a></td>
 </tr>
-<tr>
+<tr markdown>
 <td>iOS</td>
-<td rowspan="2">![](imgs/icons_apple.png) </td>
+<td rowspan="2" markdown>
+![](imgs/icons_apple.png)
+</td>
 <td rowspan="2">
   <a href="https://developer.apple.com/design/human-interface-guidelines/app-icons">Apple Developer</a><br/>
   <a href="https://developer.apple.com/design/resources/#macos-apps">Apple Design Resources</a>
@@ -86,14 +89,16 @@ On the other hand, Windows and Linux applications tend to have non-uniform shape
 <tr>
 <td colspan="3" style="text-align: center"><i> - freeform trend - </i></td>
 </tr>
-<tr>
+<tr markdown>
 <td>Windows</td>
-<td>![](imgs/icons_win.png) </td>
+<td markdown>
+![](imgs/icons_win.png)
+</td>
 <td><a href="https://learn.microsoft.com/en-us/windows/apps/design/style/iconography/app-icon-design">Microsoft</a></td>
 </tr>
-<tr>
+<tr markdown>
 <td rowspan="3">Linux</td>
-<td rowspan="3">
+<td rowspan="3" markdown>
 ![](imgs/icons_gnome.png)
 ![](imgs/icons_kde.png)
 </td>
@@ -106,4 +111,3 @@ On the other hand, Windows and Linux applications tend to have non-uniform shape
 <td><a href="https://develop.kde.org/hig/icons/colorful/">KDE</a></td>
 </tr>
 </table>
-</div>

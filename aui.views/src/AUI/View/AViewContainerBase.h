@@ -52,7 +52,6 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
 
 /**
  * @brief A view that represents a set of views.
- * @ingroup useful_views
  * @details
  * AViewContainerBase can store, render, resize, provide events to and handle the child views.
  *

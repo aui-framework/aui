@@ -1,3 +1,7 @@
+---
+icon: simple/webassembly
+---
+
 # Emscripten (WebAssembly)
 
 @page emscripten Emscripten (WebAssembly)

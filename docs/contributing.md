@@ -139,6 +139,21 @@ Suppose whe want to create a module called `aui::my_module`:
 
 ### Documentation
 
+!!! tip "Recommended: easy way to contribute"
+
+    Want to fix a typo or make a small documentation improvement? You can do it directly through GitHub:
+    
+    1. Navigate to top right corner of the page you would like to contribute to and click "Edit this page".
+       ![](imgs/Screenshot_20250828_155724.png)
+    2. On GitHub's edit page, you'll be prompted to fork the AUI repository if needed
+    3. Make your changes in the editor.
+    4. Commit your changes and create a pull request to https://github.com/aui-framework/aui
+    5. Once our documentation pipelines verify the changes, we'll merge your contribution.
+
+    This process is perfect for minor documentation updates and doesn't require setting up a local development
+    environment.
+
+
 The docs found on [aui-framework.github.io](https://aui-framework.github.io) is generated with MkDocs.
 
 To generate documentation, run the following command from the root of AUI repository:
@@ -150,6 +165,7 @@ To generate documentation, run the following command from the root of AUI reposi
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
+git checkout develop # we do development on develop branch only
 
 # if you want to use venv
 python3 -m venv .venv

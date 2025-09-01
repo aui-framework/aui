@@ -14,39 +14,13 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import re
-from pathlib import Path
 
 import mkdocs_gen_files
-import pymdownx
 
-from docs.python.generators import cpp_parser
+from docs.python.generators import cpp_parser, common, group_page
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 
-CPP_BRIEF_LINE = re.compile('(\s*\@\w+) ?(.*)')
-assert CPP_BRIEF_LINE.match('@brief Test').group(1) == "@brief"
-assert CPP_BRIEF_LINE.match('@brief Test').group(2) == "Test"
-assert CPP_BRIEF_LINE.match('@brief').group(1) == "@brief"
-
 log = logging.getLogger('mkdocs')
-
-def parse_doxygen(comment):
-    output = [['', '']]
-    if comment is None:
-        return output
-    iterator = iter(comment.split('\n'))
-
-    for i in iterator:
-        if m := CPP_BRIEF_LINE.match(i):
-            section_name = m.group(1)
-            output.append([section_name, ''])
-            output[-1][1] += m.group(2)
-            continue
-        output[-1][1] += "\n" + i
-    output = [i for i in filter(lambda x: x[1] != '', output)]
-    for output_line in output:
-        output_line[1] = output_line[1].strip()
-
-    return output
 
 
 def _format_token_sequence(tokens: list[str]):
@@ -60,62 +34,13 @@ def _format_token_sequence(tokens: list[str]):
 
 
 def gen_pages():
-
-
     for parse_entry in cpp_parser.index:
         if hasattr(parse_entry, 'doc'):
             if "<!-- aui:no_dedicated_page -->" in parse_entry.doc:
                 continue
 
         if isinstance(parse_entry, DoxygenEntry):
-            # Arbitrary comment. It may contain group definition or other information.
-            doxygen = parse_doxygen(parse_entry.doc)
-            for def_group in [i for i in doxygen if i[0] == '@defgroup']:
-                m = re.compile(r"(\S+) (.+)").match(def_group[1])
-                group_id = m.group(1)
-                group_name = m.group(2)
-
-                output = f'{group_id.lower()}.md'
-                with mkdocs_gen_files.open(output, 'w') as fos:
-                    print(f'# {group_name}\n', file=fos)
-                    print(f'<!-- aui:index_alias {group_id} -->', file=fos)
-                    for type_entry in [i for i in doxygen if i[0] == '@brief']:
-                        print(type_entry[1], file=fos)
-
-                    details = [i for i in doxygen if i[0] in ['@details', '']]
-                    if details:
-                        print(f'## Detailed Description', file=fos)
-                        for type_entry in details:
-                            print(type_entry[1], file=fos)
-                    print('', file=fos)
-                    print('## Related Pages', file=fos)
-                    print('', file=fos)
-
-                    print('<div class="grid cards" markdown>', file=fos)
-                    print(' ', file=fos)
-                    for group_item in cpp_parser.index:
-                        if not hasattr(group_item, 'doc'):
-                            continue
-                        if not hasattr(group_item, 'name'):
-                            continue
-                        if f"@ingroup {group_id}" not in group_item.doc:
-                            continue
-                        brief = "\n".join([i[1] for i in parse_doxygen(group_item.doc) if f"@brief" in i[0]])
-                        print(f"""
--   __{group_item.namespaced_name()}__
-
-    ---
-
-    {brief}
-
-""", file=fos)
-
-                    print('</div>', file=fos)
-
-
-                mkdocs_gen_files.set_edit_path(output, '..' / parse_entry.location)
-                break
-
+            group_page.handle_doxygen_entry(parse_entry)
             continue
 
         slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
@@ -123,7 +48,7 @@ def gen_pages():
         with mkdocs_gen_files.open(parse_entry.page_url, 'w') as fos:
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
-            doxygen = parse_doxygen(parse_entry.doc)
+            doxygen = common.parse_doxygen(parse_entry.doc)
 
 
             include_dir = parse_entry.location
@@ -138,9 +63,6 @@ def gen_pages():
                 print(type_entry[1], file=fos)
 
             has_detailed_description = bool([i for i in doxygen if i[0] == '@details'])
-
-            if has_detailed_description:
-                print('[More...](#detailed-description)', file=fos)
 
             print('<table>', file=fos)
             for type_entry in [('Header:', f'<code>#include &lt;{parse_entry.location.relative_to(include_dir)}&gt;</code>'), ('CMake:', f'<code>aui_link(my_target PUBLIC {module_name})</code>')]:
@@ -181,7 +103,7 @@ def gen_pages():
                         print(f'`{type_entry.generic_kind} {parse_entry.namespaced_name()}::{type_entry.name}`', file=fos)
                         print(f'', file=fos)
 
-                        doxygen = parse_doxygen(type_entry.doc)
+                        doxygen = common.parse_doxygen(type_entry.doc)
 
                         # todo add a check for @brief to exist
                         for i in [i for i in doxygen if i[0] == '@brief']:
@@ -204,7 +126,7 @@ def gen_pages():
                                 print(f'`#!cpp {type_entry.name}::{v[0]}`', file=fos)
                                 print('</td>', file=fos)
                                 print('<td markdown>', file=fos)
-                                for i in parse_doxygen(v[1]):
+                                for i in common.parse_doxygen(v[1]):
                                     print(i[1], file=fos)
                                 print('</td>', file=fos)
                                 print('</tr>', file=fos)
@@ -225,7 +147,7 @@ def gen_pages():
                                     print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
                                     print('</td>', file=fos)
                                     print('<td markdown>', file=fos)
-                                    for i in parse_doxygen(v.doc):
+                                    for i in common.parse_doxygen(v.doc):
                                         print(i[1], file=fos)
                                     print('</td>', file=fos)
                                     print('</tr>', file=fos)
@@ -243,7 +165,7 @@ def gen_pages():
                         full_name = f"{parse_entry.namespaced_name()}::{i.name}"
                         _render_invisible_header(toc=i.name, id=full_name, on_other_pages=full_name)
                         print(f'`#!cpp {i.type_str} {i.name}`\n\n', file=fos)
-                        doxygen = parse_doxygen(i.doc)
+                        doxygen = common.parse_doxygen(i.doc)
                         for i in doxygen:
                             if i[0] != '@brief':
                                 continue
@@ -285,7 +207,7 @@ def gen_pages():
                             print(f'```', file=fos)
                             print(f'', file=fos)
 
-                            doxygen = parse_doxygen(overload.doc)
+                            doxygen = common.parse_doxygen(overload.doc)
 
                             # todo add a check for @brief to exist
                             for i in [i for i in doxygen if i[0] == '@brief']:
@@ -336,7 +258,7 @@ def gen_pages():
 
         print('<div class="class-index" markdown>', file=f)
         for letter, classes2 in classes_alphabet:
-            print('<div class="item" markdown>', file=f)
+            print('<div class="item odd-highlight" markdown>', file=f)
             print(f'<div class="letter" id="{letter.lower()}">{letter}</div>', file=f)
             print('<div class="list" markdown>', file=f)
             for c in sorted(classes2, key=lambda x: x.name):
@@ -349,3 +271,4 @@ def gen_pages():
             print('</div>', file=f)
             print('</div>', file=f)
         print('</div>', file=f)
+

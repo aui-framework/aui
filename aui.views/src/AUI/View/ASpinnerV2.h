@@ -17,7 +17,10 @@
 
 /**
  * @brief Circular infinite progress indicator.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ASpinnerV2.png)
+ *
+ * @ingroup views_indication
  * @details
  * ![](imgs/Screenshot_20250205_061349.png)
  *

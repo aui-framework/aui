@@ -1,3 +1,7 @@
+---
+icon: fontawesome/brands/android
+---
+
 # Android (operating system)
 
 Android is a mobile operating system primarily developed by Google. It's the most widely used operating system in the
@@ -24,6 +28,7 @@ Android shares its kernel with [linux], but is not treated by AUI exactly as Lin
 - Android apps can't be customized by the end user, with an exception to fonts, launcher icons and virtual keyboard
 - Android app workflows use "back button" to close or navigate to previous page. Newer devices tend to lack such button
   in hardware, so they use software button/gesture instead
+- smartphones come with high density displays, so you need to use density-independent dimension units such as [_dp]
 
 
 ## AUI implementation specifics

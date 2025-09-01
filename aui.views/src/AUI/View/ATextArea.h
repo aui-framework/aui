@@ -26,7 +26,10 @@ class API_AUI_VIEWS AScrollArea;
 
 /**
  * @brief Multiline text input area.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ATextArea.png)
+ *
+ * @ingroup views_input
  * @details
  * Word breaking text area.
  *

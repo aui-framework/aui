@@ -1,3 +1,4 @@
-mkdocs-material==9.*
+mkdocs==1.6.1
+mkdocs-material==9.6.16
 mkdocs-macros-plugin==1.*
 mkdocs-gen-files==0.*

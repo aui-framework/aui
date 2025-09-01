@@ -19,7 +19,7 @@ log = logging.getLogger('mkdocs')
 
 def handle_comment_macros(markdown: str, file: File):
     def replace_comment(match: re.Match):
-        type, args = match.groups()
+        indentation, type, args = match.groups()
         args = args.strip()
         if type == "example-file-count":
             return _badge_for_file_count(args)
@@ -30,7 +30,7 @@ def handle_comment_macros(markdown: str, file: File):
         if type == "icon":
             return _badge_for_icon(args)
         if type == "include":
-            return _include(args)
+            return "\n".join([f'{indentation}{i}' for i in _include(args).splitlines()])
         if type == "snippet":
             return _snippet(args)
         if type == "parse_tests":
@@ -46,7 +46,7 @@ def handle_comment_macros(markdown: str, file: File):
         raise RuntimeError(f"Unknown shortcode: {type} in {file.url}")
 
     return re.sub(
-        r"<!-- aui:([\w\-]+)(.*?) -->",
+        r"( *)<!-- aui:([\w\-]+)(.*?) -->",
         replace_comment, markdown, flags=re.I | re.M
     )
 

@@ -15,7 +15,6 @@
 
 /**
  * @brief A trivial modifiable view that represents a set of views.
- * @ingroup useful_views
  * @details
  * AViewContainer can store, render, resize, provide events to and handle the child views.
  *

@@ -9,7 +9,17 @@ cmake_minimum_required(VERSION 3.16)
 project(AUI)
 
 if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported")
+    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
+endif()
+
+if(MSVC)
+    if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+    else()                                 # MD / MDd
+        if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
+        endif()
+    endif()
 endif()
 
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
@@ -68,9 +78,13 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
-auib_import(ZLIB https://github.com/aui-framework/zlib
-            VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
-            CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+if(AUIB_DISABLE)
+    find_package(ZLIB REQUIRED)
+else()
+    auib_import(ZLIB https://github.com/aui-framework/zlib
+                VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
+                CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+endif()
 
 # define all components
 define_aui_component(core)
@@ -199,7 +213,9 @@ auib_precompiled_binary()
 # [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
-add_subdirectory(test/)
+if(NOT AUIB_DISABLE)
+    add_subdirectory(test/)
+endif()
 
 # [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)

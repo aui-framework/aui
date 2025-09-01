@@ -76,7 +76,12 @@ Specify main executable of the application which will be executed when your appl
 
 Specify application display name that would appear in system's UIs (i.e., start menu, launchpad, desktop, control panel).
 
-This argument assigns value to aui::app_info::name 
+This value is availabile in C++ via `app_info` namespace:
+
+```cpp
+#include <AUI/AppInfo.h>
+int main() { auto appName = aui::app_info::name; }
+```
 
 |Platform|Required|Traits|
 |--------|--------|------|
