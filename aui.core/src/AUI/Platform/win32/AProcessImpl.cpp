@@ -72,9 +72,10 @@ public:
     }
 
     APath getPathToExecutable() override {
-        APath result;
-        result.resize(0x1000);
-        result.resize(GetModuleFileNameEx(mHandle, nullptr, aui::win32::toWchar(result), result.length()));
+        AByteBuffer u16result;
+        u16result.resize(0x1000 * 2);
+        u16result.resize(GetModuleFileNameEx(mHandle, nullptr, reinterpret_cast<wchar_t*>(u16result.data()), 0x1000) * 2);
+        APath result(reinterpret_cast<const char16_t*>(u16result.data()), u16result.size() / 2);
         result.replaceAll('\\', '/');
         return result;
     }
@@ -191,7 +192,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 if (!result.empty()) {
                     result += " ";
                 }
-                if (i.contains(" ")) {
+                if (i.contains(U' ')) {
                     result += "\"";
                     result += i.replacedAll("\"", "\\\"");
                     result += "\"";
@@ -208,14 +209,17 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
-    if (!CreateProcess(aui::win32::toWchar(mInfo.executable.c_str()),
-                       aui::win32::toWchar(args),
+    AByteBuffer u16executable = mInfo.executable.encode(AStringEncoding::UTF16);
+    AByteBuffer u16args = args.encode(AStringEncoding::UTF16);
+    AByteBuffer u16workDir = mInfo.workDir.encode(AStringEncoding::UTF16);
+    if (!CreateProcess(reinterpret_cast<wchar_t*>(u16executable.data()),
+                       reinterpret_cast<wchar_t*>(u16args.data()),
                        nullptr,
                        nullptr,
                        true,
                        creationFlags,
                        nullptr,
-                       mInfo.workDir.empty() ? nullptr : aui::win32::toWchar(mInfo.workDir),
+                       mInfo.workDir.empty() ? nullptr : reinterpret_cast<wchar_t*>(u16workDir.data()),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mInfo.executable;
