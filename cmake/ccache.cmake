@@ -1,4 +1,4 @@
-# cmake/EnableCcache.cmake
+# cmake/ccache.cmake
 #
 # Usage:
 #   enable_ccache(
