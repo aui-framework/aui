@@ -576,9 +576,9 @@ public:
 
     AString(std::string_view view) : super(view) {}
 
-    constexpr AString(const super& other) : super(other) {}
+    AString(const super& other) : super(other) {}
 
-    constexpr AString(super&& other) : super(std::move(other)) {}
+    AString(super&& other) : super(std::move(other)) {}
 
     AString(AChar c);
 
