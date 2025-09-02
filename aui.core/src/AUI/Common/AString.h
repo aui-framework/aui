@@ -34,6 +34,36 @@ std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_i
 
 }
 
+template<typename OutT, typename InT>
+constexpr const OutT* pointer_cast(const InT* ptr) {
+    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
+    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
+
+    union Converter {
+        const InT* from;
+        const OutT* to;
+
+        constexpr Converter(const InT* p) : from(p) {}
+    };
+
+    return Converter(ptr).to;
+}
+
+template<typename OutT, typename InT>
+constexpr const OutT* pointer_cast(InT* ptr) {
+    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
+    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
+
+    union Converter {
+        InT* from;
+        OutT* to;
+
+        constexpr Converter(InT* p) : from(p) {}
+    };
+
+    return Converter(ptr).to;
+}
+
 /**
  * @brief UTF-8 forward iterator for AString
  */
@@ -347,9 +377,9 @@ public:
 
     using super::super;
 
-    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super((const char*) utf8_str, length) {}
+    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(pointer_cast<char>(utf8_str), length) {}
 
-    constexpr AStringView(const char8_t* utf8_str) noexcept : super((const char*) utf8_str) {}
+    constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
 
@@ -512,7 +542,7 @@ public:
 
     AString(const char* bytes, size_t size_bytes, AStringEncoding encoding);
 
-    AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString((const char*) bytes.data(), bytes.size(), encoding) {}
+    AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString(pointer_cast<char>(bytes.data()), bytes.size(), encoding) {}
 
     AString(const AByteBuffer& buffer, AStringEncoding encoding = AStringEncoding::UTF8);
 
@@ -520,7 +550,7 @@ public:
 
     AString(const char* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
-    AString(const char8_t* utf8_bytes, size_type length) : AString((const char*) utf8_bytes, length) {}
+    AString(const char8_t* utf8_bytes, size_type length) : AString(pointer_cast<char>(utf8_bytes), length) {}
 
     AString(const char8_t* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
