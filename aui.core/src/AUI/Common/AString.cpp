@@ -1472,7 +1472,7 @@ bool AString::contains(AStringView str) const noexcept {
 
 bool AString::startsWith(AChar prefix) const noexcept {
     auto utf8p = prefix.toUtf8();
-    return startsWith(AStringView(utf8p.begin(), utf8p.end()));
+    return startsWith(AStringView(utf8p.data(), utf8p.size()));
 }
 
 bool AString::endsWith(AChar suffix) const noexcept {
