@@ -38,9 +38,6 @@ macro(auib_mark_var_forwardable VAR)
     set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()
 
-# Detect ccache and expose as a global cached variable so downstream projects
-# (including dependencies built through AUI.Boot) can use it as a compiler launcher.
-
 if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
     include("${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
     enable_ccache(
