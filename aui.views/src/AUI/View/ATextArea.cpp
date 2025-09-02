@@ -119,10 +119,10 @@ namespace {
                 return std::nullopt;
             }
             for (auto it = mWord.begin(); it != mWord.end(); ++it) {
-                const int characterWidth = mText->getFontStyle().getWidth(it, std::next(it));
-                if (position.x <= int(characterWidth)) {
+                const int characterWidth = static_cast<int>(mText->getFontStyle().getWidth(it, std::next(it)));
+                if (position.x <= characterWidth) {
                     bool rightHalf = position.x > characterWidth / 2;
-                    return size_t(std::distance(mWord.begin(), it + (rightHalf ? 1 : 0)));
+                    return static_cast<size_t>(std::distance(mWord.begin(), it + (rightHalf ? 1 : 0)));
                 }
                 position.x -= characterWidth;
             }
