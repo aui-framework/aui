@@ -99,6 +99,20 @@ TEST(Strings, Clown) {
     EXPECT_EQ("🤡"_as.toStdString(), "🤡");
 }
 
+TEST(Strings, MultibyteErase) {
+    auto s = "A🤡B"_as;
+    s.erase(1, 1);
+    EXPECT_EQ(s, "AB");
+    EXPECT_EQ(s.bytes().size(), 2);
+}
+
+TEST(Strings, MultibyteInsert) {
+    auto s = "AB"_as;
+    s.insert(1, U'🤡');
+    EXPECT_EQ(s, "A🤡B");
+    EXPECT_EQ(s.bytes().size(), 6);
+}
+
 TEST(Strings, Chinese) {
     EXPECT_EQ("嗨"_as, "嗨");
     EXPECT_EQ("嗨"_as.length(), 1);
