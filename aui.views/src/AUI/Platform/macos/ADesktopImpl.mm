@@ -57,7 +57,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         [panel setCanCreateDirectories:YES];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.c_str()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
@@ -116,7 +116,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                 }
 
                 UTType* type =
-                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
+                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.c_str()]];
 
                 [allowedTypes addObject:type];
             }
@@ -130,7 +130,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                     break;
                 }
 
-                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
+                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.c_str()]];
             }
 
             [panel setAllowedFileTypes:allowedExtensions];
@@ -166,7 +166,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
-    NSString* filePath = [NSString stringWithUTF8String:file.toUtf8().data()];
+    NSString* filePath = [NSString stringWithUTF8String:file.c_str()];
 
     NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
     NSImage* icon = [workspace iconForFile:filePath];

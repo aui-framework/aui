@@ -22,8 +22,8 @@ AMessageBox::ResultButton
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
     @autoreleasepool {
         NSAlert *alert = [[NSAlert alloc] init];
-        [alert setMessageText:[NSString stringWithUTF8String:title.toUtf8().data()]];
-        [alert setInformativeText:[NSString stringWithUTF8String:message.toUtf8().data()]];
+        [alert setMessageText:[NSString stringWithUTF8String:title.c_str()]];
+        [alert setInformativeText:[NSString stringWithUTF8String:message.c_str()]];
 
         switch (icon) {
             case Icon::CRITICAL:
@@ -42,14 +42,14 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
         }
 
         if (b == Button::OK || b == Button::OK_CANCEL) {
-            [alert addButtonWithTitle:[NSString stringWithUTF8String:"OK"_i18n.toUtf8().data()]];
+            [alert addButtonWithTitle:[NSString stringWithUTF8String:"OK"_i18n.c_str()]];
         } else if (b == Button::YES_NO || b == Button::YES_NO_CANCEL) {
-            [alert addButtonWithTitle:[NSString stringWithUTF8String:"Yes"_i18n.toUtf8().data()]];
-            [alert addButtonWithTitle:[NSString stringWithUTF8String:"No"_i18n.toUtf8().data()]];
+            [alert addButtonWithTitle:[NSString stringWithUTF8String:"Yes"_i18n.c_str()]];
+            [alert addButtonWithTitle:[NSString stringWithUTF8String:"No"_i18n.c_str()]];
         }
 
         if (b == Button::OK_CANCEL || b == Button::YES_NO_CANCEL) {
-            [alert addButtonWithTitle:[NSString stringWithUTF8String:"Cancel"_i18n.toUtf8().data()]];
+            [alert addButtonWithTitle:[NSString stringWithUTF8String:"Cancel"_i18n.c_str()]];
         }
 
         NSWindow *nativeParentWindow = nil;
