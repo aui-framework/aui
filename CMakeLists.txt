@@ -8,13 +8,27 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
-include(cmake/ccache.cmake)
-
-enable_ccache(
-    PREFIX AUI
-    OPTION_DESC "Enable usage of ccache if available"
-    DEFAULT OFF
-)
+option(AUI_USE_CCACHE "Enable usage of ccache if available" OFF)
+set(AUI_CCACHE_PROGRAM "" CACHE PATH "Path to ccache wrapper or executable (overrides auto-detection)")
+if(AUI_USE_CCACHE)
+    if(NOT AUI_CCACHE_PROGRAM)
+        find_program(_AUI_CCACHE_PROGRAM NAMES ccache ccache.exe ccache.bat)
+        if(_AUI_CCACHE_PROGRAM)
+            set(AUI_CCACHE_PROGRAM "${_AUI_CCACHE_PROGRAM}" CACHE PATH "Path to ccache wrapper or executable (overrides auto-detection)" FORCE)
+        endif()
+    endif()
+    if(AUI_CCACHE_PROGRAM)
+        message(STATUS "ccache found: ${AUI_CCACHE_PROGRAM}; enabling compiler launchers")
+        if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER OR CMAKE_C_COMPILER_LAUNCHER STREQUAL "")
+            set(CMAKE_C_COMPILER_LAUNCHER ${AUI_CCACHE_PROGRAM} CACHE STRING "C compiler launcher" FORCE)
+        endif()
+        if(NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER OR CMAKE_CXX_COMPILER_LAUNCHER STREQUAL "")
+            set(CMAKE_CXX_COMPILER_LAUNCHER ${AUI_CCACHE_PROGRAM} CACHE STRING "C++ compiler launcher" FORCE)
+        endif()
+    else()
+        message(STATUS "AUI_USE_CCACHE is ON but ccache was not found in PATH and AUI_CCACHE_PROGRAM not set")
+    endif()
+endif()
 
 if (MINGW AND NOT AUI_IGNORE_MINGW)
     message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
