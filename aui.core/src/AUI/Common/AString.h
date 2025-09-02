@@ -26,11 +26,11 @@
 
 namespace aui::detail {
 
-char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept;
+API_AUI_CORE char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept;
 
-size_t getPrevCharStart(const char* data, size_t pos) noexcept;
+API_AUI_CORE size_t getPrevCharStart(const char* data, size_t pos) noexcept;
 
-std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index);
+API_AUI_CORE std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index);
 
 }
 
@@ -67,7 +67,7 @@ constexpr const OutT* pointer_cast(InT* ptr) {
 /**
  * @brief UTF-8 forward iterator for AString
  */
-class AUtf8ConstIterator {
+class API_AUI_CORE AUtf8ConstIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = char32_t;
@@ -178,7 +178,7 @@ public:
 /**
  * @brief UTF-8 reverse iterator for AString
  */
-class AUtf8ConstReverseIterator {
+class API_AUI_CORE AUtf8ConstReverseIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = char32_t;
@@ -251,7 +251,7 @@ public:
 };
 
 
-class AUtf8MutableIterator {
+class API_AUI_CORE AUtf8MutableIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
     using value_type = char32_t;
@@ -363,7 +363,7 @@ public:
     operator AUtf8ConstIterator() const noexcept;
 };
 
-class AStringView: public std::string_view {
+class API_AUI_CORE AStringView: public std::string_view {
 private:
     using super = std::string_view;
 

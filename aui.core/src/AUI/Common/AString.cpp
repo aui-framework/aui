@@ -21,7 +21,7 @@
 
 namespace aui::detail {
 
-char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept {
+API_AUI_CORE char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept {
     if (bytePos >= maxSize) return 0;
 
     unsigned char first = static_cast<unsigned char>(data[bytePos++]);
@@ -64,7 +64,7 @@ char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcep
     return result;
 }
 
-size_t getPrevCharStart(const char* data, size_t pos) noexcept {
+API_AUI_CORE size_t getPrevCharStart(const char* data, size_t pos) noexcept {
     if (pos == 0) return 0;
 
     size_t prev_pos = pos - 1;
@@ -85,7 +85,7 @@ inline size_t utf8_char_length(unsigned char first_byte) {
     return 0; // Invalid UTF-8
 }
 
-std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index) {
+API_AUI_CORE std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index) {
     size_t byte_pos = 0;
     size_t char_count = 0;
 
