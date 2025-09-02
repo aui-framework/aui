@@ -462,19 +462,19 @@ AString AString::trim(char symbol) const
     return { left, right };
 }
 
-/*AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
+AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
         return substr(0, s) + stringAtEnd;
     }
     return *this;
 }
 
-AString AString::excessSpacesRemoved() const noexcept {
+AString AString::trimDoubleSpace() const noexcept {
     AString s;
-    s.reserve(length() + 1);
+    s.reserve(sizeBytes());
     bool prevWasSpace = false;
     for (auto c : *this) {
-        if (c == ' ') {
+        if (c == U' ') {
             if (prevWasSpace) {
                 continue;
             }
@@ -485,7 +485,7 @@ AString AString::excessSpacesRemoved() const noexcept {
         s << c;
     }
     return s;
-}*/
+}
 
 AString& AString::append(char c) {
     super::append(&c, 1);

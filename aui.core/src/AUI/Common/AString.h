@@ -162,14 +162,14 @@ public:
 
     AUtf8ConstIterator& operator=(const std::string::iterator& it) noexcept {
         if (begin_ != nullptr) {
-            byte_pos_ = it.base() - begin_;
+            byte_pos_ = &*it - begin_;
         }
         return *this;
     }
 
     AUtf8ConstIterator& operator=(const std::string::const_iterator& it) noexcept {
         if (begin_ != nullptr) {
-            byte_pos_ = it.base() - begin_;
+            byte_pos_ = &*it - begin_;
         }
         return *this;
     }
@@ -656,12 +656,18 @@ public:
     size_type length() const noexcept;
 
     constexpr AString substr(size_type pos = 0, size_type n = npos) const {
-        return AString(super::substr(pos, n));
+        size_t base = (begin() + pos).getBytePos();
+        size_t base_n = (begin() + pos + n).getBytePos() - base;
+        return AString(super::substr(base, base_n));
     }
 
     AString trimLeft(char symbol = ' ') const;
     AString trimRight(char symbol = ' ') const;
     AString trim(char symbol = ' ') const;
+
+    AString restrictLength(size_t s, const AString& stringAtEnd) const;
+
+    AString trimDoubleSpace() const noexcept;
 
     AString& operator=(const AString& other) {
         std::string& ul = *this;
