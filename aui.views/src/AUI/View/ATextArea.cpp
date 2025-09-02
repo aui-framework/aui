@@ -418,6 +418,7 @@ unsigned int ATextArea::cursorIndexByPos(glm::ivec2 pos) {
 }
 
 glm::ivec2 ATextArea::getPosByIndex(size_t index) {
+    performLayout();
     auto [it, relativeIndex] = getLeftEntity(index);
     if (it == entities().end()) {
         if (it == entities().begin()) {
