@@ -583,6 +583,10 @@ public:
     AString(AChar c);
 
     AString(size_type n, AChar c);
+    
+    AString(size_type n, char32_t c) : AString(n, AChar(c)) {}
+
+    AString(size_type n, char16_t c) : AString(n, AChar(c)) {}
 
     AString(std::initializer_list<AChar> il) {
         reserve(il.size());

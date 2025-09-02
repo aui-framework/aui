@@ -275,33 +275,98 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
                     case 'n': out += '\n'; break;
                     case 't': out += '\t'; break;
                     case 'u': {
-                        // utf8 sequence
-                        AString::value_type currentChar = 0;
-                        auto commit4bitValue = [&](uint8_t v) {
-                            currentChar = currentChar << 4 | v;
+                        char32_t codepoint = 0;
+                        int hexDigitsRead = 0;
+
+                        auto parseHexDigit = [](char c) -> int {
+                            if (c >= '0' && c <= '9') return c - '0';
+                            if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+                            if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+                            return -1;
                         };
-                        for (;;) {
-                            char bit4 = readChar();
-                            if (bit4 >= '0' && bit4 <= '9') {
-                                commit4bitValue(bit4 - '0');
-                                continue;
+
+                        for (int i = 0; i < 4; ++i) {
+                            char hexChar = readChar();
+                            int hexValue = parseHexDigit(hexChar);
+
+                            if (hexValue == -1) {
+                                reverseByte();
+                                break;
                             }
 
-                            if (bit4 >= 'a' && bit4 <= 'f') {
-                                static constexpr auto BASE = 10;
-                                commit4bitValue(bit4 - 'a' + BASE);
-                                continue;
-                            }
-
-                            if (bit4 >= 'A' && bit4 <= 'F') {
-                                commit4bitValue(bit4 - 'A');
-                                continue;
-                            }
-                            reverseByte();
-                            break;
+                            codepoint = (codepoint << 4) | hexValue;
+                            hexDigitsRead++;
                         }
-                        out += AString(1, currentChar).toStdString();
 
+                        if (hexDigitsRead == 4) {
+                            if (codepoint >= 0xD800 && codepoint <= 0xDBFF) {
+                                char next1 = readChar();
+                                char next2 = readChar();
+
+                                if (next1 == '\\' && next2 == 'u') {
+                                    char32_t lowSurrogate = 0;
+                                    int lowHexDigitsRead = 0;
+
+                                    for (int i = 0; i < 4; ++i) {
+                                        char hexChar = readChar();
+                                        int hexValue = parseHexDigit(hexChar);
+
+                                        if (hexValue == -1) {
+                                            reverseByte();
+                                            break;
+                                        }
+
+                                        lowSurrogate = (lowSurrogate << 4) | hexValue;
+                                        lowHexDigitsRead++;
+                                    }
+
+                                    if (lowHexDigitsRead == 4 && lowSurrogate >= 0xDC00 && lowSurrogate <= 0xDFFF) {
+                                        codepoint = 0x10000 + ((codepoint & 0x3FF) << 10) + (lowSurrogate & 0x3FF);
+                                    } else {
+                                        for (int i = 0; i < lowHexDigitsRead; ++i) {
+                                            reverseByte();
+                                        }
+                                        reverseByte(); // 'u'
+                                        reverseByte(); // '\'
+                                    }
+                                } else {
+                                    reverseByte(); // next2
+                                    reverseByte(); // next1
+                                }
+                            }
+
+                            if ((codepoint <= 0x10FFFF) &&
+                                !(codepoint >= 0xD800 && codepoint <= 0xDFFF) &&
+                                codepoint != 0xFFFE && codepoint != 0xFFFF) {
+
+                                if (codepoint <= 0x7F) {
+                                    //= 0xxxxxxx
+                                    out += static_cast<char>(codepoint);
+                                } else if (codepoint <= 0x7FF) {
+                                    // 110xxxxx 10xxxxxx
+                                    out += static_cast<char>(0xC0 | (codepoint >> 6));
+                                    out += static_cast<char>(0x80 | (codepoint & 0x3F));
+                                } else if (codepoint <= 0xFFFF) {
+                                    // 1110xxxx 10xxxxxx 10xxxxxx
+                                    out += static_cast<char>(0xE0 | (codepoint >> 12));
+                                    out += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+                                    out += static_cast<char>(0x80 | (codepoint & 0x3F));
+                                } else {
+                                    // 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+                                    out += static_cast<char>(0xF0 | (codepoint >> 18));
+                                    out += static_cast<char>(0x80 | ((codepoint >> 12) & 0x3F));
+                                    out += static_cast<char>(0x80 | ((codepoint >> 6) & 0x3F));
+                                    out += static_cast<char>(0x80 | (codepoint & 0x3F));
+                                }
+                            } else {
+                                out += "\xEF\xBF\xBD"; // U+FFFD
+                            }
+                        } else {
+                            out += "\\u";
+                            for (int i = 0; i < hexDigitsRead; ++i) {
+                                reverseByte();
+                            }
+                        }
                         break;
                     }
                     default: out += tmp;
