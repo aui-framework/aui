@@ -107,6 +107,7 @@ void ANumberPicker::setValue(int64_t v) {
 }
 
 int64_t ANumberPicker::getValue() const {
+    auto texttest = mTextField->getText();
     return mTextField->getText().toInt().valueOr(0);
 }
 
@@ -137,6 +138,7 @@ void ANumberPicker::decrease() {
 }
 
 void ANumberPicker::changeBy(int64_t v) {
+    auto wtf = getValue();
     setValue(getValue() + v);
     emit valueChanging(getValue());
 }

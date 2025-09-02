@@ -216,7 +216,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getPosByIndexAbsolute(getText().length());
+    auto w = getPosByIndexAbsolute(getDisplayText().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;

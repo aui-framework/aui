@@ -83,7 +83,10 @@ namespace aui::detail {
                 : mText(text), mWord(std::move(word)) {}
 
         WordEntry(IFontView* text, AString word)
-                : mText(text), mWord(reinterpret_cast<const char32_t*>(word.encode(AStringEncoding::UTF32).data())) {}
+                : mText(text), mWord() {
+            auto u32bytes = word.encode(AStringEncoding::UTF32);
+            mWord = std::u32string(reinterpret_cast<const char32_t*>(u32bytes.data()), u32bytes.size() / sizeof(char32_t));
+        }
 
         glm::ivec2 getSize() override {
             return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };

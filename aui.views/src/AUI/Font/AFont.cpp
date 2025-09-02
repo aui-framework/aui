@@ -78,7 +78,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     if (fr == FontRendering::NEAREST)
         flags |= FT_LOAD_TARGET_MONO;
 
-    FT_Error e = FT_Load_Char(mFace, glyph, flags);
+    FT_Error e = FT_Load_Char(mFace, glyph.codepoint(), flags);
     if (e) {
         throw std::runtime_error(("Cannot load char: error code" + AString::number(e)).toStdString());
     }
@@ -138,15 +138,15 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     auto& chars = charset.second.characters;
-    if (chars.size() > glyph && chars[glyph]) {
-        return *chars[glyph];
+    if (chars.size() > glyph && chars[glyph.codepoint()]) {
+        return *chars[glyph.codepoint()];
     } else {
         if (chars.size() <= glyph) {
             chars.resize(glyph + 1, std::nullopt);
         }
-        chars[glyph] = std::move(renderGlyph(charset, glyph));
+        chars[glyph.codepoint()] = std::move(renderGlyph(charset, glyph));
 
-        return *chars[glyph];
+        return *chars[glyph.codepoint()];
     }
 }
 

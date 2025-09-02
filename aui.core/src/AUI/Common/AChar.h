@@ -100,7 +100,13 @@ inline bool operator==(AChar lhs, AChar rhs) noexcept {
 inline bool operator==(AChar lhs, char rhs) noexcept {
     return lhs == AChar(rhs);
 }
+inline bool operator==(AChar lhs, char32_t rhs) noexcept {
+    return lhs == AChar(rhs);
+}
 inline bool operator==(char lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+inline bool operator==(char32_t lhs, AChar rhs) noexcept {
     return AChar(lhs) == rhs;
 }
 

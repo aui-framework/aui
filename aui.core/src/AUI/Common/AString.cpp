@@ -387,20 +387,20 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
         } break;
         case AStringEncoding::UTF16: {
             size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-            bytes.resize((words + 1) * sizeof(char16_t));
-            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) * sizeof(char16_t) + sizeof(char16_t));
+            bytes.reserve((words + 1) * sizeof(char16_t));
+            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) * sizeof(char16_t));
             reinterpret_cast<char16_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::UTF32: {
             size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
-            bytes.resize((words + 1) * sizeof(char32_t));
-            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) * sizeof(char32_t) + sizeof(char32_t));
+            bytes.reserve((words + 1) * sizeof(char32_t));
+            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) * sizeof(char32_t));
             reinterpret_cast<char32_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::LATIN1: {
             size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
-            bytes.resize(words + 1);
-            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())) + 1);
+            bytes.reserve(words + 1);
+            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())));
             bytes.data()[bytes.capacity() - 1] = '\0';
         } break;
     }
@@ -1481,14 +1481,14 @@ bool AString::endsWith(AChar suffix) const noexcept {
 }
 
 template<typename T>
-static AOptional<T> toNumber(AStringView str) noexcept {
+static AOptional<T> toNumber(std::string_view str) noexcept {
     if (str.empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;
     bool negative = false;
 
     if constexpr (std::is_integral_v<T>) {
-        if (str.startsWith("0x") || str.startsWith("0X")) {
+        if (str.starts_with("0x") || str.starts_with("0X")) {
             // hex
             for (auto c : str.substr(2)) {
                 value *= 16;
@@ -1512,14 +1512,15 @@ static AOptional<T> toNumber(AStringView str) noexcept {
                 negative = true;
                 ++i;
             }
+            if (i == str.end()) return std::nullopt;
             for (; i != str.end(); ++i) {
-                value *= 10;
-                if (value < prevValue) { // overflow check
-                    return std::nullopt;
-                }
-                prevValue = value;
                 auto c = *i;
                 if (c >= '0' && c <= '9') {
+                    value *= 10;
+                    if (value < prevValue) { // overflow check
+                        return std::nullopt;
+                    }
+                    prevValue = value;
                     value += c - '0';
                 } else {
                     return std::nullopt;
@@ -1561,23 +1562,23 @@ static AOptional<T> toNumber(AStringView str) noexcept {
 }
 
 AOptional<int32_t> AString::toInt() const noexcept {
-    return ::toNumber<int32_t>(*this);
+    return ::toNumber<int32_t>(view());
 }
 
 AOptional<int64_t> AString::toLong() const noexcept {
-    return ::toNumber<int64_t>(*this);
+    return ::toNumber<int64_t>(view());
 }
 
 AOptional<uint32_t> AString::toUInt() const noexcept {
-    return ::toNumber<uint32_t>(*this);
+    return ::toNumber<uint32_t>(view());
 }
 
 AOptional<uint64_t> AString::toULong() const noexcept {
-    return ::toNumber<uint64_t>(*this);
+    return ::toNumber<uint64_t>(view());
 }
 
 AOptional<float> AString::toFloat() const noexcept {
-    return ::toNumber<float>(*this);
+    return ::toNumber<float>(view());
 }
 
 AOptional<double> AString::toDouble() const noexcept {

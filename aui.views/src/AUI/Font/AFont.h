@@ -107,11 +107,13 @@ public:
         int size = charset.first.size;
         int advance = 0;
 
-        for (Iterator i = begin; i != end; i++) {
-            if (*i == ' ')
+        for (Iterator i = begin; i != end; ++i) {
+            if (*i == U' ') {
                 advance += getSpaceWidth(size);
-            else if (*i == '\n')
+            }
+            else if (*i == U'\n') {
                 advance = 0;
+            }
             else {
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {
