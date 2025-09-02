@@ -16,7 +16,6 @@ enable_ccache(
     DEFAULT OFF
 )
 
-
 if (MINGW AND NOT AUI_IGNORE_MINGW)
     message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
 endif()
