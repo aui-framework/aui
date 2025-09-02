@@ -119,13 +119,13 @@ TEST_F(UIDataBindingTest, TextField1) {
 
     // -  Prefills text field with the current `user->name` value (pre fire):
     // AUI_DOCS_CODE_BEGIN
-    EXPECT_EQ(tf->text(), "Robert");
+    EXPECT_EQ(tf->text().value(), "Robert");
     // AUI_DOCS_CODE_END
 
     // -  Connects `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Angela";           // changing user->name programmatically...
-    EXPECT_EQ(tf->text(), "Angela"); // ...should reflect on the text field
+    EXPECT_EQ(tf->text().value(), "Angela"); // ...should reflect on the text field
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
     // <figure markdown="span">
@@ -345,7 +345,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H3
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(tf->text(), "Vasil");
+    EXPECT_EQ(tf->text().value(), "Vasil");
 
     //
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:
@@ -899,7 +899,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(tf->text(), "Vasil");
+    EXPECT_EQ(tf->text().value(), "Vasil");
 
     //
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:
