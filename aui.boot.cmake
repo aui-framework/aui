@@ -38,15 +38,6 @@ macro(auib_mark_var_forwardable VAR)
     set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()
 
-if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
-    include("${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
-    enable_ccache(
-        PREFIX AUIB
-        OPTION_DESC "AUI.Boot: enable usage of ccache for building imported dependencies"
-        DEFAULT OFF
-    )
-endif()
-
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
 option(AUIB_FORCE_PRECOMPILED "Forbid local build and use precompiled packages only")
 option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with AUIB_DEPS inside of your package" OFF)
