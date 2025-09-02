@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-find_program(GIT_EXECUTABLE NAMES git git.cmd)
+find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd)
 if (NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
@@ -44,7 +44,7 @@ option(AUIB_USE_CCACHE "AUI.Boot: enable usage of ccache for building imported d
 set(AUIB_CCACHE_PROGRAM "" CACHE PATH "AUI.Boot: Path to ccache wrapper or executable (overrides auto-detection)")
 if(AUIB_USE_CCACHE)
     if(NOT AUIB_CCACHE_PROGRAM)
-        find_program(_AUIB_CCACHE_PROGRAM NAMES ccache ccache.exe)
+        find_program(_AUIB_CCACHE_PROGRAM NAMES ccache ccache.exe ccache.bat)
         if(_AUIB_CCACHE_PROGRAM)
             set(AUIB_CCACHE_PROGRAM "${_AUIB_CCACHE_PROGRAM}" CACHE PATH "AUI.Boot: Path to ccache wrapper or executable (overrides auto-detection)" FORCE)
         endif()
