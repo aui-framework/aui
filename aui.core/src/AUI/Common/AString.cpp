@@ -1477,7 +1477,7 @@ bool AString::startsWith(AChar prefix) const noexcept {
 
 bool AString::endsWith(AChar suffix) const noexcept {
     auto utf8s = suffix.toUtf8();
-    return endsWith(AStringView(utf8s.begin(), utf8s.end()));
+    return endsWith(AStringView(utf8s.data(), utf8s.size()));
 }
 
 template<typename T>
