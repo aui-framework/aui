@@ -659,7 +659,7 @@ public:
      */
     size_type length() const noexcept;
 
-    constexpr AString substr(size_type pos = 0, size_type n = npos) const {
+    AString substr(size_type pos = 0, size_type n = npos) const {
         size_t base = (begin() + pos).getBytePos();
         size_t base_n = (begin() + pos + n).getBytePos() - base;
         return AString(super::substr(base, base_n));
