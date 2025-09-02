@@ -102,7 +102,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
         [panel setCanCreateDirectories:NO];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.c_str()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
