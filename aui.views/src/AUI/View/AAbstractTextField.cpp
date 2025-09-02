@@ -74,12 +74,12 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 void AAbstractTextField::setText(const AString& t) {
     mHorizontalScroll = 0;
     auto utf32t = t.encode(AStringEncoding::UTF32);
-    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size() / 4};
+    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size() / sizeof(char32_t)};
     if (t.empty()) {
         clearSelection();
     }
 
-    mCursorIndex = t.size();
+    mCursorIndex = utf32t.size() / sizeof(char32_t);
     onCursorIndexChanged();
     updateCursorBlinking();
     invalidateFont();
@@ -121,9 +121,9 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
         return false;
     }
     auto u32str = toInsert.encode(AStringEncoding::UTF32);
-    mContents.insert(mContents.begin() + at, u32str.begin(), u32str.end());
+    mContents.insert(at, reinterpret_cast<const char32_t*>(u32str.data()), u32str.size() / sizeof(char32_t));
     if (!isValidText(mContents)) {
-        mContents.erase(at, u32str.size()); // undo insert
+        mContents.erase(at, u32str.size() / sizeof(char32_t)); // undo insert
         return false;
     }
     return true;
@@ -133,7 +133,7 @@ bool AAbstractTextField::typeableInsert(size_t at, AChar toInsert) {
     if (!mIsEditable) {
         return false;
     }
-    mContents.insert(mContents.begin() + at, toInsert);
+    mContents.insert(at, 1, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert
         return false;

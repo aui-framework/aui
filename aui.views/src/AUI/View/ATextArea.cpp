@@ -132,8 +132,8 @@ namespace {
 
 
     constexpr auto stringToEntriesView(ATextArea* thiz) {
-        return ranges::views::filter([](auto c) { return c != '\r'; })
-               | ranges::views::chunk_by([](AChar prev, AChar next) {
+        return ranges::views::filter([](char32_t c) { return c != '\r'; })
+               | ranges::views::chunk_by([](char32_t prev, char32_t next) {
             if (prev == '\n' || next == '\n') {
                 return false;
             }
@@ -153,7 +153,8 @@ namespace {
             if (chars.front() == '\n') {
                 return std::make_unique<NextLineEntry>(thiz);
             }
-            return std::make_unique<WordEntry>(thiz, AString(chars.begin(), chars.end()));
+            std::u32string u32str(chars.begin(), chars.end());
+            return std::make_unique<WordEntry>(thiz, AString(u32str.data(), u32str.size()));
         });
     }
 }
@@ -169,7 +170,8 @@ ATextArea::ATextArea(const AString& text) :
 }
 
 void ATextArea::setText(const AString& t) {
-    auto u32str = t.encode(AStringEncoding::UTF32);
+    auto u32strBytes = t.encode(AStringEncoding::UTF32);
+    std::u32string u32str(reinterpret_cast<const char32_t*>(u32strBytes.data()), u32strBytes.size() / sizeof(char32_t));
     auto entries = u32str
                    | stringToEntriesView(this)
                    | ranges::to<Entries>();
@@ -259,8 +261,9 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
         }
         target = splitIfNecessary({ target, relativeIndex });
     }
-    auto u32toInsert = toInsert.encode(AStringEncoding::UTF32);
-    for (auto i: u32toInsert | stringToEntriesView(this)) {
+    auto u32bytes = toInsert.encode(AStringEncoding::UTF32);
+    std::u32string u32str(reinterpret_cast<const char32_t*>(u32bytes.data()), u32bytes.size() / sizeof(char32_t));
+    for (auto i: u32str | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
     }
 

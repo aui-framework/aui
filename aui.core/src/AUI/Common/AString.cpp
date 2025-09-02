@@ -388,19 +388,19 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
         case AStringEncoding::UTF16: {
             size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
             bytes.resize((words + 1) * sizeof(char16_t));
-            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) + sizeof(char16_t));
+            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) * sizeof(char16_t) + sizeof(char16_t));
             reinterpret_cast<char16_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::UTF32: {
             size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
             bytes.resize((words + 1) * sizeof(char32_t));
-            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) + sizeof(char32_t));
+            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) * sizeof(char32_t) + sizeof(char32_t));
             reinterpret_cast<char32_t*>(bytes.data())[words] = '\0';
         } break;
         case AStringEncoding::LATIN1: {
             size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
             bytes.resize(words + 1);
-            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())));
+            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())) + 1);
             bytes.data()[bytes.capacity() - 1] = '\0';
         } break;
     }
