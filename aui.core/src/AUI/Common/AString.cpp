@@ -369,11 +369,11 @@ void AString::push_back(AChar c) noexcept {
 
 void AString::insert(size_type pos, AChar c) {
     auto utf8c = c.toUtf8();
-    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value(), utf8c.begin(), utf8c.end());
+    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value_or(0), utf8c.begin(), utf8c.end());
 }
 
 void AString::insert(size_type pos, AStringView str) {
-    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value(), str.begin(), str.end());
+    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value_or(0), str.begin(), str.end());
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {
@@ -431,7 +431,7 @@ AString AString::trimRight(char symbol) const
 {
     for (auto i = rbegin(); i != rend(); ++i)
     {
-        if (*i != symbol)
+        if (*i != AChar(symbol))
         {
             return { begin(), i.base() };
         }
@@ -444,7 +444,7 @@ AString AString::trim(char symbol) const
     auto left = begin();
     auto right = end();
 
-    while (left != right && *left == symbol)
+    while (left != right && *left == AChar(symbol))
     {
         ++left;
     }
@@ -452,7 +452,7 @@ AString AString::trim(char symbol) const
     if (left != right)
     {
         auto riter = rbegin();
-        while (riter.base() != left && *riter == symbol)
+        while (riter.base() != left && *riter == AChar(symbol))
         {
             ++riter;
         }
