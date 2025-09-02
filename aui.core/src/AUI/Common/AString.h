@@ -125,9 +125,13 @@ public:
 
     AUtf8ConstIterator& operator+=(int n) noexcept {
         if (n > 0) {
-            ++(*this);
+            while (n-- > 0) {
+                ++(*this);
+            }
         } else if (n < 0) {
-            --(*this);
+            while (n++ < 0) {
+                --(*this);
+            }
         }
         return *this;
     }

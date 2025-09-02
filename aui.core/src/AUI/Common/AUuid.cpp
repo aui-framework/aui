@@ -23,8 +23,8 @@ AUuid::AUuid(const AString& s) {
         if (stringIndex + 1 >= s.length()) {
             throw AUuidException("too short uuid string: " + s);
         }
-        auto b1 = s[stringIndex];
-        auto b2 = s[stringIndex + 1];
+        auto b1 = s[stringIndex].asAscii();
+        auto b2 = s[stringIndex + 1].asAscii();
         if (b1 == '-') {
             ++stringIndex;
         } else if (b2 == '-') {
