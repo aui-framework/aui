@@ -40,26 +40,14 @@ endmacro()
 
 # Detect ccache and expose as a global cached variable so downstream projects
 # (including dependencies built through AUI.Boot) can use it as a compiler launcher.
-option(AUIB_USE_CCACHE "AUI.Boot: enable usage of ccache for building imported dependencies" OFF)
-set(AUIB_CCACHE_PROGRAM "" CACHE PATH "AUI.Boot: Path to ccache wrapper or executable (overrides auto-detection)")
-if(AUIB_USE_CCACHE)
-    if(NOT AUIB_CCACHE_PROGRAM)
-        find_program(_AUIB_CCACHE_PROGRAM NAMES ccache ccache.exe ccache.cmd ccache.bat)
-        if(_AUIB_CCACHE_PROGRAM)
-            set(AUIB_CCACHE_PROGRAM "${_AUIB_CCACHE_PROGRAM}" CACHE PATH "AUI.Boot: Path to ccache wrapper or executable (overrides auto-detection)" FORCE)
-        endif()
-    endif()
-    if(AUIB_CCACHE_PROGRAM)
-        message(STATUS "AUI.Boot: ccache detected: ${AUIB_CCACHE_PROGRAM}")
-        if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER OR CMAKE_C_COMPILER_LAUNCHER STREQUAL "")
-            set(CMAKE_C_COMPILER_LAUNCHER ${AUIB_CCACHE_PROGRAM} CACHE STRING "C compiler launcher" FORCE)
-        endif()
-        if(NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER OR CMAKE_CXX_COMPILER_LAUNCHER STREQUAL "")
-            set(CMAKE_CXX_COMPILER_LAUNCHER ${AUIB_CCACHE_PROGRAM} CACHE STRING "C++ compiler launcher" FORCE)
-        endif()
-    else()
-        message(STATUS "AUI.Boot: AUIB_USE_CCACHE is ON but ccache was not found in PATH and AUIB_CCACHE_PROGRAM not set")
-    endif()
+
+if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
+    include("${CMAKE_CURRENT_LIST_DIR}/cmake/ccache.cmake")
+    enable_ccache(
+        PREFIX AUIB
+        OPTION_DESC "AUI.Boot: enable usage of ccache for building imported dependencies"
+        DEFAULT OFF
+    )
 endif()
 
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
