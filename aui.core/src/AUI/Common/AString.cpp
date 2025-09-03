@@ -407,6 +407,15 @@ AByteBuffer AString::encode(AStringEncoding encoding) const {
     return std::move(bytes);
 }
 
+std::wstring AString::toWideString() const {
+    std::wstring u16str;
+    size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
+    u16str.reserve(words);
+    u16str.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(u16str.data())));
+    u16str[words] = '\0';
+    return std::move(u16str);
+}
+
 AString::operator AStringView() const noexcept {
     return {bytes().data(), bytes().size()};
 }

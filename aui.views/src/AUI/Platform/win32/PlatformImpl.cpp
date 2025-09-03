@@ -27,5 +27,6 @@ float APlatform::getDpiRatio()
 }
 
 void APlatform::openUrl(const AUrl& url) {
-    ShellExecute(nullptr, L"open", aui::win32::toWchar(url.full()), nullptr, nullptr, SW_NORMAL);
+    auto wurl = url.full().toWideString();
+    ShellExecute(nullptr, L"open", wurl.c_str(), nullptr, nullptr, SW_NORMAL);
 }

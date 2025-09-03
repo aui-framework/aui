@@ -17,8 +17,8 @@
 
 AFileInputStream::AFileInputStream(const AString& path) {
 #if AUI_PLATFORM_WIN
-    AByteBuffer pathU16 = path.encode(AStringEncoding::UTF16);
-    _wfopen_s(&mFile, reinterpret_cast<const wchar_t*>(pathU16.data()), L"rb");
+    auto wPath = path.toWideString();
+    _wfopen_s(&mFile, wPath.c_str(), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif

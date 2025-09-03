@@ -140,7 +140,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_CHAR: {
-            onCharEntered(wParam);
+            onCharEntered(static_cast<char32_t>(wParam));
             return 0;
         }
 

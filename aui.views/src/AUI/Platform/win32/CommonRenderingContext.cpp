@@ -44,7 +44,8 @@ void CommonRenderingContext::init(const Init& init) {
     ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = aui::win32::toWchar(mWindowClass);
+        auto u16windowClass = mWindowClass.encode(AStringEncoding::UTF16);
+        winClass.lpszClassName = reinterpret_cast<const wchar_t*>(u16windowClass.data());
         winClass.cbSize = sizeof(WNDCLASSEX);
         winClass.style = CS_HREDRAW | CS_VREDRAW;
         winClass.lpfnWndProc = WindowProc;
@@ -56,7 +57,7 @@ void CommonRenderingContext::init(const Init& init) {
         winClass.hIconSm = icon;
         winClass.hbrBackground = nullptr;
         winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = aui::win32::toWchar(mWindowClass);
+        winClass.lpszMenuName = reinterpret_cast<const wchar_t*>(u16windowClass.data());
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
         if (RegisterClassEx(&winClass)) {
@@ -66,7 +67,9 @@ void CommonRenderingContext::init(const Init& init) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
 
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, aui::win32::toWchar(mWindowClass), aui::win32::toWchar(init.name), style,
+    auto u16windowClass = mWindowClass.encode(AStringEncoding::UTF16);
+    auto u16windowName = init.name.encode(AStringEncoding::UTF16);
+    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, reinterpret_cast<const wchar_t*>(u16windowClass.data()), reinterpret_cast<const wchar_t*>(u16windowName.data()), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -95,7 +98,8 @@ void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
 
         DestroyWindow(w->mHandle);
     }
-    UnregisterClass(aui::win32::toWchar(mWindowClass), GetModuleHandle(nullptr));
+    auto u16windowClass = mWindowClass.encode(AStringEncoding::UTF16);
+    UnregisterClass(reinterpret_cast<const wchar_t*>(u16windowClass.data()), GetModuleHandle(nullptr));
 }
 
 void CommonRenderingContext::beginPaint(AWindowBase& window) {

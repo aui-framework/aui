@@ -59,8 +59,8 @@ void AFileOutputStream::open(bool append) {
     }
 
 #if AUI_PLATFORM_WIN
-    AByteBuffer pathU16 = mPath.encode(AStringEncoding::UTF16);
-    mFile = _wfsopen(reinterpret_cast<const wchar_t*>(pathU16.data()), append ? L"a+b" : L"wb", _SH_DENYWR);
+    auto wPath = mPath.toWideString();
+    mFile = _wfsopen(wPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
 #else
     mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
 #endif

@@ -154,8 +154,8 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;
-    AByteBuffer pathU16 = file("*").encode(AStringEncoding::UTF16);
-    HANDLE dir = FindFirstFile(reinterpret_cast<const wchar_t*>(pathU16.data()), &fd);
+    auto wPath = file("*").toWideString();
+    HANDLE dir = FindFirstFile(wPath.c_str(), &fd);
 
     if (dir == INVALID_HANDLE_VALUE) {
 #else
@@ -462,9 +462,9 @@ void APath::move(const APath& source, const APath& destination) {
     }
 
 #if AUI_PLATFORM_WIN
-    AByteBuffer sourceU16 = source.encode(AStringEncoding::UTF16);
-    AByteBuffer destinationU16 = destination.encode(AStringEncoding::UTF16);
-    if (MoveFile(reinterpret_cast<const wchar_t*>(sourceU16.data()), reinterpret_cast<const wchar_t*>(destinationU16.data())) == 0) {
+    auto wSource = source.toWideString();
+    auto wDestination = destination.toWideString();
+    if (MoveFile(wSource.c_str(), wDestination.c_str()) == 0) {
 #else
     if (rename(source.toStdString().c_str(), destination.toStdString().c_str())) {
 #endif

@@ -39,8 +39,8 @@ AString AClipboard::pasteFromClipboard() {
         CloseClipboard();
     };
 
-	if (memView.data()) {
-        AString s = aui::win32::fromWchar({memView.data(), std::min(size_t(0x10000), memView.length())});
+    if (memView.data()) {
+        AString s(reinterpret_cast<const char16_t*>(memView.data()), memView.length());
 
         return s;
     }

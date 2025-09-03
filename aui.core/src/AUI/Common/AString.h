@@ -611,6 +611,8 @@ public:
      */
     AByteBuffer encode(AStringEncoding encoding) const;
 
+    std::wstring toWideString() const;
+
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.
      * @sa encode

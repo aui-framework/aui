@@ -52,8 +52,8 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         HRESULT operator()(HANDLE thread, PCWSTR name) { return mPtr(thread, name); }
     } s;
     if (s) {
-        AByteBuffer nameU16 = name.encode(AStringEncoding::UTF16);
-        s(handle, reinterpret_cast<const wchar_t*>(nameU16.data()));
+        auto wName = name.toWideString();
+        s(handle, wName.c_str());
     }
 }
 #else

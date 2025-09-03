@@ -34,8 +34,8 @@ Pipe::Pipe() {
 
     constexpr auto BUFFER_SIZE = 4096;
     auto pipeName = R"(\\.\Pipe\AuiAnonPipe.{}.{})"_format(GetCurrentProcessId(), nextUniqueId());
-    AByteBuffer pipeNameU16 = pipeName.encode(AStringEncoding::UTF16);
-    mOut = CreateNamedPipe(reinterpret_cast<const wchar_t*>(pipeNameU16.data()),
+    auto wPipeName = pipeName.toWideString();
+    mOut = CreateNamedPipe(wPipeName.c_str(),
                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                            PIPE_TYPE_BYTE | PIPE_WAIT,
                            1,

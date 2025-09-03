@@ -42,8 +42,8 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-    AByteBuffer pathU16 = fullname.encode(AStringEncoding::UTF16);
-    auto lib = LoadLibrary(reinterpret_cast<const wchar_t*>(pathU16.data()));
+    auto wPath = fullname.toWideString();
+    auto lib = LoadLibrary(wPath.c_str());
     if (!lib) {
         throw LoadException(
             "Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
