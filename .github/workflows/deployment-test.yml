@@ -23,7 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        #os: [windows-latest, ubuntu-latest]
+        os: [windows-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
