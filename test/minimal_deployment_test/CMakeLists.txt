@@ -14,6 +14,10 @@ if (NOT ARTIFACTS_DIR)
     message(FATAL_ERROR "ARTIFACTS_DIR is required")
 endif()
 
+if (MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+endif()
+
 include(FetchContent)
 
 file(GLOB AUI_TEST_PACKAGE "${ARTIFACTS_DIR}/*.gz")
