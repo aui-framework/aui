@@ -10,6 +10,7 @@ from docs.python.generators import cpp_parser, common, examples_page
 from docs.python.generators.cpp_parser import CppMacro
 from pathlib import Path
 import re
+from docs.python.generators.examples_helpers import collect_macro_examples_blocks
 
 
 def define_env(env):
@@ -24,55 +25,11 @@ def define_env(env):
         return output
 
     def _collect_examples_blocks():
-        """Collect examples for all macros and return list of rendered note blocks."""
-        examples_blocks = []
         try:
             examples_lists = examples_page.examples_lists
         except Exception:
             examples_lists = {}
-
-        macros = sorted([i for i in cpp_parser.index if isinstance(i, CppMacro)], key=lambda x: x.name)
-
-        for i in macros:
-            name = i.name
-            pat = re.compile(r"\\b" + re.escape(name) + r"\\b")
-            for cat, examples in examples_lists.items():
-                for ex in examples:
-                    for src in ex.get('srcs', []):
-                        try:
-                            text = src.read_text(encoding='utf-8', errors='ignore')
-                        except Exception:
-                            continue
-                        if not pat.search(text):
-                            continue
-                        # find first match and build snippet
-                        m = pat.search(text)
-                        lines = text.splitlines()
-                        pos = m.start()
-                        cum = 0
-                        line_idx = 0
-                        for idx, l in enumerate(lines):
-                            if pos <= cum + len(l):
-                                line_idx = idx
-                                break
-                            cum += len(l) + 1
-                        start = max(0, line_idx - 4)
-                        end = min(len(lines), line_idx + 6)
-                        snippet = '\n'.join(lines[start:end])
-                        try:
-                            src_rel = Path(src).relative_to(Path.cwd())
-                        except Exception:
-                            src_rel = Path(src)
-                        extension = common.determine_extension(src)
-                        block = ''
-                        block += f"??? note \"{src_rel}\"\n"
-                        block += f"    [{ex['title']}]({ex['id']}.md) — {ex.get('description','')}\n"
-                        block += f"    ```{extension}\n"
-                        for line in snippet.splitlines():
-                            block += f"    {line}\n"
-                        block += f"    ```\n"
-                        examples_blocks.append(block)
-        return examples_blocks
+        return collect_macro_examples_blocks(examples_lists)
 
     @env.macro
     def list_macro_examples():

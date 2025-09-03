@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 from docs.python.generators import regexes, common
+from docs.python.generators.examples_helpers import build_examples_index
 
 
 def examine():
@@ -129,52 +130,7 @@ examples_lists = examine()
 if not examples_lists:
     raise RuntimeError("no examples provided")
 
-examples_index: dict[str, list[dict]] = {}
-for category, items in examples_lists.items():
-    for ex in items:
-        seen_tokens = set()
-        for src in ex.get('srcs', []):
-            try:
-                text = src.read_text(encoding='utf-8', errors='ignore')
-            except Exception:
-                continue
-
-            # Quick heuristic: skip trivial files that only contain includes,
-            # using-directives, braces, or preprocessor guards. This avoids
-            # treating examples that are only a header wrapper as usage.
-            non_blank_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-            is_trivial = True
-            for ln in non_blank_lines:
-                # skip comment lines
-                if ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                    continue
-                # includes
-                if ln.startswith('#include'):
-                    continue
-                # using namespace or using std::
-                if ln.startswith('using '):
-                    continue
-                # simple braces or preprocessor guards
-                if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                    continue
-                # if we reach here, the file contains non-trivial content
-                is_trivial = False
-                break
-
-            if is_trivial:
-                continue
-
-            # iterate by lines and collect tokens; avoid tokens coming only
-            # from the same file multiple times by using seen_tokens
-            for line in text.splitlines():
-                for tok in re.findall(r"\b[A-Za-z_][A-Za-z0-9_:]*\b", line):
-                    if tok in seen_tokens:
-                        continue
-                    seen_tokens.add(tok)
-                    lst = examples_index.setdefault(tok, [])
-                    # avoid duplicates: append example only once per token
-                    if not any(existing.get('id') == ex.get('id') for existing in lst):
-                        lst.append(ex)
+examples_index = build_examples_index(examples_lists)
 
 def define_env(env):
     @env.macro
