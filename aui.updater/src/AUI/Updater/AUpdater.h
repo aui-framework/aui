@@ -36,7 +36,7 @@
  *
  * !!! note
  *
- *     Check out our app template: https://github.com/aui-framework/example_app for a GitHub-hosted app template with auto update implemented.
+ *     Check out our [app-template] for a GitHub-hosted app template with auto update implemented.
  *
  * ## Supported platforms
  *

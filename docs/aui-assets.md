@@ -51,7 +51,7 @@ _new<AView>() AUI_WITH_STYLE {
 },
 ```
 
-See also [minimal-ui-template-with-assets](minimal_ui_assets.md) for a complete minimal example.
+See also [minimal-ui-template-with-assets] for a complete minimal example.
 
 ## How does it work
 
@@ -72,5 +72,5 @@ byte array that is being registered automatically to AUI's [ABuiltinFiles] files
 
 ## Examples
 
-- [app-template](https://github.com/aui-framework/example_app)
-- [minimal-ui-template-xmake](minimal-ui-template-xmake.md)
+- [app-template]
+- [minimal-ui-template-with-assets]
