@@ -18,7 +18,7 @@ AUI_ENTRY {
     ALogger::info("Hello world!");
     AMimedData d;
 
-    auto c = AString::fromUtf8(AByteBuffer::fromStream(":test.txt"_url.open()));
+    auto c = AString(AByteBuffer::fromStream(":test.txt"_url.open()));
     ALogger::info("test.txt") << c;
     return c == "test" ? 0 : -1;
 }
