@@ -47,7 +47,7 @@ Pipe::Pipe() {
     if (!mOut) {
         throw AException("CreateNamedPipe failed");
     }
-    mIn = CreateFile(reinterpret_cast<const wchar_t*>(pipeNameU16.data()),
+    mIn = CreateFile(wPipeName.c_str(),
                      GENERIC_WRITE | FILE_FLAG_OVERLAPPED,
                      false, // no sharing
                      &securityAttributes,
