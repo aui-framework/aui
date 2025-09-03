@@ -8,17 +8,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
-# Option to enable/disable ccache for the top-level project. If ON (default), CMake will
-# try to find ccache or use user-provided `AUI_CCACHE_PROGRAM` and set it as the
-# `CMAKE_*_COMPILER_LAUNCHER` (but won't override an already defined launcher).
-
-include(cmake/ccache.cmake)
-
-enable_ccache(
-    PREFIX AUI
-    OPTION_DESC "Enable usage of ccache if available"
-    DEFAULT OFF
-)
 
 
 if (MINGW AND NOT AUI_IGNORE_MINGW)
