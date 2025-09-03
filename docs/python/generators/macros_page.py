@@ -56,8 +56,8 @@ def define_env(env):
                                 line_idx = idx
                                 break
                             cum += len(l) + 1
-                        start = max(0, line_idx - 2)
-                        end = min(len(lines), line_idx + 3)
+                        start = max(0, line_idx - 4)
+                        end = min(len(lines), line_idx + 6)
                         snippet = '\n'.join(lines[start:end])
                         try:
                             src_rel = Path(src).relative_to(Path.cwd())

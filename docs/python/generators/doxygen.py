@@ -95,7 +95,7 @@ def _examples_for_symbol_with_snippets(names: list[str], anchors: list[str] | No
                                         line_idx = i
                                         break
                                     cum += len(l) + 1
-                                snippet = '\n'.join(lines[max(0, line_idx - 2):min(len(lines), line_idx + 3)])
+                                snippet = '\n'.join(lines[max(0, line_idx - 4):min(len(lines), line_idx + 6)])
                                 results.append({
                                     'title': ex.get('title'),
                                     'id': ex.get('id'),
@@ -129,7 +129,7 @@ def _examples_for_symbol_with_snippets(names: list[str], anchors: list[str] | No
                                     line_idx = i
                                     break
                                 cum += len(l) + 1
-                            snippet = '\n'.join(lines[max(0, line_idx - 2):min(len(lines), line_idx + 3)])
+                                snippet = '\n'.join(lines[max(0, line_idx - 4):min(len(lines), line_idx + 6)])
                             results.append({
                                 'title': ex.get('title'),
                                 'id': ex.get('id'),
@@ -184,7 +184,7 @@ def _examples_for_symbol_with_snippets(names: list[str], anchors: list[str] | No
                     start = max(0, line_idx - 10)
                     end = min(len(lines), line_idx + 11)
                     local_text = '\n'.join(lines[start:end])
-                    snippet = '\n'.join(lines[max(0, line_idx - 2):min(len(lines), line_idx + 3)])
+                    snippet = '\n'.join(lines[max(0, line_idx - 4):min(len(lines), line_idx + 6)])
                     # if anchors are provided, ensure snippet relates to anchors or the file contains an instantiation
                     if anchors:
                         # Special-case: if caller asked for the 'me' pseudo-namespace, keep
@@ -354,7 +354,7 @@ def _examples_for_symbol_with_snippets(names: list[str], anchors: list[str] | No
                     start = max(0, line_idx - 10)
                     end = min(len(lines), line_idx + 11)
                     local_text = '\n'.join(lines[start:end])
-                    snippet = '\n'.join(lines[max(0, line_idx - 2):min(len(lines), line_idx + 3)])
+                    snippet = '\n'.join(lines[max(0, line_idx - 4):min(len(lines), line_idx + 6)])
                     # if anchors are provided, ensure snippet relates to anchors or the local window contains an instantiation
                     if anchors:
                         # Special-case: if caller asked for the 'me' pseudo-namespace, keep
