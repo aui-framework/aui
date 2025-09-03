@@ -67,7 +67,6 @@ void AText::processString(const AString& string, const AText::ParsedFlags& parse
     auto commitWord = [&] {
         if (!currentWord.empty()) {
             pushWord(entries, std::move(currentWord), parsedFlags);
-            currentWord.clear(); // Windows moment
         }
     };
     for (auto c: string) {
