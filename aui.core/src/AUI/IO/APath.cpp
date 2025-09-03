@@ -46,11 +46,18 @@ APath APath::parent() const {
 }
 
 APath APath::filename() const {
-     auto i = rfind('/');
-     if (i == NPOS) {
-         return *this;
-     }
-    return substr(i + 1);
+    auto fs = bytes().rfind('/');
+    auto bs = bytes().rfind('\\');
+    if (fs == NPOS && bs == NPOS) {
+        return *this;
+    }
+    if (fs == NPOS) {
+        fs = bs;
+    }
+    if (bs == NPOS) {
+        bs = fs;
+    }
+    return APath(bytes().substr(std::max(fs, bs) + 1));
 }
 
 APath APath::filenameWithoutExtension() const {

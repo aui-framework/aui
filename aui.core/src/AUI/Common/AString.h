@@ -542,7 +542,9 @@ public:
 
     AString(const AString& other) : super(other.bytes()) {}
 
-    AString(AString&& other) noexcept : super(std::move(other.bytes())) {}
+    AString(AString&& other) noexcept : super(std::move(other.bytes())) {
+        other.clear(); // Windows moment
+    }
 
     AString(const char* bytes, size_t size_bytes, AStringEncoding encoding);
 
@@ -680,14 +682,13 @@ public:
     AString trimDoubleSpace() const noexcept;
 
     AString& operator=(const AString& other) {
-        std::string& ul = *this;
-        ul = other;
+        bytes() = other.bytes();
         return *this;
     }
 
     AString& operator=(AString&& other) noexcept {
-        std::string& ul = *this;
-        ul = std::move(other);
+        bytes() = std::move(other.bytes());
+        other.clear(); // Windows moment
         return *this;
     }
 
