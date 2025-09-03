@@ -305,7 +305,11 @@ AString AString::numberHex(int i) {
     return buf;
 }
 
-AString::AString(const char* bytes, size_t size_bytes, AStringEncoding encoding) {
+AString::AString() {}
+
+AString::AString(AByteBufferView buffer, AStringEncoding encoding) {
+    const char* bytes = buffer.data();
+    size_t size_bytes = buffer.size();
     switch (encoding) {
         case AStringEncoding::UTF8: {
             super::resize(size_bytes);
@@ -329,7 +333,7 @@ AString::AString(const char* bytes, size_t size_bytes, AStringEncoding encoding)
     }
 }
 
-AString::AString(const AByteBuffer& buffer, AStringEncoding encoding) : AString((const char*) buffer.data(), buffer.size(), encoding) {}
+AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString(AByteBufferView(reinterpret_cast<const char*>(bytes.data()), bytes.size()), encoding) {}
 
 AString::AString(const char* utf8_bytes, size_type length) {
     if (simdutf::validate_utf8(utf8_bytes, length)) {

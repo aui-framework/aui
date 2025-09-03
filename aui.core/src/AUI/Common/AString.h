@@ -540,17 +540,17 @@ public:
 
     using super::super;
 
+    AString();
+
     AString(const AString& other) : super(other.bytes()) {}
 
     AString(AString&& other) noexcept : super(std::move(other.bytes())) {
         other.clear(); // Windows moment
     }
 
-    AString(const char* bytes, size_t size_bytes, AStringEncoding encoding);
+    AString(AByteBufferView buffer, AStringEncoding encoding = AStringEncoding::UTF8);
 
-    AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString(pointer_cast<char>(bytes.data()), bytes.size(), encoding) {}
-
-    AString(const AByteBuffer& buffer, AStringEncoding encoding = AStringEncoding::UTF8);
+    AString(std::span<const std::byte> bytes, AStringEncoding encoding);
 
     AString(const char* utf8_bytes, size_type length);
 
