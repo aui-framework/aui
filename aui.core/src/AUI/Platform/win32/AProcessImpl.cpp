@@ -73,7 +73,7 @@ public:
 
     APath getPathToExecutable() override {
         AByteBuffer u16result;
-        u16result.resize(0x1000 * 2);
+        u16result.resize(0x1000 * sizeof(char16_t));
         u16result.resize(GetModuleFileNameEx(mHandle, nullptr, reinterpret_cast<wchar_t*>(u16result.data()), 0x1000) * 2);
         APath result(reinterpret_cast<const char16_t*>(u16result.data()), u16result.size() / 2);
         result.replaceAll('\\', '/');

@@ -222,8 +222,8 @@ APath APath::absolute() const {
 #ifdef WIN32
     AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
     AByteBuffer bufU16;
-    bufU16.resize(0x1000 * 2);
-    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), reinterpret_cast<const wchar_t*>(pathU16.data()), bufU16.size() * 2) == nullptr) {
+    bufU16.resize(0x1000 * sizeof(char16_t));
+    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), reinterpret_cast<const wchar_t*>(pathU16.data()), bufU16.size() / sizeof(char16_t)) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
     APath buf(reinterpret_cast<const char16_t*>(bufU16.data()));
@@ -348,8 +348,8 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 
 APath APath::workingDir() {
     AByteBuffer resultU16;
-    resultU16.resize(0x800 * 2);
-    resultU16.resize(GetCurrentDirectory(resultU16.size() * 2, reinterpret_cast<wchar_t*>(resultU16.data())));
+    resultU16.resize(0x800 * sizeof(char16_t));
+    resultU16.resize(GetCurrentDirectory(resultU16.size() / sizeof(char16_t), reinterpret_cast<wchar_t*>(resultU16.data())));
     APath p(reinterpret_cast<const char16_t*>(resultU16.data()));
     p.removeBackSlashes();
     return p;

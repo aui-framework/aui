@@ -32,12 +32,12 @@ namespace aui::enumerate::basic {
         static AString name() {
 #if AUI_COMPILER_MSVC
             AString s = __FUNCSIG__;
-        AString::iterator end = s.begin() + s.rfind('>');
-        AString::iterator begin = (std::find_if(std::make_reverse_iterator(end), s.rend(), [](wchar_t c) {
-            return c == ':' || c == '<';
-        })).base();
+            auto end = s.bytes().begin() + s.bytes().rfind('>');
+            auto begin = (std::find_if(std::make_reverse_iterator(end), s.bytes().rend(), [](char c) {
+                return c == ':' || c == '<';
+            })).base();
 
-        AString result(begin, end);
+            AString result(begin, end);
 #else
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
             AString s = __PRETTY_FUNCTION__;
