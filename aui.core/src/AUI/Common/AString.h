@@ -540,9 +540,9 @@ public:
 
     using super::super;
 
-    AString(const AString& other) : super(other) {}
+    AString(const AString& other) : super(other.bytes()) {}
 
-    AString(AString&& other) noexcept : super(std::move(other)) {}
+    AString(AString&& other) noexcept : super(std::move(other.bytes())) {}
 
     AString(const char* bytes, size_t size_bytes, AStringEncoding encoding);
 

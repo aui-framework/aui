@@ -71,13 +71,13 @@ void AText::processString(const AString& string, const AText::ParsedFlags& parse
     };
     for (auto c: string) {
         switch (c) {
-            case '\r':
+            case U'\r':
                 break;
-            case ' ':
+            case U' ':
                 commitWord();
                 entries << aui::ptr::fake_shared(&mWhitespaceEntry);
                 break;
-            case '\n':
+            case U'\n':
                 commitWord();
                 entries << aui::ptr::fake_shared(&mNextLineEntry);
                 break;
