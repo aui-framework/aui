@@ -78,10 +78,6 @@ def examine():
 
             srcs = [p for p in srcs if not _is_trivial_source(p)]
 
-            # If after filtering all source files are trivial, skip this example
-            # entirely — we don't want examples that only show includes/using.
-            if not srcs:
-                continue
 
             input_file = Path(root) / file
             with open(input_file, 'r', encoding='utf-8') as fis:
