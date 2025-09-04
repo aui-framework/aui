@@ -133,7 +133,7 @@ std::size_t AWebsocket::onDataSend(char* dst, std::size_t maxLen) {
 AString AWebsocket::generateKeyString() {
     AString s;
     s.resize(16);
-    for (auto& v : static_cast<std::string&>(s)) {
+    for (auto& v : s.bytes()) {
         v = std::uniform_int_distribution(int('a'), int('z'))(gRandomEngine);
     }
     return s;
