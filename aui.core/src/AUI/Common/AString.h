@@ -204,6 +204,9 @@ public:
     }
 
     static AString fromUtf8(AByteBufferView buffer);
+    static AString fromUtf8(const char* str);
+    static AString fromLatin1(AByteBufferView buffer);
+    static AString fromLatin1(const char* str);
 
     using super::super;
 

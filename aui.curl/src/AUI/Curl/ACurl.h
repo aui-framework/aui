@@ -535,7 +535,7 @@ private:
     }
 
     void reportFail(int statusCode) {
-        reportFail(ErrorDescription{statusCode, AString({reinterpret_cast<const std::byte*>(mErrorBuffer), strlen(mErrorBuffer)}, AStringEncoding::LATIN1)});
+        reportFail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
     }
 
     template<typename Ret>
