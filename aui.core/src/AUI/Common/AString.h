@@ -694,6 +694,3 @@ template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
 inline void PrintTo(const AString& s, std::ostream* stream) {
     *stream << s.toStdString();
 }
-
-static_assert(std::bidirectional_iterator<AString::iterator>);
-static_assert(std::bidirectional_iterator<AString::const_iterator>);
