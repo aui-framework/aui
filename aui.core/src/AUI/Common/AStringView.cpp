@@ -49,7 +49,7 @@ AByteBuffer AStringView::encode(AStringEncoding encoding) const {
     return std::move(bytes);
 }
 
-#if AUI_PLATFORM_WINDOWS
+#if AUI_PLATFORM_WIN
 std::wstring AStringView::toWideString() const {
     static_assert(sizeof(wchar_t) == sizeof(char16_t), "This method is only for 16-bit wchar");
     size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());

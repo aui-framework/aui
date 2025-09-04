@@ -283,7 +283,7 @@ public:
      */
     AByteBuffer encode(AStringEncoding encoding) const;
 
-#if AUI_PLATFORM_WINDOWS
+#if AUI_PLATFORM_WIN
     /**
      * @brief Encodes the string into a UTF-16 bytes stored in wchar_t.
      * Only for Windows API usage
