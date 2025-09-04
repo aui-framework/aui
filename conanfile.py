@@ -57,7 +57,7 @@ class AUIRecipe(ConanFile):
         self.requires("gtest/1.17.0")
         self.requires("benchmark/1.9.4")
         # Audio
-        self.requires("opus/1.4")
+        self.requires("opus/1.5.2")
         if self.settings.os == "Android":
             self.requires("oboe/1.8.0")
         # Core
