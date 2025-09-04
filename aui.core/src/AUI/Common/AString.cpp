@@ -291,43 +291,7 @@ void AString::insert(size_type pos, AStringView str) {
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {
-    AByteBuffer bytes;
-    if (super::empty()) return bytes;
-    switch (encoding) {
-        case AStringEncoding::UTF8: {
-            bytes.reserve(super::size() + 1);
-            bytes.write(super::data(), super::size());
-            bytes.data()[bytes.capacity() - 1] = '\0';
-        } break;
-        case AStringEncoding::UTF16: {
-            size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-            bytes.reserve((words + 1) * sizeof(char16_t));
-            bytes.resize(simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(bytes.data())) * sizeof(char16_t));
-            reinterpret_cast<char16_t*>(bytes.data())[words] = '\0';
-        } break;
-        case AStringEncoding::UTF32: {
-            size_t words = simdutf::utf32_length_from_utf8(super::data(), super::size());
-            bytes.reserve((words + 1) * sizeof(char32_t));
-            bytes.resize(simdutf::convert_utf8_to_utf32(super::data(), super::size(), reinterpret_cast<char32_t*>(bytes.data())) * sizeof(char32_t));
-            reinterpret_cast<char32_t*>(bytes.data())[words] = '\0';
-        } break;
-        case AStringEncoding::LATIN1: {
-            size_t words = simdutf::latin1_length_from_utf8(super::data(), super::size());
-            bytes.reserve(words + 1);
-            bytes.resize(simdutf::convert_utf8_to_latin1(super::data(), super::size(), reinterpret_cast<char*>(bytes.data())));
-            bytes.data()[bytes.capacity() - 1] = '\0';
-        } break;
-    }
-    return std::move(bytes);
-}
-
-std::wstring AString::toWideString() const {
-    size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-    std::wstring u16str(words, L'\0');
-    auto size = simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(u16str.data()));
-    u16str[words] = '\0';
-    u16str.resize(size);
-    return std::move(u16str);
+    return view().encode(encoding);
 }
 
 AString::operator AStringView() const noexcept {

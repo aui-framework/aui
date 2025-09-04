@@ -140,13 +140,6 @@ class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
-enum class AStringEncoding : uint8_t {
-    UTF8 = 0,
-    UTF16 = 1,
-    UTF32 = 2,
-    LATIN1 = 3,
-};
-
 /**
  * @brief Represents a UTF-8 string.
  * @ingroup core
@@ -283,11 +276,20 @@ public:
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
-     * @sa bytes
+     * @sa bytes, toWideString
      */
     AByteBuffer encode(AStringEncoding encoding) const;
 
-    std::wstring toWideString() const;
+#if AUI_PLATFORM_WINDOWS
+    /**
+     * @brief Encodes the string into a UTF-16 bytes stored in wchar_t.
+     * Only for Windows API usage
+     * @sa bytes, encode
+     */
+    std::wstring toWideString() const {
+        return view().toWideString();
+    }
+#endif
 
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.

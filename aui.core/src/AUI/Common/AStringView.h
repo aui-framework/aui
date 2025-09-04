@@ -47,6 +47,8 @@ constexpr const OutT* pointer_cast(InT* ptr) {
     return Converter(ptr).to;
 }
 
+class AByteBuffer;
+
 class API_AUI_CORE AStringView: public std::string_view {
 private:
     using super = std::string_view;
@@ -80,6 +82,20 @@ public:
         }
         return substr(size() - suffix.size()) == suffix;
     }
+
+    /**
+     * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
+     * @sa bytes, toWideString
+     */
+    AByteBuffer encode(AStringEncoding encoding) const;
+
+#if AUI_PLATFORM_WINDOWS
+    /**
+     * @brief Encodes the string into a UTF-16 bytes stored in wchar_t for Windows API usage
+     * @sa bytes, encode
+     */
+    std::wstring toWideString() const;
+#endif
 
     std::string_view bytes() const noexcept {
         return *this;

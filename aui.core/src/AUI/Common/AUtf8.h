@@ -29,6 +29,13 @@ API_AUI_CORE std::optional<size_t> findUnicodePos(std::string_view utf8_str, siz
 
 }
 
+enum class AStringEncoding : uint8_t {
+    UTF8 = 0,
+    UTF16 = 1,
+    UTF32 = 2,
+    LATIN1 = 3,
+};
+
 /**
  * @brief UTF-8 forward iterator for AString
  */
