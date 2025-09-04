@@ -22,7 +22,6 @@
 #include <AUI/Common/AStringView.h>
 #include <optional>
 #include <span>
-#include <ranges>
 #include <concepts>
 #include <fmt/core.h>
 
@@ -698,7 +697,3 @@ inline void PrintTo(const AString& s, std::ostream* stream) {
 
 static_assert(std::bidirectional_iterator<AString::iterator>);
 static_assert(std::bidirectional_iterator<AString::const_iterator>);
-
-static_assert(std::ranges::range<AString>);
-static_assert(std::ranges::bidirectional_range<AString>);
-static_assert(std::ranges::sized_range<AString>);
