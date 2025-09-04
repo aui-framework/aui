@@ -226,7 +226,7 @@ jobs:
           -c tools.microsoft:winsdk_version=10.0.19041.0
           -c tools.cmake.cmaketoolchain:generator=Ninja
           -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
-          -c user.openssl:windows_use_jom=True
+          -c user.openssl:windows_use_jom=False
           -s os=Windows
           -s compiler=clang
           -s compiler.runtime=dynamic
@@ -244,7 +244,7 @@ jobs:
           -c tools.microsoft:winsdk_version=10.0.26100.0
           -c tools.cmake.cmaketoolchain:generator=Ninja
           -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
-          -c user.openssl:windows_use_jom=True
+          -c user.openssl:windows_use_jom=False
           -s os=Windows
           -s compiler=clang
           -s compiler.runtime=dynamic
