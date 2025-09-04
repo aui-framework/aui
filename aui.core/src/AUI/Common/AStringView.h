@@ -183,6 +183,6 @@ namespace aui::win32 {
  * @details
  * @exclusivefor{windows}
  */
-std::wstring toWchar(AStringView str);
+API_AUI_CORE std::wstring toWchar(AStringView str);
 }
 #endif
