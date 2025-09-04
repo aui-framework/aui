@@ -659,7 +659,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
     AWindowBase::onDragDrop(event);
 
     for (const auto& [k, v] : event.data.data()) {
-        ALogger::info("Drop") << "[" << k << "] = " << AString(v.data(), v.size());
+        ALogger::info("Drop") << "[" << k << "] = " << AString::fromUtf8(v);
     }
 
     auto surface = createOverlappingSurface({ 0, 0 }, { 100, 100 }, false);
