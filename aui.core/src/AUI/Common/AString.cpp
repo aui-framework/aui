@@ -219,6 +219,14 @@ AString AString::fromUtf8(const char* str) {
     return fromUtf8(AByteBufferView{str, strLength(str)});
 }
 
+AString AString::fromUtf16(AByteBufferView buffer) {
+    return AString(buffer, AStringEncoding::UTF16);
+}
+
+AString AString::fromUtf32(AByteBufferView buffer) {
+    return AString(buffer, AStringEncoding::UTF32);
+}
+
 AString AString::fromLatin1(AByteBufferView buffer) {
     return AString(buffer, AStringEncoding::LATIN1);
 }
