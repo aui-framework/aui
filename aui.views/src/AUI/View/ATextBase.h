@@ -84,8 +84,7 @@ namespace aui::detail {
 
         WordEntry(IFontView* text, AString word)
                 : mText(text), mWord() {
-            auto u32bytes = word.encode(AStringEncoding::UTF32);
-            mWord = std::u32string(reinterpret_cast<const char32_t*>(u32bytes.data()), u32bytes.size() / sizeof(char32_t));
+            mWord = word.toUtf32();
         }
 
         glm::ivec2 getSize() override {

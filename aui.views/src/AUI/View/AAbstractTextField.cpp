@@ -176,8 +176,7 @@ void AAbstractTextField::onCharEntered(AChar c) {
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto u32suffix = mSuffix.encode(AStringEncoding::UTF32);
-        auto text = getDisplayText() + std::u32string(reinterpret_cast<const char32_t*>(u32suffix.data()), u32suffix.size() / 4);
+        auto text = getDisplayText() + mSuffix.toUtf32();
         updateTextAlignOffset();
         if (!text.empty()) {
             auto canvas = render.newMultiStringCanvas(getFontStyle());

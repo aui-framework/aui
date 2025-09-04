@@ -53,10 +53,28 @@ AByteBuffer AStringView::encode(AStringEncoding encoding) const {
 std::wstring AStringView::toWideString() const {
     static_assert(sizeof(wchar_t) == sizeof(char16_t), "This method is only for 16-bit wchar");
     size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
-    std::wstring u16str(words, L'\0');
-    auto size = simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(u16str.data()));
-    u16str[words] = '\0';
-    u16str.resize(size);
-    return std::move(u16str);
+    std::wstring encoded(words, L'\0');
+    auto size = simdutf::convert_utf8_to_utf16(super::data(), super::size(), reinterpret_cast<char16_t*>(encoded.data()));
+    encoded[words] = '\0';
+    encoded.resize(size);
+    return std::move(encoded);
 }
 #endif
+
+std::u16string AStringView::toUtf16() const {
+    size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
+    std::u16string encoded(words, '\0');
+    auto size = simdutf::convert_utf8_to_utf16(super::data(), super::size(), encoded.data());
+    encoded[words] = '\0';
+    encoded.resize(size);
+    return std::move(encoded);
+}
+
+std::u32string AStringView::toUtf32() const {
+    size_t words = simdutf::utf16_length_from_utf8(super::data(), super::size());
+    std::u32string encoded(words, U'\0');
+    auto size = simdutf::convert_utf8_to_utf32(super::data(), super::size(), encoded.data());
+    encoded[words] = '\0';
+    encoded.resize(size);
+    return std::move(encoded);
+}

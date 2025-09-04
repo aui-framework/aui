@@ -154,7 +154,7 @@ namespace {
                 return std::make_unique<NextLineEntry>(thiz);
             }
             std::u32string u32str(chars.begin(), chars.end());
-            return std::make_unique<WordEntry>(thiz, AString(u32str.data(), u32str.size()));
+            return std::make_unique<WordEntry>(thiz, AString(u32str));
         });
     }
 }
@@ -261,8 +261,7 @@ bool ATextArea::typeableInsert(size_t at, const AString& toInsert) {
         }
         target = splitIfNecessary({ target, relativeIndex });
     }
-    auto u32bytes = toInsert.encode(AStringEncoding::UTF32);
-    std::u32string u32str(reinterpret_cast<const char32_t*>(u32bytes.data()), u32bytes.size() / sizeof(char32_t));
+    std::u32string u32str = toInsert.toUtf32();
     for (auto i: u32str | stringToEntriesView(this)) {
         target = std::next(mEngine.entries().insert(target, std::move(i)));
     }

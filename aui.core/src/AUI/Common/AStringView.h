@@ -97,6 +97,18 @@ public:
     std::wstring toWideString() const;
 #endif
 
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-16 string
+     * @sa bytes, encode
+     */
+    std::u16string toUtf16() const;
+
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-32 string
+     * @sa bytes, encode
+     */
+    std::u32string toUtf32() const;
+
     std::string_view bytes() const noexcept {
         return *this;
     }

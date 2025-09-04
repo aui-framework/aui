@@ -149,8 +149,7 @@ class API_AUI_CORE AByteBufferView;
  *
  * Unicode provides comprehensive support for international writing systems and symbols.
  */
-class API_AUI_CORE AString: public std::string
-{
+class API_AUI_CORE AString: public std::string {
 private:
     friend struct std::hash<AString>;
     using super = std::string;
@@ -293,6 +292,22 @@ public:
         return view().toWideString();
     }
 #endif
+
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-16 string
+     * @sa bytes, encode
+     */
+    std::u16string toUtf16() const {
+        return view().toUtf16();
+    }
+
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-32 string
+     * @sa bytes, encode
+     */
+    std::u32string toUtf32() const {
+        return view().toUtf32();
+    }
 
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.
