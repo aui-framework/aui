@@ -170,8 +170,7 @@ ATextArea::ATextArea(const AString& text) :
 }
 
 void ATextArea::setText(const AString& t) {
-    auto u32strBytes = t.encode(AStringEncoding::UTF32);
-    std::u32string u32str(reinterpret_cast<const char32_t*>(u32strBytes.data()), u32strBytes.size() / sizeof(char32_t));
+    std::u32string u32str = t.toUtf32();
     auto entries = u32str
                    | stringToEntriesView(this)
                    | ranges::to<Entries>();
