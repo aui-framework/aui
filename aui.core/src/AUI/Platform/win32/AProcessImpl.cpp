@@ -32,17 +32,17 @@
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
-    AByteBuffer fileU16 = applicationFile.encode(AStringEncoding::UTF16);
-    AByteBuffer paramsU16 = args.encode(AStringEncoding::UTF16);
-    AByteBuffer dirU16 = workingDirectory.encode(AStringEncoding::UTF16);
+    auto fileU16 = applicationFile.toWideString();
+    auto paramsU16 = args.toWideString();
+    auto dirU16 = workingDirectory.toWideString();
 
     SHELLEXECUTEINFO sei = { sizeof(sei) };
 
 
     sei.lpVerb = L"runas";
-    sei.lpFile = reinterpret_cast<const wchar_t*>(fileU16.data());
-    sei.lpParameters = reinterpret_cast<const wchar_t*>(paramsU16.data());
-    sei.lpDirectory = reinterpret_cast<const wchar_t*>(dirU16.data());
+    sei.lpFile = fileU16.c_str();
+    sei.lpParameters = paramsU16.c_str();
+    sei.lpDirectory = dirU16.c_str();
     sei.hwnd = NULL;
     sei.nShow = SW_NORMAL;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;

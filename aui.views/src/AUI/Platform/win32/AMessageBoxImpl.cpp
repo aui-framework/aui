@@ -54,9 +54,9 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
             break;
     }
 
-    auto u16message = message.encode(AStringEncoding::UTF16);
-    auto u16title = title.encode(AStringEncoding::UTF16);
-    switch (::MessageBox(window, reinterpret_cast<const wchar_t*>(u16message.data()), reinterpret_cast<const wchar_t*>(u16title.data()), flags)) {
+    auto u16message = message.toWideString();
+    auto u16title = title.toWideString();
+    switch (::MessageBox(window, u16message.c_str(), u16title.c_str(), flags)) {
         case IDOK:
             return ResultButton::OK;
         case IDCANCEL:
