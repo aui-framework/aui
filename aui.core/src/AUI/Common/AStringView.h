@@ -83,6 +83,12 @@ public:
         return substr(size() - suffix.size()) == suffix;
     }
 
+    bool contains(char c) const noexcept;
+
+    bool contains(AChar c) const noexcept;
+
+    bool contains(AStringView str) const noexcept;
+
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
      * @sa bytes, toWideString

@@ -430,11 +430,17 @@ public:
      */
     void resizeToNullTerminator();
 
-    bool contains(char c) const noexcept;
+    bool contains(char c) const noexcept {
+        return view().contains(c);
+    }
 
-    bool contains(AChar c) const noexcept;
+    bool contains(AChar c) const noexcept {
+        return view().contains(c);
+    }
 
-    bool contains(AStringView str) const noexcept;
+    bool contains(AStringView str) const noexcept {
+        return view().contains(str);
+    }
 
     bool startsWith(AChar prefix) const noexcept;
 

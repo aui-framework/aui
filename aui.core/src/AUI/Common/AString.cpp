@@ -1367,25 +1367,6 @@ void AString::resizeToNullTerminator() {
     resize(end - current);
 }
 
-bool AString::contains(char c) const noexcept {
-    return contains(AChar(c));
-}
-
-bool AString::contains(AChar c) const noexcept {
-    for (auto it = begin(); it != end(); ++it) {
-        if (*it == c) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool AString::contains(AStringView str) const noexcept {
-    if (str.empty()) return true;
-    if (str.length() > length()) return false;
-    return std::search(bytes().begin(), bytes().end(), str.bytes().begin(), str.bytes().end()) != bytes().end();
-}
-
 bool AString::startsWith(AChar prefix) const noexcept {
     auto utf8p = prefix.toUtf8();
     return startsWith(AStringView(utf8p.data(), utf8p.size()));
