@@ -346,7 +346,7 @@ void ACurl::run() {
     }
     AThread::interruptionPoint();
     if (c != CURLE_OK) {
-        ErrorDescription description{c, AString({reinterpret_cast<const std::byte*>(mErrorBuffer), strlen(mErrorBuffer)}, AStringEncoding::LATIN1)};
+        ErrorDescription description{c, AString::fromLatin1(mErrorBuffer)};
         reportFail(description);
         if (mThrowExceptionOnError) {
             description.throwException();
