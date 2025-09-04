@@ -148,13 +148,13 @@ enum class AStringEncoding : uint8_t {
 };
 
 /**
- * @brief Represents a Unicode character string.
+ * @brief Represents a UTF-8 string.
  * @ingroup core
  * @details
- * AString stores a string of 16-bit chars, where each char corresponds to one UTF-16 code unit. Unicode characters with
- * code values above 65535 are stored using two consecutive chars.
+ * AString stores a sequence of 8-bit integers representing UTF-8 code units. Each Unicode character
+ * (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
  *
- * Unicode is an international standard that supports most of the writing systems in use today.
+ * Unicode provides comprehensive support for international writing systems and symbols.
  */
 class API_AUI_CORE AString: public std::string
 {
