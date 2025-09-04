@@ -157,6 +157,114 @@ jobs:
           ctest --list-presets
           ctest --preset ${{ matrix.cmake-preset }}
 
+  test-on-clang-cl:
+    strategy:
+      fail-fast: false
+      matrix:
+        toolset: [142, 143]
+        cppstd: ['20']
+        build-type: [Debug, Release]
+        include:
+          - build-type: Debug
+            cmake-preset: conan-debug
+          - build-type: Release
+            cmake-preset: conan-release
+
+    name: Clang-CL 19.1.5 ${{ matrix.toolset }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install WinSDK 10.0.19041
+        if: matrix.toolset == 142
+        shell: powershell
+        run: |
+          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.Windows10SDK.19041"
+
+      - name: Install WinSDK 10.0.26100
+        if: matrix.toolset == 143
+        shell: powershell
+        run: |
+          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.Windows10SDK.26100"
+
+      - name: Set Clang as default compiler
+        run: |
+          echo "CC=clang-cl" >> $GITHUB_ENV
+          echo "CXX=clang-cl" >> $GITHUB_ENV
+
+      - name: Install CMake
+        uses: lukka/get-cmake@latest
+        with:
+          cmakeVersion: 4.1.1
+          ninjaVersion: latest
+
+      - name: Install Conan
+        uses: turtlebrowser/get-conan@main
+
+      - name: Conan select default profile
+        shell: powershell
+        run: |
+          choco install -y ninja
+          conan --version
+          conan profile detect
+
+      - name: Install dependencies
+        if: matrix.toolset == 142
+        run: >
+          conan install .
+          -c tools.microsoft:winsdk_version=10.0.19041.0
+          -c tools.cmake.cmaketoolchain:generator=Ninja
+          -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
+          -s os=Windows
+          -s compiler=clang
+          -s compiler.runtime=dynamic
+          -s compiler.runtime_version=v144
+          -s compiler.version=20
+          -s compiler.cppstd=${{ matrix.cppstd }}
+          -s build_type=${{ matrix.build-type }}
+          --build=missing
+
+      - name: Install dependencies
+        if: matrix.toolset == 143
+        run: >
+          conan install .
+          -c tools.microsoft:winsdk_version=10.0.26100.0
+          -c tools.cmake.cmaketoolchain:generator=Ninja
+          -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
+          -s os=Windows
+          -s compiler=clang
+          -s compiler.runtime=dynamic
+          -s compiler.runtime_version=v144
+          -s compiler.version=20
+          -s compiler.cppstd=${{ matrix.cppstd }}
+          -s build_type=${{ matrix.build-type }}
+          --build=missing
+
+      - name: CMake Configure
+        run: |
+          cmake --list-presets
+          cmake --preset ${{ matrix.cmake-preset }}
+
+      - name: Build
+        run: |
+          cmake --build --list-presets
+          cmake --build --preset ${{ matrix.cmake-preset }}
+
+      - name: Test
+        run: |
+          ctest --list-presets
+          ctest --preset ${{ matrix.cmake-preset }}
+
   test-on-clang:
     strategy:
       fail-fast: false
