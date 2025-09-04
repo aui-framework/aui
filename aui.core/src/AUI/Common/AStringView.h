@@ -91,17 +91,9 @@ public:
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
-     * @sa bytes, toWideString
+     * @sa bytes, toUtf16, toUtf32
      */
     AByteBuffer encode(AStringEncoding encoding) const;
-
-#if AUI_PLATFORM_WIN
-    /**
-     * @brief Encodes the string into a UTF-16 bytes stored in wchar_t for Windows API usage
-     * @sa bytes, encode
-     */
-    std::wstring toWideString() const;
-#endif
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-16 string
@@ -178,3 +170,19 @@ struct std::hash<AStringView>
     }
 };
 
+#if AUI_PLATFORM_WIN
+namespace aui::win32 {
+/*
+ * On Windows, char16_t == wchar_t. WinAPI interfaces use wchar_t widely, so we have some handy functions to
+ * convert AString(View) to wchar_t* and back.
+ */
+
+/**
+ * @brief AString to const wchar_t*.
+ * @ingroup core
+ * @details
+ * @exclusivefor{windows}
+ */
+std::wstring toWchar(AStringView str);
+}
+#endif

@@ -54,8 +54,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     static int pxf;
     if (ourHrc == nullptr) {
         ALogger::info(LOG_TAG) << ("Creating context...");
-        auto u16windowClass = mWindowClass.toWideString();
-        auto u16windowName = init.name.toWideString();
+        auto u16windowClass = aui::win32::toWchar(mWindowClass);
+        auto u16windowName = aui::win32::toWchar(init.name);
         struct FakeWindow {
             HWND mHwnd;
             HDC mDC;

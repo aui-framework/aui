@@ -58,7 +58,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
                 for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                     APath current = i;
                     current.replaceAll('/', '\\');
-                    auto wcurrent = current.toWideString();
+                    auto wcurrent = aui::win32::toWchar(current);
                     SHCreateItemFromParsingName(
                         wcurrent.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
@@ -124,8 +124,8 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
                 auto extMask = "*." + ext.extension;
                 storage << extMask;
                 storage << ext.name + " (" + extMask + ")";
-                auto w1 = (*(storage.end() - 1)).toWideString();
-                auto w2 = (*(storage.end() - 2)).toWideString();
+                auto w1 = aui::win32::toWchar(*(storage.end() - 1));
+                auto w2 = aui::win32::toWchar(*(storage.end() - 2));
                 filter << COMDLG_FILTERSPEC {
                     w1.c_str(), w2.c_str()
                 };
@@ -142,7 +142,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
                 for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                     APath current = i;
                     current.replaceAll('/', '\\');
-                    auto wcurrent = current.toWideString();
+                    auto wcurrent = aui::win32::toWchar(current);
                     SHCreateItemFromParsingName(
                         wcurrent.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
@@ -180,7 +180,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     SHFILEINFO info;
-    auto wfile = file.toWideString();
+    auto wfile = aui::win32::toWchar(file);
     if (SUCCEEDED(SHGetFileInfo(wfile.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
 
         ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };

@@ -161,7 +161,7 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;
-    auto wPath = file("*").toWideString();
+    auto wPath = aui::win32::toWchar(file("*"));
     HANDLE dir = FindFirstFile(wPath.c_str(), &fd);
 
     if (dir == INVALID_HANDLE_VALUE) {
@@ -469,8 +469,8 @@ void APath::move(const APath& source, const APath& destination) {
     }
 
 #if AUI_PLATFORM_WIN
-    auto wSource = source.toWideString();
-    auto wDestination = destination.toWideString();
+    auto wSource = aui::win32::toWchar(source);
+    auto wDestination = aui::win32::toWchar(destination);
     if (MoveFile(wSource.c_str(), wDestination.c_str()) == 0) {
 #else
     if (rename(source.toStdString().c_str(), destination.toStdString().c_str())) {

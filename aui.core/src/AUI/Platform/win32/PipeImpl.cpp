@@ -34,7 +34,7 @@ Pipe::Pipe() {
 
     constexpr auto BUFFER_SIZE = 4096;
     auto pipeName = R"(\\.\Pipe\AuiAnonPipe.{}.{})"_format(GetCurrentProcessId(), nextUniqueId());
-    auto wPipeName = pipeName.toWideString();
+    auto wPipeName = aui::win32::toWchar(pipeName);
     mOut = CreateNamedPipe(wPipeName.c_str(),
                            PIPE_ACCESS_INBOUND | FILE_FLAG_OVERLAPPED,
                            PIPE_TYPE_BYTE | PIPE_WAIT,

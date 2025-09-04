@@ -54,8 +54,8 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
             break;
     }
 
-    auto u16message = message.toWideString();
-    auto u16title = title.toWideString();
+    auto u16message = aui::win32::toWchar(message);
+    auto u16title = aui::win32::toWchar(title);
     switch (::MessageBox(window, u16message.c_str(), u16title.c_str(), flags)) {
         case IDOK:
             return ResultButton::OK;

@@ -42,7 +42,7 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-    auto wPath = fullname.toWideString();
+    auto wPath = aui::win32::toWchar(fullname);
     auto lib = LoadLibrary(wPath.c_str());
     if (!lib) {
         throw LoadException(

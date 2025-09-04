@@ -52,7 +52,7 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         HRESULT operator()(HANDLE thread, PCWSTR name) { return mPtr(thread, name); }
     } s;
     if (s) {
-        auto wName = name.toWideString();
+        auto wName = aui::win32::toWchar(name);
         s(handle, wName.c_str());
     }
 }

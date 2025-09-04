@@ -280,20 +280,9 @@ public:
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
-     * @sa bytes, toWideString
+     * @sa bytes, toUtf16, toUtf32
      */
     AByteBuffer encode(AStringEncoding encoding) const;
-
-#if AUI_PLATFORM_WIN
-    /**
-     * @brief Encodes the string into a UTF-16 bytes stored in wchar_t.
-     * Only for Windows API usage
-     * @sa bytes, encode
-     */
-    std::wstring toWideString() const {
-        return view().toWideString();
-    }
-#endif
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-16 string

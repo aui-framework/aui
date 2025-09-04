@@ -59,7 +59,7 @@ void AFileOutputStream::open(bool append) {
     }
 
 #if AUI_PLATFORM_WIN
-    auto wPath = mPath.toWideString();
+    auto wPath = aui::win32::toWchar(mPath);
     mFile = _wfsopen(wPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
 #else
     mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");

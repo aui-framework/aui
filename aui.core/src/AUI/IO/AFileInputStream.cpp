@@ -17,7 +17,7 @@
 
 AFileInputStream::AFileInputStream(const AString& path) {
 #if AUI_PLATFORM_WIN
-    auto wPath = path.toWideString();
+    auto wPath = aui::win32::toWchar(path);
     _wfopen_s(&mFile, wPath.c_str(), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");

@@ -32,9 +32,9 @@
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
-    auto fileU16 = applicationFile.toWideString();
-    auto paramsU16 = args.toWideString();
-    auto dirU16 = workingDirectory.toWideString();
+    auto fileU16 = aui::win32::toWchar(applicationFile);
+    auto paramsU16 = aui::win32::toWchar(args);
+    auto dirU16 = aui::win32::toWchar(workingDirectory);
 
     SHELLEXECUTEINFO sei = { sizeof(sei) };
 
@@ -209,9 +209,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
-    auto wExecutable = mInfo.executable.toWideString();
-    auto wArgs = args.toWideString();
-    auto wWorkDir = mInfo.workDir.toWideString();
+    auto wExecutable = aui::win32::toWchar(mInfo.executable);
+    auto wArgs = aui::win32::toWchar(args);
+    auto wWorkDir = aui::win32::toWchar(mInfo.workDir);
     if (!CreateProcess(wExecutable.data(),
                        wArgs.data(),
                        nullptr,
