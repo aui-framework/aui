@@ -42,10 +42,10 @@ enum class AStringEncoding : uint8_t {
 class API_AUI_CORE AUtf8ConstIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = char32_t;
+    using value_type = AChar;
     using difference_type = std::ptrdiff_t;
-    using pointer = const char32_t*;
-    using reference = char32_t;
+    using pointer = const AChar*;
+    using reference = AChar;
 
 private:
     const char* data_;
@@ -157,10 +157,10 @@ public:
 class API_AUI_CORE AUtf8ConstReverseIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = char32_t;
+    using value_type = AChar;
     using difference_type = std::ptrdiff_t;
-    using pointer = const char32_t*;
-    using reference = char32_t;
+    using pointer = const AChar*;
+    using reference = AChar;
 
 private:
     AUtf8ConstIterator base_iterator_;

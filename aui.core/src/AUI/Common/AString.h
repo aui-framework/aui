@@ -22,15 +22,17 @@
 #include <AUI/Common/AStringView.h>
 #include <optional>
 #include <span>
+#include <ranges>
+#include <concepts>
 #include <fmt/core.h>
 
 class API_AUI_CORE AUtf8MutableIterator {
 public:
     using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = char32_t;
+    using value_type = AChar;
     using difference_type = std::ptrdiff_t;
-    using pointer = const char32_t*;
-    using reference = char32_t;
+    using pointer = const AChar*;
+    using reference = AChar;
 
 private:
     AString* string_;
@@ -693,3 +695,10 @@ template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
 inline void PrintTo(const AString& s, std::ostream* stream) {
     *stream << s.toStdString();
 }
+
+static_assert(std::bidirectional_iterator<AString::iterator>);
+static_assert(std::bidirectional_iterator<AString::const_iterator>);
+
+static_assert(std::ranges::range<AString>);
+static_assert(std::ranges::bidirectional_range<AString>);
+static_assert(std::ranges::sized_range<AString>);
