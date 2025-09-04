@@ -1,0 +1,119 @@
+name: Code Quality
+
+on:
+  pull_request:
+    branches: [ master, develop ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  GIT_SUBMODULE_STRATEGY: recursive
+
+permissions:
+  contents: write
+
+jobs:
+  clang-tidy:
+    name: clang-tidy
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+          clang \
+          libc++-dev \
+          pkg-config \
+          libglew-dev \
+          zlib1g-dev \
+          libssl-dev \
+          libcrypt-dev \
+          libcurl4-openssl-dev \
+          libgtk-3-dev \
+          \
+          libdbus-1-dev \
+          libfontconfig-dev \
+          ninja-build \
+          libpulse-dev \
+
+      - name: clang-tidy verify config
+        run: bash -c 'OUT=$(clang-tidy --dump-config 2>&1); echo "$OUT"; if echo "$OUT" | grep -q "error:"; then exit -1; fi'
+
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: CC=/usr/bin/clang CXX=/usr/bin/clang++  cmake -GNinja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DBUILD_SHARED_LIBS=OFF -DCMAKE_CXX_CLANG_TIDY=/usr/bin/clang-tidy -DCMAKE_CXX_FLAGS="-stdlib=libc++ -std=c++20"
+
+      - name: Run tidy
+        # Build your program with the given configuration
+        run: cd build && python3 ../.github/tidy-summary.py
+
+      # - name: Build AUI tests
+      #   # Build your program with the given configuration
+      #   run: cmake --build ${{github.workspace}}/build --config RelWithDebInfo --target Tests
+
+      # - name: Run AUI tests
+      #   working-directory: ${{github.workspace}}/build/bin
+      #   run: ${{github.workspace}}/build/bin/Tests
+
+      - name: Pack
+        working-directory: ${{github.workspace}}/build
+        run: cpack . -C RelWithDebInfo
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          path: ${{github.workspace}}/build/*.tar.gz
+          name: ubuntu-latest static Release clang
+
+  valgrind:
+    name: valgrind
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+          valgrind \
+          pkg-config \
+          libglew-dev \
+          zlib1g-dev \
+          libssl-dev \
+          libcrypt-dev \
+          libcurl4-openssl-dev \
+          libgtk-3-dev \
+          \
+          libdbus-1-dev \
+          libfontconfig-dev \
+          ninja-build \
+          libpulse-dev \
+
+      - name: Configure CMake asan
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -GNinja -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Debug -DBUILD_SHARED_LIBS=OFF -DAUI_ENABLE_DEATH_TESTS=FALSE
+
+      - name: Build project asan
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config Debug
+
+      - name: Build AUI tests asan
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config Debug --target Tests
+
+      - name: Run AUI tests asan
+        working-directory: ${{github.workspace}}/build/bin
+        run: valgrind --suppressions=${{github.workspace}}/valgrind_suppressions.supp --error-exitcode=1 --tool=memcheck --leak-check=full --track-origins=yes --gen-suppressions=all ${{github.workspace}}/build/bin/Tests --gtest_filter="-Threading.FutureOn*"

@@ -16,10 +16,9 @@ if(MSVC)
     if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
     else()                                 # MD / MDd
-        #if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
-        #    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
-        #endif()
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
+        endif()
     endif()
 endif()
 
