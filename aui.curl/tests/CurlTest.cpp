@@ -29,7 +29,7 @@
 
 TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").runBlocking().body;
-    ASSERT_TRUE(AString(buffer).contains("DOCTYPE"));
+    ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 /*
  temporary disabled, this service does not work
@@ -91,7 +91,7 @@ TEST(CurlTest, ToStream) {
         a.run();
     }
     auto buffer = AByteBuffer::fromStream(AFileInputStream("temp.html"));
-    ASSERT_TRUE(AString(buffer).contains("DOCTYPE"));
+    ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 
 TEST(CurlTest, Fail) {
@@ -108,12 +108,12 @@ TEST(CurlTest, WebSocket) {
         ws->write("hello", 5);
 
         AObject::connect(ws->received, ws, [&](AByteBufferView data) {
-            EXPECT_EQ(AString(data), "hello");
+            EXPECT_EQ(AString::fromUtf8(data), "hello");
             AObject::disconnect();
             ws->write("world", 5);
             c++;
             AObject::connect(ws->received, ws, [&](AByteBufferView data) {
-                EXPECT_EQ(AString(data), "world");
+                EXPECT_EQ(AString::fromUtf8(data), "world");
                 AObject::disconnect();
                 ws->close();
                 c++;
@@ -131,7 +131,7 @@ public:
     MOCK_METHOD(void, acceptMessage, (const AString& message));
 
     void acceptMessageSlot(AByteBufferView data) {
-        auto msg = AString(data);
+        auto msg = AString::fromUtf8(data);
         acceptMessage(msg);
     }
 };

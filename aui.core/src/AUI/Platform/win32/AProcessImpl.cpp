@@ -192,7 +192,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 if (!result.empty()) {
                     result += " ";
                 }
-                if (i.contains(U' ')) {
+                if (i.contains(' ')) {
                     result += "\"";
                     result += i.replacedAll("\"", "\\\"");
                     result += "\"";
@@ -209,17 +209,17 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
-    AByteBuffer u16executable = mInfo.executable.encode(AStringEncoding::UTF16);
-    AByteBuffer u16args = args.encode(AStringEncoding::UTF16);
-    AByteBuffer u16workDir = mInfo.workDir.encode(AStringEncoding::UTF16);
-    if (!CreateProcess(reinterpret_cast<wchar_t*>(u16executable.data()),
-                       reinterpret_cast<wchar_t*>(u16args.data()),
+    auto wExecutable = mInfo.executable.toWideString();
+    auto wArgs = args.toWideString();
+    auto wWorkDir = mInfo.workDir.toWideString();
+    if (!CreateProcess(wExecutable.data(),
+                       wArgs.data(),
                        nullptr,
                        nullptr,
                        true,
                        creationFlags,
                        nullptr,
-                       mInfo.workDir.empty() ? nullptr : reinterpret_cast<wchar_t*>(u16workDir.data()),
+                       mInfo.workDir.empty() ? nullptr : wWorkDir.data(),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mInfo.executable;

@@ -18,242 +18,11 @@
 #include <AUI/Core.h>
 #include <AUI/Traits/values.h>
 #include <AUI/Common/ASet.h>
-#include <AUI/Common/AChar.h>
+#include <AUI/Common/AUtf8.h>
+#include <AUI/Common/AStringView.h>
 #include <optional>
 #include <span>
-#include <AUI/Common/AOptional.h>
 #include <fmt/core.h>
-
-namespace aui::detail {
-
-API_AUI_CORE char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept;
-
-API_AUI_CORE size_t getPrevCharStart(const char* data, size_t pos) noexcept;
-
-API_AUI_CORE std::optional<size_t> findUnicodePos(std::string_view utf8_str, size_t unicode_index);
-
-}
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(const InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        const InT* from;
-        const OutT* to;
-
-        constexpr Converter(const InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        InT* from;
-        OutT* to;
-
-        constexpr Converter(InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
-
-/**
- * @brief UTF-8 forward iterator for AString
- */
-class API_AUI_CORE AUtf8ConstIterator {
-public:
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = char32_t;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const char32_t*;
-    using reference = char32_t;
-
-private:
-    const char* data_;
-    const char* begin_;
-    const char* end_;
-    size_t byte_pos_;
-
-public:
-    constexpr AUtf8ConstIterator() noexcept
-        : data_(nullptr), begin_(nullptr), end_(nullptr),
-          byte_pos_(0) {}
-
-    constexpr AUtf8ConstIterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
-        : data_(data), begin_(begin), end_(end),
-          byte_pos_(pos) {}
-
-    AChar operator*() const noexcept {
-        size_t temp_pos = byte_pos_;
-        return aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
-    }
-
-    AUtf8ConstIterator& operator++() noexcept {
-        if (byte_pos_ < static_cast<size_t>(end_ - begin_)) {
-            size_t temp_pos = byte_pos_;
-            aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
-            byte_pos_ = temp_pos;
-        }
-        return *this;
-    }
-
-    AUtf8ConstIterator operator++(int) noexcept {
-        AUtf8ConstIterator temp = *this;
-        ++(*this);
-        return temp;
-    }
-
-    AUtf8ConstIterator& operator--() noexcept {
-        if (byte_pos_ > 0) {
-            byte_pos_ = aui::detail::getPrevCharStart(data_, byte_pos_);
-        }
-        return *this;
-    }
-
-    AUtf8ConstIterator operator--(int) noexcept {
-        AUtf8ConstIterator temp = *this;
-        --(*this);
-        return temp;
-    }
-
-    AUtf8ConstIterator& operator+=(int n) noexcept {
-        if (n > 0) {
-            while (n-- > 0) {
-                ++(*this);
-            }
-        } else if (n < 0) {
-            while (n++ < 0) {
-                --(*this);
-            }
-        }
-        return *this;
-    }
-
-    AUtf8ConstIterator& operator-=(int n) noexcept {
-        return *this += (-n);
-    }
-
-    AUtf8ConstIterator operator+(int n) const noexcept {
-        AUtf8ConstIterator result = *this;
-        result += n;
-        return result;
-    }
-
-    AUtf8ConstIterator operator-(int n) const noexcept {
-        AUtf8ConstIterator result = *this;
-        result -= n;
-        return result;
-    }
-
-    bool operator==(const AUtf8ConstIterator& other) const noexcept {
-        return data_ == other.data_ && byte_pos_ == other.byte_pos_;
-    }
-
-    bool operator!=(const AUtf8ConstIterator& other) const noexcept {
-        return !(*this == other);
-    }
-
-    size_t getBytePos() const noexcept {
-        return byte_pos_;
-    }
-
-    AUtf8ConstIterator& operator=(const std::string::iterator& it) noexcept {
-        if (begin_ != nullptr) {
-            byte_pos_ = &*it - begin_;
-        }
-        return *this;
-    }
-
-    AUtf8ConstIterator& operator=(const std::string::const_iterator& it) noexcept {
-        if (begin_ != nullptr) {
-            byte_pos_ = &*it - begin_;
-        }
-        return *this;
-    }
-};
-
-/**
- * @brief UTF-8 reverse iterator for AString
- */
-class API_AUI_CORE AUtf8ConstReverseIterator {
-public:
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = char32_t;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const char32_t*;
-    using reference = char32_t;
-
-private:
-    AUtf8ConstIterator base_iterator_;
-
-public:
-    explicit AUtf8ConstReverseIterator() noexcept = default;
-
-    explicit AUtf8ConstReverseIterator(AUtf8ConstIterator it) noexcept
-        : base_iterator_(it) {
-        --base_iterator_;
-    }
-
-    AUtf8ConstIterator base() const noexcept {
-        AUtf8ConstIterator temp = base_iterator_;
-        ++temp;
-        return temp;
-    }
-
-    char32_t operator*() const noexcept {
-        return *base_iterator_;
-    }
-
-    AUtf8ConstReverseIterator& operator++() noexcept {
-        --base_iterator_;
-        return *this;
-    }
-
-    AUtf8ConstReverseIterator operator++(int) noexcept {
-        AUtf8ConstReverseIterator temp = *this;
-        ++(*this);
-        return temp;
-    }
-
-    AUtf8ConstReverseIterator& operator--() noexcept {
-        ++base_iterator_;
-        return *this;
-    }
-
-    AUtf8ConstReverseIterator operator--(int) noexcept {
-        AUtf8ConstReverseIterator temp = *this;
-        --(*this);
-        return temp;
-    }
-
-    bool operator==(const AUtf8ConstReverseIterator& other) const noexcept {
-        return base_iterator_ == other.base_iterator_;
-    }
-
-    bool operator!=(const AUtf8ConstReverseIterator& other) const noexcept {
-        return !(*this == other);
-    }
-
-    AUtf8ConstReverseIterator& operator=(std::string::reverse_iterator it) noexcept {
-        base_iterator_ = it.base();
-        --base_iterator_;
-        return *this;
-    }
-
-    AUtf8ConstReverseIterator& operator=(std::string::const_reverse_iterator it) noexcept {
-        base_iterator_ = it.base();
-        --base_iterator_;
-        return *this;
-    }
-};
-
 
 class API_AUI_CORE AUtf8MutableIterator {
 public:
@@ -367,103 +136,6 @@ public:
     operator AUtf8ConstIterator() const noexcept;
 };
 
-class API_AUI_CORE AStringView: public std::string_view {
-private:
-    using super = std::string_view;
-
-public:
-    using bytes_type = super;
-
-    using iterator = AUtf8ConstIterator;
-    using const_iterator = AUtf8ConstIterator;
-    using reverse_iterator = AUtf8ConstReverseIterator;
-    using const_reverse_iterator = AUtf8ConstReverseIterator;
-
-    using super::super;
-
-    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(pointer_cast<char>(utf8_str), length) {}
-
-    constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
-
-    constexpr AStringView(std::string_view str) noexcept : super(str) {}
-
-    bool startsWith(AStringView prefix) const noexcept {
-        if (prefix.size() > size()) {
-            return false;
-        }
-        return substr(0, prefix.size()) == prefix;
-    }
-
-    bool endsWith(AStringView suffix) const noexcept {
-        if (suffix.size() > size()) {
-            return false;
-        }
-        return substr(size() - suffix.size()) == suffix;
-    }
-
-    std::string_view bytes() const noexcept {
-        return *this;
-    }
-
-    iterator begin() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
-    }
-
-    iterator end() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), size());
-    }
-
-    const_iterator cbegin() const noexcept {
-        return begin();
-    }
-
-    const_iterator cend() const noexcept {
-        return end();
-    }
-
-    reverse_iterator rbegin() const noexcept {
-        return AUtf8ConstReverseIterator(end());
-    }
-
-    reverse_iterator rend() const noexcept {
-        return AUtf8ConstReverseIterator(begin());
-    }
-
-    const_reverse_iterator crbegin() const noexcept {
-        return rbegin();
-    }
-
-    const_reverse_iterator crend() const noexcept {
-        return rend();
-    }
-
-    AChar first() const {
-        if (empty()) {
-            return AChar();
-        }
-        return *begin();
-    }
-
-    AChar last() const {
-        if (empty()) {
-            return AChar();
-        }
-        auto it = end();
-        --it;
-        return *it;
-    }
-
-};
-
-template<>
-struct std::hash<AStringView>
-{
-    size_t operator()(const AStringView& t) const noexcept
-    {
-        return std::hash<std::string_view>()(t);
-    }
-};
-
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
@@ -538,6 +210,8 @@ public:
         return length;
     }
 
+    static AString fromUtf8(AByteBufferView buffer);
+
     using super::super;
 
     AString();
@@ -548,7 +222,7 @@ public:
         other.clear(); // Windows moment
     }
 
-    AString(AByteBufferView buffer, AStringEncoding encoding = AStringEncoding::UTF8);
+    AString(AByteBufferView buffer, AStringEncoding encoding);
 
     AString(std::span<const std::byte> bytes, AStringEncoding encoding);
 
@@ -735,6 +409,8 @@ public:
     void resizeToNullTerminator();
 
     bool contains(char c) const noexcept;
+
+    bool contains(AChar c) const noexcept;
 
     bool contains(AStringView str) const noexcept;
 

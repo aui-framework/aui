@@ -50,7 +50,7 @@ public:
     AByteBuffer(const AByteBuffer& other): AByteBuffer(AByteBufferView(other)) {}
     AByteBuffer(AByteBuffer&& other) noexcept;
 
-    ~AByteBuffer();
+    ~AByteBuffer() override;
 
     void write(const char* src, size_t size) override;
 
