@@ -157,7 +157,6 @@ jobs:
           ctest --list-presets
           ctest --preset ${{ matrix.cmake-preset }}
 
-
   test-on-clang:
     strategy:
       fail-fast: false
