@@ -231,6 +231,10 @@ OpenGLRenderer::OpenGLRenderer() {
           return "null";
       }
     }();
+#if AUI_DEBUG && (AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX)
+    gl::setupDebug();
+#endif
+
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
@@ -1020,7 +1024,10 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderer::endPaint() {
-
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::bindVertexArray(0);
+    gl::State::useProgram(0);
 }
 
 
