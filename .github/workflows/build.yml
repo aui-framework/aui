@@ -32,7 +32,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-build
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -150,7 +150,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-build
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -250,7 +250,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-build
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -349,7 +349,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-build
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -448,7 +448,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-build
           restore-keys: |
             apt-${{ runner.os }}-build-
 
