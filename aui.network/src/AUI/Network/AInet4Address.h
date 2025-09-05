@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <AUI/Common/AString.h>
 #include <AUI/Network.h>
