@@ -40,19 +40,10 @@ private:
     AString* string_;
     size_t byte_pos_;
 
-    /**
-     * @brief Get the byte length of UTF-8 character at current position
-     */
     size_t getCurrentCharByteLength() const noexcept;
 
-    /**
-     * @brief Get the byte length needed to encode a char32_t in UTF-8
-     */
     static size_t getEncodedByteLength(char32_t codepoint) noexcept;
 
-    /**
-     * @brief Encode a char32_t to UTF-8 bytes
-     */
     static size_t encodeUtf8(char32_t codepoint, char* buffer) noexcept;
 
 public:
