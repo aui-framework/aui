@@ -29,9 +29,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /var/cache/apt/archives/**.deb
+            /var/cache/apt/archives/*.deb
+            /var/lib/apt/lists
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
+            !/var/lib/apt/lists/lock
+            !/var/lib/apt/lists/partial
           key: apt-${{ runner.os }}-lint-${{ hashFiles('**/code-quality.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-lint-
@@ -98,9 +101,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            /var/cache/apt/archives/**.deb
+            /var/cache/apt/archives/*.deb
+            /var/lib/apt/lists
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
+            !/var/lib/apt/lists/lock
+            !/var/lib/apt/lists/partial
           key: apt-${{ runner.os }}-valgrind-${{ hashFiles('**/code-quality.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-valgrind-
