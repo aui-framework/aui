@@ -185,7 +185,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
@@ -307,7 +307,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
@@ -612,7 +612,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 

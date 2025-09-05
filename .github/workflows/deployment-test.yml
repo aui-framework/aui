@@ -72,7 +72,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-deploy
+          key: apt-${{ runner.os }}-deploy-${{ hashFiles('.github/workflows/deployment-test.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-deploy-
 
