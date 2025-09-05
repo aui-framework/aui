@@ -226,6 +226,8 @@ public:
 
     AString(const char* utf8_bytes, size_type length);
 
+    AString(const char* begin, const char* end);
+
     AString(const char* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
     AString(const char8_t* utf8_bytes, size_type length) : AString(pointer_cast<char>(utf8_bytes), length) {}

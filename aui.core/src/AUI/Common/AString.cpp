@@ -273,6 +273,8 @@ AString::AString(const char* utf8_bytes, size_type length) {
     }
 }
 
+AString::AString(const char* begin, const char* end) : super(begin, end) {}
+
 AString::AString(const char16_t* utf16_bytes, size_type length) {
     size_t size = simdutf::utf8_length_from_utf16(utf16_bytes, length);
     super::resize(size);
