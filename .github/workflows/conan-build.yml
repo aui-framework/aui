@@ -190,9 +190,9 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-clang-${{ hashFiles('**/conan-build.yml') }}
           restore-keys: |
-            apt-${{ runner.os }}-conan-
+            apt-${{ runner.os }}-conan-clang-
 
       - name: Install system dependencies
         run: |
@@ -317,9 +317,9 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-gcc-${{ hashFiles('**/conan-build.yml') }}
           restore-keys: |
-            apt-${{ runner.os }}-conan-
+            apt-${{ runner.os }}-conan-gcc-
 
       - name: Install system dependencies
         run: |
@@ -627,9 +627,9 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-android-${{ hashFiles('**/conan-build.yml') }}
           restore-keys: |
-            apt-${{ runner.os }}-conan-
+            apt-${{ runner.os }}-conan-android-
 
       - name: Install system dependencies
         run: |
