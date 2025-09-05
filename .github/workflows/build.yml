@@ -31,9 +31,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /var/cache/apt/archives/**.deb
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
-            /var/cache/apt
           key: apt-${{ runner.os }}-build-${{ hashFiles('**/build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
@@ -151,9 +151,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /var/cache/apt/archives/**.deb
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
-            /var/cache/apt
           key: apt-${{ runner.os }}-build-${{ hashFiles('**/build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
@@ -253,9 +253,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /var/cache/apt/archives/**.deb
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
-            /var/cache/apt
           key: apt-${{ runner.os }}-build-${{ hashFiles('**/build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
@@ -354,9 +354,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /var/cache/apt/archives/**.deb
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
-            /var/cache/apt
           key: apt-${{ runner.os }}-build-${{ hashFiles('**/build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
@@ -455,9 +455,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
+            /var/cache/apt/archives/**.deb
             !/var/cache/apt/archives/lock
             !/var/cache/apt/archives/partial
-            /var/cache/apt
           key: apt-${{ runner.os }}-build-${{ hashFiles('**/build.yml') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
