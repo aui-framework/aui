@@ -30,15 +30,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-lint-${{ hashFiles('.github/workflows/code-quality.yml') }}
+          key: apt-${{ runner.os }}-lint-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-lint-
 
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install \
+          sudo apt-get install -y $(cat apt-packages.txt)
           clang \
           libc++-dev \
           pkg-config \
@@ -98,15 +97,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('.github/workflows/code-quality.yml') }}
+          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-valgrind-
 
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install \
+          sudo apt-get install -y $(cat apt-packages.txt)
           valgrind \
           pkg-config \
           libglew-dev \

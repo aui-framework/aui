@@ -32,15 +32,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install python3
+          sudo apt-get install -y $(cat apt-packages.txt)
 
       - name: Generate docs
         run: |
@@ -81,7 +80,7 @@ jobs:
            apt-${{ runner.os }}-build-
 
      - name: Install Linux dependencies
-       run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+       run: sudo apt-get update && sudo apt-get install -y $(cat apt-packages.txt)
 
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE
@@ -152,14 +151,13 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        run: sudo apt-get update && sudo apt-get install -y $(cat apt-packages.txt)
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -253,14 +251,13 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        run: sudo apt-get update && sudo apt-get install -y $(cat apt-packages.txt)
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -353,8 +350,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -362,7 +358,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install \
+          sudo apt-get install -y $(cat apt-packages.txt)
             pkg-config \
             libglew-dev \
             zlib1g-dev \
@@ -453,14 +449,13 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install libglew-dev libadwaita-1-dev
+        run: sudo apt-get update && sudo apt-get install -y $(cat apt-packages.txt)
 
       - name: Download artifact
         uses: actions/download-artifact@v4

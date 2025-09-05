@@ -185,15 +185,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
       - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
+          apt-get install -y $(cat apt-packages.txt)
             libgl1-mesa-dev libglu1-mesa-dev \
             libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
             libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev \
@@ -308,15 +307,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
       - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
+          apt-get install -y $(cat apt-packages.txt)
             gcc-15 g++-15 \
             libgl1-mesa-dev libglu1-mesa-dev \
             libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
@@ -614,15 +612,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-            /var/lib/apt/lists
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
       - name: Install system dependencies
         run: |
           apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
+          apt-get install -y $(cat apt-packages.txt)
 
       - name: Download and extract Android NDK r28b
         run: |
