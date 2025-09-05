@@ -222,7 +222,8 @@ jobs:
         if: matrix.toolset == 142
         run: >
           conan install .
-          -c tools.build:cxxflags='["-gcodeview"]'
+          -c tools.build:cflags='["-g", "-gcodeview"]'
+          -c tools.build:cxxflags='["-g", "-gcodeview"]'
           -c tools.microsoft:winsdk_version=10.0.19041.0
           -c tools.cmake.cmaketoolchain:generator=Ninja
           -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
@@ -240,7 +241,8 @@ jobs:
         if: matrix.toolset == 143
         run: >
           conan install .
-          -c tools.build:cxxflags='["-gcodeview"]'
+          -c tools.build:cflags='["-g", "-gcodeview"]'
+          -c tools.build:cxxflags='["-g", "-gcodeview"]'
           -c tools.microsoft:winsdk_version=10.0.26100.0
           -c tools.cmake.cmaketoolchain:generator=Ninja
           -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
