@@ -265,6 +265,10 @@ AString::AString(AByteBufferView buffer, AStringEncoding encoding) {
 
 AString::AString(std::span<const std::byte> bytes, AStringEncoding encoding) : AString(AByteBufferView(reinterpret_cast<const char*>(bytes.data()), bytes.size()), encoding) {}
 
+AString::AString(super::const_iterator begin, super::const_iterator end) : super(begin, end) {}
+
+AString::AString(const_iterator begin, const_iterator end) : super(begin, end) {}
+
 AString::AString(const char* utf8_bytes, size_type length) {
     if (simdutf::validate_utf8(utf8_bytes, length)) {
         *this = std::string(utf8_bytes, length);

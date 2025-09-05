@@ -210,8 +210,6 @@ public:
     static AString fromLatin1(AByteBufferView buffer);
     static AString fromLatin1(const char* str);
 
-    using super::super;
-
     AString();
 
     AString(const AString& other) : super(other.bytes()) {}
@@ -223,6 +221,22 @@ public:
     AString(AByteBufferView buffer, AStringEncoding encoding);
 
     AString(std::span<const std::byte> bytes, AStringEncoding encoding);
+
+    AString(super::const_iterator begin, super::const_iterator end);
+
+    AString(const_iterator begin, const_iterator end);
+
+    template <typename InputIterator>
+    requires std::is_same_v<std::iter_value_t<InputIterator>, AChar>
+    AString(InputIterator first, InputIterator last) {
+        auto count = std::distance(first, last);
+        if (count > 0) {
+            reserve(count);
+        }
+        for (auto it = first; it != last; ++it) {
+            push_back(*it);
+        }
+    }
 
     AString(const char* utf8_bytes, size_type length);
 
@@ -263,6 +277,8 @@ public:
     AString(size_type n, char32_t c) : AString(n, AChar(c)) {}
 
     AString(size_type n, char16_t c) : AString(n, AChar(c)) {}
+
+    AString(size_type n, char c) : AString(n, AChar(c)) {}
 
     AString(std::initializer_list<AChar> il) {
         reserve(il.size());
