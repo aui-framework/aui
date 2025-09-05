@@ -37,7 +37,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y $(cat apt-packages.txt)
+          sudo apt-get install -y \
           clang \
           libc++-dev \
           pkg-config \
@@ -104,7 +104,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y $(cat apt-packages.txt)
+          sudo apt-get install -y \
           valgrind \
           pkg-config \
           libglew-dev \
