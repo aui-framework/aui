@@ -74,7 +74,6 @@ jobs:
        with:
          path: |
            /var/cache/apt/archives
-           /var/lib/apt/lists
          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
          restore-keys: |
            apt-${{ runner.os }}-build-
