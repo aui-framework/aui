@@ -185,7 +185,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-conan
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
@@ -307,7 +307,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-conan
           restore-keys: |
             apt-${{ runner.os }}-conan-
 
@@ -612,7 +612,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-conan-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-conan
           restore-keys: |
             apt-${{ runner.os }}-conan-
 

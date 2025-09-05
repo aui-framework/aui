@@ -30,14 +30,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-lint-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-lint
           restore-keys: |
             apt-${{ runner.os }}-lint-
 
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get install \
           clang \
           libc++-dev \
           pkg-config \
@@ -97,14 +97,14 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('apt-packages.txt') }}
+          key: apt-${{ runner.os }}-valgrind
           restore-keys: |
             apt-${{ runner.os }}-valgrind-
 
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y \
+          sudo apt-get install \
           valgrind \
           pkg-config \
           libglew-dev \
