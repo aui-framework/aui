@@ -24,6 +24,9 @@
 #include <span>
 #include <concepts>
 #include <fmt/core.h>
+#if AUI_PLATFORM_ANDROID
+#include <range/v3/all.hpp>
+#endif
 
 class API_AUI_CORE AUtf8MutableIterator {
 public:
@@ -227,7 +230,11 @@ public:
     AString(const_iterator begin, const_iterator end);
 
     template <typename InputIterator>
+#if AUI_PLATFORM_ANDROID
+    requires std::is_same_v<ranges::iter_value_t<InputIterator>, AChar>
+#else
     requires std::is_same_v<std::iter_value_t<InputIterator>, AChar>
+#endif
     AString(InputIterator first, InputIterator last) {
         auto count = std::distance(first, last);
         if (count > 0) {
