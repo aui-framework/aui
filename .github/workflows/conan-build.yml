@@ -255,7 +255,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
           restore-keys: |
             conan-${{ runner.os }}-
 
@@ -373,7 +373,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
           restore-keys: |
             conan-${{ runner.os }}-
 
@@ -460,7 +460,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
           restore-keys: |
             conan-${{ runner.os }}-
 
@@ -548,7 +548,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
           restore-keys: |
             conan-${{ runner.os }}-
 
@@ -669,7 +669,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
           restore-keys: |
             conan-${{ runner.os }}-
 
