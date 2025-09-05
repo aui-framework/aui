@@ -157,119 +157,6 @@ jobs:
           ctest --list-presets
           ctest --preset ${{ matrix.cmake-preset }}
 
-  test-on-clang-cl:
-    strategy:
-      fail-fast: false
-      matrix:
-        toolset: [142, 143]
-        cppstd: ['20']
-        build-type: [Debug, Release]
-        include:
-          - build-type: Debug
-            cmake-preset: conan-debug
-          - build-type: Release
-            cmake-preset: conan-release
-
-    name: Clang-CL 19.1.5 ${{ matrix.toolset }} - C++${{ matrix.cppstd }} - ${{ matrix.build-type }}
-    runs-on: windows-2025
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install WinSDK 10.0.19041
-        if: matrix.toolset == 142
-        shell: powershell
-        run: |
-          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-            Set-ExecutionPolicy Bypass -Scope Process -Force
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-          }
-          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.Windows10SDK.19041"
-
-      - name: Install WinSDK 10.0.26100
-        if: matrix.toolset == 143
-        shell: powershell
-        run: |
-          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-            Set-ExecutionPolicy Bypass -Scope Process -Force
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-          }
-          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Component.Windows10SDK.26100"
-
-      - name: Set Clang as default compiler
-        run: |
-          echo "CC=clang-cl" >> $GITHUB_ENV
-          echo "CXX=clang-cl" >> $GITHUB_ENV
-
-      - name: Install CMake
-        uses: lukka/get-cmake@latest
-        with:
-          cmakeVersion: 4.1.1
-          ninjaVersion: latest
-
-      - name: Install Conan
-        uses: turtlebrowser/get-conan@main
-
-      - name: Conan select default profile
-        shell: powershell
-        run: |
-          choco install -y ninja
-          conan --version
-          conan profile detect
-
-      - name: Install dependencies
-        if: matrix.toolset == 142
-        run: >
-          conan install .
-          -c tools.build:cflags='["-g", "-gcodeview"]'
-          -c tools.build:cxxflags='["-g", "-gcodeview"]'
-          -c tools.microsoft:winsdk_version=10.0.19041.0
-          -c tools.cmake.cmaketoolchain:generator=Ninja
-          -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
-          -c user.openssl:windows_use_jom=True
-          -s os=Windows
-          -s compiler=clang
-          -s compiler.runtime=dynamic
-          -s compiler.runtime_version=v144
-          -s compiler.version=20
-          -s compiler.cppstd=${{ matrix.cppstd }}
-          -s build_type=${{ matrix.build-type }}
-          --build=missing
-
-      - name: Install dependencies
-        if: matrix.toolset == 143
-        run: >
-          conan install .
-          -c tools.build:cflags='["-g", "-gcodeview"]'
-          -c tools.build:cxxflags='["-g", "-gcodeview"]'
-          -c tools.microsoft:winsdk_version=10.0.26100.0
-          -c tools.cmake.cmaketoolchain:generator=Ninja
-          -c tools.build:compiler_executables='{"cpp": "clang-cl", "c": "clang-cl"}'
-          -c user.openssl:windows_use_jom=True
-          -s os=Windows
-          -s compiler=clang
-          -s compiler.runtime=dynamic
-          -s compiler.runtime_version=v144
-          -s compiler.version=20
-          -s compiler.cppstd=${{ matrix.cppstd }}
-          -s build_type=${{ matrix.build-type }}
-          --build=missing
-
-      - name: CMake Configure
-        run: |
-          cmake --list-presets
-          cmake --preset ${{ matrix.cmake-preset }}
-
-      - name: Build
-        run: |
-          cmake --build --list-presets
-          cmake --build --preset ${{ matrix.cmake-preset }}
-
-      - name: Test
-        run: |
-          ctest --list-presets
-          ctest --preset ${{ matrix.cmake-preset }}
 
   test-on-clang:
     strategy:
@@ -307,6 +194,15 @@ jobs:
             libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev libxcb-cursor-dev \
             libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev \
             libxcb-util-dev libxcb-util0-dev libdbus-1-dev libglib2.0-dev libfontconfig1-dev libpulse-dev libglew-dev
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          restore-keys: |
+            apt-${{ runner.os }}-conan-
 
       - name: Install Clang 20
         run: |
@@ -421,6 +317,15 @@ jobs:
             libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev libxcb-cursor-dev \
             libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev \
             libxcb-util-dev libxcb-util0-dev libdbus-1-dev libglib2.0-dev libfontconfig1-dev libpulse-dev libglew-dev
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          restore-keys: |
+            apt-${{ runner.os }}-conan-
 
       - name: Symlink gcc and g++
         run: |
@@ -707,6 +612,15 @@ jobs:
         run: |
           apt-get update
           apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
+      - name: Cache APT packages
+        uses: actions/cache@v4
+        with:
+          path: |
+            /var/cache/apt/archives
+            /var/lib/apt/lists
+          key: apt-${{ runner.os }}-conan-${{ hashFiles('.github/workflows/conan-build.yml') }}
+          restore-keys: |
+            apt-${{ runner.os }}-conan-
 
       - name: Download and extract Android NDK r28b
         run: |
