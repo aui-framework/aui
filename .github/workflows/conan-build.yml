@@ -180,7 +180,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages
+      - name: Cache APT packages (Conan)
         uses: actions/cache@v4
         with:
           path: |
@@ -303,7 +303,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages
+      - name: Cache APT packages (Conan)
         uses: actions/cache@v4
         with:
           path: |
@@ -609,7 +609,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages
+      - name: Cache APT packages (Conan)
         uses: actions/cache@v4
         with:
           path: |
