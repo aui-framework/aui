@@ -32,7 +32,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -74,7 +74,7 @@ jobs:
        with:
          path: |
            /var/cache/apt/archives
-         key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+         key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
          restore-keys: |
            apt-${{ runner.os }}-build-
 
@@ -150,7 +150,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -237,7 +237,7 @@ jobs:
           path: |
             ~/.aui
 
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
@@ -250,7 +250,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -349,7 +349,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 
@@ -448,7 +448,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-build-${{ hashFiles('.github/workflows/build.yml') }}
+          key: apt-${{ runner.os }}-build-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-build-
 

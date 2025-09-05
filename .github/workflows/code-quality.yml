@@ -30,7 +30,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-lint-${{ hashFiles('.github/workflows/code-quality.yml') }}
+          key: apt-${{ runner.os }}-lint-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-lint-
 
@@ -97,7 +97,7 @@ jobs:
         with:
           path: |
             /var/cache/apt/archives
-          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('.github/workflows/code-quality.yml') }}
+          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('**/apt-packages.txt') }}
           restore-keys: |
             apt-${{ runner.os }}-valgrind-
 
