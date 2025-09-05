@@ -247,7 +247,7 @@ jobs:
           path: |
             ~/.aui
 
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/apt-packages.txt') }}
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/CMakeLists.txt') }}
           restore-keys: |
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
