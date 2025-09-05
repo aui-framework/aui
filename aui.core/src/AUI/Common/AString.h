@@ -206,11 +206,9 @@ public:
 
     AString();
 
-    AString(const AString& other) : super(other.bytes()) {}
+    AString(const AString& other);
 
-    AString(AString&& other) noexcept : super(std::move(other.bytes())) {
-        other.clear(); // Windows moment
-    }
+    AString(AString&& other) noexcept;
 
     AString(AByteBufferView buffer, AStringEncoding encoding);
 
@@ -260,13 +258,13 @@ public:
 
     AString(std::u32string_view utf32_string) : AString(utf32_string.data(), utf32_string.size()) {}
 
-    AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
+    AString(AStringView view);
 
-    AString(std::string_view view) : super(view) {}
+    AString(std::string_view view);
 
-    AString(const super& other) : super(other) {}
+    AString(const super& other);
 
-    AString(super&& other) : super(std::move(other)) {}
+    AString(super&& other);
 
     AString(AChar c);
 

@@ -237,6 +237,12 @@ AString AString::fromLatin1(const char* str) {
 
 AString::AString() {}
 
+AString::AString(const AString& other) : super(other.bytes()) {}
+
+AString::AString(AString&& other) noexcept : super(std::move(other.bytes())) {
+    other.clear(); // Windows moment
+}
+
 AString::AString(AByteBufferView buffer, AStringEncoding encoding) {
     const char* bytes = buffer.data();
     size_t size_bytes = buffer.size();
@@ -290,6 +296,14 @@ AString::AString(const char32_t* utf32_bytes, size_type length) {
     super::resize(size);
     super::resize(simdutf::convert_utf32_to_utf8(utf32_bytes, length, data()));
 }
+
+AString::AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
+
+AString::AString(std::string_view view) : super(view) {}
+
+AString::AString(const super& other) : super(other) {}
+
+AString::AString(super&& other) : super(std::move(other)) {}
 
 AString::AString(AChar c) {
     push_back(c);
