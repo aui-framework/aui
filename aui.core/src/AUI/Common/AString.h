@@ -189,7 +189,6 @@ public:
         if (str == nullptr) {
             return 0;
         }
-
         size_type length = 0;
         while (str[length] != T()) {
             ++length;
