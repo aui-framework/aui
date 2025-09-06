@@ -50,4 +50,31 @@ compatibility layers such as WINE to launch your application under Linux.
     - Ubuntu Unity
 - There are distros designed for smartphones but they're considered unusable at the moment
 
+## Wayland support status
+
+AUI currently relies on X11 as its primary windowing system on Linux. As modern Linux distributions like Ubuntu and
+Fedora move away from X11, the application runs through the Xwayland compatibility layer.
+
+AUI includes experimental Wayland support implemented through GTK. This implementation appears native on GNOME desktop
+environments, while other desktop environments display a window with server-side decorations.
+
+Rather than directly linking to libraries, AUI uses a dynamic loading approach. This dynamic loading strategy using
+`dlopen` ensures broad compatibility while enabling a smooth transition toward modern windowing systems.
+
+To force AUI to use Wayland-friendly backends, use the following snippet inside your `AUI_ENTRY`:
+
+```cpp
+AUI_ENTRY {
+  APlatformAbstractionOptions::set({
+    .initializationOrder = {
+      APlatformAbstractionOptions::Adwaita1{},
+      APlatformAbstractionOptions::Gtk4{},
+      APlatformAbstractionOptions::X11{},
+    },
+  });
+  ...
+  return 0;
+}
+```
+
 ## AUI implementation specifics

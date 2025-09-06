@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-find_program(GIT_EXECUTABLE NAMES git git.cmd)
+find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
