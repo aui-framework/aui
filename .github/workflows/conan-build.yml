@@ -627,7 +627,7 @@ jobs:
       - name: Create Conan Android profile
         run: |
           mkdir -p ~/.conan2/profiles
-          cat > ~/.conan2/profiles/default <<EOF
+          cat > ~/.conan2/profiles/android <<EOF
           [settings]
           os=Android
           os.api_level=28
@@ -645,7 +645,7 @@ jobs:
         run: >
           conan install . \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
-            --profile:build=default --profile:host=android \
+            --profile:build=android --profile:host=default \
             --settings compiler.cppstd=${{ matrix.cppstd }} \
             --build=missing
 
