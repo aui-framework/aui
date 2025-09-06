@@ -129,6 +129,24 @@ public:
      * @brief Convert to const iterator
      */
     operator AUtf8ConstIterator() const noexcept;
+
+    difference_type operator-(const AUtf8MutableIterator& other) const noexcept;
+
+    bool operator<(const AUtf8MutableIterator& other) const noexcept {
+        return byte_pos_ < other.byte_pos_;
+    }
+
+    bool operator<=(const AUtf8MutableIterator& other) const noexcept {
+        return byte_pos_ <= other.byte_pos_;
+    }
+
+    bool operator>(const AUtf8MutableIterator& other) const noexcept {
+        return byte_pos_ > other.byte_pos_;
+    }
+
+    bool operator>=(const AUtf8MutableIterator& other) const noexcept {
+        return byte_pos_ >= other.byte_pos_;
+    }
 };
 
 class API_AUI_CORE AStringVector;

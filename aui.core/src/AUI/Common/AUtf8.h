@@ -149,6 +149,24 @@ public:
         }
         return *this;
     }
+
+    difference_type operator-(const AUtf8ConstIterator& other) const noexcept;
+
+    bool operator<(const AUtf8ConstIterator& other) const noexcept {
+        return byte_pos_ < other.byte_pos_;
+    }
+
+    bool operator<=(const AUtf8ConstIterator& other) const noexcept {
+        return byte_pos_ <= other.byte_pos_;
+    }
+
+    bool operator>(const AUtf8ConstIterator& other) const noexcept {
+        return byte_pos_ > other.byte_pos_;
+    }
+
+    bool operator>=(const AUtf8ConstIterator& other) const noexcept {
+        return byte_pos_ >= other.byte_pos_;
+    }
 };
 
 /**
@@ -223,5 +241,25 @@ public:
         base_iterator_ = it.base();
         --base_iterator_;
         return *this;
+    }
+
+    difference_type operator-(const AUtf8ConstReverseIterator& other) const noexcept {
+        return other.base_iterator_ - base_iterator_;
+    }
+
+    bool operator<(const AUtf8ConstReverseIterator& other) const noexcept {
+        return base_iterator_ > other.base_iterator_;
+    }
+
+    bool operator<=(const AUtf8ConstReverseIterator& other) const noexcept {
+        return base_iterator_ >= other.base_iterator_;
+    }
+
+    bool operator>(const AUtf8ConstReverseIterator& other) const noexcept {
+        return base_iterator_ < other.base_iterator_;
+    }
+
+    bool operator>=(const AUtf8ConstReverseIterator& other) const noexcept {
+        return base_iterator_ <= other.base_iterator_;
     }
 };

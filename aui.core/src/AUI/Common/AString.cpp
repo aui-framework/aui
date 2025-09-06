@@ -205,6 +205,10 @@ AUtf8MutableIterator::operator AUtf8ConstIterator() const noexcept {
                              string_->data() + string_->size(), byte_pos_);
 }
 
+auto AUtf8MutableIterator::operator-(const AUtf8MutableIterator& other) const noexcept -> difference_type {
+    return (operator AUtf8ConstIterator()) - (other.operator AUtf8ConstIterator());
+}
+
 AString AString::numberHex(int i) {
     char buf[32];
     std::snprintf(buf, sizeof(buf), "%x", static_cast<unsigned>(i));

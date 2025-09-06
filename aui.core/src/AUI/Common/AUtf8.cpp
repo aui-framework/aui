@@ -108,3 +108,38 @@ API_AUI_CORE std::optional<size_t> findUnicodePos(std::string_view utf8_str, siz
 }
 
 }
+
+auto AUtf8ConstIterator::operator-(const AUtf8ConstIterator& other) const noexcept -> difference_type {
+    if (data_ != other.data_) {
+        return 0;
+    }
+
+    if (byte_pos_ == other.byte_pos_) {
+        return 0;
+    }
+
+    size_t start_pos, end_pos;
+    bool forward;
+
+    if (byte_pos_ > other.byte_pos_) {
+        start_pos = other.byte_pos_;
+        end_pos = byte_pos_;
+        forward = true;
+    } else {
+        start_pos = byte_pos_;
+        end_pos = other.byte_pos_;
+        forward = false;
+    }
+
+    difference_type count = 0;
+    size_t current_pos = start_pos;
+
+    while (current_pos < end_pos) {
+        size_t temp_pos = current_pos;
+        aui::utf8::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
+        current_pos = temp_pos;
+        ++count;
+    }
+
+    return forward ? count : -count;
+}
