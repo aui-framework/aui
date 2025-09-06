@@ -593,15 +593,11 @@ jobs:
         run: |
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
-      - name: Symlink clang and clang++
-        run: |
-          ln -sf /opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/clang /usr/bin/clang
-          ln -sf /opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ /usr/bin/clang++
-
       - name: Set clang as default compiler
         run: |
           echo "CC=clang" >> $GITHUB_ENV
           echo "CXX=clang++" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
       - name: Install Conan
         run: |
