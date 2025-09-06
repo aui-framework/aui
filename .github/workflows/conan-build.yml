@@ -190,7 +190,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-clang-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-clang-conanbuild
           restore-keys: |
             apt-${{ runner.os }}-conan-clang-
 
@@ -317,7 +317,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-gcc-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-gcc-conanbuild
           restore-keys: |
             apt-${{ runner.os }}-conan-gcc-
 
@@ -627,7 +627,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-android-${{ hashFiles('**/conan-build.yml') }}
+          key: apt-${{ runner.os }}-conan-android-conanbuild
           restore-keys: |
             apt-${{ runner.os }}-conan-android-
 

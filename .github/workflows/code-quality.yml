@@ -35,7 +35,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-lint-${{ hashFiles('**/code-quality.yml') }}
+          key: apt-${{ runner.os }}-lint-codequality
           restore-keys: |
             apt-${{ runner.os }}-lint-
 
@@ -107,7 +107,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-valgrind-${{ hashFiles('**/code-quality.yml') }}
+          key: apt-${{ runner.os }}-valgrind-codequality
           restore-keys: |
             apt-${{ runner.os }}-valgrind-
 

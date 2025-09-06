@@ -77,7 +77,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-deploy-${{ hashFiles('**/deployment-test.yml') }}
+          key: apt-${{ runner.os }}-deploy-deploymenttest
           restore-keys: |
             apt-${{ runner.os }}-deploy-
 

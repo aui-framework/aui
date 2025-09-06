@@ -37,7 +37,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-docs-${{ hashFiles('**/build.yml') }}
+          key: apt-${{ runner.os }}-build-docs-buildyml
           restore-keys: |
             apt-${{ runner.os }}-build-docs-
 
@@ -84,7 +84,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-         key: apt-${{ runner.os }}-build-android-${{ hashFiles('**/build.yml') }}
+         key: apt-${{ runner.os }}-build-android-buildyml
          restore-keys: |
            apt-${{ runner.os }}-build-android-
 
@@ -165,7 +165,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-check-${{ hashFiles('**/build.yml') }}
+          key: apt-${{ runner.os }}-build-check-buildyml
           restore-keys: |
             apt-${{ runner.os }}-build-check-
 
@@ -270,7 +270,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-desktop-${{ hashFiles('**/build.yml') }}
+          key: apt-${{ runner.os }}-build-desktop-buildyml
           restore-keys: |
             apt-${{ runner.os }}-build-desktop-
 
@@ -374,7 +374,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-deployment-test-build-${{ hashFiles('**/build.yml') }}
+          key: apt-${{ runner.os }}-deployment-test-build-buildyml
           restore-keys: |
             apt-${{ runner.os }}-deployment-test-build-
 
@@ -478,7 +478,7 @@ jobs:
             !/var/cache/apt/archives/partial
             !/var/lib/apt/lists/lock
             !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-deployment-test-run-${{ hashFiles('**/build.yml') }}
+          key: apt-${{ runner.os }}-deployment-test-run-buildyml
           restore-keys: |
             apt-${{ runner.os }}-deployment-test-run-
 
