@@ -31,6 +31,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: python3
+          version: 1.0
 
       - name: Generate docs
         run: |
@@ -64,6 +65,7 @@ jobs:
        uses: awalsh128/cache-apt-pkgs-action@latest
        with:
          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+         version: 1.0
 
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE
@@ -133,6 +135,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          version: 1.0
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -225,6 +228,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          version: 1.0
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -316,7 +320,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
-        
+          version: 1.0
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -394,6 +398,7 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: libglew-dev libadwaita-1-dev
+          version: 1.0
 
       - name: Download artifact
         uses: actions/download-artifact@v4
