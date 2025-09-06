@@ -118,3 +118,18 @@ TEST(Strings, Chinese) {
     EXPECT_EQ("嗨"_as.length(), 1);
     EXPECT_EQ("嗨"_as.toStdString(), "嗨");
 }
+
+TEST(Strings, Utf8Iterators) {
+    AString str("Привет, 🤡, Как твои дела?");
+
+    EXPECT_EQ(*(str.begin() + 8), U'🤡');
+    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
+
+    (str.begin() + 8) = U'👽';
+    EXPECT_EQ(*(str.begin() + 8), U'👽');
+    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
+
+    (str.begin() + 8) = 'A';
+    EXPECT_EQ(*(str.begin() + 8), 'A');
+    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
+}
