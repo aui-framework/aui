@@ -35,6 +35,9 @@
  */
 class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
 public:
+    friend class UIText; // testing
+    friend class UIText_Contents_Test; // testing
+
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
         WordBreak wordBreak = WordBreak::NORMAL;
