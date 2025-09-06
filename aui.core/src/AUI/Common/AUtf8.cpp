@@ -15,7 +15,7 @@
 
 #include "AUtf8.h"
 
-namespace aui::detail {
+namespace aui::utf8::detail {
 
 API_AUI_CORE char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept {
     if (bytePos >= maxSize) return 0;

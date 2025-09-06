@@ -19,7 +19,7 @@
 #include <AUI/Common/AChar.h>
 #include <AUI/Common/AOptional.h>
 
-namespace aui::detail {
+namespace aui::utf8::detail {
 
 API_AUI_CORE char32_t decodeUtf8At(const char* data, size_t& bytePos, size_t maxSize) noexcept;
 
@@ -64,13 +64,13 @@ public:
 
     AChar operator*() const noexcept {
         size_t temp_pos = byte_pos_;
-        return aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
+        return aui::utf8::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
     }
 
     AUtf8ConstIterator& operator++() noexcept {
         if (byte_pos_ < static_cast<size_t>(end_ - begin_)) {
             size_t temp_pos = byte_pos_;
-            aui::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
+            aui::utf8::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
             byte_pos_ = temp_pos;
         }
         return *this;
@@ -84,7 +84,7 @@ public:
 
     AUtf8ConstIterator& operator--() noexcept {
         if (byte_pos_ > 0) {
-            byte_pos_ = aui::detail::getPrevCharStart(data_, byte_pos_);
+            byte_pos_ = aui::utf8::detail::getPrevCharStart(data_, byte_pos_);
         }
         return *this;
     }

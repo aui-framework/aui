@@ -86,7 +86,7 @@ AChar AUtf8MutableIterator::operator*() const noexcept {
     }
 
     size_t temp_pos = byte_pos_;
-    return aui::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
+    return aui::utf8::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
 }
 
 AUtf8MutableIterator& AUtf8MutableIterator::operator=(AChar c) {
@@ -143,7 +143,7 @@ AUtf8MutableIterator& AUtf8MutableIterator::operator=(AChar c) {
 AUtf8MutableIterator& AUtf8MutableIterator::operator++() noexcept {
     if (string_ && byte_pos_ < string_->size()) {
         size_t temp_pos = byte_pos_;
-        aui::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
+        aui::utf8::detail::decodeUtf8At(string_->data(), temp_pos, string_->size());
         byte_pos_ = temp_pos;
     }
     return *this;
@@ -157,7 +157,7 @@ AUtf8MutableIterator AUtf8MutableIterator::operator++(int) noexcept {
 
 AUtf8MutableIterator& AUtf8MutableIterator::operator--() noexcept {
     if (string_ && byte_pos_ > 0) {
-        byte_pos_ = aui::detail::getPrevCharStart(string_->data(), byte_pos_);
+        byte_pos_ = aui::utf8::detail::getPrevCharStart(string_->data(), byte_pos_);
     }
     return *this;
 }
@@ -339,11 +339,11 @@ void AString::push_back(AChar c) noexcept {
 
 void AString::insert(size_type pos, AChar c) {
     auto utf8c = c.toUtf8();
-    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value_or(0), utf8c.begin(), utf8c.end());
+    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).value_or(0), utf8c.begin(), utf8c.end());
 }
 
 void AString::insert(size_type pos, AStringView str) {
-    bytes().insert(bytes().begin() + aui::detail::findUnicodePos(bytes(), pos).value_or(0), str.begin(), str.end());
+    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).value_or(0), str.begin(), str.end());
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {
@@ -1554,7 +1554,7 @@ auto AString::erase(const_iterator it) -> iterator {
     size_type byte_pos = it.getBytePos();
 
     size_type temp_pos = byte_pos;
-    aui::detail::decodeUtf8At(data(), temp_pos, size());
+    aui::utf8::detail::decodeUtf8At(data(), temp_pos, size());
     size_type char_byte_length = temp_pos - byte_pos;
 
     super::erase(byte_pos, char_byte_length);
