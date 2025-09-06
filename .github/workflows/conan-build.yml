@@ -589,14 +589,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download and extract Android NDK r28b
+      - name: Set clang as default compiler
+        if: matrix.arch == 'armv7'
         run: |
+          echo "CC=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang" >> $GITHUB_ENV
+          echo "CXX=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang++" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
       - name: Set clang as default compiler
+        if: matrix.arch == 'armv8'
         run: |
-          echo "CC=clang" >> $GITHUB_ENV
-          echo "CXX=clang++" >> $GITHUB_ENV
+          echo "CC=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang" >> $GITHUB_ENV
+          echo "CXX=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
       - name: Install Conan
@@ -651,9 +655,9 @@ jobs:
         run: >
           conan install . \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
+            -s compiler=clang \
+            -s compiler.cppstd=${{ matrix.cppstd }} \
             --profile:build=default --profile:host=android \
-            --settings compiler=clang \
-            --settings compiler.cppstd=${{ matrix.cppstd }} \
             --build=missing
 
       - name: CMake Configure (Android)
