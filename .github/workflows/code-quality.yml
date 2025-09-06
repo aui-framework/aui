@@ -27,7 +27,7 @@ jobs:
 
 
       - name: Install Linux dependencies
-        uses: Eeems-Org/apt-cache-action
+        uses: Eeems-Org/apt-cache-action@v1.4
         with:
           packages: clang \
             libc++-dev \
@@ -85,7 +85,7 @@ jobs:
 
 
       - name: Install Linux dependencies
-        uses: Eeems-Org/apt-cache-action
+        uses: Eeems-Org/apt-cache-action@v1.4
         with:
           packages: valgrind \
             pkg-config \
