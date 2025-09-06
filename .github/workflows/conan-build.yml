@@ -645,7 +645,7 @@ jobs:
         run: >
           conan install . \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
-            --profile:build=default --profile:host=android \
+            --profile:build=android --profile:host=default \
             --settings compiler=clang \
             --settings compiler.cppstd=${{ matrix.cppstd }} \
             --build=missing
