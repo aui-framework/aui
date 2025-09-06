@@ -23,28 +23,14 @@ jobs:
     name: "Documentation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Cache APT packages (Documentation)
-        uses: actions/cache@v4
+      - name: (Documentation) Install python3
+        uses: Eeems-Org/apt-cache-action
         with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-docs-buildyml
-          restore-keys: |
-            apt-${{ runner.os }}-build-docs-
-
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3
+          packages: python3
 
       - name: Generate docs
         run: |
@@ -68,28 +54,16 @@ jobs:
    name: "Android"
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v4
        with:
          submodules: true
      - uses: actions/setup-java@v1
        with: { java-version: '11' }
 
-     - name: Cache APT packages (build-android)
-       uses: actions/cache@v4
+     - name: Install Linux dependencies (build-android)
+       uses: Eeems-Org/apt-cache-action
        with:
-         path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-         key: apt-${{ runner.os }}-build-android-buildyml
-         restore-keys: |
-           apt-${{ runner.os }}-build-android-
-
-     - name: Install Linux dependencies
-       run: sudo apt-get update && sudo apt-get install -y pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+         packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
 
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE
@@ -111,7 +85,7 @@ jobs:
    name: "iOS Debug"
    runs-on: macos-latest
    steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v4
        with:
          submodules: true
 
@@ -154,24 +128,11 @@ jobs:
         with:
           submodules: true
 
-      - name: Cache APT packages (build check)
-        if: runner.os == 'Linux'
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-check-buildyml
-          restore-keys: |
-            apt-${{ runner.os }}-build-check-
-
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -259,24 +220,11 @@ jobs:
             ${{ runner.os }}-
       # [cache_example]
 
-      - name: Cache APT packages (build-desktop)
-        if: runner.os == 'Linux'
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-build-desktop-buildyml
-          restore-keys: |
-            apt-${{ runner.os }}-build-desktop-
-
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -359,38 +307,21 @@ jobs:
             generator: "Ninja"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           submodules: true
 
-      - name: Cache APT packages (deployment-test build)
-        if: runner.os == 'Linux'
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-deployment-test-build-buildyml
-          restore-keys: |
-            apt-${{ runner.os }}-deployment-test-build-
-
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            pkg-config \
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: pkg-config \
             libglew-dev \
             zlib1g-dev \
             libssl-dev \
             libcrypt-dev \
             libcurl4-openssl-dev \
             libgtk-3-dev \
-            \
             libdbus-1-dev \
             libfontconfig-dev \
             ninja-build \
@@ -467,24 +398,12 @@ jobs:
         shared_or_static: [shared, static]
 
     steps:
-      - name: Cache APT packages (deployment-test run)
-        if: runner.os == 'Linux'
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-deployment-test-run-buildyml
-          restore-keys: |
-            apt-${{ runner.os }}-deployment-test-run-
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y libglew-dev libadwaita-1-dev
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: libglew-dev libadwaita-1-dev
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -535,7 +454,7 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Download artifact
         uses: actions/download-artifact@v4

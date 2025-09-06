@@ -180,24 +180,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages (Conan)
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-clang-conanbuild
-          restore-keys: |
-            apt-${{ runner.os }}-conan-clang-
 
       - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
             libgl1-mesa-dev libglu1-mesa-dev \
             libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
             libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev \
@@ -307,24 +294,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages (Conan)
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-gcc-conanbuild
-          restore-keys: |
-            apt-${{ runner.os }}-conan-gcc-
 
       - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
             gcc-15 g++-15 \
             libgl1-mesa-dev libglu1-mesa-dev \
             libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
@@ -617,24 +591,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache APT packages (Conan)
-        uses: actions/cache@v4
-        with:
-          path: |
-            /var/cache/apt/archives/*.deb
-            /var/lib/apt/lists
-            !/var/cache/apt/archives/lock
-            !/var/cache/apt/archives/partial
-            !/var/lib/apt/lists/lock
-            !/var/lib/apt/lists/partial
-          key: apt-${{ runner.os }}-conan-android-conanbuild
-          restore-keys: |
-            apt-${{ runner.os }}-conan-android-
 
       - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
+        uses: Eeems-Org/apt-cache-action
+        with:
+          packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
 
       - name: Download and extract Android NDK r28b
         run: |
