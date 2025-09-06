@@ -182,7 +182,7 @@ jobs:
 
 
       - name: Install system dependencies
-        uses: Eeems-Org/apt-cache-action@v1.4
+        uses: fecet/apt-cache-action@4b305105661a078da8085e9d891e48ce853f1bef
         with:
           packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
             libgl1-mesa-dev libglu1-mesa-dev \
@@ -296,7 +296,7 @@ jobs:
 
 
       - name: Install system dependencies
-        uses: Eeems-Org/apt-cache-action@v1.4
+        uses: fecet/apt-cache-action@4b305105661a078da8085e9d891e48ce853f1bef
         with:
           packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
             gcc-15 g++-15 \
@@ -593,7 +593,7 @@ jobs:
 
 
       - name: Install system dependencies
-        uses: Eeems-Org/apt-cache-action@v1.4
+        uses: fecet/apt-cache-action@4b305105661a078da8085e9d891e48ce853f1bef
         with:
           packages: ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
 
