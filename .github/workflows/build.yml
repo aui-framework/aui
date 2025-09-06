@@ -315,17 +315,7 @@ jobs:
         if: runner.os == 'Linux'
         uses: Eeems-Org/apt-cache-action@v1.4
         with:
-          packages: pkg-config \
-            libglew-dev \
-            zlib1g-dev \
-            libssl-dev \
-            libcrypt-dev \
-            libcurl4-openssl-dev \
-            libgtk-3-dev \
-            libdbus-1-dev \
-            libfontconfig-dev \
-            ninja-build \
-            libpulse-dev \
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
         
 
       - name: Install macos dependencies
