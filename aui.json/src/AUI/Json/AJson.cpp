@@ -18,7 +18,7 @@
 AString AJson::toString(const AJson& json) {
     AByteBuffer buffer;
     aui::serialize(buffer, json);
-    return AString(buffer.data(), buffer.size());
+    return AString::fromUtf8(buffer);
 }
 
 AJson AJson::fromString(const AString& json) {

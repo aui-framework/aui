@@ -211,28 +211,44 @@ AString AString::numberHex(int i) {
     return buf;
 }
 
+AString AString::fromUtf8(std::string_view buffer) {
+    return AString(buffer);
+}
+
 AString AString::fromUtf8(AByteBufferView buffer) {
-    return AString(buffer, AStringEncoding::UTF8);
+    return fromUtf8(std::string_view{buffer.data(), buffer.size()});
 }
 
 AString AString::fromUtf8(const char* str) {
-    return fromUtf8(AByteBufferView{str, strLength(str)});
+    return fromUtf8(std::string_view{str, strLength(str)});
 }
 
-AString AString::fromUtf16(AByteBufferView buffer) {
-    return AString(buffer, AStringEncoding::UTF16);
+AString AString::fromUtf16(std::u16string_view buffer) {
+    AString result;
+    size_t size = simdutf::utf8_length_from_utf16(buffer.data(), buffer.size());
+    result.resize(size);
+    result.resize(simdutf::convert_utf16_to_utf8(buffer.data(), buffer.size(), result.data()));
+    return result;
 }
 
-AString AString::fromUtf32(AByteBufferView buffer) {
-    return AString(buffer, AStringEncoding::UTF32);
+AString AString::fromUtf32(std::u32string_view buffer) {
+    AString result;
+    size_t size = simdutf::utf8_length_from_utf32(buffer.data(), buffer.size());
+    result.resize(size);
+    result.resize(simdutf::convert_utf32_to_utf8(buffer.data(), buffer.size(), result.data()));
+    return result;
 }
 
-AString AString::fromLatin1(AByteBufferView buffer) {
-    return AString(buffer, AStringEncoding::LATIN1);
+AString AString::fromLatin1(std::string_view buffer) {
+    AString result;
+    size_t size = simdutf::utf8_length_from_latin1(buffer.data(), buffer.size());
+    result.resize(size);
+    result.resize(simdutf::convert_latin1_to_utf8(buffer.data(), buffer.size(), result.data()));
+    return result;
 }
 
 AString AString::fromLatin1(const char* str) {
-    return fromLatin1(AByteBufferView{str, strLength(str)});
+    return fromLatin1({str, strLength(str)});
 }
 
 AString::AString() {}

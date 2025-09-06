@@ -197,11 +197,12 @@ public:
         return length;
     }
 
+    static AString fromUtf8(std::string_view buffer);
     static AString fromUtf8(AByteBufferView buffer);
     static AString fromUtf8(const char* str);
-    static AString fromUtf16(AByteBufferView buffer);
-    static AString fromUtf32(AByteBufferView buffer);
-    static AString fromLatin1(AByteBufferView buffer);
+    static AString fromUtf16(std::u16string_view buffer);
+    static AString fromUtf32(std::u32string_view buffer);
+    static AString fromLatin1(std::string_view buffer);
     static AString fromLatin1(const char* str);
 
     AString();

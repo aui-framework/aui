@@ -82,7 +82,7 @@ AInet4Address AInet4Address::fromString(const AString& addr, uint16_t port) {
     hints.ai_protocol = IPPROTO_TCP;
     addrinfo* result;
 
-    if (getaddrinfo(addr.toStdString().c_str(), ports.c_str(), &hints, &result) != 0)
+    if (getaddrinfo(addr.c_str(), ports.c_str(), &hints, &result) != 0)
         throw AIOException((AString("Unresolved hostname: ") + addr).c_str());
     auto* sockaddrin = (sockaddr_in*)result->ai_addr;
 
