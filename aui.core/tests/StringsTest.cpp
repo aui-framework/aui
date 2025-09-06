@@ -133,3 +133,9 @@ TEST(Strings, Utf8Iterators) {
     EXPECT_EQ(*(str.begin() + 8), 'A');
     EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
 }
+
+TEST(Strings, UtfEncoding) {
+    AString str("Привет, 🤡, Как твои дела?");
+    EXPECT_EQ(str.toUtf16(), u"Привет, 🤡, Как твои дела?");
+    EXPECT_EQ(str.toUtf32(), U"Привет, 🤡, Как твои дела?");
+}
