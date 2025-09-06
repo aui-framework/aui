@@ -33,6 +33,24 @@ jobs:
           execute_install_scripts: true
           version: 1.0
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+          clang \
+          libc++-dev \
+          pkg-config \
+          libglew-dev \
+          zlib1g-dev \
+          libssl-dev \
+          libcrypt-dev \
+          libcurl4-openssl-dev \
+          libgtk-3-dev \
+          libdbus-1-dev \
+          libfontconfig-dev \
+          ninja-build \
+          libpulse-dev
+
       - name: clang-tidy verify config
         run: bash -c 'OUT=$(clang-tidy --dump-config 2>&1); echo "$OUT"; if echo "$OUT" | grep -q "error:"; then exit -1; fi'
 
@@ -72,13 +90,29 @@ jobs:
         with:
           submodules: true
 
-
       - name: Install Linux dependencies
         uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: valgrind pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
           execute_install_scripts: true
           version: 1.0
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install \
+          valgrind \
+          pkg-config \
+          libglew-dev \
+          zlib1g-dev \
+          libssl-dev \
+          libcrypt-dev \
+          libcurl4-openssl-dev \
+          libgtk-3-dev \
+          libdbus-1-dev \
+          libfontconfig-dev \
+          ninja-build \
+          libpulse-dev
 
       - name: Configure CMake asan
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
