@@ -593,6 +593,11 @@ jobs:
         run: |
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
+      - name: Install Conan
+        run: |
+          pipx ensurepath
+          pipx install conan
+
       - name: Add pipx bin to PATH
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
 
