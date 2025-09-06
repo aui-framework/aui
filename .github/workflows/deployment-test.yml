@@ -68,11 +68,11 @@ jobs:
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
-        uses: awalsh128/cache-apt-pkgs-action@latest
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
         with:
           packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
           execute_install_scripts: true
-          version: 2.0
+          version: 3.0
 
       - name: Install Linux dependencies
         if: runner.os == 'Linux'
