@@ -652,6 +652,7 @@ jobs:
             -s compiler=clang \
             -s compiler.version=20 \
             -s compiler.cppstd=${{ matrix.cppstd }} \
+            -s build_type=${{ matrix.build-type }} \
             --profile:build=default --profile:host=android \
             --build=missing
 
