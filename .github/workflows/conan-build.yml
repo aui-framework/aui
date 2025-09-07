@@ -591,7 +591,10 @@ jobs:
 
       - name: Set clang as default compiler
         run: |
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
+          echo "/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/" >> $GITHUB_PATH
 
       - name: Install Conan
         run: |
