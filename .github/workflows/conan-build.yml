@@ -44,7 +44,7 @@ jobs:
     name: MSVC ${{ matrix.toolset }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install VS 2019 Build Tools v142
         if: matrix.toolset == 142
@@ -178,7 +178,7 @@ jobs:
     container:
       image: ghcr.io/aui-framework/clang-20-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Symlink llvm-strip
         run: |
@@ -266,7 +266,7 @@ jobs:
     container:
       image: ghcr.io/aui-framework/gcc-15-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set GCC as default compiler
         run: |
@@ -349,7 +349,7 @@ jobs:
     name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -437,7 +437,7 @@ jobs:
     name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -542,7 +542,7 @@ jobs:
     container:
       image: ghcr.io/aui-framework/ndk-28b-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set clang as default compiler
         run: |

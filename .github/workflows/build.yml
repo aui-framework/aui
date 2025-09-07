@@ -23,7 +23,7 @@ jobs:
     name: "Documentation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -56,7 +56,7 @@ jobs:
    name: "Android"
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v4
+     - uses: actions/checkout@v5
        with:
          submodules: true
      - uses: actions/setup-java@v1
@@ -89,7 +89,7 @@ jobs:
    name: "iOS Debug"
    runs-on: macos-latest
    steps:
-     - uses: actions/checkout@v4
+     - uses: actions/checkout@v5
        with:
          submodules: true
 
@@ -128,7 +128,7 @@ jobs:
         shared_or_static: [shared, static]
         generator: ["Ninja"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -204,7 +204,7 @@ jobs:
             shared_or_static: static
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -315,7 +315,7 @@ jobs:
             generator: "Ninja"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -397,7 +397,7 @@ jobs:
         shared_or_static: [shared, static]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -458,7 +458,7 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -505,7 +505,7 @@ jobs:
     steps:
       - name: Checkout
         if: ${{ !contains(github.ref, 'tags/v') }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Remove old release drafts
       - name: Remove Old Release Drafts

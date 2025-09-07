@@ -57,7 +57,7 @@ jobs:
 
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
@@ -116,7 +116,7 @@ jobs:
           dnf -y update
           dnf -y install git libstdc++ libstdc++-static cmake gcc-c++ make pkgconf glew-devel zlib-devel openssl-devel libxcrypt-devel libcurl-devel gtk3-devel fontconfig-devel ninja-build pulseaudio-libs-devel
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
