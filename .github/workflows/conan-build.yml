@@ -44,7 +44,7 @@ jobs:
     name: MSVC ${{ matrix.toolset }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install VS 2019 Build Tools v142
         if: matrix.toolset == 142
@@ -176,34 +176,9 @@ jobs:
     name: Clang ${{ matrix.clang-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ubuntu:25.04
+      image: ghcr.io/aui-framework/clang-20-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
-            libgl1-mesa-dev libglu1-mesa-dev \
-            libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
-            libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev \
-            libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev \
-            libxt-dev libxtst-dev libxv-dev libxxf86vm-dev libxcb-glx0-dev libxcb-render0-dev libxcb-render-util0-dev \
-            libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev \
-            libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev libxcb-cursor-dev \
-            libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev \
-            libxcb-util-dev libxcb-util0-dev libdbus-1-dev libglib2.0-dev libfontconfig1-dev libpulse-dev libglew-dev
-
-      - name: Install Clang 20
-        run: |
-          wget https://apt.llvm.org/llvm.sh
-          chmod +x llvm.sh
-          ./llvm.sh 20 all
-
-      - name: Symlink clang and clang++
-        run: |
-          ln -sf /usr/bin/clang-20 /usr/bin/clang
-          ln -sf /usr/bin/clang++-20 /usr/bin/clang++
+      - uses: actions/checkout@v5
 
       - name: Symlink llvm-strip
         run: |
@@ -289,29 +264,9 @@ jobs:
     name: GCC ${{ matrix.gcc-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ubuntu:25.04
+      image: ghcr.io/aui-framework/gcc-15-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Install system dependencies
-        run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git \
-            gcc-15 g++-15 \
-            libgl1-mesa-dev libglu1-mesa-dev \
-            libx11-dev libx11-xcb-dev libfontenc-dev libice-dev libsm-dev libxau-dev libxaw7-dev \
-            libxcomposite-dev libxcursor-dev libxdamage-dev libxext-dev libxfixes-dev libxi-dev libxinerama-dev \
-            libxkbfile-dev libxmu-dev libxmuu-dev libxpm-dev libxrandr-dev libxrender-dev libxres-dev libxss-dev \
-            libxt-dev libxtst-dev libxv-dev libxxf86vm-dev libxcb-glx0-dev libxcb-render0-dev libxcb-render-util0-dev \
-            libxcb-xkb-dev libxcb-icccm4-dev libxcb-image0-dev libxcb-keysyms1-dev libxcb-randr0-dev libxcb-shape0-dev \
-            libxcb-sync-dev libxcb-xfixes0-dev libxcb-xinerama0-dev libxcb-dri3-dev uuid-dev libxcb-cursor-dev \
-            libxcb-dri2-0-dev libxcb-present-dev libxcb-composite0-dev libxcb-ewmh-dev libxcb-res0-dev \
-            libxcb-util-dev libxcb-util0-dev libdbus-1-dev libglib2.0-dev libfontconfig1-dev libpulse-dev libglew-dev
-
-      - name: Symlink gcc and g++
-        run: |
-          ln -sf /usr/bin/gcc-15 /usr/bin/gcc
-          ln -sf /usr/bin/g++-15 /usr/bin/g++
+      - uses: actions/checkout@v5
 
       - name: Set GCC as default compiler
         run: |
@@ -394,7 +349,7 @@ jobs:
     name: AppleClang ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -482,7 +437,7 @@ jobs:
     name: AppleClang iOS ${{ matrix.appleclang-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Install CMake
         uses: lukka/get-cmake@latest
@@ -585,20 +540,16 @@ jobs:
     name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ubuntu:25.04
+      image: ghcr.io/aui-framework/ndk-28b-conan-aui:latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - name: Install system dependencies
+      - name: Set clang as default compiler
         run: |
-          apt-get update
-          apt-get install -y ninja-build python3 python3-pip python3-wheel python3-setuptools wget lsb-release software-properties-common gnupg pipx cmake git unzip
-
-      - name: Download and extract Android NDK r28b
-        run: |
-          wget https://dl.google.com/android/repository/android-ndk-r28b-linux.zip
-          unzip -q android-ndk-r28b-linux.zip
-          echo "ANDROID_NDK_ROOT=$PWD/android-ndk-r28b" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
+          echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
+          echo "/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/" >> $GITHUB_PATH
 
       - name: Install Conan
         run: |
@@ -651,9 +602,16 @@ jobs:
       - name: Install dependencies (Android)
         run: >
           conan install . \
+            -c tools.android:ndk_path=$ANDROID_NDK_ROOT \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
+            -s arch=${{ matrix.arch }} \
+            -s os=Android \
+            -s os.api_level=28 \
+            -s compiler=clang \
+            -s compiler.version=20 \
+            -s compiler.cppstd=${{ matrix.cppstd }} \
+            -s build_type=${{ matrix.build-type }} \
             --profile:build=default --profile:host=android \
-            --settings compiler.cppstd=${{ matrix.cppstd }} \
             --build=missing
 
       - name: CMake Configure (Android)
