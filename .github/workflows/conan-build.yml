@@ -176,7 +176,7 @@ jobs:
     name: Clang ${{ matrix.clang-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ghcr.io/genei-inc/clang-20-conan-aui:latest
+      image: ghcr.io/aui-framework/clang-20-conan-aui:latest
     steps:
       - uses: actions/checkout@v4
 
@@ -264,7 +264,7 @@ jobs:
     name: GCC ${{ matrix.gcc-version }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ghcr.io/genei-inc/gcc-15-conan-aui:latest
+      image: ghcr.io/aui-framework/gcc-15-conan-aui:latest
     steps:
       - uses: actions/checkout@v4
 
@@ -540,7 +540,7 @@ jobs:
     name: NDK ${{ matrix.ndk-version }} ${{ matrix.arch }} - ${{ matrix.os-name }} - ${{ matrix.build-type }}
     runs-on: ${{ matrix.os }}
     container:
-      image: ghcr.io/genei-inc/ndk-28b-conan-aui:latest
+      image: ghcr.io/aui-framework/ndk-28b-conan-aui:latest
     steps:
       - uses: actions/checkout@v4
 
