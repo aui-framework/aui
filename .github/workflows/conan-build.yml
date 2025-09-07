@@ -646,7 +646,11 @@ jobs:
           conan install . \
             -c tools.android:ndk_path=$ANDROID_NDK_ROOT \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
+            -s arch=${{ matrix.arch }} \
+            -s os=Android \
+            -s os.api_level=28 \
             -s compiler=clang \
+            -s compiler.version=20 \
             -s compiler.cppstd=${{ matrix.cppstd }} \
             --profile:build=default --profile:host=android \
             --build=missing
