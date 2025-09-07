@@ -590,17 +590,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Set clang as default compiler
-        if: matrix.arch == 'armv7'
         run: |
-          echo "CC=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang" >> $GITHUB_ENV
-          echo "CXX=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi28-clang++" >> $GITHUB_ENV
-          echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
-
-      - name: Set clang as default compiler
-        if: matrix.arch == 'armv8'
-        run: |
-          echo "CC=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang" >> $GITHUB_ENV
-          echo "CXX=/opt/android-ndk-r28b/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android28-clang++" >> $GITHUB_ENV
           echo "ANDROID_NDK_ROOT=/opt/android-ndk-r28b" >> $GITHUB_ENV
 
       - name: Install Conan
@@ -654,6 +644,7 @@ jobs:
       - name: Install dependencies (Android)
         run: >
           conan install . \
+            -c tools.android:ndk_path=$ANDROID_NDK_ROOT \
             -c tools.cmake.cmaketoolchain:generator=Ninja \
             -s compiler=clang \
             -s compiler.cppstd=${{ matrix.cppstd }} \
