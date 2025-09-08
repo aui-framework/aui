@@ -23,8 +23,8 @@ AUuid::AUuid(const AString& s) {
         if (stringIndex + 1 >= s.length()) {
             throw AUuidException("too short uuid string: " + s);
         }
-        auto b1 = s[stringIndex];
-        auto b2 = s[stringIndex + 1];
+        auto b1 = s[stringIndex].asAscii();
+        auto b2 = s[stringIndex + 1].asAscii();
         if (b1 == '-') {
             ++stringIndex;
         } else if (b2 == '-') {
@@ -107,7 +107,7 @@ AUuid AUuid::fromString(const AString& string) {
         std::array<uint8_t, 16> v;
         aui::zero(v);
         size_t i = 0;
-        for (auto c : string) {
+        for (auto c : string.bytes()) {
             while (c >= 255) {
                 v[i++] = c;
                 c >>= 8;

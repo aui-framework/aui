@@ -99,7 +99,7 @@ AVector<_<AProcess>> AProcess::all() {
 #if !AUI_PLATFORM_APPLE
 _<AProcess> AProcess::self() {
     char buf[0x100];
-    return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
+    return _new<AOtherProcess>(*AString(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
@@ -123,10 +123,10 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         aui::lambda_overloaded {
           [](const ArgSingleString& singleString) {
               auto split = singleString.arg.split(' ');
-              return split | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return split | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
           [](const ArgStringList& singleString) {
-              return singleString.list | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return singleString.list | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
         },
         mInfo.args);

@@ -56,42 +56,45 @@ AInet4Address::AInet4Address(const AInet4Address& other):
 {
 }
 
-AInet4Address::AInet4Address(uint8_t ip[4], uint16_t port):
-	mPort(port)
-{
-}
-
 AInet4Address::AInet4Address(uint32_t ip, uint16_t port):
 	mAddr(ip),
 	mPort(port)
 {
 }
 
-AInet4Address::AInet4Address(const AString& addr, uint16_t port):
-	mPort(port) {
+AInet4Address AInet4Address::fromArray(std::array<uint8_t, 4> ip, uint16_t port) {
+    uint32_t u32ip = (static_cast<uint32_t>(ip[0]) << 24) |
+                    (static_cast<uint32_t>(ip[1]) << 16) |
+                    (static_cast<uint32_t>(ip[2]) << 8)  |
+                    (static_cast<uint32_t>(ip[3]));
+    return AInet4Address(u32ip, port);
+}
+AInet4Address AInet4Address::fromString(const AString& addr, uint16_t port) {
 #if AUI_PLATFORM_WIN
-	aui_wsa_init();
+    aui_wsa_init();
 #endif
-	sockaddr_in sock;
-	memset((char*)& sock, 0, sizeof(sock));
-	std::string ports = std::to_string(port);
-	addrinfo hints = { 0 };
-	hints.ai_family = AF_INET;
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_protocol = IPPROTO_TCP;
-	addrinfo* result;
+    sockaddr_in sock;
+    memset((char*)& sock, 0, sizeof(sock));
+    std::string ports = std::to_string(port);
+    addrinfo hints = { 0 };
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+    hints.ai_protocol = IPPROTO_TCP;
+    addrinfo* result;
 
-	if (getaddrinfo(addr.toStdString().c_str(), ports.c_str(), &hints, &result) != 0)
-		throw AIOException((AString("Unresolved hostname: ") + addr).c_str());
-	auto* sockaddrin = (sockaddr_in*)result->ai_addr;
+    if (getaddrinfo(addr.c_str(), ports.c_str(), &hints, &result) != 0)
+        throw AIOException((AString("Unresolved hostname: ") + addr).c_str());
+    auto* sockaddrin = (sockaddr_in*)result->ai_addr;
 
 #if AUI_PLATFORM_WIN
-	mAddr = sockaddrin->sin_addr.S_un.S_addr;
+    uint32_t u32ip = sockaddrin->sin_addr.S_un.S_addr;
 #else
-	mAddr = sockaddrin->sin_addr.s_addr;
+    uint32_t u32ip = sockaddrin->sin_addr.s_addr;
 #endif
 
-	freeaddrinfo(result);
+    freeaddrinfo(result);
+
+    return AInet4Address(u32ip, port);
 }
 
 

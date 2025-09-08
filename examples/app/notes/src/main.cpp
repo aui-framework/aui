@@ -43,7 +43,7 @@ AJSON_FIELDS(Note, AJSON_FIELDS_ENTRY(title) AJSON_FIELDS_ENTRY(content))
 class TitleTextArea : public ATextArea {
 public:
     using ATextArea::ATextArea;
-    void onCharEntered(char16_t c) override {
+    void onCharEntered(AChar c) override {
         if (c == '\r') {
             AWindow::current()->focusNextView();
             return;

@@ -29,7 +29,7 @@ struct Data2 {
     int i;
 
     bool operator==(const Data2& o) const {
-        return std::tie(values, i) == std::tie(o.values, o.i);
+        return values == o.values && i == o.i;
     }
 };
 

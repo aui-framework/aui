@@ -222,7 +222,7 @@ void AAbstractTypeable::copyToClipboard() const {
     AClipboard::copyToClipboard(selectedText());
 }
 
-void AAbstractTypeable::enterChar(char16_t c)
+void AAbstractTypeable::enterChar(AChar c)
 {
     if (AInput::isKeyDown(AInput::LBUTTON) ||
         AInput::isKeyDown(AInput::LCONTROL) ||
@@ -294,10 +294,6 @@ void AAbstractTypeable::setText(const AString& t)
 void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorIndex = t.length();
     mCursorSelection = 0;
-}
-
-AString AAbstractTypeable::getDisplayText() {
-    return getText();
 }
 
 void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {

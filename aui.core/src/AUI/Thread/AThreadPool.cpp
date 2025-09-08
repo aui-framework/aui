@@ -147,7 +147,7 @@ AThreadPool::AThreadPool()
   : AThreadPool(
         aui::args()
             .value("aui-threadpool-size")
-            .map(&AString::toLongIntOrException)
+            .map(&AString::toLongOrException)
             .valueOr(glm::max(std::thread::hardware_concurrency() - 1, 2u))) {}
 
 AThreadPool::~AThreadPool() {

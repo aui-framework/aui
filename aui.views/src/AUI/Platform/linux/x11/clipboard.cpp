@@ -68,7 +68,7 @@ AString PlatformAbstractionX11::pasteFromClipboard() {
 
                 XGetWindowProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
                                    &da, &di, &dul, &dul, &prop_ret);
-                AString clipboardData = (const char*)prop_ret;
+                AString clipboardData = reinterpret_cast<const char*>(prop_ret);
                 XFree(prop_ret);
 
                 XDeleteProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard);
@@ -108,7 +108,7 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
                         8,
                         PropModeReplace,
                         (unsigned char*) gClipboardText.c_str(),
-                        gClipboardText.length());
+                        gClipboardText.size());
     } else if (ev.xselectionrequest.target == ourAtoms.targets) { // data type request
         Atom atoms[] = {
             XInternAtom(ourDisplay, "TIMESTAMP", false),

@@ -55,7 +55,7 @@ public:
 
 	AStringVector& noEmptyStrings();
 
-	[[nodiscard]] AString join(wchar_t w) const;
+	[[nodiscard]] AString join(AChar w) const;
 	[[nodiscard]] AString join(const AString& w) const;
 
 };

@@ -58,8 +58,9 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
                 for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                     APath current = i;
                     current.replaceAll('/', '\\');
+                    auto wcurrent = aui::win32::toWchar(current);
                     SHCreateItemFromParsingName(
-                        aui::win32::toWchar(current), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
+                        wcurrent.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
                 if (psiFolder) {
                     dlg->SetFolder(psiFolder);
@@ -79,7 +80,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
                     PWSTR psz = nullptr;
                     // Display the file name to the user.
                     if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &psz))) {
-                        result = aui::win32::fromWchar(psz);
+                        result = AString(reinterpret_cast<const char16_t*>(psz));
                         CoTaskMemFree(psz);
                     }
                     item->Release();
@@ -123,8 +124,10 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
                 auto extMask = "*." + ext.extension;
                 storage << extMask;
                 storage << ext.name + " (" + extMask + ")";
+                auto w1 = aui::win32::toWchar(*(storage.end() - 1));
+                auto w2 = aui::win32::toWchar(*(storage.end() - 2));
                 filter << COMDLG_FILTERSPEC {
-                    aui::win32::toWchar(*(storage.end() - 1)), aui::win32::toWchar(*(storage.end() - 2))
+                    w1.c_str(), w2.c_str()
                 };
             }
 
@@ -139,8 +142,9 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
                 for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                     APath current = i;
                     current.replaceAll('/', '\\');
+                    auto wcurrent = aui::win32::toWchar(current);
                     SHCreateItemFromParsingName(
-                        aui::win32::toWchar(current), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
+                        wcurrent.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
                 }
                 if (psiFolder) {
                     dlg->SetFolder(psiFolder);
@@ -160,7 +164,7 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
                     PWSTR psz = nullptr;
                     // Display the file name to the user.
                     if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &psz))) {
-                        result = aui::win32::fromWchar(psz);
+                        result = AString(reinterpret_cast<const char16_t*>(psz));
                         CoTaskMemFree(psz);
                     }
                     item->Release();
@@ -176,7 +180,8 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     SHFILEINFO info;
-    if (SUCCEEDED(SHGetFileInfo(aui::win32::toWchar(file), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
+    auto wfile = aui::win32::toWchar(file);
+    if (SUCCEEDED(SHGetFileInfo(wfile.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
 
         ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };
         return _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(info.hIcon)));

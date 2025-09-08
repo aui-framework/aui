@@ -35,7 +35,7 @@ void Pack::run(Toolbox& t) {
         APath entry(t.args[2]);
         AString assetPath = APath(t.args[1]).absolute();
         assetPath = assetPath.substr(APath(t.args[0]).absolute().length() + 1);
-        assetPath = assetPath.replacedAll("\\", '/');
+        assetPath = assetPath.replacedAll("\\", "/");
         doPacking(t.args[1], assetPath, entry);
     }
 }

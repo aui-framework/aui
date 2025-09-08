@@ -54,6 +54,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     static int pxf;
     if (ourHrc == nullptr) {
         ALogger::info(LOG_TAG) << ("Creating context...");
+        auto u16windowClass = aui::win32::toWchar(mWindowClass);
+        auto u16windowName = aui::win32::toWchar(init.name);
         struct FakeWindow {
             HWND mHwnd;
             HDC mDC;
@@ -66,7 +68,7 @@ void OpenGLRenderingContext::init(const Init& init) {
                 ReleaseDC(mHwnd, mDC);
                 DestroyWindow(mHwnd);
             }
-        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, aui::win32::toWchar(mWindowClass), aui::win32::toWchar(init.name), WS_OVERLAPPEDWINDOW,
+        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, u16windowClass.c_str(), u16windowName.c_str(), WS_OVERLAPPEDWINDOW,
                                     GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                                     GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                                     init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr));

@@ -54,7 +54,7 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
 
         if (arg.startsWith(ARG_AUI_UPDATER_WAIT_FOR_PROCESS)) {
             handleWaitForProcess(
-                arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongIntOrException());
+                arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongOrException());
             continue;
         }
 

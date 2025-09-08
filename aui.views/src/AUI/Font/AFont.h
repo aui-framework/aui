@@ -81,7 +81,7 @@ private:
         return mCharData[FontKey{size, fr}];
     }
 
-    Character renderGlyph(const FontEntry& fs, long glyph);
+    Character renderGlyph(const FontEntry& fs, AChar glyph);
 
 public:
     AFont(AFontManager* fm, const AString& path);
@@ -96,20 +96,24 @@ public:
 
     AFont(const AFont&) = delete;
 
-    Character& getCharacter(const FontEntry& charset, long glyph);
+    Character& getCharacter(const FontEntry& charset, AChar glyph);
 
-    float length(const FontEntry& charset, const AString& text);
+    float length(const FontEntry& charset, AStringView text);
+
+    float length(const FontEntry& charset, std::u32string_view text);
 
     template<class Iterator>
     float length(const FontEntry& charset, Iterator begin, Iterator end) {
         int size = charset.first.size;
         int advance = 0;
 
-        for (Iterator i = begin; i != end; i++) {
-            if (*i == ' ')
+        for (Iterator i = begin; i != end; ++i) {
+            if (*i == U' ') {
                 advance += getSpaceWidth(size);
-            else if (*i == '\n')
+            }
+            else if (*i == U'\n') {
                 advance = 0;
+            }
             else {
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {

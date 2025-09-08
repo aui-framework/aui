@@ -73,12 +73,13 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 
 void AAbstractTextField::setText(const AString& t) {
     mHorizontalScroll = 0;
-    mContents = t;
+    auto utf32t = t.encode(AStringEncoding::UTF32);
+    mContents = {reinterpret_cast<const char32_t*>(utf32t.data()), utf32t.size() / sizeof(char32_t)};
     if (t.empty()) {
         clearSelection();
     }
 
-    mCursorIndex = t.size();
+    mCursorIndex = utf32t.size() / sizeof(char32_t);
     onCursorIndexChanged();
     updateCursorBlinking();
     invalidateFont();
@@ -90,9 +91,9 @@ void AAbstractTextField::setSuffix(const AString& s) {
     invalidateFont();
 }
 
-AString AAbstractTextField::getDisplayText() {
+std::u32string AAbstractTextField::getDisplayText() {
     if (mIsPasswordTextField) {
-        return AString(mContents.length(), L'•');
+        return std::u32string(mContents.length(), U'•');
     }
     return mContents;
 }
@@ -101,8 +102,8 @@ void AAbstractTextField::cursorSelectableRedraw() {
     redraw();
 }
 
-const AString& AAbstractTextField::getText() const {
-    return mContents;
+AString AAbstractTextField::getText() const {
+    return AString(mContents);
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
@@ -119,19 +120,20 @@ bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     if (!mIsEditable) {
         return false;
     }
-    mContents.insert(at, toInsert);
+    auto u32str = toInsert.encode(AStringEncoding::UTF32);
+    mContents.insert(at, reinterpret_cast<const char32_t*>(u32str.data()), u32str.size() / sizeof(char32_t));
     if (!isValidText(mContents)) {
-        mContents.erase(at, toInsert.length()); // undo insert
+        mContents.erase(at, u32str.size() / sizeof(char32_t)); // undo insert
         return false;
     }
     return true;
 }
 
-bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, AChar toInsert) {
     if (!mIsEditable) {
         return false;
     }
-    mContents.insert(at, toInsert);
+    mContents.insert(at, 1, toInsert);
     if (!isValidText(mContents)) {
         mContents.erase(at, 1); // undo insert
         return false;
@@ -139,11 +141,11 @@ bool AAbstractTextField::typeableInsert(size_t at, char16_t toInsert) {
     return true;
 }
 
-size_t AAbstractTextField::typeableFind(char16_t c, size_t startPos) {
+size_t AAbstractTextField::typeableFind(AChar c, size_t startPos) {
     return mContents.find(c, startPos);
 }
 
-size_t AAbstractTextField::typeableReverseFind(char16_t c, size_t startPos) {
+size_t AAbstractTextField::typeableReverseFind(AChar c, size_t startPos) {
     return mContents.rfind(c, startPos);
 }
 
@@ -155,7 +157,7 @@ void AAbstractTextField::invalidateFont() {
     mPrerenderedString = nullptr;
 }
 
-void AAbstractTextField::onCharEntered(char16_t c) {
+void AAbstractTextField::onCharEntered(AChar c) {
     mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;
@@ -169,12 +171,12 @@ void AAbstractTextField::onCharEntered(char16_t c) {
         mCursorIndex = cursorIndexCopy;
         ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
     }
-    emit textChanging(mContents);
+    emit textChanging(AString(mContents));
 }
 
 void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
     if (!mPrerenderedString) {
-        auto text = getDisplayText() + mSuffix;
+        auto text = getDisplayText() + mSuffix.toUtf32();
         updateTextAlignOffset();
         if (!text.empty()) {
             auto canvas = render.newMultiStringCanvas(getFontStyle());
@@ -213,7 +215,7 @@ void AAbstractTextField::updateTextAlignOffset() {
             break;
     }
 
-    auto w = getPosByIndexAbsolute(getText().length());
+    auto w = getPosByIndexAbsolute(getDisplayText().length());
     if (w >= getContentWidth()) {
         mTextAlignOffset = 0; // unbreak the scroll
         return;
@@ -237,12 +239,12 @@ void AAbstractTextField::commitStyle() {
     onCursorIndexChanged();
 }
 
-bool AAbstractTextField::isValidText(const AString& text) {
+bool AAbstractTextField::isValidText(std::u32string_view text) {
     return true;
 }
 
 AString AAbstractTextField::toString() const {
-    return mContents;
+    return AString(mContents);
 }
 
 void AAbstractTextField::setSize(glm::ivec2 size) {

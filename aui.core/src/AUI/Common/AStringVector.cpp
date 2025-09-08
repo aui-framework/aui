@@ -18,7 +18,7 @@ AStringVector& AStringVector::noEmptyStrings()
 	return *this;
 }
 
-AString AStringVector::join(wchar_t w) const
+AString AStringVector::join(AChar w) const
 {
 	AString res;
 

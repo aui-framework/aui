@@ -166,7 +166,7 @@ public:
         removeBackSlashes();
     }
 
-    APath(const char16_t * str, std::size_t length) noexcept: AString(str, str + length) {
+    APath(const char16_t * str, std::size_t length) noexcept: AString(str, length) {
         removeBackSlashes();
     }
 

@@ -44,7 +44,7 @@ void CommonRenderingContext::init(const Init& init) {
             [nsWindow setDelegate:delegate];
             [nsWindow setAcceptsMouseMovedEvents:YES];
             [nsWindow setRestorable:NO];
-            [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.toStdString().c_str())]];
+            [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.c_str())]];
         } @catch (NSException* e) {
             throw AException([[e reason] UTF8String]);
         }

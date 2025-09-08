@@ -47,11 +47,11 @@ protected:
 TEST_F(UIText, Contents) {
     auto& entries = mText->mEngine.entries();
     ASSERT_EQ(entries.size(), 7);
-    EXPECT_EQ(_cast<AText::WordEntry>(entries[0])->getWord(), "Привет");
+    EXPECT_EQ(AString::fromUtf32(_cast<AText::WordEntry>(entries[0])->getWord()), "Привет");
     EXPECT_NE(_cast<aui::detail::WhitespaceEntry>(entries[1]), nullptr);
-    EXPECT_EQ(_cast<AText::WordEntry>(entries[2])->getWord(), "мир");
+    EXPECT_EQ(AString::fromUtf32(_cast<AText::WordEntry>(entries[2])->getWord()), "мир");
     EXPECT_NE(_cast<aui::detail::NextLineEntry>(entries[3]), nullptr);
-    EXPECT_EQ(_cast<aui::detail::WordEntry>(entries[4])->getWord(), "вторая");
+    EXPECT_EQ(AString::fromUtf32(_cast<aui::detail::WordEntry>(entries[4])->getWord()), "вторая");
     EXPECT_NE(_cast<aui::detail::WhitespaceEntry>(entries[5]), nullptr);
-    EXPECT_EQ(_cast<aui::detail::WordEntry>(entries[6])->getWord(), "строка");
+    EXPECT_EQ(AString::fromUtf32(_cast<aui::detail::WordEntry>(entries[6])->getWord()), "строка");
 }

@@ -46,11 +46,18 @@ APath APath::parent() const {
 }
 
 APath APath::filename() const {
-     auto i = rfind('/');
-     if (i == NPOS) {
-         return *this;
-     }
-    return substr(i + 1);
+    auto fs = bytes().rfind('/');
+    auto bs = bytes().rfind('\\');
+    if (fs == NPOS && bs == NPOS) {
+        return *this;
+    }
+    if (fs == NPOS) {
+        fs = bs;
+    }
+    if (bs == NPOS) {
+        bs = fs;
+    }
+    return APath(bytes().substr(std::max(fs, bs) + 1));
 }
 
 APath APath::filenameWithoutExtension() const {
@@ -110,11 +117,13 @@ bool APath::isDirectoryExists() const {
 const APath& APath::removeFile() const {
 #if AUI_PLATFORM_WIN
     if (isRegularFileExists()) {
-        if (!DeleteFile(aui::win32::toWchar(*this))) {
+        AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+        if (!DeleteFile(reinterpret_cast<const wchar_t*>(pathU16.data()))) {
             aui::impl::lastErrorToException("could not remove file " + *this);
         }
     } else if (isDirectoryExists()) {
-        if (!RemoveDirectory(aui::win32::toWchar(*this))) {
+        AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+        if (!RemoveDirectory(reinterpret_cast<const wchar_t*>(pathU16.data()))) {
             aui::impl::lastErrorToException("could not remove directory " + *this);
         }
     } else {
@@ -152,7 +161,8 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;
-    HANDLE dir = FindFirstFile(aui::win32::toWchar(file("*")), &fd);
+    auto wPath = aui::win32::toWchar(file("*"));
+    HANDLE dir = FindFirstFile(wPath.c_str(), &fd);
 
     if (dir == INVALID_HANDLE_VALUE) {
 #else
@@ -165,7 +175,7 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
-        auto filename = reinterpret_cast<char16_t*>(fd.cFileName); // NOLINT(*-pro-type-reinterpret-cast)
+        AString filename(reinterpret_cast<char16_t*>(fd.cFileName)); // NOLINT(*-pro-type-reinterpret-cast)
         bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
         bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
@@ -217,11 +227,13 @@ APath APath::absolute() const {
         throw AFileNotFoundException("could not find absolute file " +*this);
     }
 #ifdef WIN32
-    APath buf;
-    buf.resize(0x1000);
-    if (_wfullpath(aui::win32::toWchar(buf), aui::win32::toWchar(*this), buf.length()) == nullptr) {
+    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    AByteBuffer bufU16;
+    bufU16.resize(0x1000 * sizeof(char16_t));
+    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), reinterpret_cast<const wchar_t*>(pathU16.data()), bufU16.size() / sizeof(char16_t)) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
+    APath buf(reinterpret_cast<const char16_t*>(bufU16.data()));
     buf.resizeToNullTerminator();
     buf.removeBackSlashes();
     return buf;
@@ -236,7 +248,8 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    if (CreateDirectory(aui::win32::toWchar(*this), nullptr)) return *this;
+    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    if (CreateDirectory(reinterpret_cast<const wchar_t*>(pathU16.data()), nullptr)) return *this;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         // race condition issue.
         return *this;
@@ -285,7 +298,8 @@ size_t APath::fileSize() const {
 #if AUI_PLATFORM_WIN
 struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
-    _wstat64(aui::win32::toWchar(*this), &s);
+    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    _wstat64(reinterpret_cast<const wchar_t*>(pathU16.data()), &s);
     return s;
 }
 #else
@@ -315,33 +329,35 @@ APath APath::withoutUppermostFolder() const {
 #include <shlobj.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
-    APath result;
-    result.resize(MAX_PATH);
+    AByteBuffer resultU16;
+    resultU16.resize(MAX_PATH * sizeof(wchar_t));
     switch (path) {
         case APPDATA:
-            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         case TEMP:
-            GetTempPath(result.length(), aui::win32::toWchar(result));
+            GetTempPath(MAX_PATH, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         case HOME:
-            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, aui::win32::toWchar(result));
+            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, reinterpret_cast<wchar_t*>(resultU16.data()));
             break;
 
         default:
             AUI_ASSERT(0);
     }
+    APath result(reinterpret_cast<const char16_t*>(resultU16.data()));
     result.resizeToNullTerminator();
     result.removeBackSlashes();
     return result;
 }
 
 APath APath::workingDir() {
-    APath p;
-    p.resize(0x800);
-    p.resize(GetCurrentDirectory(p.length(), aui::win32::toWchar(p)));
+    AByteBuffer resultU16;
+    resultU16.resize(0x800 * sizeof(char16_t));
+    resultU16.resize(GetCurrentDirectory(resultU16.size() / sizeof(char16_t), reinterpret_cast<wchar_t*>(resultU16.data())));
+    APath p(reinterpret_cast<const char16_t*>(resultU16.data()));
     p.removeBackSlashes();
     return p;
 }
@@ -453,7 +469,9 @@ void APath::move(const APath& source, const APath& destination) {
     }
 
 #if AUI_PLATFORM_WIN
-    if (MoveFile(aui::win32::toWchar(source.c_str()), aui::win32::toWchar(destination.c_str())) == 0) {
+    auto wSource = aui::win32::toWchar(source);
+    auto wDestination = aui::win32::toWchar(destination);
+    if (MoveFile(wSource.c_str(), wDestination.c_str()) == 0) {
 #else
     if (rename(source.toStdString().c_str(), destination.toStdString().c_str())) {
 #endif
@@ -478,7 +496,8 @@ const APath& APath::touch() const {
 
 const APath& APath::chmod(int newMode) const {
 #if AUI_PLATFORM_WIN
-    if (::_wchmod(aui::win32::toWchar(*this), newMode) != 0)
+    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    if (::_wchmod(reinterpret_cast<const wchar_t*>(pathU16.data()), newMode) != 0)
 #else
     if (::chmod(toStdString().c_str(), newMode) != 0)
 #endif
@@ -538,7 +557,8 @@ bool APath::isEffectivelyAccessible(AFileAccess flags) const noexcept {
     if (wflags == 0) {
         return true;
     }
-    return _waccess(aui::win32::toWchar(*this), wflags) == 0;
+    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    return _waccess(reinterpret_cast<const wchar_t*>(pathU16.data()), wflags) == 0;
 #elif AUI_PLATFORM_LINUX
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_ANDROID

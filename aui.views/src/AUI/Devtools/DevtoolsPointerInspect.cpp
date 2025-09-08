@@ -162,7 +162,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
             Button { "Inspect" }.clicked(this, [this] {
                 try {
                     auto ptr = [&] {
-                        auto ptr = mAddress->text()->toStdString();
+                        auto ptr = (*mAddress->text()).toStdString();
                         char* end = nullptr;
                         return (AView*)uintptr_t(std::strtoull(ptr.data(), &end, 16));
                     }();

@@ -22,22 +22,22 @@ using namespace std::chrono_literals;
 #if !AUI_PLATFORM_LINUX
 TEST(Ping, Localhost) {
     try {
-        AUI_REPEAT(1000) { EXPECT_GE(AIcmp::ping(AInet4Address("127.0.0.1"))->count(), 0); }
+        AUI_REPEAT(1000) { EXPECT_GE(AIcmp::ping(AInet4Address::fromString("127.0.0.1"))->count(), 0); }
     } catch (const AException& e) {
         FAIL() << e;
     }
 }
 
 TEST(Ping, Fail1) {
-    EXPECT_ANY_THROW(AIcmp::ping(AInet4Address("192.168.10.54"), 1s)->count());
+    EXPECT_ANY_THROW(AIcmp::ping(AInet4Address::fromString("192.168.10.54"), 1s)->count());
 }
 
 TEST(Ping, Fail2) {
     // Check that AIcmp implementation does not mess up with the results.
 
     AUI_REPEAT(10) {
-        auto fail = AIcmp::ping(AInet4Address("192.168.10.54"), 1s);
-        auto good = AIcmp::ping(AInet4Address("127.0.0.1"));
+        auto fail = AIcmp::ping(AInet4Address::fromString("192.168.10.54"), 1s);
+        auto good = AIcmp::ping(AInet4Address::fromString("127.0.0.1"));
         EXPECT_ANY_THROW(fail->count());
         EXPECT_GE(good->count(), 0);
     }
@@ -46,7 +46,7 @@ TEST(Ping, Fail2) {
 /*
 // we are unable to ping even to github on github actions
 TEST(Ping, External) {
-    EXPECT_GE(AIcmp::ping(AInet4Address("github.com"))->count(), 0);
+    EXPECT_GE(AIcmp::ping(AInet4Address::fromString("github.com"))->count(), 0);
 }
 */
 

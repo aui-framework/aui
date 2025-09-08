@@ -11,6 +11,10 @@
 
 #pragma once
 
+#include <cstddef>
+
+template <typename StoredType, std::size_t MaxSize>
+class AStaticVector;
 
 /**
  * @brief Represents a single 32-bit char.
@@ -20,8 +24,39 @@ class AChar {
 private:
     char32_t mValue;
 
+    static constexpr bool isValidUnicode(char32_t codePoint) {
+        return codePoint <= 0x10FFFF &&
+               (codePoint < 0xD800 || codePoint > 0xDFFF);
+    }
+
 public:
-    AChar(char c): mValue(c) {}
+    constexpr static char32_t INVALID_CHAR = 0xFFFD;
+
+    constexpr AChar() : mValue(0) {}
+
+    constexpr AChar(char c) : mValue(static_cast<char32_t>(static_cast<unsigned char>(c))) {}
+
+    constexpr AChar(char8_t c): mValue(static_cast<char32_t>(c)) {}
+
+    constexpr AChar(wchar_t c): mValue(static_cast<char32_t>(c)) {
+        if constexpr (sizeof(wchar_t) == 2) {
+            if (c >= 0xD800 && c <= 0xDFFF) {
+                mValue = INVALID_CHAR;
+            }
+        } else {
+            if (!isValidUnicode(mValue)) {
+                mValue = INVALID_CHAR;
+            }
+        }
+    }
+
+    constexpr AChar(char16_t c): mValue(static_cast<char32_t>(c)) {
+        if (c >= 0xD800 && c <= 0xDFFF) {
+            mValue = INVALID_CHAR;
+        }
+    }
+
+    constexpr AChar(char32_t c): mValue(isValidUnicode(c) ? c : INVALID_CHAR) {}
 
     [[nodiscard]]
     bool digit() const {
@@ -39,15 +74,40 @@ public:
     }
 
     [[nodiscard]]
-    char asAscii() const {
-        return char(mValue);
+    bool isAscii() const {
+        return mValue <= 0x7F;
     }
 
-    operator char32_t() const {
+    [[nodiscard]]
+    char asAscii() const {
+        return isAscii() ? static_cast<char>(mValue) : ' ';
+    }
+
+    AStaticVector<char, 4> toUtf8() const noexcept;
+
+    char32_t codepoint() const noexcept {
+        return mValue;
+    }
+
+    operator char32_t() const noexcept {
         return mValue;
     }
 };
 
+inline bool operator==(AChar lhs, AChar rhs) noexcept {
+    return lhs.codepoint() == rhs.codepoint();
+}
+inline bool operator==(AChar lhs, char rhs) noexcept {
+    return lhs == AChar(rhs);
+}
+inline bool operator==(AChar lhs, char32_t rhs) noexcept {
+    return lhs == AChar(rhs);
+}
+inline bool operator==(char lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+inline bool operator==(char32_t lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+
 static_assert(sizeof(AChar) == 4, "AChar should be exact 4 bytes");
-
-

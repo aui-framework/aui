@@ -63,9 +63,9 @@ public:
 
     bool handlesNonMouseNavigation() override;
 
-    const AString& getText() const override;
+    AString getText() const override;
 
-    void onCharEntered(char16_t c) override;
+    void onCharEntered(AChar c) override;
 
     void setSize(glm::ivec2 size) override;
 
@@ -73,10 +73,10 @@ public:
 
 protected:
     _<IRenderer::IPrerenderedString> mPrerenderedString;
-    AString mContents;
+    std::u32string mContents;
     AString mSuffix;
 
-    virtual bool isValidText(const AString& text);
+    virtual bool isValidText(std::u32string_view text);
 
     void prerenderStringIfNeeded(IRenderer& render);
 
@@ -84,15 +84,15 @@ protected:
 
     bool typeableInsert(size_t at, const AString& toInsert) override;
 
-    size_t typeableFind(char16_t c, size_t startPos) override;
+    size_t typeableFind(AChar c, size_t startPos) override;
 
-    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+    size_t typeableReverseFind(AChar c, size_t startPos) override;
 
     size_t length() const override;
 
-    bool typeableInsert(size_t at, char16_t toInsert) override;
+    bool typeableInsert(size_t at, AChar toInsert) override;
 
-    AString getDisplayText() override;
+    std::u32string getDisplayText() override;
 
     void cursorSelectableRedraw() override;
 
