@@ -33,13 +33,14 @@ public:
 
 /**
  * @brief A radio button.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ARadioButton.png)
+ *
+ * @ingroup views_input
  * @details
- * A radio button is a checkable button (similar to ACheckBox) that typically used in @ref ARadioGroup "groups". In a
+ * A radio button is a checkable button (similar to ACheckBox) that typically used in [groups](aradiogroup.md). In a
  * group of radio buttons, only one radio button at a time can be checked thus checking another radio button in a group
  * causes to switch off the previous one.
- *
- * See @ref declarative::RadioButton for a declarative form and examples.
  *
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */

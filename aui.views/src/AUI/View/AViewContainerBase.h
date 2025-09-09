@@ -52,12 +52,11 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
 
 /**
  * @brief A view that represents a set of views.
- * @ingroup useful_views
  * @details
  * AViewContainerBase can store, render, resize, provide events to and handle the child views.
  *
  * AViewContainerBase does not control the position and size of the child views by itself; instead, it delegates that
- * responsibility to it's @ref layout_managers "layout manager".
+ * responsibility to it's [layout manager](layout-managers.md).
  *
  * Since AViewContainerBase is an instance of AView, AViewContainerBase can handle AViewContainerBases recursively, thus, making
  * possible complex UI by nested AViewContainerBases with different layout managers.
@@ -290,7 +289,7 @@ public:
     /**
      * @brief Applies geometry to all children if needed.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout-managers] for more info.
      */
     void applyGeometryToChildrenIfNecessary();
 
@@ -419,7 +418,7 @@ protected:
     /**
      * @brief Applies geometry to all children with no preconditions.
      * @details
-     * See @ref layout_managers for more info.
+     * See [layout-managers] for more info.
      */
     virtual void applyGeometryToChildren();
 

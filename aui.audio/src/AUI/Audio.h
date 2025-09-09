@@ -23,5 +23,5 @@
  * @defgroup audio aui::audio
  * @brief Audio recording and playback library.
  * @details
- * @experimental
+ * <!-- aui:experimental -->
 */

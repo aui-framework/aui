@@ -17,25 +17,23 @@
 
 /**
  * @brief Fixed-size view which is useful in UI building.
- * @ingroup useful_views
+ * @ingroup views_arrangement
  * @details
  *
  * ASpacerFixed is fixed size blank view which acquires specified space in `Horizontal` and `Vertical` layouts. For the
  * rest of layout managers it does nothing.
  *
- * See @ref declarative::SpacerFixed for a declarative form and examples.
- *
  * ASpacerFixed follows direction of its container layout. That is, for `Horizontal` layout it consumes horizontal space
  * only and for `Vertical` layout it consumes vertical space only.
  *
  * Example usage:
- * @code{cpp}
+ * ```cpp
  * Horizontal {
  *   Label { "Hello" },
  *   SpacerFixed(100_dp),
  *   Label { "world" },
  * }
- * @endcode
+ * ```
  * In this case, SpacerFixed occupies `100_dp` in horizontal but nothing in vertical.
  */
 class API_AUI_VIEWS ASpacerFixed : public AView {

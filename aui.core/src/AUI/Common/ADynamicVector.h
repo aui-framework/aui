@@ -25,11 +25,11 @@
 /**
  * @brief Vector implementation for ASmallVector.
  * @tparam T stored type
- *
  * @details
- * @note
- * This vector implementation is indented to use only by ASmallVector. If it's not your case, consider using AVector
- * instead.
+ * !!! note
+ *
+ *     This vector implementation is indented to use only by ASmallVector. If it's not your case, consider using AVector
+ *     instead.
  */
 template<typename StoredType>
 class ADynamicVector {
@@ -475,7 +475,7 @@ public:
     }
 
     /**
-     * Removes element if predicate(container[i]) == true.
+     * Removes element if `predicate(container[i])` == true.
      * @param predicate predicate
      */
     template<typename Predicate>

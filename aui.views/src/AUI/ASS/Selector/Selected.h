@@ -28,12 +28,12 @@ namespace ass {
      * @brief Wraps another selector matching Selected views.
      * @ingroup ass_selectors
      * @details
-     * @code{cpp}
+     * ```cpp
      * {
      *   Selected(t<ACheckBox>()),
      *   BackgroundImage {":uni/svg/checkbox.svg" },
      * },
-     * @endcode
+     * ```
      *
      * The view must implement ass::ISelectable.
      */

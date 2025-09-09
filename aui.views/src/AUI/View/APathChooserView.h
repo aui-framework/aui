@@ -23,7 +23,10 @@
 
 /**
  * @brief A text field with "..." button prompting path to a file.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AFileChooserView.png)
+ *
+ * @ingroup views_input
  */
 class API_AUI_VIEWS AFileChooserView: public AViewContainerBase {
 private:
@@ -70,7 +73,10 @@ public:
 
 /**
  * @brief A text field with "..." button prompting path to a dir.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ADirChooserView.png)
+ *
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ADirChooserView: public AViewContainerBase {
 private:

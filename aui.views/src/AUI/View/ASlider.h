@@ -17,7 +17,10 @@
 
 /**
  * @brief Slider control.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ASlider.png)
+ *
+ * @ingroup views_input
  */
 class API_AUI_VIEWS ASlider: public AViewContainerBase {
 public:

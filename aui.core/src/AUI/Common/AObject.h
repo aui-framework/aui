@@ -31,7 +31,7 @@ namespace aui::detail {
  * @brief A base object class.
  * @ingroup core signal_slot
  * @details
- * AObject is required to use @ref signal_slot "signal-slot system".
+ * AObject is required to use [signal-slot system](signal_slot.md).
  *
  * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with
  * aui::ptr::shared_from_this().
@@ -45,18 +45,18 @@ public:
     /**
      * @brief Indicates that a connection should not be explicitly linked to receiver's lifetime.
      * @details
-     * @experimental
+     * <!-- aui:experimental -->
      * Normally, a connection is broken when either sender or receiver die. You can indicate that you actually don't
      * need the connection to be broken if receiver dies, or you don't have a receiver AObject either. In such case, the
      * connection is breaks only when the sender (signal) dies.
      *
      * This can be useful in situations when you don't want to introduce some receiver AObject and when slot just to
-     * observe @ref property_system "property" or @ref signal_slot "signal", i.e., you just want to make a
+     * observe [property](property-system.md) or [signal](signal_slot.md), i.e., you just want to make a
      * _generic observer_.
      *
      * Use this in combination with lambda.
      *
-     * @snippet aui.core/tests/SignalSlotTest.cpp GENERIC_OBSERVER
+     * <!-- aui:snippet aui.core/tests/SignalSlotTest.cpp GENERIC_OBSERVER -->
      */
     static constexpr AObjectBase* GENERIC_OBSERVER = nullptr;
 
@@ -69,10 +69,10 @@ public:
      * @brief Connects signal to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * See [signal-slot system](signal_slot.md) for more info.
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
-     * @endcode
+     * ```
      * @param signal signal
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -85,15 +85,15 @@ public:
 
     /**
      * @brief Connects property to the slot of the specified object.
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
      * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
      * property (pre-fire).
      *
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * See [signal-slot system](signal_slot.md) for more info.
+     * ```cpp
      * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
-     * @endcode
+     * ```
      * @param property property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -107,17 +107,17 @@ public:
 
     /**
      * @brief Connects source property to the destination property.
-     * @ingroup property_system
-     * @details
-     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
-     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, dataflow is from left
-     * argument to the right argument.
-     *
-     * connect pulls AObject from \c propertyDestination to maintain the connection.
-     *
-     * See @ref signal_slot "signal-slot system" for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
+     * @ingroup property-system
+     * @details
+     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
+     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, dataflow is from left
+     * argument to the right argument.
+     *
+     * connect pulls AObject from `propertyDestination` to maintain the connection.
+     *
+     * See [signal-slot system](signal_slot.md) for more info.
      */
     template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
     static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {
@@ -130,21 +130,21 @@ public:
 
     /**
      * @brief Connects source property to the destination property and opposite (bidirectionally).
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
-     * Connects \c propertySource.changed to the setter of \c propertyDestination . Additionally, sets the
-     * \c propertyDestination with the current value of the \c propertySource (pre-fire). Hence, initial dataflow is
+     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
+     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, initial dataflow is
      * from left argument to the right argument.
      *
-     * After pre-fire, connects \c propertyDestination.changed to the setter of \c propertySource . This way, when
-     * \c propertyDestination changes (i.e, \c propertyDestination belongs to some view and it's value is changed due to
-     * user action) it immediately reflects on \c propertySource . So, \c propertySource is typically a property of some
+     * After pre-fire, connects `propertyDestination.changed` to the setter of `propertySource` . This way, when
+     * `propertyDestination` changes (i.e, `propertyDestination` belongs to some view and it's value is changed due to
+     * user action) it immediately reflects on `propertySource` . So, `propertySource` is typically a property of some
      * view model with prefilled interesting data, and propertyDestination is a property of some view whose value
      * is unimportant at the moment of connection creation.
      *
-     * biConnect pulls AObject from \c propertySource and \c propertyDestination to maintain the connection.
+     * biConnect pulls AObject from `propertySource` and `propertyDestination` to maintain the connection.
      *
-     * See @ref signal_slot "signal-slot system" for more info.
+     * See [signal-slot system](signal_slot.md) for more info.
      * @param propertySource source property, whose value is preserved on connection creation.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
@@ -164,10 +164,10 @@ public:
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * [signal-slot system](signal_slot.md) for more info.
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
-     * @endcode
+     * ```
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
@@ -181,14 +181,14 @@ public:
     }
 
     /**
-     * @brief Connects signal or property to slot of \c "this" object.
+     * @brief Connects signal or property to slot of `"this"` object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * [signal-slot system](signal_slot.md) for more info.
+     * ```cpp
      * connect(view->clicked, [] { printf("Button clicked!\\n"); });
      * connect(textField->text(), [](const AString& s) { ALogger::info(LOG_TAG) << "Text: " << s; });
-     * @endcode
+     * ```
      * @param connectable signal or property
      * @param function slot. Can be lambda
      * @return Connection instance
@@ -202,14 +202,16 @@ public:
      * @brief Connects signal or property to the slot of the specified object.
      * @ingroup signal_slot
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * See [signal-slot system](signal_slot.md) for more info.
+     * ```cpp
      * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
      * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
-     * @endcode
-     * @note
-     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     * connection creation.
+     * ```
+     *
+     * !!! note
+     *
+     *     `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     *      connection creation.
      *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
@@ -229,17 +231,21 @@ public:
      * @return Connection instance
      *
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * See [signal-slot system](signal_slot.md) for more info.
+     *
+     * ```cpp
      * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
      * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
-     * @endcode
-     * @note
-     * This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If possible,
-     * consider using shorter overload:
-     * @code{cpp}
-     * connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
-     * @endcode
+     * ```
+     *
+     * !!! note
+     *
+     *     This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If
+     *     possible, consider using shorter overload:
+     *
+     *     ```cpp
+     *     connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
+     *     ```
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
     static decltype(auto)
@@ -249,16 +255,20 @@ public:
 
     /**
      * @brief Connects signal or property to the slot of the specified non-AObject type.
-     * @ingroup property_system
+     * @ingroup property-system
      * @details
-     * See @ref signal_slot "signal-slot system" for more info.
-     * @code{cpp}
+     * See [signal-slot system](signal_slot.md) for more info.
+     *
+     * ```cpp
      * struct User { AProperty<AString> name }; // user.name here is non-AObject type
      * connect(textField->text(), user->name.assignment());
-     * @endcode
-     * @note
-     * `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     * connection creation.
+     * ```
+     *
+     * !!! note
+     *
+     *    `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
+     *    connection creation.
+     *
      *
      * @param property source property.
      * @param object instance of `AObject`.
@@ -318,24 +328,24 @@ private:
 };
 
 /**
- * @brief emits the specified signal in context of \c this object.
+ * @brief emits the specified signal in context of `this` object.
  * @details
  * @ingroup signal_slot
  * Unlike Qt's emit, AUI's emit is not just a syntax sugar; it's required to actually perform a signal call.
  *
  * Basic example: (in context of member function of AView):
- * @code{cpp}
+ * ```cpp
  * emit clicked;
- * @endcode
+ * ```
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
- * If @ref emits "signal declaration" has arguments, you have to specify them in braces:
- * @code{cpp}
+ * If [signal declaration](emits) has arguments, you have to specify them in braces:
+ * ```cpp
  * emit keyPressed(AInput::LCTRL);
- * @endcode
+ * ```
  *
- * See @ref signal_slot "signal-slot system" for more info.
+ * See [signal-slot system](signal_slot.md) for more info.
  */
 #define emit (*this) ^
 
@@ -350,19 +360,19 @@ private:
  * there's no way to use emit.
  *
  * Basic example: (in context of member function of AView):
- * @code{cpp}
+ * ```cpp
  * auto view = _new<AButton>("button"); // or whatever view
  * AUI_EMIT_FOREIGN(view, clicked);
- * @endcode
+ * ```
  *
  * This code calls slots connected to <code>clicked</code> signal.
  *
- * If @ref emits "signal declaration" has arguments, you have to specify them:
- * @code{cpp}
+ * If [signal declaration](emits) has arguments, you have to specify them:
+ * ```cpp
  * AUI_EMIT_FOREIGN(view, keyPressed, AInput::LCTRL);
- * @endcode
+ * ```
  *
- * See @ref signal_slot "signal-slot system" for more info.
+ * See [signal-slot system](signal_slot.md) for more info.
  */
 #define AUI_EMIT_FOREIGN(object, signal, ...) (*object) ^ object->signal(__VA_ARGS__)
 

@@ -1,4 +1,4 @@
 # Console Hello World Example
 
-@auiexample{desktop}
+<!-- aui:example desktop -->
 Basic CLI Hello World application.

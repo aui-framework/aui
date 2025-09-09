@@ -19,35 +19,34 @@ permissions:
   contents: write
 
 jobs:
-  doxygen:
-    name: "Doxygen"
+  documentation:
+    name: "Documentation"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install python3 graphviz
-          wget https://www.doxygen.nl/files/doxygen-1.13.1.linux.bin.tar.gz
-          tar -xzvf doxygen-1.13.1.linux.bin.tar.gz
+      - name: (Documentation) Install python3
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: python3
+          execute_install_scripts: true
+          version: 4.0
 
       - name: Generate docs
         run: |
-          export PATH=$PATH:doxygen-1.13.1/bin/
-          python3 -m pip install -r doxygen/requirements.txt 
-          python3 doxygen/docs.py
+          python3 -m pip install -r docs/python/requirements.txt 
+          mkdocs build --strict --use-directory-urls
 
       - name: Debug
-        run: tree -aI .
+        run: tree -aI site
 
       - name: Deploy
         if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop'
         uses: peaceiris/actions-gh-pages@v3
         with:
-          publish_dir: ./doxygen/out/html
+          publish_dir: ./site
           destination_dir: ${{ github.ref_name }}
           external_repository: aui-framework/aui-framework.github.io
           publish_branch: main
@@ -57,15 +56,18 @@ jobs:
    name: "Android"
    runs-on: ubuntu-latest
    steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v5
        with:
          submodules: true
      - uses: actions/setup-java@v1
        with: { java-version: '11' }
 
-     - name: Install Linux dependencies
-       run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
-
+     - name: Install Linux dependencies (build-android)
+       uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+       with:
+         packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+         execute_install_scripts: true
+         version: 4.0
 
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE
@@ -87,7 +89,7 @@ jobs:
    name: "iOS Debug"
    runs-on: macos-latest
    steps:
-     - uses: actions/checkout@v2
+     - uses: actions/checkout@v5
        with:
          submodules: true
 
@@ -126,15 +128,19 @@ jobs:
         shared_or_static: [shared, static]
         generator: ["Ninja"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
-      - name: Install Linux dependencies
+      - name: Install Linux dependencies (check build)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          execute_install_scripts: true
+          version: 4.0
 
-      - name: Install macos dependencies
+      - name: Install MacOS dependencies
         if: runner.os == 'macOS'
         run: brew install ninja
 
@@ -176,7 +182,7 @@ jobs:
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: ubuntu-latest
             generator: "Ninja"
@@ -193,17 +199,17 @@ jobs:
 
           - os: windows-latest
             generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
+            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
       # Cache AUI boot directory/build
-      # [cache example]
+      # [cache_example]
       - name: Cache AUI.BOOT deps
         id: cache-aui-boot
         uses: actions/cache@v3
@@ -218,21 +224,34 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
             ${{ runner.os }}-
-      # [cache example]
+      # [cache_example]
 
-      - name: Install Linux dependencies
+      - name: Install Linux dependencies (build desktop)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          execute_install_scripts: true
+          version: 4.0
 
-      - name: Install macos dependencies
+      - name: Install MacOS dependencies
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Setup clang
-        if: matrix.compiler == 'clang'
+      - name: Setup clang for macOS
+        if: matrix.compiler == 'clang' && runner.os == 'macOS'
         run: |
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
+
+      - name: Clang Toolchain Installation for Linux
+        if: matrix.compiler == 'clang' && runner.os == 'Linux'
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh 20 all
+          echo "CC=clang-20" >> $GITHUB_ENV
+          echo "CXX=clang++-20" >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -296,28 +315,17 @@ jobs:
             generator: "Ninja"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
         with:
           submodules: true
 
-      - name: Install Linux dependencies
+      - name: Install Linux dependencies (deployment tests build minimal app)
         if: runner.os == 'Linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install \
-            pkg-config \
-            libglew-dev \
-            zlib1g-dev \
-            libssl-dev \
-            libcrypt-dev \
-            libcurl4-openssl-dev \
-            libgtk-3-dev \
-            \
-            libdbus-1-dev \
-            libfontconfig-dev \
-            ninja-build \
-            libpulse-dev \
-        
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          execute_install_scripts: true
+          version: 4.0
 
       - name: Install macos dependencies
         if: runner.os == 'macOS'
@@ -389,9 +397,17 @@ jobs:
         shared_or_static: [shared, static]
 
     steps:
-      - name: Install Linux dependencies
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - name: Install Linux dependencies (deployment tests run minimal app)
         if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install libglew-dev libadwaita-1-dev
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: libglew-dev libadwaita-1-dev
+          execute_install_scripts: true
+          version: 4.0
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -442,7 +458,7 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -489,7 +505,7 @@ jobs:
     steps:
       - name: Checkout
         if: ${{ !contains(github.ref, 'tags/v') }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       # Remove old release drafts
       - name: Remove Old Release Drafts

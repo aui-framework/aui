@@ -10,7 +10,7 @@ class AUrl;
  * @brief Base interface for representing sound input streams of different formats
  * @ingroup audio
  * @details
- * @experimental
+ * <!-- aui:experimental -->
  */
 class ISoundInputStream: public IInputStream {
 public:

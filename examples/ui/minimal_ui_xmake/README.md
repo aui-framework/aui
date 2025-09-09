@@ -1,28 +1,37 @@
 # Minimal UI Template XMake
 
-@auiexample{ui}
+<!-- aui:example ui -->
 Minimal UI boilerplate template XMake.
 
-@image html docs/imgs/minimal-template.png
+![](imgs/minimal-template.png)
 
-# Source Files
-## Project Structure
+## Source Code
+### Project Structure
 
-@mermaid{project_structure_minimal_example_xmake}
+```mermaid
+graph TD
+    A[project_template_ui_xmake] --> B[xmake.lua]
+    A --> C[src/]
+    C --> D[MainWindow.h]
+    C --> E[MainWindow.cpp]
+    C --> F[main.cpp]
+    A --> G[.vscode/]
+    G --> H[c_cpp_properties.json]
+```
 
 ---
 
-## xmake.lua
-@include examples/ui/minimal_ui_xmake/xmake.lua
+### xmake.lua
+<!-- aui:include examples/ui/minimal_ui_xmake/xmake.lua -->
 
-## src/MainWindow.h
-@include examples/ui/minimal_ui_xmake/src/MainWindow.h
+### src/MainWindow.h
+<!-- aui:include examples/ui/minimal_ui_xmake/src/MainWindow.h -->
 
-## src/MainWindow.cpp
-@include examples/ui/minimal_ui_xmake/src/MainWindow.cpp
+### src/MainWindow.cpp
+<!-- aui:include examples/ui/minimal_ui_xmake/src/MainWindow.cpp -->
 
-## src/main.cpp
-@include examples/ui/minimal_ui_xmake/src/main.cpp
+### src/main.cpp
+<!-- aui:include examples/ui/minimal_ui_xmake/src/main.cpp -->
 
-## .vscode/c_cpp_properties.json
-@include examples/ui/minimal_ui_xmake/.vscode/c_cpp_properties.json
+### .vscode/c_cpp_properties.json
+<!-- aui:include examples/ui/minimal_ui_xmake/.vscode/c_cpp_properties.json -->

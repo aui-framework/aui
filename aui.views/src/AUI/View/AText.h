@@ -16,7 +16,10 @@
 
 /**
  * @brief HTML-capable text container.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AText.png)
+ *
+ * @ingroup views_indication
  * @details
  * Used to display rich text or large texts.
  *
@@ -28,10 +31,13 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  *
- * @snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems
+ * <!-- aui:snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems -->
  */
 class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
 public:
+    friend class UIText; // testing
+    friend class UIText_Contents_Test; // testing
+
     using Flags = AVector<std::variant<WordBreak>>;
     struct ParsedFlags {
         WordBreak wordBreak = WordBreak::NORMAL;

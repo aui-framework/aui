@@ -31,7 +31,7 @@ namespace aui::impl {
 }
 
 /**
- * @brief A std::vector with AUI extensions.
+ * @brief An std::vector with AUI extensions.
  * @ingroup core
  */
 template <class StoredType, class Allocator>
@@ -327,7 +327,7 @@ public:
     }
 
     /**
-     * Removes element if predicate(container[i]) == true.
+     * Removes element if `predicate(container[i]) == true`.
      * @param predicate predicate
      */
     template<aui::predicate<StoredType> Predicate>
@@ -337,7 +337,7 @@ public:
     }
 
     /**
-     * Removes only the first element if predicate(container[i]) == true.
+     * Removes only the first element if `predicate(container[i]) == true`.
      * @param predicate predicate
      */
     template<aui::predicate<StoredType> Predicate>

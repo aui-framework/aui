@@ -62,7 +62,7 @@ TEST(Json, FieldsTestBasic)
     EXPECT_THROW(aui::from_json<Data2>(AJson::fromString(R"({"i":228})") /* no "values" field present */), AJsonException);
 }
 
-// [clang format toggle]
+// [clang_format_toggle]
 struct DataOptional {
     int v1;
     int v2;
@@ -73,7 +73,7 @@ AJSON_FIELDS(DataOptional,
              (v1, "v1")
              (v2, "v2", AJsonFieldFlags::OPTIONAL))
 // clang-format on
-// [clang format toggle]
+// [clang_format_toggle]
 
 TEST(Json, FieldsTestOptional)
     {

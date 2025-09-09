@@ -23,11 +23,17 @@
 
 /**
  * @brief Button with text, which can be pushed to make some action.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AButton.png)
+ *
+ * @ingroup views_actions
  * @details
  * Button is a fundamental view which can be pushed to make some action.
  *
- * @image html docs/imgs/AButton.gif "The button view being pressed."
+ * <figure markdown="span">
+ * ![](imgs/AButton.gif)
+ * <figcaption>The button view being pressed.</figcaption>
+ * </figure>
  *
  * Button is styled with background, box shadow, and a border that highlights on hover. When pushed, the shadow
  * disappears, making an illusion of pressing.
@@ -37,10 +43,8 @@
  *
  * Button usually contains text only, but in practice any view can be put in it.
  *
- * @include examples/ui/button/src/main.cpp
+ * <!-- aui:include examples/ui/button/src/main.cpp -->
  *
- *
- * See @ref declarative::Button for a declarative form and examples.
  */
 class API_AUI_VIEWS AButton : public AAbstractLabel {
 public:
@@ -88,36 +92,36 @@ struct Button : aui::ui_building::view_container_layout<AStackedLayout, AButtonE
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     Button(AString text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { std::move(text) } }) {}
 
     /**
      * @brief Basic label initializer.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button { "Action label" }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     Button(const char* text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { text } }) {}
 
     /**
      * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
      * @details
-     * @code{cpp}
+     * ```cpp
      * Button {
      *   Icon { ":img/cart.svg" },
      *   Label { "Cart" },
      * }.connect(&AView::clicked, this, [] {
      *   // action
      * }),
-     * @endcode
+     * ```
      */
     template <typename... Views>
     Button(Views&&... views)

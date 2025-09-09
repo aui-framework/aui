@@ -50,7 +50,7 @@ API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
  *               nullptr.
  * @param startingLocation path where the file browser dialog opened initially. Can be empty.
  * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
- * @note
+ * @details
  * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
  * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
  */
@@ -63,7 +63,7 @@ API_AUI_VIEWS AFuture<APath> browseForDir(AWindowBase* parent, const APath& star
  * @param startingLocation path where the file browser dialog opened initially. Can be empty.
  * @param extensions extensions.
  * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
- * @note
+ * @details
  * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
  * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
  */

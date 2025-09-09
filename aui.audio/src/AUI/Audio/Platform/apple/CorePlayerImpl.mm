@@ -30,7 +30,7 @@ struct CoreAudioInstance {
         strdesc.mChannelsPerFrame = 2;
         strdesc.mSampleRate = 44100;
         strdesc.mFramesPerPacket = 1;
-        strdesc.mBitsPerChannel = aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
+        strdesc.mBitsPerChannel = aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format) * 8;
         strdesc.mBytesPerFrame = strdesc.mChannelsPerFrame * strdesc.mBitsPerChannel / 8;
         strdesc.mBytesPerPacket = strdesc.mBytesPerFrame * strdesc.mFramesPerPacket;
 

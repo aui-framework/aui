@@ -466,7 +466,7 @@ public:
     }
 
     /**
-     * Removes element if predicate(container[i]) == true.
+     * Removes element if `predicate(container[i]) == true`.
      * @param predicate predicate
      */
     template<typename Predicate>

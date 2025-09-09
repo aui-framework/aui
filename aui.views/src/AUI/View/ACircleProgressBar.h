@@ -16,7 +16,10 @@
 
 /**
  * @brief A circle-shaped progress bar.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/ACircleProgressBar.png)
+ *
+ * @ingroup views_indication
  * @details
  * A progress bar is used to express a long operation (i.e. file copy) with known progress and reassure the user that
  * application is still running.

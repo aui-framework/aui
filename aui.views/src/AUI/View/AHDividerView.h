@@ -19,7 +19,10 @@
 
 /**
  * @brief A horizontal line.
- * @ingroup useful_views
+ *
+ * ![](imgs/views/AHDividerView.png)
+ *
+ * @ingroup views_arrangement
  */
 class API_AUI_VIEWS AHDividerView: public ADividerView {
 public:

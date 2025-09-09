@@ -1,10 +1,10 @@
 # Game of Life
 
-@auiexample{app}
-Game of Life implementation that uses advanced large dynamic data rendering techniques such as @ref ITexture,
-@ref AImage to be GPU friendly. The computation is performed in @ref AThreadPool.
+<!-- aui:example app -->
+Game of Life implementation that uses advanced large dynamic data rendering techniques such as [ITexture],
+[AImage] to be GPU friendly. The computation is performed in [AThreadPool].
 
-@image html docs/imgs/eb3f5607-5dfb-4f58-958c-ed513cf3161e.jpeg
+![](imgs/eb3f5607-5dfb-4f58-958c-ed513cf3161e.jpeg)
 
 Conway's Game of Life, a cellular automaton devised by the mathematician John Conway. The game consists of a grid where
 each cell can be either alive or dead, and its state evolves over time according to simple rules based on the states of
@@ -19,7 +19,7 @@ adjacent cells.
 > 
 > [Wikipedia](https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life)
 
-# Cells
+## Cells
 
 Represents the grid of cells with their states (`CellState::ALIVE` or `CellState::DEAD`). It has methods for
 initialization and randomization, as well as accessors to get the size and state of individual cells.
@@ -31,7 +31,7 @@ computations in large grids.
 @skip class Cells
 @until /// end
 
-# CellsView
+## CellsView
 
 Visualizes the grid using a texture. It updates the texture when cells change their states. When the pointer is pressed
 on the view, it toggles the state of the cell under the cursor.
@@ -42,7 +42,7 @@ call to draw the grid.
 @skip class CellsView
 @until /// end
 
-# GameOfLifeWindow
+## GameOfLifeWindow
 
 This is the main window for the Game of Life application. It sets up the UI with buttons to randomize the grid and
 start/pause the game, as well as a central area where the `CellsView` is displayed.

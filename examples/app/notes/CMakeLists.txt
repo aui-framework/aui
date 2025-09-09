@@ -16,4 +16,3 @@ aui_executable(aui.example.notes)
 aui_compile_assets(aui.example.notes)
 
 aui_link(aui.example.notes PUBLIC aui::core aui::views aui::json)
-

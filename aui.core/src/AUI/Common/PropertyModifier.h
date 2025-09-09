@@ -15,12 +15,13 @@ namespace aui {
 /**
  * @brief Temporary transparent object that gains write access to underlying property's value, notifying about value
  * changes when destructed.
- * @ingroup property_system
+ * @ingroup property-system
  * @details
  * PropertyModifier is a result of `writeScope()` method of writeable properties. Also, it is used inside non-const
  * operator implementations (see below). It gains transparent writeable handle to property's value, and calls `notify()`
  * method on associated property upon PropertyModifier destruction.
  *
+ * <!-- aui:parse_tests aui.core/tests/PropertyModifierTest.cpp -->
  */
 template<typename Property>
 class PropertyModifier;
@@ -36,11 +37,14 @@ inline decltype(auto) operator*(const aui::PropertyModifier<T>& t) {
     return t.value();
 }
 
-#define AUI_DETAIL_BINARY_OP(op)                                                                                   \
-template<typename T, typename Rhs>                                                                                 \
-inline decltype(auto) operator op (const aui::PropertyModifier<T>& lhs, Rhs&& rhs) {/* writeScope forwarding op */ \
-    return *lhs op std::forward<Rhs>(rhs);                                                                         \
-}                                                                                                                  \
+#define AUI_DETAIL_BINARY_OP(op)                                                                                       \
+    template <typename T, typename Rhs>                                                                                \
+    inline decltype(auto) operator op(const aui::PropertyModifier<T>& lhs, Rhs&& rhs) { /* writeScope forwarding op */ \
+        static_assert(                                                                                                 \
+            requires { *lhs op std::forward<Rhs>(rhs); },                                                              \
+            "AProperty: this binary operator is not defined for underlying type.");                                    \
+        return *lhs op std::forward<Rhs>(rhs);                                                                         \
+    }
 
 // keep in sync with detail/property.h
 

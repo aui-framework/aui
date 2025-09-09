@@ -1,9 +1,9 @@
 # 7GUIs Cells
 
-@auiexample{7guis}
+<!-- aui:example 7guis -->
 Spreadsheet processor (Excel).
 
-@image html docs/imgs/wankfdnfkjma.webp
+![](imgs/wankfdnfkjma.webp)
 
 Challenges: change propagation, widget customization, implementing a more authentic/involved GUI application.
 

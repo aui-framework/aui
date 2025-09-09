@@ -1,11 +1,13 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2025 Alex2772 and Contributors
-//
-// SPDX-License-Identifier: MPL-2.0
-//
-// This Source Code Form is subject to the terms of the Mozilla Public
-// License, v. 2.0. If a copy of the MPL was not distributed with this
-// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+/*
+* AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Logging/ALogger.h>
@@ -25,9 +27,7 @@ public:
 };
 
 namespace {
-// AUI_DOCS_OUTPUT: doxygen/intermediate/property.h
-// @class AProperty
-// # Declaration
+// ## Declaration
 // To declare a property inside your data model, use AProperty template:
 // AUI_DOCS_CODE_BEGIN
 struct User {
@@ -62,7 +62,7 @@ TEST_F(PropertyTest, Declaration) {
         // AUI_DOCS_CODE_END
     }
 
-    // Non-const operators have @ref PropertyTest_Write_operators "side effects"; const operators don't, so you can
+    // Non-const operators have [side effects](#PropertyTest_Write_operators); const operators don't, so you can
     // perform seamlessly:
     {
         LogObserver mock;
@@ -95,7 +95,7 @@ TEST_F(PropertyTest, Declaration) {
     }
 }
 
-TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
+TEST_F(PropertyTest, Observing_changes) { // HEADER_H2
     // All property types offer `.changed` field which is a signal reporting value changes. Let's make little observer
     // object for demonstration:
     {
@@ -123,9 +123,9 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         u->name = "Marinette";
         // AUI_DOCS_CODE_END
         // Code produces the following output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
     }
     {
         testing::InSequence s;
@@ -142,9 +142,9 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         AObject::connect(u->name, AUI_SLOT(observer)::log);
         // AUI_DOCS_CODE_END
         // Code above produces the following output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
-        // @endcode
+        // ```
         // As you can see, observer receives the value without making updates to the value. The call of
         // `LogObserver::log` is made by `AObject::connect` itself. In this document, we will call this behaviour as
         // "pre-fire".
@@ -155,19 +155,19 @@ TEST_F(PropertyTest, Observing_changes) { // HEADER_H1
         u->name = "Marinette";
         // AUI_DOCS_CODE_END
         // Assignment operation above makes an additional line to output:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
         //
         // Whole program output when connecting to property directly:
-        // @code
+        // ```
         // [07:58:59][][LogObserver][INFO]: Received value: Chloe
         // [07:58:59][][LogObserver][INFO]: Received value: Marinette
-        // @endcode
+        // ```
     }
 }
 
-TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H2
     {
         User user { .name = "Hello" };
         auto copy = user;
@@ -209,7 +209,7 @@ TEST_F(PropertyTest, Copy_constructing_AProperty) { // HEADER_H1
     }
 }
 
-TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H2
     {
         User user1{ .name = "Hello" };
         EXPECT_EQ(user1.name, "Hello");
@@ -243,7 +243,7 @@ TEST_F(PropertyTest, Copy_assigning_AProperty) { // HEADER_H1
     EXPECT_EQ(connections(*observer).size(), 1);
 }
 
-TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
+TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H2
     {
         User user { .name = "Hello" };
         auto copy = std::move(user);
@@ -320,10 +320,10 @@ TEST_F(PropertyTest, Moving_AProperty) { // HEADER_H1
     EXPECT_EQ(connections(*observer).size(), 1);
 }
 
-// # Non-const operators {#PropertyTest_Write_operators}
-// Refer to @ref aui::PropertyModifier.
+// ## Non-const operators { #PropertyTest_Write_operators }
+// Refer to [aui::PropertyModifier].
 
-TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1
+TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H2
     // Assuming you have an AVector wrapped with AProperty:
     // AUI_DOCS_CODE_BEGIN
     AProperty<AVector<int>> ints = AVector<int>{1, 2, 3};
@@ -341,7 +341,7 @@ TEST_F(PropertyTest, AProperty_and_AVector) { // HEADER_H1
     for (int i : *ints) {
         // i = 1, 2, 3...
     }
-    // AUI_DOCS_CODE_BEGIN
+    // AUI_DOCS_CODE_END
 }
 
 TEST_F(PropertyTest, AProperty_and_AVector_modifying) {
@@ -353,7 +353,7 @@ TEST_F(PropertyTest, AProperty_and_AVector_modifying) {
     ints.writeScope() << 2;
     // or
     ints << 2; // implies writeScope()
-    // AUI_DOCS_CODE_BEGIN
+    // AUI_DOCS_CODE_END
     EXPECT_EQ(ints[0], 2);
     EXPECT_EQ(ints[1], 2);
     EXPECT_EQ(ints[2], 2);

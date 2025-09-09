@@ -19,7 +19,7 @@
 
 /**
  * @brief Inner component of AScrollArea that manages rendering and event handling with custom offset (scroll).
- * @ingroup useful_views
+ * @ingroup views_containment
  * @details
  * This view is intended to store only one single view with setContents()/contents() methods.
  *

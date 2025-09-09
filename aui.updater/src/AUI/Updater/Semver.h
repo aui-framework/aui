@@ -5,6 +5,8 @@ namespace aui::updater {
     /**
      * @brief Semantic version.
      * @ingroup updater
+     * @details
+     * <!-- aui:parse_tests aui.updater/tests/VersionTest.cpp -->
      */
     struct API_AUI_UPDATER Semver {
         unsigned major{}, minor{}, patch{};

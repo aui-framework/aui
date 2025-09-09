@@ -35,16 +35,16 @@ class AString;
  * It provides `std::cout`-like API.
  *
  * Example:
- * @code{cpp}
+ * ```cpp
  * ALogger::info("MyApp") << "Hello world!";
- * @endcode
+ * ```
  * Possible output:
  * ```
  * [00:47:02][UI Thread][Logger][INFO]: Hello world!
  * ```
  *
  * It's convenient to define `LOG_TAG` variable for your class:
- * @code{cpp}
+ * ```cpp
  * static constexpr auto LOG_TAG = "MyDownloader";
  * class MyDownloader {
  * public:
@@ -55,7 +55,7 @@ class AString;
  *     ALogger::info(LOG_TAG) << "Downloading file: " << name;
  *   }
  * }
- * @endcode
+ * ```
  */
 class API_AUI_CORE ALogger final
 {
@@ -229,7 +229,7 @@ public:
      * @param path path to the log file.
      * @details
      * Log file is opened immediately in setLogFile.
-     * @note
+     *
      * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
      * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
      * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
@@ -258,7 +258,8 @@ public:
      * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
      * @details
      * Useful when sending log file to remote server.
-     * @note Windows, for instance, doesn't allow to read the file when it's already opened
+     *
+     * On Windows, for instance, doesn't allow to read the file when it's already opened.
      */
     template <aui::invocable Callable>
     void doLogFileAccessSafe(Callable action) {

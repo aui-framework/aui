@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-find_program(GIT_EXECUTABLE NAMES git git.cmd)
+find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
@@ -125,18 +125,18 @@ endif()
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
-    # [RPATH apple]
+    # [rpath_apple]
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
-    # [RPATH apple]
+    # [rpath_apple]
 elseif(UNIX AND NOT ANDROID)
     if (CMAKE_C_COMPILER_ID MATCHES "Clang")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath,$ORIGIN/../lib")
     endif()
-    # [RPATH linux]
+    # [rpath_linux]
     set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
     set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
-    # [RPATH linux]
+    # [rpath_linux]
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
@@ -416,13 +416,15 @@ function(_auib_try_download_precompiled_binary)
         message(STATUS "GitHub detected, checking for precompiled package...")
     endif()
 
+    set(_diagnostics "")
     foreach(_binary_download_url ${_binary_download_urls})
         if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
             # since CMake 3.19 there's a way to check for file existence
 
             file(DOWNLOAD ${_binary_download_url} STATUS _status)
-            list(GET _status 0 _status)
-            if (NOT _status STREQUAL 0)
+            list(GET _status 0 _status_code)
+            if (NOT _status_code STREQUAL 0)
+                list(APPEND _diagnostics "\n${_binary_download_url} : ${_status}")
                 continue()
             endif()
         endif()
@@ -448,11 +450,8 @@ function(_auib_try_download_precompiled_binary)
             return()
         endif()
     endforeach()
-    if (AUIB_DEBUG_PRECOMPILED STREQUAL ${AUI_MODULE_NAME})
-        message(FATAL_ERROR "Precompiled binary for ${AUI_MODULE_NAME} is not available"
-                "\ntrace: download urls: ${_binary_download_urls}")
-    endif()
-    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
+    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available"
+            "\nNote: tried following urls: ${_diagnostics}")
 endfunction()
 
 function(_auib_dump_with_prefix PREFIX PATH)
@@ -928,6 +927,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_C_FLAGS
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
+                        CMAKE_GENERATOR_TOOLSET
                         CMAKE_VS_PLATFORM_NAME
                         CMAKE_BUILD_TYPE
                         CMAKE_CONFIGURATION_TYPES

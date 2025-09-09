@@ -8,8 +8,40 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
+option(AUI_USE_CCACHE "Enable usage of ccache if available" OFF)
+set(AUI_CCACHE_PROGRAM "" CACHE PATH "Path to ccache wrapper or executable (overrides auto-detection)")
+if(AUI_USE_CCACHE)
+    if(NOT AUI_CCACHE_PROGRAM)
+        find_program(_AUI_CCACHE_PROGRAM NAMES ccache ccache.exe ccache.cmd ccache.bat)
+        if(_AUI_CCACHE_PROGRAM)
+            set(AUI_CCACHE_PROGRAM "${_AUI_CCACHE_PROGRAM}" CACHE PATH "Path to ccache wrapper or executable (overrides auto-detection)" FORCE)
+        endif()
+    endif()
+    if(AUI_CCACHE_PROGRAM)
+        message(STATUS "ccache found: ${AUI_CCACHE_PROGRAM}; enabling compiler launchers")
+        if(NOT DEFINED CMAKE_C_COMPILER_LAUNCHER OR CMAKE_C_COMPILER_LAUNCHER STREQUAL "")
+            set(CMAKE_C_COMPILER_LAUNCHER ${AUI_CCACHE_PROGRAM} CACHE STRING "C compiler launcher" FORCE)
+        endif()
+        if(NOT DEFINED CMAKE_CXX_COMPILER_LAUNCHER OR CMAKE_CXX_COMPILER_LAUNCHER STREQUAL "")
+            set(CMAKE_CXX_COMPILER_LAUNCHER ${AUI_CCACHE_PROGRAM} CACHE STRING "C++ compiler launcher" FORCE)
+        endif()
+    else()
+        message(STATUS "AUI_USE_CCACHE is ON but ccache was not found in PATH and AUI_CCACHE_PROGRAM not set")
+    endif()
+endif()
+
 if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported")
+    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
+endif()
+
+if(MSVC)
+    if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>" CACHE STRING "" FORCE)
+    else()                                 # MD / MDd
+        if(NOT DEFINED CMAKE_MSVC_RUNTIME_LIBRARY)
+            set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL" CACHE STRING "" FORCE)
+        endif()
+    endif()
 endif()
 
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
@@ -68,9 +100,13 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
-auib_import(ZLIB https://github.com/aui-framework/zlib
-            VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
-            CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+if(AUIB_DISABLE)
+    find_package(ZLIB REQUIRED)
+else()
+    auib_import(ZLIB https://github.com/aui-framework/zlib
+                VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
+                CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+endif()
 
 # define all components
 define_aui_component(core)
@@ -199,14 +235,16 @@ auib_precompiled_binary()
 # [auib_precompiled_binary]
 
 # test aui.boot on ci/cd
-add_subdirectory(test/)
+if(NOT AUIB_DISABLE)
+    add_subdirectory(test/)
+endif()
 
-# [configure file example]
+# [configure_file_example]
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
-# [configure file example]
+# [configure_file_example]
 
 install(DIRECTORY cmake/
         DESTINATION cmake)

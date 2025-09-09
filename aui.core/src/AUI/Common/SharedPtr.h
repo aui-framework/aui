@@ -17,6 +17,14 @@
 #include <AUI/Thread/AThread.h>
 #include <AUI/Reflect/AClass.h>
 
+/**
+ * @brief Creates a new shared pointer.
+ * @ingroup core
+ * @param args arguments to pass to the constructor of T
+ * @return a new shared pointer [_] to T
+ * @details
+ * This function is a shortcut to std::make_shared.
+ */
 template<typename T, typename... Args>
 inline _<T> _new(Args&& ... args)
 {
