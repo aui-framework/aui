@@ -658,12 +658,19 @@ AStylesheet::AStylesheet() {
 
         // AGroupBox
         {
-            c(".agroupbox-title") > t<ADrawableIconView>(),
+            c(".agroupbox-title"),
             Padding { {}, 4_dp },
+            // Clip overflowing text inside the title instead of hiding the title entirely.
+            ATextOverflow::CLIP,
+            // keep overflow visible for container itself; children that try to render under the title
+            // will be clipped by the following rule when appropriate.
+            AOverflow::VISIBLE,
         },
         {
-            c(".agroupbox-title") >> t<ADrawableIconView>(),
-            ATextOverflow::ELLIPSIS,
+            // Ensure that any child view under the title (i.e., when the title contains a view that
+            // could render outside its bounds) is clipped from the title's area.
+            c(".agroupbox-title") >> t<AView>(),
+            AOverflow::HIDDEN_FROM_THIS,
         },
         {
             c(".agroupbox-inner"),
@@ -671,7 +678,8 @@ AStylesheet::AStylesheet() {
             BorderRadius { 4_dp },
             Padding { 10_dp, 8_dp },
             Margin { 0, 4_dp},
-            AOverflow::HIDDEN,
+            AOverflow::VISIBLE,
+            // ATextOverflow::CLIP
         },
         {
             c(".modal-scaffold-dim"),
