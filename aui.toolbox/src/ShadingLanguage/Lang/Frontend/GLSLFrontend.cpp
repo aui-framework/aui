@@ -42,17 +42,6 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
     return internalFunctions;
 }
 
-void GLSLFrontend::ensurePrecisionInserted() {
-    if (!mPrecisionInsterted) {
-        // shitty compilers like adreno very do want extension definitions before any other tokens for no actual reason
-        mPrecisionInsterted = true;
-        mShaderOutput <<
-                     "precision highp float;\n"
-                     "precision highp int;\n"
-                     ;
-    }
-}
-
 AString GLSLFrontend::mapType(const AString& type) {
     const AMap<AString, AString> mapping = {
             {"vec2",   "vec2"},
@@ -66,7 +55,6 @@ AString GLSLFrontend::mapType(const AString& type) {
             {"int",    "int"},
             {"2D",     "sampler2D"},
     };
-    ensurePrecisionInserted();
     if (auto c = mapping.contains(type)) {
         return c->second;
     }
@@ -74,7 +62,6 @@ AString GLSLFrontend::mapType(const AString& type) {
 }
 
 void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
-    ensurePrecisionInserted();
     const auto byKey = [](const auto& l, const auto& r) {
         return std::get<0>(l) < std::get<0>(r);
     };
@@ -105,7 +92,6 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
 
 }
 void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
-    ensurePrecisionInserted();
     CBasedFrontend::visitNode(node);
     AString keyword;
     AString prefix;
@@ -142,9 +128,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
 }
 
 void GLSLFrontend::parseShader(const _<AST>& ast) {
-    mShaderOutput << "#version 100\n"
-                     "#define glsl120\n"
-                     ;
+    mShaderOutput << "#define glsl120\n";
 
     CBasedFrontend::parseShader(ast);
 }

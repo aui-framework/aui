@@ -23,30 +23,9 @@
 gl::Program::Program() { mProgram = glCreateProgram(); }
 
 void gl::Program::load(
-    const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version) {
-#if AUI_PLATFORM_ANDROID
-    AString prefix;
-
-    if (version.empty()) {
-    } else {
-        prefix = "#version " + version + "\n";
-    }
-
-    prefix +=
-        "precision mediump float;"
-        "precision mediump int;";
-#elif AUI_PLATFORM_APPLE
-    AString prefix;
-#else
-    AString prefix;
-    if (version.empty()) {
-        prefix = "#version 120\n";
-    } else {
-        prefix = "#version " + version + "\n";
-    }
-#endif
-    mVertex = load(prefix + vertex, GL_VERTEX_SHADER, false);
-    mFragment = load(prefix + fragment, GL_FRAGMENT_SHADER, false);
+    const AString& vertex, const AString& fragment, const AVector<AString>& attribs, GLSLOptions options) {
+    mVertex = load(vertex, GL_VERTEX_SHADER, options);
+    mFragment = load(fragment, GL_FRAGMENT_SHADER, options);
 
     unsigned index = 0;
     for (auto& s : attribs) bindAttribute(index++, s);
@@ -54,13 +33,8 @@ void gl::Program::load(
     compile();
 }
 
-void gl::Program::loadVertexShader(const AString& vertex, bool raw) { mVertex = load(vertex, GL_VERTEX_SHADER, raw); }
-void gl::Program::loadFragmentShader(const AString& fragment, bool raw) { mFragment = load(fragment, GL_FRAGMENT_SHADER, raw); }
-
-void gl::Program::loadRaw(const AString& vertex, const AString& fragment) {
-    loadVertexShader(vertex, true);
-    loadFragmentShader(fragment, true);
-}
+void gl::Program::loadVertexShader(const AString& vertex, GLSLOptions options) { mVertex = load(vertex, GL_VERTEX_SHADER, options); }
+void gl::Program::loadFragmentShader(const AString& fragment, GLSLOptions options) { mFragment = load(fragment, GL_FRAGMENT_SHADER, options); }
 
 gl::Program::~Program() {
     if (mProgram == 0) {
@@ -73,27 +47,35 @@ gl::Program::~Program() {
     glDeleteProgram(mProgram);
 }
 
-uint32_t gl::Program::load(std::string code, uint32_t type, bool raw) {
+uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options) {
     assert(!code.empty());
 
-    if (!raw) {
-#if AUI_PLATFORM_APPLE
-        code = "#version 100\n"
-            "precision mediump float;\n"
-            "precision mediump int;\n" +
-                code;
-#elif AUI_PLATFORM_ANDROID
-        code = "#version 100\n"
-               "precision mediump float;\n"
-               "precision mediump int;\n" +
-               code;
-#endif
+    std::string prefix;
+    if (options.version != 0) {
+//#if (AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE)
+        prefix = fmt::format("#version {}\n"
+                           "precision {} float;\n"
+                           "precision {} int;\n",
+                           options.version,
+                           options.floatp == highp ? "highp" : "mediump",
+                           options.intp == highp ? "highp" : "mediump");
+//#else
+//        prefix = fmt::format("#version {}\n", options.version);
+//#endif
+        AUI_ASSERT(!prefix.empty());
     }
 
+    const char* codeData[2] {
+        prefix.data(),
+        code.data(),
+    };
+    const GLint codeLen[2] {
+        static_cast<GLint>(prefix.size()),
+        static_cast<GLint>(code.size()),
+    };
+
     uint32_t shader = glCreateShader(type);
-    AUI_ASSERT(!code.empty());
-    const char* c = code.c_str();
-    glShaderSource(shader, 1, &c, nullptr);
+    glShaderSource(shader, 2, codeData, codeLen);
     glCompileShader(shader);
     int st;
     glGetShaderiv(shader, GL_COMPILE_STATUS, &st);
@@ -117,6 +99,21 @@ void gl::Program::compile() {
     glAttachShader(mProgram, mVertex);
     glAttachShader(mProgram, mFragment);
     glLinkProgram(mProgram);
+
+    GLint success;
+    glGetProgramiv(mProgram, GL_LINK_STATUS, &success);
+    if (!success) {
+        GLint log_length;
+        glGetProgramiv(mProgram, GL_INFO_LOG_LENGTH, &log_length);
+
+        if (log_length > 0) {
+            std::vector<char> log(log_length);
+            glGetProgramInfoLog(mProgram, log_length, nullptr, log.data());
+            ALogger::warn("OpenGL") << "Shader program link message: " << log.data();
+        }
+
+        throw AException("Failed to link shader program:\n");
+    }
 }
 
 void gl::Program::use() const {
