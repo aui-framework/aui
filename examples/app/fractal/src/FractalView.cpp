@@ -66,7 +66,7 @@ FractalView::FractalView() : mTransform(1.f) {
         "color = texture(tex, vec2(theta, 0));"
         "}"
         "}",
-        { "pos", "uv" }, "400");
+        { "pos", "uv" }, gl::GLSLOptions { .version = 400 });
     mShader.compile();
     mShader.use();
     mShader.set(UNIFORM_TR, mTransform);
