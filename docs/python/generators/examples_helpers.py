@@ -16,6 +16,76 @@ import re
 from typing import List, Dict, Any
 
 
+def _is_in_double_quotes(text: str, pos: int) -> bool:
+    """Return True if position pos in text is inside a double-quoted string (heuristic)."""
+    if pos < 0:
+        return False
+    # Count unescaped double quotes before pos
+    cnt = 0
+    i = 0
+    while True:
+        m = text.find('"', i)
+        if m == -1 or m >= pos:
+            break
+        # check escaped
+        esc = False
+        back = m - 1
+        while back >= 0 and text[back] == '\\':
+            esc = not esc
+            back -= 1
+        if not esc:
+            cnt += 1
+        i = m + 1
+    return (cnt % 2) == 1
+
+
+def _find_unquoted(pattern: str, text: str) -> bool:
+    """Return True if regex pattern has a match in text outside double-quoted strings."""
+    try:
+        for m in re.finditer(pattern, text):
+            if not _is_in_double_quotes(text, m.start()):
+                return True
+    except re.error:
+        # if pattern is not a valid regex, fall back to simple search
+        idx = text.find(pattern)
+        if idx >= 0:
+            return not _is_in_double_quotes(text, idx)
+    return False
+
+
+def _find_unquoted_word(word: str, text: str) -> bool:
+    return _find_unquoted(r"\b" + re.escape(word) + r"\b", text)
+
+
+def _find_unquoted_word_on_nontrivial_line(word: str, text: str) -> bool:
+    """Return True if word appears unquoted somewhere and the matched line is not a trivial/preprocessor/comment line."""
+    try:
+        pat = re.compile(r"\b" + re.escape(word) + r"\b")
+        lines = text.splitlines()
+        cum = 0
+        for m in pat.finditer(text):
+            if _is_in_double_quotes(text, m.start()):
+                continue
+            # determine line index for match
+            pos = m.start()
+            line_idx = 0
+            cur = 0
+            for i, l in enumerate(lines):
+                if pos <= cur + len(l):
+                    line_idx = i
+                    break
+                cur += len(l) + 1
+            ln = lines[line_idx].strip()
+            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                continue
+            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                continue
+            return True
+    except Exception:
+        pass
+    return False
+
+
 def build_examples_index(examples_lists: Dict[str, List[Dict[str, Any]]]) -> Dict[str, List[Dict[str, Any]]]:
     """Build a token -> examples index from examples_lists.
 
@@ -236,6 +306,41 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
 
 def examples_for_symbol(names: List[str], examples_lists: Dict[str, List[Dict[str, Any]]] | None = None, examples_index: Dict[str, List[Dict[str, Any]]] | None = None) -> List[Dict[str, Any]]:
     """Find examples that mention any of the given names using index or scanning lists."""
+    # Expand names with any index aliases (<!-- aui:index_alias NAME -->) so
+    # that mentions of alias tokens (for example AUI_DECLARATIVE_FOR) are
+    # considered when looking for examples of the canonical symbol.
+    def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
+        out = set([n for n in (names_in or []) if n])
+        try:
+            from docs.python.generators import index as docs_index
+            # For every provided name, if we can find the page entry, also add
+            # any other mapping keys that point to the same page (these are
+            # aliases created by <!-- aui:index_alias ... -->).
+            for n in list(out):
+                try:
+                    entry = docs_index.find_page(n)
+                except Exception:
+                    entry = None
+                if not entry:
+                    continue
+                for key, mapping_entry in getattr(docs_index, '_mapping', {}).items():
+                    try:
+                        # match by url or by title (case-insensitive) to be robust
+                        if getattr(mapping_entry, 'url', None) == getattr(entry, 'url', None):
+                            out.add(key)
+                            continue
+                        m_title = getattr(mapping_entry, 'title', None)
+                        e_title = getattr(entry, 'title', None)
+                        if m_title and e_title and (m_title == e_title or m_title.lower() == e_title.lower()):
+                            out.add(key)
+                    except Exception:
+                        pass
+        except Exception:
+            # If index import fails, just return original names
+            pass
+        return list(out)
+
+    names = _expand_names_with_index_aliases(names)
     index = examples_index
     merged = []
     seen = set()
@@ -263,7 +368,7 @@ def examples_for_symbol(names: List[str], examples_lists: Dict[str, List[Dict[st
                 for name in (names or []):
                     if not name:
                         continue
-                    if re.search(r"\b" + re.escape(name) + r"\b", text):
+                    if _find_unquoted_word(name, text):
                         key = (ex.get('id'), ex.get('title'))
                         if key in seen:
                             break
@@ -282,6 +387,47 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
     Returns list of dicts: title,id,description,src(snippet Path),snippet,category
     """
     results: List[Dict[str, Any]] = []
+    # strong patterns that indicate canonical usage we want to prefer when picking snippets
+    strong_patterns = [r"\bAUI_DECLARATIVE_FOR\s*\(", r"_new<\s*AForEachUI\b", r"\bAForEachUI\b", r"AForEachUI::"]
+    # Expand names using index aliases (see examples_for_symbol)
+    def _expand_names_with_index_aliases_local(names_in: List[str]) -> List[str]:
+        out = set([n for n in (names_in or []) if n])
+        try:
+            from docs.python.generators import index as docs_index
+            for n in list(out):
+                try:
+                    entry = docs_index.find_page(n)
+                except Exception:
+                    entry = None
+                if not entry:
+                    continue
+                for key, mapping_entry in getattr(docs_index, '_mapping', {}).items():
+                    try:
+                        if getattr(mapping_entry, 'url', None) == getattr(entry, 'url', None):
+                            out.add(key)
+                            continue
+                        m_title = getattr(mapping_entry, 'title', None)
+                        e_title = getattr(entry, 'title', None)
+                        if m_title and e_title and (m_title == e_title or m_title.lower() == e_title.lower()):
+                            out.add(key)
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+        return list(out)
+
+    names = _expand_names_with_index_aliases_local(names)
+    # fallback: some symbols are referred to by a macro alias (e.g. AForEachUI <-> AUI_DECLARATIVE_FOR).
+    # If the examples index contains the alias but index-based alias mapping was not populated,
+    # include the alias so snippet extraction considers examples that mention the macro form.
+    # also ensure the well-known macro alias pair is searched together
+    try:
+        if 'AForEachUI' in names and 'AUI_DECLARATIVE_FOR' not in names:
+            names.append('AUI_DECLARATIVE_FOR')
+        if 'AUI_DECLARATIVE_FOR' in names and 'AForEachUI' not in names:
+            names.append('AForEachUI')
+    except Exception:
+        pass
     index = examples_index
     seen = set()
     # make lists available early so index-handling can resolve categories
@@ -346,42 +492,54 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                                     'src': Path(src),
                                     'snippet': snippet,
                                 })
-            try:
-                lists = examples_lists or {}
-            except Exception:
-                lists = {}
-            for category, items in lists.items():
-                for ex in items:
-                    for src in ex.get('srcs', []):
-                        try:
-                            text = Path(src).read_text(encoding='utf-8', errors='ignore')
-                        except Exception:
-                            continue
-                        if 'me::' in text:
-                            k = (ex.get('id'), str(src))
-                            if k in seen_local:
-                                continue
-                            seen_local.add(k)
-                            lines = text.splitlines()
-                            pos = text.find('me::')
-                            cum = 0
-                            line_idx = 0
-                            for i, l in enumerate(lines):
-                                if pos <= cum + len(l):
-                                    line_idx = i
-                                    break
-                                cum += len(l) + 1
-                                snippet = '\n'.join(lines[max(0, line_idx - 4):min(len(lines), line_idx + 6)])
-                            results.append({
-                                'title': ex.get('title'),
-                                'id': ex.get('id'),
-                                'description': ex.get('description'),
-                                'src': Path(src),
-                                'snippet': snippet,
-                                'category': category,
-                            })
-            return results
     except Exception:
+        # ignore errors in 'me' special-case scanning
+        pass
+
+    # Prefer snippets that explicitly contain searched names or anchors.
+    try:
+        def _snippet_score(ex: Dict[str, Any]) -> tuple:
+            snippet = (ex.get('snippet') or '')
+            # anchor match is strongest signal
+            anchor_match = _snippet_matches_anchors(snippet, anchors or names)
+            # detect strong usage patterns (macro call, constructor/new, class-qualified) outside quotes
+            strong = 0
+            for p in strong_patterns:
+                if _find_unquoted(p, snippet):
+                    strong = 1
+                    break
+            # name present as a whole word in snippet (unquoted)
+            name_present = any(_find_unquoted_word(n, snippet) for n in (names or []) if n)
+            # prefer: strong usage (0) -> anchor match (1) -> name presence (2) -> shorter snippets
+            return (0 if strong else 1, 0 if anchor_match else 1, 0 if name_present else 1, len(snippet))
+
+        results.sort(key=_snippet_score)
+    except Exception:
+        # If any unexpected failure occurs, leave original ordering
+        pass
+
+    # If at least one example contains an unquoted occurrence of any searched name,
+    # drop examples that only mention the name inside double-quoted strings.
+    try:
+        unquoted_map = {}
+        for ex in results:
+            src = ex.get('src')
+            unquoted = False
+            try:
+                text = Path(src).read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+                text = ''
+            for n in (names or []):
+                if not n:
+                    continue
+                if _find_unquoted_word_on_nontrivial_line(n, text):
+                    unquoted = True
+                    break
+            unquoted_map[ex.get('id'), str(ex.get('src'))] = unquoted
+        if any(unquoted_map.values()):
+            results = [ex for ex in results if unquoted_map.get((ex.get('id'), str(ex.get('src'))), False)]
+    except Exception:
+        # best-effort only
         pass
 
     if index is not None:
@@ -398,23 +556,75 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                     except Exception:
                         continue
                     lines = text.splitlines()
+                    # Prefer strong-pattern matches (macro invocation, unquoted symbol, _new<...>)
                     found = None
-                    for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
-                        pos = m.start()
-                        cum = 0
-                        line_idx = 0
-                        for i, l in enumerate(lines):
-                            if pos <= cum + len(l):
-                                line_idx = i
+                    non_quoted_found = False
+                    try:
+                        for p in strong_patterns:
+                            for m in re.finditer(p, text):
+                                if _is_in_double_quotes(text, m.start()):
+                                    continue
+                                pos = m.start()
+                                cum = 0
+                                line_idx = 0
+                                for i, l in enumerate(lines):
+                                    if pos <= cum + len(l):
+                                        line_idx = i
+                                        break
+                                    cum += len(l) + 1
+                                ln = lines[line_idx].strip()
+                                if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                    continue
+                                if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                    continue
+                                found = (m, line_idx)
+                                non_quoted_found = True
                                 break
-                            cum += len(l) + 1
-                        ln = lines[line_idx].strip()
-                        if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                            continue
-                        if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                            continue
-                        found = (m, line_idx)
-                        break
+                            if non_quoted_found:
+                                break
+                    except Exception:
+                        found = None
+                        non_quoted_found = False
+                    # if no strong-pattern match, fall back to first non-quoted occurrence of the name
+                    if not non_quoted_found:
+                        for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+                            if _is_in_double_quotes(text, m.start()):
+                                # skip quoted occurrence for now
+                                continue
+                            pos = m.start()
+                            cum = 0
+                            line_idx = 0
+                            for i, l in enumerate(lines):
+                                if pos <= cum + len(l):
+                                    line_idx = i
+                                    break
+                                cum += len(l) + 1
+                            ln = lines[line_idx].strip()
+                            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                continue
+                            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                continue
+                            found = (m, line_idx)
+                            non_quoted_found = True
+                            break
+                    # if we didn't find a non-quoted occurrence, fall back to first quoted occurrence
+                    if not non_quoted_found:
+                        for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+                            pos = m.start()
+                            cum = 0
+                            line_idx = 0
+                            for i, l in enumerate(lines):
+                                if pos <= cum + len(l):
+                                    line_idx = i
+                                    break
+                                cum += len(l) + 1
+                            ln = lines[line_idx].strip()
+                            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                continue
+                            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                continue
+                            found = (m, line_idx)
+                            break
                     if not found:
                         continue
                     m, line_idx = found
@@ -547,23 +757,50 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                     if not name:
                         continue
                     lines = text.splitlines()
+                    # Prefer strong-pattern matches if present
                     found = None
-                    for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
-                        pos = m.start()
-                        cum = 0
-                        line_idx = 0
-                        for i, l in enumerate(lines):
-                            if pos <= cum + len(l):
-                                line_idx = i
+                    try:
+                        for p in strong_patterns:
+                            m = re.search(p, text)
+                            if not m:
+                                continue
+                            if _is_in_double_quotes(text, m.start()):
+                                continue
+                            pos = m.start()
+                            cum = 0
+                            line_idx = 0
+                            for i, l in enumerate(lines):
+                                if pos <= cum + len(l):
+                                    line_idx = i
+                                    break
+                                cum += len(l) + 1
+                            ln = lines[line_idx].strip()
+                            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                continue
+                            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                continue
+                            found = (m, line_idx)
+                            break
+                        # fallback to first nontrivial occurrence of the name
+                        if not found:
+                            for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+                                pos = m.start()
+                                cum = 0
+                                line_idx = 0
+                                for i, l in enumerate(lines):
+                                    if pos <= cum + len(l):
+                                        line_idx = i
+                                        break
+                                    cum += len(l) + 1
+                                ln = lines[line_idx].strip()
+                                if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                    continue
+                                if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                    continue
+                                found = (m, line_idx)
                                 break
-                            cum += len(l) + 1
-                        ln = lines[line_idx].strip()
-                        if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                            continue
-                        if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                            continue
-                        found = (m, line_idx)
-                        break
+                    except Exception:
+                        found = None
                     if not found:
                         continue
                     m, line_idx = found
@@ -590,7 +827,35 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                         'category': category,
                     })
                     seen.add(key)
-    return results
+    # Final pass: dedupe by (id, src) and prefer entries that contain unquoted matches
+    final = []
+    seen_pairs = set()
+    for ex in results:
+        pair = (ex.get('id'), str(ex.get('src')))
+        if pair in seen_pairs:
+            continue
+        seen_pairs.add(pair)
+        final.append(ex)
+
+    # if any final example has unquoted match, drop ones that only match in quotes
+    try:
+        any_unquoted = any(_find_unquoted_word_on_nontrivial_line(n, Path(ex.get('src')).read_text(encoding='utf-8', errors='ignore')) for ex in final for n in (names or []) if n)
+    except Exception:
+        any_unquoted = False
+
+    if any_unquoted:
+        filtered = []
+        for ex in final:
+            try:
+                text = Path(ex.get('src')).read_text(encoding='utf-8', errors='ignore')
+            except Exception:
+                text = ''
+            if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in (names or []) if n):
+                filtered.append(ex)
+        final = filtered or final
+
+    return final
+
 
 
 def collect_macro_examples_blocks(examples_lists: Dict[str, List[Dict[str, Any]]] | None = None) -> List[str]:

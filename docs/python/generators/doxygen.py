@@ -27,9 +27,30 @@ from docs.python.generators.examples_helpers import (
     filter_examples_by_relevance as _filter_examples_by_relevance,
     dedupe_examples_list as _dedupe_examples_list,
 )
+from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
 
 log = logging.getLogger('mkdocs')
  
+
+def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
+    """Return True if any of the names appears in snippet outside double quotes."""
+    if not snippet:
+        return False
+    import re
+    for name in names:
+        if not name:
+            continue
+        for m in re.finditer(re.escape(name), snippet):
+            i = m.start()
+            # find nearest quote before and after the match
+            before = snippet.rfind('"', 0, i)
+            after = snippet.find('"', i)
+            # if there's no surrounding pair of quotes containing the match,
+            # consider it unquoted
+            if before == -1 or after == -1 or not (before < i < after):
+                return True
+    return False
+
 
 
 def _format_token_sequence(tokens: list[str]):
@@ -87,7 +108,96 @@ def gen_pages():
                     if hasattr(parse_entry, 'name'):
                         names_to_search.append(parse_entry.name)
                     exs = _examples_for_symbol_with_snippets(names_to_search, anchors=None, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
+                    # If filtering removed all candidates but we have precomputed
+                    # class_examples (discovered by a permissive index search),
+                    # fall back to them so examples found on other pages are
+                    # nevertheless printed on the class page.
+                    if not exs and class_examples:
+                        try:
+                            exs = _dedupe_examples_list(class_examples)
+                        except Exception:
+                            pass
+
                     if exs:
+                        # rank examples by strong signals: macro usage, header include, unquoted name
+                        def _example_priority(e):
+                            try:
+                                text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                            except Exception:
+                                text = ''
+                            snippet = e.get('snippet','') or ''
+                            # strongest: macro invocation AUI_DECLARATIVE_FOR
+                            if re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", snippet) or re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", text):
+                                return 0
+                            # header include for AForEachUI
+                            if re.search(r"#include\s+[<\"]AUI/View/AForEachUI.h[>\"]", text):
+                                return 1
+                            # unquoted AForEachUI occurrence on nontrivial line
+                            try:
+                                from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
+                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in names_to_search if n):
+                                    return 2
+                            except Exception:
+                                pass
+                            # prefer snippets that contain macro anchors
+                            try:
+                                if any(re.search(re.escape(a), snippet) for a in (names_to_search or [])):
+                                    return 3
+                            except Exception:
+                                pass
+                            return 10
+
+                        # sort examples by computed priority
+                        exs.sort(key=_example_priority)
+                        # log per-example priority for debugging
+                        try:
+                            for e in exs:
+                                try:
+                                    p = _example_priority(e)
+                                except Exception:
+                                    p = None
+                                log.info(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
+                        except Exception:
+                            pass
+                        # if any has strong signal (priority < 10), keep only those with strong signal
+                        if any(_example_priority(e) < 10 for e in exs):
+                            exs = [e for e in exs if _example_priority(e) < 10]
+                        # if any example contains an unquoted match in its source file
+                        # (and the match is on a non-trivial line), drop examples
+                        # whose matches are exclusively inside quoted strings.
+                        try:
+                            # expand simple macro alias pair used by helpers so we check both forms
+                            check_names = [n for n in (names_to_search or []) if n]
+                            try:
+                                if 'AForEachUI' in check_names and 'AUI_DECLARATIVE_FOR' not in check_names:
+                                    check_names.append('AUI_DECLARATIVE_FOR')
+                                if 'AUI_DECLARATIVE_FOR' in check_names and 'AForEachUI' not in check_names:
+                                    check_names.append('AForEachUI')
+                            except Exception:
+                                pass
+
+                            any_unquoted = False
+                            for e in exs:
+                                try:
+                                    text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                except Exception:
+                                    text = ''
+                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n):
+                                    any_unquoted = True
+                                    break
+                            if any_unquoted:
+                                # keep examples that contain at least one unquoted occurrence of any checked name
+                                filtered = []
+                                for e in exs:
+                                    try:
+                                        text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                    except Exception:
+                                        text = ''
+                                    if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n):
+                                        filtered.append(e)
+                                exs = filtered
+                        except Exception:
+                            pass
                         page_examples.extend(exs)
                 except Exception:
                     pass
@@ -161,15 +271,76 @@ def gen_pages():
                 try:
                     exs = _examples_for_symbol_with_snippets([parse_entry.namespaced_name(), parse_entry.name], anchors=[parse_entry.namespaced_name(), parse_entry.name, parse_entry.name.split('::')[-1] if '::' in parse_entry.namespaced_name() else None], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
                     exs = _dedupe_examples_list(exs)
-                    exs = _filter_examples_by_relevance(exs, [parse_entry.namespaced_name(), parse_entry.name], strict=True)
+                    # include known macro alias in the filter names so macro-only
+                    # snippets (AUI_DECLARATIVE_FOR) are considered relevant for
+                    # AForEachUI class pages
+                    filter_names = [parse_entry.namespaced_name(), parse_entry.name]
+                    try:
+                        if 'AForEachUI' in filter_names and 'AUI_DECLARATIVE_FOR' not in filter_names:
+                            filter_names.append('AUI_DECLARATIVE_FOR')
+                        if 'AUI_DECLARATIVE_FOR' in filter_names and 'AForEachUI' not in filter_names:
+                            filter_names.append('AForEachUI')
+                    except Exception:
+                        pass
+                    exs = _filter_examples_by_relevance(exs, filter_names, strict=True)
                     # fallback to a relaxed filter if strict yields nothing (avoid empty class pages)
                     if not exs:
                         fallback_list = _dedupe_examples_list(_examples_for_symbol([parse_entry.namespaced_name(), parse_entry.name], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
-                        exs = _filter_examples_by_relevance(fallback_list, [parse_entry.namespaced_name(), parse_entry.name], strict=False)
+                        exs = _filter_examples_by_relevance(fallback_list, filter_names, strict=False)
+                    # Prefer examples with unquoted occurrences when available (based on source file, nontrivial lines)
+                    try:
+                        if exs:
+                            # log initial class-level candidates
+                            try:
+                                log.info(f"class-level candidates before filtering: {[ (e.get('id'), e.get('title')) for e in exs ]}")
+                            except Exception:
+                                pass
+                            # expand alias pair similar to helpers so macro-form usages are counted
+                            check_names = [n for n in [parse_entry.namespaced_name(), parse_entry.name] if n]
+                            try:
+                                if 'AForEachUI' in check_names and 'AUI_DECLARATIVE_FOR' not in check_names:
+                                    check_names.append('AUI_DECLARATIVE_FOR')
+                                if 'AUI_DECLARATIVE_FOR' in check_names and 'AForEachUI' not in check_names:
+                                    check_names.append('AForEachUI')
+                            except Exception:
+                                pass
+
+                            any_unquoted = False
+                            per_example_unquoted = {}
+                            for e in exs:
+                                try:
+                                    text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                except Exception:
+                                    text = ''
+                                has_unq = any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n)
+                                per_example_unquoted[e.get('id')] = has_unq
+                                if has_unq:
+                                    any_unquoted = True
+                            try:
+                                log.info(f"class-level per-example unquoted map: {per_example_unquoted}")
+                            except Exception:
+                                pass
+                            if any_unquoted:
+                                # keep examples that contain at least one unquoted occurrence of any checked name
+                                filtered = []
+                                for e in exs:
+                                    try:
+                                        text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                    except Exception:
+                                        text = ''
+                                    if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n):
+                                        filtered.append(e)
+                                exs = filtered
+                                try:
+                                    log.info(f"class-level candidates after unquoted-filter: {[ (e.get('id'), e.get('title')) for e in exs ]}")
+                                except Exception:
+                                    pass
+                    except Exception:
+                        pass
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            if not ex or 'src' not in ex or not ex.get('snippet'):
+                            if not ex or 'src' not in ex or not ex.get('id'):
                                 # skip malformed example entries
                                 continue
                             try:
@@ -184,14 +355,136 @@ def gen_pages():
                             # emit admonition header with no blank line after it
                             # compute hl_lines using class tokens
                             tokens = [parse_entry.namespaced_name(), parse_entry.name]
-                            hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                            snippet = ex.get('snippet', '') or ''
+                            hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
                             print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                            print(f"    ```{extension}{hl_attr}", file=fos)
-                            for line in ex['snippet'].splitlines():
-                                print(f"    {line}", file=fos)
-                            print(f"    ```", file=fos)
+                            # print code block only when snippet is available
+                            if snippet:
+                                print(f"    ```{extension}{hl_attr}", file=fos)
+                                for line in snippet.splitlines():
+                                    print(f"    {line}", file=fos)
+                                print(f"    ```", file=fos)
+                except Exception:
+                    pass
+
+            # For non-class symbols: attempt to reuse class-level candidates
+            # (examples that reference the symbol but may appear on other pages)
+            # and print them here. Do this even if page-level examples exist so
+            # canonical macro-form examples found elsewhere are surfaced on the
+            # symbol's page (e.g., AForEachUI / AUI_DECLARATIVE_FOR).
+            if not isinstance(parse_entry, CppClass) and class_examples:
+                try:
+                    # build names and anchors similar to class handling
+                    anchors = []
+                    top_names = []
+                    if hasattr(parse_entry, 'namespaced_name'):
+                        top_names.append(parse_entry.namespaced_name())
+                        anchors.append(parse_entry.namespaced_name())
+                    if hasattr(parse_entry, 'name'):
+                        top_names.append(parse_entry.name)
+                        anchors.append(parse_entry.name)
+
+                    # Expand well-known macro alias so macro-form usages are considered
+                    try:
+                        if 'AForEachUI' in top_names and 'AUI_DECLARATIVE_FOR' not in top_names:
+                            top_names.append('AUI_DECLARATIVE_FOR')
+                            anchors.append('AUI_DECLARATIVE_FOR')
+                        if 'AUI_DECLARATIVE_FOR' in top_names and 'AForEachUI' not in top_names:
+                            top_names.append('AForEachUI')
+                            anchors.append('AForEachUI')
+                    except Exception:
+                        pass
+
+                    exs = _examples_for_symbol_with_snippets(top_names, anchors=anchors, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
+                    exs = _dedupe_examples_list(exs)
+                    # be permissive for non-class symbol pages but still filter by relevance
+                    exs = _filter_examples_by_relevance(exs, top_names, strict=False)
+                    # if snippet-aware search returned nothing, fall back to the
+                    # precomputed class_examples which may contain candidates
+                    # discovered by a more permissive index search.
+                    if not exs:
+                        try:
+                            exs = _dedupe_examples_list(class_examples)
+                            exs = _filter_examples_by_relevance(exs, top_names, strict=False)
+                        except Exception:
+                            pass
+
+                    # Prefer examples with unquoted occurrences when available
+                    try:
+                        if exs:
+                            check_names = [n for n in top_names if n]
+                            try:
+                                if 'AForEachUI' in check_names and 'AUI_DECLARATIVE_FOR' not in check_names:
+                                    check_names.append('AUI_DECLARATIVE_FOR')
+                                if 'AUI_DECLARATIVE_FOR' in check_names and 'AForEachUI' not in check_names:
+                                    check_names.append('AForEachUI')
+                            except Exception:
+                                pass
+
+                            any_unquoted = False
+                            for e in exs:
+                                try:
+                                    text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                except Exception:
+                                    text = ''
+                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n):
+                                    any_unquoted = True
+                                    break
+                            if any_unquoted:
+                                filtered = []
+                                for e in exs:
+                                    try:
+                                        text = Path(e.get('src')).read_text(encoding='utf-8', errors='ignore')
+                                    except Exception:
+                                        text = ''
+                                    if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in check_names if n):
+                                        filtered.append(e)
+                                exs = filtered
+                    except Exception:
+                        pass
+
+                    # If filtering produced nothing, fall back to any precomputed
+                    # class_examples discovered earlier (less strict). This ensures
+                    # canonical examples referenced elsewhere still surface on
+                    # the class page.
+                    if not exs:
+                        try:
+                            exs = _dedupe_examples_list(class_examples)
+                            exs = _filter_examples_by_relevance(exs, [parse_entry.namespaced_name(), parse_entry.name], strict=False)
+                        except Exception:
+                            pass
+
+                    if exs:
+                        print('\n## Examples', file=fos)
+                        for ex in exs:
+                            if not ex or 'src' not in ex or not ex.get('id'):
+                                continue
+                            try:
+                                src_rel = ex['src'].relative_to(Path.cwd())
+                            except Exception:
+                                src_rel = ex['src']
+                            pair = (ex.get('id'), str(src_rel))
+                            if pair in printed_example_pairs:
+                                continue
+                            printed_example_pairs.add(pair)
+                            extension = common.determine_extension(ex['src'])
+                            tokens = []
+                            if hasattr(parse_entry, 'namespaced_name'):
+                                tokens.append(parse_entry.namespaced_name())
+                            if hasattr(parse_entry, 'name'):
+                                tokens.append(parse_entry.name)
+                            snippet = ex.get('snippet', '') or ''
+                            hl = _compute_hl_lines(snippet, tokens)
+                            hl_attr = f' hl_lines="{hl}"' if hl else ''
+                            print(f"\n??? note \"{src_rel}\"", file=fos)
+                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            if snippet:
+                                print(f"    ```{extension}{hl_attr}", file=fos)
+                                for line in snippet.splitlines():
+                                    print(f"    {line}", file=fos)
+                                print(f"    ```", file=fos)
                 except Exception:
                     pass
 
