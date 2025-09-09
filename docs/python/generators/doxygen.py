@@ -244,7 +244,16 @@ def gen_pages():
                         tokens.append(parse_entry.namespaced_name())
                     if hasattr(parse_entry, 'name'):
                         tokens.append(parse_entry.name)
-                    hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                    snippet = ex.get('snippet','') or ''
+                    try:
+                        # highlight macro invocation line when present
+                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                            tokens.append('AUI_DECLARATIVE_FOR')
+                        if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
+                            tokens.append('AUI_DECLARATIVE_FOR')
+                    except Exception:
+                        pass
+                    hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
                     print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
@@ -356,6 +365,13 @@ def gen_pages():
                             # compute hl_lines using class tokens
                             tokens = [parse_entry.namespaced_name(), parse_entry.name]
                             snippet = ex.get('snippet', '') or ''
+                            try:
+                                if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                                    tokens.append('AUI_DECLARATIVE_FOR')
+                                if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
+                                    tokens.append('AUI_DECLARATIVE_FOR')
+                            except Exception:
+                                pass
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -545,7 +561,13 @@ def gen_pages():
                                 extension = common.determine_extension(ex['src'])
                                 # compute hl_lines using nested type tokens
                                 tokens = [full_name, type_entry.name]
-                                hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                snippet = ex.get('snippet','') or ''
+                                try:
+                                    if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                                        tokens.append('AUI_DECLARATIVE_FOR')
+                                except Exception:
+                                    pass
+                                hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
@@ -644,7 +666,13 @@ def gen_pages():
                                 printed_example_pairs.add(pair)
                                 extension = common.determine_extension(ex['src'])
                                 tokens = [field.name]
-                                hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                snippet = ex.get('snippet','') or ''
+                                try:
+                                    if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                                        tokens.append('AUI_DECLARATIVE_FOR')
+                                except Exception:
+                                    pass
+                                hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
@@ -740,7 +768,13 @@ def gen_pages():
                                             src_rel = ex['src']
                                         extension = common.determine_extension(ex['src'])
                                         tokens = [method_full, overload.name]
-                                        hl = _compute_hl_lines(ex.get('snippet',''), tokens)
+                                        snippet = ex.get('snippet','') or ''
+                                        try:
+                                            if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                                                tokens.append('AUI_DECLARATIVE_FOR')
+                                        except Exception:
+                                            pass
+                                        hl = _compute_hl_lines(snippet, tokens)
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
                                         print(f"\n??? note \"{src_rel}\"", file=fos)
                                         print(file=fos)
