@@ -52,16 +52,22 @@ uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options)
 
     std::string prefix;
     if (options.version != 0) {
-//#if (AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE)
+#if (AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE)
         prefix = fmt::format("#version {}\n"
                            "precision {} float;\n"
                            "precision {} int;\n",
                            options.version,
                            options.floatp == highp ? "highp" : "mediump",
                            options.intp == highp ? "highp" : "mediump");
-//#else
-//        prefix = fmt::format("#version {}\n", options.version);
-//#endif
+#else
+        prefix = fmt::format("#version {}{}\n"
+                           "precision {} float;\n"
+                           "precision {} int;\n",
+                           options.version,
+                           options.version < 140 ? "" : " compatibility",
+                           options.floatp == highp ? "highp" : "mediump",
+                           options.intp == highp ? "highp" : "mediump");
+#endif
         AUI_ASSERT(!prefix.empty());
     }
 
