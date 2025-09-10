@@ -1344,11 +1344,8 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                       static auto shader = [&] {
                         auto shader = std::make_unique<gl::Program>();
 
-                        gl::GLSLOptions options {
-                            .version = 130,
-                        };
                         shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), options);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         shader->loadFragmentShader(
                             R"(
 precision highp float;
@@ -1367,8 +1364,7 @@ void main() {
  vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
  gl_FragColor = vec4(accumulator.xyz, uvmap_sample.a);
 }
-)",
-                            options);
+)");
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(shader->handle());
                         shader->compile();
@@ -1444,11 +1440,8 @@ void main() {
 
                         auto kernel = aui::detail::gaussianKernel(radius);
 
-                        gl::GLSLOptions options {
-                            .version = 130,
-                        };
                         result.shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), options);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
@@ -1473,7 +1466,7 @@ void main() {{
 }}
 )",
                                 fmt::arg("radius", radius),
-                                fmt::arg("kernel_size", kernel.size())), options);
+                                fmt::arg("kernel_size", kernel.size())));
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
                         result.shader->compile();

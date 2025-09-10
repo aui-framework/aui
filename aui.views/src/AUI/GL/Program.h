@@ -33,10 +33,6 @@ enum Precision : uint8_t {
     highp,
 };
 struct GLSLOptions {
-    /**
-     * @brief Set to 0 to disable version and precision prefixes at the beginning of the shader
-     */
-    uint16_t version = 100;
     Precision floatp = mediump;
     Precision intp = mediump;
 };
