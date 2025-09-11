@@ -74,18 +74,16 @@ uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options)
     uint32_t shader = glCreateShader(type);
     glShaderSource(shader, 2, codeData, codeLen);
     glCompileShader(shader);
-    int st;
-    glGetShaderiv(shader, GL_COMPILE_STATUS, &st);
+    GLint success;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
-    {
+    if (!success) {
         char buf[8192];
         GLsizei len;
         glGetShaderInfoLog(shader, sizeof(buf), &len, buf);
         if (len) {
             ALogger::warn("OpenGL") << "Shader compile message: " << buf;
         }
-    }
-    if (!st) {
         throw AException("Failed to compile shader:\n" + code);
     }
 
