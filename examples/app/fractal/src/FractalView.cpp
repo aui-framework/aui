@@ -24,49 +24,56 @@ static gl::Program::Uniform UNIFORM_ITERATIONS("iterations");
 
 FractalView::FractalView() : mTransform(1.f) {
     setExpanding();
-    mShader.load(
-        "in vec4 pos;"
-        "in vec2 uv;"
-        "out vec2 pass_uv;"
-        "uniform float ratio;"
-        "uniform mat4 SL_uniform_transform;"
+    mShader.load(R"(
+#version 330 core
 
-        "void main() {"
-        "gl_Position = SL_uniform_transform * pos;"
-        "pass_uv = (uv - 0.5) * 2.0;"
-        "pass_uv.x *= ratio;"
-        "}",
+in vec4 pos;
+in vec2 uv;
+out vec2 pass_uv;
+uniform float ratio;
+uniform mat4 SL_uniform_transform;
 
-        "in vec2 pass_uv;\n"
+void main() {
+    gl_Position = SL_uniform_transform * pos;
+    pass_uv = (uv - 0.5) * 2.0;
+    pass_uv.x *= ratio;
+}
+)",
+    R"(
+#version 330 core
 
-        "#define product(a, b) dvec2(a.x*b.x-a.y*b.y, a.x*b.y+a.y*b.x)\n"
-        "#define conjugate(a) dvec2(a.x,-a.y)\n"
-        "#define divide(a, b) dvec2(((a.x*b.x+a.y*b.y)/(b.x*b.x+b.y*b.y)),((a.y*b.x-a.x*b.y)/(b.x*b.x+b.y*b.y)))\n"
-        "uniform float c;"
-        "uniform int iterations;"
-        "uniform dmat4 tr;"
-        "uniform sampler2D tex;"
+in vec2 pass_uv;
 
-        "out vec4 color;"
-        "void main() {"
-        "dvec2 tmp_pass_uv = (tr * dvec4(pass_uv, 0.0, 1.0)).xy;"
-        "dvec2 v = dvec2(0, 0);"
-        "int i = 0;"
-        "for (; i < iterations; ++i) {"
-        "v = product(v, v) + tmp_pass_uv;"
-        "dvec2 tmp = v * v;"
-        "if ((v.x + v.y) > 4) {"
-        "break;"
-        "}"
-        "}"
-        "if (i == iterations) {"
-        "color = vec4(0, 0, 0, 1);"
-        "} else {"
-        "float theta = float(i) / float(iterations);"
-        "color = texture(tex, vec2(theta, 0));"
-        "}"
-        "}",
-        { "pos", "uv" }, gl::GLSLOptions { .floatp = gl::highp, .intp = gl::highp });
+#define product(a, b) vec2(a.x*b.x-a.y*b.y, a.x*b.y+a.y*b.x)
+#define conjugate(a) vec2(a.x,-a.y)
+#define divide(a, b) vec2(((a.x*b.x+a.y*b.y)/(b.x*b.x+b.y*b.y)),((a.y*b.x-a.x*b.y)/(b.x*b.x+b.y*b.y)))
+
+uniform float c;
+uniform int iterations;
+uniform mat4 tr;
+uniform sampler2D tex;
+
+out vec4 color;
+
+void main() {
+    vec2 tmp_pass_uv = (tr * vec4(pass_uv, 0.0, 1.0)).xy;
+    vec2 v = vec2(0, 0);
+    int i = 0;
+    for (; i < iterations; ++i) {
+        v = product(v, v) + tmp_pass_uv;
+        vec2 tmp = v * v;
+        if ((v.x + v.y) > 4) {
+            break;
+        }
+    }
+    if (i == iterations) {
+        color = vec4(0, 0, 0, 1);
+    } else {
+        float theta = float(i) / float(iterations);
+        color = texture(tex, vec2(theta, 0));
+    }
+}
+)", { "pos", "uv" }, gl::GLSLOptions { .custom = true });
     mShader.compile();
     mShader.use();
     mShader.set(UNIFORM_TR, mTransform);
@@ -99,9 +106,9 @@ void FractalView::onScroll(const AScrollEvent& event) {
     AView::onScroll(event);
     auto projectedPos = (glm::dvec2(event.origin) / glm::dvec2(getSize()) - glm::dvec2(0.5)) * 2.0;
     projectedPos.x *= mAspectRatio;
-    mTransform = glm::translate(mTransform, glm::dvec3 { projectedPos, 0.0 });
-    mTransform = glm::scale(mTransform, glm::dvec3(1.0 - event.delta.y / 1000.0));
-    mTransform = glm::translate(mTransform, -glm::dvec3 { projectedPos, 0.0 });
+    mTransform = glm::translate(mTransform, glm::vec3 { projectedPos, 0.0 });
+    mTransform = glm::scale(mTransform, glm::vec3(1.0 - event.delta.y / 1000.0));
+    mTransform = glm::translate(mTransform, -glm::vec3 { projectedPos, 0.0 });
 
     handleMatrixUpdated();
 
@@ -142,10 +149,10 @@ void FractalView::onKeyRepeat(AInput::Key key) {
             mTransform = glm::translate(mTransform, { SPEED, 0, 0 });
             break;
         case AInput::PAGEDOWN:
-            mTransform = glm::scale(mTransform, glm::dvec3 { 0.99 });
+            mTransform = glm::scale(mTransform, glm::vec3 { 0.99 });
             break;
         case AInput::PAGEUP:
-            mTransform = glm::scale(mTransform, glm::dvec3 { 1.01 });
+            mTransform = glm::scale(mTransform, glm::vec3 { 1.01 });
             break;
 
         default:

@@ -50,17 +50,15 @@ gl::Program::~Program() {
 uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options) {
     assert(!code.empty());
 
-    std::string prefix = fmt::format("#version {}\n"
+    std::string prefix;
+    if (!options.custom) {
+        prefix = fmt::format("#version 100\n"
                        "precision {} float;\n"
                        "precision {} int;\n",
-#if (AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
-                       "300 es",
-#else
-                       "400 compatibility",
-#endif
-                       options.floatp == highp ? "highp" : "mediump",
-                       options.intp == highp ? "highp" : "mediump");
-    AUI_ASSERT(!prefix.empty());
+                       options.floatp == Precision::highp ? "highp" : "mediump",
+                       options.intp == Precision::highp ? "highp" : "mediump");
+        AUI_ASSERT(!prefix.empty());
+    }
 
     const char* codeData[2] {
         prefix.data(),

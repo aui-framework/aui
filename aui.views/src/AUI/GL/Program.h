@@ -28,13 +28,17 @@
 class AString;
 
 namespace gl {
-enum Precision : uint8_t {
+enum class Precision : uint8_t {
     mediump,
     highp,
 };
 struct GLSLOptions {
-    Precision floatp = mediump;
-    Precision intp = mediump;
+    /**
+     * @brief Turns off #version prefix for custom shaders
+     */
+    bool custom = false;
+    Precision floatp = Precision::mediump;
+    Precision intp = Precision::mediump;
 };
 
 class API_AUI_VIEWS Program: public aui::noncopyable {
