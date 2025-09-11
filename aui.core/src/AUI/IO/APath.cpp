@@ -298,13 +298,13 @@ size_t APath::fileSize() const {
 #if AUI_PLATFORM_WIN
 struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
-    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-    _wstat64(reinterpret_cast<const wchar_t*>(pathU16.data()), &s);
+    std::wstring pathU16 = aui::win32::toWchar(*this);
+    _wstat64(pathU16.c_str(), &s);
     return s;
 }
 #else
 struct stat APath::stat() const {
-    struct stat s = {0};
+    struct stat s = {};
     ::stat(toStdString().c_str(), &s);
     return s;
 }
