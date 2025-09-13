@@ -13,12 +13,12 @@ programming languages and external compilers.
 
 ---
 
-[<kbd>Documentation</kbd>](https://aui-framework.github.io)
-[<kbd>Examples</kbd>](https://aui-framework.github.io/develop/examples.html)
-[<kbd>Getting started</kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)
-[<kbd>Roadmap</kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)
-[<kbd>News</kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)
-[<kbd>Discussions</kbd>](https://github.com/aui-framework/aui/discussions)
+**[<kbd>Documentation</kbd>](https://aui-framework.github.io)**
+**[<kbd>Examples</kbd>](https://aui-framework.github.io/develop/examples.html)**
+**[<kbd>Getting started</kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)**
+**[<kbd>Roadmap</kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)**
+**[<kbd>News</kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)**
+**[<kbd>Discussions</kbd>](https://github.com/aui-framework/aui/discussions)**
 
 ---
 
