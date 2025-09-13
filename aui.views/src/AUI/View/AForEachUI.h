@@ -74,6 +74,7 @@ public:
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
+    void render(ARenderContext context) override;
 
 protected:
     struct Cache {
@@ -102,6 +103,8 @@ protected:
      */
     virtual aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() = 0;
 
+    void putOurViewsToSharedCache();
+
 private:
     _weak<AScrollAreaViewport> mViewport;
     List mViewsModel;
@@ -114,7 +117,6 @@ private:
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
-    void putOurViewsToSharedCache();
 
 };
 
@@ -256,17 +258,15 @@ class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver 
 public:
     friend class UIDeclarativeForTest;
 
-    static_assert(
-        requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); },
-        "// ====================> AForEachUI: aui::for_each_ui::defaultKey overload or std::hash specialization is "
-        "required for your type.");
-
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;
+    using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
-    ~AForEachUI() override = default;
+    ~AForEachUI() override {
+        putOurViewsToSharedCache();
+    }
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
@@ -283,7 +283,7 @@ public:
                 [[maybe_unused]] auto discoverReferencedProperties = *it;
             }
             return rng | ranges::views::transform([this](const T& t) {
-                       auto key = aui::for_each_ui::defaultKey(t, 0L);
+                       auto key = mKeyFunction(t);
                        _<AView> view;
                        if (mViewsSharedCache) {
                            if (auto c = mViewsSharedCache->contains(key)) {
@@ -324,6 +324,10 @@ public:
 
     using AViewContainerBase::setLayout;
 
+    void setKeyFunction(KeyFunction keyFunction) noexcept {
+        mKeyFunction = std::move(keyFunction);
+    }
+
 protected:
 
     aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override { return mViewsSharedCache; }
@@ -335,6 +339,13 @@ private:
     aui::for_each_ui::detail::ViewsSharedCache* mViewsSharedCache = nullptr;
     ListFactory mListFactory;
     ViewFactory mFactory;
+    KeyFunction mKeyFunction = [](const T& t) {
+        if constexpr (requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); }) {
+            return aui::for_each_ui::defaultKey(t, 0L);
+        }
+        throw AException("can't automatically generate key function; please define one with setKeyFunction" + AReflect::name(&t));
+        return aui::for_each_ui::Key {};
+    };;
 
     void updateUnderlyingModel() {
         if (!mFactory) {

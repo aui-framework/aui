@@ -95,20 +95,26 @@ struct APropertyDef {
 
     [[nodiscard]]
     GetterReturnT value() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     GetterReturnT operator*() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     const Underlying* operator->() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return &std::invoke(get, base);
     }
 
-    [[nodiscard]] operator GetterReturnT() const noexcept { return std::invoke(get, base); }
+    [[nodiscard]] operator GetterReturnT() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        return std::invoke(get, base);
+    }
 
     [[nodiscard]]
     M* boundObject() const {

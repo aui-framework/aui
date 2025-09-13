@@ -24,6 +24,10 @@ void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     mViewsModel = std::move(model);
 }
 
+void AForEachUIBase::render(ARenderContext context) {
+    AViewContainerBase::render(context);
+}
+
 void AForEachUIBase::putOurViewsToSharedCache() {
     removeAllViews();
     if (!mCache) {

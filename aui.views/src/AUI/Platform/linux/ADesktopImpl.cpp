@@ -47,7 +47,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
         options.insert_or_assign("current_folder", locationBytes);
     }
 
-    auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>(
+    auto p = *ADBus::session().callWithResult<aui::dbus::ObjectPath>(
         "org.freedesktop.portal.Desktop",       // bus
         "/org/freedesktop/portal/desktop",      // object
         "org.freedesktop.portal.FileChooser",   // interface
@@ -59,7 +59,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
 
     AFuture<APath> f;
 
-    const auto unsubscribe = ADBus::inst().addSignalListener(
+    auto unsubscribe = std::shared_ptr(ADBus::session().addSignalListener(
         std::move(p), "org.freedesktop.portal.Request", "Response",
         [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
             // The following results get returned via the :ref:`org.freedesktop.portal.Request::Response` signal:
@@ -97,11 +97,10 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
                 f.supplyException();
                 throw;
             }
-        });
+        }));
 
-    f.onFinally([parent, unsubscribe]() {
-        AThread::current()->enqueue([=] {
-          unsubscribe();
+    f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
+        AThread::current()->enqueue([parent] {
           AUI_NULLSAFE(parent)->blockUserInput(false);
         });
     });
@@ -124,7 +123,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &starting
         options.insert_or_assign("current_folder", locationBytes);
     }
 
-    auto p = ADBus::inst().callBlocking<aui::dbus::ObjectPath>(
+    auto p = *ADBus::session().callWithResult<aui::dbus::ObjectPath>(
         "org.freedesktop.portal.Desktop",       // bus
         "/org/freedesktop/portal/desktop",      // object
         "org.freedesktop.portal.FileChooser",   // interface
@@ -136,7 +135,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &starting
 
     AFuture<APath> f;
 
-    const auto unsubscribe = ADBus::inst().addSignalListener(
+    auto unsubscribe = std::shared_ptr(ADBus::session().addSignalListener(
         std::move(p), "org.freedesktop.portal.Request", "Response",
         [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
             try {
@@ -154,10 +153,9 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &starting
                 f.supplyException();
                 throw;
             }
-        });
+        }));
 
-    f.onFinally([parent, unsubscribe]() {
-        unsubscribe();
+    f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
         AUI_NULLSAFE(parent)->blockUserInput(false);
     });
 
