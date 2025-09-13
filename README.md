@@ -13,12 +13,12 @@ programming languages and external compilers.
 
 ---
 
-[<kbd><br>Documentation<br></kbd>](https://aui-framework.github.io)
-[<kbd><br>Examples<br></kbd>](https://aui-framework.github.io/develop/examples.html)
-[<kbd><br>Getting started<br></kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)
-[<kbd><br>Roadmap<br></kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)
-[<kbd><br>News<br></kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)
-[<kbd><br>Discussions<br></kbd>](https://github.com/aui-framework/aui/discussions)
+[<kbd> <br> Documentation <br> </kbd>](https://aui-framework.github.io)
+[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/develop/examples.html)
+[<kbd> <br> Getting started <br> </kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)
+[<kbd> <br> Roadmap <br> </kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)
+[<kbd> <br> News <br> </kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)
+[<kbd> <br> Discussions <br> </kbd>](https://github.com/aui-framework/aui/discussions)
 
 ---
 
