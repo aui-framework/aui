@@ -13,25 +13,23 @@
 // Created by alex2772 on 9/10/20.
 //
 
-#include <sys/stat.h>
-#include <cstring>
-#include <cassert>
 #include "APath.h"
+
+#include <sys/stat.h>
+#include <cassert>
 #include <AUI/Common/AStringVector.h>
-#include "AIOException.h"
-#include "AFileInputStream.h"
-#include "AFileOutputStream.h"
-#include "AUI/Platform/ErrorToException.h"
-#include "AUI/Platform/AProcess.h"
-#include "AUI/Util/ACleanup.h"
+#include <AUI/IO/AIOException.h>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
+#include <AUI/Platform/ErrorToException.h>
+#include <AUI/Platform/AProcess.h>
+#include <AUI/Util/ACleanup.h>
 #include <AUI/Traits/platform.h>
 #include <AUI/Util/kAUI.h>
 
 #ifdef WIN32
-#include <windows.h>
+#include <Windows.h>
 #include <direct.h>
-#include <AUI/Platform/ErrorToException.h>
-
 #else
 #include <dirent.h>
 #include <cstring>
@@ -69,12 +67,12 @@ APath APath::filenameWithoutExtension() const {
     return name.substr(0, it);
 }
 
-AString APath::extension() const {
+AStringView APath::extension() const {
     auto it = rfind('.');
-    return AString::substr(it + 1);
+    return super::view().substr(it + 1);
 }
 
-APath APath::file(const AString& fileName) const {
+APath APath::file(AStringView fileName) const {
     return ensureSlashEnding() + fileName;
 }
 
@@ -408,7 +406,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 }
 #endif
 
-AVector<APath> APath::find(const AString& filename, const AVector<APath>& locations, APathFinder flags) {
+AVector<APath> APath::find(AStringView filename, const AVector<APath>& locations, APathFinder flags) {
     AVector<APath> result;
     auto doReturn = [&] {
         return !!(flags & APathFinder::SINGLE) && !result.empty();
@@ -507,7 +505,7 @@ const APath& APath::chmod(int newMode) const {
     return *this;
 }
 
-APath APath::extensionChanged(const AString& newExtension) const {
+APath APath::extensionChanged(AStringView newExtension) const {
     auto it = rfind('.');
     if (it == NPOS) {
         return *this + "." + newExtension;

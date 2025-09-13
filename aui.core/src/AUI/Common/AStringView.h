@@ -61,6 +61,8 @@ public:
     using reverse_iterator = AUtf8ConstReverseIterator;
     using const_reverse_iterator = AUtf8ConstReverseIterator;
 
+    auto constexpr static NPOS = super::npos;
+
     using super::super;
 
     constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(pointer_cast<char>(utf8_str), length) {}
@@ -157,6 +159,10 @@ public:
         auto it = end();
         --it;
         return *it;
+    }
+
+    std::string toStdString() const {
+        return std::string{*this};
     }
 
 };

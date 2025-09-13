@@ -12,98 +12,8 @@
 #pragma once
 
 #include <iterator>
-#include "AUI/Reflect/AEnumerate.h"
-#include <AUI/Common/AString.h>
-#include <AUI/Common/ADeque.h>
-#include <AUI/Common/AVector.h>
 #include <AUI/Traits/serializable.h>
-
-/**
- * @brief Flag enum for APath::find
- * @ingroup io
- */
-AUI_ENUM_FLAG(APathFinder) {
-    NONE,
-
-    /**
-     * In addition to specified paths, use the system paths (PATH environment variable)
-     */
-    USE_SYSTEM_PATHS = 1 << 0,
-
-    /**
-     * Do scan recursively (slow)
-     */
-    RECURSIVE = 1 << 1,
-
-    /**
-     * Return only one file
-     */
-    SINGLE = 1 << 2
-};
-
-/**
- * @brief Flag enum for APath::listDir
- * @ingroup io
- */
-AUI_ENUM_FLAG(AFileListFlags) {
-    NONE = 0,
-
-    /**
-     * @brief Some file systems include ". " and " .. " to the list of files. In AUI, these elements are skipped by
-     *        default. This flag overrides this behaviour.
-     */
-    DONT_IGNORE_DOTS = 1 << 0,
-
-    /**
-     * @brief Include folders to the list of files.
-     */
-    DIRS = 1 << 1,
-
-    /**
-     * @brief Include regular files to the list of files.
-     */
-    REGULAR_FILES = 1 << 2,
-
-    /**
-     * @brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
-     * are set relative to the folder where the <code>listDir()</code> is called.
-    * @details
-     *
-     * <ul>
-     *     <li>/home</li>
-     *     <li>/home/user</li>
-     *     <li>/home/user/file1.txt</li>
-     *     <li>/home/user/file2.txt</li>
-     *     <li>/home/other</li>
-     *     <li>/home/other/code1.cpp</li>
-     *     <li>/home/other/code2.cpp</li>
-     * </ul>
-     */
-    RECURSIVE = 1 << 3,
-
-    DEFAULT_FLAGS = AFileListFlags::DIRS | AFileListFlags::REGULAR_FILES
-};
-
-/**
- * @brief Flag enum for APath::isEffectivelyAccessible
- * @ingroup io
- */
-AUI_ENUM_FLAG(AFileAccess) {
-    /**
-     * @brief File is Readable flag.
-     */
-    R = 0b100,
-
-    /**
-     * @brief File is Writeable flag.
-     */
-    W = 0b010,
-
-    /**
-     * @brief File is eXecutable flag.
-     */
-    X = 0b001,
-};
+#include <AUI/IO/APathView.h>
 
 /**
  * @brief An add-on to AString with functions for working with the path.
@@ -132,8 +42,11 @@ AUI_ENUM_FLAG(AFileAccess) {
  *        <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
  *     </ul>
  */
-class API_AUI_CORE APath final: public AString {
+class API_AUI_CORE APath: public AString {
 private:
+    using super = AString;
+    friend class APathView;
+
     APath ensureSlashEnding() const;
     APath ensureNonSlashEnding() const;
 
@@ -148,13 +61,25 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(std::move(other)) {
+    APath(AString&& other) noexcept : super(std::move(other)) {
         removeBackSlashes();
     }
-    APath(const AString& other) noexcept: AString(other) {
+    APath(const AString& other) : super(other) {
         removeBackSlashes();
     }
-    APath(const char* utf8) noexcept: AString(utf8) {
+    APath(std::string&& other) noexcept : super(std::move(other)) {
+        removeBackSlashes();
+    }
+    APath(const std::string& other) : super(other) {
+        removeBackSlashes();
+    }
+    APath(std::string_view other) : super(other) {
+        removeBackSlashes();
+    }
+    APath(const char* utf8) : super(utf8) {
+        removeBackSlashes();
+    }
+    APath(APathView other) : super(other) {
         removeBackSlashes();
     }
 
@@ -169,33 +94,6 @@ public:
     APath(const char16_t * str, std::size_t length) noexcept: AString(str, length) {
         removeBackSlashes();
     }
-
-    /**
-     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
-     * @details
-     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
-     * process, it prevents, potential conflicts between concurrent processes.
-     *
-     * When the application closes, a directory cleanup attempt will be performed.
-     *
-     * @sa APath::nextRandomTemporary
-     *
-     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
-     */
-    [[nodiscard]]
-    static const APath& processTemporaryDir();
-
-    /**
-     * @brief Creates a path to non-existent random file in system temp directory.
-     * @details
-     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
-     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
-     * any file either.
-     * @sa APathOwner
-     * @sa APath:processTemporaryDir:
-     */
-    [[nodiscard]]
-    static APath nextRandomTemporary();
 
     /**
      * Creates a file.
@@ -250,7 +148,7 @@ public:
      * @param fileName name of child file
      * @return path to child file relatively to this folder
      */
-    [[nodiscard]] APath file(const AString& fileName) const;
+    [[nodiscard]] APath file(AStringView fileName) const;
 
     /**
      * @brief File name.
@@ -274,7 +172,7 @@ public:
      * `/home/user/file.cpp -> cpp
      * @return file extension
      */
-    [[nodiscard]] AString extension() const;
+    [[nodiscard]] AStringView extension() const;
 
     /**
      * @brief Remove the uppermost folder from this path
@@ -375,7 +273,7 @@ public:
     /**
      * @brief Returns same path but with extension changed.
      */
-    APath extensionChanged(const AString& newExtension) const;
+    APath extensionChanged(AStringView newExtension) const;
 
     /**
      * @brief Checks whether path absolute or not.
@@ -404,6 +302,42 @@ public:
      * ```
      */
     const APath& chmod(int newMode) const;
+
+    /**
+     * @brief Path of the child element. Relevant only for folders.
+     * @param filename child to produce path to
+     * ```cpp
+     * AString filename = "file.txt";
+     * APath path = "path" / "to" / "your" / filename;
+     * ```
+     * Which would supplyValue into "path/to/your/file.txt"
+     * @return path to child file relatively to this folder
+     */
+    [[nodiscard]]
+    APath operator/(AStringView filename) const {
+        return file(filename);
+    }
+
+    /**
+     * @brief Return true if the current process has specified access flags to path.
+     * @details
+     * Checks permissions and existence of the file identified by this APath using the real user and group
+     * identifiers of the process, like if the file were opened by open().
+     *
+     * Using this function to check a process's permissions on a file before performing some operation based on that
+     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
+     * safer just to attempt the desired operation and handle any permission error that occurs.
+     */
+    [[nodiscard]]
+    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
+
+    APathView view() const noexcept {
+        return {*this};
+    }
+
+    AStringView string() const noexcept {
+        return super::view();
+    }
 
     enum DefaultPath {
         /**
@@ -490,35 +424,34 @@ public:
      * @param flags lookup flags (see APathFinder)
      * @return full path to the found file; if file not found, an empty string is returned.
      */
-    static AVector<APath> find(const AString& filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);
+    static AVector<APath> find(AStringView filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);
 
     /**
-     * @brief Path of the child element. Relevant only for folders.
-     * @param filename child to produce path to
-     * ```cpp
-     * AString filename = "file.txt";
-     * APath path = "path" / "to" / "your" / filename;
-     * ```
-     * Which would supplyValue into "path/to/your/file.txt"
-     * @return path to child file relatively to this folder
-     */
-    [[nodiscard]]
-    APath operator/(const AString& filename) const {
-        return file(filename);
-    }
-
-    /**
-     * @brief Return true if the current process has specified access flags to path.
+     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
      * @details
-     * Checks permissions and existence of the file identified by this APath using the real user and group
-     * identifiers of the process, like if the file were opened by open().
+     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
+     * process, it prevents, potential conflicts between concurrent processes.
      *
-     * Using this function to check a process's permissions on a file before performing some operation based on that
-     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
-     * safer just to attempt the desired operation and handle any permission error that occurs.
+     * When the application closes, a directory cleanup attempt will be performed.
+     *
+     * @sa APath::nextRandomTemporary
+     *
+     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
      */
     [[nodiscard]]
-    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
+    static const APath& processTemporaryDir();
+
+    /**
+     * @brief Creates a path to non-existent random file in system temp directory.
+     * @details
+     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
+     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
+     * any file either.
+     * @sa APathOwner
+     * @sa APath:processTemporaryDir:
+     */
+    [[nodiscard]]
+    static APath nextRandomTemporary();
 };
 
 /**
