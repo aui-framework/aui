@@ -265,4 +265,12 @@ Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/mast
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=aui-framework/aui&type=Date)](https://star-history.com/#aui-framework/aui&Date)
+<div align = center>
+ <a href="https://www.star-history.com/#aui-framework/aui&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date" />
+  </picture>
+ </a>
+</div>
