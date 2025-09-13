@@ -11,7 +11,16 @@ The project is inspired by Qt and aims to provide developers with the best possi
 to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
 programming languages and external compilers.
 
-[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
+---
+
+[<kbd>Documentation</kbd>](https://aui-framework.github.io)
+[<kbd>Examples</kbd>](https://aui-framework.github.io/develop/examples.html)
+[<kbd>Getting started</kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)
+[<kbd>Roadmap</kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)
+[<kbd>News</kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)
+[<kbd>Discussions</kbd>](https://github.com/aui-framework/aui/discussions)
+
+---
 
 ## Quickstart
 
