@@ -14,6 +14,7 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/APropertyPrecomputed.h>
 #include <AUI/Common/PropertyModifier.h>
+#include <AUI/Traits/unsafe_declval.h>
 
 namespace aui::detail::property {
 
@@ -147,21 +148,21 @@ auto makeBidirectionalProjection(Property&& property, Projection&& projection) {
 }
 }   // namespace aui::detail::property
 
-#define AUI_DETAIL_BINARY_OP(op)                                                                                 \
-    template <AAnyProperty T, typename Rhs>                                                                      \
-    inline decltype(auto) operator op(T&& lhs, Rhs&& rhs) { /* property forwarding op */                         \
-        static_assert(                                                                                           \
-            requires {                                                                                           \
-                const_cast<std::decay_t<typename std::decay_t<T>::Underlying>&>(*lhs) op std::forward<Rhs>(rhs); \
-            }, "AProperty: this binary operator is not defined for underlying type.");                           \
-        /* try const operator first */                                                                           \
-        if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                                            \
-            return *lhs op std::forward<Rhs>(rhs);                                                               \
-        } else {                                                                                                 \
-            /* fallback to a non-const version, involving writeScope() */                                        \
-            return *lhs.writeScope() op std::forward<Rhs>(rhs);                                                  \
-        }                                                                                                        \
-    }                                                                                                            \
+#define AUI_DETAIL_BINARY_OP(op)                                                                                     \
+    template <AAnyProperty T, typename Rhs>                                                                          \
+    inline decltype(auto) operator op(T&& lhs, Rhs&& rhs) { /* property forwarding op */                             \
+        static_assert(                                                                                               \
+            requires {                                                                                               \
+                aui::unsafe_declval<std::decay_t<typename std::decay_t<T>::Underlying>>() op std::forward<Rhs>(rhs); \
+            }, "AProperty: this binary operator is not defined for underlying type.");                               \
+        /* try const operator first */                                                                               \
+        if constexpr (requires { *lhs op std::forward<Rhs>(rhs); }) {                                                \
+            return *lhs op std::forward<Rhs>(rhs);                                                                   \
+        } else {                                                                                                     \
+            /* fallback to a non-const version, involving writeScope() */                                            \
+            return *lhs.writeScope() op std::forward<Rhs>(rhs);                                                      \
+        }                                                                                                            \
+    }                                                                                                                \
 // note: sync this PropertyModifier.h
 
 // comparison
