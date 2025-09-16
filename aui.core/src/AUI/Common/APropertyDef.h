@@ -14,6 +14,23 @@
 
 #include <AUI/Common/detail/property.h>
 
+namespace aui::detail {
+template<typename T>
+struct OwningContainer {
+    T object;
+    T* operator->() {
+        return &object;
+    }
+    T* operator->() const {
+        return &object;
+    }
+    T& operator*() {
+        return object;
+    }
+    T& operator*() const {}
+};
+}
+
 /**
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property-system
@@ -104,8 +121,16 @@ struct APropertyDef {
     }
 
     [[nodiscard]]
-    const Underlying* operator->() const noexcept {
-        return &std::invoke(get, base);
+    auto operator->() const noexcept {
+        if constexpr (std::is_reference_v<GetterReturnT>) {
+            return &std::invoke(get, base);
+        } else {
+            // the only reason we do that is because compiler would say "bruh u can't take address of a temporary
+            // object". so, we'll return a wrap that wraps -> instead, to extend lifetime of the object outside of scope
+            // of this exact function.
+            return aui::detail::OwningContainer{ std::invoke(get, base) };
+        }
+
     }
 
     [[nodiscard]] operator GetterReturnT() const noexcept { return std::invoke(get, base); }
