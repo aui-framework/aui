@@ -80,7 +80,7 @@ private:
     APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts->size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
     AProperty<AString> mSearchQuery;
-    AChar mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
+    APropertyPrecomputed<AString> mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
 
     void deleteCurrentContact() {
         if (mSelectedContact == nullptr) {
