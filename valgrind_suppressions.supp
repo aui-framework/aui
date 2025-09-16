@@ -38,7 +38,7 @@
    fontconfig
    Memcheck:Leak
    match-leak-kinds: definite
-   fun:malloc
+   fun:malloc|fun:calloc
    ...
    fun:XML_ParseBuffer
    ...
