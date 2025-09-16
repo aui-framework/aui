@@ -309,7 +309,7 @@ public:
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
      * @return same path but without <code>dir</code>
      */
-    AString relativelyTo(const APath& dir) const {
+    AString relativelyTo(APathView dir) const {
         view().relativelyTo(dir);
         return *this;
     }

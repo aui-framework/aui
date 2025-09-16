@@ -283,7 +283,7 @@ public:
      * @sa APath::removeFileRecursive()
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFile() const;
+    APathView removeFile() const;
 
     /**
      * @brief Delete files recursively, including itself.
@@ -296,7 +296,7 @@ public:
      *
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFileRecursive() const;
+    APathView removeFileRecursive() const;
 
     /**
      * @brief Delete directory contents (recursively).
@@ -309,19 +309,19 @@ public:
      *
      * @sa APath::removeFileRecursive()
      */
-    const APath& removeDirContentsRecursive() const;
+    APathView removeDirContentsRecursive() const;
 
     /**
      * @brief Create folder.
      * @return this
      */
-    const APath& makeDir() const;
+    APathView makeDir() const;
 
     /**
      * @brief Create all nonexistent folders on the path.
      * @return this
      */
-    const APath& makeDirs() const;
+    APathView makeDirs() const;
 
     /**
      * @brief Returns same path but without <code>dir</code>
@@ -330,7 +330,7 @@ public:
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
      * @return same path but without <code>dir</code>
      */
-    AString relativelyTo(const APath& dir) const;
+    AString relativelyTo(APathView dir) const;
 
     /**
      * @brief Returns same path but with extension changed.
@@ -363,7 +363,7 @@ public:
      * p.chmod(0755); // -rwxr-xr-x
      * ```
      */
-    const APath& chmod(int newMode) const;
+    APathView chmod(int newMode) const;
 
     /**
      * @brief Path of the child element. Relevant only for folders.

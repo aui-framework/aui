@@ -107,7 +107,7 @@ APath APathView::file(AStringView fileName) const {
     return ensureSlashEnding() + fileName;
 }
 
-AString APathView::relativelyTo(const APath& dir) const {
+AString APathView::relativelyTo(APathView dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
         AUI_ASSERT(startsWith(f));
@@ -129,7 +129,7 @@ bool APathView::isDirectoryExists() const {
     return stat().st_mode & S_IFDIR;
 }
 
-const APath& APathView::removeFile() const {
+APathView APathView::removeFile() const {
 #if AUI_PLATFORM_WIN
     if (isRegularFileExists()) {
         AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
@@ -152,7 +152,7 @@ const APath& APathView::removeFile() const {
     return *this;
 }
 
-const APath& APathView::removeFileRecursive() const {
+APathView APathView::removeFileRecursive() const {
     removeDirContentsRecursive();
     if (exists()) {
         removeFile();
@@ -160,7 +160,7 @@ const APath& APathView::removeFileRecursive() const {
     return *this;
 }
 
-const APath& APathView::removeDirContentsRecursive() const {
+APathView APathView::removeDirContentsRecursive() const {
     if (!isDirectoryExists()) {
         return *this;
     }
@@ -262,7 +262,7 @@ APath APathView::absolute() const {
 #endif
 }
 
-const APath& APathView::makeDir() const {
+APathView APathView::makeDir() const {
 #ifdef WIN32
     AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
     if (CreateDirectory(reinterpret_cast<const wchar_t*>(pathU16.data()), nullptr)) return *this;
@@ -279,7 +279,7 @@ const APath& APathView::makeDir() const {
     return *this;
 }
 
-const APath& APathView::makeDirs() const {
+APathView APathView::makeDirs() const {
     if (empty()) {
         return *this;
     }
@@ -345,7 +345,7 @@ const APathView& APathView::touch() const {
     return *this;
 }
 
-const APath& APathView::chmod(int newMode) const {
+APathView APathView::chmod(int newMode) const {
 #if AUI_PLATFORM_WIN
     AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
     if (::_wchmod(reinterpret_cast<const wchar_t*>(pathU16.data()), newMode) != 0)
