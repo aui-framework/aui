@@ -128,7 +128,7 @@ struct APropertyDef {
             // the only reason we do that is because compiler would say "bruh u can't take address of a temporary
             // object". so, we'll return a wrap that wraps -> instead, to extend lifetime of the object outside of scope
             // of this exact function.
-            return aui::detail::OwningContainer{ std::invoke(get, base) };
+            return aui::detail::OwningContainer<GetterReturnT>{ std::invoke(get, base) };
         }
 
     }
