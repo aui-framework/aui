@@ -213,7 +213,7 @@ concept AuiSLShader = requires(C&& c) {
 template<AuiSLShader Vertex, AuiSLShader Fragment>
 inline void useAuislShader(AOptional<gl::Program>& out) {
     out.emplace();
-    out->loadRaw(Vertex::code(), Fragment::code());
+    out->loadBoth(Vertex::code(), Fragment::code());
     Vertex::setup(out->handle());
     Fragment::setup(out->handle());
     out->compile();
@@ -1345,7 +1345,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                         auto shader = std::make_unique<gl::Program>();
 
                         shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         shader->loadFragmentShader(
                             R"(
 precision highp float;
@@ -1364,8 +1364,7 @@ void main() {
  vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
  gl_FragColor = vec4(accumulator.xyz, uvmap_sample.a);
 }
-)",
-                            false);
+)");
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(shader->handle());
                         shader->compile();
@@ -1442,7 +1441,7 @@ void main() {
                         auto kernel = aui::detail::gaussianKernel(radius);
 
                         result.shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
@@ -1467,7 +1466,7 @@ void main() {{
 }}
 )",
                                 fmt::arg("radius", radius),
-                                fmt::arg("kernel_size", kernel.size())), false);
+                                fmt::arg("kernel_size", kernel.size())));
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
                         result.shader->compile();
