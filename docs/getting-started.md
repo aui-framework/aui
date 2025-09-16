@@ -35,7 +35,7 @@
 
     ![](imgs/Screenshot_20250824_154056.png)
     
-    Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot.
+    Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot. MinGW is not supported.
     Also, if you use :simple-clion: CLion:
 
     1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
