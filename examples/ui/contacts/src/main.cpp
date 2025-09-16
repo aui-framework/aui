@@ -80,7 +80,7 @@ private:
     APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts->size(); };
     AProperty<_<Contact>> mSelectedContact = nullptr;
     AProperty<AString> mSearchQuery;
-    APropertyPrecomputed<AString> mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
+    AChar mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
 
     void deleteCurrentContact() {
         if (mSelectedContact == nullptr) {
@@ -122,7 +122,7 @@ private:
     _<AView> searchQueryList() {
         auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
             for (const auto& field : { c->displayName, c->note }) {
-                if (field->lowercase().contains(mSearchQueryLowercased.value())) {
+                if (field->lowercase().contains(*mSearchQueryLowercased)) {
                     return true;
                 }
             }

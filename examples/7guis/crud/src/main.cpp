@@ -38,7 +38,7 @@ public:
         });
 
         auto FILTER_VIEW = ranges::views::filter([this](const _<User>& user) {
-            return user->displayName->startsWith(mFilterPrefix.value());
+            return user->displayName->startsWith(*mFilterPrefix);
         });
 
         setContents(Vertical {
