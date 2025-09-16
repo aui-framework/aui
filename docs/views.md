@@ -1,5 +1,7 @@
 # Views overview
 
+<!-- aui:index_alias aui::views -->
+
 AUI offers implementations of basic views. You can use compose them to make custom components.
 
 ## Actions
