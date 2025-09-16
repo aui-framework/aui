@@ -16,6 +16,7 @@
 #include "APathView.h"
 
 #include <sys/stat.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/IO/APath.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/IO/AFileOutputStream.h>
