@@ -218,7 +218,7 @@ public:
      * `/home/user/file.cpp -> file.cpp`
      * @return file name
      */
-    [[nodiscard]] APath filename() const;
+    [[nodiscard]] APathView filename() const;
 
     /**
      * @brief File name without extension.
@@ -226,7 +226,7 @@ public:
      * `/home/user/file.cpp -> file
      * @return file name without extension
      */
-    [[nodiscard]] APath filenameWithoutExtension() const;
+    [[nodiscard]] APathView filenameWithoutExtension() const;
 
     /**
      * @brief File extension.

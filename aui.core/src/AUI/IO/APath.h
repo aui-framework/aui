@@ -99,7 +99,10 @@ public:
      * Creates a file.
      * @return this.
      */
-    const APath& touch() const;
+    const APath& touch() const {
+        view().touch();
+        return *this;
+    }
 
     /**
      * @brief Transforms this path to string with platform's native slashes.
@@ -109,13 +112,17 @@ public:
      *
      * On any other platform, returns path with forward slashes `/`.
      */
-    AString systemSlashDirection() const;
+    AString systemSlashDirection() const {
+        return view().systemSlashDirection();
+    }
 
     /**
      * @brief Get the absolute (full) path to the file.
      * @return the absolute (full) path to the file
      */
-    APath absolute() const;
+    APath absolute() const {
+        return view().absolute();
+    }
 
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
@@ -125,14 +132,18 @@ public:
      * @details
      * Use AFileListFlags enum flags to customize behaviour of this function.
      */
-    ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
+    ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const {
+        return view().listDir(f);
+    }
 
     /**
      * @details
      * `/home/user -> /home`
      * @return path to parent folder
      */
-    [[nodiscard]] APath parent() const;
+    [[nodiscard]] APath parent() const {
+        return view().parent();
+    }
 
     /**
      * @brief Path of the child element. Relevant only for folders.
@@ -148,7 +159,9 @@ public:
      * @param fileName name of child file
      * @return path to child file relatively to this folder
      */
-    [[nodiscard]] APath file(AStringView fileName) const;
+    [[nodiscard]] APath file(AStringView fileName) const {
+        return view().file(fileName);
+    }
 
     /**
      * @brief File name.
@@ -156,7 +169,9 @@ public:
      * `/home/user/file.cpp -> file.cpp`
      * @return file name
      */
-    [[nodiscard]] APath filename() const;
+    [[nodiscard]] APath filename() const {
+        return view().filename();
+    }
 
     /**
      * @brief File name without extension.
@@ -164,7 +179,9 @@ public:
      * `/home/user/file.cpp -> file
      * @return file name without extension
      */
-    [[nodiscard]] APath filenameWithoutExtension() const;
+    [[nodiscard]] APath filenameWithoutExtension() const {
+        return view().filenameWithoutExtension();
+    }
 
     /**
      * @brief File extension.
@@ -172,7 +189,9 @@ public:
      * `/home/user/file.cpp -> cpp
      * @return file extension
      */
-    [[nodiscard]] AStringView extension() const;
+    [[nodiscard]] AStringView extension() const {
+        return view().extension();
+    }
 
     /**
      * @brief Remove the uppermost folder from this path
@@ -180,7 +199,9 @@ public:
      * v1.0.0/client/azaza.zip -> client/azaza.zip
      * @return The same path except uppermost folder
      */
-    [[nodiscard]] APath withoutUppermostFolder() const;
+    [[nodiscard]] APath withoutUppermostFolder() const {
+        return view().withoutUppermostFolder();
+    }
 
     /**
      * @return true if whether regular file or a folder exists on this path
@@ -192,8 +213,9 @@ public:
      * Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
      * type of the file exists on this path.
      */
-    bool exists() const;
-
+    bool exists() const {
+        return view().exists();
+    }
 
     /**
      * @return true if regular file exists on this path
@@ -201,7 +223,9 @@ public:
      * A file can exist as a regular file or(and) as a folder. This function will return false only if regular
      * file does not exists on this path.
      */
-    bool isRegularFileExists() const;
+    bool isRegularFileExists() const {
+        return view().isRegularFileExists();
+    }
 
     /**
      * @return true if folder exists on this path
@@ -209,7 +233,9 @@ public:
      * A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
      * not exists on this path.
      */
-    bool isDirectoryExists() const;
+    bool isDirectoryExists() const {
+        return view().isDirectoryExists();
+    }
 
     /**
      * @brief Delete file. Relevant for empty folders and regular files.
@@ -221,7 +247,10 @@ public:
      * @sa APath::removeFileRecursive()
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFile() const;
+    const APath& removeFile() const {
+        view().removeFile();
+        return *this;
+    }
 
     /**
      * @brief Delete files recursively, including itself.
@@ -234,7 +263,10 @@ public:
      *
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFileRecursive() const;
+    const APath& removeFileRecursive() const {
+        view().removeFileRecursive();
+        return *this;
+    }
 
     /**
      * @brief Delete directory contents (recursively).
@@ -247,19 +279,28 @@ public:
      *
      * @sa APath::removeFileRecursive()
      */
-    const APath& removeDirContentsRecursive() const;
+    const APath& removeDirContentsRecursive() const {
+        view().removeDirContentsRecursive();
+        return *this;
+    }
 
     /**
      * @brief Create folder.
      * @return this
      */
-    const APath& makeDir() const;
+    const APath& makeDir() const {
+        view().makeDir();
+        return *this;
+    }
 
     /**
      * @brief Create all nonexistent folders on the path.
      * @return this
      */
-    const APath& makeDirs() const;
+    const APath& makeDirs() const {
+        view().makeDirs();
+        return *this;
+    }
 
     /**
      * @brief Returns same path but without <code>dir</code>
@@ -268,18 +309,26 @@ public:
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
      * @return same path but without <code>dir</code>
      */
-    AString relativelyTo(const APath& dir) const;
+    AString relativelyTo(const APath& dir) const {
+        view().relativelyTo(dir);
+        return *this;
+    }
 
     /**
      * @brief Returns same path but with extension changed.
      */
-    APath extensionChanged(AStringView newExtension) const;
+    APath extensionChanged(AStringView newExtension) const {
+        return view().extensionChanged(newExtension);
+    }
 
     /**
      * @brief Checks whether path absolute or not.
      * @return true if path is absolute
      */
-    bool isAbsolute() const;
+    bool isAbsolute() const {
+        return view().isAbsolute();
+    }
+
     /**
      * @brief Checks whether path absolute or not.
      * @return true if path is relative
@@ -288,8 +337,13 @@ public:
         return !isAbsolute();
     }
 
-    time_t fileModifyTime() const;
-    size_t fileSize() const;
+    time_t fileModifyTime() const {
+        return view().fileModifyTime();
+    }
+
+    size_t fileSize() const {
+        return view().fileSize();
+    }
 
     /**
      * @brief Changes mode (permissions) on file
@@ -301,7 +355,10 @@ public:
      * p.chmod(0755); // -rwxr-xr-x
      * ```
      */
-    const APath& chmod(int newMode) const;
+    const APath& chmod(int newMode) const {
+        view().chmod(newMode);
+        return *this;
+    }
 
     /**
      * @brief Path of the child element. Relevant only for folders.
@@ -329,7 +386,9 @@ public:
      * safer just to attempt the desired operation and handle any permission error that occurs.
      */
     [[nodiscard]]
-    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
+    bool isEffectivelyAccessible(AFileAccess flags) const noexcept {
+        return view().isEffectivelyAccessible(flags);
+    }
 
     APathView view() const noexcept {
         return {*this};

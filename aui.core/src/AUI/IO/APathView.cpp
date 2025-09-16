@@ -72,7 +72,7 @@ APath APathView::parent() const {
     return {};
 }
 
-APath APathView::filename() const {
+APathView APathView::filename() const {
     auto fs = bytes().rfind('/');
     auto bs = bytes().rfind('\\');
     if (fs == NPOS && bs == NPOS) {
@@ -84,10 +84,10 @@ APath APathView::filename() const {
     if (bs == NPOS) {
         bs = fs;
     }
-    return APath(bytes().substr(std::max(fs, bs) + 1));
+    return APathView(bytes().substr(std::max(fs, bs) + 1));
 }
 
-APath APathView::filenameWithoutExtension() const {
+APathView APathView::filenameWithoutExtension() const {
     auto name = filename();
     auto it = name.rfind('.');
     if (it == NPOS) {
@@ -336,7 +336,7 @@ AString APathView::systemSlashDirection() const {
 APathView::APathView() {}
 APathView::APathView(const APathView& other) = default;
 APathView::APathView(APathView&& other) = default;
-APathView::APathView(const APath& path) : super(path.view()) {}
+APathView::APathView(const APath& path) : super(path.string()) {}
 
 const APathView& APathView::touch() const {
     AFileOutputStream fos(toStdString());
