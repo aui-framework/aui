@@ -122,7 +122,7 @@ private:
     _<AView> searchQueryList() {
         auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
             for (const auto& field : { c->displayName, c->note }) {
-                if (field->lowercase().contains(mSearchQueryLowercased.value())) {
+                if (field->lowercase().contains(*mSearchQueryLowercased)) {
                     return true;
                 }
             }
