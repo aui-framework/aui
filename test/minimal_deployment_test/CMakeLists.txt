@@ -47,4 +47,5 @@ endforeach ()
 
 
 aui_app(TARGET test_project
+        ICON "icon.svg"
         NAME "Test Project")
