@@ -1105,9 +1105,9 @@ AString AStringView::removedAll(AChar c) {
 namespace aui::win32 {
 std::wstring toWchar(AStringView str) {
     static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t size must be same as char16_t");
-    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.size());
+    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.sizeBytes());
     std::wstring encoded(words, L'\0');
-    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.size(), reinterpret_cast<char16_t*>(encoded.data()));
+    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.sizeBytes(), reinterpret_cast<char16_t*>(encoded.data()));
     encoded[words] = '\0';
     encoded.resize(size);
     return std::move(encoded);

@@ -31,9 +31,9 @@ public:
         auto openTag = s.find('<') + 1;
         auto closeTag = s.find('>');
         auto name = s.substr(openTag, closeTag - openTag);
-        name = name.substr(name.rfind(' ') + 1);
+        name = name.substr(name.bytes().rfind(' ') + 1);
         if (name.endsWith(" &"))
-            name = name.substr(0, name.size() - 2);
+            name = name.substr(0, name.bytes().size() - 2);
         return name;
 #elif AUI_COMPILER_CLANG
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
