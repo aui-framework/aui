@@ -64,7 +64,7 @@ class API_AUI_CORE AStringVector;
  *
  * AStringView points to constant data. For owning version of AStringView, see [AString].
  *
- * To work with raw bytes, use [AStringView::bytes()] function.
+ * To work with raw bytes, use AStringView::bytes() function.
  */
 class API_AUI_CORE AStringView: private std::string_view {
 private:
