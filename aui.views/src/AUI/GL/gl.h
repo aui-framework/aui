@@ -10,6 +10,11 @@
  */
 
 #pragma once
+
+#if AUI_PLATFORM_MACOS
+#include <GL/glew.h>
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -30,8 +35,4 @@ extern "C" {
 #endif
 #ifdef __cplusplus
 }
-#endif
-
-#if AUI_PLATFORM_MACOS
-#include <GL/glew.h>
 #endif
