@@ -385,10 +385,10 @@ public:
      */
     size_type length() const noexcept;
 
-    AString substr(size_type pos = 0, size_type n = npos) const {
+    AStringView substr(size_type pos = 0, size_type n = npos) const {
         size_t base = (begin() + pos).getBytePos();
         size_t base_n = (begin() + pos + n).getBytePos() - base;
-        return AString(super::substr(base, base_n));
+        return view().substr(base, base_n);
     }
 
     AString trimLeft(char symbol = ' ') const;
