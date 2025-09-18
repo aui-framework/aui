@@ -20,7 +20,6 @@ extern "C" {
 #include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
 #elif AUI_PLATFORM_MACOS
-#include <GL/glew.h>
 #include <OpenGL/OpenGL.h>
 #elif AUI_PLATFORM_IOS
 #include <OpenGLES/ES3/gl.h>
@@ -31,4 +30,8 @@ extern "C" {
 #endif
 #ifdef __cplusplus
 }
+#endif
+
+#if AUI_PLATFORM_MACOS
+#include <GL/glew.h>
 #endif
