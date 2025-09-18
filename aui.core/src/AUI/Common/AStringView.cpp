@@ -87,14 +87,27 @@ std::u32string AStringView::toUtf32() const {
     return std::move(encoded);
 }
 
-AString AStringView::trimLeft(char symbol) const {
-    return AString(*this).trimLeft(symbol);
+AStringView AStringView::trimLeft(char symbol) const {
+    for (auto i = bytes().begin(); i != bytes().end(); ++i)
+    {
+        if (*i != symbol)
+        {
+            return { i, bytes().end() };
+        }
+    }
+    return {};
 }
-AString AStringView::trimRight(char symbol) const {
-    return AString(*this).trimRight(symbol);
+AStringView AStringView::trimRight(char symbol) const {
+    for (auto i = bytes().rbegin(); i != bytes().rend(); ++i)
+    {
+        if (*i != symbol) {
+            return { bytes().begin(), i.base() };
+        }
+    }
+    return {};
 }
-AString AStringView::trim(char symbol) const {
-    return AString(*this).trim(symbol);
+AStringView AStringView::trim(char symbol) const {
+    return trimLeft(symbol).trimRight(symbol);
 }
 
 AString AStringView::uppercase() const {

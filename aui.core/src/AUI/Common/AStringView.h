@@ -121,9 +121,9 @@ public:
         return *this;
     }
 
-    AString trimLeft(char symbol = ' ') const;
-    AString trimRight(char symbol = ' ') const;
-    AString trim(char symbol = ' ') const;
+    AStringView trimLeft(char symbol = ' ') const;
+    AStringView trimRight(char symbol = ' ') const;
+    AStringView trim(char symbol = ' ') const;
 
     size_type sizeBytes() const noexcept {
         return bytes().size();

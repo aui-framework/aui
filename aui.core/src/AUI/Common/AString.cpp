@@ -362,53 +362,6 @@ AString::size_type AString::length() const noexcept {
     return simdutf::count_utf8(super::data(), super::size());
 }
 
-AString AString::trimLeft(char symbol) const
-{
-    for (auto i = begin(); i != end(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return { i, end() };
-        }
-    }
-    return {};
-}
-
-AString AString::trimRight(char symbol) const
-{
-    for (auto i = rbegin(); i != rend(); ++i)
-    {
-        if (*i != AChar(symbol))
-        {
-            return { begin(), i.base() };
-        }
-    }
-    return {};
-}
-
-AString AString::trim(char symbol) const
-{
-    auto left = begin();
-    auto right = end();
-
-    while (left != right && *left == AChar(symbol))
-    {
-        ++left;
-    }
-
-    if (left != right)
-    {
-        auto riter = rbegin();
-        while (riter.base() != left && *riter == AChar(symbol))
-        {
-            ++riter;
-        }
-        right = riter.base();
-    }
-
-    return { left, right };
-}
-
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
         return substr(0, s) + stringAtEnd;

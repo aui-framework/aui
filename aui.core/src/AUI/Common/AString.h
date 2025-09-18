@@ -391,9 +391,15 @@ public:
         return view().substr(base, base_n);
     }
 
-    AString trimLeft(char symbol = ' ') const;
-    AString trimRight(char symbol = ' ') const;
-    AString trim(char symbol = ' ') const;
+    AString trimLeft(char symbol = ' ') const {
+        return view().trimLeft(symbol);
+    }
+    AString trimRight(char symbol = ' ') const {
+        return view().trimRight(symbol);
+    }
+    AString trim(char symbol = ' ') const {
+        return view().trim(symbol);
+    }
 
     AString restrictLength(size_t s, const AString& stringAtEnd) const;
 
