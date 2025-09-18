@@ -495,6 +495,10 @@ public:
 
     AString& removeAll(AChar c);
 
+    AString removedAll(AChar c) {
+        return view().removedAll(c);
+    }
+
     AString processEscapes() const;
 
     /**

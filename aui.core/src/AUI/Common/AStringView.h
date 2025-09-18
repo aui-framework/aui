@@ -349,6 +349,8 @@ public:
     [[nodiscard]]
     AString uppercase() const;
 
+    AString removedAll(AChar c);
+
     static constexpr auto TO_NUMBER_BASE_BIN = 2;
     static constexpr auto TO_NUMBER_BASE_OCT = 8;
     static constexpr auto TO_NUMBER_BASE_DEC = 10;

@@ -1095,6 +1095,12 @@ AStringVector AStringView::split(AChar c) const {
     return result;
 }
 
+AString AStringView::removedAll(AChar c) {
+    AString copy{*this};
+    copy.removeAll(c);
+    return copy;
+}
+
 #if AUI_PLATFORM_WIN
 namespace aui::win32 {
 std::wstring toWchar(AStringView str) {
