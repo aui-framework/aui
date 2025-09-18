@@ -442,9 +442,13 @@ public:
 
     using super::operator+=;
 
-    AString uppercase() const;
+    AString uppercase() const {
+        return view().uppercase();
+    }
 
-    AString lowercase() const;
+    AString lowercase() const {
+        return view().lowercase();
+    }
 
     AStringVector split(AChar c) const;
 
@@ -505,7 +509,9 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<int32_t> toInt() const noexcept;
+    AOptional<int32_t> toInt() const noexcept {
+        return view().toInt();
+    }
 
     /**
      * @brief Converts the string to long value.
@@ -514,7 +520,9 @@ public:
      *
      * If conversion to long is not possible, nullopt is returned.
      */
-    AOptional<int64_t> toLong() const noexcept;
+    AOptional<int64_t> toLong() const noexcept {
+        return view().toLong();
+    }
 
     /**
      * @brief Converts the string to unsigned int value.
@@ -523,7 +531,9 @@ public:
      *
      * If conversion to unsigned int is not possible, exception is thrown.
      */
-    AOptional<uint32_t> toUInt() const noexcept;
+    AOptional<uint32_t> toUInt() const noexcept {
+        return view().toUInt();
+    }
 
     /**
      * @brief Converts the string to unsigned long value.
@@ -532,7 +542,9 @@ public:
      *
      * If conversion to unsigned long is not possible, exception is thrown.
      */
-    AOptional<uint64_t> toULong() const noexcept;
+    AOptional<uint64_t> toULong() const noexcept {
+        return view().toULong();
+    }
 
     /**
      * @brief Converts the string to a float number.
@@ -540,7 +552,9 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<float> toFloat() const noexcept;
+    AOptional<float> toFloat() const noexcept {
+        return view().toFloat();
+    }
 
     /**
      * @brief Converts the string to a double number.
@@ -548,40 +562,44 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<double> toDouble() const noexcept;
+    AOptional<double> toDouble() const noexcept {
+        return view().toDouble();
+    }
 
     /**
      * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
      * @sa toNumberOrException
      */
-    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
+    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
+        return view().toNumber(base);
+    }
 
     int32_t toIntOrException() const {
-        return toInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toIntOrException();
     }
 
     int64_t toLongOrException() const {
-        return toLong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toLongOrException();
     }
 
     uint32_t toUIntOrException() const {
-        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toUIntOrException();
     }
 
     uint64_t toULongOrException() const {
-        return toULong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toULongOrException();
     }
 
     float toFloatOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad float: {}", toStdString()).c_str());
+        return view().toFloatOrException();
     }
 
     double toDoubleOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
+        return view().toDoubleOrException();
     }
 
     int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
-        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toNumberOrException(base);
     }
 
     template<typename... Args>
