@@ -40,7 +40,7 @@
 APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind('/');
     if (c != NPOS) {
-        return substr(0, c);
+        return APath(substr(0, c));
     }
     return {};
 }
@@ -66,7 +66,7 @@ APath APath::filenameWithoutExtension() const {
     if (it == NPOS) {
         return name;
     }
-    return name.substr(0, it);
+    return APath(name.substr(0, it));
 }
 
 AString APath::extension() const {
@@ -87,7 +87,7 @@ APath APath::ensureSlashEnding() const {
 
 APath APath::ensureNonSlashEnding() const {
     if (endsWith("/")) {
-        return substr(0, length() - 1);
+        return APath(substr(0, length() - 1));
     }
     return *this;
 }
@@ -322,7 +322,7 @@ APath APath::withoutUppermostFolder() const {
     auto r = AString::find('/');
     if (r == NPOS)
         return *this;
-    return substr(r + 1);
+    return APath(substr(r + 1));
 }
 
 #if AUI_PLATFORM_WIN

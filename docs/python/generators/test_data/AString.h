@@ -520,7 +520,7 @@ public:
         return *this;
     }
 
-    inline ::AString& operator+=(const AString& str) noexcept
+    inline ::AString& operator+=(const AStringView& str) noexcept
     {
         append(str);
         return *this;

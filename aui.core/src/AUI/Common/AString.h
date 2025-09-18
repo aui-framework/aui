@@ -149,7 +149,6 @@ public:
     }
 };
 
-class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
@@ -161,6 +160,8 @@ class API_AUI_CORE AByteBufferView;
  * (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
  *
  * Unicode provides comprehensive support for international writing systems and symbols.
+ *
+ * For non-owning version of AString, see [AStringView].
  */
 class API_AUI_CORE AString: public std::string {
 private:
@@ -197,10 +198,10 @@ public:
         }
     }
 
-    static constexpr auto TO_NUMBER_BASE_BIN = 2;
-    static constexpr auto TO_NUMBER_BASE_OCT = 8;
-    static constexpr auto TO_NUMBER_BASE_DEC = 10;
-    static constexpr auto TO_NUMBER_BASE_HEX = 16;
+    static constexpr auto TO_NUMBER_BASE_BIN = AStringView::TO_NUMBER_BASE_BIN;
+    static constexpr auto TO_NUMBER_BASE_OCT = AStringView::TO_NUMBER_BASE_OCT;
+    static constexpr auto TO_NUMBER_BASE_DEC = AStringView::TO_NUMBER_BASE_DEC;
+    static constexpr auto TO_NUMBER_BASE_HEX = AStringView::TO_NUMBER_BASE_HEX;
 
     template<class T>
     constexpr static size_type strLength(const T* str) noexcept {
@@ -375,25 +376,49 @@ public:
      * @brief Returns the number of bytes in the UTF-8 encoded string
      * @sa length
      */
+    [[nodiscard]]
     size_type sizeBytes() const noexcept {
-        return size();
+        return view().length();
     }
 
     /**
      * @brief Returns the number of Unicode characters in the string
      * @sa sizeBytes
      */
-    size_type length() const noexcept;
-
-    AString substr(size_type pos = 0, size_type n = npos) const {
-        size_t base = (begin() + pos).getBytePos();
-        size_t base_n = (begin() + pos + n).getBytePos() - base;
-        return AString(super::substr(base, base_n));
+    [[nodiscard]]
+    size_type length() const noexcept {
+        return view().length();
     }
 
-    AString trimLeft(char symbol = ' ') const;
-    AString trimRight(char symbol = ' ') const;
-    AString trim(char symbol = ' ') const;
+    /**
+     * @brief Returns a substring `[pos, pos + count)`.
+     * @param pos The starting position of the substring.
+     * @param count The number of characters to include in the substring.
+     * If the requested substring extends past the end of the string, i.e. the count is greater than `size() - pos`
+     * (e.g. if `count == npos`), the returned substring is `[pos, size())`.
+     *
+     * Since AString encapsulates a UTF-8 encoded string, the returned substring is always valid UTF-8, hence, it
+     * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
+     */
+    [[nodiscard]]
+    AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
+        return view().substr(pos, count);
+    }
+
+    [[nodiscard]]
+    AStringView trimLeft(AChar symbol = ' ') const {
+        return view().trimLeft(symbol);
+    }
+
+    [[nodiscard]]
+    AStringView trimRight(AChar symbol = ' ') const {
+        return view().trimRight(symbol);
+    }
+
+    [[nodiscard]]
+    AStringView trim(AChar symbol = ' ') const {
+        return view().trim(symbol);
+    }
 
     AString restrictLength(size_t s, const AString& stringAtEnd) const;
 
@@ -413,8 +438,11 @@ public:
     using super::append;
 
     AString& append(char c);
-
     AString& append(AChar c);
+    AString& append(AStringView c) {
+        append(c.bytes());
+        return *this;
+    }
 
     AString& operator<<(char c) noexcept
     {
@@ -442,9 +470,18 @@ public:
 
     using super::operator+=;
 
-    AString uppercase() const;
+    AString& operator+=(AStringView other) {
+        append(other);
+        return *this;
+    }
 
-    AString lowercase() const;
+    AString uppercase() const {
+        return view().uppercase();
+    }
+
+    AString lowercase() const {
+        return view().lowercase();
+    }
 
     AStringVector split(AChar c) const;
 
@@ -495,7 +532,7 @@ public:
      * @return If the string equals to "true", true returned, false otherwise.
      */
     bool toBool() const {
-        return sizeBytes() == 4 && lowercase() == "true";
+        return view().toBool();
     }
 
     /**
@@ -505,7 +542,9 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<int32_t> toInt() const noexcept;
+    AOptional<int32_t> toInt() const noexcept {
+        return view().toInt();
+    }
 
     /**
      * @brief Converts the string to long value.
@@ -514,7 +553,9 @@ public:
      *
      * If conversion to long is not possible, nullopt is returned.
      */
-    AOptional<int64_t> toLong() const noexcept;
+    AOptional<int64_t> toLong() const noexcept {
+        return view().toLong();
+    }
 
     /**
      * @brief Converts the string to unsigned int value.
@@ -523,7 +564,9 @@ public:
      *
      * If conversion to unsigned int is not possible, exception is thrown.
      */
-    AOptional<uint32_t> toUInt() const noexcept;
+    AOptional<uint32_t> toUInt() const noexcept {
+        return view().toUInt();
+    }
 
     /**
      * @brief Converts the string to unsigned long value.
@@ -532,7 +575,9 @@ public:
      *
      * If conversion to unsigned long is not possible, exception is thrown.
      */
-    AOptional<uint64_t> toULong() const noexcept;
+    AOptional<uint64_t> toULong() const noexcept {
+        return view().toULong();
+    }
 
     /**
      * @brief Converts the string to a float number.
@@ -540,7 +585,9 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<float> toFloat() const noexcept;
+    AOptional<float> toFloat() const noexcept {
+        return view().toFloat();
+    }
 
     /**
      * @brief Converts the string to a double number.
@@ -548,40 +595,44 @@ public:
      *
      * If conversion to int is not possible, nullopt is returned.
      */
-    AOptional<double> toDouble() const noexcept;
+    AOptional<double> toDouble() const noexcept {
+        return view().toDouble();
+    }
 
     /**
      * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
      * @sa toNumberOrException
      */
-    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
+    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
+        return view().toNumber(base);
+    }
 
     int32_t toIntOrException() const {
-        return toInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toIntOrException();
     }
 
     int64_t toLongOrException() const {
-        return toLong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toLongOrException();;
     }
 
     uint32_t toUIntOrException() const {
-        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toUIntOrException();
     }
 
     uint64_t toULongOrException() const {
-        return toULong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+        return view().toULongOrException();
     }
 
     float toFloatOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad float: {}", toStdString()).c_str());
+        return view().toFloatOrException();
     }
 
     double toDoubleOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
+        return view().toDoubleOrException();
     }
 
-    int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
-        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
+    int toNumberOrException(aui::ranged_number<int, 2, 36> base = AStringView::TO_NUMBER_BASE_DEC) const {
+        return view().toNumberOrException(base);
     }
 
     template<typename... Args>
@@ -651,11 +702,14 @@ public:
         return *it;
     }
 
+    /**
+     * @brief Unchecked access to the UTF-8 character at the specified position.
+     * @param i The position of the character to return.
+     * @return The character at the specified position.
+     */
+    [[nodiscard]]
     AChar operator[](size_type i) const {
-        if (empty()) {
-            return AChar();
-        }
-        return *(begin() + i);
+        return view()[i];
     }
 
     iterator erase(const_iterator it);
