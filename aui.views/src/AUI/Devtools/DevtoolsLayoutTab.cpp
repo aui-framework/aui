@@ -163,4 +163,18 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
     });
 }
 
+DevtoolsLayoutTab::~DevtoolsLayoutTab() {
+    if (mViewPropertiesView) {
+        mViewPropertiesView->setTargetView(nullptr);
+    }
+    if (mViewHierarchyTree) {
+        // TODO: Fix error `ATreeModelIndex::as any_cast failed (asked for class _<class AView>, actually stored std::nullptr_t)`
+        mViewHierarchyTree->select(ATreeModelIndex(0, 0, nullptr));
+    }
+    if (mTargetWindow) {
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
+        mTargetWindow->redraw();
+    }
+}
+
 void DevtoolsLayoutTab::forceLayoutUpdate() { mTargetWindow->forceUpdateLayoutRecursively(); }
