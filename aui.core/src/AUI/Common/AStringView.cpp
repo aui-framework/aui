@@ -92,7 +92,7 @@ AStringView AStringView::trimLeft(char symbol) const {
     {
         if (*i != symbol)
         {
-            return { i, bytes().end() };
+            return std::string_view{ i, bytes().end() };
         }
     }
     return {};
@@ -101,7 +101,7 @@ AStringView AStringView::trimRight(char symbol) const {
     for (auto i = bytes().rbegin(); i != bytes().rend(); ++i)
     {
         if (*i != symbol) {
-            return { bytes().begin(), i.base() };
+            return std::string_view{ bytes().begin(), i.base() };
         }
     }
     return {};
