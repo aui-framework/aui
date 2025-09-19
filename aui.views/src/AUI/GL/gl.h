@@ -10,7 +10,12 @@
  */
 
 #pragma once
-#ifndef __cplusplus
+
+#if AUI_PLATFORM_MACOS
+#include <GL/glew.h>
+#endif
+
+#ifdef __cplusplus
 extern "C" {
 #endif
 #if AUI_PLATFORM_ANDROID
@@ -20,7 +25,6 @@ extern "C" {
 #include <GLES3/gl3ext.h>
 #include <EGL/egl.h>
 #elif AUI_PLATFORM_MACOS
-#include <GL/glew.h>
 #include <OpenGL/OpenGL.h>
 #elif AUI_PLATFORM_IOS
 #include <OpenGLES/ES3/gl.h>
@@ -29,6 +33,6 @@ extern "C" {
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
-#ifndef __cplusplus
+#ifdef __cplusplus
 }
 #endif
