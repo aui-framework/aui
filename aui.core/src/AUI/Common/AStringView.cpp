@@ -1056,7 +1056,7 @@ AStringView AStringView::trimLeft(AChar symbol) const {
     {
         if (*i != symbol)
         {
-            return AStringView(i.data(), npos);
+            return AStringView(i.data(), end().data() - i.data());
         }
     }
     return {};
