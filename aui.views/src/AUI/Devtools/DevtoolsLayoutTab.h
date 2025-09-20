@@ -18,6 +18,7 @@
 class DevtoolsLayoutTab: public AViewContainerBase {
 public:
     DevtoolsLayoutTab(AWindowBase* targetWindow);
+    ~DevtoolsLayoutTab() override;
 
 private:
     AWindowBase* mTargetWindow;
