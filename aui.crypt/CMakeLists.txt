@@ -16,6 +16,9 @@ target_include_directories(aui.crypt PRIVATE ${OPENSSL_INCLUDE_DIR})
 
 aui_link(aui.crypt PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 
+auib_mark_var_forwardable(OPENSSL_CRYPTO_LIBRARY)
+auib_mark_var_forwardable(OPENSSL_SSL_LIBRARY)
+
 if(WIN32 AND NOT BUILD_SHARED_LIBS)
     aui_link(OpenSSL::Crypto INTERFACE wsock32 ws2_32)
 endif()
