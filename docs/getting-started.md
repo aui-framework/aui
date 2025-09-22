@@ -33,7 +33,7 @@
     
     !!! success "Install Windows updates"
         
-        You may want to ignore this, but in case of errors, please ensure you
+        You may want to ignore this, but in case of errors, please ensure you have installed Windows updates.
         
         ![](imgs/Screenshot_20250824_154056.png)
     
@@ -53,7 +53,7 @@
         
         ![](imgs/erfgbhjnjerghb.png)
         
-        Search and select the following workloads:
+        Search and select the following components:
         
         1. `Windows Universal C Runtime`
         2. `MSVC v142` or newer
