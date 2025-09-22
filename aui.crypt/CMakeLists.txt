@@ -24,6 +24,7 @@ auib_mark_var_forwardable(OPENSSL_VERSION)
 auib_mark_var_forwardable(OPENSSL_LIBRARIES)
 auib_mark_var_forwardable(OPENSSL_FOUND)
 auib_mark_var_forwardable(OPENSSL_INCLUDE_DIR)
+auib_mark_var_forwardable(OPENSSL_ROOT_DIR)
 
 if(WIN32 AND NOT BUILD_SHARED_LIBS)
     aui_link(OpenSSL::Crypto INTERFACE wsock32 ws2_32)
