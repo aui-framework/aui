@@ -1643,12 +1643,9 @@ macro(aui_app)
         set(_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
         set(CMAKE_SYSTEM_PROCESSOR ${_SYSTEM_PROCESSOR})
         #include(BundleUtilities)
-        include(FindXCTest)
         if (CMAKE_TOOLCHAIN_FILE)
             get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
         endif()
-
-        message(STATUS XCTestFound:${XCTest_FOUND})
 
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
