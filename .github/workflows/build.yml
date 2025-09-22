@@ -331,6 +331,10 @@ jobs:
         if: runner.os == 'macOS'
         run: brew install ninja
 
+      - name: Install Windows dependencies
+        if: runner.os == 'Windows'
+        run: choco install innosetup
+
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
