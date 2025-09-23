@@ -1643,6 +1643,7 @@ macro(aui_app)
         set(_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
         set(CMAKE_SYSTEM_PROCESSOR ${_SYSTEM_PROCESSOR})
         #include(BundleUtilities)
+        auib_use_system_libs_begin()
         include(FindXCTest)
         if (CMAKE_TOOLCHAIN_FILE)
             get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
@@ -1660,6 +1661,8 @@ macro(aui_app)
         find_library(MOBILECORESERVICES MobileCoreServices REQUIRED)
         find_library(CFNETWORK CFNetwork REQUIRED)
         find_library(SYSTEMCONFIGURATION SystemConfiguration REQUIRED)
+
+        auib_use_system_libs_end()
 
         # link the frameworks located above
         target_link_libraries(${APP_TARGET}
