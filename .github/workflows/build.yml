@@ -380,6 +380,7 @@ jobs:
         working-directory: ${{github.workspace}}/build
         run: |
           cmake . -DAUI_APP_PACKAGING=INNOSETUP
+          cmake --build . --config ${{matrix.debug_or_release}}
           cpack -C ${{ matrix.debug_or_release }} . -B artifacts
 
       - name: Print logs
