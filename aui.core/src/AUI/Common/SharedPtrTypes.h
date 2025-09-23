@@ -45,72 +45,88 @@ template<typename T>
 class AArc;
 
 /**
- * Deprecated, use AArc or aui::Arc instead
- */
-template<typename T>
-using _ = AArc<T>;
-
-/**
  * @brief An std::weak_ptr with AUI extensions.
  * @tparam T
  */
 template<typename T>
-struct _weak: public std::weak_ptr<T> {
+struct AWeakArc: public std::weak_ptr<T> {
 private:
     using super = std::weak_ptr<T>;
 
 public:
     using super::weak_ptr;
 
-    _weak(const _weak<T>& v) noexcept: std::weak_ptr<T>(v) {}
-    _weak(_weak<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
-    _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
-    _weak(std::weak_ptr<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
+    AWeakArc(const AWeakArc<T>& v) noexcept: std::weak_ptr<T>(v) {}
+    AWeakArc(AWeakArc<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
+    AWeakArc(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
+    AWeakArc(std::weak_ptr<T>&& v) noexcept: std::weak_ptr<T>(std::move(v)) {}
 
     AArc<T> lock() const noexcept {
         return static_cast<AArc<T>>(super::lock());
     }
 
-    _weak& operator=(const std::weak_ptr<T>& v) noexcept {
+    AWeakArc& operator=(const std::weak_ptr<T>& v) noexcept {
         super::weak_ptr::operator=(v);
         return *this;
     }
 
-    _weak& operator=(std::weak_ptr<T>&& v) noexcept {
+    AWeakArc& operator=(std::weak_ptr<T>&& v) noexcept {
         super::weak_ptr::operator=(std::move(v));
         return *this;
     }
 
-    _weak& operator=(const _weak<T>& v) noexcept {
+    AWeakArc& operator=(const AWeakArc<T>& v) noexcept {
         super::weak_ptr::operator=(v);
         return *this;
     }
 
-    _weak& operator=(_weak<T>&& v) noexcept {
+    AWeakArc& operator=(AWeakArc<T>&& v) noexcept {
         super::weak_ptr::operator=(std::move(v));
         return *this;
     }
 
-    _weak& operator=(const std::shared_ptr<T>& v) noexcept {
+    AWeakArc& operator=(const std::shared_ptr<T>& v) noexcept {
         super::weak_ptr::operator=(v);
         return *this;
     }
 
-    _weak& operator=(std::shared_ptr<T>&& v) noexcept {
+    AWeakArc& operator=(std::shared_ptr<T>&& v) noexcept {
         super::weak_ptr::operator=(std::move(v));
         return *this;
     }
 
-    _weak& operator=(const AArc<T>& v) noexcept {
+    AWeakArc& operator=(const AArc<T>& v) noexcept {
         super::weak_ptr::operator=(v);
         return *this;
     }
 
-    _weak& operator=(AArc<T>&& v) noexcept {
+    AWeakArc& operator=(AArc<T>&& v) noexcept {
         super::weak_ptr::operator=(std::move(v));
         return *this;
     }
 };
+
+/**
+ * Deprecated, use AArc or aui::Arc instead
+ */
+template<typename T>
+using _ = AArc<T>;
+
+/**
+ * Deprecated, use AWeakArc or aui::WeakArc instead
+ */
+template<typename T>
+using _weak = AWeakArc<T>;
+
+namespace aui {
+
+template<typename T>
+using Arc = AArc<T>;
+
+template<typename T>
+using WeakArc = AWeakArc<T>;
+
+}
 
 template<typename T, typename Deleter = std::default_delete<T>>
 using _unique = std::unique_ptr<T, Deleter>;
@@ -202,7 +218,7 @@ namespace aui {
          * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
          */
         template <typename T>
-        static _weak<T> weak_from_this(T* raw) {
+        static AWeakArc<T> weak_from_this(T* raw) {
             // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
             // although i dont understand reasons behind it
             return _weak<T>(shared_from_this(raw));
@@ -212,12 +228,14 @@ namespace aui {
 
 
 /**
- * @brief @brief An std::weak_ptr with AUI extensions.
+ * @brief An std::shared_ptr with AUI extensions.
  * @details
  * !!! note
  *
  *     Of course, it is not good tone to define a class with _ type but it significantly increases coding speed. Instead
  *     of writing every time std::shared_ptr you should write only the _ symbol.
+ *
+ * Arc stands for atomic reference counter
  */
 template<typename T>
 class AArc : public std::shared_ptr<T>
@@ -289,7 +307,7 @@ public:
     AArc(const AArc& v): std::shared_ptr<T>(v) {}
     AArc(AArc&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     AArc(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
-    AArc(const _weak<T>& v): std::shared_ptr<T>(v) {}
+    AArc(const AWeakArc<T>& v): std::shared_ptr<T>(v) {}
 
     AArc& operator=(const AArc& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);
@@ -312,8 +330,8 @@ public:
      * @return weak reference
      */
     [[nodiscard]]
-    _weak<T> weak() const {
-        return _weak<T>(*this);
+    AWeakArc<T> weak() const {
+        return AWeakArc<T>(*this);
     }
 
     template<typename SignalField, typename Object, typename Function>
