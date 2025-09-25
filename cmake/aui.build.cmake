@@ -793,21 +793,6 @@ macro(_aui_find_root)
     endif()
 endmacro()
 
-macro(_aui_try_find_toolbox)
-    _aui_find_root()
-    message(STATUS "AUI_BUILD_AUI_ROOT = ${AUI_BUILD_AUI_ROOT}")
-    find_program(AUI_TOOLBOX_EXE aui.toolbox
-            HINTS ${AUI_BUILD_AUI_ROOT}/bin)
-    if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUIB_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
-
-        if (AUI_TOOLBOX_EXE)
-            list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
-            set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location" FORCE)
-        endif()
-    endif()
-endmacro()
-
 macro(_aui_provide_toolbox_for_host)
     message(STATUS "Compiling aui.toolbox for the host platform")
     set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider)
@@ -818,7 +803,7 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
-set(AUI_VERSION v7.1.1)
+set(AUI_VERSION v8.0.0-rc.12)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
@@ -828,6 +813,7 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
             VERSION ${AUI_VERSION})
+_aui_check_toolbox()
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -849,7 +835,7 @@ auib_import(aui https://github.com/aui-framework/aui
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR}/crosscompile-host ${_forwarded_args}
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} ${_forwarded_args}
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
@@ -863,7 +849,15 @@ auib_import(aui https://github.com/aui-framework/aui
     if (NOT _r STREQUAL 0)
         message(FATAL_ERROR "Unable to build aui.toolbox for the host system (check ${_build_log})")
     endif()
-    _aui_try_find_toolbox()
+
+    file(STRINGS "${_workdir}/b/CMakeCache.txt" _cache_contents)
+    foreach (_line ${_cache_contents})
+        if (_line MATCHES "^AUI_TOOLBOX_EXE:.*=(.*)")
+            set(AUI_TOOLBOX_EXE "${CMAKE_MATCH_1}" CACHE FILEPATH "aui.toolbox" FORCE)
+            break()
+        endif ()
+    endforeach ()
+
     if (NOT AUI_TOOLBOX_EXE)
         message(FATAL_ERROR "Could not provide aui.toolbox (AUI_TOOLBOX_EXE) - giving up")
     endif()
@@ -884,12 +878,22 @@ function(_aui_check_toolbox)
         set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox" FORCE)
         return()
     endif()
-    _aui_try_find_toolbox()
-    if (AUI_TOOLBOX_EXE)
+    _aui_find_root()
+    find_program(AUI_TOOLBOX_EXE
+            NAMES aui.toolbox aui.toolbox.exe
+            PATHS ${AUI_BUILD_AUI_ROOT}/bin
+            NO_DEFAULT_PATH
+            REQUIRED)
+    if (EXISTS ${AUI_TOOLBOX_EXE})
         return()
+    endif ()
+
+    _aui_provide_toolbox_for_host()
+    if (NOT AUI_TOOLBOX_EXE)
+        message(FATAL_ERROR "Can't provide AUI_TOOLBOX_EXE")
     endif()
-    set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox" FORCE)
 endfunction()
+
 
 function(aui_compile_assets AUI_MODULE_NAME)
     set(oneValueArgs DIR)

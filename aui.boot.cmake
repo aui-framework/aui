@@ -36,7 +36,6 @@ define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
 
 macro(auib_mark_var_forwardable VAR)
     set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
-    set(${VAR} "${${VAR}}" CACHE INTERNAL "auib_mark_var_forwardable propagated variable")
 endmacro()
 
 option(AUIB_NO_PRECOMPILED "Forbid usage of precompiled packages")
@@ -374,7 +373,7 @@ function(_auib_precompiled_archive_name _output_var _project_name)
     set(${_output_var} ${_tmp} PARENT_SCOPE)
 endfunction()
 
-macro(_auib_try_find AUI_MODULE_NAME)
+macro(_auib_try_find)
     set(_mode CONFIG)
     while(TRUE)
         if (AUIB_IMPORT_COMPONENTS)
@@ -441,7 +440,7 @@ function(_auib_try_download_precompiled_binary)
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
                 WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
 
-        _auib_try_find(${AUI_MODULE_NAME})
+        _auib_try_find()
 
         file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz)
 
@@ -520,7 +519,7 @@ function(_auib_postprocess)
 endfunction()
 
 # TODO add a way to provide file access to the repository
-macro(auib_import AUI_MODULE_NAME URL)
+function(auib_import AUI_MODULE_NAME URL)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
@@ -711,7 +710,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             ROOT_DIR # OPENSSL_ROOT_DIR
             DIR)
         foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
-            unset(${_v1}_${_v2})
+            unset(${_v1}_${_v2} PARENT_SCOPE)
             unset(${_v1}_${_v2} CACHE)
         endforeach()
     endforeach()
@@ -721,10 +720,10 @@ macro(auib_import AUI_MODULE_NAME URL)
     set(${AUI_MODULE_NAME}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     # creating uppercase variables in order to ease the case insensitive checks
-    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX} )
-    set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX} )
-    set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} )
-    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} )
+    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
@@ -750,7 +749,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
-            _auib_try_find(${AUI_MODULE_NAME})
+            _auib_try_find()
         endif()
     endif()
 
@@ -1059,7 +1058,7 @@ macro(auib_import AUI_MODULE_NAME URL)
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     elseif(NOT ${AUI_MODULE_NAME}_FOUND)
-        _auib_try_find(${AUI_MODULE_NAME})
+        _auib_try_find()
 
         if (NOT ${AUI_MODULE_NAME}_FOUND)
             # print verbosely find procedure
@@ -1167,7 +1166,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             message(WARNING "${AUIB_IMPORT_NAME} You are staying on a branch or did not specify the version control, please specify a tag or hash VERSION!\nSee https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html#version")
         endif ()
     endif ()
-endmacro()
+endfunction()
 
 
 macro(auib_use_system_libs_begin)
