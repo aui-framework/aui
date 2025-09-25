@@ -878,15 +878,22 @@ function(_aui_check_toolbox)
         set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox" FORCE)
         return()
     endif()
-    _aui_provide_toolbox_for_host()
-    if (AUI_TOOLBOX_EXE)
+    _aui_find_root()
+    find_program(AUI_TOOLBOX_EXE
+            NAMES aui.toolbox aui.toolbox.exe
+            PATHS ${AUI_BUILD_AUI_ROOT}/bin
+            NO_DEFAULT_PATH
+            REQUIRED)
+    if (EXISTS ${AUI_TOOLBOX_EXE})
         return()
-    endif()
-    set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox" FORCE)
-    if (NOT EXISTS ${AUI_TOOLBOX_EXE})
-        message(FATAL_ERROR "Can't provide AUI_TOOLBOX_EXE")
     endif ()
+
+    _aui_provide_toolbox_for_host()
+    if (NOT AUI_TOOLBOX_EXE)
+        message(FATAL_ERROR "Can't provide AUI_TOOLBOX_EXE")
+    endif()
 endfunction()
+
 
 function(aui_compile_assets AUI_MODULE_NAME)
     set(oneValueArgs DIR)
