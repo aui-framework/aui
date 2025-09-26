@@ -835,7 +835,7 @@ _aui_check_toolbox()
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} ${_forwarded_args}
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args}
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
