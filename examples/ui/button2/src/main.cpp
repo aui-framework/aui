@@ -22,7 +22,7 @@ public:
     MainWindow(): AWindow("Button", 600_dp, 300_dp) {
         setContents(Centered {
             Button {
-                .content = "Click me",
+                .content = Label { "Click me" },
                 .onClick = {me::onClick},
             },
         });

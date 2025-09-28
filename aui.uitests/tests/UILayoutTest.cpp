@@ -90,7 +90,7 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
 TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
     } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
     auto b = By::type<AButton>().one();
 
@@ -100,8 +100,8 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
 }
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
-      Button { "2" } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
     } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
@@ -109,10 +109,10 @@ TEST_F(UILayoutTest, LayoutSpacing2) {
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
-      Button { "2" } AUI_WITH_STYLE { Expanding {} },
-      Button { "3" } AUI_WITH_STYLE { Expanding {} },
-      Button { "4" } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "3" } } AUI_WITH_STYLE { Expanding {} },
+      Button { Label { "4" } } AUI_WITH_STYLE { Expanding {} },
     } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");

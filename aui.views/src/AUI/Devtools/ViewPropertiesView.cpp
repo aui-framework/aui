@@ -73,7 +73,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
             Horizontal {
               Label { addressStr },
-              Button { .content = "Copy", .onClick = [addressStr] { AClipboard::copyToClipboard(addressStr); } },
+              Button { .content = Label { "Copy" }, .onClick = [addressStr] { AClipboard::copyToClipboard(addressStr); } },
             },
 
             Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
@@ -82,7 +82,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             Horizontal {
               Button {
-                .content = "Add \"DevtoolsTest\" stylesheet name",
+                .content = Label { "Add \"DevtoolsTest\" stylesheet name" },
                 .onClick =
                     [this, targetView] {
                         setTargetView(targetView);

@@ -55,13 +55,13 @@ fun Counter() {
 
 ![](imgs/Screenshot_20250401_081455.png)
 
-|           | AUI                                                                   | Kotlin                            |
-|-----------|-----------------------------------------------------------------------|-----------------------------------|
-| State     | Inside class                                                          | Local variable (`remember`)       |
-|           | `Vertical`                                                            | `Column`                          |
-|           | `Horizontal`                                                          | `Row`                             |
-| Display   | `Label { AUI_REACT("{}"_format(mCounter)) }`                          | `Text(text = "Counter $counter")` |
-| Increment | `Button { .content = "Count", .onClick = [this] { mCounter += 1; } }` | `Button(onClick = { counter++ })` |
+|           | AUI                                                                             | Kotlin                            |
+|-----------|---------------------------------------------------------------------------------|-----------------------------------|
+| State     | Inside class                                                                    | Local variable (`remember`)       |
+|           | `Vertical`                                                                      | `Column`                          |
+|           | `Horizontal`                                                                    | `Row`                             |
+| Display   | `Label { AUI_REACT("{}"_format(mCounter)) }`                                    | `Text(text = "Counter $counter")` |
+| Increment | `Button { .content = Label { "Count" }, .onClick = [this] { mCounter += 1; } }` | `Button(onClick = { counter++ })` |
 
 
 AUI tends to have longer expressions but does not differ that much. Jetpack Compose is an immediate mode UI, whereas AUI

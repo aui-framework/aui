@@ -204,7 +204,7 @@ TEST_F(UIClick, Click3) {
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
     mTestWindow->setContents(Centered {
         Vertical {
-            Button { .content = "Say hello", .onClick = [this] { mTestWindow->onButtonClicked(); } },
+            Button { .content = Label { "Say hello" }, .onClick = [this] { mTestWindow->onButtonClicked(); } },
         },
     });
 
@@ -219,7 +219,7 @@ TEST_F(UIClick, NoClick) {
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(0);
     mTestWindow->setContents(Centered {
         Vertical {
-            Button { .content = "Say hello" },
+            Button { .content = Label { "Say hello" } },
         },
     });
 

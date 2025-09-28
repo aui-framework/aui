@@ -226,9 +226,9 @@ public:
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
-     *     Button { "Item1" },
-     *     Button { "Item2" },
-     *     Button { "Item3" },
+     *     Button { Label { "Item1" } },
+     *     Button { Label "Item2" } },
+     *     Button { Label { "Item3" } },
      * });
      *
      * surfaceContainer->pack();

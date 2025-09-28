@@ -22,7 +22,7 @@ AUI_ENTRY {
     auto window = _new<AWindow>("Button", 600_dp, 300_dp);
     window->setContents(Centered {
       Button {
-        .content = "Click me",
+        .content = Label { "Click me" },
         .onClick = [] { ALogger::info("Test") << "Hello world!"; },
       },
     });

@@ -221,10 +221,10 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              Button { "Undo", {me::undo} } AUI_LET {
+              Button { Label { "Undo" }, {me::undo} } AUI_LET {
                   it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
               },
-              Button { "Redo", {me::redo} } AUI_LET {
+              Button { Label { "Redo" }, {me::redo} } AUI_LET {
                 it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
               },
             },

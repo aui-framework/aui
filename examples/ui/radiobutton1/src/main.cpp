@@ -23,11 +23,11 @@ AUI_ENTRY {
     window->setContents(Centered {
       Vertical {
         RadioButton {
-          .content = "Option 1",
+          .content = Label { "Option 1" },
           .onClick = [] { ALogger::info("Test") << "Hello world!"; },
         },
         RadioButton {
-          .content = "Option 2",
+          .content = Label { "Option 2" },
           .onClick = [] { ALogger::info("Test") << "Hello world!"; },
         },
       },

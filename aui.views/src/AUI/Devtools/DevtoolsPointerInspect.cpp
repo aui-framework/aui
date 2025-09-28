@@ -158,7 +158,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
           Horizontal {
             Label { "Address (AView*):" },
             mAddress,
-            Button { .content = "Inspect", .onClick = [this] {
+            Button { .content = Label { "Inspect" }, .onClick = [this] {
                 try {
                     auto ptr = [&] {
                         auto ptr = mAddress->text()->toStdString();

@@ -192,15 +192,15 @@ namespace declarative {
  * @ingroup views
  * @details
  * ```cpp
- * Button { "Default button" },
+ * Label { "Default label" },
  * Style{
  *     {
  *         c(".btn"),
  *         BackgroundSolid { 0xff0000_rgb },
  *     },
  * } ({
- *     Button { "Red button" },
- *     Button { "Another red button" },
+ *     Label { "Red label" },
+ *     Label { "Another red label" },
  * }),
  * ```
  */

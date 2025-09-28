@@ -49,7 +49,7 @@
  * Button usually contains text only, but in practice any view can be put in it.
  *
  * Starting from AUI 8.0.0, AButton itself does not render text; instead, it's a styled container, which is populated
- * with any views by the user, i.e., ALabel. `Button { .content = "Text" }` does exactly this. AButton used to have
+ * with any views by the user, i.e., ALabel. AButton used to have
  * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
  * options of customization.
  *
@@ -104,6 +104,13 @@ class API_AUI_VIEWS AButton : public AViewContainer {
 public:
     AButton();
 
+    /**
+     * @brief Inflates a label with a text.
+     * @details
+     * Left for compatibility.
+     *
+     * This setter would override any of existing content within button.
+     */
     explicit AButton(AString text) {
         setText(std::move(text));
     }
@@ -148,9 +155,9 @@ struct Button {
     /**
      * @brief Content of the button.
      * @details
-     * Can be either a string (which will be wrapped in ALabel) or any view.
+     * Can be any view, i.e., `Label` to display text.
      */
-    std::variant<contract::In<AString>, _<AView>> content;
+    _<AView> content;
 
     /**
      * @brief Handler for button click event.
@@ -172,14 +179,7 @@ struct Button {
         if (isDefault) {
             button->setDefault();
         }
-        if (auto* s = std::get_if<contract::In<AString>>(&content)) {
-            // if .content = "some text", compose a label for it.
-            auto label = _new<ALabel>();
-            s->bindTo(label->text());
-            button->setContents(Centered { std::move(label) });
-            return button;
-        }
-        button->setContents(Centered { std::move(std::get<_<AView>>(content)) });
+        button->setContents(Centered { std::move(content) });
         return button;
     }
 };

@@ -22,7 +22,7 @@ public:
         setContents(Centered {
             /// [AButton_example]
             Button {
-                .content = "Click me",
+                .content = Label { "Click me" },
                 .onClick = {me::onClick},
                 .isDefault = true,
             },

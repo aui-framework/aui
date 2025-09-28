@@ -75,7 +75,7 @@ protected:
                 },
                 mOverlay = Vertical::Expanding {
                   SpacerExpanding{},
-                  Button { "Another bullshit", []{} },
+                  Button { Label { "Another bullshit" }, []{} },
                 },
               }
             });

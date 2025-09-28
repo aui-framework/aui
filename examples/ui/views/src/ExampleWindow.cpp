@@ -696,7 +696,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") AUI_WITH_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { .content = "OK", .onClick = [surface] { surface->close(); } } },
+        Centered { Button { .content = Label { "OK" }, .onClick = [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

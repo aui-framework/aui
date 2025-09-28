@@ -204,7 +204,7 @@
  * setContents(Centered {
  *     Label { "Highlighted" } << ".highlight",
  *     Label { "Not highlighted" },
- *     Button { "Not highlighted either" },
+ *     Button { Label { "Not highlighted either" } },
  * });
  * ```
  *
