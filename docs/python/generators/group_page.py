@@ -57,11 +57,11 @@ def _generate_regular_group_page(doxygen, fos, group_id):
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
         print(f"""
 -   __{group_item.namespaced_name()}__
-
----
-
-{brief}
-
+    
+    ---
+    
+    {brief}
+    
 """, file=fos)
 
     print('</div>', file=fos)
