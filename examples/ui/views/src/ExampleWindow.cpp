@@ -50,6 +50,7 @@
 #include "AUI/IO/AByteBufferInputStream.h"
 #include "AUI/Curl/ACurl.h"
 #include "AUI/View/ASpinnerV2.h"
+#include "AUI/View/ASpacerFixed.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -160,11 +161,23 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Buttons" },
                   Vertical {
-                    _new<AButton>("Common button"),
-                    _new<AButton>("Default button") AUI_LET { it->setDefault(); },
-                    _new<AButton>("Disabled button") AUI_LET { it->setDisabled(); },
                     Button {
-                      .content = Horizontal { Icon { ":img/logo.svg" }, Label { "Button with icon" }, },
+                      .content = Label { "Common button" },
+                      .onClick = [this] { AMessageBox::show(this, "Title", "Message"); },
+                    },
+                    Button {
+                      .content = Label { "Default button" },
+                      .onClick = [this] { AMessageBox::show(this, "Title", "Message"); },
+                      .isDefault = true,
+                    },
+                    Button { .content = Label { "Disabled button" } } AUI_LET { it->setDisabled(); },
+                    Button {
+                      .content =
+                          Horizontal {
+                            Icon { ":img/logo.svg" },
+                            SpacerFixed { 2_dp },
+                            Label { "Button with icon" },
+                          },
                       .onClick = [this] {
                         AMessageBox::show(this, "Title", "Message");
                       },

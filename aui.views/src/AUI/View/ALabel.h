@@ -61,6 +61,7 @@ public:
 };
 
 
+/// [ALabel_declarative_example]
 namespace declarative {
 /**
  * <!-- aui:no_dedicated_page -->
@@ -78,6 +79,7 @@ struct Label {
     }
 };
 }
+/// [ALabel_declarative_example]
 
 template<>
 struct ADataBindingDefault<ALabel, AString> {
