@@ -26,38 +26,38 @@
  * This function is a shortcut to std::make_shared.
  */
 template<typename T, typename... Args>
-inline _<T> _new(Args&& ... args)
+inline AArc<T> _new(Args&& ... args)
 {
-    return static_cast<_<T>>(std::make_shared<T>(std::forward<Args>(args)...));
+    return static_cast<AArc<T>>(std::make_shared<T>(std::forward<Args>(args)...));
 }
 
 template<typename T, typename E>
-inline _<T> _new(std::initializer_list<E> il) {
-    return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
+inline AArc<T> _new(std::initializer_list<E> il) {
+    return static_cast<AArc<T>>(std::make_shared<T>(il.begin(), il.end()));
 }
 
 
 template<typename T>
-std::ostream& operator<<(std::ostream& os, const _<T>& rhs) noexcept {
+std::ostream& operator<<(std::ostream& os, const AArc<T>& rhs) noexcept {
     return os << "[" << AClass<T>::name() << " " << rhs.get() << "]";
 }
 
 // gtest printer
 template<typename T>
-inline void PrintTo(const _<T>& ptr, std::ostream* stream) {
+inline void PrintTo(const AArc<T>& ptr, std::ostream* stream) {
     *stream << ptr;
 }
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
-inline _<T>& _<T>::connect(SignalField signalField, Object object, Function&& function) {
+inline AArc<T>& AArc<T>::connect(SignalField signalField, Object object, Function&& function) {
     AObject::connect(super::get()->*signalField, object, std::forward<Function>(function));
     return *this;
 }
 
 template<typename T>
 template<typename SignalField, typename Function>
-inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
+inline AArc<T>& AArc<T>::connect(SignalField signalField, Function&& function) {
     AObject::connect(super::get()->*signalField, super::get(), std::forward<Function>(function));
     return *this;
 }
