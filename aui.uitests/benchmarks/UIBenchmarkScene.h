@@ -81,7 +81,7 @@ static _<AView> uiBenchmarkScene() {
                 "Combobox 5",
                 "Combobox 6",
               })),
-              _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
+              _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown" })) AUI_LET { it->setDisabled(); },
             },
           },
           GroupBox {

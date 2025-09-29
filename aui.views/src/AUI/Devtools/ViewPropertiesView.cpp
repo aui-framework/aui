@@ -34,6 +34,7 @@
 #include "AUI/View/ADropdownList.h"
 #include "AUI/View/ARadioGroup.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/Common/AString.h"
 
 using namespace ass;
 using namespace declarative;
@@ -78,7 +79,13 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
             Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
 
-            CheckBoxWrapper { Label { "Enabled" } } && targetView->enabled(),
+            CheckBox {
+              .checked = AUI_REACT(targetView->enabled()),
+              .onCheckedChange = [targetView](bool enabled) {
+                  targetView->enabled() = enabled;
+              },
+              .content = Label { "Enabled" },
+            },
             AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             Horizontal {
               Button {
@@ -90,16 +97,13 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     },
               } AUI_LET { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
             },
-            CheckBoxWrapper {
-              Label { "Expanding" },
-            } && targetView->expanding().biProjected(aui::lambda_overloaded {
-                   [](bool v) -> glm::ivec2 {
-                       return glm::ivec2(v ? 1 : 0);
-                   },
-                   [](glm::ivec2 v) {
-                     return v != glm::ivec2(0);
-                   },
-                 }),
+            CheckBox {
+              .checked = AUI_REACT(targetView->expanding() != glm::ivec2(0)),
+              .onCheckedChange = [this, targetView](bool expanding) {
+                  targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0);
+              },
+              .content = Label { "Expanding" },
+            },
             GroupBox {
               Label { "Visibility" },
               _new<ARadioGroup>() AUI_LET {

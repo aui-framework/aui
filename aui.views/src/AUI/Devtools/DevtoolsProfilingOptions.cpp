@@ -49,14 +49,25 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           AText::fromItems(
               { "These settings are applicable for render-to-texture optimizations.",
                 makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html") }),
-          CheckBoxWrapper { Label { "Highlight redraw requests" } } &&
-              targetWindow->profiling()->highlightRedrawRequests,
+          CheckBox {
+            .checked = AUI_REACT(targetWindow->profiling()->highlightRedrawRequests),
+            .onCheckedChange = [targetWindow](bool checked) {
+                targetWindow->profiling()->highlightRedrawRequests = checked;
+            },
+            .content = Label { "Highlight redraw requests" },
+          },
           AText::fromItems(
               { "Draws purple rect ", coloredRect(0xff00ff_rgb),
                 " over view that requested redraw "
                 "(AView::redraw). This can help to find views that causes window to repaint which "
                 "affects application performance and device's battery life." }),
-          CheckBoxWrapper { Label { "Render to texture decay" } } && targetWindow->profiling()->renderToTextureDecay,
+          CheckBox {
+            .checked = AUI_REACT(targetWindow->profiling()->renderToTextureDecay),
+            .onCheckedChange = [targetWindow](bool checked) {
+                targetWindow->profiling()->renderToTextureDecay = checked;
+            },
+            .content = Label { "Render to texture decay" },
+          },
           AText::fromItems(
               { "Visually displays render to texture optimization by gradually transforming old pixel ",
                 "data to gray ", coloredRect(AColor::GRAY),
@@ -64,8 +75,13 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
                 "data would be represented as unaffected to gray color and seem bright and saturated "
                 "color. From perspective of performance it's good that whole screen transformed to gray "
                 "color and thus no redraw is performed." }),
-          CheckBoxWrapper { Label { "Breakpoint on AWindow update layout flag" } } &&
-              targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid,
+          CheckBox {
+            .checked = AUI_REACT(targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid),
+            .onCheckedChange = [targetWindow](bool checked) {
+                targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid = checked;
+            },
+            .content = Label { "Breakpoint on AWindow update layout flag" },
+          },
           AText::fromItems(
               { "Stops the attached debugger at the point when window's update layout flag is set. This "
                 "can be used to walk through stacktrace and find which view and why triggered layout "

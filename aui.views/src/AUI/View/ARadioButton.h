@@ -27,7 +27,7 @@
  * icon: material/radiobox-marked
  * ---
  *
- * @brief A radio button.
+ * @brief Radio buttons let people select one option from a set of options.
  *
  * ![](imgs/views/ARadioGroup.png)
  *
@@ -157,6 +157,13 @@ struct RadioButton {
     contract::In<bool> checked;
 
     /**
+     * @brief Handler for button click event.
+     * @details
+     * Called when user activates the button.
+     */
+    contract::Slot<> onClick;
+
+    /**
      * @brief View associated with the radio button.
      * @details
      * Can be any view, i.e., `Label` to display text.
@@ -166,13 +173,6 @@ struct RadioButton {
      * Clicking or activating this view will cause the radio button to be checked.
      */
     _<AView> content;
-
-    /**
-     * @brief Handler for button click event.
-     * @details
-     * Called when user activates the button.
-     */
-    contract::Slot<> onClick;
 
     API_AUI_VIEWS _<AView> operator()();
 };

@@ -34,8 +34,8 @@ _<AView> radioButtons(_<State> state) {
         const auto& [index, text] = i;
         return RadioButton {
             .checked = AUI_REACT(state->selection == index),
-            .content = Label { text },
             .onClick = [state, index] { state->selection = index; },
+            .content = Label { text },
         };
     };
 }
@@ -43,12 +43,12 @@ _<AView> radioButtons(_<State> state) {
 AUI_ENTRY {
     auto window = _new<AWindow>("Radiobutton", 600_dp, 300_dp);
     auto state = _new<State>();
-    window->setContents(Centered {
+    window->setContents(
       Vertical {
         radioButtons(state),
         Label { AUI_REACT("Selected option: {}"_format(state->selection)) },
-      },
-    });
+      }
+    );
     window->show();
     return 0;
 }

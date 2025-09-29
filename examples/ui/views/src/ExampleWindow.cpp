@@ -108,28 +108,51 @@ static _<AView> link(const AString& url) {
 }
 /// [label_coloring]
 
+static _<AView> checkBoxesDemo() {
+    struct State {
+        AProperty<bool> checked1 = false, checked2 = true;
+    };
+    auto state = _new<State>();
+    return Vertical {
+        CheckBox {
+          .checked = AUI_REACT(state->checked1),
+          .onCheckedChange = [state](bool checked) { state->checked1 = checked; },
+          .content = Label { "Unchecked checkbox" },
+        },
+        CheckBox {
+          .checked = AUI_REACT(state->checked2),
+          .onCheckedChange = [state](bool checked) { state->checked2 = checked; },
+          .content = Label { "Checked checkbox" },
+        },
+        CheckBox {
+          .checked = AUI_REACT(false),
+          .content = Label { "Disabled checkbox" },
+        } AUI_LET { it->disable(); },
+    };
+}
+
 static _<AView> radioButtonsDemo() {
     auto selection = _new<AProperty<int>>(0);
     return Vertical {
         RadioButton {
           .checked = AUI_REACT(*selection == 0),
-          .content = Label { "Radiobutton 1" },
           .onClick = [selection] { *selection = 0; },
+          .content = Label { "Radiobutton 1" },
         },
         RadioButton {
           .checked = AUI_REACT(*selection == 1),
-          .content = Label { "Radiobutton 2" },
           .onClick = [selection] { *selection = 1; },
+          .content = Label { "Radiobutton 2" },
         },
         RadioButton {
           .checked = AUI_REACT(*selection == 2),
-          .content = Label { "Radiobutton 3" },
           .onClick = [selection] { *selection = 2; },
+          .content = Label { "Radiobutton 3" },
         },
         RadioButton {
           .checked = AUI_REACT(*selection == 3),
-          .content = Label { "Radiobutton 4" },
           .onClick = [selection] { *selection = 3; },
+          .content = Label { "Radiobutton 4" },
         } AUI_LET { it->disable(); },
     };
 }
@@ -213,12 +236,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
                 // checkboxes
                 GroupBox {
-                  CheckBoxWrapper { Label { "Checkboxes" } } AUI_LET { it->checked() = true; },
-                  Vertical {
-                    CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Checked checkbox" } } AUI_LET { it->checked() = true; },
-                    CheckBoxWrapper { Label { "Disabled checkbox" } } AUI_LET { it->setDisabled(); },
-                  },
+                  Label { "Checkboxes" } ,
+                  checkBoxesDemo(),
                 },
 
                 // radiobuttons
@@ -239,7 +258,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       "Dropdown list 5",
                       "Dropdown list 6",
                     })),
-                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
+                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown" })) AUI_LET { it->setDisabled(); },
                   },
                 },
                 GroupBox {
@@ -679,18 +698,21 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       Centered {
         _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }),
       },
-      _new<ASpacerExpanding>(),
+      SpacerExpanding{},
       _new<ASpinnerV2>(),
-      CheckBoxWrapper {
-        Label { "Enabled" },
-      } AUI_LET {
-              it->check();
-              connect(it->checked().changed, AUI_SLOT(tabView)::setEnabled);
+      Centered {
+        Horizontal {
+          CheckBox {
+            .checked = AUI_REACT(tabView->enabled()),
+            .onCheckedChange = [tabView](bool checked) { tabView->enabled() = checked; },
+            .content = Label { "Enabled" },
           },
-      _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") AUI_LET {
-              it << "#copyright";
-              it->setEnabled(false);
-          },
+          _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
+                  it << "#copyright";
+                  it->setEnabled(false);
+              },
+        },
+      },
     });
 }
 

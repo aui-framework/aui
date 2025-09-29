@@ -251,9 +251,9 @@ AStylesheet::AStylesheet() {
             BackgroundImage { ":uni/svg/down.svg", {}, {}, Sizing::CENTER },
         },
 
-        // ACheckBox
+        /// [ACheckBox]
         {
-            t<ACheckBox>(),
+            t<ACheckBox::Box>(), // styling box itself
             BackgroundSolid { 0xffffff_rgb },
             Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
@@ -262,29 +262,30 @@ AStylesheet::AStylesheet() {
             BorderRadius { 3_dp },
         },
         {
-            t<ACheckBox>::active(),
+            t<ACheckBox>::active() > t<ACheckBox::Box>(),
             BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
-            Selected(t<ACheckBox>()),
+            Selected(t<ACheckBox::Box>()),
             BackgroundImage { ":uni/svg/checkbox.svg", getOsThemeColor().readableBlackOrWhite() },
             Border { nullptr },
             BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-          t<ACheckBox>::active() && Selected(t<ACheckBox>()),
-          BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
-          BackgroundGradient { getOsThemeColorLighter().lighter(0.3f), getOsThemeColor(), 180_deg },
+            t<ACheckBox>::active() > Selected(t<ACheckBox::Box>()),
+            BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
+            BackgroundGradient { getOsThemeColorLighter().lighter(0.3f), getOsThemeColor(), 180_deg },
         },
         {
-            t<ACheckBox>::disabled(),
+            t<ACheckBox::Box>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
         },
         {
-            Selected(t<ACheckBox>()) && t<ACheckBox>::disabled(),
+            Selected(t<ACheckBox::Box>::disabled()),
             BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
+        /// [ACheckBox]
 
         // ARulerView
         {

@@ -90,6 +90,8 @@
  * means you can place various UI elements inside a button, such as images, icons, custom layouts, or combinations of
  * different views.
  *
+ * See [aui-assets] for more information on how to put icons in your application.
+ *
  * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
  *
  * ![](imgs/Screenshot_20250719_130034.png)

@@ -106,7 +106,7 @@ struct Slot {
           AObject::connect(signal, slotDef);
       }) {}
 
-    template <aui::invocable Invocable>
+    template <typename Invocable>
     Slot(Invocable&& invocable)
       : mSetup([invocable = std::forward<Invocable>(invocable)](emits<Args...>& signal) mutable {
           AObject::connect(signal, AObject::GENERIC_OBSERVER, std::move(invocable));
