@@ -283,6 +283,9 @@ public:
                 [[maybe_unused]] auto discoverReferencedProperties = *it;
             }
             return rng | ranges::views::transform([this](const T& t) {
+                       if (!mKeyFunction) {
+                           return AForEachUIBase::Entry { .view = mFactory(t), .id = 0 };
+                       }
                        auto key = mKeyFunction(t);
                        _<AView> view;
                        if (mViewsSharedCache) {
@@ -330,7 +333,12 @@ public:
 
 protected:
 
-    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override { return mViewsSharedCache; }
+    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override {
+        if (!mKeyFunction) {
+            return nullptr;
+        }
+        return mViewsSharedCache;
+    }
 
 private:
     template <typename FactoryTypeTag>
@@ -339,13 +347,14 @@ private:
     aui::for_each_ui::detail::ViewsSharedCache* mViewsSharedCache = nullptr;
     ListFactory mListFactory;
     ViewFactory mFactory;
-    KeyFunction mKeyFunction = [](const T& t) {
+    KeyFunction mKeyFunction = defaultKeyFunction();
+    static KeyFunction defaultKeyFunction() {
         if constexpr (requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); }) {
-            return aui::for_each_ui::defaultKey(t, 0L);
+            return [](const T& t) { return aui::for_each_ui::defaultKey(t, 0L); };
         }
-        throw AException("can't automatically generate key function; please define one with setKeyFunction" + AReflect::name(&t));
-        return aui::for_each_ui::Key {};
-    };;
+        return nullptr;
+    }
+
 
     void updateUnderlyingModel() {
         if (!mFactory) {

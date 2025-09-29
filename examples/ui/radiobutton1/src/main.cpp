@@ -13,23 +13,40 @@
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/View/ARadioButton.h>
+#include <AUI/View/AForEachUI.h>
+#include "AUI/View/ARadioButton.h"
 
 using namespace ass;
 using namespace declarative;
 
+struct State {
+    AProperty<int> selection = 0;
+};
+
+_<AView> radioButtons(_<State> state) {
+    static constexpr auto options = std::array {
+        std::make_tuple(0, "Option 0"),
+        std::make_tuple(1, "Option 1"),
+        std::make_tuple(2, "Option 2"),
+    };
+
+    return AUI_DECLARATIVE_FOR(i, options, AVerticalLayout) {
+        const auto& [index, text] = i;
+        return RadioButton {
+            .checked = AUI_REACT(state->selection == index),
+            .content = Label { text },
+            .onClick = [state, index] { state->selection = index; },
+        };
+    };
+}
+
 AUI_ENTRY {
     auto window = _new<AWindow>("Radiobutton", 600_dp, 300_dp);
+    auto state = _new<State>();
     window->setContents(Centered {
       Vertical {
-        RadioButton {
-          .content = Label { "Option 1" },
-          .onClick = [] { ALogger::info("Test") << "Hello world!"; },
-        },
-        RadioButton {
-          .content = Label { "Option 2" },
-          .onClick = [] { ALogger::info("Test") << "Hello world!"; },
-        },
+        radioButtons(state),
+        Label { AUI_REACT("Selected option: {}"_format(state->selection)) },
       },
     });
     window->show();

@@ -309,48 +309,45 @@ AStylesheet::AStylesheet() {
             Padding { 1_dp },
         },
 
-        // ARadioButton
+        /// [ARadioButton]
         {
-            t<ARadioButton>(),
-            Margin { 1_dp, 4_dp },
+            t<ARadioButton>(), // styles the radiobutton + contents container
+            LayoutSpacing { 2_dp }, // specifies space between ARadioButton::Circle and contents
         },
         {
-            t<ARadioButton>() > t<AAbstractLabel>(),
-            Margin { 1_dp, 4_dp },
-        },
-        {
-            t<ARadioButtonInner>(),
+            t<ARadioButton::Circle>(), // styles the circle itself
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp },
+            Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BorderRadius { 7_dp },
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
-            t<ARadioButton>::active() > t<ARadioButtonInner>(),
+            t<ARadioButton>::active() > t<ARadioButton::Circle>(),
             BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
-            Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
+            Selected(t<ARadioButton::Circle>()),
             BackgroundImage { ":uni/svg/radio.svg", getOsThemeColor().readableBlackOrWhite() },
             Border { nullptr },
             BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            Selected(t<ARadioButtonInner>::active()) > t<ARadioButtonInner>(),
+            Selected(t<ARadioButton::Circle>::active()),
             BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
             BackgroundGradient { getOsThemeColorLighter(), getOsThemeColor(), 180_deg },
         },
         {
-            { t<ARadioButtonInner>::disabled(), (t<ARadioButton>::disabled() > t<ARadioButtonInner>()) },
+            t<ARadioButton::Circle>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
         },
         {
-            { (Selected(t<ARadioButton>::disabled()) > t<ARadioButtonInner>()) },
+            Selected(t<ARadioButton>::disabled()),
             BackgroundGradient { AColor::GRAY.lighter(0.1f), AColor::GRAY.darker(0.1f), 0_deg },
         },
+        /// [ARadioButton]
 
         // ADropdownList
         {

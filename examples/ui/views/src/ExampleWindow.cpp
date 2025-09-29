@@ -108,6 +108,32 @@ static _<AView> link(const AString& url) {
 }
 /// [label_coloring]
 
+static _<AView> radioButtonsDemo() {
+    auto selection = _new<AProperty<int>>(0);
+    return Vertical {
+        RadioButton {
+          .checked = AUI_REACT(*selection == 0),
+          .content = Label { "Radiobutton 1" },
+          .onClick = [selection] { *selection = 0; },
+        },
+        RadioButton {
+          .checked = AUI_REACT(*selection == 1),
+          .content = Label { "Radiobutton 2" },
+          .onClick = [selection] { *selection = 1; },
+        },
+        RadioButton {
+          .checked = AUI_REACT(*selection == 2),
+          .content = Label { "Radiobutton 3" },
+          .onClick = [selection] { *selection = 2; },
+        },
+        RadioButton {
+          .checked = AUI_REACT(*selection == 3),
+          .content = Label { "Radiobutton 4" },
+          .onClick = [selection] { *selection = 3; },
+        } AUI_LET { it->disable(); },
+    };
+}
+
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();
 
@@ -198,12 +224,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 // radiobuttons
                 GroupBox {
                   Label { "Radiobuttons" },
-                  RadioGroup {
-                    RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
-                    RadioButton { "Radiobutton 2" },
-                    RadioButton { "Radiobutton 3" },
-                    RadioButton { "Disabled radiobutton" } AUI_LET { it->disable(); },
-                  },
+                  radioButtonsDemo(),
                 },
 
                 // dropdown lists

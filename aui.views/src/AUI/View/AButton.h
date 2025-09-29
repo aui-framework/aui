@@ -162,7 +162,7 @@ struct Button {
     /**
      * @brief Handler for button click event.
      * @details
-     * Called when user clicks the button.
+     * Called when user activates the button.
      */
     contract::Slot<> onClick;
 
