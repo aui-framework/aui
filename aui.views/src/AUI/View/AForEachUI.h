@@ -142,10 +142,12 @@ concept RangeFactory = requires(Factory&& factory) {
  * @ingroup views_containment
  * @ingroup reactive
  * @details
- * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ * Many apps need to display collections of items. This document explains how you can efficiently do this in AUI.
  *
  * <!-- aui:experimental -->
  * <!-- aui:index_alias AUI_DECLARATIVE_FOR -->
+ *
+ * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
  *
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
