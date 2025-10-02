@@ -36,20 +36,21 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_module(aui.views EXPORT aui)
     aui_enable_tests(aui.views)
 
-    if (AUI_PLATFORM_LINUX)
+    if (AUI_PLATFORM_LINUX AND NOT ANDROID)
         auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
 
         pkg_check_modules(sigc REQUIRED IMPORTED_TARGET sigc++-3.0)
         find_package(Threads REQUIRED)
-        auib_import(dbus-cxx https://github.com/aui-framework/dbus-cxx
-                VERSION d9c45c52333ac471e87a1466d46bc88a9b82f2f1
-        )
 
         pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
         pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
 
         auib_use_system_libs_end()
+
+        auib_import(dbus-cxx https://github.com/aui-framework/dbus-cxx
+                VERSION d9c45c52333ac471e87a1466d46bc88a9b82f2f1
+        )
 
         aui_link(aui.views PRIVATE
                 X11::X11 X11::Xrandr X11::Xcursor X11::Xi
