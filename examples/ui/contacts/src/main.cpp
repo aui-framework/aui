@@ -41,7 +41,9 @@ public:
               AScrollArea::Builder()
                       .withContents(
                           Vertical {
+                            SpacerFixed(8_dp),
                             _new<ATextField>() && mSearchQuery,
+                            SpacerFixed(8_dp),
                             AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             CustomLayout {} & mSearchQuery.readProjected([&](const AString& q) {

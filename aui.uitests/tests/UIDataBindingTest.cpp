@@ -527,7 +527,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     public:
         MyWindow(const _<User>& user) {
             setContents(Centered {
-              Label { user->name },
+              Label { AUI_REACT(user->name) },
             });
         }
     };

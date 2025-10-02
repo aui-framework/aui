@@ -82,7 +82,6 @@ AStylesheet::AStylesheet() {
         {
             t<ASpinner>(),
             BackgroundImage { ":uni/svg/spinner.svg", 0x404040_rgb },
-            Margin { 4_dp },
             FixedSize { 16_dp }
         },
 
@@ -90,7 +89,6 @@ AStylesheet::AStylesheet() {
         {
             t<ASpinnerV2>(),
             BackgroundImage { ":uni/svg/spinner_v2.svg", 0x993c3c43_argb },
-            Margin { 4_dp },
             FixedSize { 16_dp },
             ASpinnerV2::Configuration { .period = 1000ms, .steps = 8 },
         },
@@ -99,7 +97,6 @@ AStylesheet::AStylesheet() {
         // AText
         {
             { t<AText>(), t<ATextArea>() },
-            Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
@@ -128,7 +125,6 @@ AStylesheet::AStylesheet() {
             t<AButton>(),
             BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 5_dp},
-            Margin {2_dp, 4_dp},
             MinSize {60_dp, 22_dp },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {5_dp},
@@ -190,8 +186,11 @@ AStylesheet::AStylesheet() {
         // Text fields
         {
             t<AAbstractTypeable>(),
-            Padding { 3_dp, 6_dp },
             ACursor::TEXT,
+        },
+        {
+            t<ATextField>(),
+            Padding { 3_dp, 6_dp },
         },
         {
             class_of(".input-field"),
@@ -199,7 +198,6 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
             BorderRadius { 4_dp },
-            Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 22_dp },
             AOverflow::HIDDEN,
         },
@@ -363,13 +361,12 @@ AStylesheet::AStylesheet() {
         // AListView
         {
             {t<AListView>(), t<ATreeView>()},
-                BackgroundSolid { 0xffffff_rgb },
-                Border { 1_dp, 0x828790_rgb },
+            BackgroundSolid { 0xffffff_rgb },
+            Border { 1_dp, 0x828790_rgb },
             Padding { 2_dp },
-                Margin {2_dp, 4_dp},
-                Expanding { 0, 1 },
+            Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
-                AOverflow::HIDDEN,
+            AOverflow::HIDDEN,
         },
         {
             t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),
@@ -405,13 +402,11 @@ AStylesheet::AStylesheet() {
         {
             t<AHDividerView>(),
             FixedSize { {}, 1_px },
-            Margin { 0, 2_dp },
             BackgroundSolid { 0x808080_rgb },
         },
         {
             t<AVDividerView>(),
             FixedSize { 1_px, {} },
-            Margin { 2_dp, 0 },
             BackgroundSolid { 0x808080_rgb },
         },
 
@@ -610,7 +605,6 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xd0d0d0_rgb },
             BorderRadius { 4_dp },
             MinSize { 40_dp, 8_dp },
-            Margin { 2_dp, 4_dp },
         },
         {
             t<AProgressBar::Inner>(),
@@ -625,7 +619,6 @@ AStylesheet::AStylesheet() {
             Border { 4_dp, 0xd0d0d0_rgb },
             BorderRadius { 8_dp },
             FixedSize { 16_dp },
-            Margin { 2_dp, 4_dp },
         },
         {
             t<ACircleProgressBar::Inner>(),
@@ -645,6 +638,10 @@ AStylesheet::AStylesheet() {
 
         // AGroupBox
         {
+          t<AGroupBox>(),
+          LayoutSpacing { -6_pt /* half of the title's height */ }
+        },
+        {
             c(".agroupbox-title"),
             Margin { {}, 4_dp },
         },
@@ -657,8 +654,6 @@ AStylesheet::AStylesheet() {
             Border { 2_dp, 0x30808080_argb },
             BorderRadius { 4_dp },
             Padding { 10_dp, 8_dp },
-            Margin { 0, 4_dp},
-            AOverflow::HIDDEN,
         },
         {
             c(".modal-scaffold-dim"),

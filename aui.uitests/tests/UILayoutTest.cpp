@@ -18,6 +18,7 @@
 #include "AUI/ASS/Property/LayoutSpacing.h"
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
+#include "AUI/View/AGroupBox.h"
 
 using namespace declarative;
 
@@ -116,6 +117,36 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
     } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
+}
+
+TEST_F(UILayoutTest, LayoutSpacing4) {
+    inflate(Vertical::Expanding {
+        Button { Label { "1" } } AUI_WITH_STYLE {},
+        Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
+    } AUI_WITH_STYLE { LayoutSpacing { -8_dp }, FixedSize(200_dp, {}) });
+
+    uitest::frame();
+    auto i = By::type<AButton>().toVector();
+    EXPECT_GT(i[0]->getPosition().y + i[0]->getSize().y, i[1]->getPosition().y);
+    EXPECT_LT(mWindow->getContentMinimumHeight(), i[0]->getMinimumHeight() + i[1]->getMinimumHeight());
+}
+
+TEST_F(UILayoutTest, LayoutSpacing5) {
+    auto groupBox =
+        GroupBox {
+            Label { "Test" },
+            Vertical {
+                Label { "Test" },
+            }
+        } AUI_WITH_STYLE { Expanding {} };
+    inflate(Centered::Expanding {
+            groupBox
+    } AUI_WITH_STYLE { FixedSize(200_dp, {}) });
+
+    uitest::frame();
+    auto title = groupBox->getViews()[0];
+    auto body = groupBox->getViews()[1];
+    EXPECT_GT(title->position()->y + title->size()->y, body->position()->y);
 }
 
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {

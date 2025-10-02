@@ -45,8 +45,6 @@ private:
     _<AView> mContent;
     _<AView> mFrame;
 
-    int getFrameForcedPosition() const noexcept;
-
     void updateCheckboxState(bool checked);
 };
 

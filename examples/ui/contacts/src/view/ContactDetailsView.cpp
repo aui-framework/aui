@@ -75,7 +75,7 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                 Centered::Expanding {
                   presentation(mContact->displayName) AUI_WITH_STYLE { FontSize { 12_pt } },
                 },
-              } AUI_WITH_STYLE { Margin { 8_dp, {} } },
+              } AUI_WITH_STYLE { Margin { 8_dp, {} }, LayoutSpacing { 4_dp } },
               row("Phone", mContact->phone),
               row("Address", mContact->address),
               row("Email", mContact->email),
@@ -87,15 +87,16 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                 _new<ATextArea>() && mContact->note,
               } AUI_WITH_STYLE {
                     MinSize { {}, 100_dp },
+                    LayoutSpacing { 4_dp },
                   },
-            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp) },
+            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp), LayoutSpacing { 4_dp } },
           }),
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),
               Button { .content = Label { mEditorMode ? "Discard" : "Delete" }, .onClick = {me::drop} },
               Button { .content = Label { mEditorMode ? "Done" : "Edit" }, .onClick = {me::toggleEdit} },
-            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
+            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp), LayoutSpacing { 4_dp } },
           },
         });
     });
@@ -139,7 +140,7 @@ _<AView> ContactDetailsView::row(AString title, AProperty<T>& property) {
         Horizontal {
           Label { std::move(title) } AUI_WITH_STYLE { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
           presentation(property),
-        },
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         common_views::divider(),
-    };
+    } AUI_WITH_STYLE { LayoutSpacing(4_dp) };
 }

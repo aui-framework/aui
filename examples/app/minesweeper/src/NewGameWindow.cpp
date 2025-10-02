@@ -81,7 +81,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper)
           "Mines count:"_as,
           mMines = _new<ANumberPicker>() AUI_LET { it->setMin(8); },
         },
-      }),
+      }) AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
       mDifficultyLabel = _new<ALabel>(),
       Horizontal {
         _new<ASpacerExpanding>(),
@@ -90,8 +90,8 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper)
                 connect(it->clicked, me::begin);
             },
         _new<AButton>("Cancel").connect(&AButton::clicked, me::close),
-      },
-    });
+      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
 
     mWidth->setValue(gWidth);
     mHeight->setValue(gHeight);

@@ -25,7 +25,7 @@ public:
           Horizontal {
             Label { AUI_REACT("{}"_format(mCounter)) },
             Button { .content = Label { "Count" }, .onClick = [this] { mCounter += 1; } },
-          },
+          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
     }
 

@@ -79,11 +79,6 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
 
 void AGroupBox::applyGeometryToChildren() {
     AViewContainerBase::applyGeometryToChildren();
-    mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
-}
-
-int AGroupBox::getFrameForcedPosition() const noexcept {
-    return mTitle->getPosition().y + mTitle->getSize().y / 2;
 }
 
 void AGroupBox::updateCheckboxState(bool checked) {
