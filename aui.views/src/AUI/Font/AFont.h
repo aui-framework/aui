@@ -35,10 +35,51 @@ struct FT_FaceRec_;
 
 class AFont {
 public:
+    /**
+     * @brief Character data for a glyph.
+     * @details
+     * https://freetype.org/freetype2/docs/tutorial/step2.html
+     */
     struct Character {
+        /**
+         * @brief Bitmap of the glyph.
+         */
         _<AImage> image;
-        int advanceX, advanceY;
-        int bearingX;
+
+        /**
+         * @brief Glyph's image bounding box size. It's independent of the layout direction.
+         */
+        glm::vec2 size{};
+
+        struct Metrics {
+            /**
+             * @brief Horizontal/vertical distance from the current cursor position to the left-top-most border of the
+             * glyph image's bounding box. Cursor position is considered to be on the baseline.
+             */
+            glm::vec2 bearing{};
+
+            /**
+             * @brief Distance to increment the pen position when the glyph is drawn as part of a string of text.
+             * @details
+             * For horizontal text layouts, this increments x position.
+             *
+             * For vertical text layouts, this increments y position.
+             */
+            float advance{};
+        };
+
+        /**
+         * @brief Metrics for horizontal text layout.
+         */
+        Metrics horizontal{};
+
+        /**
+         * @brief Metrics for vertical text layout.
+         * @details
+         * As not all fonts do contain vertical metrics, these values should not be considered reliable if the font does
+         * not contain them.
+         */
+        Metrics vertical{};
 
         [[nodiscard]]
         bool empty() const {
@@ -98,13 +139,13 @@ public:
 
     Character& getCharacter(const FontEntry& charset, long glyph);
 
-    float length(const FontEntry& charset, const AString& text);
+    int length(const FontEntry& charset, const AString& text);
 
     template<class Iterator>
-    float length(const FontEntry& charset, Iterator begin, Iterator end) {
+    int length(const FontEntry& charset, Iterator begin, Iterator end) {
         int size = charset.first.size;
-        int prevLineAdvance = 0;
-        int advance = 0;
+        float prevLineAdvance = 0;
+        float advance = 0;
 
         for (Iterator i = begin; i != end; i++) {
             if (*i == ' ')
@@ -115,13 +156,12 @@ public:
             } else {
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {
-                    advance += ch.advanceX;
-                    advance = glm::floor(advance);
+                    advance += ch.horizontal.advance;
                 } else
                     advance += getSpaceWidth(size);
             }
         }
-        return glm::max(prevLineAdvance, advance);
+        return int(glm::ceil(glm::max(prevLineAdvance, advance)));
     }
 
     AString

@@ -16,7 +16,7 @@ ACheckBox::ACheckBox(_<AView> content)
 {
     mBox = _new<ACheckBox::Box>();
     setContents(declarative::Horizontal {
-      mBox,
+      declarative::Centered { mBox },
       std::move(content),
     });
 

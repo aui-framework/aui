@@ -505,8 +505,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                             .build()
                         << ".input-field" AUI_LET { it->setExpanding(); },
-                  } }
-    AUI_WITH_STYLE { Expanding {} } } }),
+                  } } AUI_WITH_STYLE { Expanding {} },
+              } }),
             "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
@@ -700,19 +700,15 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       },
       SpacerExpanding{},
       _new<ASpinnerV2>(),
-      Centered {
-        Horizontal {
-          CheckBox {
-            .checked = AUI_REACT(tabView->enabled()),
-            .onCheckedChange = [tabView](bool checked) { tabView->enabled() = checked; },
-            .content = Label { "Enabled" },
-          },
-          _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
-                  it << "#copyright";
-                  it->setEnabled(false);
-              },
-        },
+      CheckBox {
+        .checked = AUI_REACT(tabView->enabled()),
+        .onCheckedChange = [tabView](bool checked) { tabView->enabled() = checked; },
+        .content = Label { "Enabled" },
       },
+      _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
+              it << "#copyright";
+              it->setEnabled(false);
+          },
     });
 }
 

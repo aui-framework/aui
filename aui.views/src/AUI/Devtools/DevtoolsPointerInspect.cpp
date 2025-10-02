@@ -78,7 +78,7 @@ public:
         AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
-            ctx.render.string({0, 0}, "Expired");
+            ctx.render.string({0, 10}, "Expired");
             return;
         }
 

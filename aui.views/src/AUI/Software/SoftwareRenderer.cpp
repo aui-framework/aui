@@ -479,7 +479,8 @@ public:
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ advance + ch.bearingX, ch.advanceY + advanceY };
+                    glm::ivec2 pos{ advance,  advanceY };
+                    pos += ch.horizontal.bearing;
                     notifySymbolAdded({pos});
                     mCharEntries.push_back(CharEntry{
                             pos,
@@ -496,7 +497,7 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
+                advance += ch.horizontal.advance;
                 advance = glm::floor(advance);
             }
         }

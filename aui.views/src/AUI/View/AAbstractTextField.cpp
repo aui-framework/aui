@@ -16,6 +16,7 @@
 
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ADesktop.h"
+#include "ATextBase.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Render/RenderHints.h>
@@ -33,7 +34,7 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 
 
 int AAbstractTextField::getContentMinimumHeight() {
-    return getFontStyle().size;
+    return getFontStyle().size + getFontStyle().font->getDescenderHeight(getFontStyle().size);
 }
 
 
@@ -43,12 +44,13 @@ void AAbstractTextField::render(ARenderContext ctx) {
     prerenderStringIfNeeded(ctx.render);
 
     AStaticVector<ARect<int>, 1> selectionRects;
+    int y = mPadding.top + getVerticalAlignmentOffset() - getFontStyle().getAscenderHeight() - getFontStyle().getDescenderHeight() * 2;
     if (hasSelection()) {
         auto s = selection();
         auto beginPos = getPosByIndex(s.begin).x;
         auto endPos = getPosByIndex(s.end).x;
-        selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, mPadding.top + getVerticalAlignmentOffset()},
-                                                                        {endPos - beginPos, getFontStyle().size}));
+        selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, y},
+                                                                        {endPos - beginPos, getFontStyle().size + getFontStyle().getAscenderHeight()}));
     }
     drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
         doDrawString(ctx.render);
@@ -56,7 +58,7 @@ void AAbstractTextField::render(ARenderContext ctx) {
     if (!mIsEditable) {
         return;
     }
-    drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, mPadding.top + getVerticalAlignmentOffset()});
+    drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, y});
 }
 
 void AAbstractTextField::doDrawString(IRenderer& render) {
@@ -64,8 +66,9 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
         return;
     }
     RenderHints::PushState m(render);
+
     render.translate(
-            {mPadding.left - mHorizontalScroll + mTextAlignOffset, mPadding.top + getVerticalAlignmentOffset()});
+            {mPadding.left - mHorizontalScroll + mTextAlignOffset, getVerticalAlignmentOffset()});
     render.setColor(textColor());
     mPrerenderedString->draw();
 }
@@ -295,4 +298,15 @@ void AAbstractTextField::onCursorIndexChanged() {
 
 glm::ivec2 AAbstractTextField::getCursorPosition() {
     return {mAbsoluteCursorPos, 0};
+}
+
+int AAbstractTextField::getVerticalAlignmentOffset() noexcept {
+    int y = getPadding().top + getFontStyle().getAscenderHeight();
+
+    // adding height of descender we established in getContentMinimumHeight, see explanation there.
+    y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
+
+    y = (glm::max)(y,
+                   y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
+    return y;
 }

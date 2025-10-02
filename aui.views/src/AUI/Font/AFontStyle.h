@@ -44,6 +44,13 @@ struct API_AUI_VIEWS AFontStyle {
         return font->getCharacter(getFontEntry(), c);
     }
 
+    auto getAscenderHeight() const {
+        return font->getAscenderHeight(size);
+    }
+    auto getDescenderHeight() const {
+        return font->getDescenderHeight(size);
+    }
+
     [[nodiscard]]
     size_t getSpaceWidth() const {
         return font->getSpaceWidth(size);

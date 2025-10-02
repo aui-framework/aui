@@ -109,6 +109,7 @@ AStylesheet::AStylesheet() {
         {
             t<ATextArea>(),
             TextColor { inherit },
+            VerticalAlign::DEFAULT,
             Expanding { 1 },
         },
         // AAbstractLabel
@@ -253,16 +254,19 @@ AStylesheet::AStylesheet() {
 
         /// [ACheckBox]
         {
+            t<ACheckBox>(), // styles the checkbox + contents container
+            LayoutSpacing { 4_dp }, // specifies space between ACheckBox::Box and contents
+        },
+        {
             t<ACheckBox::Box>(), // styling box itself
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BackgroundImage { {}, 0x333333_rgb },
             BorderRadius { 3_dp },
         },
         {
-            t<ACheckBox>::active() > t<ACheckBox::Box>(),
+            t<ACheckBox>::active() >> t<ACheckBox::Box>(),
             BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
@@ -313,19 +317,18 @@ AStylesheet::AStylesheet() {
         /// [ARadioButton]
         {
             t<ARadioButton>(), // styles the radiobutton + contents container
-            LayoutSpacing { 2_dp }, // specifies space between ARadioButton::Circle and contents
+            LayoutSpacing { 4_dp }, // specifies space between ARadioButton::Circle and contents
         },
         {
             t<ARadioButton::Circle>(), // styles the circle itself
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 2_dp },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 14_dp, 14_dp },
             BorderRadius { 7_dp },
             BackgroundImage { {}, 0x333333_rgb },
         },
         {
-            t<ARadioButton>::active() > t<ARadioButton::Circle>(),
+            t<ARadioButton>::active() >> t<ARadioButton::Circle>(),
             BackgroundSolid { AColor::GRAY.transparentize(0.8f) },
         },
         {
@@ -601,7 +604,7 @@ AStylesheet::AStylesheet() {
             Opacity { 0.7f },
         },
 
-        // AProgressBar
+        /// [AProgressBar]
         {
             t<AProgressBar>(),
             BackgroundSolid { 0xd0d0d0_rgb },
@@ -614,6 +617,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { getOsThemeColor() },
             BorderRadius { 4_dp },
         },
+        /// [AProgressBar]
 
         // ACircleProgressBar
         {

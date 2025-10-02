@@ -45,7 +45,7 @@
  * - `struct State` holds a reactive property `checked` representing the check box's state. When `checked` changes, the
  *    UI updates reactively.
  * - The `CheckBox` view binds `.checked` to the state's property, so the check mark is kept in sync with the data.
- * - `.onClick` toggles the state when the check box is clicked.
+ * - `.onCheckedChange` toggles the state when the check box is clicked.
  * - Content (label or any view) can be provided using `.content`.
  * - The UI updates automatically based on the state because of AUI's reactive system.
  *
@@ -55,7 +55,7 @@
  *
  * ![](imgs/Screenshot_20250929_094428.png)
  *
- * And  this is how the same checkbox appears when checked:
+ * And this is how the same checkbox appears when checked:
  *
  * ![](imgs/Screenshot_20250929_094529.png)
  *

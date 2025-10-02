@@ -265,16 +265,15 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         }
 
         if (mPrerendered) {
-            int y = mPadding.top;
+            int y = mPadding.top + getFontStyle().getAscenderHeight();
 
             // adding height of descender we established in getContentMinimumHeight, see explanation there.
             y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
-            /*
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
                 y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight()) / 2.0)));
-            }*/
+                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
+            }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
             render.setColor(textColor());

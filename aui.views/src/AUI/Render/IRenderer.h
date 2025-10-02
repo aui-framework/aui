@@ -321,7 +321,7 @@ public:
 
     /**
      * @brief Draws string.
-     * @param position string's top left point
+     * @param position string baseline
      * @param string string to render
      * @param fs font style (optional)
      * @details
@@ -337,7 +337,7 @@ public:
     /**
      * @brief Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
      * <code>IRenderer</code> to efficiently render the string.
-     * @param position string's top left point
+     * @param position string baseline
      * @param text string to prerender
      * @param fs font style
      * @return an instance of IPrerenderedString

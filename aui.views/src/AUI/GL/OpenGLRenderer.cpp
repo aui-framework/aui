@@ -578,6 +578,8 @@ public:
         if (!img)
             return;
 
+        mRenderer->rectangle(ASolidBrush{ AColor::RED.transparentize(0.5f) }, {0, 0}, {mTextWidth, 1}); // debug baseline
+
         auto width = img->width();
 
         float uvScale = 1.f / float(width);
@@ -668,9 +670,9 @@ public:
         const bool hasKerning = font->isHasKerning();
 
         int advanceX = position.x;
-        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
+        int advanceY = position.y;
         size_t counter = 0;
-        int advance = advanceX;
+        float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             wchar_t c = *i;
             if (c == ' ') {
@@ -678,7 +680,7 @@ public:
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, advance);
+                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
@@ -690,7 +692,8 @@ public:
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
 
-                    int posX = advance + ch.bearingX;
+                    int posX = advance + ch.horizontal.bearing.x;
+                    int posY = advanceY - ch.horizontal.bearing.y;
                     int width = ch.image->width();
                     int height = ch.image->height();
 
@@ -711,14 +714,14 @@ public:
                         uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                     }
 
-                    notifySymbolAdded({glm::ivec2{posX, ch.advanceY + advanceY}});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + height + advanceY),
+                    notifySymbolAdded({glm::ivec2{posX, posY}});
+                    mVertices.push_back({glm::vec2(posX, posY + height),
                                          glm::vec2(uv.x, uv.w)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + height + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY + height),
                                          glm::vec2(uv.z, uv.w)});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX, posY),
                                          glm::vec2(uv.x, uv.y)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY),
                                          glm::vec2(uv.z, uv.y)});
 
                 }
@@ -731,14 +734,13 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
+                advance += ch.horizontal.advance;
             }
         }
 
         notifySymbolAdded({glm::ivec2{advance, advanceY}});
 
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 

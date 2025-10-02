@@ -449,7 +449,7 @@ void ATextArea::render(ARenderContext context) {
         auto s = selection();
         auto beginPos = getPosByIndex(s.begin);
         auto endPos = getPosByIndex(s.end);
-        const auto LINE_HEIGHT = int(getFontStyle().size);
+        const auto LINE_HEIGHT = int(getFontStyle().size) + getFontStyle().getDescenderHeight();
         endPos.y += LINE_HEIGHT;
         for (auto i: {&beginPos, &endPos}) *i += glm::ivec2{mPadding.left, mPadding.top};
         const auto LINES_OF_SELECTION = (endPos.y - beginPos.y) / LINE_HEIGHT;
@@ -526,6 +526,14 @@ AScrollArea* ATextArea::findScrollArea() {
 }
 
 void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+
+    auto ascender = glm::ivec2 {0,
+                                getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
+    };
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        ascender.y += (getContentHeight() - this->getContentMinimumHeight()) / 2;
+    }
+
     auto wordEntries = entities()
                        | ranges::views::transform([](const _unique<aui::detail::TextBaseEntry>& e) {
         return _cast<aui::detail::WordEntry>(e);
@@ -534,7 +542,7 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
                        | ranges::views::transform([](auto ptr) -> aui::detail::WordEntry& { return *ptr; });
 
     for (auto& wordEntry: wordEntries) {
-        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+        canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
     }
 }
 

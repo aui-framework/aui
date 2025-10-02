@@ -17,7 +17,7 @@ ARadioButton::ARadioButton(_<AView> content)
 {
     mCircle = _new<ARadioButton::Circle>();
     setContents(declarative::Horizontal {
-      mCircle,
+      declarative::Centered { mCircle },
       std::move(content),
     });
 
