@@ -13,7 +13,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include "AUI/Platform/CommonRenderingContext.h"
-#include "ADBus.h"
+#include <dbus-cxx.h>
 #include "AUI/Logging/ALogger.h"
 #include "IPlatformAbstraction.h"
 #include <AUI/Util/kAUI.h>

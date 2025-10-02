@@ -18,7 +18,7 @@
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/CommonRenderingContext.h>
-#include "ADBus.h"
+#include <dbus-cxx.h>
 #include "IPlatformAbstraction.h"
 
 #undef signals
