@@ -578,7 +578,10 @@ public:
         if (!img)
             return;
 
-        mRenderer->rectangle(ASolidBrush{ AColor::RED.transparentize(0.5f) }, {0, 0}, {mTextWidth, 1}); // debug baseline
+        if (AWindow::current()->profiling()->showBaseline) {
+            mRenderer->rectangle(
+                ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, { mTextWidth, 1 });   // debug baseline
+        }
 
         auto width = img->width();
 

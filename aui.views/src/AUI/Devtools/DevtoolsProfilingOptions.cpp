@@ -122,6 +122,19 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           AText::fromItems(
               { "In addition to your monitor DPI adjustments, changes scaling factor with AWindow::setScalingParams "
                 "API. In this setting, 100% takes no effect." }),
+          header("Typography"),
+          /// [fromItems]
+          CheckBox {
+            .checked = AUI_REACT(targetWindow->profiling()->showBaseline),
+            .onCheckedChange = [targetWindow](bool checked) {
+                targetWindow->profiling()->showBaseline = checked;
+                targetWindow->redraw();
+            },
+            .content = Label { "Show baseline" },
+          },
+          AText::fromItems(
+              { "Displays a horizontal line indicating the text baseline. When multiple text views are placed in a row, "
+                "their baselines should align for proper visual appearance." }),
         }
         << ".items" AUI_WITH_STYLE {
                       MaxSize { 700_dp, {} },

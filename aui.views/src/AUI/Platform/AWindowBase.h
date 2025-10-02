@@ -68,6 +68,11 @@ public:
          * reset to false.
          */
         AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
+
+        /**
+         * @brief When set to true, all rendered strings will display their baselines.
+         */
+        AProperty<bool> showBaseline = false;
     };
 
 
