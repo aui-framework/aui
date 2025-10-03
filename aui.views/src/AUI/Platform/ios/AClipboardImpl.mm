@@ -14,7 +14,7 @@
 
 void AClipboard::copyToClipboard(const AString &text) {
     @autoreleasepool {
-        [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.toStdString().c_str()];
+        [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.c_str()];
     }
 }
 

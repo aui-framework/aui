@@ -38,7 +38,7 @@ private:
         void onKeyRepeat(AInput::Key key) override;
 
     protected:
-        bool isValidText(const AString& text) override;
+        bool isValidText(std::u32string_view text) override;
     };
 
     _<ANumberPickerField> mTextField;
@@ -67,7 +67,7 @@ public:
 
     void setSuffix(const AString& suffix);
 
-    [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
+    [[nodiscard]] AString text() const noexcept { return mTextField->text(); }
 
     void increase();
 

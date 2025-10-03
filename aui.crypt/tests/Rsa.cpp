@@ -37,14 +37,14 @@ TEST(Rsa, EncryptDecrypt) {
 
 TEST(Rsa, PEM_PrivateWrite) {
     auto r = ARsa::generate();
-    AString s = AString::fromLatin1(r->getPrivateKeyPEM());
+    AString s = AString(r->getPrivateKeyPEM(), AStringEncoding::LATIN1);
     ASSERT_TRUE(s.startsWith("-----BEGIN RSA PRIVATE KEY-----"));
     ASSERT_TRUE(s.endsWith("-----END RSA PRIVATE KEY-----\n"));
 }
 
 TEST(Rsa, PEM_PublicWrite) {
     auto r = ARsa::generate();
-    AString s = AString::fromLatin1(r->getPublicKeyPEM());
+    AString s = AString(r->getPublicKeyPEM(), AStringEncoding::LATIN1);
 
     ASSERT_TRUE(s.startsWith("-----BEGIN RSA PUBLIC KEY-----"));
     ASSERT_TRUE(s.endsWith("-----END RSA PUBLIC KEY-----\n"));

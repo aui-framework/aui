@@ -53,11 +53,13 @@ class AUIRecipe(ConanFile):
         self.tool_requires("cmake/[>=3.16 <=4]")
 
     def requirements(self):
+        # Common
         self.requires("zlib/1.3.1")
         self.requires("gtest/1.17.0")
         self.requires("benchmark/1.9.4")
+        self.requires("simdutf/7.1.0")
         # Audio
-        self.requires("opus/1.4")
+        self.requires("opus/1.5.2")
         if self.settings.os == "Android":
             self.requires("oboe/1.8.0")
         # Core

@@ -13,7 +13,12 @@
 
 #include "AUI/Platform/AFontManager.h"
 
-size_t AFontStyle::getWidth(const AString& text) const
+size_t AFontStyle::getWidth(AStringView text) const
+{
+	return font->length(*this, text);
+}
+
+size_t AFontStyle::getWidth(std::u32string_view text) const
 {
 	return font->length(*this, text);
 }

@@ -189,7 +189,7 @@ AStylesheet::AStylesheet() {
             ACursor::TEXT,
         },
         {
-            t<ATextField>(),
+            { t<ATextField>(), c(".number-picker") >> t<AAbstractTypeable>() },
             Padding { 3_dp, 6_dp },
         },
         {

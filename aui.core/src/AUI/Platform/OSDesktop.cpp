@@ -124,10 +124,10 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
         // remove quotation marks
-        AString argsRaw = aui::win32::fromWchar(GetCommandLineW());
+        AString argsRaw(reinterpret_cast<const char16_t*>(GetCommandLineW()));
         bool wrappedWithQuots = false;
         AString currentArg;
-        for (auto& c : argsRaw) {
+        for (auto c : argsRaw) {
             switch (c) {
                 case '\"':
                     wrappedWithQuots = !wrappedWithQuots;

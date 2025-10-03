@@ -11,6 +11,8 @@
 
 #include <cassert>
 #include "AProgramModule.h"
+
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AString.h"
 
 #if AUI_PLATFORM_WIN
@@ -40,7 +42,8 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-    auto lib = LoadLibrary(aui::win32::toWchar(fullname));
+    auto wPath = aui::win32::toWchar(fullname);
+    auto lib = LoadLibrary(wPath.c_str());
     if (!lib) {
         throw LoadException(
             "Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
@@ -87,7 +90,7 @@ _<AProgramModule> AProgramModule::load(const AString& path) {
     counter = 0;
     for (auto& fp : paths) {
         auto& dlError = dlErrors[counter];
-        diagnostic += " - " + fp + " -> " + (dlError.empty() ? "not found" : dlError) + "\n";
+        diagnostic += " - " + fp + " -> " + AString(dlError.empty() ? "not found" : dlError) + "\n";
         ++counter;
     }
 

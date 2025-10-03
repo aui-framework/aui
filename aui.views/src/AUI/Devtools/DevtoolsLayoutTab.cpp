@@ -163,4 +163,14 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
     });
 }
 
+DevtoolsLayoutTab::~DevtoolsLayoutTab() {
+    if (mViewPropertiesView) {
+        mViewPropertiesView->setTargetView(nullptr);
+    }
+    if (mTargetWindow) {
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
+        mTargetWindow->redraw();
+    }
+}
+
 void DevtoolsLayoutTab::forceLayoutUpdate() { mTargetWindow->forceUpdateLayoutRecursively(); }

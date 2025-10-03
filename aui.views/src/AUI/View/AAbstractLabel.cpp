@@ -120,7 +120,7 @@ int AAbstractLabel::getContentMinimumHeight() {
     //    E
     //    R
 
-    return getFontStyle().size * (1 + ranges::count(mText, '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
+    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
 }
 
 
@@ -150,9 +150,9 @@ Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 
 template<class Iterator>
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    static constexpr auto ELLIPSIS = u'…';
+    static constexpr char32_t ELLIPSIS = U'…';
     auto firstOverflowedIt = findFirstOverflowedIndex(
-        begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({ELLIPSIS}) : 0));
+        begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({&ELLIPSIS, 1}) : 0));
     if (firstOverflowedIt == end) {
         return;
     }

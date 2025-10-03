@@ -24,10 +24,12 @@ class AViewContainer;
  * @defgroup layout-managers Layout Managers
  * @ingroup views
  * @details In AUI, layout building consists of layout managers. Layout manager determines position and size of
- * [container](aviewcontainer.md)'s children [views](aview.md). A [container](aviewcontainer.md) is a [AView]
- * "view" that consists of other [views](aview.md), called children. In general, layout manager does not allow going
+ * [container](aviewcontainer.md)'s children [views](aview.md). A [container](aviewcontainer.md) is a [view](aview.md)
+ * that consists of other [views](aview.md), called children. In general, layout manager does not allow going
  * beyond the border of the [container](aviewcontainer.md). A [container](aviewcontainer.md) can be a child of an
- * another [container](aviewcontainer.md) i.e., nesting is allowed.
+ * another [container](aviewcontainer.md). Such nested combinations allows to replicate nearly any UI layout.
+ *
+ * This approach can be found in many popular declarative UI frameworks.
  *
  * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
  *
@@ -53,31 +55,31 @@ class AViewContainer;
  * Key concepts:
  *
  * 1. **Minimum Size** - Layout managers calculate minimum size requirements by:
- *    - Considering minimum sizes of child views
- *    - Adding margins and spacing
- *    - Respecting fixed size constraints
- *    - Following [aui-box-model].
+ *     - Considering minimum sizes of child views
+ *     - Adding margins and spacing
+ *     - Respecting fixed size constraints
+ *     - Following [aui-box-model].
  *
  * 2. **[Expanding Views](#EXPANDING)** - Children can expand to fill available space of their parent:
- *    - Set via [AView::setExpanding()] or [ass::Expanding] on a child
- *    - Requires parent to have [ass::FixedSize] or [ass::MinSize] or [EXPANDING] set to take effect
- *    - Independent for horizontal/vertical directions
- *    - Ignored if [ass::FixedSize] is set
+ *     - Set via [AView::setExpanding()] or [ass::Expanding] on a child
+ *     - Requires parent to have [ass::FixedSize] or [ass::MinSize] or [EXPANDING] set to take effect
+ *     - Independent for horizontal/vertical directions
+ *     - Ignored if [ass::FixedSize] is set
  *
  * 3. **Spacing** - Configurable gaps between views:
- *    - Set via [ALayout::setSpacing()] or [ass::LayoutSpacing] of the parent view
- *    - Part of minimum size calculations of the parent view
- *    - Applied uniformly between its child views
+ *     - Set via [ALayout::setSpacing()] or [ass::LayoutSpacing] of the parent view
+ *     - Part of minimum size calculations of the parent view
+ *     - Applied uniformly between its child views
  *
  * 4. **Margins** - Space around individual views:
- *    - Set per-view via ASS or margins property
- *    - Respected during layout
- *    - Part of minimum size calculations of the parent view
+ *     - Set per-view via ASS or margins property
+ *     - Respected during layout
+ *     - Part of minimum size calculations of the parent view
  *
  * 5. **Layout Direction** - Overall flow direction:
- *    - Horizontal layouts flow left-to-right
- *    - Vertical layouts flow top-to-bottom
- *    - Grid layouts use both directions
+ *     - Horizontal layouts flow left-to-right
+ *     - Vertical layouts flow top-to-bottom
+ *     - Grid layouts use both directions
  *
  * 6. **Relativeness** - children position is relative to parent's position, not an absolute position within a window.
  *
@@ -173,9 +175,7 @@ class AViewContainer;
  *       );
  *       ```
  *     </td>
- *     <td>
- *  ![](imgs/Screenshot_20250625_011101.png)
- *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20250625_011101.png" /></td>
  *   </tr>
  * </table>
  *

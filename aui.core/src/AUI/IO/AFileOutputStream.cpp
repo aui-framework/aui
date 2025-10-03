@@ -12,6 +12,7 @@
 #include "AFileOutputStream.h"
 
 #include "AUI/Common/AString.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Platform/ErrorToException.h"
 
 #if AUI_PLATFORM_WIN
@@ -58,7 +59,8 @@ void AFileOutputStream::open(bool append) {
     }
 
 #if AUI_PLATFORM_WIN
-    mFile = _wfsopen(aui::win32::toWchar(mPath), append ? L"a+b" : L"wb", _SH_DENYWR);
+    auto wPath = aui::win32::toWchar(mPath);
+    mFile = _wfsopen(wPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
 #else
     mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
 #endif

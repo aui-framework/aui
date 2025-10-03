@@ -31,7 +31,7 @@ using namespace std::chrono_literals;
 
 static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
-static auto groupLetter(const AString& s) { return s.firstOpt().valueOr('_'); }
+static auto groupLetter(const AString& s) { return s.empty() ? AChar(U'_') : s.first(); }
 
 class ContactsWindow : public AWindow {
 public:
@@ -122,7 +122,7 @@ private:
     _<AView> searchQueryList() {
         auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
             for (const auto& field : { c->displayName, c->note }) {
-                if (field->lowercase().contains(mSearchQueryLowercased)) {
+                if (field->lowercase().contains(*mSearchQueryLowercased)) {
                     return true;
                 }
             }

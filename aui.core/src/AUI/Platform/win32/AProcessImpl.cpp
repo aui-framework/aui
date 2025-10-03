@@ -32,13 +32,17 @@
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
+    auto fileU16 = aui::win32::toWchar(applicationFile);
+    auto paramsU16 = aui::win32::toWchar(args);
+    auto dirU16 = aui::win32::toWchar(workingDirectory);
+
     SHELLEXECUTEINFO sei = { sizeof(sei) };
 
 
     sei.lpVerb = L"runas";
-    sei.lpFile = aui::win32::toWchar(applicationFile.c_str());
-    sei.lpParameters = aui::win32::toWchar(args.c_str());
-    sei.lpDirectory = aui::win32::toWchar(workingDirectory.c_str());
+    sei.lpFile = fileU16.c_str();
+    sei.lpParameters = paramsU16.c_str();
+    sei.lpDirectory = dirU16.c_str();
     sei.hwnd = NULL;
     sei.nShow = SW_NORMAL;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
@@ -68,9 +72,10 @@ public:
     }
 
     APath getPathToExecutable() override {
-        APath result;
-        result.resize(0x1000);
-        result.resize(GetModuleFileNameEx(mHandle, nullptr, aui::win32::toWchar(result), result.length()));
+        AByteBuffer u16result;
+        u16result.resize(0x1000 * sizeof(char16_t));
+        u16result.resize(GetModuleFileNameEx(mHandle, nullptr, reinterpret_cast<wchar_t*>(u16result.data()), 0x1000) * 2);
+        APath result(reinterpret_cast<const char16_t*>(u16result.data()), u16result.size() / 2);
         result.replaceAll('\\', '/');
         return result;
     }
@@ -187,7 +192,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 if (!result.empty()) {
                     result += " ";
                 }
-                if (i.contains(" ")) {
+                if (i.contains(' ')) {
                     result += "\"";
                     result += i.replacedAll("\"", "\\\"");
                     result += "\"";
@@ -204,14 +209,17 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
-    if (!CreateProcess(aui::win32::toWchar(mInfo.executable.c_str()),
-                       aui::win32::toWchar(args),
+    auto wExecutable = aui::win32::toWchar(mInfo.executable);
+    auto wArgs = aui::win32::toWchar(args);
+    auto wWorkDir = aui::win32::toWchar(mInfo.workDir);
+    if (!CreateProcess(wExecutable.data(),
+                       wArgs.data(),
                        nullptr,
                        nullptr,
                        true,
                        creationFlags,
                        nullptr,
-                       mInfo.workDir.empty() ? nullptr : aui::win32::toWchar(mInfo.workDir),
+                       mInfo.workDir.empty() ? nullptr : wWorkDir.data(),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mInfo.executable;

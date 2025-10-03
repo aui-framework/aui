@@ -213,7 +213,7 @@ concept AuiSLShader = requires(C&& c) {
 template<AuiSLShader Vertex, AuiSLShader Fragment>
 inline void useAuislShader(AOptional<gl::Program>& out) {
     out.emplace();
-    out->loadRaw(Vertex::code(), Fragment::code());
+    out->loadBoth(Vertex::code(), Fragment::code());
     Vertex::setup(out->handle());
     Fragment::setup(out->handle());
     out->compile();
@@ -231,6 +231,10 @@ OpenGLRenderer::OpenGLRenderer() {
           return "null";
       }
     }();
+#if AUI_DEBUG && (AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX)
+    gl::setupDebug();
+#endif
+
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
@@ -664,7 +668,8 @@ public:
         mVertices.reserve(1000);
     }
 
-    void addString(const glm::ivec2& position, const AString& text) noexcept override {
+    template<class UnicodeString>
+    void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
@@ -677,7 +682,7 @@ public:
         size_t counter = 0;
         float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            wchar_t c = *i;
+            AChar c = *i;
             if (c == ' ') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
@@ -745,6 +750,14 @@ public:
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
+    }
+
+    void addString(const glm::ivec2& position, AStringView text) noexcept override {
+        addStringT(position, text);
+    }
+
+    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
+        addStringT(position, text);
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
@@ -1025,7 +1038,10 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderer::endPaint() {
-
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::bindVertexArray(0);
+    gl::State::useProgram(0);
 }
 
 
@@ -1334,7 +1350,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                         auto shader = std::make_unique<gl::Program>();
 
                         shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         shader->loadFragmentShader(
                             R"(
 precision highp float;
@@ -1353,8 +1369,7 @@ void main() {
  vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
  gl_FragColor = vec4(accumulator.xyz, uvmap_sample.a);
 }
-)",
-                            false);
+)");
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(shader->handle());
                         shader->compile();
@@ -1431,7 +1446,7 @@ void main() {
                         auto kernel = aui::detail::gaussianKernel(radius);
 
                         result.shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
@@ -1456,7 +1471,7 @@ void main() {{
 }}
 )",
                                 fmt::arg("radius", radius),
-                                fmt::arg("kernel_size", kernel.size())), false);
+                                fmt::arg("kernel_size", kernel.size())));
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
                         result.shader->compile();

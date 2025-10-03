@@ -154,6 +154,15 @@ if (AUI_SHARED_PTR_FIND_INSTANCES)
     target_compile_definitions(aui.core PUBLIC AUI_SHARED_PTR_FIND_INSTANCES=1)
 endif()
 
+if(AUIB_DISABLE)
+    find_package(simdutf REQUIRED CONFIG)
+else()
+    auib_import(simdutf https://github.com/simdutf/simdutf
+            VERSION v7.3.3
+            CMAKE_ARGS -DSIMDUTF_TESTS=OFF -DSIMDUTF_TOOLS=OFF)
+endif()
+
+aui_link(aui.core PRIVATE simdutf::simdutf)
 
 # [auib_import_examples]
 if(AUIB_DISABLE)

@@ -449,7 +449,7 @@ void AView::onFocusLost()
     mHasFocus.set(this, false);
 }
 
-void AView::onCharEntered(char16_t c)
+void AView::onCharEntered(AChar c)
 {
 
 }

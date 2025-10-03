@@ -65,7 +65,7 @@ glm::vec2 AFont::getKerning(wchar_t left, wchar_t right) {
     return {vec2.x >> 6, vec2.y >> 6};
 }
 
-AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
+AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int size = fs.first.size;
     FontRendering fr = fs.first.fr;
 
@@ -78,7 +78,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
     if (fr == FontRendering::NEAREST)
         flags |= FT_LOAD_TARGET_MONO;
 
-    FT_Error e = FT_Load_Char(mFace, glyph, flags);
+    FT_Error e = FT_Load_Char(mFace, glyph.codepoint(), flags);
     if (e) {
         throw std::runtime_error(("Cannot load char: error code" + AString::number(e)).toStdString());
     }
@@ -137,21 +137,25 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
     return Character{};
 }
 
-AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
+AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     auto& chars = charset.second.characters;
-    if (chars.size() > glyph && chars[glyph]) {
-        return *chars[glyph];
+    if (chars.size() > glyph && chars[glyph.codepoint()]) {
+        return *chars[glyph.codepoint()];
     } else {
         if (chars.size() <= glyph) {
             chars.resize(glyph + 1, std::nullopt);
         }
-        chars[glyph] = std::move(renderGlyph(charset, glyph));
+        chars[glyph.codepoint()] = std::move(renderGlyph(charset, glyph));
 
-        return *chars[glyph];
+        return *chars[glyph.codepoint()];
     }
 }
 
-int AFont::length(const FontEntry& charset, const AString& text) {
+int AFont::length(const FontEntry& charset, AStringView text) {
+    return length(charset, text.begin(), text.end());
+}
+
+int AFont::length(const FontEntry& charset, std::u32string_view text) {
     return length(charset, text.begin(), text.end());
 }
 

@@ -53,7 +53,7 @@ public:
      *   text().</dd>
      * </dl>
      */
-    [[nodiscard]] virtual const AString& getText() const = 0;
+    [[nodiscard]] virtual AString getText() const = 0;
 
     /**
      * @return Text field text length.
@@ -64,7 +64,7 @@ public:
         if (!hasSelection())
             return {};
         auto t = getText();
-    	return {t.begin() + selection().begin, t.begin() + selection().end };
+    	return {t.bytes().begin() + selection().begin, t.bytes().begin() + selection().end };
     }
 
     /**
@@ -120,7 +120,7 @@ protected:
     AOptional<unsigned> mCursorSelection;
 
     virtual bool isLButtonPressed() = 0;
-    virtual AString getDisplayText() = 0;
+    virtual std::u32string getDisplayText() = 0;
     virtual void cursorSelectableRedraw() = 0;
     virtual void onSelectionChanged() = 0;
 

@@ -15,6 +15,7 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/Logging/ALogger.h>
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
@@ -51,7 +52,8 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         HRESULT operator()(HANDLE thread, PCWSTR name) { return mPtr(thread, name); }
     } s;
     if (s) {
-        s(handle, aui::win32::toWchar(name));
+        auto wName = aui::win32::toWchar(name);
+        s(handle, wName.c_str());
     }
 }
 #else

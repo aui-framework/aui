@@ -17,12 +17,13 @@
 #include "ALanguageCode.h"
 
 ALanguageCode::ALanguageCode(const AString& str) {
-    if (str.length() != 5 || str[2] != '-' || islower(str[2]) || islower(str[3])) {
+    auto& ascii = str.bytes();
+    if (str.length() != str.sizeBytes() || str.sizeBytes() != 5 || ascii[2] != '-' || islower(ascii[2]) || islower(ascii[3])) {
         throw AException("invalid language code: " + str);
     }
-    mGroup[0] = char(str[0]);
-    mGroup[1] = char(str[1]);
-    mSubGroup[0] = char(str[3]);
-    mSubGroup[1] = char(str[4]);
+    mGroup[0] = ascii[0];
+    mGroup[1] = ascii[1];
+    mSubGroup[0] = ascii[3];
+    mSubGroup[1] = ascii[4];
 }
 

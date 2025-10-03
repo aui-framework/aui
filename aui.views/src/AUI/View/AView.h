@@ -829,7 +829,7 @@ public:
     virtual void onKeyUp(AInput::Key key);
     virtual void onFocusAcquired();
     virtual void onFocusLost();
-    virtual void onCharEntered(char16_t c);
+    virtual void onCharEntered(AChar c);
 
     /**
      * @return true if this AView accepts tab focus

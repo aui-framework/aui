@@ -19,7 +19,7 @@ ATextField::ATextField()
     addAssName(".input-field");
 }
 
-bool ATextField::isValidText(const AString& text) {
+bool ATextField::isValidText(std::u32string_view text) {
     return true;
 }
 

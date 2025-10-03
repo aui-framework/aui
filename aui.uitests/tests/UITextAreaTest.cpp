@@ -349,7 +349,7 @@ TEST_F(UITextArea, Insert) {
         AString expectedString = SAMPLE;
         expectedString.insert(i, SAMPLE_PASTE);
 
-        EXPECT_EQ(expectedString, mTextArea->text()) << "(insert at " << i << ")";
+        EXPECT_EQ(mTextArea->text(), expectedString) << "(insert at " << i << ")";
     }
 }
 

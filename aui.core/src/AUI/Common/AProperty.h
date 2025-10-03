@@ -220,6 +220,13 @@ struct AProperty: AObjectBase {
         return raw[std::forward<Rhs>(rhs)];
     }
 
+    auto operator==(const AProperty& rhs) const {
+        return raw == rhs.raw;
+    }
+    auto operator!=(const AProperty& rhs) const {
+        return raw != rhs.raw;
+    }
+
 private:
     friend class AObject;
     /**

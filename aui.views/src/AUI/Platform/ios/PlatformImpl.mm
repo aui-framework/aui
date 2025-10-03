@@ -25,7 +25,7 @@ float APlatform::getDpiRatio()
 void APlatform::openUrl(const AUrl &url) {
     @autoreleasepool {
         UIApplication *application = [UIApplication sharedApplication];
-        NSURL *URL = [NSURL URLWithString:[NSString stringWithUTF8String: url.full().toStdString().c_str()]];
+        NSURL *URL = [NSURL URLWithString:[NSString stringWithUTF8String: url.full().c_str()]];
         [application openURL:URL options:@{} completionHandler:nil];
     }
 }

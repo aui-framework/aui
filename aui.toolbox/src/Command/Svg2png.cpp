@@ -57,7 +57,7 @@ void Svg2png::run(Toolbox& t) {
                         break;
                     }
                     case 'o': {
-                        outputDir = std::move(value);
+                        outputDir = APath(value);
                         break;
                     }
                     case 'p': {

@@ -28,6 +28,19 @@
 class AString;
 
 namespace gl {
+enum class Precision : uint8_t {
+    mediump,
+    highp,
+};
+struct GLSLOptions {
+    /**
+     * @brief Turns off #version prefix for custom shaders
+     */
+    bool custom = false;
+    Precision floatp = Precision::mediump;
+    Precision intp = Precision::mediump;
+};
+
 class API_AUI_VIEWS Program: public aui::noncopyable {
 public:
     class API_AUI_VIEWS Uniform {
@@ -51,10 +64,13 @@ public:
     }
     void
     load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {},
-         const AString& version = {});
-    void loadVertexShader(const AString& vertex, bool raw);
-    void loadFragmentShader(const AString& fragment, bool raw);
-    void loadRaw(const AString& vertex, const AString& fragment);
+         GLSLOptions options = {});
+    void loadVertexShader(const AString& vertex, GLSLOptions options = {});
+    void loadFragmentShader(const AString& fragment, GLSLOptions options = {});
+    void loadBoth(const AString& vertex, const AString& fragment, GLSLOptions options = {}) {
+        loadVertexShader(vertex, options);
+        loadFragmentShader(fragment, options);
+    }
     void compile();
     void bindAttribute(uint32_t index, const AString& name);
     void use() const;
@@ -119,9 +135,6 @@ private:
         }
         return false;
     }
-    uint32_t load(const AString& code, uint32_t type, bool raw) {
-        return load(code.toStdString(), type, raw);
-    }
-    uint32_t load(std::string code, uint32_t type, bool raw);
+    uint32_t load(std::string code, uint32_t type, GLSLOptions options = {});
 };
 }   // namespace gl
