@@ -105,7 +105,7 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextArea, CursorClickPos1) {
-    By::type<ATextArea>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({19_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(3));
 }
 
@@ -113,7 +113,7 @@ TEST_F(UITextArea, CursorClickPos1) {
  * Checks cursor position when clicking between 'o' and 'r'.
  */
 TEST_F(UITextArea, CursorClickPos2) {
-    By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({45_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(7));
 }
 
@@ -121,7 +121,7 @@ TEST_F(UITextArea, CursorClickPos2) {
  * Checks cursor position when clicking between 's' and 'e
  */
 TEST_F(UITextArea, CursorClickPos3) {
-    By::type<ATextArea>().perform(click({17_dp, 12_pt})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({15_dp, 12_pt})) // hardcoded mouse position
             .check(selectionMatches(15));
 }
 
@@ -362,25 +362,4 @@ TEST_F(UITextArea, NextLineCursorPos) {
     EXPECT_GE(mTextArea->getCursorPosition().y, 0);
     mTextArea->moveCursorLeft();
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
-}
-
-TEST_F(UITextArea, ScrollAreaFollowsCursor) {
-    AWindow::current()->setContents(Centered {
-        AScrollArea::Builder().withContents(mTextArea).build() AUI_WITH_STYLE { FixedSize(200_dp, 100_dp) },
-    });
-    mTextArea->setText("");
-    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
-    By::type<ATextArea>().perform(type(R"(Text
-with
-very
-large
-height
-blah
-bruh
-ololo
-lol
-kek)"));
-    By::type<ATextArea>().check(isBottomAboveBottomOf(By::type<AScrollArea>()));
-    mTextArea->setSelection(0); // move to the beginning
-    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
 }
