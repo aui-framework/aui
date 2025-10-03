@@ -113,7 +113,7 @@ public:
         setContents(Centered {
             // 1. you don't need to set the initial string "0"
             Button {
-                .text = AUI_RECT("{}"_format(mCounter)),
+                .text = AUI_REACT("{}"_format(mCounter)),
                 .onClick = { me::increase },
             },
         });
