@@ -52,10 +52,6 @@
  * - Value ranges from `0.0f` (0%) to `1.0f` (100%).
  * - The UI updates automatically based on the state because of AUI's reactive system.
  *
- * ### Result
- *
- * ![](imgs/views/AProgressBar_empty.png)
- *
  * ## Styling
  *
  * Both `AProgressBar` and `AProgressBar::Inner` are exposed for styling purposes.
