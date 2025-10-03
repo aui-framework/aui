@@ -26,7 +26,7 @@
  *
  * ![](imgs/views/AProgressBar.png)
  *
- * @ingroup views_feedback
+ * @ingroup views_indication
  * @details
  * Progress bars are visual indicators that show the completion progress of an operation, process, or task.
  * Progress bars provide users with real-time feedback on progress of a defined operation.

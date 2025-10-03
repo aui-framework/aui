@@ -74,7 +74,6 @@ public:
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
-    void render(ARenderContext context) override;
 
 protected:
     struct Cache {
