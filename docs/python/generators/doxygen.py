@@ -53,6 +53,27 @@ def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
 
 
 
+def _extract_example_names(parse_entry):
+    t = [parse_entry.namespaced_name(), parse_entry.name]
+    def _extract_aliases(doc: str):
+        def _impl():
+            for i in doc.splitlines():
+                if m := regexes.INDEX_ALIAS.match(i):
+                    yield m.group(1)
+                    continue
+                if m := regexes.STEAL_DOCUMENTATION.match(i):
+                    yield m.group(1)
+                    continue
+        for i in _impl():
+            yield i
+            for omit in common.OMIT_NAMESPACES:
+                namespaced = f"{omit}::"
+                if i.startswith(namespaced):
+                    yield i[len(namespaced):]
+    t += _extract_aliases(parse_entry.doc)
+    return t
+
+
 def _format_token_sequence(tokens: list[str]):
     output = " ".join(tokens)
     for i in [",", "&&", ">", "&", "*"]:
@@ -82,7 +103,7 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                 fallback_list = _dedupe_examples_list(_examples_for_symbol(names_to_search_examples, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
                 exs = _filter_examples_by_relevance(fallback_list, names_to_search_examples, strict=False)
             if exs:
-                print('\n## Examples', file=fos)
+                print('\n**Examples:**\n', file=fos)
                 for ex in exs:
                     if not ex or 'src' not in ex or not ex.get('snippet'):
                         continue
@@ -394,12 +415,12 @@ def gen_pages():
             # For classes: print class-level examples once (used as fallback reference).
             if isinstance(parse_entry, CppClass) and class_examples:
                 try:
-                    exs = _examples_for_symbol_with_snippets([parse_entry.namespaced_name(), parse_entry.name], anchors=[parse_entry.namespaced_name(), parse_entry.name, parse_entry.name.split('::')[-1] if '::' in parse_entry.namespaced_name() else None], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
+                    filter_names = _extract_example_names(parse_entry)
+                    exs = _examples_for_symbol_with_snippets(filter_names, anchors=filter_names+[parse_entry.name.split('::')[-1] if '::' in parse_entry.namespaced_name() else None], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
                     exs = _dedupe_examples_list(exs)
                     # include known macro alias in the filter names so macro-only
                     # snippets (AUI_DECLARATIVE_FOR) are considered relevant for
                     # AForEachUI class pages
-                    filter_names = [parse_entry.namespaced_name(), parse_entry.name]
                     try:
                         if 'AForEachUI' in filter_names and 'AUI_DECLARATIVE_FOR' not in filter_names:
                             filter_names.append('AUI_DECLARATIVE_FOR')
@@ -410,7 +431,7 @@ def gen_pages():
                     exs = _filter_examples_by_relevance(exs, filter_names, strict=True)
                     # fallback to a relaxed filter if strict yields nothing (avoid empty class pages)
                     if not exs:
-                        fallback_list = _dedupe_examples_list(_examples_for_symbol([parse_entry.namespaced_name(), parse_entry.name], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
+                        fallback_list = _dedupe_examples_list(_examples_for_symbol(_extract_example_names(parse_entry), examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
                         exs = _filter_examples_by_relevance(fallback_list, filter_names, strict=False)
                     # Prefer examples with unquoted occurrences when available (based on source file, nontrivial lines)
                     try:
@@ -421,7 +442,7 @@ def gen_pages():
                             except Exception:
                                 pass
                             # expand alias pair similar to helpers so macro-form usages are counted
-                            check_names = [n for n in [parse_entry.namespaced_name(), parse_entry.name] if n]
+                            check_names = [n for n in _extract_example_names(parse_entry) if n]
                             try:
                                 if 'AForEachUI' in check_names and 'AUI_DECLARATIVE_FOR' not in check_names:
                                     check_names.append('AUI_DECLARATIVE_FOR')
@@ -479,7 +500,7 @@ def gen_pages():
                             extension = common.determine_extension(ex['src'])
                             # emit admonition header with no blank line after it
                             # compute hl_lines using class tokens
-                            tokens = [parse_entry.namespaced_name(), parse_entry.name]
+                            tokens = _extract_example_names(parse_entry)
                             snippet = ex.get('snippet', '') or ''
                             try:
                                 if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
