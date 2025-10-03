@@ -223,7 +223,15 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
             var_decl_re = re.compile(r"\b(auto|[A-Za-z_][\w:<>\s\*&]+)\s+" + t_esc + r"\b")
 
             if is_member_context:
-                if re.search(r"\b" + t_esc + r"\s*\(", snippet) or re.search(t_esc + r"::", snippet) or re.search(r"\b" + t_esc + r"\s*->", snippet) or re.search(r"\b" + t_esc + r"\s*\.", snippet) or re.search(r"AUI_SLOT\(\s*" + t_esc + r"\s*\)", snippet):
+                matches = [
+                    r"\b" + t_esc + r"\s*\(",
+                    t_esc + r"::",
+                    r"\b" + t_esc + r"\s*->",
+                    r"\b" + t_esc + r"\s*\.",
+                    r"AUI_SLOT\(\s*" + t_esc + r"\s*\)",
+                    r"\b" + t_esc + r"\s*\{",
+                ]
+                if any([re.search(i, snippet) for i in matches]):
                     matched = True
             else:
                 if re.search(r"_new<" + t_esc + r">", snippet) or re.search(r"_<" + t_esc + r">", snippet) or re.search(t_esc + r"::", snippet) or re.search(r"\b" + t_esc + r"\s*->", snippet) or re.search(r"\b" + t_esc + r"\s*\.", snippet) or re.search(r"\b" + t_esc + r"\s*\(", snippet) or re.search(r"AUI_SLOT\(\s*" + t_esc + r"\s*\)", snippet):

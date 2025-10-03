@@ -17,7 +17,7 @@ import re
 
 import mkdocs_gen_files
 
-from docs.python.generators import cpp_parser, common, group_page, examples_page
+from docs.python.generators import cpp_parser, common, group_page, examples_page, regexes
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 from pathlib import Path
 from docs.python.generators.examples_helpers import (
@@ -642,7 +642,7 @@ def gen_pages():
                         _render_invisible_header(toc=nested.name, id=full_name, on_other_pages=full_name)
                         print(f'`{nested.generic_kind} {parse_entry.namespaced_name()}::{nested.name}`', file=fos)
                         print(f'', file=fos)
-                        names_to_search_examples = [full_name, type_entry.name]
+                        names_to_search_examples = [full_name]
                         embed_doc(nested, fos, names_to_search_examples=names_to_search_examples, printed_example_pairs=printed_example_pairs)
 
 
@@ -717,7 +717,8 @@ def gen_pages():
                         methods_grouped.setdefault(i.name, []).append(i)
                     for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
                         full_name = f"{parse_entry.namespaced_name()}::{name}"
-                        _render_invisible_header(toc=f"{name}", id=full_name, on_other_pages=f'{full_name}()')
+                        toc_name = name if name != parse_entry.name else 'constructor'
+                        _render_invisible_header(toc=toc_name, id=full_name, on_other_pages=f'{full_name}()')
                         for overload in overloads:
                             print('', file=fos)
                             print('---', file=fos)
@@ -782,7 +783,7 @@ def gen_pages():
                                     filtered_fallback = [ex for ex in fallback_list if ex.get('snippet') and member_pattern.search(ex.get('snippet'))]
                                     method_exs = _filter_examples_by_relevance(filtered_fallback, method_names, strict=False)
                                 if method_exs:
-                                    print('\n## Examples', file=fos)
+                                    print('\n**Examples:**\n', file=fos)
                                     for ex in method_exs:
                                         if not ex or 'src' not in ex or not ex.get('snippet'):
                                             continue

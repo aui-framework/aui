@@ -10,7 +10,7 @@ import logging
 
 from mkdocs.structure.files import File
 
-from docs.python.generators import regexes
+from docs.python.generators import regexes, common
 
 log = logging.getLogger('mkdocs')
 
@@ -60,8 +60,7 @@ def find_page(name: str) -> MappingEntry | None:
     if m := _mapping.get(name):
         return m
 
-    # hack: try to find a class in the namespace whose are commonly used with "using namespace".
-    for namespace in ["ass", "declarative"]:
+    for namespace in common.OMIT_NAMESPACES:
         if m := _mapping.get(f"{namespace}::{name}"):
             return m
 

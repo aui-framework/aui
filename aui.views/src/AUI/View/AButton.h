@@ -109,7 +109,9 @@ public:
     /**
      * @brief Inflates a label with a text.
      * @details
-     * Left for compatibility.
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility.
      *
      * This setter would override any of existing content within button.
      */
@@ -120,7 +122,10 @@ public:
     /**
      * @brief Inflates a label with a text.
      * @details
-     * Left for compatibility.
+     *
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility.
      *
      * This setter would override any of existing content within button.
      */
