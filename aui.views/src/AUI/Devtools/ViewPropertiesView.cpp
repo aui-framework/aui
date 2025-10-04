@@ -118,9 +118,6 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                       it->selectionId());
               },
         },
-
-        Label { "view's custom style" },
-        Label { "{" } << ".declaration_br",
     } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
 
 
