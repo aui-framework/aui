@@ -57,46 +57,46 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     if (!targetView) {
         return;
     }
-    AUI_NULLSAFE(targetView->getWindow())->profiling()->highlightView = targetView;
+    AUI_NULLSAFE(targetView->getWindow())->profiling()-targetView;
     AUI_NULLSAFE(targetView->getWindow())->redraw();
 
-    mTargetView = targetView;
+   targetView;
     if (!targetView)
         return;
 
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
-    auto addressStr = "{}"_format((void*) targetView.get());
-    _<AViewContainer> dst = Vertical {
+    auto"{}"_format((void*) targetView.get());
+    _<AViewContainer>Vertical {
         _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
         Horizontal {
           Label { addressStr },
-          Button { .content = Label { "Copy" }, .onClick = [addressStr] { AClipboard::copyToClipboard(addressStr); } },
+          Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
         } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
 
-        Label { AUI_REACT("Min size = {}px"_format(targetView->getMinimumSize())) },
-        Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
+        Label { AUI_REACT("Min{}px"_format(targetView->getMinimumSize())) },
+        Label { AUI_REACT({}px"_format(targetView->size())) },
 
         Vertical {
           CheckBox {
-            .checked = AUI_REACT(targetView->enabled()),
-            .onCheckedChange = [targetView](bool enabled) { targetView->enabled() = enabled; },
-            .content = Label { "Enabled" },
+            AUI_REACT(targetView->enabled()),
+            [targetView](bool enabled) { targetView->enabled() = enabled; },
+            Label { "Enabled" },
           },
           CheckBox {
-            .checked = AUI_REACT(targetView->expanding() != glm::ivec2(0)),
+            AUI_REACT(targetView->expanding() != glm::ivec2(0)),
             .onCheckedChange =
                 [this, targetView](bool expanding) {
                     targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0);
                 },
-            .content = Label { "Expanding" },
+            Label { "Expanding" },
           },
         },
 
         AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
 
         Button {
-          .content = Label { "Add \"DevtoolsTest\" stylesheet name" },
+          Label { "Add \"DevtoolsTest\" stylesheet name" },
           .onClick =
               [this, targetView] {
                   setTargetView(targetView);
@@ -107,7 +107,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         GroupBox {
           Label { "Visibility" },
           _new<ARadioGroup>() AUI_LET {
-                  static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
+                  static constexpr autoaui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
                       POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
                   AObject::biConnect(
@@ -118,6 +118,9 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                       it->selectionId());
               },
         },
+
+        Label { "view's custom style" },
+        Label { "{" } << ".declaration_br",
     } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
 
 
@@ -127,7 +130,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         if (r.getSelector().isStateApplicable(targetView.get())) {
             AStringVector sl;
             for (auto& ss : r.getSelector().getSubSelectors()) {
-                if (auto classOf = _cast<class_of>(ss)) {
+                if (auto_cast<class_of>(ss)) {
                     sl << "ass::class_of(\"{}\")"_format(classOf->getClasses().join(", "));
                 } else {
                     sl << IStringable::toString(ss);
@@ -163,8 +166,8 @@ void ViewPropertiesView::displayApplicableRule(
 }
 
 void ViewPropertiesView::requestTargetUpdate() {
-    if (auto targetView = mTargetView.lock()) {
-        if (auto targetWindow = targetView->getWindow()) {
+    if (automTargetView.lock()) {
+        if (autotargetView->getWindow()) {
             targetWindow->applyGeometryToChildrenIfNecessary();
             targetWindow->redraw();
         }
