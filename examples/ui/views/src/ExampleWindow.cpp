@@ -115,18 +115,18 @@ static _<AView> checkBoxesDemo() {
     auto state = _new<State>();
     return Vertical {
         CheckBox {
-          .checked = AUI_REACT(state->checked1),
-          .onCheckedChange = [state](bool checked) { state->checked1 = checked; },
-          .content = Label { "Unchecked checkbox" },
+          AUI_REACT(state->checked1),
+          [state](bool checked) { state->checked1 = checked; },
+          Label { "Unchecked checkbox" },
         },
         CheckBox {
-          .checked = AUI_REACT(state->checked2),
-          .onCheckedChange = [state](bool checked) { state->checked2 = checked; },
-          .content = Label { "Checked checkbox" },
+          AUI_REACT(state->checked2),
+          [state](bool checked) { state->checked2 = checked; },
+          Label { "Checked checkbox" },
         },
         CheckBox {
-          .checked = AUI_REACT(false),
-          .content = Label { "Disabled checkbox" },
+          AUI_REACT(false),
+          Label { "Disabled checkbox" },
         } AUI_LET { it->disable(); },
     };
 }
@@ -135,24 +135,24 @@ static _<AView> radioButtonsDemo() {
     auto selection = _new<AProperty<int>>(0);
     return Vertical {
         RadioButton {
-          .checked = AUI_REACT(*selection == 0),
-          .onClick = [selection] { *selection = 0; },
-          .content = Label { "Radiobutton 1" },
+          AUI_REACT(*selection == 0),
+          [selection] { *selection = 0; },
+          Label { "Radiobutton 1" },
         },
         RadioButton {
-          .checked = AUI_REACT(*selection == 1),
-          .onClick = [selection] { *selection = 1; },
-          .content = Label { "Radiobutton 2" },
+          AUI_REACT(*selection == 1),
+          [selection] { *selection = 1; },
+          Label { "Radiobutton 2" },
         },
         RadioButton {
-          .checked = AUI_REACT(*selection == 2),
-          .onClick = [selection] { *selection = 2; },
-          .content = Label { "Radiobutton 3" },
+          AUI_REACT(*selection == 2),
+          [selection] { *selection = 2; },
+          Label { "Radiobutton 3" },
         },
         RadioButton {
-          .checked = AUI_REACT(*selection == 3),
-          .onClick = [selection] { *selection = 3; },
-          .content = Label { "Radiobutton 4" },
+          AUI_REACT(*selection == 3),
+          [selection] { *selection = 3; },
+          Label { "Radiobutton 4" },
         } AUI_LET { it->disable(); },
     };
 }
@@ -214,23 +214,22 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   Label { "Buttons" },
                   Vertical {
                     Button {
-                      .content = Label { "Common button" },
-                      .onClick = [this] { AMessageBox::show(this, "Title", "Message"); },
+                      Label { "Common button" },
+                      [this] { AMessageBox::show(this, "Title", "Message"); },
                     },
                     Button {
-                      .content = Label { "Default button" },
-                      .onClick = [this] { AMessageBox::show(this, "Title", "Message"); },
-                      .isDefault = true,
+                      Label { "Default button" },
+                      [this] { AMessageBox::show(this, "Title", "Message"); },
+                      true,
                     },
-                    Button { .content = Label { "Disabled button" } } AUI_LET { it->setDisabled(); },
+                    Button { Label { "Disabled button" } } AUI_LET { it->setDisabled(); },
                     Button {
-                      .content =
                           Horizontal {
                             Icon { ":img/logo.svg" },
                             SpacerFixed { 2_dp },
                             Label { "Button with icon" },
                           },
-                      .onClick = [this] {
+                      [this] {
                         AMessageBox::show(this, "Title", "Message");
                       },
                     },
@@ -440,17 +439,17 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   [] {   // lambda style inlining
                       return _new<ATreeView>(_new<ATreeModel<AString>>(AVector<ATreeModel<AString>::Item>{
                               {
-                                .value = "dir1",
-                                .children = {
-                                  { .value = "file1" },
-                                  { .value = "file2" },
+                                "dir1",
+                                {
+                                  { "file1" },
+                                  { "file2" },
                                 }
                               },
                               {
-                                .value = "dir2",
-                                .children = {
-                                  { .value = "file3" },
-                                  { .value = "file4" },
+                                "dir2",
+                                {
+                                  { "file3" },
+                                  { "file4" },
                                 }
                               },
                             }));
@@ -480,8 +479,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<ANumberPicker>().connect(&ANumberPicker::valueChanged,
                                                   [](int64_t x) {
                                                       AWindow::current()->setScalingParams(
-                                                          { .scalingFactor = x * 0.25f,
-                                                            .minimalWindowSizeDp = std::nullopt });
+                                                          { x * 0.25f,
+                                                            std::nullopt });
                                                   }) AUI_LET {
                             it->setMin(1);
                             it->setMax(12);
@@ -697,7 +696,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Label { "Blur" } AUI_WITH_STYLE { Margin { 1_dp, 16_dp } },
                   } AUI_WITH_STYLE {
                         Expanding(1, 0),
-                        Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
+                        Backdrop { Backdrop::GaussianBlur { 9_dp } },
                         BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                       },
                 },
@@ -715,9 +714,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       SpacerExpanding{},
       Centered { _new<ASpinnerV2>() },
       CheckBox {
-        .checked = AUI_REACT(tabView->enabled()),
-        .onCheckedChange = [tabView](bool checked) { tabView->enabled() = checked; },
-        .content = Label { "Enabled" },
+        AUI_REACT(tabView->enabled()),
+        [tabView](bool checked) { tabView->enabled() = checked; },
+        Label { "Enabled" },
       },
       _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
               it << "#copyright";
@@ -749,7 +748,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") AUI_WITH_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { .content = Label { "OK" }, .onClick = [surface] { surface->close(); } } },
+        Centered { Button { Label { "OK" }, [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

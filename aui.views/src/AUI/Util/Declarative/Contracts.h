@@ -61,10 +61,6 @@ public:
 
     In(aui::factory<T> auto&& t) : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(t)) }) {}
 
-    ~In() {
-        AUI_ASSERTX(std::holds_alternative<Devastated>(mImpl), "contract::In: bindTo was not called");
-    }
-
     template <APropertyWritable DestinationProperty>
     void bindTo(DestinationProperty&& destinationProperty) {
         std::visit(

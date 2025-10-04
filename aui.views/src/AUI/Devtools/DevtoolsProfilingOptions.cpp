@@ -50,11 +50,11 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
               { "These settings are applicable for render-to-texture optimizations.",
                 makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html") }),
           CheckBox {
-            .checked = AUI_REACT(targetWindow->profiling()->highlightRedrawRequests),
-            .onCheckedChange = [targetWindow](bool checked) {
+            AUI_REACT(targetWindow->profiling()->highlightRedrawRequests),
+            [targetWindow](bool checked) {
                 targetWindow->profiling()->highlightRedrawRequests = checked;
             },
-            .content = Label { "Highlight redraw requests" },
+            Label { "Highlight redraw requests" },
           },
           AText::fromItems(
               { "Draws purple rect ", coloredRect(0xff00ff_rgb),
@@ -62,11 +62,11 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
                 "(AView::redraw). This can help to find views that causes window to repaint which "
                 "affects application performance and device's battery life." }),
           CheckBox {
-            .checked = AUI_REACT(targetWindow->profiling()->renderToTextureDecay),
-            .onCheckedChange = [targetWindow](bool checked) {
+            AUI_REACT(targetWindow->profiling()->renderToTextureDecay),
+            [targetWindow](bool checked) {
                 targetWindow->profiling()->renderToTextureDecay = checked;
             },
-            .content = Label { "Render to texture decay" },
+            Label { "Render to texture decay" },
           },
           AText::fromItems(
               { "Visually displays render to texture optimization by gradually transforming old pixel ",
@@ -76,11 +76,11 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
                 "color. From perspective of performance it's good that whole screen transformed to gray "
                 "color and thus no redraw is performed." }),
           CheckBox {
-            .checked = AUI_REACT(targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid),
-            .onCheckedChange = [targetWindow](bool checked) {
+            AUI_REACT(targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid),
+            [targetWindow](bool checked) {
                 targetWindow->profiling()->breakpointOnMarkMinContentSizeInvalid = checked;
             },
-            .content = Label { "Breakpoint on AWindow update layout flag" },
+            Label { "Breakpoint on AWindow update layout flag" },
           },
           AText::fromItems(
               { "Stops the attached debugger at the point when window's update layout flag is set. This "
@@ -96,7 +96,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
                     connect(it->value(), [targetWindow, it](float v) {
                         it->value() = glm::round(v * 6) / 6.f;
                         targetWindow->setScalingParams({
-                          .scalingFactor = glm::mix(0.5f, 2.f, float(*it->value())),
+                          glm::mix(0.5f, 2.f, float(*it->value())),
                         });
                     });
                 },
@@ -125,12 +125,12 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           header("Typography"),
           /// [fromItems]
           CheckBox {
-            .checked = AUI_REACT(targetWindow->profiling()->showBaseline),
-            .onCheckedChange = [targetWindow](bool checked) {
+            AUI_REACT(targetWindow->profiling()->showBaseline),
+            [targetWindow](bool checked) {
                 targetWindow->profiling()->showBaseline = checked;
                 targetWindow->redraw();
             },
-            .content = Label { "Show baseline" },
+            Label { "Show baseline" },
           },
           AText::fromItems(
               { "Displays a horizontal line indicating the text baseline. When multiple text views are placed in a row, "
