@@ -53,7 +53,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
 
     using namespace declarative;
     setContents(Vertical {
-        Horizontal { mTitle } << ".agroupbox-title",
+        Horizontal { mTitle }  << ".agroupbox-title",
         mFrame = _new<Inner>(mTitle,
                             /*
                              * Using two nested container because view's masking does not affect it's background (style), but does for
