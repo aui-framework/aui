@@ -23,7 +23,7 @@ public:
     CounterWindow() : AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
         setContents(Centered {
           Horizontal {
-            Label { AUI_REACT("{}"_format(mCounter)) },
+            Label { AUI_REACT("Count: {}"_format(mCounter)) },
             Button { .content = Label { "Count" }, .onClick = [this] { mCounter += 1; } },
           } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
