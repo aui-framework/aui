@@ -86,9 +86,6 @@ static void reload() {
         if (sectionName == ".text") {
             goto patch;
         }
-        if (sectionName == ".rodata") {
-            goto patch;
-        }
 
         continue;
         patch:
@@ -114,7 +111,7 @@ static void reload() {
         if (sectionHeader.sh_flags & SHF_EXECINSTR) {
             prot |= PROT_EXEC;
         }
-//        mprotect(alignedRegion.data(), alignedRegion.size(), prot);
+        mprotect(aligned, sectionEnd - aligned, prot);
     }
     ALogger::info(LOG_TAG) << "Reloaded, good luck!";
 }
