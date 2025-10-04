@@ -30,7 +30,7 @@ public:
         AView::render(ctx);
         ctx.render.setColor(AColor::BLACK);
         ctx.render.string({0, 0}, "Hello World!");
-//        ctx.render.string({5, 10}, "Hello World"); // <<----- i added this line
+        ctx.render.string({5, 10}, "Hello 23 World"); // <<----- i added this line
     }
 
 };
@@ -62,43 +62,60 @@ static void reload() {
     fis.seek(stringTableHeader.sh_offset, ASeekDir::BEGIN);
     fis.read(stringTable.data(), stringTableHeader.sh_size);
 
-    auto regionToPatch = [&]() -> AOptional<std::span<char>> {
-        for (int i = 0; i < elfHeader.e_shnum; ++i) {
-            Elf64_Shdr sectionHeader;
-            fis.seek(elfHeader.e_shoff + i * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
-            fis >> aui::serialize_raw(sectionHeader);
+    for (int i = 0; i < elfHeader.e_shnum; ++i) {
+        Elf64_Shdr sectionHeader;
+        fis.seek(elfHeader.e_shoff + i * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
+        fis >> aui::serialize_raw(sectionHeader);
 
-            if (sectionHeader.sh_type == SHT_PROGBITS && (sectionHeader.sh_flags & SHF_EXECINSTR)) {
-                const char* sectionName = static_cast<const char*>(stringTable.data() + sectionHeader.sh_name);
-
-                auto sectionStart = static_cast<void*>(reinterpret_cast<void*>(sectionHeader.sh_addr));
-                auto sectionEnd = static_cast<void*>(static_cast<char*>(sectionStart) + sectionHeader.sh_size);
-
-                if (addr >= sectionStart && addr < sectionEnd) {
-                    ALogger::info(LOG_TAG)
-                        << "Patching: " << sectionName << " " << sectionHeader.sh_type << " " << sectionHeader.sh_flags
-                        << " " << sectionStart << "-" << sectionEnd;
-                    fis.seek(sectionHeader.sh_offset, ASeekDir::BEGIN);
-                    return std::span<char>((char*)sectionStart, sectionHeader.sh_size);
-                }
-            }
+        if (sectionHeader.sh_addr == 0) {
+            continue;
         }
-        return std::nullopt;
-    }();
-    if (!regionToPatch) {
-        ALogger::err(LOG_TAG) << "Can't find section to patch";
-        return;
+
+        if (sectionHeader.sh_size == 0) {
+            continue;
+        }
+
+        std::string_view sectionName = static_cast<const char*>(stringTable.data() + sectionHeader.sh_name);
+        auto sectionStart = static_cast<char*>(reinterpret_cast<void*>(sectionHeader.sh_addr));
+        auto sectionEnd = static_cast<char*>(static_cast<char*>(sectionStart) + sectionHeader.sh_size);
+
+        if (sectionHeader.sh_type == SHT_PROGBITS && !(sectionHeader.sh_flags & SHF_WRITE) && !(sectionHeader.sh_flags & SHF_EXECINSTR)) {
+            goto patch;
+        }
+
+        if (sectionName == ".text") {
+            goto patch;
+        }
+        if (sectionName == ".rodata") {
+            goto patch;
+        }
+
+        continue;
+        patch:
+
+        ALogger::info(LOG_TAG)
+            << "Patching: " << sectionName << " " << sectionHeader.sh_type << " " << sectionHeader.sh_flags << " "
+            << (void*)sectionStart << "-" << (void*)sectionEnd;
+
+        auto region = std::span<char>( sectionStart, sectionHeader.sh_size);
+        auto aligned = reinterpret_cast<char*>(align(reinterpret_cast<std::uintptr_t>(region.data())));
+
+        if (mprotect(aligned, sectionEnd - aligned, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
+            ALogger::err(LOG_TAG) << "Failed to make memory writable";
+            continue;
+        }
+
+        fis.seek(sectionHeader.sh_offset, ASeekDir::BEGIN);
+        fis.read(region.data(), region.size());
+        int prot = PROT_READ;
+        if (sectionHeader.sh_flags & SHF_WRITE) {
+            prot |= PROT_WRITE;
+        }
+        if (sectionHeader.sh_flags & SHF_EXECINSTR) {
+            prot |= PROT_EXEC;
+        }
+//        mprotect(alignedRegion.data(), alignedRegion.size(), prot);
     }
-    auto alignedRegionToPatch = std::span<char>(reinterpret_cast<char*>(align(reinterpret_cast<std::uintptr_t>(regionToPatch->data()))), align(regionToPatch->size()));
-
-    if (mprotect(alignedRegionToPatch.data(), alignedRegionToPatch.size(), PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-        ALogger::err(LOG_TAG) << "Failed to make memory writable";
-        return;
-    }
-
-    AUI_DEFER { mprotect(alignedRegionToPatch.data(), alignedRegionToPatch.size(), PROT_READ | PROT_EXEC); };
-
-    fis.read(regionToPatch->data(), regionToPatch->size());
     ALogger::info(LOG_TAG) << "Reloaded, good luck!";
 }
 
