@@ -35,7 +35,7 @@ _<AView> radioButtons(_<State> state) {
         return RadioButton {
             .checked = AUI_REACT(state->selection == index),
             .onClick = [state, index] { state->selection = index; },
-            .content = Label { .text = text },
+            .content = Label { .text },
         };
     };
 }
