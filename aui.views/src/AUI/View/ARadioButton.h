@@ -94,8 +94,7 @@ public:
         return mCircle;
     }
 
-    [[deprecated("use declarative::RadioButton instead.")]]
-    class API_AUI_VIEWS Group : public AObject {
+    class API_AUI_VIEWS [[deprecated("use declarative::RadioButton instead.")]] Group : public AObject {
     private:
         AMap<int, _<ARadioButton>> mButtons;
         _weak<ARadioButton> mSelectedRadio;
