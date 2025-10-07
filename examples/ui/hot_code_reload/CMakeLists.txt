@@ -27,7 +27,7 @@ function(aui_enable_hot_reload AUI_MODULE_NAME)
 #INSERT BEFORE .text;
 #    ]])
 
-    target_link_options(aui.example.hot_code_reload PRIVATE "-T${LDSCRIPT_OUT}")
+    target_link_options(${AUI_MODULE_NAME} PRIVATE "-T${LDSCRIPT_OUT}")
 
     set(SCRIPT ${AUI_BUILD_AUI_ROOT}/cmake/hot_code_reload/generate_ld.sh)
 
