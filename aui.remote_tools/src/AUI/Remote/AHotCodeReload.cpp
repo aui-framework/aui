@@ -23,177 +23,276 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <elf.h>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/algorithm.hpp>
+
+namespace {
+
+static constexpr auto LOG_TAG = "Hot code reload";
+
+struct Section {
+    Elf64_Shdr header;
+    AString name;
+    std::vector<char> data;
+};
+
+AVector<Section> parseElf(const AString& path) {
+    Elf64_Ehdr elfHeader;
+    AFileInputStream fis(path);
+    fis >> aui::serialize_raw(elfHeader);
+
+    if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) != 0) {
+        throw AException("Invalid ELF signature");
+    }
+
+    Elf64_Shdr stringTableHeader;
+    fis.seek(elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
+    fis >> aui::serialize_raw(stringTableHeader);
+
+    auto stringTable = std::string(stringTableHeader.sh_size, '\0');
+    fis.seek(stringTableHeader.sh_offset, ASeekDir::BEGIN);
+    fis.read(stringTable.data(), stringTableHeader.sh_size);
+
+    AVector<Section> sections;
+
+    for (int i = 0; i < elfHeader.e_shnum; ++i) {
+        Elf64_Shdr sectionHeader;
+        fis.seek(elfHeader.e_shoff + i * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
+        fis >> aui::serialize_raw(sectionHeader);
+        AString name = static_cast<const char*>(stringTable.data() + sectionHeader.sh_name);
+        std::vector<char> data(sectionHeader.sh_size);
+        if (sectionHeader.sh_size != 0) {
+            fis.seek(sectionHeader.sh_offset, ASeekDir::BEGIN);
+            fis.read(data.data(), data.size());
+            data.resize(sectionHeader.sh_size);
+        }
+        sections.emplace_back(Section {
+          .header = sectionHeader,
+          .name = std::move(name),
+          .data = std::move(data),
+        });
+    }
+    return sections;
+}
+
+template <typename T>
+std::span<const T> asSpan(std::span<const char> view) {
+    AUI_ASSERTX(view.size() % sizeof(T) == 0, "Invalid view size");
+    return std::span<const T>((const T*) view.data(), view.size() / sizeof(T));
+}
+
+char* alignUpper(char* input, size_t alignment = sysconf(_SC_PAGESIZE)) {
+    size_t offset = (size_t) input % alignment;
+    if (offset == 0) {
+        return input;
+    }
+    return input + alignment - offset;
+}
+
+void validateDistance(
+    AStringView symname, char* addr1, char* addr2, size_t distance = std::numeric_limits<int32_t>::max()) {
+    if (addr1 > addr2) {
+        if (addr1 - addr2 > distance) {
+            throw AException("Symbol too far: {}"_format(symname.data()));
+        }
+    } else {
+        if (addr2 - addr1 > distance) {
+            throw AException("Symbol too far: {}"_format(symname.data()));
+        }
+    }
+}
+}   // namespace
 
 void AHotCodeReload::reload() {
-    static constexpr auto LOG_TAG = "Hot code reload";
     AThread::current()->enqueue([this] {
-      auto newSymbols = extractSymbols();
-      bool symbolsChanged = false;
-      for (const auto& [name, addr] : mSymbols) {
-          auto it = newSymbols.find(name);
-          if (it == newSymbols.end()) {
-              ALogger::err(LOG_TAG) << "Can't apply code: symbol \"" << name << "\" not found";
-              symbolsChanged = true;
-              continue;
-          }
+        AString input = "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/aui.example.hot_code_reload.dir/src/main.cpp.o";
+        emit patchBegin;
+        AUI_DEFER { emit patchEnd; };
 
-          if (it->second != addr) {
-              ALogger::err(LOG_TAG) << "Can't apply code: symbol \"" << name << "\" was relocated from " << addr << " to " << it->second;
-              symbolsChanged = true;
-          }
-      }
-      if (symbolsChanged) {
-          //            return;
-      }
-      AUI_DEFER { mSymbols = std::move(newSymbols); };
+        struct MappedSection {
+            Section section;
+            _<void> page;
+        };
 
-      const auto PAGE_SIZE = sysconf(_SC_PAGESIZE);
+        // 1. Load PROGBITS sections with ALLOC into memory
+        std::vector<MappedSection> sections = [&] {
+            auto pivot =
+                ranges::max(mSymbols | ranges::view::transform([](const auto& i) { return (char*) i.second; }));
+            pivot = alignUpper(pivot);
+            auto sections = parseElf(input);
+            return sections | ranges::view::transform([&](Section& section) {
+                       _<void> page;
+                       if (section.header.sh_flags & SHF_ALLOC && section.header.sh_type == SHT_PROGBITS &&
+                           section.data.size() > 0) {
+                           page = [&] {
+                               tryAgainLol:
+                                   void* p = mmap(
+                                       pivot, section.data.size(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                                       -1, 0);
+                                   if (p == MAP_FAILED) {
+                                       throw AException("mmap fail");
+                                   }
+                                   pivot = alignUpper(pivot + section.data.size() + 1);
+                                   if (p > pivot + sysconf(_SC_PAGESIZE)) {
+                                       munmap(p, section.data.size());
+                                       goto tryAgainLol;
+                                   }
+                                   return aui::ptr::manage_shared(p, [size = section.data.size()](void* ptr) {
+                                       munmap(ptr, size);
+                                   });
+                           }();
+                           memcpy(page.get(), section.data.data(), section.data.size());
+                       }
+                       return MappedSection { .section = std::move(section), .page = std::move(page) };
+                   }) |
+                   ranges::to_vector;
+        }();
 
-      auto align = [&](uintptr_t addr) { return ((uintptr_t) addr & ~(PAGE_SIZE - 1)); };
+        bool errored = false;
+        // 2. Process relocations
+        for (const auto& mapped : sections) {
+            if (mapped.section.header.sh_type != SHT_RELA)
+                continue;
+            if (mapped.section.name.contains(".debug")) {
+                continue;
+            }
+            if (mapped.section.name.contains(".rela.eh_frame")) {
+                printf("\n");
+            }
+            // Find target section
+            size_t targetIdx = mapped.section.header.sh_info;
+            auto& targetSection = sections[targetIdx];
 
-      auto myLocation = AProcess::self()->getPathToExecutable();
-      AFileInputStream fis(myLocation);
-      Elf64_Ehdr elfHeader;
-      fis >> aui::serialize_raw(elfHeader);
-
-      if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) != 0) {
-          ALogger::err(LOG_TAG) << "Invalid ELF signature";
-          return;
-      }
-
-      Elf64_Shdr stringTableHeader;
-      fis.seek(elfHeader.e_shoff + elfHeader.e_shstrndx * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
-      fis >> aui::serialize_raw(stringTableHeader);
-
-      std::string stringTable(stringTableHeader.sh_size, '\0');
-      fis.seek(stringTableHeader.sh_offset, ASeekDir::BEGIN);
-      fis.read(stringTable.data(), stringTableHeader.sh_size);
-
-      for (int i = 0; i < elfHeader.e_shnum; ++i) {
-          Elf64_Shdr sectionHeader;
-          fis.seek(elfHeader.e_shoff + i * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
-          fis >> aui::serialize_raw(sectionHeader);
-
-          if (sectionHeader.sh_addr == 0) {
-              continue;
-          }
-
-          if (sectionHeader.sh_size == 0) {
-              continue;
-          }
+            auto getSymbolName = [&](size_t index) {
+                auto& symtab = sections.at(mapped.section.header.sh_link);
+                auto st_name = asSpan<Elf64_Sym>(std::span(symtab.section.data))[index].st_name;
+                return AStringView(&sections.at(symtab.section.header.sh_link).section.data.at(st_name));
+            };
 
 
-          if (sectionHeader.sh_offset == 0) {
-              continue;
-          }
+            // Each entry:
+            auto i = asSpan<Elf64_Rela>(std::span(mapped.section.data));
+            auto count = i.size();
 
-          AStringView sectionName = static_cast<const char*>(stringTable.data() + sectionHeader.sh_name);
-          auto sectionStart = static_cast<char*>(reinterpret_cast<void*>(sectionHeader.sh_addr));
-          auto sectionEnd = static_cast<char*>(static_cast<char*>(sectionStart) + sectionHeader.sh_size);
+            auto printSectionName = [&, printed = false]() mutable {
+                if (printed) {
+                    return;
+                }
+                printed = true;
+                ALogger::info(LOG_TAG) << "In section: " << mapped.section.name << ":";
+            };
 
-          if (sectionName.contains(".plt")) {
-             // Overwriting .plt entries corrupts your program’s ability to perform dynamic calls. These entries are
-             // set up at program start; overwriting them with on-disk data is almost always incorrect.
-             continue;
-          }
-          if (sectionName.contains(".got")) {
-              continue;
-          }
-          if (sectionName.contains(".bss")) {
-             continue;
-          }
-          if (sectionName.contains(".rodata")) {
-              continue;
-          }
-          if (sectionName.contains(".data.rel.ro")) {
-              continue;
-          }
-          if (sectionName.contains(".data")) {
-              continue;
-          }
+            for (const auto& rela : i) {
+                size_t offset = rela.r_offset;
+                size_t symidx = ELF64_R_SYM(rela.r_info);
 
-          ALogger::info(LOG_TAG)
-              << "Patching: " << sectionName.data() << " " << sectionHeader.sh_type << " " << sectionHeader.sh_flags << " "
-              << (void*) sectionStart << "-" << (void*) sectionEnd;
+                // Lookup symbol name:
+                auto symname = getSymbolName(symidx);
+                auto symaddr = [&]() -> char* {
+                    if (symname == "") {
+                        return (char*)targetSection.page.get();
+                    }
+                    auto it = mSymbols.find(symname);
+                    if (it == mSymbols.end()) {
+                        printSectionName();
+                        ALogger::err(LOG_TAG) << "Unresolved reference: \"" << symname.data() << "\"";
+                        errored = true;
+                        return nullptr;
+                    }
+                    return reinterpret_cast<char*>(it->second);
+                }();
+                if (symaddr == nullptr) {
+                    continue;
+                }
 
-          auto region = std::span<char>(sectionStart, sectionHeader.sh_size);
-          auto aligned = reinterpret_cast<char*>(align(reinterpret_cast<std::uintptr_t>(region.data())));
+                auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
 
-          if (mprotect(aligned, sectionEnd - aligned, PROT_READ | PROT_WRITE | PROT_EXEC) != 0) {
-              ALogger::err(LOG_TAG) << "Failed to make memory writable";
-              continue;
-          }
-
-          fis.seek(sectionHeader.sh_offset, ASeekDir::BEGIN);
-          fis.read(region.data(), region.size());
-          int prot = PROT_READ;
-          if (sectionHeader.sh_flags & SHF_WRITE) {
-              prot |= PROT_WRITE;
-          }
-          if (sectionHeader.sh_flags & SHF_EXECINSTR) {
-              prot |= PROT_EXEC;
-          }
-//          mprotect(aligned, sectionEnd - aligned, prot);
-      }
-      ALogger::info(LOG_TAG) << "Reloaded, good luck!";
-      emit completed;
+                switch (auto type = ELF64_R_TYPE(rela.r_info)) {
+                    case R_X86_64_PLT32:
+                    case R_X86_64_PC32: {
+                        validateDistance(symname, writeAddr, symaddr);
+                        int32_t rel = symaddr - writeAddr + rela.r_addend;
+                        memcpy(writeAddr, &rel, 4);
+                        break;
+                    }
+                        /*
+                    case R_X86_64_64: {
+                        uint64_t abs = (uintptr_t) symaddr + rela->r_addend;
+                        memcpy(writeAddr, &abs, 8);
+                        break;
+                    }*/
+                        // Add more types here as needed
+                    default: {
+                        printSectionName();
+                        ALogger::err(LOG_TAG)
+                            << "Unsupported relocation type: " << type << " in \"" << symname.data() << "\"";
+                        errored = true;
+                    }
+                }
+            }
+        }
+        if (errored) {
+            ALogger::err(LOG_TAG) << "\"" << input << "\": refusing patch due to errors. Target is not changed.";
+            return;
+        }
     });
 }
 
 std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
     std::unordered_map<AString, void*> symbols;
     auto myLocation = AProcess::self()->getPathToExecutable();
-    AFileInputStream fis(myLocation);
-    Elf64_Ehdr elfHeader;
-    fis >> aui::serialize_raw(elfHeader);
+    auto sections = parseElf(myLocation);
 
-    if (memcmp(elfHeader.e_ident, ELFMAG, SELFMAG) != 0) {
-        return symbols;
-    }
+    const Section* symtab = nullptr;   // regular symbol table
+    const Section* dynsym = nullptr;   // dynamic symbol table
+    const Section* rela = nullptr;     // relocation table
 
-    // Read section headers
-    for (int i = 0; i < elfHeader.e_shnum; ++i) {
-        Elf64_Shdr sectionHeader;
-        fis.seek(elfHeader.e_shoff + i * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
-        fis >> aui::serialize_raw(sectionHeader);
-
-
-        if (sectionHeader.sh_type == SHT_SYMTAB) {
-            auto stringTable = [&] {
-              fis.seek(elfHeader.e_shoff + sectionHeader.sh_link * sizeof(Elf64_Shdr), ASeekDir::BEGIN);
-              Elf64_Shdr sectionHeaderStringTable;
-              fis >> aui::serialize_raw(sectionHeaderStringTable);
-              fis.seek(sectionHeaderStringTable.sh_offset, ASeekDir::BEGIN);
-              std::string sectionHeaderStringTableString(sectionHeaderStringTable.sh_size, '\0');
-              fis.read(sectionHeaderStringTableString.data(), sectionHeaderStringTable.sh_size);
-              return sectionHeaderStringTableString;
-            }();
-
-            // Read symbols
-            size_t numSymbols = sectionHeader.sh_size / sizeof(Elf64_Sym);
-            fis.seek(sectionHeader.sh_offset, ASeekDir::BEGIN);
-            for (size_t j = 0; j < numSymbols; ++j) {
-                Elf64_Sym sym;
-                fis >> aui::serialize_raw(sym);
-
-                if (sym.st_value == 0) {
-                    continue;
-                }
-
-                auto type = ELF64_ST_TYPE(sym.st_info);
-                if (type == STT_SECTION) {
-                    continue;
-                }
-                if (type == STT_OBJECT) {
-                    continue;
-                }
-                if (type == STT_NOTYPE) {
-                    continue;
-                }
-
-                symbols["{} ({})"_format(std::string_view(&stringTable.at(sym.st_name)), sym.st_info)] = reinterpret_cast<void*>(sym.st_value);
-            }
+    for (const auto& section : sections) {
+        switch (section.header.sh_type) {
+            case SHT_SYMTAB:
+                symtab = &section;
+                break;
+            case SHT_DYNSYM:
+                dynsym = &section;
+                break;
+            case SHT_RELA:
+                rela = &section;
+                break;
+            default:
+                break;
         }
     }
+
+    auto extractStringTable = [&](const Section& section) {
+        return std::span(sections.at(section.header.sh_link).data);
+    };
+    if (symtab != nullptr) {
+        auto stringTable = extractStringTable(*symtab);
+        // Read symbols
+        for (const auto& sym : asSpan<Elf64_Sym>(symtab->data)) {
+            if (sym.st_value == 0) {
+                continue;
+            }
+
+            auto name = std::string_view(&stringTable[sym.st_name]);
+            auto value = reinterpret_cast<void*>(sym.st_value);
+            symbols[name] = value;
+            ALogger::info(LOG_TAG) << "Found symbol: " << name << " at " << value << " (size: " << sym.st_size << ")";
+        }
+    }
+
+    if (dynsym != nullptr && rela != nullptr) {
+        auto stringTable = extractStringTable(*dynsym);
+        for (const auto& r : asSpan<Elf64_Rela>(rela->data)) {
+            auto symIdx = ELF64_R_SYM(r.r_info);
+            const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
+            auto name = std::string_view(&stringTable[sym.st_name]);
+            auto value = reinterpret_cast<void*>(r.r_offset);   // address of plt stub
+            symbols[name] = value;
+            ALogger::info(LOG_TAG) << "Found dynamic symbol: " << name << " at " << value;
+        }
+    }
+
     return symbols;
 }

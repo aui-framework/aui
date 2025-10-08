@@ -23,12 +23,13 @@ public:
 
     void reload();
 
-    emits<> completed;
+    emits<> patchBegin;
+    emits<> patchEnd;
 
 private:
     std::unordered_map<AString, void*> mSymbols = extractSymbols();
-
     std::unordered_map<AString, void*> extractSymbols();
+    AVector<_<void>> mAllocatedPages;
 
     AHotCodeReload() {}
 };

@@ -24,7 +24,7 @@ class MyWindow: public AWindow {
 public:
     MyWindow(): AWindow("Hot code reload", 600_dp, 300_dp) {
         inflate();
-        AObject::connect(AHotCodeReload::instance().completed, me::inflate);
+        AObject::connect(AHotCodeReload::instance().patchEnd, me::inflate);
     }
 
     void inflate() {
