@@ -83,7 +83,7 @@ std::span<const T> asSpan(std::span<const char> view) {
     return std::span<const T>((const T*) view.data(), view.size() / sizeof(T));
 }
 
-char* alignUpper(char* input, size_t alignment = sysconf(_SC_PAGESIZE)) {
+uintptr_t alignUpper(uintptr_t input, size_t alignment = sysconf(_SC_PAGESIZE)) {
     size_t offset = (size_t) input % alignment;
     if (offset == 0) {
         return input;
@@ -116,6 +116,26 @@ int iterateOverLoadedObjects(T&& t) {
 
 auto extractStringTable(const AVector<Section>& allSections, const Section& targetSection) {
     return std::span(allSections.at(targetSection.header.sh_link).data);
+}
+
+
+void hook(void* source, void* destination) {
+    static const auto PAGE_SIZE = sysconf(_SC_PAGESIZE);
+    auto alignedAddr = reinterpret_cast<uintptr_t>(source) & ~(PAGE_SIZE - 1);
+    auto alignedSize = alignUpper(reinterpret_cast<uintptr_t>(source) - alignedAddr + 8, PAGE_SIZE);
+    if (mprotect(reinterpret_cast<void*>(alignedAddr), alignedSize, PROT_READ | PROT_WRITE) != 0) {
+        throw AException("mprotect failed at {}"_format(reinterpret_cast<void*>(alignedAddr)));
+    }
+    AUI_DEFER { mprotect(reinterpret_cast<void*>(alignedAddr), alignedSize, PROT_READ | PROT_EXEC); };
+
+    auto* sourceCode = reinterpret_cast<uint8_t*>(source);
+
+#if AUI_ARCH_X86 || AUI_ARCH_X86_64
+    static constexpr auto JMP_OPCODE = 0xE9;
+    *(sourceCode++) = JMP_OPCODE;
+    int32_t offset = reinterpret_cast<uintptr_t>(destination) - (reinterpret_cast<uintptr_t>(source)) - 5;
+    std::memcpy(sourceCode, &offset, sizeof(offset));
+#endif
 }
 
 template<aui::invocable<AStringView, const Elf64_Sym> F>
@@ -173,6 +193,12 @@ void AHotCodeReload::reload() {
              * @brief Offset in bytes from the beginning of the section.
              */
             size_t offset;
+
+
+            /**
+             * @brief Size of the symbol in bytes.
+             */
+            size_t size;
         };
         
         std::unordered_map<AString, LocalSymbol> localSymbols;
@@ -180,7 +206,7 @@ void AHotCodeReload::reload() {
         // 1. Load PROGBITS sections with ALLOC into memory
         std::vector<MappedSection> sections = [&] {
             auto pivot =
-                ranges::min(mSymbols | ranges::view::transform([](const auto& i) { return (char*) i.second; }));
+                ranges::min(mSymbols | ranges::view::transform([](const auto& i) { return reinterpret_cast<uintptr_t>(i.second); }));
             pivot = alignUpper(pivot);
             auto sections = parseElf(input);
             ALOG_DEBUG(LOG_TAG) << input << " :";
@@ -188,6 +214,7 @@ void AHotCodeReload::reload() {
                 localSymbols[name] = LocalSymbol{
                     .sectionIdx = sym.st_shndx,
                     .offset = sym.st_value,
+                    .size = sym.st_size,
                 };
             });
 
@@ -198,13 +225,13 @@ void AHotCodeReload::reload() {
                            page = [&] {
                                tryAgainLol:
                                    void* p = mmap(
-                                       pivot, section.data.size(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
+                                       reinterpret_cast<void*>(pivot), section.data.size(), PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS,
                                        -1, 0);
                                    if (p == MAP_FAILED) {
                                        throw AException("mmap fail");
                                    }
                                    pivot = alignUpper(pivot + section.data.size() + 1);
-                                   if (p > pivot + sysconf(_SC_PAGESIZE)) {
+                                   if (p > reinterpret_cast<char*>(pivot) + sysconf(_SC_PAGESIZE)) {
                                        munmap(p, section.data.size());
                                        goto tryAgainLol;
                                    }
@@ -290,12 +317,12 @@ void AHotCodeReload::reload() {
                     case R_X86_64_PC32: {
                         validateDistance(symname, writeAddr, symaddr);
                         int32_t rel = symaddr - writeAddr + rela.r_addend;
-                        memcpy(writeAddr, &rel, 4);
+//                        memcpy(writeAddr, &rel, 4);
                         break;
                     }
                     case R_X86_64_64: {
                         uint64_t abs = (uintptr_t) symaddr + rela.r_addend;
-                        memcpy(writeAddr, &abs, 8);
+//                        memcpy(writeAddr, &abs, 8);
                         break;
                     }
                     case R_X86_64_REX_GOTPCRELX:
@@ -303,7 +330,7 @@ void AHotCodeReload::reload() {
                     case R_X86_64_GOTPCRELX: {
                         validateDistance(symname, writeAddr, symaddr);
                         int32_t rel = symaddr - writeAddr + rela.r_addend;
-                        memcpy(writeAddr, &rel, 4);
+//                        memcpy(writeAddr, &rel, 4);
                         break;
                     }
                     default: {
@@ -319,6 +346,40 @@ void AHotCodeReload::reload() {
             ALogger::err(LOG_TAG) << "\"" << input << "\": refusing patch due to errors. Target is not changed.";
             return;
         }
+        // 3. Hook old symbols with newly loaded ones
+        for (const auto&[name, symbol]: localSymbols) {
+            auto sourceAddr = mSymbols.find(name);
+            if (sourceAddr == mSymbols.end()) {
+                continue;
+            }
+            auto destinationAddr = reinterpret_cast<char*>(symbol.offset);
+            if (symbol.sectionIdx == SHN_UNDEF) {
+                continue;
+            }
+            if (symbol.sectionIdx == SHN_COMMON) {
+                continue;
+            }
+            if (symbol.sectionIdx != SHN_ABS) {
+                auto& destinationSection = sections.at(symbol.sectionIdx);
+                if (destinationSection.page == nullptr) {
+                    continue;
+                }
+                destinationAddr += reinterpret_cast<uintptr_t>(destinationSection.page.get());
+            }
+
+            if (std::memcmp(sourceAddr->second, destinationAddr, symbol.size) == 0) {
+                continue;
+            }
+
+            if (!name.contains("inflate")) {
+                continue;
+            }
+
+            ALOG_DEBUG(LOG_TAG) << "Hooking symbol: " << name << " : " << (void*)sourceAddr->second << " -> " << (void*)destinationAddr;
+            hook(sourceAddr->second, destinationAddr);
+        }
+        ALOG_DEBUG(LOG_TAG) << "Done";
+        emit patchEnd;
     });
 }
 
@@ -339,29 +400,33 @@ std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
         auto sections = parseElf(objectPath);
 
         ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
-            symbols[name] = reinterpret_cast<void*>(sym.st_value);
+            auto resolved = reinterpret_cast<char*>(info->dlpi_addr) + sym.st_value;
+            if (auto& v = symbols[name]; v == nullptr) {
+                // we would not override existing symbols, since it would probably override symbols resolved by dynsym
+                // of the main executable
+                v = resolved;
+            };
         });
 
-        const Section* dynsym = nullptr;   // dynamic symbol table
-        const Section* rela = nullptr;     // relocation table
-
-        for (const auto& section : sections) {
-            switch (section.header.sh_type) {
-                case SHT_DYNSYM:
-                    dynsym = &section;
-                    break;
-                case SHT_RELA:
-                    rela = &section;
-                    break;
-                default:
-                    break;
-            }
+        const bool isExecutable = info->dlpi_name[0] == '\0';
+        if (!isExecutable) {
+            return 0;
         }
 
-        const bool isSelf = info->dlpi_name[0] == '\0';
-        if (dynsym != nullptr && rela != nullptr && isSelf) {
-            auto stringTable = extractStringTable(sections, *dynsym);
-            for (const auto& r : asSpan<Elf64_Rela>(rela->data)) {
+        auto dynsym = ranges::find_if(sections, [&](const auto& section) {
+            return section.header.sh_type == SHT_DYNSYM;
+        });
+        if (dynsym == sections.end()) {
+            return 0;
+        }
+
+        auto stringTable = extractStringTable(sections, *dynsym);
+
+        for (const auto& section : sections) {
+            if (section.header.sh_type != SHT_RELA) {
+                continue;
+            }
+            for (const auto& r : asSpan<Elf64_Rela>(section.data)) {
                 auto symIdx = ELF64_R_SYM(r.r_info);
                 const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
                 auto name = std::string_view(&stringTable[sym.st_name]);
