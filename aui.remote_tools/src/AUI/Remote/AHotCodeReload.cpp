@@ -439,59 +439,48 @@ void AHotCodeReload::reload() {
 }
 
 AHotCodeReload::AHotCodeReload() {
-    iterateOverLoadedObjects([&](dl_phdr_info* info, size_t size) {
-        APath objectPath = info->dlpi_name;
-        if (objectPath.empty()) {
-            // main executable
-            objectPath = AProcess::self()->getPathToExecutable();
+    APath objectPath = AProcess::self()->getPathToExecutable();
+
+    if (!objectPath.isRegularFileExists()) {
+        return;
+    }
+    ALOG_DEBUG(LOG_TAG) << "Object: \"" << objectPath << "\"";
+
+    auto sections = parseElf(objectPath);
+
+    ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
+        auto resolved = reinterpret_cast<char*>(0) + sym.st_value;
+        if (resolved == nullptr) {
+            return;
         }
-        if (!objectPath.isRegularFileExists()) {
-            return 0;
-        }
-        ALOG_DEBUG(LOG_TAG) << "Object: \"" << objectPath << "\"";
-
-        auto sections = parseElf(objectPath);
-
-        ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
-            auto resolved = reinterpret_cast<char*>(info->dlpi_addr) + sym.st_value;
-            if (resolved == nullptr) {
-                return;
-            }
-            if (auto& v = mSymbols[name]; v > resolved || v == nullptr) {
-                v = resolved;
-            };
-        });
-
-        const bool isExecutable = info->dlpi_name[0] == '\0';
-        if (!isExecutable) {
-            return 0;
-        }
-
-        auto dynsym = ranges::find_if(sections, [&](const auto& section) {
-            return section.header.sh_type == SHT_DYNSYM;
-        });
-        if (dynsym == sections.end()) {
-            return 0;
-        }
-
-        auto stringTable = extractStringTable(sections, *dynsym);
-
-        for (const auto& section : sections) {
-            if (section.header.sh_type != SHT_RELA) {
-                continue;
-            }
-            for (const auto& r : asSpan<Elf64_Rela>(section.data)) {
-                auto symIdx = ELF64_R_SYM(r.r_info);
-                const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
-                auto name = std::string_view(&stringTable[sym.st_name]);
-                auto got = reinterpret_cast<void**>(info->dlpi_addr + r.r_offset);   // address of plt stub
-                if (name == "_Znwm") {
-                    printf("\n");
-                }
-                mGot[name] = got;
-                ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", actual location: " << *got;
-            }
-        }
-        return 0;
+        if (auto& v = mSymbols[name]; v > resolved || v == nullptr) {
+            v = resolved;
+        };
     });
+
+    auto dynsym = ranges::find_if(sections, [&](const auto& section) {
+        return section.header.sh_type == SHT_DYNSYM;
+    });
+    if (dynsym == sections.end()) {
+        return;
+    }
+
+    auto stringTable = extractStringTable(sections, *dynsym);
+
+    for (const auto& section : sections) {
+        if (section.header.sh_type != SHT_RELA) {
+            continue;
+        }
+        for (const auto& r : asSpan<Elf64_Rela>(section.data)) {
+            auto symIdx = ELF64_R_SYM(r.r_info);
+            const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
+            auto name = std::string_view(&stringTable[sym.st_name]);
+            auto got = reinterpret_cast<void**>(r.r_offset);   // address of plt stub
+            if (name == "_Znwm") {
+                printf("\n");
+            }
+            mGot[name] = got;
+            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", actual location: " << *got;
+        }
+    }
 }
