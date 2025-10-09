@@ -91,17 +91,18 @@ uintptr_t alignUpper(uintptr_t input, size_t alignment = sysconf(_SC_PAGESIZE)) 
     return input + alignment - offset;
 }
 
-void validateDistance(
+bool validateDistance(
     AStringView symname, char* addr1, char* addr2, size_t distance = std::numeric_limits<int32_t>::max()) {
     if (addr1 > addr2) {
         if (addr1 - addr2 > distance) {
-            throw AException("Symbol too far: {}"_format(symname));
+            return false;
         }
     } else {
         if (addr2 - addr1 > distance) {
-            throw AException("Symbol too far: {}"_format(symname));
+            return false;
         }
     }
+    return true;
 }
 
 template <typename T>
@@ -149,22 +150,26 @@ void extractSymbols(const AVector<Section>& sections, F&& destination) {
                 break;
         }
     }
-    if (symtab != nullptr) {
-        auto stringTable = extractStringTable(sections, *symtab);
-        // Read symbols
-        for (const auto& sym : asSpan<Elf64_Sym>(symtab->data)) {
-            auto name = AStringView(&stringTable[sym.st_name]);
-            if (name.empty()) {
-                continue;
-            }
-            auto value = reinterpret_cast<void*>(sym.st_value);
-            ALOG_DEBUG(LOG_TAG) << fmt::format(
-                "    Found symbol: at {:<16p} (size: {:<8}, bind: {:<8}, type: {:<8}, visibility: {:<8}, shndx: {:<8}) "
-                "{:<40}",
-                value, sym.st_size, ELF64_ST_BIND(sym.st_info), ELF64_ST_TYPE(sym.st_info),
-                ELF64_ST_VISIBILITY(sym.st_other), sym.st_shndx, name);
-            destination(name, sym);
+    if (symtab == nullptr) {
+        return;
+    }
+    auto stringTable = extractStringTable(sections, *symtab);
+    // Read symbols
+    for (const auto& sym : asSpan<Elf64_Sym>(symtab->data)) {
+        auto name = AStringView(&stringTable[sym.st_name]);
+        if (name.empty()) {
+            continue;
         }
+        if (name == "_ZN18AViewContainerBase11setContentsERK1_I14AViewContainerE") {
+            printf("\n");
+        }
+        auto value = reinterpret_cast<void*>(sym.st_value);
+        ALOG_DEBUG(LOG_TAG) << fmt::format(
+            "    Found symbol: at base+{:<16p} (size: {:<8}, bind: {:<8}, type: {:<8}, visibility: {:<8}, shndx: {:<8}) "
+            "{:<40}",
+            value, sym.st_size, ELF64_ST_BIND(sym.st_info), ELF64_ST_TYPE(sym.st_info),
+            ELF64_ST_VISIBILITY(sym.st_other), sym.st_shndx, name);
+        destination(name, sym);
     }
 }
 
@@ -284,11 +289,13 @@ void AHotCodeReload::reload() {
 
                 // Lookup symbol name:
                 auto symname = getSymbolName(symidx);
-                auto symaddr = [&]() -> char* {
+                auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
+
+                auto getAddr = [&](const auto& table) -> char* {
                     if (symname == "") {
                         return (char*) targetSection.page.get();
                     }
-                    if (auto it = mSymbols.find(symname); it != mSymbols.end()) {
+                    if (auto it = table.find(symname); it != table.end()) {
                         return reinterpret_cast<char*>(it->second);
                     }
                     if (auto it = localSymbols.find(symname); it != localSymbols.end()) {
@@ -305,32 +312,60 @@ void AHotCodeReload::reload() {
                     ALogger::err(LOG_TAG) << "Unresolved reference: \"" << symname << "\"";
                     errored = true;
                     return nullptr;
-                }();
-                if (symaddr == nullptr) {
-                    continue;
+                };
+#if AUI_DEBUG
+                if (!symname.empty()) {
+                    printSectionName();
+                    ALOG_DEBUG(LOG_TAG) << "Patching relocation: " << symname << " : " << (void*) writeAddr;
+                    if (symname == "_ZN18AViewContainerBase11setContentsERK1_I14AViewContainerE") {
+                        printf("\n");
+                    }
                 }
-
-                auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
+#endif
 
                 switch (auto type = ELF64_R_TYPE(rela.r_info)) {
                     case R_X86_64_PLT32:
                     case R_X86_64_PC32: {
-                        validateDistance(symname, writeAddr, symaddr);
+                        auto symaddr = getAddr(mSymbols);
+                        if (symaddr == nullptr) {
+                            continue;
+                        }
+                        if (!validateDistance(symname, writeAddr, symaddr)) {
+                            printSectionName();
+                            ALogger::err(LOG_TAG)
+                                << "Relocation is too far away: symname=\"" << symname
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr;
+                            errored = true;
+                        }
                         int32_t rel = symaddr - writeAddr + rela.r_addend;
-//                        memcpy(writeAddr, &rel, 4);
+                        memcpy(writeAddr, &rel, 4);
                         break;
                     }
                     case R_X86_64_64: {
+                        auto symaddr = getAddr(mSymbols);
+                        if (symaddr == nullptr) {
+                            continue;
+                        }
                         uint64_t abs = (uintptr_t) symaddr + rela.r_addend;
-//                        memcpy(writeAddr, &abs, 8);
+                        memcpy(writeAddr, &abs, 8);
                         break;
                     }
                     case R_X86_64_REX_GOTPCRELX:
                     case R_X86_64_GOTPCREL:
                     case R_X86_64_GOTPCRELX: {
-                        validateDistance(symname, writeAddr, symaddr);
+                        auto symaddr = getAddr(mGot);
+                        if (symaddr == nullptr) {
+                            continue;
+                        }
+                        if (!validateDistance(symname, writeAddr, symaddr)) {
+                            printSectionName();
+                            ALogger::err(LOG_TAG)
+                                << "Relocation is too far away: symname=\"" << symname
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr;
+                            errored = true;
+                        }
                         int32_t rel = symaddr - writeAddr + rela.r_addend;
-//                        memcpy(writeAddr, &rel, 4);
+                        memcpy(writeAddr, &rel, 4);
                         break;
                     }
                     default: {
@@ -343,10 +378,30 @@ void AHotCodeReload::reload() {
             }
         }
         if (errored) {
+            printErrorAndExit:
             ALogger::err(LOG_TAG) << "\"" << input << "\": refusing patch due to errors. Target is not changed.";
             return;
         }
-        // 3. Hook old symbols with newly loaded ones
+        
+        // 3. Set proper page permissions
+        for (const auto& mapped : sections) {
+            if (mapped.page == nullptr) {
+                continue;
+            }
+            int prot = PROT_READ;
+            if (mapped.section.header.sh_flags & SHF_WRITE) {
+                prot |= PROT_WRITE;
+            }
+            if (mapped.section.header.sh_flags & SHF_EXECINSTR) {
+                prot |= PROT_EXEC;
+            }
+            if (auto result = mprotect(mapped.page.get(), mapped.section.data.size(), prot); result != 0) {
+                ALogger::err(LOG_TAG) << "mprotect failed: " << (void*)mapped.page.get() << " : " << strerror(errno);
+                goto printErrorAndExit;
+            }
+        }
+
+        // 4. Hook old symbols with newly loaded ones
         for (const auto&[name, symbol]: localSymbols) {
             auto sourceAddr = mSymbols.find(name);
             if (sourceAddr == mSymbols.end()) {
@@ -383,9 +438,7 @@ void AHotCodeReload::reload() {
     });
 }
 
-std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
-    std::unordered_map<AString, void*> symbols;
-
+AHotCodeReload::AHotCodeReload() {
     iterateOverLoadedObjects([&](dl_phdr_info* info, size_t size) {
         APath objectPath = info->dlpi_name;
         if (objectPath.empty()) {
@@ -401,9 +454,10 @@ std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
 
         ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
             auto resolved = reinterpret_cast<char*>(info->dlpi_addr) + sym.st_value;
-            if (auto& v = symbols[name]; v == nullptr) {
-                // we would not override existing symbols, since it would probably override symbols resolved by dynsym
-                // of the main executable
+            if (resolved == nullptr) {
+                return;
+            }
+            if (auto& v = mSymbols[name]; v > resolved || v == nullptr) {
                 v = resolved;
             };
         });
@@ -430,13 +484,14 @@ std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
                 auto symIdx = ELF64_R_SYM(r.r_info);
                 const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
                 auto name = std::string_view(&stringTable[sym.st_name]);
-                auto value = reinterpret_cast<void*>(info->dlpi_addr + r.r_offset);   // address of plt stub
-                symbols[name] = value;
-                ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << " at " << value;
+                auto got = reinterpret_cast<void**>(info->dlpi_addr + r.r_offset);   // address of plt stub
+                if (name == "_Znwm") {
+                    printf("\n");
+                }
+                mGot[name] = got;
+                ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", actual location: " << *got;
             }
         }
         return 0;
     });
-
-    return symbols;
 }

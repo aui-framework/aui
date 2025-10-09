@@ -16,6 +16,7 @@
 
 class API_AUI_REMOTE_TOOLS AHotCodeReload : public AObject {
 public:
+    AHotCodeReload();
     static AHotCodeReload& instance() {
         static AHotCodeReload instance;
         return instance;
@@ -27,9 +28,8 @@ public:
     emits<> patchEnd;
 
 private:
-    std::unordered_map<AString, void*> mSymbols = extractSymbols();
-    std::unordered_map<AString, void*> extractSymbols();
+    std::unordered_map<AString, void*> mSymbols;
+    std::unordered_map<AString, void**> mGot;
     AVector<_<void>> mAllocatedPages;
 
-    AHotCodeReload() {}
 };
