@@ -26,7 +26,7 @@
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/algorithm.hpp>
-#include <link.h>
+#include <range/v3/view/enumerate.hpp>
 
 namespace {
 
@@ -105,16 +105,6 @@ bool validateDistance(
     return true;
 }
 
-template <typename T>
-int iterateOverLoadedObjects(T&& t) {
-    return dl_iterate_phdr(
-        [](dl_phdr_info* info, size_t size, void* data) {
-            std::invoke(*reinterpret_cast<T*>(data), info, size);
-            return 0;
-        },
-        &t);
-}
-
 auto extractStringTable(const AVector<Section>& allSections, const Section& targetSection) {
     return std::span(allSections.at(targetSection.header.sh_link).data);
 }
@@ -159,9 +149,6 @@ void extractSymbols(const AVector<Section>& sections, F&& destination) {
         auto name = AStringView(&stringTable[sym.st_name]);
         if (name.empty()) {
             continue;
-        }
-        if (name == "_ZN18AViewContainerBase11setContentsERK1_I14AViewContainerE") {
-            printf("\n");
         }
         auto value = reinterpret_cast<void*>(sym.st_value);
         ALOG_DEBUG(LOG_TAG) << fmt::format(
@@ -253,14 +240,23 @@ void AHotCodeReload::reload() {
 
         bool errored = false;
         // 2. Process relocations
+        aui::lazy<MappedSection*> textSection = [&] {
+            auto it = ranges::find_if(sections, [&](const MappedSection& section) {
+                return section.section.name == ".text";
+            });
+            if (it == sections.end()) {
+                throw AException("Failed to find .text section");
+            }
+            if (it->page == nullptr) {
+                throw AException(".text section is not mapped");
+            }
+            return &*it;
+        };
         for (const auto& mapped : sections) {
             if (mapped.section.header.sh_type != SHT_RELA)
                 continue;
             if (mapped.section.name.contains(".debug")) {
                 continue;
-            }
-            if (mapped.section.name.contains(".rela.eh_frame")) {
-                printf("\n");
             }
             // Find target section
             size_t targetIdx = mapped.section.header.sh_info;
@@ -290,10 +286,14 @@ void AHotCodeReload::reload() {
                 // Lookup symbol name:
                 auto symname = getSymbolName(symidx);
                 auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
+                if (writeAddr == nullptr) {
+                    continue;
+                }
 
                 auto getAddr = [&](const auto& table) -> char* {
                     if (symname == "") {
-                        return (char*) targetSection.page.get();
+                        symname = ".text";
+                        return static_cast<char*>((*textSection)->page.get());
                     }
                     if (auto it = table.find(symname); it != table.end()) {
                         return reinterpret_cast<char*>(it->second);
@@ -314,13 +314,8 @@ void AHotCodeReload::reload() {
                     return nullptr;
                 };
 #if AUI_DEBUG
-                if (!symname.empty()) {
-                    printSectionName();
-                    ALOG_DEBUG(LOG_TAG) << "Patching relocation: " << symname << " : " << (void*) writeAddr;
-                    if (symname == "_ZN18AViewContainerBase11setContentsERK1_I14AViewContainerE") {
-                        printf("\n");
-                    }
-                }
+                printSectionName();
+                ALOG_DEBUG(LOG_TAG) << "Patching relocation: \"" << symname << "\" : " << (void*) writeAddr;
 #endif
 
                 switch (auto type = ELF64_R_TYPE(rela.r_info)) {
@@ -403,10 +398,6 @@ void AHotCodeReload::reload() {
 
         // 4. Hook old symbols with newly loaded ones
         for (const auto&[name, symbol]: localSymbols) {
-            auto sourceAddr = mSymbols.find(name);
-            if (sourceAddr == mSymbols.end()) {
-                continue;
-            }
             auto destinationAddr = reinterpret_cast<char*>(symbol.offset);
             if (symbol.sectionIdx == SHN_UNDEF) {
                 continue;
@@ -421,6 +412,12 @@ void AHotCodeReload::reload() {
                 }
                 destinationAddr += reinterpret_cast<uintptr_t>(destinationSection.page.get());
             }
+            ALOG_DEBUG(LOG_TAG) << "Mapping: " << name << " : " << (void*)destinationAddr;
+
+            auto sourceAddr = mSymbols.find(name);
+            if (sourceAddr == mSymbols.end()) {
+                continue;
+            }
 
             if (std::memcmp(sourceAddr->second, destinationAddr, symbol.size) == 0) {
                 continue;
@@ -433,6 +430,7 @@ void AHotCodeReload::reload() {
             ALOG_DEBUG(LOG_TAG) << "Hooking symbol: " << name << " : " << (void*)sourceAddr->second << " -> " << (void*)destinationAddr;
             hook(sourceAddr->second, destinationAddr);
         }
+        mAllocatedPages.insertAll(sections | ranges::view::transform([](auto& section) -> decltype(auto) { return std::move(section.page); }));
         ALOG_DEBUG(LOG_TAG) << "Done";
         emit patchEnd;
     });
@@ -458,29 +456,33 @@ AHotCodeReload::AHotCodeReload() {
         };
     });
 
-    auto dynsym = ranges::find_if(sections, [&](const auto& section) {
-        return section.header.sh_type == SHT_DYNSYM;
+    auto plt = ranges::find_if(sections, [&](const auto& section) {
+        return section.name == ".plt";
     });
-    if (dynsym == sections.end()) {
+    if (plt == sections.end()) {
         return;
     }
-
-    auto stringTable = extractStringTable(sections, *dynsym);
 
     for (const auto& section : sections) {
         if (section.header.sh_type != SHT_RELA) {
             continue;
         }
-        for (const auto& r : asSpan<Elf64_Rela>(section.data)) {
+        const auto& dynsym = sections.at(section.header.sh_link);
+        auto stringTable = extractStringTable(sections, dynsym);
+        for (const auto& [i, r] : asSpan<Elf64_Rela>(section.data) | ranges::view::enumerate) {
             auto symIdx = ELF64_R_SYM(r.r_info);
-            const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
+            const auto& sym = asSpan<Elf64_Sym>(dynsym.data)[symIdx];
             auto name = std::string_view(&stringTable[sym.st_name]);
             auto got = reinterpret_cast<void**>(r.r_offset);   // address of plt stub
-            if (name == "_Znwm") {
-                printf("\n");
-            }
+
+#if AUI_ARCH_X86 || AUI_ARCH_X86_64
+            static constexpr auto PLT_ENTRY_SIZE = 16;
+#endif
+
+            auto pltFunc = (void*)(plt->header.sh_addr + PLT_ENTRY_SIZE * (i + 1)); // +1 for initial PLT0 entry
             mGot[name] = got;
-            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", actual location: " << *got;
+            mSymbols[name] = pltFunc;
+            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", @plt func: " << pltFunc << " actual location: " << *got;
         }
     }
 }
