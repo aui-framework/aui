@@ -26,6 +26,7 @@
 #include <range/v3/view/transform.hpp>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/algorithm.hpp>
+#include <link.h>
 
 namespace {
 
@@ -94,19 +95,66 @@ void validateDistance(
     AStringView symname, char* addr1, char* addr2, size_t distance = std::numeric_limits<int32_t>::max()) {
     if (addr1 > addr2) {
         if (addr1 - addr2 > distance) {
-            throw AException("Symbol too far: {}"_format(symname.data()));
+            throw AException("Symbol too far: {}"_format(symname));
         }
     } else {
         if (addr2 - addr1 > distance) {
-            throw AException("Symbol too far: {}"_format(symname.data()));
+            throw AException("Symbol too far: {}"_format(symname));
         }
     }
 }
+
+template <typename T>
+int iterateOverLoadedObjects(T&& t) {
+    return dl_iterate_phdr(
+        [](dl_phdr_info* info, size_t size, void* data) {
+            std::invoke(*reinterpret_cast<T*>(data), info, size);
+            return 0;
+        },
+        &t);
+}
+
+auto extractStringTable(const AVector<Section>& allSections, const Section& targetSection) {
+    return std::span(allSections.at(targetSection.header.sh_link).data);
+}
+
+template<aui::invocable<AStringView, const Elf64_Sym> F>
+void extractSymbols(const AVector<Section>& sections, F&& destination) {
+    const Section* symtab = nullptr;   // regular symbol table
+
+    for (const auto& section : sections) {
+        switch (section.header.sh_type) {
+            case SHT_SYMTAB:
+                symtab = &section;
+                break;
+        }
+    }
+    if (symtab != nullptr) {
+        auto stringTable = extractStringTable(sections, *symtab);
+        // Read symbols
+        for (const auto& sym : asSpan<Elf64_Sym>(symtab->data)) {
+            auto name = AStringView(&stringTable[sym.st_name]);
+            if (name.empty()) {
+                continue;
+            }
+            auto value = reinterpret_cast<void*>(sym.st_value);
+            ALOG_DEBUG(LOG_TAG) << fmt::format(
+                "    Found symbol: at {:<16p} (size: {:<8}, bind: {:<8}, type: {:<8}, visibility: {:<8}, shndx: {:<8}) "
+                "{:<40}",
+                value, sym.st_size, ELF64_ST_BIND(sym.st_info), ELF64_ST_TYPE(sym.st_info),
+                ELF64_ST_VISIBILITY(sym.st_other), sym.st_shndx, name);
+            destination(name, sym);
+        }
+    }
+}
+
 }   // namespace
 
 void AHotCodeReload::reload() {
     AThread::current()->enqueue([this] {
-        AString input = "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/aui.example.hot_code_reload.dir/src/main.cpp.o";
+        AString input =
+            "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/"
+            "aui.example.hot_code_reload.dir/src/main.cpp.o";
         emit patchBegin;
         AUI_DEFER { emit patchEnd; };
 
@@ -115,12 +163,34 @@ void AHotCodeReload::reload() {
             _<void> page;
         };
 
+        struct LocalSymbol {
+            /**
+             * @brief Section index this symbol is located in.
+             */
+            size_t sectionIdx;
+
+            /**
+             * @brief Offset in bytes from the beginning of the section.
+             */
+            size_t offset;
+        };
+        
+        std::unordered_map<AString, LocalSymbol> localSymbols;
+
         // 1. Load PROGBITS sections with ALLOC into memory
         std::vector<MappedSection> sections = [&] {
             auto pivot =
-                ranges::max(mSymbols | ranges::view::transform([](const auto& i) { return (char*) i.second; }));
+                ranges::min(mSymbols | ranges::view::transform([](const auto& i) { return (char*) i.second; }));
             pivot = alignUpper(pivot);
             auto sections = parseElf(input);
+            ALOG_DEBUG(LOG_TAG) << input << " :";
+            ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
+                localSymbols[name] = LocalSymbol{
+                    .sectionIdx = sym.st_shndx,
+                    .offset = sym.st_value,
+                };
+            });
+
             return sections | ranges::view::transform([&](Section& section) {
                        _<void> page;
                        if (section.header.sh_flags & SHF_ALLOC && section.header.sh_type == SHT_PROGBITS &&
@@ -170,17 +240,15 @@ void AHotCodeReload::reload() {
                 return AStringView(&sections.at(symtab.section.header.sh_link).section.data.at(st_name));
             };
 
-
             // Each entry:
             auto i = asSpan<Elf64_Rela>(std::span(mapped.section.data));
-            auto count = i.size();
 
             auto printSectionName = [&, printed = false]() mutable {
                 if (printed) {
                     return;
                 }
                 printed = true;
-                ALogger::info(LOG_TAG) << "In section: " << mapped.section.name << ":";
+                ALogger::info(LOG_TAG) << "In section: " << mapped.section.name << " :";
             };
 
             for (const auto& rela : i) {
@@ -191,16 +259,25 @@ void AHotCodeReload::reload() {
                 auto symname = getSymbolName(symidx);
                 auto symaddr = [&]() -> char* {
                     if (symname == "") {
-                        return (char*)targetSection.page.get();
+                        return (char*) targetSection.page.get();
                     }
-                    auto it = mSymbols.find(symname);
-                    if (it == mSymbols.end()) {
-                        printSectionName();
-                        ALogger::err(LOG_TAG) << "Unresolved reference: \"" << symname.data() << "\"";
-                        errored = true;
-                        return nullptr;
+                    if (auto it = mSymbols.find(symname); it != mSymbols.end()) {
+                        return reinterpret_cast<char*>(it->second);
                     }
-                    return reinterpret_cast<char*>(it->second);
+                    if (auto it = localSymbols.find(symname); it != localSymbols.end()) {
+                        auto& targetSection = sections.at(it->second.sectionIdx);
+                        if (targetSection.page.get() == nullptr) {
+                            printSectionName();
+                            ALogger::err(LOG_TAG) << "Target section of this symbol is not mapped: \"" << symname << "\"";
+                            errored = true;
+                            return nullptr;
+                        }
+                        return reinterpret_cast<char*>(targetSection.page.get()) + it->second.offset;
+                    }
+                    printSectionName();
+                    ALogger::err(LOG_TAG) << "Unresolved reference: \"" << symname << "\"";
+                    errored = true;
+                    return nullptr;
                 }();
                 if (symaddr == nullptr) {
                     continue;
@@ -216,17 +293,23 @@ void AHotCodeReload::reload() {
                         memcpy(writeAddr, &rel, 4);
                         break;
                     }
-                        /*
                     case R_X86_64_64: {
-                        uint64_t abs = (uintptr_t) symaddr + rela->r_addend;
+                        uint64_t abs = (uintptr_t) symaddr + rela.r_addend;
                         memcpy(writeAddr, &abs, 8);
                         break;
-                    }*/
-                        // Add more types here as needed
+                    }
+                    case R_X86_64_REX_GOTPCRELX:
+                    case R_X86_64_GOTPCREL:
+                    case R_X86_64_GOTPCRELX: {
+                        validateDistance(symname, writeAddr, symaddr);
+                        int32_t rel = symaddr - writeAddr + rela.r_addend;
+                        memcpy(writeAddr, &rel, 4);
+                        break;
+                    }
                     default: {
                         printSectionName();
                         ALogger::err(LOG_TAG)
-                            << "Unsupported relocation type: " << type << " in \"" << symname.data() << "\"";
+                            << "Unsupported relocation type: " << type << " in \"" << symname << "\"";
                         errored = true;
                     }
                 }
@@ -241,58 +324,54 @@ void AHotCodeReload::reload() {
 
 std::unordered_map<AString, void*> AHotCodeReload::extractSymbols() {
     std::unordered_map<AString, void*> symbols;
-    auto myLocation = AProcess::self()->getPathToExecutable();
-    auto sections = parseElf(myLocation);
 
-    const Section* symtab = nullptr;   // regular symbol table
-    const Section* dynsym = nullptr;   // dynamic symbol table
-    const Section* rela = nullptr;     // relocation table
-
-    for (const auto& section : sections) {
-        switch (section.header.sh_type) {
-            case SHT_SYMTAB:
-                symtab = &section;
-                break;
-            case SHT_DYNSYM:
-                dynsym = &section;
-                break;
-            case SHT_RELA:
-                rela = &section;
-                break;
-            default:
-                break;
+    iterateOverLoadedObjects([&](dl_phdr_info* info, size_t size) {
+        APath objectPath = info->dlpi_name;
+        if (objectPath.empty()) {
+            // main executable
+            objectPath = AProcess::self()->getPathToExecutable();
         }
-    }
+        if (!objectPath.isRegularFileExists()) {
+            return 0;
+        }
+        ALOG_DEBUG(LOG_TAG) << "Object: \"" << objectPath << "\"";
 
-    auto extractStringTable = [&](const Section& section) {
-        return std::span(sections.at(section.header.sh_link).data);
-    };
-    if (symtab != nullptr) {
-        auto stringTable = extractStringTable(*symtab);
-        // Read symbols
-        for (const auto& sym : asSpan<Elf64_Sym>(symtab->data)) {
-            if (sym.st_value == 0) {
-                continue;
+        auto sections = parseElf(objectPath);
+
+        ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
+            symbols[name] = reinterpret_cast<void*>(sym.st_value);
+        });
+
+        const Section* dynsym = nullptr;   // dynamic symbol table
+        const Section* rela = nullptr;     // relocation table
+
+        for (const auto& section : sections) {
+            switch (section.header.sh_type) {
+                case SHT_DYNSYM:
+                    dynsym = &section;
+                    break;
+                case SHT_RELA:
+                    rela = &section;
+                    break;
+                default:
+                    break;
             }
-
-            auto name = std::string_view(&stringTable[sym.st_name]);
-            auto value = reinterpret_cast<void*>(sym.st_value);
-            symbols[name] = value;
-            ALogger::info(LOG_TAG) << "Found symbol: " << name << " at " << value << " (size: " << sym.st_size << ")";
         }
-    }
 
-    if (dynsym != nullptr && rela != nullptr) {
-        auto stringTable = extractStringTable(*dynsym);
-        for (const auto& r : asSpan<Elf64_Rela>(rela->data)) {
-            auto symIdx = ELF64_R_SYM(r.r_info);
-            const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
-            auto name = std::string_view(&stringTable[sym.st_name]);
-            auto value = reinterpret_cast<void*>(r.r_offset);   // address of plt stub
-            symbols[name] = value;
-            ALogger::info(LOG_TAG) << "Found dynamic symbol: " << name << " at " << value;
+        const bool isSelf = info->dlpi_name[0] == '\0';
+        if (dynsym != nullptr && rela != nullptr && isSelf) {
+            auto stringTable = extractStringTable(sections, *dynsym);
+            for (const auto& r : asSpan<Elf64_Rela>(rela->data)) {
+                auto symIdx = ELF64_R_SYM(r.r_info);
+                const auto& sym = asSpan<Elf64_Sym>(dynsym->data)[symIdx];
+                auto name = std::string_view(&stringTable[sym.st_name]);
+                auto value = reinterpret_cast<void*>(info->dlpi_addr + r.r_offset);   // address of plt stub
+                symbols[name] = value;
+                ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << " at " << value;
+            }
         }
-    }
+        return 0;
+    });
 
     return symbols;
 }
