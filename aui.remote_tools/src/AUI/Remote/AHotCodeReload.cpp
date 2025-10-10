@@ -160,13 +160,17 @@ void extractSymbols(const AVector<Section>& sections, F&& destination) {
     }
 }
 
+void cxa_pure_virtual() {
+    throw AException("Pure virtual function called");
+}
+
 }   // namespace
 
 void AHotCodeReload::reload() {
     AThread::current()->enqueue([this] {
         AString input =
             "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/"
-            "aui.example.hot_code_reload.dir/src/main.cpp2.o";
+            "aui.example.hot_code_reload.dir/src/main.cpp.o";
         emit patchBegin;
         AUI_DEFER { emit patchEnd; };
 
@@ -279,23 +283,25 @@ void AHotCodeReload::reload() {
                 ALogger::info(LOG_TAG) << "In section: " << mapped.section.name << " :";
             };
 
-            for (const auto& rela : i) {
+            for (auto rela : i) {
                 size_t offset = rela.r_offset;
                 size_t symidx = ELF64_R_SYM(rela.r_info);
 
                 // Lookup symbol name:
                 auto symname = getSymbolName(symidx);
+                if (symname == "") {
+                    symname = ".text";
+                }
                 auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
                 if (writeAddr == nullptr) {
                     continue;
                 }
 
-                auto getAddr = [&](const auto& table) -> char* {
-                    if (symname == "") {
-                        symname = ".text";
+                auto getAddr = [&]() -> char* {
+                    if (symname == ".text") {
                         return static_cast<char*>((*textSection)->page.get());
                     }
-                    if (auto it = table.find(symname); it != table.end()) {
+                    if (auto it = mSymbols.find(symname); it != mSymbols.end()) {
                         return reinterpret_cast<char*>(it->second);
                     }
                     if (auto it = localSymbols.find(symname); it != localSymbols.end() && it->second.sectionIdx != SHN_UNDEF) {
@@ -309,19 +315,20 @@ void AHotCodeReload::reload() {
                         return reinterpret_cast<char*>(targetSection.page.get()) + it->second.offset;
                     }
                     printSectionName();
-                    ALogger::err(LOG_TAG) << "Unresolved reference: \"" << symname << "\"";
+                    ALogger::err(LOG_TAG) << "Unresolved reference to \"" << symname << "\"";
                     errored = true;
                     return nullptr;
                 };
 #if AUI_DEBUG
                 printSectionName();
-                ALOG_DEBUG(LOG_TAG) << "Patching relocation: \"" << symname << "\" : " << (void*) writeAddr;
+                auto type = ELF64_R_TYPE(rela.r_info);
+                ALOG_DEBUG(LOG_TAG) << "Patching relocation: symname=\"" << symname << "\", writeAddr=" << (void*) writeAddr << ", type=" << type;
 #endif
 
-                switch (auto type = ELF64_R_TYPE(rela.r_info)) {
+                switch (type) {
                     case R_X86_64_PLT32:
                     case R_X86_64_PC32: {
-                        auto symaddr = getAddr(mSymbols);
+                        auto symaddr = getAddr();
                         if (symaddr == nullptr) {
                             continue;
                         }
@@ -337,7 +344,7 @@ void AHotCodeReload::reload() {
                         break;
                     }
                     case R_X86_64_64: {
-                        auto symaddr = getAddr(mSymbols);
+                        auto symaddr = getAddr();
                         if (symaddr == nullptr) {
                             continue;
                         }
@@ -348,18 +355,42 @@ void AHotCodeReload::reload() {
                     case R_X86_64_REX_GOTPCRELX:
                     case R_X86_64_GOTPCREL:
                     case R_X86_64_GOTPCRELX: {
-                        auto symaddr = getAddr(mGot);
+                        char* symaddr = nullptr;
+                        if (auto it = mGot.find(symname); it != mGot.end()) {
+                            symaddr = reinterpret_cast<char*>(it->second);
+                        } else {
+                            // i'm not sure if this is correct, relying on objdump -d.
+                            symaddr = getAddr();
+                        }
                         if (symaddr == nullptr) {
                             continue;
                         }
-                        if (!validateDistance(symname, writeAddr, symaddr)) {
+
+                        auto relativeFrom = writeAddr;
+                        if (type == R_X86_64_REX_GOTPCRELX) {
+                            // - R_X86_64_GOTPCREL(X)`** is used for position-independent code to access globals via the
+                            //   Global Offset Table (GOT), usually with instructions like mov foo@GOTPCREL(%rip),%reg.
+                            //
+                            // - R_X86_64_REX_GOTPCRELX and R_X86_64_GOTPCRELX are very similar—"X" represents an
+                            //   "relaxed" or optimized version of the relocation, where the linker is allowed to
+                            //   optimize away the load from the GOT and use a direct move if possible.
+                            //
+                            // The relocation is not only about patching addresses; it may actually require rewriting
+                            // the instruction opcode and operands, not just a simple offset/fixup.
+                            static constexpr auto X86_MOV_RELAXED = std::string_view("\x48\xC7\xC0");
+                            memcpy(writeAddr - X86_MOV_RELAXED.size(), X86_MOV_RELAXED.data(), X86_MOV_RELAXED.size());
+                            relativeFrom = 0;
+                            rela.r_addend = 0;
+                        }
+
+                        if (!validateDistance(symname, relativeFrom, symaddr)) {
                             printSectionName();
                             ALogger::err(LOG_TAG)
                                 << "Relocation is too far away: symname=\"" << symname
-                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr;
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr << ", relativeFrom=" << relativeFrom << ", type=" << type;
                             errored = true;
                         }
-                        int32_t rel = symaddr - writeAddr + rela.r_addend;
+                        int32_t rel = symaddr - relativeFrom + rela.r_addend;
                         memcpy(writeAddr, &rel, 4);
                         break;
                     }
@@ -412,7 +443,7 @@ void AHotCodeReload::reload() {
                 }
                 destinationAddr += reinterpret_cast<uintptr_t>(destinationSection.page.get());
             }
-            ALOG_DEBUG(LOG_TAG) << "Mapping: " << name << " : " << (void*)destinationAddr;
+            ALOG_DEBUG(LOG_TAG) << "New function: " << (void*)destinationAddr << " : " << name;
 
             auto sourceAddr = mSymbols.find(name);
             if (sourceAddr == mSymbols.end()) {
@@ -445,6 +476,8 @@ AHotCodeReload::AHotCodeReload() {
     ALOG_DEBUG(LOG_TAG) << "Object: \"" << objectPath << "\"";
 
     auto sections = parseElf(objectPath);
+
+    mSymbols["__cxa_pure_virtual"] = (void*)cxa_pure_virtual;
 
     ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
         auto resolved = reinterpret_cast<char*>(0) + sym.st_value;

@@ -29,8 +29,8 @@ public:
 
     void inflate() {
         setContents(Vertical {
-          Label { "Hello, world!" } AUI_WITH_STYLE { Margin { {}, 10_dp } },
-          Label { "Hello, world!" },
+          Label { "Hello, world!" } AUI_WITH_STYLE { Margin { {}, 8_dp }, BackgroundSolid { AColor::RED } },
+//          Label { "Hello, world!" },
 
 
 
