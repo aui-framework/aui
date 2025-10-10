@@ -166,7 +166,7 @@ void AHotCodeReload::reload() {
     AThread::current()->enqueue([this] {
         AString input =
             "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/"
-            "aui.example.hot_code_reload.dir/src/main.cpp.o";
+            "aui.example.hot_code_reload.dir/src/main.cpp2.o";
         emit patchBegin;
         AUI_DEFER { emit patchEnd; };
 
@@ -298,7 +298,7 @@ void AHotCodeReload::reload() {
                     if (auto it = table.find(symname); it != table.end()) {
                         return reinterpret_cast<char*>(it->second);
                     }
-                    if (auto it = localSymbols.find(symname); it != localSymbols.end()) {
+                    if (auto it = localSymbols.find(symname); it != localSymbols.end() && it->second.sectionIdx != SHN_UNDEF) {
                         auto& targetSection = sections.at(it->second.sectionIdx);
                         if (targetSection.page.get() == nullptr) {
                             printSectionName();
