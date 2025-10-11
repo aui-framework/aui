@@ -15,6 +15,7 @@
 #include <AUI/View/AScrollArea.h>
 
 using namespace ass;
+using namespace declarative;
 
 
 class UIText: public testing::UITest {

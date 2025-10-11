@@ -47,7 +47,7 @@ public:
 public:
     AText();
 
-    ~AText() override;
+    ~AText() override = default;
 
     void clearContent() override;
 
@@ -79,8 +79,10 @@ public:
         return v;
     }
 
+
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
+    void applyGeometryToChildren() override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {
@@ -92,6 +94,7 @@ private:
     public:
         using aui::detail::CharEntry::CharEntry;
     };
+    _<AViewContainer> mViewsContainer;
 
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;

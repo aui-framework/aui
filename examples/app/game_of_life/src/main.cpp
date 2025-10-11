@@ -194,7 +194,7 @@ public:
                       };
                       connect(it->clicked, [&] { mCells.isRunning = !mCells.isRunning; });
                   },
-            },
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
           },
           Centered {
             _new<CellsView>(aui::ptr::fake_shared(&mCells)) AUI_WITH_STYLE {
@@ -202,7 +202,7 @@ public:
                   BackgroundSolid(AColor::BLACK),
                 },
           },
-        });
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:

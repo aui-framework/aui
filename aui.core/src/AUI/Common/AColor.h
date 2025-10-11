@@ -22,6 +22,12 @@ class AString;
 /**
  * @brief Represents a 4-component floating point color (RGBA).
  * @ingroup core
+ * @details
+ * <!-- aui:index_alias _rgb -->
+ * <!-- aui:index_alias _argb -->
+ * <!-- aui:index_alias _rgba -->
+ * `AColor` is a color class that inherits from `glm::vec4`, representing colors in RGBA format where each component
+ * (Red, Green, Blue, Alpha) is a floating-point value between 0.0 and 1.0.
  */
 class AColor : public glm::vec4 {
 public:

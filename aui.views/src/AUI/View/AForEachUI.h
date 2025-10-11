@@ -102,6 +102,8 @@ protected:
      */
     virtual aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() = 0;
 
+    void putOurViewsToSharedCache();
+
 private:
     _weak<AScrollAreaViewport> mViewport;
     List mViewsModel;
@@ -114,7 +116,6 @@ private:
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
-    void putOurViewsToSharedCache();
 
 };
 
@@ -128,19 +129,29 @@ concept RangeFactory = requires(Factory&& factory) {
 
 
 /**
+ * ---
+ * title: Lists
+ * icon: material/view-list
+ * ---
+ *
  * @brief Customizable lists display.
  *
  * ![](imgs/views/AForEachUI.png)
  *
  * @ingroup views_containment
+ * @ingroup reactive
  * @details
- * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ * Many apps need to display collections of items. This document explains how you can efficiently do this in AUI.
  *
  * <!-- aui:experimental -->
  * <!-- aui:index_alias AUI_DECLARATIVE_FOR -->
  *
+ * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ *
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
+ *
+ * ## API surface
  *
  * AForEachUI is created by using [AUI_DECLARATIVE_FOR] macro.
  *
@@ -166,7 +177,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * ![](imgs/UIDeclarativeForTest.Example_.png)
  *
- * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially [reactive](aui::react) expression
+ * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially reactive expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
  * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
  * [AUI_DECLARATIVE_FOR] macro; the lambda's body (including curly braces) is left up to developer. The final
@@ -248,17 +259,15 @@ class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver 
 public:
     friend class UIDeclarativeForTest;
 
-    static_assert(
-        requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); },
-        "// ====================> AForEachUI: aui::for_each_ui::defaultKey overload or std::hash specialization is "
-        "required for your type.");
-
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;
+    using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
-    ~AForEachUI() override = default;
+    ~AForEachUI() override {
+        putOurViewsToSharedCache();
+    }
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
@@ -275,7 +284,10 @@ public:
                 [[maybe_unused]] auto discoverReferencedProperties = *it;
             }
             return rng | ranges::views::transform([this](const T& t) {
-                       auto key = aui::for_each_ui::defaultKey(t, 0L);
+                       if (!mKeyFunction) {
+                           return AForEachUIBase::Entry { .view = mFactory(t), .id = 0 };
+                       }
+                       auto key = mKeyFunction(t);
                        _<AView> view;
                        if (mViewsSharedCache) {
                            if (auto c = mViewsSharedCache->contains(key)) {
@@ -316,9 +328,18 @@ public:
 
     using AViewContainerBase::setLayout;
 
+    void setKeyFunction(KeyFunction keyFunction) noexcept {
+        mKeyFunction = std::move(keyFunction);
+    }
+
 protected:
 
-    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override { return mViewsSharedCache; }
+    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override {
+        if (!mKeyFunction) {
+            return nullptr;
+        }
+        return mViewsSharedCache;
+    }
 
 private:
     template <typename FactoryTypeTag>
@@ -327,6 +348,14 @@ private:
     aui::for_each_ui::detail::ViewsSharedCache* mViewsSharedCache = nullptr;
     ListFactory mListFactory;
     ViewFactory mFactory;
+    KeyFunction mKeyFunction = defaultKeyFunction();
+    static KeyFunction defaultKeyFunction() {
+        if constexpr (requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); }) {
+            return [](const T& t) { return aui::for_each_ui::defaultKey(t, 0L); };
+        }
+        return nullptr;
+    }
+
 
     void updateUnderlyingModel() {
         if (!mFactory) {

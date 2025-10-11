@@ -8,7 +8,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -17,11 +16,27 @@
 using namespace ass;
 using namespace declarative;
 
+class MainWindow: public AWindow {
+public:
+    MainWindow(): AWindow("Button", 600_dp, 300_dp) {
+        setContents(Centered {
+            /// [AButton_example]
+            Button {
+                .content = Label { "Click me" },
+                .onClick = {me::onClick},
+                .isDefault = true,
+            },
+            /// [AButton_example]
+        });
+    }
+
+private:
+    void onClick() {
+        ALogger::info("Test") << "Hello world!";
+    }
+};
+
 AUI_ENTRY {
-    auto window = _new<AWindow>("Button", 600_dp, 300_dp);
-    window->setContents(Centered {
-      Button { "Click me" },
-    });
-    window->show();
+    _new<MainWindow>()->show();
     return 0;
 }

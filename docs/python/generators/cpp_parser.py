@@ -99,6 +99,7 @@ class DoxygenEntry:
 class CppClass:
     def __init__(self):
         self.name = None
+        self.overview_page_title = None
         self.doc = None
         self.methods = []
         self.fields = []
@@ -338,7 +339,7 @@ class _Parser:
         assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
         clazz = CppClass()
         clazz.generic_kind = kind
-        clazz.name = self.last_token[1]
+        clazz.overview_page_title = clazz.name = self.last_token[1]
         clazz.doc = self._consume_doc()
         clazz.location = self.location
 

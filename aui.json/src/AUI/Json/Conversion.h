@@ -244,6 +244,16 @@ struct AJsonConv<int> {
     }
 };
 
+template<>
+struct AJsonConv<AColor> {
+    static AJson toJson(AColor c) {
+        return c.toString();
+    }
+    static void fromJson(const AJson& json, AColor& dst) {
+        dst = AColor(json.asString());
+    }
+};
+
 template<typename T>
 struct AJsonConv<std::shared_ptr<T>> {
     static AJson toJson(const std::shared_ptr<T>& v) {
@@ -378,6 +388,24 @@ struct AJsonConv<aui::ranged_number<T, min, max>> {
     }
     static void fromJson(const AJson& json, aui::ranged_number<T, min, max>& dst) {
         *dst = json.asLongInt();
+    }
+};
+
+
+template<typename T1>
+struct AJsonConv<AOptional<T1>> {
+    static AJson toJson(const AOptional<T1>& v) {
+        if (!v.hasValue())
+            return nullptr;
+        return aui::to_json(*v);
+    }
+
+    static void fromJson(const AJson& json, AOptional<T1>& dst) {
+        if (json.isNull()) {
+            dst.reset();
+        } else {
+            dst = aui::from_json<T1>(json);
+        }
     }
 };
 

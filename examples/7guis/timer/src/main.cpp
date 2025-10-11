@@ -23,6 +23,7 @@ using namespace std::chrono_literals;
 
 static constexpr high_resolution_clock::duration MAX_DURATION = 60s;
 
+/// [example]
 class TimerWindow : public AWindow {
 public:
     TimerWindow() : AWindow("AUI - 7GUIs - Timer", 300_dp, 50_dp) {
@@ -36,10 +37,8 @@ public:
                         it->setCustomStyle({ Expanding { 1, 0 } });
                     },
               },
-            },
-            Label {} & mElapsedTime.readProjected([](high_resolution_clock::duration d) {
-                return "{:.1f}s"_format(duration_cast<milliseconds>(d).count() / 1000.f);
-            }),
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+            Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
               _new<ASlider>() AUI_LET {
@@ -53,11 +52,11 @@ public:
                       });
                       it->setCustomStyle({ Expanding {} });
                   },
-            },
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
             _new<AButton>("Reset Timer") AUI_WITH_STYLE {
                   Expanding { 1, 0 },
                 } AUI_LET { connect(it->clicked, me::reset); },
-          },
+          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
 
         connect(mTimer->fired, me::update);
@@ -82,6 +81,7 @@ private:
 
     void reset() { mStartTime = high_resolution_clock::now(); }
 };
+/// [example]
 
 AUI_ENTRY {
     _new<TimerWindow>()->show();

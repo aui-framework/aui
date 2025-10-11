@@ -9,31 +9,34 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Util/UIBuildingHelpers.h>
 #include "ACheckBox.h"
-#include "AUI/Layout/AHorizontalLayout.h"
+#include "AUI/Util/Declarative/Containers.h"
 
-
-ACheckBox::ACheckBox()
+ACheckBox::ACheckBox(_<AView> content)
 {
-    connect(clicked, me::toggle);
+    mBox = _new<ACheckBox::Box>();
+    setContents(declarative::Horizontal {
+      declarative::Centered { mBox },
+      std::move(content),
+    });
+
+    // legacy behavior
+    connect(clicked, [this]() {
+        mBox->checked = !mBox->checked;
+    });
 }
 
-
-bool ACheckBox::consumesClick(const glm::ivec2& pos) {
-    return true;
+ACheckBox::Box::Box() {
+    connect(checked.changed, [this] { emit customCssPropertyChanged; });
 }
 
-bool ACheckBox::selectableIsSelectedImpl() {
-    return mChecked;
-}
-
-ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
-    setLayout(std::make_unique<AHorizontalLayout>());
-    addView(Centered { mCheckBox = _new<ACheckBox>() });
-    addView(viewToWrap);
-
-    connect(clicked, me::toggle);
-
-    mCheckBox->clicked.clearAllOutgoingConnectionsWith(mCheckBox); // fixes double toggle
+_<AView> declarative::CheckBox::operator()() {
+    auto checkbox = _new<ACheckBox>(std::move(content));
+    checkbox->clicked.clearAllOutgoingConnectionsWith(checkbox); // removes default legacy behavior
+    AObject::connect(checkbox->clicked, checkbox, [&checkbox = *checkbox]() {
+        AUI_EMIT_FOREIGN(checkbox.box(), userCheckedChange, !checkbox.box()->checked);
+    });
+    checked.bindTo(checkbox->box()->checked);
+    onCheckedChange.bindTo(checkbox->box()->userCheckedChange);
+    return checkbox;
 }

@@ -204,7 +204,7 @@ to free you from dependency management and focus you right to development of you
     [aui_executable] hooks all CPP files from `src/` directory. You need to create `src/` directory and a CPP file in
     it.
     
-    <!-- aui:include examples/ui/button/src/main.cpp title="src/main.cpp" -->
+    <!-- aui:include examples/ui/button1/src/main.cpp title="src/main.cpp" -->
 
 
 !!! note "Why CMake or IDE doesn't recognize a new CPP file?"

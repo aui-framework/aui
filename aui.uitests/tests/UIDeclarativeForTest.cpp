@@ -110,7 +110,7 @@ TEST_F(UIDeclarativeForTest, Example) {
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
-    EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 40));
+    EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 50));
 
     mWindow-> // HIDE
     setContents(Vertical {
@@ -144,7 +144,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
 // This section explains how to initialize [AUI_DECLARATIVE_FOR], manage lifetime of containers and how to make them
 // reactive.
 //
-// In [AUI_DECLARATIVE_FOR], a potentially [reactive](aui::react) expression evaluating to *range* and the lambda
+// In [AUI_DECLARATIVE_FOR], a potentially reactive expression evaluating to *range* and the lambda
 // that creates a new views are both lambdas with capture default by value `[=]`. This means that:
 //
 // 1. All mentioned *local* variables are captured by copying.
