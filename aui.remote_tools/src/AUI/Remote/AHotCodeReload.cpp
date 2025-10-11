@@ -152,7 +152,7 @@ void extractSymbols(const AVector<Section>& sections, F&& destination) {
             continue;
         }
         auto value = reinterpret_cast<void*>(sym.st_value);
-        ALOG_DEBUG(LOG_TAG) << fmt::format(
+        ALOG_TRACE(LOG_TAG) << fmt::format(
             "    Found symbol: at base+{:<16p} (size: {:<8}, bind: {:<8}, type: {:<8}, visibility: {:<8}, shndx: {:<8}) "
             "{:<40}",
             value, sym.st_size, ELF64_ST_BIND(sym.st_info), ELF64_ST_TYPE(sym.st_info),
@@ -206,7 +206,7 @@ void AHotCodeReload::reload() {
                 ranges::min(mSymbols | ranges::view::transform([](const auto& i) { return reinterpret_cast<uintptr_t>(i.second); }));
             pivot = alignUpper(pivot);
             auto sections = parseElf(input);
-            ALOG_DEBUG(LOG_TAG) << input << " :";
+            ALOG_TRACE(LOG_TAG) << input << " :";
             ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
                 localSymbols[name] = LocalSymbol{
                     .sectionIdx = sym.st_shndx,
@@ -325,7 +325,7 @@ void AHotCodeReload::reload() {
 #if AUI_DEBUG
                 printSectionName();
                 auto type = ELF64_R_TYPE(rela.r_info);
-                ALOG_DEBUG(LOG_TAG) << "Patching relocation: symname=\"" << symname << "\", writeAddr=" << (void*) writeAddr << ", type=" << type;
+                ALOG_TRACE(LOG_TAG) << "Patching relocation: symname=\"" << symname << "\", writeAddr=" << (void*) writeAddr << ", type=" << type;
 #endif
 
                 switch (type) {
@@ -481,7 +481,7 @@ void AHotCodeReload::reload() {
                 }
                 destinationAddr += reinterpret_cast<uintptr_t>(destinationSection.page.get());
             }
-            ALOG_DEBUG(LOG_TAG) << "New function: " << (void*)destinationAddr << " : " << name;
+            ALOG_TRACE(LOG_TAG) << "New function: " << (void*)destinationAddr << " : " << name;
 
             auto sourceAddr = mSymbols.find(name);
             if (sourceAddr == mSymbols.end()) {
@@ -496,11 +496,11 @@ void AHotCodeReload::reload() {
                 continue;
             }
 
-            ALOG_DEBUG(LOG_TAG) << "Hooking symbol: " << name << " : " << (void*)sourceAddr->second << " -> " << (void*)destinationAddr;
+            ALOG_TRACE(LOG_TAG) << "Hooking symbol: " << name << " : " << (void*)sourceAddr->second << " -> " << (void*)destinationAddr;
             hook(sourceAddr->second, destinationAddr);
         }
         mAllocatedPages.insertAll(sections | ranges::view::transform([](auto& section) -> decltype(auto) { return std::move(section.page); }));
-        ALOG_DEBUG(LOG_TAG) << "Done";
+        ALOG_TRACE(LOG_TAG) << "Done";
         emit patchEnd;
     });
 }
@@ -511,7 +511,7 @@ AHotCodeReload::AHotCodeReload() {
     if (!objectPath.isRegularFileExists()) {
         return;
     }
-    ALOG_DEBUG(LOG_TAG) << "Object: \"" << objectPath << "\"";
+    ALOG_TRACE(LOG_TAG) << "Object: \"" << objectPath << "\"";
 
     auto sections = parseElf(objectPath);
 
@@ -542,7 +542,7 @@ AHotCodeReload::AHotCodeReload() {
         auto stringTable = extractStringTable(sections, dynsym);
 
         const bool isRelatedToPlt = section.name.contains(".plt"); // .rela.plt
-        ALOG_DEBUG(LOG_TAG) << "In section: " << section.name << " :";
+        ALOG_TRACE(LOG_TAG) << "In section: " << section.name << " :";
 
         for (const auto& [i, r] : asSpan<Elf64_Rela>(section.data) | ranges::view::enumerate) {
             auto symIdx = ELF64_R_SYM(r.r_info);
@@ -558,7 +558,7 @@ AHotCodeReload::AHotCodeReload() {
             }
             mGot[name] = got;
             if (pltFunc != nullptr) mSymbols[name] = pltFunc;
-            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol name=" << name << ", got=" << (void*)got << ", *got=" << *got << ", pltFunc=" << (void*)pltFunc;
+            ALOG_TRACE(LOG_TAG) << "    Found dynamic symbol name=" << name << ", got=" << (void*)got << ", *got=" << *got << ", pltFunc=" << (void*)pltFunc;
         }
     }
 }

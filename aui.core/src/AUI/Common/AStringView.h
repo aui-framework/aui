@@ -85,6 +85,7 @@ public:
     constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
+    constexpr explicit AStringView(const std::string& str) noexcept : super(str) {}
 
     bool startsWith(AStringView prefix) const noexcept {
         if (prefix.size() > size()) {
