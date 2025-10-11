@@ -322,11 +322,14 @@ void AHotCodeReload::reload() {
                     }
                     return nullptr;
                 };
-#if AUI_DEBUG
-                printSectionName();
+
                 auto type = ELF64_R_TYPE(rela.r_info);
-                ALOG_TRACE(LOG_TAG) << "Patching relocation: symname=\"" << symname << "\", writeAddr=" << (void*) writeAddr << ", type=" << type;
-#endif
+                if (ALogger::global().isTrace()) {
+                    printSectionName();
+                    ALOG_TRACE(LOG_TAG)
+                        << "Patching relocation: symname=\"" << symname << "\", writeAddr=" << (void*) writeAddr
+                        << ", type=" << type;
+                }
 
                 switch (type) {
                     case R_X86_64_PC32: {
@@ -489,10 +492,6 @@ void AHotCodeReload::reload() {
             }
 
             if (std::memcmp(sourceAddr->second, destinationAddr, symbol.size) == 0) {
-                continue;
-            }
-
-            if (!name.contains("inflate")) {
                 continue;
             }
 
