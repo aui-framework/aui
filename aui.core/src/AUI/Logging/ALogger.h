@@ -294,7 +294,9 @@ private:
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
     bool mDebug = AUI_DEBUG;
-    bool mTrace = AUI_DEBUG;
+    bool mTrace = isTraceImpl();
+
+    static bool isTraceImpl();
 
     void setLogFileImpl(AString path);
 

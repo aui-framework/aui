@@ -167,3 +167,7 @@ void ALogger::setLogFileImpl(AString path) {
 }
 
 ALogger::~ALogger() { mLogFile.reset(); }
+
+bool ALogger::isTraceImpl() {
+    return std::getenv("AUI_TRACE") != nullptr;
+}
