@@ -39,6 +39,14 @@ function(aui_enable_hot_reload AUI_MODULE_NAME)
 #    )
 
 endfunction()
+function(aui_enable_hotswap AUI_MODULE_NAME)
+    string(SHA1 hash ${AUI_MODULE_NAME})
+    set(hash "HotswapEnabler${hash}")
+    file(GENERATE
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/hotswap_enable.cpp"
+            CONTENT "#include <AUI/Remote/AHotCodeReload.h>\nstruct ${hash} { ${hash}() { AHotCodeReload::inst().addFiles(\"$<TARGET_OBJECTS:${AUI_MODULE_NAME}>\"); } } hotswapenabler${hash};"
+    )
+    target_sources(${AUI_MODULE_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/hotswap_enable.cpp)
+endfunction()
 
-aui_enable_hot_reload(aui.example.hot_code_reload)
-
+aui_enable_hotswap(aui.example.hot_code_reload)

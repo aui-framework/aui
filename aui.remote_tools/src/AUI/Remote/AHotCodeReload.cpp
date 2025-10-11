@@ -17,6 +17,8 @@
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/kAUI.h"
 #include "AUI/Platform/AProcess.h"
+#include "ObjectLoader.h"
+#include "AUI/Platform/linux/AINotifyFileWatcher.h"
 
 namespace {
 
@@ -24,24 +26,54 @@ static constexpr auto LOG_TAG = "Hot code reload";
 
 }
 
-AHotCodeReload::AHotCodeReload():
-  mLoader(AProcess::self()->getPathToExecutable())
-{
+struct AHotCodeReload::Priv {
+    ObjectLoader loader = AProcess::self()->getPathToExecutable();
+    _<AINotifyFileWatcher> watcher = _new<AINotifyFileWatcher>();
+};
 
-}
-
+AHotCodeReload::AHotCodeReload() = default;
 AHotCodeReload::~AHotCodeReload() = default;
 
-void AHotCodeReload::reload() {
-    AThread::current()->enqueue([this] {
-        AString input =
-            "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/"
-            "aui.example.hot_code_reload.dir/src/main.cpp.o";
-        emit patchBegin;
-        mLoader.load(input);
-        AUI_DEFER { emit patchEnd; };
-        ALogger::info(LOG_TAG) << "Binary reloaded: " << input;
+void AHotCodeReload::loadBinary(const APath& path) {
+    AThread::main()->enqueue([this, self = shared_from_this(), path] {
+        int attempts = 10;
+        tryAgain:
+        try {
+            ALogger::info(LOG_TAG) << "Reloading: " << path;
+            emit patchBegin;
+            mPriv->loader.load(path);
+            AUI_DEFER { emit patchEnd; };
+            ALogger::info(LOG_TAG) << "Binary reloaded: " << path;
+        } catch (const AException& e) {
+            if (attempts-- > 0) {
+                // there's a weird datarace
+                AThread::sleep(std::chrono::milliseconds(100));
+                goto tryAgain;
+            }
+            ALogger::err(LOG_TAG) << "Failed to reload binary: " << path << " : " << e;
+        }
     });
 }
 
+void AHotCodeReload::addFile(AString path) {
+    ALogger::info(LOG_TAG) << "Watching: " << path;
+    int h = mPriv->watcher->addWatch(path, AINotifyFileWatcher::Mask::MODIFY);
+    AObject::connect(mPriv->watcher->fired, [this, path = std::move(path), h](const AINotifyFileWatcher::Event& event) mutable {
+        if (event.watchDescriptor != h) {
+            return;
+        }
+        loadBinary(path);
+        AThread::main()->enqueue([this, h, path = std::move(path)]() mutable {
+            try {
+                mPriv->watcher->removeWatch(h);
+            } catch (...) {}
+            addFile(std::move(path));
+        });
+    });
+}
 
+void AHotCodeReload::addFiles(AStringView paths) {
+    for (auto path : paths.split(';')) {
+        addFile(std::move(path));
+    }
+}

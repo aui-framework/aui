@@ -9,10 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Platform/Entry.h>
-#include "MyWindow.h"
+#pragma once
 
-AUI_ENTRY {
-    _new<MyWindow>()->show();
-    return 0;
-}
+#include <AUI/Platform/AWindow.h>
+
+class MyWindow: public AWindow {
+public:
+    MyWindow();
+    void inflate();
+};
