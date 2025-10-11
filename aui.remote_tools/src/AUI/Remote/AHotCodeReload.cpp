@@ -27,6 +27,7 @@
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/algorithm.hpp>
 #include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/drop.hpp>
 
 namespace {
 
@@ -297,11 +298,11 @@ void AHotCodeReload::reload() {
                     continue;
                 }
 
-                auto getAddr = [&]() -> char* {
+                auto getAddr = [&](const auto& table, bool strict = true) -> char* {
                     if (symname == ".text") {
                         return static_cast<char*>((*textSection)->page.get());
                     }
-                    if (auto it = mSymbols.find(symname); it != mSymbols.end()) {
+                    if (auto it = table.find(symname); it != table.end()) {
                         return reinterpret_cast<char*>(it->second);
                     }
                     if (auto it = localSymbols.find(symname); it != localSymbols.end() && it->second.sectionIdx != SHN_UNDEF) {
@@ -314,9 +315,11 @@ void AHotCodeReload::reload() {
                         }
                         return reinterpret_cast<char*>(targetSection.page.get()) + it->second.offset;
                     }
-                    printSectionName();
-                    ALogger::err(LOG_TAG) << "Unresolved reference to \"" << symname << "\"";
-                    errored = true;
+                    if (strict) {
+                        printSectionName();
+                        ALogger::err(LOG_TAG) << "Unresolved reference to \"" << symname << "\"";
+                        errored = true;
+                    }
                     return nullptr;
                 };
 #if AUI_DEBUG
@@ -326,9 +329,14 @@ void AHotCodeReload::reload() {
 #endif
 
                 switch (type) {
-                    case R_X86_64_PLT32:
                     case R_X86_64_PC32: {
-                        auto symaddr = getAddr();
+                        // doesn't care plt or got, just an offset
+                        char* symaddr = nullptr;
+                        if (auto i = mGot.find(symname); i != mGot.end() && validateDistance(symname, writeAddr, reinterpret_cast<char*>(i->second))) {
+                            symaddr = (char*) i->second;
+                        } else if (auto addr = getAddr(mSymbols)) {
+                            symaddr = addr;
+                        }
                         if (symaddr == nullptr) {
                             continue;
                         }
@@ -343,8 +351,31 @@ void AHotCodeReload::reload() {
                         memcpy(writeAddr, &rel, 4);
                         break;
                     }
+                    case R_X86_64_PLT32: {
+                        auto symaddr = getAddr(mSymbols);
+                        if (symaddr == nullptr) {
+                            continue;
+                        }
+                        if (!validateDistance(symname, writeAddr, symaddr)) {
+                            printSectionName();
+                            ALogger::err(LOG_TAG)
+                                << "Relocation is too far away: symname=\"" << symname
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr;
+                            errored = true;
+                        }
+                        int32_t rel = symaddr - writeAddr + rela.r_addend;
+                        memcpy(writeAddr, &rel, 4);
+                        break;
+                    }
+
                     case R_X86_64_64: {
-                        auto symaddr = getAddr();
+                        // doesn't care plt or got, just an offset
+                        char* symaddr = nullptr;
+                        if (auto i = mGot.find(symname); i != mGot.end() && validateDistance(symname, writeAddr, reinterpret_cast<char*>(i->second))) {
+                            symaddr = (char*) i->second;
+                        } else if (auto addr = getAddr(mSymbols)) {
+                            symaddr = addr;
+                        }
                         if (symaddr == nullptr) {
                             continue;
                         }
@@ -352,45 +383,52 @@ void AHotCodeReload::reload() {
                         memcpy(writeAddr, &abs, 8);
                         break;
                     }
-                    case R_X86_64_REX_GOTPCRELX:
+
                     case R_X86_64_GOTPCREL:
                     case R_X86_64_GOTPCRELX: {
-                        char* symaddr = nullptr;
-                        if (auto it = mGot.find(symname); it != mGot.end()) {
-                            symaddr = reinterpret_cast<char*>(it->second);
-                        } else {
-                            // i'm not sure if this is correct, relying on objdump -d.
-                            symaddr = getAddr();
-                        }
+                        do_R_X86_64_GOTPCRELX:
+                        // R_X86_64_GOTPCREL(X)`** is used for position-independent code to access globals via the
+                        // Global Offset Table (GOT), usually with instructions like mov foo@GOTPCREL(%rip),%reg.
+                        auto symaddr = getAddr(mGot);
                         if (symaddr == nullptr) {
                             continue;
                         }
 
-                        auto relativeFrom = writeAddr;
-                        if (type == R_X86_64_REX_GOTPCRELX) {
-                            // - R_X86_64_GOTPCREL(X)`** is used for position-independent code to access globals via the
-                            //   Global Offset Table (GOT), usually with instructions like mov foo@GOTPCREL(%rip),%reg.
-                            //
-                            // - R_X86_64_REX_GOTPCRELX and R_X86_64_GOTPCRELX are very similar—"X" represents an
-                            //   "relaxed" or optimized version of the relocation, where the linker is allowed to
-                            //   optimize away the load from the GOT and use a direct move if possible.
-                            //
-                            // The relocation is not only about patching addresses; it may actually require rewriting
-                            // the instruction opcode and operands, not just a simple offset/fixup.
-                            static constexpr auto X86_MOV_RELAXED = std::string_view("\x48\xC7\xC0");
-                            memcpy(writeAddr - X86_MOV_RELAXED.size(), X86_MOV_RELAXED.data(), X86_MOV_RELAXED.size());
-                            relativeFrom = 0;
-                            rela.r_addend = 0;
-                        }
-
-                        if (!validateDistance(symname, relativeFrom, symaddr)) {
+                        if (!validateDistance(symname, writeAddr, symaddr)) {
                             printSectionName();
                             ALogger::err(LOG_TAG)
                                 << "Relocation is too far away: symname=\"" << symname
-                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr << ", relativeFrom=" << relativeFrom << ", type=" << type;
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
                             errored = true;
                         }
-                        int32_t rel = symaddr - relativeFrom + rela.r_addend;
+                        int32_t rel = symaddr - writeAddr + rela.r_addend;
+                        memcpy(writeAddr, &rel, 4);
+                        break;
+                    }
+
+                    case R_X86_64_REX_GOTPCRELX: {
+                        // R_X86_64_REX_GOTPCRELX and R_X86_64_GOTPCRELX are very similar—"X" represents an "relaxed" or
+                        // optimized version of the relocation, where the linker is allowed to optimize away the load
+                        // from the GOT and use a direct move if possible.
+                        //
+                        // The relocation is not only about patching addresses; it may actually require rewriting
+                        // the instruction opcode and operands, not just a simple offset/fixup.
+                        auto symaddr = getAddr(mSymbols, false);
+                        if (symaddr == nullptr) {
+                            goto do_R_X86_64_GOTPCRELX;
+                        }
+                        static constexpr auto X86_MOV_RELAXED = std::string_view("\x48\xC7\xC0");
+                        memcpy(writeAddr - X86_MOV_RELAXED.size(), X86_MOV_RELAXED.data(), X86_MOV_RELAXED.size());
+                        rela.r_addend = 0;
+
+                        if (!validateDistance(symname, 0, symaddr)) {
+                            printSectionName();
+                            ALogger::err(LOG_TAG)
+                                << "Relocation is too far away: symname=\"" << symname
+                                << "\", symaddr=" << (void*) symaddr << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
+                            errored = true;
+                        }
+                        int32_t rel = reinterpret_cast<uintptr_t>(symaddr) + rela.r_addend;
                         memcpy(writeAddr, &rel, 4);
                         break;
                     }
@@ -502,20 +540,25 @@ AHotCodeReload::AHotCodeReload() {
         }
         const auto& dynsym = sections.at(section.header.sh_link);
         auto stringTable = extractStringTable(sections, dynsym);
+
+        const bool isRelatedToPlt = section.name.contains(".plt"); // .rela.plt
+        ALOG_DEBUG(LOG_TAG) << "In section: " << section.name << " :";
+
         for (const auto& [i, r] : asSpan<Elf64_Rela>(section.data) | ranges::view::enumerate) {
             auto symIdx = ELF64_R_SYM(r.r_info);
             const auto& sym = asSpan<Elf64_Sym>(dynsym.data)[symIdx];
             auto name = std::string_view(&stringTable[sym.st_name]);
             auto got = reinterpret_cast<void**>(r.r_offset);   // address of plt stub
-
+            void* pltFunc = nullptr;
+            if (isRelatedToPlt) {
 #if AUI_ARCH_X86 || AUI_ARCH_X86_64
-            static constexpr auto PLT_ENTRY_SIZE = 16;
+                static constexpr auto PLT_ENTRY_SIZE = 16;
+                pltFunc = (void*)(plt->header.sh_addr + PLT_ENTRY_SIZE * (i + 1)); // +1 for initial PLT0 entry
 #endif
-
-            auto pltFunc = (void*)(plt->header.sh_addr + PLT_ENTRY_SIZE * (i + 1)); // +1 for initial PLT0 entry
+            }
             mGot[name] = got;
-            mSymbols[name] = pltFunc;
-            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol: " << name << ", got: " << (void*)got << ", @plt func: " << pltFunc << " actual location: " << *got;
+            if (pltFunc != nullptr) mSymbols[name] = pltFunc;
+            ALOG_DEBUG(LOG_TAG) << "    Found dynamic symbol name=" << name << ", got=" << (void*)got << ", *got=" << *got << ", pltFunc=" << (void*)pltFunc;
         }
     }
 }
