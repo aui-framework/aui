@@ -16,6 +16,7 @@
 #include <optional>
 #include <type_traits>
 #include <AUI/Util/Assert.h>
+#include <AUI/Traits/concepts.h>
 
 class AObject;
 
@@ -284,6 +285,10 @@ public:
     _(_&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
+
+    template <typename Factory>
+    requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<T>>
+    _(Factory&& factory): std::shared_ptr<T>(factory()) {}
 
     _& operator=(const _& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);

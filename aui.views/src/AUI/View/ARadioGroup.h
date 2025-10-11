@@ -23,16 +23,9 @@
 #include <AUI/Model/IListModel.h>
 
 /**
- * @brief A group of radio buttons.
- *
- * ![](imgs/views/ARadioGroup.png)
- *
- * @ingroup views_input
- * @details
- * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a [view container](aviewcontainer.md) it
- * places the initialized radio buttons to itself.
+ * <!-- aui:no_dedicated_page -->
  */
-class API_AUI_VIEWS ARadioGroup : public AViewContainer {
+class API_AUI_VIEWS [[deprecated("use declarative::RadioButton instead")]] ARadioGroup : public AViewContainer {
 private:
     _<IListModel<AString>> mModel;
     _<ARadioButton::Group> mGroup;
@@ -80,9 +73,9 @@ signals:
 namespace declarative {
 
 /**
- * @declarativeformof{ARadioGroup}
+ * <!-- aui:no_dedicated_page -->
  */
-struct RadioGroup : aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
+struct [[deprecated("use declarative::RadioButton instead")]] RadioGroup : aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup> {
     using aui::ui_building::view_container_layout<AVerticalLayout, ARadioGroup>::layouted_container_factory;
     struct Horizontal : aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup> {
         using aui::ui_building::view_container_layout<AHorizontalLayout, ARadioGroup>::layouted_container_factory;

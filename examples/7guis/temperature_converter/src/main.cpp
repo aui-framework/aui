@@ -25,6 +25,7 @@ auto myPicker() {
     };
 }
 
+/// [window]
 class TemperatureConverterWindow : public AWindow {
 public:
     TemperatureConverterWindow() : AWindow("AUI - 7GUIs - TempConv", 300_dp, 50_dp) {
@@ -38,7 +39,7 @@ public:
             Label { "=" } AUI_WITH_STYLE { Margin { {}, 16_dp } },
             myPicker() AUI_LET { biConnect(it->value(), mFahrenheit); },
             Label { "°F" },
-          },
+          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
 
         connect(mFahrenheit.changed, [&] { mCelsius = (*mFahrenheit - 32.f) * (5.f / 9.f); });
@@ -48,6 +49,7 @@ public:
 private:
     AProperty<int> mCelsius, mFahrenheit;
 };
+/// [window]
 
 AUI_ENTRY {
     _new<TemperatureConverterWindow>()->show();

@@ -16,6 +16,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "ATabView.h"
 
+using namespace declarative;
 
 ATabView::ATabView() {
     setLayout(std::make_unique<AVerticalLayout>());

@@ -16,9 +16,10 @@
 #include <AUI/Util/AViewEntry.h>
 #include <stack>
 
-AText::AText() = default;
+AText::AText() {
+    addView(mViewsContainer = _new<AViewContainer>());
+}
 
-AText::~AText() = default;
 
 void AText::pushWord(Entries& entries,
                      AString word,
@@ -47,6 +48,7 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
 void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
+    mViewsContainer->removeAllViews();
     ATextBase::clearContent();
 }
 
@@ -103,7 +105,7 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
                     processString(string, parsedFlags, entries);
                 },
                 [&](const _<AView>& view) {
-                    addView(view);
+                    mViewsContainer->addView(view);
                     entries << _new<AViewEntry>(view);
                 },
         }, item);
@@ -174,15 +176,30 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+    auto ascender = glm::ivec2 {0,
+                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
+    };
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        ascender += (getContentHeight() - ATextBase<>::getContentMinimumHeight()) / 2;
+    }
     for (auto& wordEntry: mWordEntries) {
-        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+        canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
     }
     AString str(1, ' ');
     for (auto& charEntry: mCharEntries) {
         auto c = charEntry.getChar();
         if (c != ' ') {
             str.first() = c;
-            canvas->addString(charEntry.getPosition(), str);
+            canvas->addString(charEntry.getPosition() + ascender, str);
         }
     }
+}
+void AText::applyGeometryToChildren() {
+    AViewContainerBase::applyGeometryToChildren();
+
+    int y = 0;
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        y += (getContentHeight() - ATextBase<>::getContentMinimumHeight()) / 2;
+    }
+    mViewsContainer->setGeometry(0, y, getWidth(), getHeight());
 }

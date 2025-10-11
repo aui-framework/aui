@@ -122,18 +122,19 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
             imageFormat |= APixelFormat::R;
 
         return Character{
-                _new<AImage>(data, glm::uvec2(width, height), imageFormat),
-                int(g->metrics.horiAdvance * div),
-                int(-(g->metrics.horiBearingY * div) + size),
-                int(g->bitmap_left)
+            .image = _new<AImage>(data, glm::uvec2(width, height), imageFormat),
+            .size = { div * g->metrics.width, div * g->metrics.height },
+            .horizontal = {
+              .bearing = { g->bitmap_left, g->bitmap_top },
+              .advance = div * g->metrics.horiAdvance,
+            },
+            .vertical = {
+              .bearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY },
+              .advance = div * g->metrics.vertAdvance,
+            },
         };
     }
-    return Character{
-            nullptr,
-            0,
-            0,
-            0
-    };
+    return Character{};
 }
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
@@ -150,11 +151,11 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     }
 }
 
-float AFont::length(const FontEntry& charset, AStringView text) {
+int AFont::length(const FontEntry& charset, AStringView text) {
     return length(charset, text.begin(), text.end());
 }
 
-float AFont::length(const FontEntry& charset, std::u32string_view text) {
+int AFont::length(const FontEntry& charset, std::u32string_view text) {
     return length(charset, text.begin(), text.end());
 }
 
