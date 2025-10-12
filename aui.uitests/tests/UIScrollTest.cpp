@@ -17,6 +17,8 @@
 #include <AUI/View/AScrollArea.h>
 #include <gmock/gmock.h>
 
+using namespace declarative;
+
 class MockedViewContainer: public AViewContainer {
 public:
     MockedViewContainer() {
@@ -26,8 +28,8 @@ public:
 
         setContents(
             Vertical {
-                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp } },
-                mBottomLabel = _new<ALabel>("Bottom"),
+                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp }, Margin { 8_dp } },
+                mBottomLabel = _new<ALabel>("Bottom") AUI_WITH_STYLE { Margin { 8_dp } },
             }
         );
         *this << ".container";

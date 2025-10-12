@@ -20,7 +20,7 @@
 /**
  * @defgroup property-system Property System
  * @ingroup core
- * @brief Property System is a data binding mechanism based on [signal_slot] "signal-slot system".
+ * @brief Property System is a data binding mechanism based on [signal-slot system](signal_slot.md).
  * @details
  * <!-- aui:experimental -->
  * AUI property system, a compiler-agnostic framework to make observable variables. This is a pure C++ alternative to:

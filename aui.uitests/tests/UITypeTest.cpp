@@ -14,6 +14,8 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
 
+using namespace declarative;
+
 /**
  * There's a text field and a button:
  * _____________________-[]X_
@@ -87,7 +89,7 @@ protected:
 TEST_F(UIType, HelloIsNotAppeared) {
 
     // check label is not visible
-    By::type<ALabel>().check(notVisible(), "label is visible");
+    By::name("#hello").check(notVisible(), "label is visible");
 }
 
 /**

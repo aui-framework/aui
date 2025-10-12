@@ -11,18 +11,15 @@
 
 #pragma once
 
-#include <AUI/View/AViewContainer.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Traits/callables.h>
-#include <AUI/Traits/parameter_pack.h>
-#include <AUI/ASS/ASS.h>
+#include <AUI/Util/Declarative/Concepts.h>
+#include <AUI/Layout/AAdvancedGridLayout.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Layout/AStackedLayout.h>
+#include <AUI/Layout/AAbsoluteLayout.h>
 
 namespace aui::ui_building {
-
-using View = _<AView>;
-using ViewContainer = _<AViewContainer>;
-using ViewGroup = AVector<_<AView>>;
-using ViewOrViewGroup = std::variant<_<AView>, AVector<_<AView>>>;
 
 namespace detail {
 template <typename ViewFactory>
@@ -77,11 +74,6 @@ public:
             std::forward<SignalField>(signalField), std::forward<Object>(object), std::forward<Function>(function));
     }
 
-    template <typename Object, typename Function>
-    auto clicked(Object&& object, Function&& function) {
-        return connect(&AView::clicked, std::forward<Object>(object), std::forward<Function>(function));
-    }
-
     template <typename SignalField, typename Function>
     auto connect(SignalField&& signalField, Function&& function) {
         return asViewFactory()->operator()().connect(
@@ -94,15 +86,6 @@ private:
     }
 };
 
-template <typename Item>
-concept LayoutItemView = aui::convertible_to<Item, View>;
-template <typename Item>
-concept LayoutItemViewGroup = aui::convertible_to<Item, ViewGroup>;
-template <typename Item>
-concept LayoutItemViewFactory = aui::factory<Item, View>;
-
-template <typename Item>
-concept ValidLayoutItem = LayoutItemView<Item> || LayoutItemViewGroup<Item> || LayoutItemViewFactory<Item>;
 
 template <typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
 struct layouted_container_factory_impl {
@@ -114,11 +97,11 @@ public:
     layouted_container_factory_impl(Views&&... views) {
         mViews.reserve(sizeof...(views));
         static_assert(
-            (ValidLayoutItem<Views> && ...),
+            (LayoutItemAny<Views> && ...),
             "One of the items passed to declarative container is not valid. "
             "Please check your compiler's diagnostics on constraint satisfaction.");
         aui::parameter_pack::for_each(
-            [this]<ValidLayoutItem Item>(Item&& item) {
+            [this]<LayoutItemAny Item>(Item&& item) {
                 constexpr bool isView = LayoutItemView<Item>;
                 constexpr bool isViewGroup = LayoutItemViewGroup<Item>;
                 constexpr bool isInvokable = LayoutItemViewFactory<Item>;
@@ -191,7 +174,7 @@ private:
 };
 
 static_assert(std::is_convertible_v<view<AView>, View>,
-             "====================> AUI: declarative view wrapper (declarative::view) must be convertible to _<AView>");
+              "====================> AUI: declarative view wrapper (declarative::view) must be convertible to _<AView>");
 
 
 /**
@@ -209,15 +192,15 @@ namespace declarative {
  * @ingroup views
  * @details
  * ```cpp
- * Button { "Default button" },
+ * Label { "Default label" },
  * Style{
  *     {
  *         c(".btn"),
  *         BackgroundSolid { 0xff0000_rgb },
  *     },
  * } ({
- *     Button { "Red button" },
- *     Button { "Another red button" },
+ *     Label { "Red label" },
+ *     Label { "Another red label" },
  * }),
  * ```
  */
@@ -241,3 +224,114 @@ private:
     AVector<_<AView>> mViews;
 };
 }   // namespace declarative
+
+
+#define AUI_DETAIL_BINARY_OP(op)                                                          \
+    template <typename Rhs>                                                               \
+    auto operator op(aui::ui_building::LayoutItemViewFactory auto&& factory, Rhs&& rhs) { \
+        return factory() op std::forward<Rhs>(rhs);                                       \
+    }
+
+AUI_DETAIL_BINARY_OP(&) // forwards AUI_WITH_STYLE
+AUI_DETAIL_BINARY_OP(^) // forwards let
+AUI_DETAIL_BINARY_OP(<<) // forwards stylesheet name assignment
+
+
+namespace declarative {
+template <typename Layout, typename... Args>
+inline auto _container(aui::ui_building::ViewGroup views, Args&&... args) {
+    auto c = _new<AViewContainer>();
+    c->setLayout(std::make_unique<Layout>(std::forward<Args>(args)...));
+
+    c->setViews(std::move(views));
+
+    return c;
+}
+
+inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views) {
+    auto c = _new<AViewContainer>();
+    c->setLayout(std::make_unique<AAdvancedGridLayout>(2, int(views.size())));
+    c->setExpanding({ 2, 0 });
+    for (const auto& v : views) {
+        try {
+            c->addView(_new<ALabel>(std::get<AString>(v.first)));
+        } catch (const std::bad_variant_access&) {
+            c->addView(std::get<_<AView>>(v.first));
+        }
+        v.second->setExpanding({ 2, 0 });
+        c->addView(v.second);
+    }
+
+    return c;
+}
+
+/**
+ * @brief Places views in a column.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AVerticalLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Vertical = aui::ui_building::view_container_layout<AVerticalLayout>;
+
+/**
+ * @brief Places views in a row.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AHorizontalLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Horizontal = aui::ui_building::view_container_layout<AHorizontalLayout>;
+
+/**
+ * @brief Places views in a stack, centering them.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AStackedLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Stacked = aui::ui_building::view_container_layout<AStackedLayout>;
+
+/**
+ * @brief Places views according to specified xy coordinates.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AAbsoluteLayout</dt>
+ *  </dl>
+ * </p>
+ */
+using Absolute = aui::ui_building::view_container_layout<AAbsoluteLayout>;
+
+/**
+ * Does not actually set the layout. The views' geometry is determined manually.
+ * @deprecated Use AAbsoluteLayout instead.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> null</dt>
+ *  </dl>
+ * </p>
+ */
+using CustomLayout = aui::ui_building::view_container_layout<std::nullopt_t>;
+
+/**
+ * <p>
+ * <code>Center</code> is an alias to Stacked. When Stacked is used only for centering views, you can use
+ * this alias in order to improve understanding of your code.
+ * </p>
+ */
+using Centered = Stacked;
+}

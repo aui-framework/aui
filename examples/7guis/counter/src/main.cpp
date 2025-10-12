@@ -17,23 +17,22 @@
 
 using namespace declarative;
 
-class CounterWindow: public AWindow {
+/// [counter]
+class CounterWindow : public AWindow {
 public:
-    CounterWindow(): AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
+    CounterWindow() : AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
         setContents(Centered {
           Horizontal {
-            _new<ATextField>() AUI_LET {
-                AObject::connect(mCounter.readProjected(AString::number<int>), it->text());
-                it->setEditable(false);
-            },
-            Button { "Count" }.connect(&AView::clicked, [&] { mCounter += 1; }),
-          },
+            Label { AUI_REACT("Count: {}"_format(mCounter)) },
+            Button { Label { "Count" }, [this] { mCounter += 1; } },
+          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
     }
 
 private:
     AProperty<int> mCounter;
 };
+/// [counter]
 
 AUI_ENTRY {
     _new<CounterWindow>()->show();
