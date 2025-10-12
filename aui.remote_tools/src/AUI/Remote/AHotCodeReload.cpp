@@ -35,6 +35,11 @@ void AHotCodeReload::addFiles(AStringView paths) {
     }
 }
 
+AHotCodeReload& AHotCodeReload::inst() {
+    static auto instance = aui::ptr::manage_shared(new AHotCodeReload);
+    return *instance;
+}
+
 #if AUI_PLATFORM_LINUX
 
 struct AHotCodeReload::Priv {
@@ -63,21 +68,27 @@ void AHotCodeReload::loadBinary(const APath& path) {
     });
 }
 
-void AHotCodeReload::addFile(AString path) {
-    ALogger::info(LOG_TAG) << "Watching: " << path;
-    int h = mPriv->watcher->addWatch(path, AINotifyFileWatcher::Mask::MODIFY);
-    AObject::connect(mPriv->watcher->fired, [this, path = std::move(path), h](const AINotifyFileWatcher::Event& event) mutable {
-      if (event.watchDescriptor != h) {
-          return;
-      }
-      loadBinary(path);
-      AThread::main()->enqueue([this, h, path = std::move(path)]() mutable {
-        try {
-            mPriv->watcher->removeWatch(h);
-        } catch (...) {}
-        addFile(std::move(path));
-      });
-    });
+void AHotCodeReload::addFile(AString path) noexcept {
+    try {
+        int h = mPriv->watcher->addWatch(path, AINotifyFileWatcher::Mask::MODIFY);
+        ALogger::info(LOG_TAG) << "Watching: " << path;
+        AObject::connect(
+            mPriv->watcher->fired, [this, path = std::move(path), h](const AINotifyFileWatcher::Event& event) mutable {
+                if (event.watchDescriptor != h) {
+                    return;
+                }
+                loadBinary(path);
+                AThread::main()->enqueue([this, h, path = std::move(path)]() mutable {
+                    try {
+                        mPriv->watcher->removeWatch(h);
+                    } catch (...) {
+                    }
+                    addFile(std::move(path));
+                });
+            });
+    } catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Failed to add file to watch: " << path << " : " << e;
+    }
 }
 
 #else

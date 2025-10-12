@@ -79,6 +79,18 @@
  * interfere with build process nor require special project structure with complicated state management. It does not
  * replace older symbols with newer ones, it keeps them both in memory, so referencing both is safe.
  *
+ * ### Setup
+ *
+ * Link to remote_tools module: `aui_link(my_target PUBLIC aui::remote_tools)`
+ *
+ * Add object files to track:
+ *
+ * === ":simple-cmake: CMake"
+ *     <!-- aui:snippet examples/ui/hot_code_reload/CMakeLists.txt aui_enable_hotswap -->
+ * === ":material-language-cpp: Manually"
+ *     <!-- aui:snippet examples/ui/hot_code_reload/src/main.cpp hardcoded_path -->
+ *
+ *
  * ### Usage
  *
  * 1. Launch your application.
@@ -103,12 +115,21 @@
  */
 class API_AUI_REMOTE_TOOLS AHotCodeReload : public AObject {
 public:
-    AHotCodeReload();
     ~AHotCodeReload();
-    static AHotCodeReload& inst() {
-        static auto instance = _new<AHotCodeReload>();
-        return *instance;
-    }
+
+    /**
+     * @brief Gets the singleton instance of AHotCodeReload.
+     * @return Reference to the singleton instance.
+     * @details
+     * This method implements the singleton pattern, ensuring only one instance of AHotCodeReload exists.
+     * The instance is created on first access and persists throughout the application lifetime.
+     *
+     * Example:
+     * ```cpp
+     * AHotCodeReload::inst().addFiles("path/to/object.o");
+     * ```
+     */
+    static AHotCodeReload& inst();
 
     /**
      * @brief Add object files to be observed.
@@ -122,20 +143,57 @@ public:
      * AHotCodeReload::inst().addFiles("C:/path/to/object1.obj;C:/path/to/object2.obj");
      * ```
      *
-     * Normally, you do not need to call this method directly. It is called automatically by [aui_enable_hotswap] CMake
+     * Normally, you do not need to call this method directly. It is called automatically by `aui_enable_hotswap` CMake
      * command.
      */
     void addFiles(AStringView paths);
-    void addFile(AString path);
 
+    /**
+     * @brief Add a single object file to be observed.
+     * @param path Path to the object file to watch for changes.
+     * @details
+     * Adds a single object file to the hot code reload system's watch list.
+     * When changes are detected in this file, it will be automatically reloaded.
+     *
+     * This method is noexcept and will log errors if file watching fails rather than throwing exceptions.
+     */
+    void addFile(AString path) noexcept;
+
+    /**
+     * @brief Load and patch a binary object file at runtime.
+     * @param path Path to the object file to load.
+     * @details
+     * This method loads a binary object file and patches the running application with the new code.
+     * It's typically used internally by the hot code reload system but can be called manually if needed.
+     *
+     * The method is thread-safe and will schedule the reload on the main thread.
+     */
     void loadBinary(const APath& path);
 
+    /**
+     * @brief Signal emitted when a binary patch operation begins.
+     * @details
+     * This signal is emitted before the hot code reload system starts patching the application with new code.
+     * Can be used to prepare the application state for the upcoming changes.
+     */
     emits<> patchBegin;
+
+    /**
+     * @brief Signal emitted when a binary patch operation completes.
+     * @details
+     * This signal is emitted after the hot code reload system has finished patching the application.
+     * Can be used to refresh UI or reinitialize components after the changes have been applied.
+     */
     emits<> patchEnd;
 
 private:
     struct Priv;
-
     aui::fast_pimpl<Priv, 0x100> mPriv;
 
+
+    /**
+     * @brief Default constructor.
+     * @details Initializes the hot code reload system. The constructor is private to enforce singleton pattern.
+     */
+    AHotCodeReload();
 };

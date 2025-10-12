@@ -9,10 +9,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+// [hardcoded_path]
 #include <AUI/Platform/Entry.h>
 #include "MyWindow.h"
+#include "AUI/Remote/AHotCodeReload.h"
 
 AUI_ENTRY {
+    // hardcoded path
+    AHotCodeReload::inst().addFile("/home/projects/aui/cmake-build-debug/CMakeFiles/aui.example.hot_code_reload.dir/src/MyWindow.cpp.o");
+
     _new<MyWindow>()->show();
     return 0;
 }
+// [hardcoded_path]
