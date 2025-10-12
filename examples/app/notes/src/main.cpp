@@ -24,6 +24,7 @@
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Reflect/for_each_field.h"
 #include "AUI/Platform/AMessageBox.h"
+#include "AUI/View/ASpacerFixed.h"
 
 #include <AUI/View/AForEachUI.h>
 #include <AUI/Util/AWordWrappingEngineImpl.h>
@@ -123,11 +124,10 @@ public:
                     Vertical {
                       Centered {
                         Horizontal {
-                          Button { Icon { ":img/save.svg" }, Label { "Save" } }.connect(&AView::clicked, me::save) &
-                              mDirty > &AView::setEnabled,
-                          Button { Icon { ":img/new.svg" }, Label { "New Note" } }.connect(
-                              &AView::clicked, me::newNote),
-                        },
+                          Button { Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } }, {me::save} }
+                              & mDirty > &AView::setEnabled,
+                          Button { Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } }, {me::newNote} },
+                        } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
                       AScrollArea::Builder()
@@ -148,8 +148,7 @@ public:
 
                     Vertical::Expanding {
                       Centered {
-                        Button { Icon { ":img/trash.svg" }, Label { "Delete" } }.connect(
-                            &AView::clicked, me::deleteCurrentNote) &
+                        Button { Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } }, {me::deleteCurrentNote} } &
                             mCurrentNote.readProjected([](const _<Note>& n) {
                                 return n != nullptr;
                             }) > &AView::setEnabled,

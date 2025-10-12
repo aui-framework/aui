@@ -80,7 +80,7 @@ public:
                     connect(it->clicked, me::book);
                     connect(mIsValid, AUI_SLOT(it)::setEnabled);
                 },
-          },
+          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         });
     }
 

@@ -65,6 +65,27 @@ class AStylesheet;
 *  keys and buttons, mouse wheel, etc...
  *
  * Analogue to Qt's QWidget, Android's View.
+ *
+ * Every view has a position and size. Also, almost every view has parent, in exception to toplevel view, [AWindow].
+ * Parent view is [AViewContainerBase] which is responsible for layout of all views inside.
+ *
+ * @image html Screenshot_20241212_064400.png Devtools demonstrating view hierarchy.
+ *
+ * AView by itself does not provide much functionality. There are many implementations of the functionality (so called
+ * "UI kit"): [AButton], [ATextField], [ACheckBox]. An implementation view can be a container, e.g.
+ * [ANumberPicker], which consists of a text field and buttons.
+ *
+ * You can implement your view by inheriting from AView and overriding some of its methods. Also, you can define
+ * [declarative contract](retained_immediate_ui.md), which means you accept everything your view needs
+ * (including data), and return pure AView without subclassing.
+ *
+ * Every view can be [styled](ass.md). It means that it can have a set of properties which can be used to change
+ * background, border, text color, etc.
+ *
+ * The user interaction is driven by events. You can handle them by overriding respective methods in AView. Also, many
+ * events can be handled with signal-slot, see which signals is emitted by AView.
+ *
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS AView: public AObject
 {
@@ -645,6 +666,16 @@ public:
         setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
     }
 
+
+    [[nodiscard]]
+    const AColor& textColor() const {
+        return mTextColor;
+    }
+
+    void setTextColor(AColor color) {
+        mTextColor = color;
+    }
+
     [[nodiscard]]
     MouseCollisionPolicy getMouseCollisionPolicy() const {
         return mMouseCollisionPolicy;
@@ -1139,6 +1170,8 @@ private:
      */
     Visibility mVisibility = Visibility::VISIBLE;
     emits<Visibility> mVisibilityChanged;
+
+    AColor mTextColor;
 
     /**
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)

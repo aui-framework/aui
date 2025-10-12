@@ -26,9 +26,9 @@ static constexpr auto EDITOR_CONTENT_MAX_WIDTH = 400_dp;
 namespace {
 _<AView> profilePhoto(const _<Contact>& contact) {
     return Centered {
-        Label {} & contact->displayName.readProjected([](const AString& s) {
-            return s.empty() ? "?" : AString(1, s.first()).uppercase();
-        }) AUI_WITH_STYLE { Opacity(0.5f), FontSize { 32_dp } },
+        Label {
+          AUI_REACT(contact->displayName->empty() ? "?" : AString(1, contact->displayName->first()).uppercase())
+        } AUI_WITH_STYLE { Opacity(0.5f), FontSize { 32_dp } },
     } AUI_WITH_STYLE {
         FixedSize { 64_dp },
         BorderRadius { 32_dp },
@@ -38,7 +38,7 @@ _<AView> profilePhoto(const _<Contact>& contact) {
 
 template <typename T>
 _<AView> viewer(AProperty<T>& property) {
-    return Label {} & property.readProjected([](const T& v) { return "{}"_format(v); });
+    return Label { AUI_REACT("{}"_format(*property)) };
 }
 
 template <typename T>
@@ -75,7 +75,7 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                 Centered::Expanding {
                   presentation(mContact->displayName) AUI_WITH_STYLE { FontSize { 12_pt } },
                 },
-              } AUI_WITH_STYLE { Margin { 8_dp, {} } },
+              } AUI_WITH_STYLE { Margin { 8_dp, {} }, LayoutSpacing { 4_dp } },
               row("Phone", mContact->phone),
               row("Address", mContact->address),
               row("Email", mContact->email),
@@ -87,15 +87,16 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
                 _new<ATextArea>() && mContact->note,
               } AUI_WITH_STYLE {
                     MinSize { {}, 100_dp },
+                    LayoutSpacing { 4_dp },
                   },
-            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp) },
+            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp), LayoutSpacing { 4_dp } },
           }),
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),
-              Button { mEditorMode ? "Discard" : "Delete" } AUI_LET { connect(it->clicked, me::drop); },
-              Button { mEditorMode ? "Done" : "Edit" } AUI_LET { connect(it->clicked, me::toggleEdit); },
-            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp) },
+              Button { Label { mEditorMode ? "Discard" : "Delete" }, {me::drop} },
+              Button { Label { mEditorMode ? "Done" : "Edit" }, {me::toggleEdit} },
+            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(4_dp), LayoutSpacing { 4_dp } },
           },
         });
     });
@@ -139,7 +140,7 @@ _<AView> ContactDetailsView::row(AString title, AProperty<T>& property) {
         Horizontal {
           Label { std::move(title) } AUI_WITH_STYLE { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
           presentation(property),
-        },
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
         common_views::divider(),
-    };
+    } AUI_WITH_STYLE { LayoutSpacing(4_dp) };
 }

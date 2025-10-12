@@ -221,18 +221,16 @@ public:
         setContents(Vertical {
           Centered {
             Horizontal {
-              Button { "Undo" } AUI_LET {
-                  connect(it->clicked, me::undo);
+              Button { Label { "Undo" }, {me::undo} } AUI_LET {
                   it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
               },
-              Button { "Redo" } AUI_LET {
-                connect(it->clicked, me::redo);
+              Button { Label { "Redo" }, {me::redo} } AUI_LET {
                 it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
               },
             },
           },
           _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
-        });
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp }});
     }
 
 private:

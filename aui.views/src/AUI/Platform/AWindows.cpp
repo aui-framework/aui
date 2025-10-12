@@ -36,6 +36,7 @@
 #endif
 
 
+using namespace declarative;
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
     return AViewContainer::consumesClick(pos);

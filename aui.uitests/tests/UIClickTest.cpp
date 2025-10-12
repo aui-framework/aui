@@ -14,6 +14,8 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 
+using namespace declarative;
+
 /**
  * This test suite checks a simple program.
  * There's a button "Say hello":
@@ -34,37 +36,37 @@
  * that's it.
  */
 
-class UIClick: public testing::UITest {
+class UIClick : public testing::UITest {
+public:
+
+protected:
+    class TestWindow : public AWindow {
+    private:
+        _<ALabel> mHelloLabel;
+
     public:
-    protected:
+        TestWindow() {
+            setContents(Centered {
+              Vertical {
+                _new<AButton>("Say hello")
+                        .connect(&AView::clicked, this,
+                                 [&] {
+                                     mHelloLabel->setVisibility(Visibility::VISIBLE);
+                                     onButtonClicked();
+                                 })
+                        .connect(&AView::clickedRightOrLongPressed, this, [&] { onButtonClickedRightOrLongPressed(); })
+                        .connect(&AView::doubleClicked, this, [&] { onButtonDoubleClicked(); }) AUI_LET { it->setDefault(); },
+                mHelloLabel = _new<ALabel>("Hello!") AUI_LET { it->setVisibility(Visibility::INVISIBLE); },
+              },
+            });
 
-        class TestWindow: public AWindow {
-        private:
-            _<ALabel> mHelloLabel;
+            pack();
+        }
 
-        public:
-            TestWindow() {
-                setContents(Centered {
-                        Vertical {
-                                _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                                    mHelloLabel->setVisibility(Visibility::VISIBLE);
-                                    onButtonClicked();
-                                }).connect(&AView::clickedRightOrLongPressed, this, [&] {
-                                    onButtonClickedRightOrLongPressed();
-                                }).connect(&AView::doubleClicked, this, [&] {
-                                    onButtonDoubleClicked();
-                                }) AUI_LET { it->setDefault(); },
-                                mHelloLabel = _new<ALabel>("Hello!") AUI_LET { it->setVisibility(Visibility::INVISIBLE); }
-                        }
-                });
-
-                pack();
-            }
-
-            MOCK_METHOD(void, onButtonClicked, (), ());
-            MOCK_METHOD(void, onButtonDoubleClicked, (), ());
-            MOCK_METHOD(void, onButtonClickedRightOrLongPressed, (), ());
-        };
+        MOCK_METHOD(void, onButtonClicked, (), ());
+        MOCK_METHOD(void, onButtonDoubleClicked, (), ());
+        MOCK_METHOD(void, onButtonClickedRightOrLongPressed, (), ());
+    };
 
     void SetUp() override {
         UITest::SetUp();
@@ -80,8 +82,6 @@ class UIClick: public testing::UITest {
 
     _<TestWindow> mTestWindow;
 };
-
-
 
 /**
  * Checks that the message is not appeared yet.
@@ -132,15 +132,11 @@ TEST_F(UIClick, Click) {
     // check clicked singal is emitted
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
 
-    mTestWindow->onPointerPressed({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
-    mTestWindow->onPointerReleased({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 }
 
 /**
@@ -152,25 +148,17 @@ TEST_F(UIClick, DoubleClickEmit) {
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(2);
     EXPECT_CALL(*mTestWindow, onButtonDoubleClicked).Times(1);
 
-    mTestWindow->onPointerPressed({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
-    mTestWindow->onPointerReleased({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
-    mTestWindow->onPointerPressed({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
-    mTestWindow->onPointerReleased({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 }
 
 /**
@@ -180,25 +168,64 @@ TEST_F(UIClick, DoubleClickNoEmit) {
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(2);
     EXPECT_CALL(*mTestWindow, onButtonDoubleClicked).Times(0);
 
-    mTestWindow->onPointerPressed({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
-    mTestWindow->onPointerReleased({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
-    });
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 
     AThread::sleep(AWindowBase::DOUBLECLICK_MAX_DURATION * 2);
 
-    mTestWindow->onPointerPressed({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+}
+
+TEST_F(UIClick, Click2) {
+    // check clicked singal is emitted
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
+    mTestWindow->setContents(Centered {
+      Vertical {
+        _new<AButton>("Say hello").connect(&AView::clicked, mTestWindow, [this] { mTestWindow->onButtonClicked(); }),
+      },
     });
 
-    mTestWindow->onPointerReleased({
-        .position = By::text("Say hello").one()->getCenterPointInWindow(),
-        .asButton = AInput::LBUTTON
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+}
+
+TEST_F(UIClick, Click3) {
+    // check clicked singal is emitted
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
+    mTestWindow->setContents(Centered {
+        Vertical {
+            Button { Label { "Say hello" }, [this] { mTestWindow->onButtonClicked(); } },
+        },
     });
+
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+}
+
+TEST_F(UIClick, NoClick) {
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(0);
+    mTestWindow->setContents(Centered {
+        Vertical {
+            Button { Label { "Say hello" } },
+        },
+    });
+
+    mTestWindow->onPointerPressed(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
+
+    mTestWindow->onPointerReleased(
+        { .position = By::text("Say hello").one()->getCenterPointInWindow(), .asButton = AInput::LBUTTON });
 }

@@ -104,6 +104,7 @@ public:
                             for (unsigned column = 0; column < mState->spreadsheet.size().x; ++column) {
                                 views[row + 1][column + 1] = _new<CellView>(mState, mState->spreadsheet[{ column, row }]) AUI_WITH_STYLE {
                                     BackgroundSolid { AColor::WHITE },
+                                    MinSize { {}, 20_dp },
                                 };
                             }
                         }

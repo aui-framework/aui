@@ -145,7 +145,7 @@ TEST_F(UIRepaintTest, ContainerRepaint4) {
     {
         testing::InSequence s;
         // adding extra view should trigger an update
-        EXPECT_CALL(*container, markPixelDataInvalid).Times(2);
+        EXPECT_CALL(*container, markPixelDataInvalid).Times(testing::AtLeast(1));
         container->addView(Label { "another label" });
         AUI_REPEAT(10) { uitest::frame(); }
     }

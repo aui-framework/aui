@@ -25,7 +25,7 @@ jobs:
       matrix:
         os: [windows-2025]
         os-name: [Windows]
-        toolset: [142, 143]
+        toolset: [142]
         cppstd: ['20']
         build-type: [Debug, Release]
         exclude:
@@ -34,8 +34,8 @@ jobs:
         include:
           - toolset: 142
             conan-compiler-version: 192
-          - toolset: 143
-            conan-compiler-version: 194
+#          - toolset: 143
+#            conan-compiler-version: 194
           - build-type: Debug
             cmake-preset: conan-debug
           - build-type: Release

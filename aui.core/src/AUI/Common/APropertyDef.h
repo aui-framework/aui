@@ -100,28 +100,31 @@ struct APropertyDef {
     //     };
     // }
     //
-    // deduction in designated initializers is relatively recent feature.
+    // deduction in designated initializers is a relatively recent feature.
     APropertyDef(const M* base, Getter get, Setter set, const emits<SignalArg>& changed)
         : base(base), get(std::move(get)), set(std::move(set)), changed(changed) {}
 
     template <aui::convertible_to<Underlying> U>
-    APropertyDef& operator=(U&& u) {
+    const APropertyDef& operator=(U&& u) const { // NOLINT(*-unconventional-assign-operator)
         std::invoke(set, *const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
 
     [[nodiscard]]
     GetterReturnT value() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     GetterReturnT operator*() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     auto operator->() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
         if constexpr (std::is_reference_v<GetterReturnT>) {
             return &std::invoke(get, base);
         } else {
@@ -130,10 +133,12 @@ struct APropertyDef {
             // of this exact function.
             return aui::detail::OwningContainer<GetterReturnT>{ std::invoke(get, base) };
         }
-
     }
 
-    [[nodiscard]] operator GetterReturnT() const noexcept { return std::invoke(get, base); }
+    [[nodiscard]] operator GetterReturnT() const noexcept {
+        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        return std::invoke(get, base);
+    }
 
     [[nodiscard]]
     M* boundObject() const {

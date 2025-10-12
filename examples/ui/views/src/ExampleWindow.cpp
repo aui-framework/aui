@@ -50,6 +50,7 @@
 #include "AUI/IO/AByteBufferInputStream.h"
 #include "AUI/Curl/ACurl.h"
 #include "AUI/View/ASpinnerV2.h"
+#include "AUI/View/ASpacerFixed.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -97,6 +98,65 @@ public:
     }
 };
 
+/// [label_coloring]
+static _<AView> link(const AString& url) {
+    return Label { url } AUI_WITH_STYLE {
+               TextColor { AColor::BLUE },
+               BorderBottom { 1_px, AColor::BLUE },
+               ACursor::POINTER,
+           } AUI_LET { AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [url] { APlatform::openUrl(url); }); };
+}
+/// [label_coloring]
+
+static _<AView> checkBoxesDemo() {
+    struct State {
+        AProperty<bool> checked1 = false, checked2 = true;
+    };
+    auto state = _new<State>();
+    return Vertical {
+        CheckBox {
+          AUI_REACT(state->checked1),
+          [state](bool checked) { state->checked1 = checked; },
+          Label { "Unchecked checkbox" },
+        },
+        CheckBox {
+          AUI_REACT(state->checked2),
+          [state](bool checked) { state->checked2 = checked; },
+          Label { "Checked checkbox" },
+        },
+        CheckBox {
+          AUI_REACT(false),
+          Label { "Disabled checkbox" },
+        } AUI_LET { it->disable(); },
+    };
+}
+
+static _<AView> radioButtonsDemo() {
+    auto selection = _new<AProperty<int>>(0);
+    return Vertical {
+        RadioButton {
+          AUI_REACT(*selection == 0),
+          [selection] { *selection = 0; },
+          Label { "Radiobutton 1" },
+        },
+        RadioButton {
+          AUI_REACT(*selection == 1),
+          [selection] { *selection = 1; },
+          Label { "Radiobutton 2" },
+        },
+        RadioButton {
+          AUI_REACT(*selection == 2),
+          [selection] { *selection = 2; },
+          Label { "Radiobutton 3" },
+        },
+        RadioButton {
+          AUI_REACT(*selection == 3),
+          [selection] { *selection = 3; },
+          Label { "Radiobutton 4" },
+        } AUI_LET { it->disable(); },
+    };
+}
+
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();
 
@@ -110,6 +170,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       Padding { 64_dp, {}, 16_dp },
     });
 #endif
+
+    setCustomStyle({
+      LayoutSpacing { 4_dp },
+    });
 
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) AUI_WITH_STYLE { FixedSize { 32_dp } },
@@ -149,54 +213,55 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Buttons" },
                   Vertical {
-                    _new<AButton>("Common button"),
-                    _new<AButton>("Default button") AUI_LET { it->setDefault(); },
-                    _new<AButton>("Disabled button") AUI_LET { it->setDisabled(); },
                     Button {
-                      Icon { ":img/logo.svg" },
-                      Label { "Button with icon" },
-                    }
-                        .clicked(this, [&] {
-                            AMessageBox::show(this, "Title", "Message");
-                        }),
-                  },
+                      Label { "Common button" },
+                      [this] { AMessageBox::show(this, "Title", "Message"); },
+                    },
+                    Button {
+                      Label { "Default button" },
+                      [this] { AMessageBox::show(this, "Title", "Message"); },
+                      true,
+                    },
+                    Button { Label { "Disabled button" } } AUI_LET { it->setDisabled(); },
+                    Button {
+                          Horizontal {
+                            Icon { ":img/logo.svg" },
+                            SpacerFixed { 2_dp },
+                            Label { "Button with icon" },
+                          },
+                      [this] {
+                        AMessageBox::show(this, "Title", "Message");
+                      },
+                    },
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 },
 
                 // checkboxes
                 GroupBox {
-                  CheckBoxWrapper { Label { "Checkboxes" } } AUI_LET { it->checked() = true; },
-                  Vertical {
-                    CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                    CheckBoxWrapper { Label { "Checked checkbox" } } AUI_LET { it->checked() = true; },
-                    CheckBoxWrapper { Label { "Disabled checkbox" } } AUI_LET { it->setDisabled(); },
-                  },
+                  Label { "Checkboxes" } ,
+                  checkBoxesDemo(),
                 },
 
                 // radiobuttons
                 GroupBox {
                   Label { "Radiobuttons" },
-                  RadioGroup {
-                    RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
-                    RadioButton { "Radiobutton 2" },
-                    RadioButton { "Radiobutton 3" },
-                    RadioButton { "Disabled radiobutton" } AUI_LET { it->disable(); },
-                  },
+                  radioButtonsDemo(),
                 },
 
-                // comboboxes
+                // dropdown lists
                 GroupBox {
-                  Label { "Comboboxes" },
+                  Label { "Dropdown lists" },
                   Vertical {
                     _new<ADropdownList>(AListModel<AString>::make({
-                      "Combobox 1",
-                      "Combobox 2",
-                      "Combobox 3",
-                      "Combobox 4",
-                      "Combobox 5",
-                      "Combobox 6",
+                      "Dropdown list 1",
+                      "Dropdown list 2",
+                      "Dropdown list 3",
+                      "Dropdown list 4",
+                      "Dropdown list 5",
+                      "Dropdown list 6",
                     })),
-                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled combobox" })) AUI_LET { it->setDisabled(); },
-                  },
+                    _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown" })) AUI_LET { it->setDisabled(); },
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 },
                 GroupBox {
                   Label { "Drag area" },
@@ -209,7 +274,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
                       },
                 } AUI_WITH_STYLE { Expanding {} },
-              },
+              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
               Vertical {
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX || AUI_PLATFORM_MACOS
                 GroupBox {
@@ -248,7 +313,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                      for (auto& w : mWindows) w->close();
                                      mWindows.clear();
                                  }),
-                  } },
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                },
 #endif
 
                 GroupBox {
@@ -305,7 +371,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                          ALogger::info("Example") << "Successfully caught access violation: " << e;
                                      }
                                  }),
-                  },
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 },
 
                 // list view
@@ -318,10 +384,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           Horizontal {
                             _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
                             _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
-                            _new<ASpacerExpanding>(),
-                          },
+                          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                           _new<AListView>(model)
-                      };
+                      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } };
                   }(),
                 },
 
@@ -352,7 +417,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                     }
                                 }),
                             _new<ASpacerExpanding>(),
-                          },
+                          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                           AUI_DECLARATIVE_FOR(i, *state->colors, AWordWrappingLayout) {
                               return Horizontal {
                                   _new<ALabel>(i.toString()) AUI_WITH_STYLE {
@@ -374,23 +439,23 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   [] {   // lambda style inlining
                       return _new<ATreeView>(_new<ATreeModel<AString>>(AVector<ATreeModel<AString>::Item>{
                               {
-                                .value = "dir1",
-                                .children = {
-                                  { .value = "file1" },
-                                  { .value = "file2" },
+                                "dir1",
+                                {
+                                  { "file1" },
+                                  { "file2" },
                                 }
                               },
                               {
-                                .value = "dir2",
-                                .children = {
-                                  { .value = "file3" },
-                                  { .value = "file4" },
+                                "dir2",
+                                {
+                                  { "file3" },
+                                  { "file4" },
                                 }
                               },
                             }));
                   }(),
-                },
-              },
+                } AUI_WITH_STYLE { Expanding {} },
+              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
               Vertical::Expanding {
                 // fields
                 GroupBox {
@@ -404,8 +469,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         _new<ASlider>()
                             .connect(&ASlider::valueChanging, AUI_SLOT(progressBar)::setValue)
                             .connect(&ASlider::valueChanging, AUI_SLOT(circleProgressBar)::setValue),
-                      } },
-                  },
+                      },
+                    },
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 },
                 GroupBox {
                   Label { "Scaling factor" },
@@ -413,8 +479,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<ANumberPicker>().connect(&ANumberPicker::valueChanged,
                                                   [](int64_t x) {
                                                       AWindow::current()->setScalingParams(
-                                                          { .scalingFactor = x * 0.25f,
-                                                            .minimalWindowSizeDp = std::nullopt });
+                                                          { x * 0.25f,
+                                                            std::nullopt });
                                                   }) AUI_LET {
                             it->setMin(1);
                             it->setMax(12);
@@ -442,8 +508,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                             .build()
                         << ".input-field" AUI_LET { it->setExpanding(); },
-                  } }
-    AUI_WITH_STYLE { Expanding {} } } }),
+                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_WITH_STYLE { Expanding {} },
+              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }),
             "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
@@ -451,34 +519,42 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
 
         it->addTab(
-            AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical,
-                                                                   Horizontal> { Horizontal {
-              Vertical {
-                _new<ALabel>("Play music using AUI!"),
-                _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
-                _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
-                _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
-                _new<ALabel>("Volume control"),
-                _new<ASlider>()
-                    .connect(&ASlider::valueChanging, this,
-                             [player = mWavAudio](aui::float_within_0_1 value) {
-                                 player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
-                             }) },
-              Vertical {
-                _new<ALabel>("Play music using AUI!"),
-                _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
-                _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
-                _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
-                _new<ALabel>("Volume control"),
-                _new<ASlider>()
-                    .connect(&ASlider::valueChanging, this,
-                             [player = mOggAudio](aui::float_within_0_1 value) {
-                                 player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
-                             }) },
-              Vertical {
-                _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE { ass::on_state::Activated {
-                  ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
-                } } } } }),
+            AScrollArea::Builder().withContents(std::conditional_t<
+                                                aui::platform::current::is_mobile(), Vertical, Horizontal> {
+              Horizontal {
+                Vertical {
+                  _new<ALabel>("Play music using AUI!"),
+                  _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
+                  _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
+                  _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
+                  _new<ALabel>("Volume control"),
+                  _new<ASlider>().connect(
+                      &ASlider::valueChanging, this,
+                      [player = mWavAudio](aui::float_within_0_1 value) {
+                          player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                      }),
+                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                Vertical {
+                  _new<ALabel>("Play music using AUI!"),
+                  _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
+                  _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
+                  _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
+                  _new<ALabel>("Volume control"),
+                  _new<ASlider>().connect(
+                      &ASlider::valueChanging, this,
+                      [player = mOggAudio](aui::float_within_0_1 value) {
+                          player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                      }),
+                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                Vertical {
+                  _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE {
+                        ass::on_state::Activated {
+                          ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
+                        },
+                      },
+                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+            }),
             "Sounds");
 #endif
 
@@ -503,7 +579,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 _new<AButton>("Three"),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }),
+              }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
               ASplitter::Horizontal().withItems({
                 _new<AButton>("One"),
                 _new<AButton>("Two"),
@@ -511,12 +587,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 SpacerExpanding(),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }),
+              }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
               _new<ALabel>("Vertical splitter"),
               ASplitter::Vertical()
                       .withItems({ _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"),
                                    _new<AButton>("Four"), _new<AButton>("Five") })
-                      .build() AUI_LET { it->setExpanding(); },
+                      .build() AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
               _new<ALabel>("Grid splitter"),
               AGridSplitter::Builder()
                       .withItems(AVector<AVector<_<AView>>>::generate(
@@ -526,8 +602,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                   return _new<AButton>("{}x{}"_format(x, y));
                               });
                           }))
-                      .build() AUI_LET { it->setExpanding(); },
-            },
+                      .build() AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
             "Splitters");
 
         it->addTab(
@@ -555,7 +631,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
                           { WordBreak::BREAK_ALL }),
                     } AUI_WITH_STYLE { MinSize { 200_dp } },
-                  }),
+                  }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                   [] {
                       _<AViewContainer> v1 = Vertical {};
                       _<AViewContainer> v2 = Vertical {};
@@ -611,12 +687,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Label { "Custom cursor" } AUI_WITH_STYLE {
                           ACursor { ":img/logo.svg", 64 },
                         },
-                    Label { "github.com/aui-framework/aui" }.clicked(
-                        this, [] { APlatform::openUrl("https://github.com/aui-framework/aui"); }) AUI_WITH_STYLE {
-                          TextColor { AColor::BLUE },
-                          BorderBottom { 1_px, AColor::BLUE },
-                          ACursor::POINTER,
-                        },
+                    link("https://github.com/aui-framework/aui"),
                   },
                 },
                 Stacked {
@@ -625,7 +696,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     Label { "Blur" } AUI_WITH_STYLE { Margin { 1_dp, 16_dp } },
                   } AUI_WITH_STYLE {
                         Expanding(1, 0),
-                        Backdrop { Backdrop::GaussianBlur { .radius = 9_dp } },
+                        Backdrop { Backdrop::GaussianBlur { 9_dp } },
                         BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                       },
                 },
@@ -640,19 +711,18 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
       Centered {
         _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] { _new<AllViewsWindow>()->show(); }),
       },
-      _new<ASpacerExpanding>(),
-      _new<ASpinnerV2>(),
-      CheckBoxWrapper {
+      SpacerExpanding{},
+      Centered { _new<ASpinnerV2>() },
+      CheckBox {
+        AUI_REACT(tabView->enabled()),
+        [tabView](bool checked) { tabView->enabled() = checked; },
         Label { "Enabled" },
-      } AUI_LET {
-              it->check();
-              connect(it->checked().changed, AUI_SLOT(tabView)::setEnabled);
-          },
-      _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") AUI_LET {
+      },
+      _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
               it << "#copyright";
               it->setEnabled(false);
           },
-    });
+    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
@@ -678,7 +748,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             return nullptr;
         }(),
         AText::fromString("Caught drop event. See the logger output for contents.") AUI_WITH_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { "OK" }.clicked(this, [surface] { surface->close(); }) }
+        Centered { Button { Label { "OK" }, [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

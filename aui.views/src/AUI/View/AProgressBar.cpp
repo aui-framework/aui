@@ -40,7 +40,8 @@ void AProgressBar::updateInnerWidth() {
                         getContentHeight() - mPadding.vertical());
 }
 
-void AProgressBar::render(ARenderContext context) {
-    AViewContainerBase::render(context);
+_<AView> declarative::ProgressBar::operator()() {
+    auto view = _new<AProgressBar>();
+    progress.bindTo(view->value());
+    return view;
 }
-

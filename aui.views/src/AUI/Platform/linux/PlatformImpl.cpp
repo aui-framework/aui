@@ -25,7 +25,7 @@ float APlatform::getDpiRatio() {
 
 void APlatform::openUrl(const AUrl& url) {
     try {
-        ADBus::inst().callBlocking(
+        ADBus::session().call(
             "org.freedesktop.portal.Desktop",    // bus
             "/org/freedesktop/portal/desktop",   // object
             "org.freedesktop.portal.OpenURI",    // interface
