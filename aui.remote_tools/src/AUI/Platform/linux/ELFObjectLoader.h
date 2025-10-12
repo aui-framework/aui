@@ -15,9 +15,9 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/IO/APath.h>
 
-class ObjectLoader {
+class ELFObjectLoader {
 public:
-    ObjectLoader(const APath& baseFilePath);
+    ELFObjectLoader(const APath& baseFilePath);
     void load(const APath& objectFile);
 
 private:

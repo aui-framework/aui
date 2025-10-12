@@ -95,7 +95,7 @@
  * 3. For changes to take effect, the patched functions must be called (e.g. by re-triggering the relevant UI action).
  * 4. Do not modify struct or class layouts; the system cannot reliably detect or adjust for such changes.
  *
- * ## Best Practices
+ * ### Best Practices
  *
  * - Use hot code reloading for iterative development on function logic and UI changes.
  * - Do not rely on this system for data or memory layout changes.

@@ -13,7 +13,7 @@
 // Created by alex2772 on 10/11/25.
 //
 
-#include "ObjectLoader.h"
+#include "ELFObjectLoader.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/kAUI.h"
 #include "AUI/Platform/AProcess.h"
@@ -31,7 +31,7 @@
 
 namespace {
 
-static constexpr auto LOG_TAG = "Hot code reload";
+static constexpr auto LOG_TAG = "ELFObjectLoader";
 
 struct Section {
     Elf64_Shdr header;
@@ -165,7 +165,7 @@ void cxa_pure_virtual() { throw AException("Pure virtual function called"); }
 
 }   // namespace
 
-ObjectLoader::ObjectLoader(const APath& baseFilePath) {
+ELFObjectLoader::ELFObjectLoader(const APath& baseFilePath) {
     ALOG_TRACE(LOG_TAG) << "Object: \"" << baseFilePath << "\"";
 
     auto sections = parseElf(baseFilePath);
@@ -219,7 +219,7 @@ ObjectLoader::ObjectLoader(const APath& baseFilePath) {
     }
 }
 
-void ObjectLoader::load(const APath& objectFile) {
+void ELFObjectLoader::load(const APath& objectFile) {
     struct MappedSection {
         Section section;
         _<void> page;
