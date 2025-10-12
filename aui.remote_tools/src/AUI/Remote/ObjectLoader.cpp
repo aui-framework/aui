@@ -383,8 +383,10 @@ void ObjectLoader::load(const APath& objectFile) {
                     if (auto i = mGot.find(symname);
                         i != mGot.end() && validateDistance(symname, writeAddr, reinterpret_cast<char*>(i->second))) {
                         symaddr = (char*) i->second;
+                        ALOG_TRACE(LOG_TAG) << "Using got";
                     } else if (auto addr = getAddr(mSymbols)) {
                         symaddr = addr;
+                        ALOG_TRACE(LOG_TAG) << "Using abs";
                     }
                     if (symaddr == nullptr) {
                         continue;
@@ -396,6 +398,8 @@ void ObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr;
                         errored = true;
                     }
+
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -412,23 +416,18 @@ void ObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr;
                         errored = true;
                     }
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
                 }
 
                 case R_X86_64_64: {
-                    // doesn't care plt or got, just an offset
-                    char* symaddr = nullptr;
-                    if (auto i = mGot.find(symname);
-                        i != mGot.end() && validateDistance(symname, writeAddr, reinterpret_cast<char*>(i->second))) {
-                        symaddr = (char*) i->second;
-                    } else if (auto addr = getAddr(mSymbols)) {
-                        symaddr = addr;
-                    }
+                    auto symaddr = getAddr(mSymbols);
                     if (symaddr == nullptr) {
                         continue;
                     }
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
                     uint64_t abs = (uintptr_t) symaddr + rela.r_addend;
                     memcpy(writeAddr, &abs, 8);
                     break;
@@ -451,6 +450,7 @@ void ObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
                         errored = true;
                     }
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -467,9 +467,17 @@ void ObjectLoader::load(const APath& objectFile) {
                     if (symaddr == nullptr) {
                         goto do_R_X86_64_GOTPCRELX;
                     }
-                    static constexpr auto X86_MOV_RELAXED = std::string_view("\x48\xC7\xC0");
-                    memcpy(writeAddr - X86_MOV_RELAXED.size(), X86_MOV_RELAXED.data(), X86_MOV_RELAXED.size());
-                    rela.r_addend = 0;
+                    {
+                        // Get pointer to opcode bytes (3 bytes before the immediate)
+                        uint8_t* op = reinterpret_cast<uint8_t*>(writeAddr) - 3;
+                        // Preserve register bits: original MODRM is op[2], lower 2 bits = reg index
+                        uint8_t regIndex = op[2] & 0x03;
+                        // Patch: if it's a MOV r, imm32 ("48 C7 Cx ...")
+                        op[0] = 0x48;              // REX.W
+                        op[1] = 0xC7;              // Opcode for MOV r/m64, imm32
+                        op[2] = 0xC0 | regIndex;   // MODRM: direct to register
+                        rela.r_addend = 0;
+                    }
 
                     if (!validateDistance(symname, 0, symaddr)) {
                         printSectionName();
@@ -478,6 +486,7 @@ void ObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
                         errored = true;
                     }
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
                     int32_t rel = reinterpret_cast<uintptr_t>(symaddr) + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
