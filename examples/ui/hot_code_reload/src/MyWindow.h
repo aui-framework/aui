@@ -17,4 +17,7 @@ class MyWindow: public AWindow {
 public:
     MyWindow();
     void inflate();
+
+private:
+    AProperty<bool> mChecked = false;
 };

@@ -15,6 +15,7 @@
 
 #include "MyWindow.h"
 #include "AUI/Platform/AMessageBox.h"
+#include "AUI/View/ACheckBox.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AView.h>
@@ -29,16 +30,27 @@ MyWindow::MyWindow() : AWindow("Hot code reload", 600_dp, 300_dp) {
 }
 
 void MyWindow::inflate() {
-    setContents(Vertical {
-      Label { "Hello, world" } AUI_WITH_STYLE {
-            Margin { {}, 8_dp },
-            BackgroundSolid { AColor::RED },
+    setContents(
+        Vertical {
+          Label { "Hello, world" },
+          _new<AButton>("Click me") AUI_LET {
+                  AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [] {
+                      AMessageBox::show(nullptr, "Hello", "Hello, world!");
+                  });
+              },
+          Button {
+            Label { "Reload" },
+            [this] {
+                AHotCodeReload::inst().loadBinary(
+                    "/home/alex2772/CLionProjects/aui/cmake-build-debug/examples/ui/hot_code_reload/CMakeFiles/"
+                    "aui.example.hot_code_reload.dir/./src/MyWindow.cpp.o");
+            },
           },
-      _new<AButton>("Click me") AUI_LET {
-          AObject::connect(it->clicked, AObject::GENERIC_OBSERVER, [] {
-              AMessageBox::show(nullptr, "Hello", "Hello, world!");
-          });
-      },
-      //                  Label { "Hello, world!" },
-    });
+          CheckBox {
+            .checked = AUI_REACT(mChecked),
+            .onCheckedChange = [this](bool v) { mChecked = v; },
+            .content = Label { "Try check me" },
+          },
+          //                        Label { "Hello, world!" },
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
 }
