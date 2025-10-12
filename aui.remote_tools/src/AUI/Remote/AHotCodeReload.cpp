@@ -68,7 +68,7 @@ void AHotCodeReload::loadBinary(const APath& path) {
     });
 }
 
-void AHotCodeReload::addFile(AString path) noexcept {
+void AHotCodeReload::addFile(AString path) {
     try {
         int h = mPriv->watcher->addWatch(path, AINotifyFileWatcher::Mask::MODIFY);
         ALogger::info(LOG_TAG) << "Watching: " << path;

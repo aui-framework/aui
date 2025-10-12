@@ -62,6 +62,11 @@
  * `AHotCodeReload` enables runtime reloading of object files, injecting new function code into a live application.
  * This gives rapid feedback and reduces iteration time during development.
  *
+ * <figure markdown="span">
+ * ![](imgs/hotreload.webp){ width="500" }
+ * <figcaption>Figure 1. Hot reload with state preservation.</figcaption>
+ * </figure>
+ *
  * | Platform     | Supported |
  * | ------------ | --------- |
  * | Windows      | No        |
@@ -155,9 +160,9 @@ public:
      * Adds a single object file to the hot code reload system's watch list.
      * When changes are detected in this file, it will be automatically reloaded.
      *
-     * This method is noexcept and will log errors if file watching fails rather than throwing exceptions.
+     * This method will log errors if file watching fails rather than throwing exceptions.
      */
-    void addFile(AString path) noexcept;
+    void addFile(AString path);
 
     /**
      * @brief Load and patch a binary object file at runtime.
