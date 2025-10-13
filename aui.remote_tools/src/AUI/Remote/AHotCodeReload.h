@@ -121,6 +121,11 @@
  *       zeroes at the time of patch, i.e., `static int counter = 0;` will reset to zero. (because those are stored in
  *       `.bss` which linker has to create a new instance of)
  *
+ *     Think of it this way: when you update the source code of a function, these changes will be reflected in the
+ *     new version of the function and take effect the next time that function is called. The modification is as direct
+ *     as changing the text of the function itself.
+ *
+ *
  * !!! failure "What will not change"
  *
  *     - `static`/`thread_local`/global non-constant variables initialized with non-zero values, which will use the
