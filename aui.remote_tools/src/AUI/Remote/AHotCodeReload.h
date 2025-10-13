@@ -107,10 +107,26 @@
  * ### Limitations
  *
  * 1. `AHotCodeReload` performs some safety checks, but a patch could still break your application.
- * 2. Only function code is updated. Changes to static/global non-constant variables are not reinitialized and will not
- *    take effect. Constants (such as string literals) will be updated.
- * 3. For changes to take effect, the patched functions must be called (e.g. by re-triggering the relevant UI action).
- * 4. Do not modify struct or class layouts; the system cannot reliably detect or adjust for such changes.
+ * 2. Only functions are hooked. New function versions will reflect changes to certain variables (see below)
+ * 3. For changes to become effective, the patched functions need to be called (e.g. by re-triggering relevant UI
+ *    actions).
+ * 4. Do not modify struct or class layouts, function signatures; the system cannot reliably detect or adjust for such
+ *    changes.
+ *
+ * !!! success "What will change (in the new version of function)"
+ *
+ *     - function logic
+ *     - `static`/`thread_local`/global constants, literals (`"string literals"`, `123`, `true`, `nullptr`)
+ *     - `static`/`thread_local`/global non-constant variables initialized with zeroes, which will be reinitialized with
+ *       zeroes at the time of patch, i.e., `static int counter = 0;` will reset to zero. (because those are stored in
+ *       `.bss` which linker has to create a new instance of)
+ *
+ * !!! failure "What will not change"
+ *
+ *     - `static`/`thread_local`/global non-constant variables initialized with non-zero values, which will use the
+ *       values prior patch. `static int counter = 1;` will not be reset to `1`
+ *     - any values that were allocated on the heap or stack, including class fields. Exploit this to preserve state of
+ *       your application
  *
  * ### Best Practices
  *

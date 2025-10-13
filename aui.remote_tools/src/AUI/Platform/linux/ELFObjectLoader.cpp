@@ -228,6 +228,11 @@ void ELFObjectLoader::load(const APath& objectFile) {
 
     struct LocalSymbol {
         /**
+         * @brief Symbol type. See ELF64_ST_TYPE.
+         */
+        int type;
+
+        /**
          * @brief Section index this symbol is located in.
          */
         size_t sectionIdx;
@@ -254,6 +259,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
         ALOG_TRACE(LOG_TAG) << objectFile << " :";
         ::extractSymbols(sections, [&](AStringView name, const Elf64_Sym& sym) {
             localSymbols[name] = LocalSymbol {
+                .type = ELF64_ST_TYPE(sym.st_info),
                 .sectionIdx = sym.st_shndx,
                 .offset = sym.st_value,
                 .size = sym.st_size,
@@ -262,7 +268,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
 
         return sections | ranges::view::transform([&](Section& section) {
                    _<void> page;
-                   if (section.header.sh_flags & SHF_ALLOC && section.header.sh_type == SHT_PROGBITS &&
+                   if (section.header.sh_flags & SHF_ALLOC && (section.header.sh_type == SHT_PROGBITS || section.header.sh_type == SHT_NOBITS) &&
                        section.data.size() > 0) {
                        page = [&] {
                            tryAgainLol:
@@ -281,7 +287,9 @@ void ELFObjectLoader::load(const APath& objectFile) {
                                    munmap(ptr, size);
                                });
                        }();
-                       memcpy(page.get(), section.data.data(), section.data.size());
+                       if (section.header.sh_type != SHT_NOBITS) { // .bss, .tbss
+                           memcpy(page.get(), section.data.data(), section.data.size());
+                       }
                    }
                    return MappedSection { .section = std::move(section), .page = std::move(page) };
                }) |
@@ -293,6 +301,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
             continue;
         }
         localSymbols[mapped.section.name] = LocalSymbol {
+            .type = STT_SECTION,
             .sectionIdx = size_t(i),
             .offset = size_t(0),
             .size = static_cast<size_t>(mapped.section.header.sh_size),
@@ -534,6 +543,9 @@ void ELFObjectLoader::load(const APath& objectFile) {
 
     // 4. Hook old symbols with newly loaded ones
     for (const auto& [name, symbol] : localSymbols) {
+        if (symbol.type != STT_FUNC) {
+            continue;
+        }
         auto destinationAddr = reinterpret_cast<char*>(symbol.offset);
         if (symbol.sectionIdx == SHN_UNDEF) {
             continue;
