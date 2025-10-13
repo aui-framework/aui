@@ -52,11 +52,9 @@ void AHotCodeReload::loadBinary(const APath& path) {
       int attempts = 10;
         tryAgain:
         try {
-            ALogger::info(LOG_TAG) << "Reloading: " << path;
             emit patchBegin;
             mPriv->loader.load(path);
             AUI_DEFER { emit patchEnd; };
-            ALogger::info(LOG_TAG) << "Binary reloaded: " << path;
         } catch (const AException& e) {
             if (attempts-- > 0) {
                 // there's a weird datarace

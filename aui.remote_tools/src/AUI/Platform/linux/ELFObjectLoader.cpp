@@ -220,6 +220,7 @@ ELFObjectLoader::ELFObjectLoader(const APath& baseFilePath) {
 }
 
 void ELFObjectLoader::load(const APath& objectFile) {
+    ALogger::info(LOG_TAG) << "Reloading: " << objectFile;
     struct MappedSection {
         Section section;
         _<void> page;
@@ -287,20 +288,19 @@ void ELFObjectLoader::load(const APath& objectFile) {
                ranges::to_vector;
     }();
 
+    for (const auto&[i, mapped] : sections | ranges::view::enumerate) {
+        if (mapped.page == nullptr) {
+            continue;
+        }
+        localSymbols[mapped.section.name] = LocalSymbol {
+            .sectionIdx = size_t(i),
+            .offset = size_t(0),
+            .size = static_cast<size_t>(mapped.section.header.sh_size),
+        };
+    }
+
     bool errored = false;
     // 2. Process relocations
-    aui::lazy<MappedSection*> textSection = [&] {
-        auto it = ranges::find_if(sections, [&](const MappedSection& section) {
-            return section.section.name == ".text";
-        });
-        if (it == sections.end()) {
-            throw AException("Failed to find .text section");
-        }
-        if (it->page == nullptr) {
-            throw AException(".text section is not mapped");
-        }
-        return &*it;
-    };
     for (const auto& mapped : sections) {
         if (mapped.section.header.sh_type != SHT_RELA)
             continue;
@@ -311,10 +311,25 @@ void ELFObjectLoader::load(const APath& objectFile) {
         size_t targetIdx = mapped.section.header.sh_info;
         auto& targetSection = sections[targetIdx];
 
-        auto getSymbolName = [&](size_t index) {
+        auto getSymbolName = [&](size_t index) -> AStringView {
             auto& symtab = sections.at(mapped.section.header.sh_link);
-            auto st_name = asSpan<Elf64_Sym>(std::span(symtab.section.data))[index].st_name;
-            return AStringView(&sections.at(symtab.section.header.sh_link).section.data.at(st_name));
+            const auto& sym = asSpan<Elf64_Sym>(std::span(symtab.section.data))[index];
+            switch (auto type = ELF64_ST_TYPE(sym.st_info)) {
+                case STT_SECTION: {
+                    return sections.at(sym.st_shndx).section.name;
+                }
+
+                case STT_NOTYPE:
+                case STT_OBJECT:
+                case STT_FUNC: {
+                    auto st_name = sym.st_name;
+                    return &sections.at(symtab.section.header.sh_link).section.data.at(st_name);
+                }
+                default: {
+                    ALogger::err(LOG_TAG) << "Unsupported symbol type: " << type;
+                }
+            }
+            return "";
         };
 
         // Each entry:
@@ -334,18 +349,12 @@ void ELFObjectLoader::load(const APath& objectFile) {
 
             // Lookup symbol name:
             auto symname = getSymbolName(symidx);
-            if (symname == "") {
-                symname = ".text";
-            }
             auto writeAddr = reinterpret_cast<char*>(targetSection.page.get()) + offset;
             if (writeAddr == nullptr) {
                 continue;
             }
 
             auto getAddr = [&](const auto& table, bool strict = true) -> char* {
-                if (symname == ".text") {
-                    return static_cast<char*>((*textSection)->page.get());
-                }
                 if (auto it = table.find(symname); it != table.end()) {
                     return reinterpret_cast<char*>(it->second);
                 }
@@ -399,7 +408,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
                         errored = true;
                     }
 
-                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr << ", r_addend=" << rela.r_addend;;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -416,7 +425,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr;
                         errored = true;
                     }
-                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr << ", r_addend=" << rela.r_addend;;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -450,7 +459,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
                         errored = true;
                     }
-                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr << ", r_addend=" << rela.r_addend;;
                     int32_t rel = symaddr - writeAddr + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -486,7 +495,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
                             << ", writeAddr=" << (void*) writeAddr << ", type=" << type;
                         errored = true;
                     }
-                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr;
+                    ALOG_TRACE(LOG_TAG) << "symaddr=" << (void*) symaddr << ", r_addend=" << rela.r_addend;;
                     int32_t rel = reinterpret_cast<uintptr_t>(symaddr) + rela.r_addend;
                     memcpy(writeAddr, &rel, 4);
                     break;
@@ -556,5 +565,5 @@ void ELFObjectLoader::load(const APath& objectFile) {
     }
     mAllocatedPages.insertAll(
         sections | ranges::view::transform([](auto& section) -> decltype(auto) { return std::move(section.page); }));
-    ALOG_TRACE(LOG_TAG) << "Done";
+    ALogger::info(LOG_TAG) << "Binary reloaded: " << objectFile;
 }
