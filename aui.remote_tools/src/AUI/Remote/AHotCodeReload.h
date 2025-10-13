@@ -109,7 +109,7 @@
  * 1. `AHotCodeReload` performs some safety checks, but a patch could still break your application.
  * 2. Only functions are hooked. New function versions will reflect changes to certain variables (see below)
  * 3. For changes to become effective, the patched functions need to be called (e.g. by re-triggering relevant UI
- *    actions).
+ *    actions or re-calling UI inflate routines `setContents`).
  * 4. Do not modify struct or class layouts, function signatures; the system cannot reliably detect or adjust for such
  *    changes.
  *
