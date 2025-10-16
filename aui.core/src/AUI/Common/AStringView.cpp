@@ -1048,7 +1048,14 @@ AOptional<int> AStringView::toNumber(aui::ranged_number<int, 2, 36> base) const 
 }
 
 bool AStringView::toBool() const {
-    return sizeBytes() == 4 && lowercase() == "true";
+    if (sizeBytes() != 4) {
+        return false;
+    }
+    const char* d = data();
+    return (d[0] == 't' || d[0] == 'T') &&
+           (d[1] == 'r' || d[1] == 'R') &&
+           (d[2] == 'u' || d[2] == 'U') &&
+           (d[3] == 'e' || d[3] == 'E');
 }
 
 AStringView AStringView::trimLeft(AChar symbol) const {
