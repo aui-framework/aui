@@ -154,8 +154,8 @@ template <typename... Args>
 class ASignal final : public AAbstractSignal {
     static_assert(
         (std::is_object_v<Args> && ...),
-        "There's no effect of specifying of non value arguments for the signal. Consider removing const and "
-        "reference modifiers.");
+        "// ====================> ASignal: there's no effect of specifying of non value arguments for the signal."
+        "Consider removing const and reference modifiers.");
 
     /* ASignal <-> AObject implementation stuff */
     friend class AObject;

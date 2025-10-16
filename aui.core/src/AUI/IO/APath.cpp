@@ -35,6 +35,47 @@
 #include <cstring>
 #endif
 
+APath APath::parent() const {
+    auto c = ensureNonSlashEnding().rfind('/');
+    if (c != NPOS) {
+        return APath(substr(0, c));
+    }
+    return {};
+}
+
+APath APath::filename() const {
+    auto fs = bytes().rfind('/');
+    auto bs = bytes().rfind('\\');
+    if (fs == NPOS && bs == NPOS) {
+        return *this;
+    }
+    if (fs == NPOS) {
+        fs = bs;
+    }
+    if (bs == NPOS) {
+        bs = fs;
+    }
+    return APath(bytes().substr(std::max(fs, bs) + 1));
+}
+
+APath APath::filenameWithoutExtension() const {
+    auto name = filename();
+    auto it = name.rfind('.');
+    if (it == NPOS) {
+        return name;
+    }
+    return APath(name.substr(0, it));
+}
+
+AString APath::extension() const {
+    auto it = rfind('.');
+    return AString::substr(it + 1);
+}
+
+APath APath::file(const AString& fileName) const {
+    return ensureSlashEnding() + fileName;
+}
+
 APath APath::ensureSlashEnding() const {
     if (endsWith("/")) {
         return *this;
@@ -44,7 +85,7 @@ APath APath::ensureSlashEnding() const {
 
 APath APath::ensureNonSlashEnding() const {
     if (endsWith("/")) {
-        return substr(0, length() - 1);
+        return APath(substr(0, length() - 1));
     }
     return *this;
 }

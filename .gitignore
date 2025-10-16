@@ -298,6 +298,7 @@ paket-files/
 
 # JetBrains Rider
 .idea/
+.run/
 *.sln.iml
 
 # CodeRush personal settings

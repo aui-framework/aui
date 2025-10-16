@@ -139,3 +139,16 @@ TEST(Strings, UtfEncoding) {
     EXPECT_EQ(str.toUtf16(), u"Привет, 🤡, Как твои дела?");
     EXPECT_EQ(str.toUtf32(), U"Привет, 🤡, Как твои дела?");
 }
+
+TEST(Strings, Substr1) {
+    AString str("Hello world");
+    EXPECT_EQ(str.substr(0, 5), "Hello");
+    EXPECT_EQ(str.substr(1), "ello world");
+}
+
+TEST(Strings, Substr2) {
+    AString str("🤡, как твои дела?");
+    EXPECT_EQ(str.substr(0, 1), "🤡");
+    EXPECT_EQ(str.substr(1), ", как твои дела?");
+    EXPECT_EQ(str.substr(1, 3), ", к");
+}

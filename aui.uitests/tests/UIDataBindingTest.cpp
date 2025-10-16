@@ -25,6 +25,8 @@
 #include "AUI/Model/AListModel.h"
 #include "AUI/View/ANumberPicker.h"
 
+using namespace declarative;
+
 class UIDataBindingTest : public testing::UITest {
 };
 
@@ -119,13 +121,13 @@ TEST_F(UIDataBindingTest, TextField1) {
 
     // -  Prefills text field with the current `user->name` value (pre fire):
     // AUI_DOCS_CODE_BEGIN
-    EXPECT_EQ(tf->text().value(), "Robert");
+    EXPECT_EQ(tf->text(), "Robert");
     // AUI_DOCS_CODE_END
 
     // -  Connects `user->named.changed` to `tf` to notify the text field about changes of `user->name`:
     // AUI_DOCS_CODE_BEGIN
     user->name = "Angela";           // changing user->name programmatically...
-    EXPECT_EQ(tf->text().value(), "Angela"); // ...should reflect on the text field
+    EXPECT_EQ(tf->text(), "Angela"); // ...should reflect on the text field
     // AUI_DOCS_CODE_END
     saveScreenshot("2");
     // <figure markdown="span">
@@ -345,7 +347,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H3
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(tf->text().value(), "Vasil");
+    EXPECT_EQ(tf->text(), "Vasil");
 
     //
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:
@@ -509,14 +511,6 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H3
 // Here's where declarative syntax comes into play. The logic behind the syntax is the same as in
 // `AObject::connect`/`AObject::biConnect` (for ease of replacement/understanding).
 //
-// Declarative syntax uses `&` and `&&` operators to set up connections. These were chosen intentionally: `&&` resembles
-// chain, so we "chaining view and property up".
-//
-// - `&` sets up one-directional connection (`AObject::connect`).
-// - `&&` sets up bidirectional connection (`AObject::biConnect`).
-//
-// Also, `>` operator (resembles arrow) is used to specify the destination AUI_SLOT.
-//
 // The example below is essentially the same as [UIDataBindingTest_Label_via_let] but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     // Use `&` and `>` expression to connect the model's username property to the label's [text](ALabel::text)
@@ -533,7 +527,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     public:
         MyWindow(const _<User>& user) {
             setContents(Centered {
-              _new<ALabel>() & user->name > &ALabel::text
+              Label { AUI_REACT(user->name) },
             });
         }
     };
@@ -566,8 +560,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     EXPECT_EQ(label->text(), "World");
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
-    // [UIDataBindingTest_Label_via_let] example) but using declarative syntax. The logic behind `&` is almost the same as with `AUI_LET`
-    // and `AObject::connect` so projection use cases can be adapted in a similar manner.
+    // [UIDataBindingTest_Label_via_let] example) but using declarative syntax.
 
     {
         auto l = Label {} & user->name > &ALabel::text;
@@ -899,7 +892,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
 
     EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(tf->text().value(), "Vasil");
+    EXPECT_EQ(tf->text(), "Vasil");
 
     //
     // If the user changes the value from UI, these changes will reflect on `user->model` as well:

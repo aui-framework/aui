@@ -19,7 +19,7 @@ class FractalView : public AView {
 private:
     gl::Program mShader;
     _<gl::Texture2D> mTexture;
-    glm::dmat4 mTransform;
+    glm::mat4 mTransform;
 
     float mAspectRatio;
 

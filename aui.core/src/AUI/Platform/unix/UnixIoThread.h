@@ -48,6 +48,9 @@ public:
 
     void registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept;
     void unregisterCallback(int fd) noexcept;
+    static const _<AThread>& thread() noexcept {
+        return inst().mThread;
+    }
 
 private:
     friend class UnixIoEventLoop;

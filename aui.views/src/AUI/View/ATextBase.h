@@ -18,6 +18,7 @@
 #include <initializer_list>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
+#include <AUI/Enum/VerticalAlign.h>
 
 namespace aui::detail {
     class TextBaseEntry: public AWordWrappingEngineBase::Entry {
@@ -45,7 +46,7 @@ namespace aui::detail {
                 : mText(text), mChar(ch) {}
 
         glm::ivec2 getSize() override {
-            return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
+            return { mText->getFontStyle().getCharacter(mChar).horizontal.advance, mText->getFontStyle().size };
         }
 
         void setPosition(glm::ivec2 position) override {
@@ -65,7 +66,7 @@ namespace aui::detail {
         }
 
         glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).advanceX, 0};
+            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).horizontal.advance, 0};
         }
 
         void appendTo(std::u32string& dst) override {
@@ -203,13 +204,21 @@ public:
         doDrawString(context);
     }
 
+    void setVerticalAlign(VerticalAlign verticalAlign) {
+        if (mVerticalAlign == verticalAlign) {
+            return;
+        }
+        mVerticalAlign = verticalAlign;
+        invalidateFont();
+    }
+
     void doDrawString(ARenderContext& context) {
         if (!mPrerenderedString) {
             prerenderString(context);
         }
         if (mPrerenderedString) {
             RenderHints::PushColor c(context.render);
-            context.render.setColor(getTextColor());
+            context.render.setColor(textColor());
             mPrerenderedString->draw();
         }
     }
@@ -258,7 +267,7 @@ public:
         }
 
         if (auto engineHeight = mEngine.height()) {
-            return *engineHeight;
+            return *engineHeight + getFontStyle().getDescenderHeight();
         }
 
         return 0;
@@ -294,13 +303,13 @@ protected:
     }
 
     virtual void clearContent() {
-        removeAllViews();
         mPrerenderedString = nullptr;
     }
 
 
 protected:
     WordWrappingEngine mEngine;
+    VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;
 

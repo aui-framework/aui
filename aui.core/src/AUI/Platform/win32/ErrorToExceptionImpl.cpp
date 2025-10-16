@@ -30,7 +30,7 @@ aui::impl::Error aui::impl::formatSystemError(int errorCode) {
     //Free the buffer.
     LocalFree(messageBuffer);
 
-    return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
+    return { errorCode, message.trim().removedAll('\r').removedAll('\n') };
 }
 
 aui::impl::Error aui::impl::formatSystemError() {

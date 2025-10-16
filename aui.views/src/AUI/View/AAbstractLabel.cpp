@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
+
 #include "AAbstractLabel.h"
 #include <AUI/Render/RenderHints.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -46,7 +48,79 @@ int AAbstractLabel::getContentMinimumHeight() {
     if (mText.empty())
         return 0;
 
-    return getFontStyle().size;
+    // Normally, text will be rendered as this:
+    //
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+    //
+    // However, it feels like it stuck to the top of the border. So, we'll just add the height of descender, so it
+    // basically mirrors the descender at the bottom. This way, CAPITALS are centered, and text feels natural.
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^
+    //      |
+    //      |   <-------- added height
+    //      |
+    //      |
+    //      | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+
+    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
 }
 
 
@@ -191,17 +265,18 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         }
 
         if (mPrerendered) {
-            int y = mPadding.top;
+            int y = mPadding.top + getFontStyle().getAscenderHeight();
+
+            // adding height of descender we established in getContentMinimumHeight, see explanation there.
+            y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                auto ascenderHeight = getFontStyle().font->getAscenderHeight(getFontStyle().size);
-                auto descenderHeight = getFontStyle().font->getDescenderHeight(getFontStyle().size);
                 y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
+                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
-            render.setColor(getTextColor());
+            render.setColor(textColor());
             mPrerendered->draw();
         }
     }

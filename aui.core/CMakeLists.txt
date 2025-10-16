@@ -194,5 +194,9 @@ if (AUI_ENABLE_ASAN)
     target_link_options(aui.core PUBLIC -fsanitize=address)
 endif()
 
+if(MSVC)
+    target_compile_options(aui.core PUBLIC /bigobj)
+endif()
+
 # uncomment this to debug concepts
 # target_compile_options(aui.core PUBLIC -fconcepts-diagnostics-depth=5)

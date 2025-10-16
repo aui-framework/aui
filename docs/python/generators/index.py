@@ -10,7 +10,7 @@ import logging
 
 from mkdocs.structure.files import File
 
-from docs.python.generators import regexes
+from docs.python.generators import regexes, common
 
 log = logging.getLogger('mkdocs')
 
@@ -39,7 +39,8 @@ def populate_mapping(markdown: str, file: File):
         if m := regexes.PAGE_TITLE.match(line_contents):
             if page_title:
                 # several H1 headings breaks TOC.
-                log.warning(f"Doc file '{file.abs_src_path}':{line_number+1} contains several H1 headings")
+                src = file.abs_src_path or file.src_uri
+                log.warning(f"Doc file '{src}':{line_number+1} contains several H1 headings")
 
             page_title = m.group(1)
             _mapping[page_title] = MappingEntry(title=page_title, url=file.src_uri, containing_file=file)
@@ -59,8 +60,7 @@ def find_page(name: str) -> MappingEntry | None:
     if m := _mapping.get(name):
         return m
 
-    # hack: try to find a class in the namespace whose are commonly used with "using namespace".
-    for namespace in ["ass", "declarative"]:
+    for namespace in common.OMIT_NAMESPACES:
         if m := _mapping.get(f"{namespace}::{name}"):
             return m
 

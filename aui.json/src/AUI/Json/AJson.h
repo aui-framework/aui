@@ -127,6 +127,7 @@ public:
 
     }
 
+    AJson(std::nullptr_t): aui::impl::JsonVariant(nullptr) {}
     AJson(const char* name): aui::impl::JsonVariant(AString(name)) {}
     AJson(const AJson& json) = default;
     AJson(AJson&&) noexcept = default;

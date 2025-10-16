@@ -317,7 +317,7 @@ AString::AString(const char32_t* utf32_bytes, size_type length) {
     super::resize(simdutf::convert_utf32_to_utf8(utf32_bytes, length, data()));
 }
 
-AString::AString(AStringView view) : super(static_cast<std::string_view>(view)) {}
+AString::AString(AStringView view) : super(static_cast<std::string_view>(view.bytes())) {}
 
 AString::AString(std::string_view view) : super(view) {}
 
@@ -358,10 +358,6 @@ AString::operator AStringView() const noexcept {
     return {bytes().data(), bytes().size()};
 }
 
-AString::size_type AString::length() const noexcept {
-    return simdutf::count_utf8(super::data(), super::size());
-}
-
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
         return substr(0, s) + stringAtEnd;
@@ -398,9 +394,6 @@ AString& AString::append(AChar c) {
     return *this;
 }
 
-AStringVector AString::split(AChar c) const {
-    return view().split(c);
-}
 
 AString& AString::replaceAll(char from, char to) {
     if (empty()) return *this;
@@ -416,14 +409,14 @@ AString& AString::replaceAll(AStringView from, AStringView to) {
     if (empty()) return *this;
     for (size_type next = 0;;)
     {
-        next = find(from, next);
+        next = find(from.bytes(), next);
         if (next == NPOS)
         {
             return *this;
         }
 
-        auto fromLength = from.size();
-        auto toLength = to.size();
+        auto fromLength = from.sizeBytes();
+        auto toLength = to.sizeBytes();
 
         if (fromLength == toLength) {
             for (auto c : to) {
@@ -467,7 +460,7 @@ AString AString::replacedAll(AStringView from, AStringView to) const {
 
     for (size_type pos = 0;;)
     {
-        auto next = find(from, pos);
+        auto next = find(from.bytes(), pos);
         if (next == NPOS)
         {
             result.bytes().insert(result.bytes().end(), bytes().begin() + pos, bytes().end());
@@ -580,6 +573,10 @@ auto AString::erase(const_iterator begin, const_iterator end) -> iterator {
 
 void AString::erase(size_t u_pos, size_t u_count) {
     erase(begin() + u_pos, begin() + u_pos + u_count);
+}
+
+AStringVector AString::split(AChar c) const {
+    return view().split(c);
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

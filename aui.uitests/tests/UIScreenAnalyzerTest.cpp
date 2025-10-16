@@ -15,6 +15,7 @@
 #include <AUI/View/ATextField.h>
 
 using namespace ass;
+using namespace declarative;
 
 /**
  * This suite tests aui::uitests' ability to determine what's going on on the screen.
@@ -37,7 +38,7 @@ protected:
                                 Horizontal {
                                         mTextField = _new<ATextField>() << "#username",
                                         _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                                            if ((*mTextField->text()).empty()) {
+                                            if (mTextField->text()->empty()) {
                                                 mHelloLabel->setVisibility(Visibility::INVISIBLE);
                                                 return;
                                             }

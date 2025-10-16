@@ -11,7 +11,20 @@ The project is inspired by Qt and aims to provide developers with the best possi
 to: dependency management, packaging, ui building, styling, debugger visualizing) with pure C++, without custom
 programming languages and external compilers.
 
-[Documentation](https://aui-framework.github.io) | [Examples](https://aui-framework.github.io/develop/examples.html) | [Getting started](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html) | [Roadmap](https://github.com/orgs/aui-framework/projects/3/views/1) | [News](https://github.com/aui-framework/aui/discussions/categories/announcements) | [Discussions](https://github.com/aui-framework/aui/discussions)
+---
+
+<div align = center>
+
+**[<kbd> <br> Documentation <br> </kbd>](https://aui-framework.github.io)**
+**[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/develop/examples.html)**
+**[<kbd> <br> Getting started <br> </kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)**
+**[<kbd> <br> Roadmap <br> </kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)**
+**[<kbd> <br> News <br> </kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)**
+**[<kbd> <br> Discussions <br> </kbd>](https://github.com/aui-framework/aui/discussions)**
+
+</div>
+
+---
 
 ## Quickstart
 
@@ -252,4 +265,12 @@ Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/mast
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=aui-framework/aui&type=Date)](https://star-history.com/#aui-framework/aui&Date)
+<div align = center>
+ <a href="https://www.star-history.com/#aui-framework/aui&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date" />
+    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=aui-framework/aui&type=Date" />
+  </picture>
+ </a>
+</div>

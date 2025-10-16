@@ -26,6 +26,7 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/ALabel.h>
+#include <AUI/View/AButton.h>
 #include <AUI/Model/AListModel.h>
 
 #include "AUI/View/AText.h"
@@ -33,8 +34,10 @@
 #include "AUI/View/ADropdownList.h"
 #include "AUI/View/ARadioGroup.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/Common/AString.h"
 
 using namespace ass;
+using namespace declarative;
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setCustomStyle({
@@ -43,7 +46,6 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
         0x505050_rgb,
       },
       Padding { 1_px },
-      Margin { 4_dp },
       MinSize { 200_dp },
       ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::ON_DEMAND),
       Expanding(),
@@ -64,61 +66,61 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
-    using namespace declarative;
     auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
+        _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
         Horizontal {
-          Vertical {
-            _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
-            Horizontal {
-              Label { addressStr },
-              Button { "Copy" }.clicked(this, [addressStr] { AClipboard::copyToClipboard(addressStr); }),
-            },
+          Label { addressStr },
+          Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
+        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
 
-            Label { "Min size = {}, {}"_format(targetView->getMinimumWidth(), targetView->getMinimumHeight()) },
+        Label { AUI_REACT("Min size = {}px"_format(targetView->getMinimumSize())) },
+        Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
 
-            CheckBoxWrapper { Label { "Enabled" } } && targetView->enabled(),
-            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
-            Horizontal {
-              Button { "Add \"DevtoolsTest\" stylesheet name" } AUI_LET {
-                      it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest"));
-                      connect(it->clicked, [=] {
-                          targetView->addAssName("DevtoolsTest");
-                          setTargetView(targetView);
-                      });
-                  },
-            },
-            CheckBoxWrapper {
-              Label { "Expanding" },
-            } && targetView->expanding().biProjected(aui::lambda_overloaded {
-                   [](bool v) -> glm::ivec2 {
-                       return glm::ivec2(v ? 1 : 0);
-                   },
-                   [](glm::ivec2 v) {
-                     return v != glm::ivec2(0);
-                   },
-                 }),
-            GroupBox {
-              Label { "Visibility" },
-              _new<ARadioGroup>() AUI_LET {
+        Vertical {
+          CheckBox {
+            AUI_REACT(targetView->enabled()),
+            [targetView](bool enabled) { targetView->enabled() = enabled; },
+            Label { "Enabled" },
+          },
+          CheckBox {
+            AUI_REACT(targetView->expanding() != glm::ivec2(0)),
+
+            [this, targetView](bool expanding) { targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0); },
+            Label { "Expanding" },
+          },
+        },
+
+        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+
+        Button {
+          Label { "Add \"DevtoolsTest\" stylesheet name" },
+
+          [this, targetView] {
+              setTargetView(targetView);
+              targetView->addAssName("DevtoolsTest");
+          },
+        } AUI_LET { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
+
+        GroupBox {
+          Label { "Visibility" },
+          _new<ARadioGroup>() AUI_LET {
                   static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
                   it->setModel(AListModel<AString>::fromVector(
                       POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
-                  AObject::biConnect(targetView->visibility().biProjected(aui::lambda_overloaded {
-                                       [](Visibility v) -> int {
-                                           return aui::indexOf(POSSIBLE_VALUES, v).valueOr(0);
-                                       },
-                                       [](int v) -> Visibility {
-                                         return POSSIBLE_VALUES[v];
-                                       },
-                                     }), it->selectionId());
-                },
-            } },
+                  AObject::biConnect(
+                      targetView->visibility().biProjected(aui::lambda_overloaded {
+                        [](Visibility v) -> int { return aui::indexOf(POSSIBLE_VALUES, v).valueOr(0); },
+                        [](int v) -> Visibility { return POSSIBLE_VALUES[v]; },
+                      }),
+                      it->selectionId());
+              },
         },
 
-        _new<ALabel>("view's custom style"),
-        _new<ALabel>("{") << ".declaration_br",
-    };
+        Label { "view's custom style" },
+        Label { "{" } << ".declaration_br",
+    } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
+
     displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
 
     for (const auto& r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
@@ -156,8 +158,9 @@ void ViewPropertiesView::displayApplicableRule(
     dst->addView(Horizontal {
       _new<ALabel>("},") << ".declaration_br",
     });
-    dst->addView(_new<AHDividerView>() AUI_WITH_STYLE {
-      BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
+    dst->addView(
+        _new<AHDividerView>()
+            AUI_WITH_STYLE { BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
 }
 
 void ViewPropertiesView::requestTargetUpdate() {

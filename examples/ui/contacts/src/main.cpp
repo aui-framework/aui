@@ -41,7 +41,9 @@ public:
               AScrollArea::Builder()
                       .withContents(
                           Vertical {
+                            SpacerFixed(8_dp),
                             _new<ATextField>() && mSearchQuery,
+                            SpacerFixed(8_dp),
                             AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             CustomLayout {} & mSearchQuery.readProjected([&](const AString& q) {
@@ -50,11 +52,9 @@ public:
                                 }
                                 return searchQueryList();
                             }),
-                            Label {}
+                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) }
                                 & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
-                                & mContactCount.readProjected([](std::size_t c) {
-                                return "{} contact(s)"_format(c);
-                            }) AUI_WITH_STYLE { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
+                                 AUI_WITH_STYLE { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
                           } AUI_WITH_STYLE { Padding(0, 8_dp) })
                       .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
@@ -122,7 +122,7 @@ private:
     _<AView> searchQueryList() {
         auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
             for (const auto& field : { c->displayName, c->note }) {
-                if (field->lowercase().contains(mSearchQueryLowercased.value())) {
+                if (field->lowercase().contains(*mSearchQueryLowercased)) {
                     return true;
                 }
             }
@@ -135,7 +135,7 @@ private:
 
     _<AView> contactPreview(const _<Contact>& contact) {
         return Vertical {
-            Label {} & contact->displayName AUI_WITH_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
+            Label { AUI_REACT(contact->displayName) } AUI_WITH_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
         } AUI_LET {
             connect(it->clicked, [this, contact] { mSelectedContact = contact; });

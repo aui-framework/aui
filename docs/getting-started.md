@@ -31,24 +31,54 @@
 
 === ":fontawesome-brands-windows: Windows"
     
-    Install Windows updates.
+    !!! success "Install Windows updates"
+        
+        You may want to ignore this, but in case of errors, please ensure you have installed Windows updates.
+        
+        ![](imgs/Screenshot_20250824_154056.png)
+    
+    !!! success "Install msvc"
+        
+        :simple-clion: CLion comes with MinGW by default. **MinGW is not supported**!
+        
+        You are not forced to use Visual Studio IDE, you can use whatever IDE you want. We just want the compiler part.
+        
+        Visual Studio Community edition is sufficient.
+        
+        Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot.
+        
+        Press ++win++, type `Visual Studio Installer` and launch.
+        
+        Choose `Individual components` tab.
+        
+        ![](imgs/erfgbhjnjerghb.png)
+        
+        Search and select the following components:
+        
+        1. `Windows Universal C Runtime`
+        2. `MSVC v142` or newer
+        3. `Windows 10 SDK` or newer
+        4. `Windows Universal CRT SDK`
+        
+        Click `Install`.
+        
+        Don't forget to reboot!
 
-    ![](imgs/Screenshot_20250824_154056.png)
-    
-    Install [msvc](https://visualstudio.microsoft.com/vs/community/) or clang, if you haven't already, and reboot.
-    Also, if you use :simple-clion: CLion:
+    !!! success "Configure CLion to use MSVC instead of MinGW"
+         
+        If you use :simple-clion: CLion:
 
-    1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
-    2. Press `+`.
-    3. Choose Visual Studio. CLion should pick up it automatically.
-    
-    ![](imgs/Screenshot_20250823_201044.png)
-    
-    1. Select Visual Studio.
-    2. Press "arrow up" button to raise priority. **Visual Studio compiler should be by default!**
-    3. Press OK.
-    
-    ![](imgs/Screenshot_20250823_201915.png)
+        1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
+        2. Press `+`.
+        3. Choose Visual Studio. CLion should pick up it automatically.
+        
+        ![](imgs/Screenshot_20250823_201044.png)
+        
+        1. Select Visual Studio.
+        2. Press "arrow up" button to raise priority. **Visual Studio compiler should be by default!**
+        3. Press OK.
+        
+        ![](imgs/Screenshot_20250823_201915.png)
 
 === ":material-apple-finder: macOS"
 
@@ -174,7 +204,7 @@ to free you from dependency management and focus you right to development of you
     [aui_executable] hooks all CPP files from `src/` directory. You need to create `src/` directory and a CPP file in
     it.
     
-    <!-- aui:include examples/ui/button/src/main.cpp title="src/main.cpp" -->
+    <!-- aui:include examples/ui/button1/src/main.cpp title="src/main.cpp" -->
 
 
 !!! note "Why CMake or IDE doesn't recognize a new CPP file?"

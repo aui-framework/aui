@@ -456,7 +456,7 @@ public:
         int prevWidth = -1;
 
         int advanceX = position.x;
-        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
+        int advanceY = position.y;
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
@@ -479,7 +479,9 @@ public:
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ advance + ch.bearingX, ch.advanceY + advanceY };
+                    glm::ivec2 pos{ advance,  advanceY };
+                    pos.x += ch.horizontal.bearing.x;
+                    pos.y -= ch.horizontal.bearing.y;
                     notifySymbolAdded({pos});
                     mCharEntries.push_back(CharEntry{
                             pos,
@@ -496,7 +498,7 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
+                advance += ch.horizontal.advance;
                 advance = glm::floor(advance);
             }
         }

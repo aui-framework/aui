@@ -76,6 +76,10 @@ public:
         return *this;
     }
 
+    const char* data() const noexcept {
+        return data_ + byte_pos_;
+    }
+
     AUtf8ConstIterator operator++(int) noexcept {
         AUtf8ConstIterator temp = *this;
         ++(*this);

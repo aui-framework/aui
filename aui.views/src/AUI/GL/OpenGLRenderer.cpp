@@ -213,7 +213,7 @@ concept AuiSLShader = requires(C&& c) {
 template<AuiSLShader Vertex, AuiSLShader Fragment>
 inline void useAuislShader(AOptional<gl::Program>& out) {
     out.emplace();
-    out->loadRaw(Vertex::code(), Fragment::code());
+    out->loadBoth(Vertex::code(), Fragment::code());
     Vertex::setup(out->handle());
     Fragment::setup(out->handle());
     out->compile();
@@ -582,6 +582,11 @@ public:
         if (!img)
             return;
 
+        if (AWindow::current()->profiling()->showBaseline) {
+            mRenderer->rectangle(
+                ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, { mTextWidth, 1 });   // debug baseline
+        }
+
         auto width = img->width();
 
         float uvScale = 1.f / float(width);
@@ -673,9 +678,9 @@ public:
         const bool hasKerning = font->isHasKerning();
 
         int advanceX = position.x;
-        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
+        int advanceY = position.y;
         size_t counter = 0;
-        int advance = advanceX;
+        float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
             if (c == ' ') {
@@ -683,7 +688,7 @@ public:
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, advance);
+                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
@@ -695,7 +700,8 @@ public:
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
 
-                    int posX = advance + ch.bearingX;
+                    int posX = advance + ch.horizontal.bearing.x;
+                    int posY = advanceY - ch.horizontal.bearing.y;
                     int width = ch.image->width();
                     int height = ch.image->height();
 
@@ -716,14 +722,14 @@ public:
                         uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                     }
 
-                    notifySymbolAdded({glm::ivec2{posX, ch.advanceY + advanceY}});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + height + advanceY),
+                    notifySymbolAdded({glm::ivec2{posX, posY}});
+                    mVertices.push_back({glm::vec2(posX, posY + height),
                                          glm::vec2(uv.x, uv.w)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + height + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY + height),
                                          glm::vec2(uv.z, uv.w)});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX, posY),
                                          glm::vec2(uv.x, uv.y)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY),
                                          glm::vec2(uv.z, uv.y)});
 
                 }
@@ -736,14 +742,13 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
+                advance += ch.horizontal.advance;
             }
         }
 
         notifySymbolAdded({glm::ivec2{advance, advanceY}});
 
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
@@ -1345,7 +1350,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<a
                         auto shader = std::make_unique<gl::Program>();
 
                         shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         shader->loadFragmentShader(
                             R"(
 precision highp float;
@@ -1364,8 +1369,7 @@ void main() {
  vec3 accumulator = texture2D(SL_uniform_albedo, base_uv).xyz;
  gl_FragColor = vec4(accumulator.xyz, uvmap_sample.a);
 }
-)",
-                            false);
+)");
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(shader->handle());
                         shader->compile();
@@ -1442,7 +1446,7 @@ void main() {
                         auto kernel = aui::detail::gaussianKernel(radius);
 
                         result.shader->loadVertexShader(
-                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()), true);
+                            std::string(aui::sl_gen::basic_uv::vsh::glsl120::Shader::code()));
                         result.shader->loadFragmentShader(
                             fmt::format(
                                 R"(
@@ -1467,7 +1471,7 @@ void main() {{
 }}
 )",
                                 fmt::arg("radius", radius),
-                                fmt::arg("kernel_size", kernel.size())), false);
+                                fmt::arg("kernel_size", kernel.size())));
 
                         aui::sl_gen::basic_uv::vsh::glsl120::Shader::setup(result.shader->handle());
                         result.shader->compile();

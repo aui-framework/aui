@@ -68,6 +68,11 @@ public:
          * reset to false.
          */
         AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
+
+        /**
+         * @brief When set to true, all rendered strings will display their baselines.
+         */
+        AProperty<bool> showBaseline = false;
     };
 
 
@@ -226,9 +231,9 @@ public:
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
-     *     Button { "Item1" },
-     *     Button { "Item2" },
-     *     Button { "Item3" },
+     *     Button { Label { "Item1" } },
+     *     Button { Label "Item2" } },
+     *     Button { Label { "Item3" } },
      * });
      *
      * surfaceContainer->pack();

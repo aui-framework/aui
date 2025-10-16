@@ -59,12 +59,12 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
         }
 
         if (arg.startsWith(ARG_AUI_UPDATER_ORIGIN)) {
-            updaterOrigin = arg.substr(std::string_view(ARG_AUI_UPDATER_ORIGIN).length());
+            updaterOrigin = APath(arg.substr(std::string_view(ARG_AUI_UPDATER_ORIGIN).length()));
             continue;
         }
 
         if (arg.startsWith(ARG_AUI_UPDATER_DIR)) {
-            updaterDir = arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length());
+            updaterDir = APath(arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length()));
             continue;
         }
 
@@ -327,7 +327,7 @@ APath AUpdater::getInstallationDirectory(const AUpdater::GetInstallationDirector
     }
 
     auto out = context.originExe.substr(0, context.originExe.length() - relativePath.length() - 1);
-    return out;
+    return APath(out);
 }
 
 void AUpdater::cleanupUnpackedUpdateDirBeforeDownloading() {

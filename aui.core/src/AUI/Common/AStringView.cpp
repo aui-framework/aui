@@ -14,9 +14,9 @@
 //
 
 #include "AStringView.h"
+#include "AStaticVector.h"
 
 #include <AUI/Common/AByteBuffer.h>
-#include <AUI/Common/AStaticVector.h>
 #include <simdutf.h>
 
 bool AStringView::contains(char c) const noexcept {
@@ -87,31 +87,21 @@ std::u32string AStringView::toUtf32() const {
     return std::move(encoded);
 }
 
-AStringView AStringView::trimLeft(char symbol) const {
-    for (auto i = bytes().begin(); i != bytes().end(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return std::string_view{ i, bytes().end() };
-        }
-    }
-    return {};
+AStringView::size_type AStringView::length() const noexcept {
+    return simdutf::count_utf8(super::data(), super::size());
 }
-AStringView AStringView::trimRight(char symbol) const {
-    for (auto i = bytes().rbegin(); i != bytes().rend(); ++i)
-    {
-        if (*i != symbol) {
-            return std::string_view{ bytes().begin(), i.base() };
-        }
-    }
-    return {};
-}
-AStringView AStringView::trim(char symbol) const {
-    return trimLeft(symbol).trimRight(symbol);
+
+AStringView
+AStringView::substr(AStringView::size_type pos, AStringView::size_type count) const noexcept {
+    auto it = begin();
+    for (; it != end() && pos > 0; ++it, --pos);
+    auto begin = it;
+    for (; it != end() && count > 0; ++it, --count);
+    return AStringView(begin.data(), it.data() - begin.data());
 }
 
 AString AStringView::uppercase() const {
-    std::string buf = toStdString();
+    std::string buf{bytes()};
     {
         auto p = reinterpret_cast<unsigned char *>(buf.data());
         unsigned char* pExtChar = 0;
@@ -373,8 +363,8 @@ AString AStringView::uppercase() const {
                                     (*p) += 0x10;
                                 }
                                 else if (((*p >= 0xb0)
-                                         && ((*p <= 0xb5)
-                                             || (*p == 0xb7)))
+                                          && ((*p <= 0xb5)
+                                              || (*p == 0xb7)))
                                          || (*p == 0xbd))
                                     (*p) -= 0x30;
                                 break;
@@ -517,7 +507,7 @@ AString AStringView::uppercase() const {
 }
 
 AString AStringView::lowercase() const {
-    std::string buf = toStdString();
+    std::string buf{bytes()};
     {
         auto p = reinterpret_cast<unsigned char *>(buf.data());
         unsigned char* pExtChar = 0;
@@ -780,8 +770,8 @@ AString AStringView::lowercase() const {
                                 break;
                             case 0x83: // Georgian
                                 if (((*p >= 0x80)
-                                    && ((*p <= 0x85)
-                                        || (*p == 0x87)))
+                                     && ((*p <= 0x85)
+                                         || (*p == 0x87)))
                                     || (*p == 0x8d))
                                     (*p) += 0x30;
                                 break;
@@ -923,32 +913,6 @@ AString AStringView::lowercase() const {
     return buf;
 }
 
-AStringVector AStringView::split(AChar c) const {
-    if (empty()) {
-        return {};
-    }
-    auto utf8c = c.toUtf8();
-    if (utf8c.empty()) return {};
-    std::string separator_utf8(utf8c.begin(), utf8c.end());
-    AStringVector result;
-    result.reserve(length() / 10);
-    for (size_type s = 0;;) {
-        auto next = super::find(separator_utf8, s);
-        if (next == npos) {
-            result << substr(s);
-            break;
-        }
-
-        result << substr(s, next - s);
-        s = next + separator_utf8.length();
-    }
-    return result;
-}
-
-bool AStringView::toBool() const {
-    return sizeBytes() == 4 && lowercase() == "true";
-}
-
 template<typename T>
 static AOptional<T> toNumber(std::string_view str) noexcept {
     if (str.empty()) return std::nullopt;
@@ -1031,28 +995,29 @@ static AOptional<T> toNumber(std::string_view str) noexcept {
 }
 
 AOptional<int32_t> AStringView::toInt() const noexcept {
-    return ::toNumber<int32_t>(*this);
+    return ::toNumber<int32_t>(bytes());
 }
 
 AOptional<int64_t> AStringView::toLong() const noexcept {
-    return ::toNumber<int64_t>(*this);
+    return ::toNumber<int64_t>(bytes());
 }
 
 AOptional<uint32_t> AStringView::toUInt() const noexcept {
-    return ::toNumber<uint32_t>(*this);
+    return ::toNumber<uint32_t>(bytes());
 }
 
 AOptional<uint64_t> AStringView::toULong() const noexcept {
-    return ::toNumber<uint64_t>(*this);
+    return ::toNumber<uint64_t>(bytes());
 }
 
 AOptional<float> AStringView::toFloat() const noexcept {
-    return ::toNumber<float>(*this);
+    return ::toNumber<float>(bytes());
 }
 
 AOptional<double> AStringView::toDouble() const noexcept {
     return ::toNumber<double>(*this);
 }
+
 
 AOptional<int> AStringView::toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
     int result = 0;
@@ -1082,13 +1047,67 @@ AOptional<int> AStringView::toNumber(aui::ranged_number<int, 2, 36> base) const 
     return result;
 }
 
+bool AStringView::toBool() const {
+    return sizeBytes() == 4 && lowercase() == "true";
+}
+
+AStringView AStringView::trimLeft(AChar symbol) const {
+    for (auto i = begin(); i != end(); ++i)
+    {
+        if (*i != symbol)
+        {
+            return AStringView(i.data(), end().data() - i.data());
+        }
+    }
+    return {};
+}
+
+AStringView AStringView::trimRight(AChar symbol) const {
+    for (auto i = rbegin(); i != rend(); ++i)
+    {
+        if (*i != AChar(symbol))
+        {
+            return std::string_view(data(), i.base().data() - data());
+        }
+    }
+    return {};
+}
+
+AStringVector AStringView::split(AChar c) const {
+    if (empty()) {
+        return {};
+    }
+    auto utf8c = c.toUtf8();
+    if (utf8c.empty()) return {};
+    std::string separator_utf8(utf8c.begin(), utf8c.end());
+    AStringVector result;
+    result.reserve(length() / 10);
+    for (size_type s = 0;;) {
+        auto next = super::find(separator_utf8, s);
+        if (next == npos) {
+            result << substr(s);
+            break;
+        }
+
+        result << substr(s, next - s);
+        s = next + separator_utf8.length();
+    }
+    return result;
+}
+
+AString AStringView::removedAll(AChar c) {
+    AString copy{*this};
+    copy.removeAll(c);
+    return copy;
+}
+
 #if AUI_PLATFORM_WIN
 namespace aui::win32 {
 std::wstring toWchar(AStringView str) {
     static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t size must be same as char16_t");
-    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.size());
+    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.sizeBytes());
     std::wstring encoded(words, L'\0');
-    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.size(), reinterpret_cast<char16_t*>(encoded.data()));
+    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.sizeBytes(), reinterpret_cast<char16_t*>(encoded.data()));
     encoded[words] = '\0';
     encoded.resize(size);
     return std::move(encoded);

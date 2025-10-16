@@ -962,7 +962,8 @@ function(auib_import AUI_MODULE_NAME URL)
                     # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
                     # emptiness
                     if (NOT ${_varname} STREQUAL "")
-                        list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+                        string(REPLACE ";" "\\;" _varvalue "${${_varname}}")
+                        list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${_varvalue}")
                     endif()
                 endforeach()
                 if (CMAKE_TOOLCHAIN_FILE) # resolve absolute path to the toolchain file - it's possibly relative thus invalid

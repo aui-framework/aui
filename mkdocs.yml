@@ -136,6 +136,11 @@ nav:
 
   - 'Views':
     - 'Overview': views.md
+    - 'Button': abutton.md
+    - 'Check box': acheckbox.md
+    - 'Label': alabel.md
+    - 'List': aforeachui.md
+    - 'Radio button': aradiobutton.md
 
   - 'Styling':
     - ass.md

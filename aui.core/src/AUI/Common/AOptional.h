@@ -154,44 +154,44 @@ public:
     }
 
     [[nodiscard]]
-    T& value() noexcept {
+    T& value() {
         AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<T&>(mStorage);
     }
 
     [[nodiscard]]
-    const T& value() const noexcept {
+    const T& value() const {
         AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<const T&>(mStorage);
     }
 
     [[nodiscard]]
-    T* ptr() noexcept {
+    T* ptr() {
         return &value();
     }
 
     [[nodiscard]]
-    const T* ptr() const noexcept {
+    const T* ptr() const {
         return &value();
     }
 
     [[nodiscard]]
-    T* operator->() noexcept {
+    T* operator->() {
         return ptr();
     }
 
     [[nodiscard]]
-    const T* operator->() const noexcept {
+    const T* operator->() const {
         return ptr();
     }
 
     [[nodiscard]]
-    T& operator*() noexcept {
+    T& operator*() {
         return value();
     }
 
     [[nodiscard]]
-    const T& operator*() const noexcept {
+    const T& operator*() const {
         return value();
     }
 
@@ -277,7 +277,7 @@ public:
      */
     template<aui::invocable<const T&> Mapper>
     [[nodiscard]]
-    auto map(Mapper&& mapper) -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> const {
+    auto map(Mapper&& mapper) const -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> {
         if (hasValue()) {
             return std::invoke(std::forward<Mapper>(mapper), value());
         }

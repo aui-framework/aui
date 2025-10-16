@@ -34,14 +34,14 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
 
     if (mModel) {
         for (size_t i = 0; i < model->listSize(); ++i) {
-            auto r = _new<ARadioButton>(model->listItemAt(i));
+            auto r = _new<ARadioButton>(declarative::Label { model->listItemAt(i) });
             mGroup->addRadioButton(r);
             addView(r);
         }
 
         connect(mModel->dataInserted, this, [&](const AListModelRange<AString>& data) {
             for (const auto& row : data) {
-                auto r = _new<ARadioButton>(row.get());
+                auto r = _new<ARadioButton>(declarative::Label { row.get() });
                 mGroup->addRadioButton(r);
                 addView(r);
             }

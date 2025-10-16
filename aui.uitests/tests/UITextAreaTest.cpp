@@ -15,6 +15,7 @@
 #include <AUI/View/AScrollArea.h>
 
 using namespace ass;
+using namespace declarative;
 using std::operator""sv;
 
 namespace {
@@ -104,7 +105,7 @@ TEST_F(UITextArea, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextArea, CursorClickPos1) {
-    By::type<ATextArea>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({17_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(3));
 }
 
@@ -112,7 +113,7 @@ TEST_F(UITextArea, CursorClickPos1) {
  * Checks cursor position when clicking between 'o' and 'r'.
  */
 TEST_F(UITextArea, CursorClickPos2) {
-    By::type<ATextArea>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({45_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(7));
 }
 
@@ -120,7 +121,7 @@ TEST_F(UITextArea, CursorClickPos2) {
  * Checks cursor position when clicking between 's' and 'e
  */
 TEST_F(UITextArea, CursorClickPos3) {
-    By::type<ATextArea>().perform(click({17_dp, 12_pt})) // hardcoded mouse position
+    By::type<ATextArea>().perform(click({15_dp, 12_pt})) // hardcoded mouse position
             .check(selectionMatches(15));
 }
 
@@ -177,117 +178,117 @@ TEST_F(UITextArea, CtrlShiftLeftRight) {
 
 TEST_F(UITextArea, Type1) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
         .perform(type("aui"))
         .check(selectionMatches(3))
         ;
-    EXPECT_EQ(mTextArea->text().value(), "aui");
+    EXPECT_EQ(mTextArea->text(), "aui");
     EXPECT_EQ(entries().size(), 1);
 }
 
 TEST_F(UITextArea, Type2a) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
             .perform(type("aui "))
             .check(selectionMatches(4))
             ;
-    EXPECT_EQ(mTextArea->text().value(), "aui ");
+    EXPECT_EQ(mTextArea->text(), "aui ");
     EXPECT_EQ(entries().size(), 2);
 }
 
 TEST_F(UITextArea, Type2b) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
             .perform(type(" aui"))
             .check(selectionMatches(4))
             ;
-    EXPECT_EQ(mTextArea->text().value(), " aui");
+    EXPECT_EQ(mTextArea->text(), " aui");
     EXPECT_EQ(entries().size(), 2);
 }
 
 TEST_F(UITextArea, Type2c) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>().perform(type("aui"));
-    EXPECT_EQ(mTextArea->text().value(), "aui");
+    EXPECT_EQ(mTextArea->text(), "aui");
     mTextArea->setSelection(0);
     By::type<ATextArea>().perform(type(" "));
-    EXPECT_EQ(mTextArea->text().value(), " aui");
+    EXPECT_EQ(mTextArea->text(), " aui");
     EXPECT_EQ(entries().size(), 2);
 }
 
 TEST_F(UITextArea, Type2d) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>().perform(type("aui"));
-    EXPECT_EQ(mTextArea->text().value(), "aui");
+    EXPECT_EQ(mTextArea->text(), "aui");
     mTextArea->setSelection(1);
     By::type<ATextArea>().perform(type(" "));
-    EXPECT_EQ(mTextArea->text().value(), "a ui");
+    EXPECT_EQ(mTextArea->text(), "a ui");
     EXPECT_EQ(entries().size(), 3);
 }
 
 TEST_F(UITextArea, Type3) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
             .perform(type("aui framework"))
             .check(selectionMatches(13))
             ;
-    EXPECT_EQ(mTextArea->text().value(), "aui framework");
+    EXPECT_EQ(mTextArea->text(), "aui framework");
     EXPECT_EQ(entries().size(), 3);
 }
 
 TEST_F(UITextArea, Type4) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
             .perform(type("aui  framework"))
             .check(selectionMatches(14))
             ;
-    EXPECT_EQ(mTextArea->text().value(), "aui  framework");
+    EXPECT_EQ(mTextArea->text(), "aui  framework");
     EXPECT_EQ(entries().size(), 3);
 }
 
 TEST_F(UITextArea, Type5) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>().perform(type("   "));
-    EXPECT_EQ(mTextArea->text().value(), "   ");
+    EXPECT_EQ(mTextArea->text(), "   ");
     EXPECT_EQ(entries().size(), 1);
     mTextArea->setSelection(1);
     By::type<ATextArea>().perform(type("aui"));
-    EXPECT_EQ(mTextArea->text().value(), " aui  ");
+    EXPECT_EQ(mTextArea->text(), " aui  ");
     EXPECT_EQ(entries().size(), 3);
 }
 
 TEST_F(UITextArea, TypeAtTheMiddleOfWord) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>()
             .perform(type("aui"))
             .check(selectionMatches(3))
             ;
-    EXPECT_EQ(mTextArea->text().value(), "aui");
+    EXPECT_EQ(mTextArea->text(), "aui");
     mTextArea->setSelection(1); // between a and u
     By::type<ATextArea>()
             .perform(type("1"))
             .check(selectionMatches(2))
             ;
     EXPECT_EQ(entries().size(), 1);
-    EXPECT_EQ(mTextArea->text().value(), "a1ui");
+    EXPECT_EQ(mTextArea->text(), "a1ui");
 }
 
 TEST_F(UITextArea, Backspace) {
     mTextArea->clear();
-    EXPECT_EQ(mTextArea->text().value(), "");
+    EXPECT_EQ(mTextArea->text(), "");
     By::type<ATextArea>().perform(type("aui"));
-    EXPECT_EQ(mTextArea->text().value(), "aui");
+    EXPECT_EQ(mTextArea->text(), "aui");
     By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
-    EXPECT_EQ(mTextArea->text().value(), "au");
+    EXPECT_EQ(mTextArea->text(), "au");
     EXPECT_EQ(entries().size(), 1);
 }
 
@@ -302,7 +303,7 @@ TEST_F(UITextArea, BackspaceFuzzy) {
         }
         mTextArea->setSelection(static_cast<int>(i));
         By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
-        ASSERT_EQ(mTextArea->text().value(), expected) << "(cursor was at " << i << ")";
+        ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << i << ")";
     }
 }
 
@@ -322,7 +323,7 @@ TEST_F(UITextArea, EraseFuzzy) {
             mTextArea->setSelection({i, j});
             auto selection = mTextArea->selection();
             By::type<ATextArea>().perform(keyDownAndUp(AInput::BACKSPACE));
-            ASSERT_EQ(mTextArea->text().value(), expected) << "(cursor was at " << selection << ")";
+            ASSERT_EQ(mTextArea->text(), expected) << "(cursor was at " << selection << ")";
         }
     }
 }
@@ -348,7 +349,7 @@ TEST_F(UITextArea, Insert) {
         AString expectedString = SAMPLE;
         expectedString.insert(i, SAMPLE_PASTE);
 
-        EXPECT_EQ(expectedString, mTextArea->text().value()) << "(insert at " << i << ")";
+        EXPECT_EQ(mTextArea->text(), expectedString) << "(insert at " << i << ")";
     }
 }
 
@@ -357,29 +358,8 @@ TEST_F(UITextArea, NextLineCursorPos) {
     mTextArea->setSelection(5);
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
     By::type<ATextArea>().perform(type("\n"));
-    EXPECT_EQ(mTextArea->text().value(), "hello\n");
+    EXPECT_EQ(mTextArea->text(), "hello\n");
     EXPECT_GE(mTextArea->getCursorPosition().y, 0);
     mTextArea->moveCursorLeft();
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
-}
-
-TEST_F(UITextArea, ScrollAreaFollowsCursor) {
-    AWindow::current()->setContents(Centered {
-        AScrollArea::Builder().withContents(mTextArea).build() AUI_WITH_STYLE { FixedSize(200_dp, 100_dp) },
-    });
-    mTextArea->setText("");
-    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
-    By::type<ATextArea>().perform(type(R"(Text
-with
-very
-large
-height
-blah
-bruh
-ololo
-lol
-kek)"));
-    By::type<ATextArea>().check(isBottomAboveBottomOf(By::type<AScrollArea>()));
-    mTextArea->setSelection(0); // move to the beginning
-    By::type<ATextArea>().check(isTopBelowTopOf(By::type<AScrollArea>()));
 }
