@@ -66,6 +66,8 @@ struct stat APathView::stat() const {
 
 APathView::APathView(std::string_view str) : super(str) {}
 
+APathView::APathView(AStringView str) : super(str.bytes()) {}
+
 APath APathView::parent() const {
     auto c = ensureNonSlashEnding().rfind('/');
     if (c != NPOS) {
@@ -337,7 +339,7 @@ AString APathView::systemSlashDirection() const {
 
 APathView::APathView() {}
 APathView::APathView(const APathView& other) = default;
-APathView::APathView(APathView&& other) = default;
+APathView::APathView(APathView&& other) noexcept = default;
 APathView::APathView(const APath& path) : super(path.string()) {}
 
 const APathView& APathView::touch() const {

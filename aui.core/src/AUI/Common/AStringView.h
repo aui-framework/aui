@@ -66,7 +66,7 @@ class API_AUI_CORE AStringVector;
  *
  * To work with raw bytes, use AStringView::bytes() function.
  */
-class API_AUI_CORE AStringView: private std::string_view {
+class API_AUI_CORE AStringView: public std::string_view {
 private:
     using super = std::string_view;
 
@@ -194,9 +194,9 @@ public:
         return *this;
     }
 
-    AStringView trimLeft(char symbol = ' ') const;
-    AStringView trimRight(char symbol = ' ') const;
-    AStringView trim(char symbol = ' ') const;
+    AStringView trimLeft(AChar symbol = ' ') const;
+    AStringView trimRight(AChar symbol = ' ') const;
+    AStringView trim(AChar symbol = ' ') const;
 
     AString uppercase() const;
 
@@ -345,6 +345,10 @@ public:
 
     int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    std::string toStdString() const {
+        return std::string(bytes());
     }
 
 };

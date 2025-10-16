@@ -1080,6 +1080,10 @@ AStringView AStringView::trimRight(AChar symbol) const {
     return {};
 }
 
+AStringView AStringView::trim(AChar symbol) const {
+    return trimLeft(symbol).trimRight(symbol);
+}
+
 AStringVector AStringView::split(AChar c) const {
     if (empty()) {
         return {};

@@ -150,11 +150,12 @@ private:
 #endif
 
     APathView(std::string_view str);
+    APathView(AStringView str);
 
 public:
     APathView();
     APathView(const APathView& other);
-    APathView(APathView&& other);
+    APathView(APathView&& other) noexcept;
     APathView(const APath& path);
 
     /**
