@@ -7,8 +7,10 @@
  *                                                                         *
  *   This file is part of the dbus-cxx library.                            *
  ***************************************************************************/
+#pragma once
+
 #include <stdint.h>
-#include <AUI/Platform/linux/dbus-cxx/signal.h>
+#include <AUI/Common/ASignal.h>
 #include <AUI/Platform/linux/dbus-cxx/signalproxy.h>
 #include <AUI/Platform/linux/dbus-cxx/threaddispatcher.h>
 #include <AUI/Platform/linux/dbus-cxx/errormessage.h>
@@ -242,7 +244,7 @@ public:
      * Any slots that listen to this signal must be threadsafe, as this
      * may be emitted from any thread.
      */
-    sigc::signal<void()>& signal_needs_dispatch();
+    ASignal<>& signal_needs_dispatch();
 
     /**
      * Create and return a new object, registering the object automatically.  If the registering

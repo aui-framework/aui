@@ -10,6 +10,8 @@
 
 #include "dispatcher.h"
 
+#include <AUI/Common/AObjectBase.h>
+
 namespace DBus {
 
 class Connection;
@@ -20,7 +22,7 @@ class Connection;
  *
  * One dispatcher can handle multiple connections.
  */
-class StandaloneDispatcher : public Dispatcher {
+class StandaloneDispatcher : public Dispatcher, public AObjectBase {
 private:
 
     StandaloneDispatcher( bool is_running = true );

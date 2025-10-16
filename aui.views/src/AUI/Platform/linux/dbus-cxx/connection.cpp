@@ -108,7 +108,7 @@ public:
     std::mutex m_threadDispatcherLock;
     std::map<std::thread::id, std::weak_ptr<ThreadDispatcher>> m_threadDispatchers;
     std::shared_ptr<DBusDaemonProxy> m_daemonProxy;
-    sigc::signal<void()> m_needsDispatching;
+    ASignal<> m_needsDispatching;
     std::mutex m_freeProxySignalsLock;
     std::vector<FreeSignalThreadInfo> m_freeProxySignals;
     std::mutex m_objectProxiesLock;
@@ -898,7 +898,7 @@ bool Connection::has_messages_to_send() {
     return !m_priv->m_outgoingMessages.empty();
 }
 
-sigc::signal< void() >& Connection::signal_needs_dispatch() {
+ASignal<>& Connection::signal_needs_dispatch() {
     return m_priv->m_needsDispatching;
 }
 
