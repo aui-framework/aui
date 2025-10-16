@@ -420,12 +420,6 @@ public:
         return view().trim(symbol);
     }
 
-    AStringView substr(size_type pos = 0, size_type n = npos) const {
-        size_t base = (begin() + pos).getBytePos();
-        size_t base_n = (begin() + pos + n).getBytePos() - base;
-        return view().substr(base, base_n);
-    }
-
     AString restrictLength(size_t s, const AString& stringAtEnd) const;
 
     AString trimDoubleSpace() const noexcept;

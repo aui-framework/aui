@@ -198,107 +198,13 @@ public:
     AStringView trimRight(char symbol = ' ') const;
     AStringView trim(char symbol = ' ') const;
 
-    size_type sizeBytes() const noexcept {
-        return bytes().size();
-    }
-
     AString uppercase() const;
 
     AString lowercase() const;
 
+    AString removedAll(AChar c);
+
     AStringVector split(AChar c) const;
-
-    /**
-     * @brief Converts the string to boolean value.
-     * @return If the string equals to "true", true returned, false otherwise.
-     */
-    bool toBool() const;
-
-    /**
-     * @brief Converts the string to int value.
-     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
-     * used.
-     *
-     * If conversion to int is not possible, nullopt is returned.
-     */
-    AOptional<int32_t> toInt() const noexcept;
-
-    /**
-     * @brief Converts the string to long value.
-     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
-     * used.
-     *
-     * If conversion to long is not possible, nullopt is returned.
-     */
-    AOptional<int64_t> toLong() const noexcept;
-
-    /**
-     * @brief Converts the string to unsigned int value.
-     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
-     * used.
-     *
-     * If conversion to unsigned int is not possible, exception is thrown.
-     */
-    AOptional<uint32_t> toUInt() const noexcept;
-
-    /**
-     * @brief Converts the string to unsigned long value.
-     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
-     * used.
-     *
-     * If conversion to unsigned long is not possible, exception is thrown.
-     */
-    AOptional<uint64_t> toULong() const noexcept;
-
-    /**
-     * @brief Converts the string to a float number.
-     * @return The string converted to a float number.
-     *
-     * If conversion to int is not possible, nullopt is returned.
-     */
-    AOptional<float> toFloat() const noexcept;
-
-    /**
-     * @brief Converts the string to a double number.
-     * @return The string converted to a double number.
-     *
-     * If conversion to int is not possible, nullopt is returned.
-     */
-    AOptional<double> toDouble() const noexcept;
-
-    /**
-     * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
-     * @sa toNumberOrException
-     */
-    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
-
-    int32_t toIntOrException() const {
-        return toInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
-    }
-
-    int64_t toLongOrException() const {
-        return toLong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
-    }
-
-    uint32_t toUIntOrException() const {
-        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
-    }
-
-    uint64_t toULongOrException() const {
-        return toULong().valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
-    }
-
-    float toFloatOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad float: {}", toStdString()).c_str());
-    }
-
-    double toDoubleOrException() const noexcept {
-        return toDouble().valueOrException(fmt::format("bad double: {}", toStdString()).c_str());
-    }
-
-    int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
-        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", toStdString()).c_str());
-    }
 
     iterator begin() const noexcept {
         return AUtf8ConstIterator(data(), data(), data() + size(), 0);
@@ -440,33 +346,6 @@ public:
     int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
     }
-
-    AStringVector split(AChar c) const;
-
-    [[nodiscard]]
-    AStringView trimLeft(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trimRight(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trim(AChar symbol = ' ') const
-    {
-        return trimLeft(symbol).trimRight(symbol);
-    }
-
-    [[nodiscard]]
-    AString lowercase() const;
-
-    [[nodiscard]]
-    AString uppercase() const;
-
-    AString removedAll(AChar c);
-
-    static constexpr auto TO_NUMBER_BASE_BIN = 2;
-    static constexpr auto TO_NUMBER_BASE_OCT = 8;
-    static constexpr auto TO_NUMBER_BASE_DEC = 10;
-    static constexpr auto TO_NUMBER_BASE_HEX = 16;
 
 };
 
