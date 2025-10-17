@@ -107,7 +107,7 @@ if(AUIB_DISABLE)
     find_package(ZLIB REQUIRED)
 else()
     auib_import(ZLIB https://github.com/aui-framework/zlib
-                VERSION 1fb44ee611e027d7252208301e3ca57afe3f5bb2
+                VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
                 CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
 endif()
 
