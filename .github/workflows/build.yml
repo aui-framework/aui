@@ -269,6 +269,12 @@ jobs:
           echo "CC=$(brew --prefix llvm@18)/bin/clang " >> $GITHUB_ENV
           echo "CXX=$(brew --prefix llvm@18)/bin/clang++ " >> $GITHUB_ENV
 
+      - name: Add MSVC to PATH for Windows
+        if: matrix.compiler == 'MSVC' && runner.os == 'Windows'
+        run: |
+          echo "CC=cl.exe " >> $GITHUB_ENV
+          echo "CXX=cl.exe " >> $GITHUB_ENV
+
       - name: Setup MinGW for Windows
         if: matrix.compiler == 'MinGW' && runner.os == 'Windows'
         uses: msys2/setup-msys2@v2
@@ -278,8 +284,8 @@ jobs:
       - name: Add MinGW to PATH for Windows
         if: matrix.compiler == 'MinGW' && runner.os == 'Windows'
         run: |
-          echo "CC=gcc " >> $GITHUB_ENV
-          echo "CXX=g++ " >> $GITHUB_ENV
+          echo "CC=gcc.exe " >> $GITHUB_ENV
+          echo "CXX=g++.exe " >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
