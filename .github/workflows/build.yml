@@ -21,7 +21,7 @@ permissions:
 jobs:
   documentation:
     name: "Documentation"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
@@ -54,7 +54,7 @@ jobs:
 
   build-android:
    name: "Android"
-   runs-on: ubuntu-latest
+   runs-on: ubuntu-22.04
    steps:
      - uses: actions/checkout@v5
        with:
@@ -169,23 +169,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-15, windows-latest]
+        os: [ubuntu-22.04, macos-15, windows-2022]
         compiler: ["Clang", "AppleClang", "MSVC", "GCC", "MinGW"]
         build_type: [Debug, Release, RelWithDebInfo]
         shared_or_static: [shared, static]
         arch: [x86_64]
+        generator: ["Ninja"]
         exclude:
           # Clang, GCC
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             compiler: "AppleClang"
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             compiler: "MSVC"
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             compiler: "GCC"
 
-          # AppleClang
-          - os: macos-15
-            compiler: "Clang"
+          # Clang, AppleClang
           - os: macos-15
             compiler: "MSVC"
           - os: macos-15
@@ -194,17 +193,17 @@ jobs:
             compiler: "MinGW"
 
           # MSVC, MinGW (static only)
-          - os: windows-latest
+          - os: windows-2022
             compiler: "Clang"
-          - os: windows-latest
+          - os: windows-2022
             compiler: "AppleClang"
-          - os: windows-latest
+          - os: windows-2022
             compiler: "GCC"
-          - os: windows-latest
+          - os: windows-2022
             compiler: "MinGW"
             shared_or_static: "shared"
         include:
-          - os: windows-latest
+          - os: windows-2022
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
@@ -239,16 +238,6 @@ jobs:
           execute_install_scripts: true
           version: 4.0
 
-      - name: Install MacOS dependencies
-        if: runner.os == 'macOS'
-        run: brew install ninja
-
-      - name: Setup clang for macOS
-        if: matrix.compiler == 'Clang' && runner.os == 'macOS'
-        run: |
-          echo "CC=/usr/bin/clang " >> $GITHUB_ENV
-          echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
-
       - name: Clang Toolchain Installation for Linux
         if: matrix.compiler == 'Clang' && runner.os == 'Linux'
         run: |
@@ -257,6 +246,34 @@ jobs:
           sudo ./llvm.sh 20 all
           echo "CC=clang-20" >> $GITHUB_ENV
           echo "CXX=clang++-20" >> $GITHUB_ENV
+
+      - name: GCC Toolchain Installation for Linux
+        if: matrix.compiler == 'GCC' && runner.os == 'Linux'
+        run: |
+          echo "CC=gcc" >> $GITHUB_ENV
+          echo "CXX=g++" >> $GITHUB_ENV
+
+      - name: Install MacOS dependencies
+        if: runner.os == 'macOS'
+        run: brew install cmake ninja llvm@18 # LLVM 18 is already installed
+
+      - name: Setup Clang 18 for macOS
+        if: matrix.compiler == 'Clang' && runner.os == 'macOS'
+        run: |
+          echo "CC=$(brew --prefix llvm@18)/bin/clang " >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm@18)/bin/clang++ " >> $GITHUB_ENV
+
+      - name: Setup MinGW for Windows
+        if: matrix.compiler == 'MinGW' && runner.os == 'Windows'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: mingw64
+
+      - name: Add MinGW to PATH for Windows
+        if: matrix.compiler == 'MinGW' && runner.os == 'Windows'
+        run: |
+          echo "CC=gcc " >> $GITHUB_ENV
+          echo "CXX=g++ " >> $GITHUB_ENV
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -307,16 +324,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2022, ubuntu-22.04]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         include:
-          - os: windows-latest
+          - os: windows-2022
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64'
 
-          - os: ubuntu-latest
+          - os: ubuntu-22.04
             generator: "Ninja"
 
     steps:
@@ -409,7 +426,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, windows-latest]
+        os: [windows-2022, ubuntu-22.04, windows-2022]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
 
@@ -471,7 +488,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-2022, ubuntu-22.04]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
     steps:
@@ -514,7 +531,7 @@ jobs:
 
 
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     permissions: write-all
     needs: [deployment-tests-run-minimal-app, deployment-tests-validate-minimal-app]
     if: github.event_name != 'pull_request'
