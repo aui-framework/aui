@@ -183,6 +183,8 @@ jobs:
             compiler: "MSVC"
           - os: ubuntu-22.04
             compiler: "GCC"
+          - os: ubuntu-22.04
+            compiler: "MinGW"
 
           # Clang, AppleClang
           - os: macos-15
