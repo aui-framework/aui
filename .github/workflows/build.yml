@@ -204,6 +204,7 @@ jobs:
             shared_or_static: "shared"
         include:
           - os: windows-2022
+            compiler: "MSVC"
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
