@@ -118,13 +118,13 @@ jobs:
     # - on specific OS configurations or versions
     # - prevent software rot
     # - these builds are not to be published
-    name: Check build ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    name: Check build ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ macos-15 ]
-        debug_or_release: [Release]
+        build_type: [Release]
         shared_or_static: [shared, static]
         generator: ["Ninja"]
     steps:
@@ -145,18 +145,18 @@ jobs:
         run: brew install ninja
 
       - name: Configure CMake
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
 
       - name: Build project
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
 
       - name: Build AUI tests
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} --target Tests
 
       - name: Run AUI tests
         if: runner.os == 'Windows'
-        working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
-        run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
+        working-directory: ${{github.workspace}}/build/bin/${{ matrix.build_type }}
+        run: ${{github.workspace}}/build/bin/${{ matrix.build_type }}/Tests.exe
 
       - name: Run AUI tests
         if: runner.os == 'Linux'
@@ -164,44 +164,49 @@ jobs:
         run: ${{github.workspace}}/build/bin/Tests
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-15]
-        debug_or_release: [Debug, Release]
+        os: [ubuntu-latest, macos-15, windows-latest]
+        compiler: ["Clang", "AppleClang", "MSVC", "GCC", "MinGW"]
+        build_type: [Debug, Release, RelWithDebInfo]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        compiler: ["default", "clang"]
         exclude:
-          - os: windows-latest
-            compiler: "clang"
+          # Clang, GCC
+          - os: ubuntu-latest
+            compiler: "AppleClang"
+          - os: ubuntu-latest
+            compiler: "MSVC"
+          - os: ubuntu-latest
+            compiler: "GCC"
+
+          # AppleClang
           - os: macos-15
-            compiler: "clang" # default only
+            compiler: "Clang"
+          - os: macos-15
+            compiler: "MSVC"
+          - os: macos-15
+            compiler: "GCC"
+          - os: macos-15
+            compiler: "MinGW"
+
+          # MSVC, MinGW (static only)
+          - os: windows-latest
+            compiler: "Clang"
+          - os: windows-latest
+            compiler: "AppleClang"
+          - os: windows-latest
+            compiler: "GCC"
+          - os: windows-latest
+            compiler: "MinGW"
+            shared_or_static: "shared"
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: ''
-
-          - os: macos-15
-            generator: "Ninja"
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: ''
-            debug_or_release: RelWithDebInfo
-            shared_or_static: static
-
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
-            debug_or_release: RelWithDebInfo
-            shared_or_static: static
 
     steps:
       - uses: actions/checkout@v5
@@ -214,7 +219,7 @@ jobs:
         id: cache-aui-boot
         uses: actions/cache@v3
         env:
-          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.debug_or_release }}-${{ matrix.arch }}
+          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.build_type }}-${{ matrix.arch }}
         with:
           path: |
             ~/.aui
@@ -239,13 +244,13 @@ jobs:
         run: brew install ninja
 
       - name: Setup clang for macOS
-        if: matrix.compiler == 'clang' && runner.os == 'macOS'
+        if: matrix.compiler == 'Clang' && runner.os == 'macOS'
         run: |
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
 
       - name: Clang Toolchain Installation for Linux
-        if: matrix.compiler == 'clang' && runner.os == 'Linux'
+        if: matrix.compiler == 'Clang' && runner.os == 'Linux'
         run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
@@ -256,20 +261,20 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT=ON -DAUI_BUILD_AUDIO=OFF
 
       - name: Build project
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
 
       - name: Build AUI tests
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} --target Tests
 
       - name: Run AUI tests
         if: runner.os == 'Windows'
-        working-directory: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}
-        run: ${{github.workspace}}/build/bin/${{ matrix.debug_or_release }}/Tests.exe
+        working-directory: ${{github.workspace}}/build/bin/${{ matrix.build_type }}
+        run: ${{github.workspace}}/build/bin/${{ matrix.build_type }}/Tests.exe
 
       - name: Run AUI tests
         if: runner.os == 'Linux'
@@ -279,31 +284,31 @@ jobs:
 # [cpack]
       - name: Pack
         working-directory: ${{github.workspace}}/build
-        run: cpack . -C ${{ matrix.debug_or_release }}
+        run: cpack . -C ${{ matrix.build_type }}
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} ${{ matrix.compiler }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
 # [cpack]
 
       - name: Enable examples
         run: cmake -B ${{github.workspace}}/build -DAUI_BUILD_EXAMPLES=TRUE -DAUI_BUILD_AUDIO=ON
 
       - name: Build examples
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}}
 
   # as a deployment test, let's build a small AUI-based app
   deployment-tests-build-minimal-app:
-    name: Build test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }}
+    name: Build test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     needs: [build-desktop]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        debug_or_release: [Debug, Release]
+        build_type: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         include:
@@ -340,15 +345,15 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.arch }} default
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} default
 
       - name: Configure test app
         run: |
-          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DARTIFACTS_DIR=${{github.workspace}}/artifacts -DAUI_APP_PACKAGING=AUI_PORTABLE_ZIP
+          cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -S ${{github.workspace}}/test/minimal_deployment_test -DCMAKE_BUILD_TYPE=${{matrix.build_type}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} -DARTIFACTS_DIR=${{github.workspace}}/artifacts -DAUI_APP_PACKAGING=AUI_PORTABLE_ZIP
 
       - name: Build test app
         working-directory: ${{github.workspace}}/build
-        run: cmake --build . --config ${{matrix.debug_or_release}}
+        run: cmake --build . --config ${{matrix.build_type}}
 
       - name: Print test app runtime dependencies (Windows)
         working-directory: ${{github.workspace}}/build/bin
@@ -373,15 +378,15 @@ jobs:
       # let's run it on another machine as well
       - name: Package test app (portables)
         working-directory: ${{github.workspace}}/build
-        run: cpack -C ${{ matrix.debug_or_release }} . -B artifacts
+        run: cpack -C ${{ matrix.build_type }} . -B artifacts
 
       - name: Package test app (innosetup)
         if: runner.os == 'Windows'
         working-directory: ${{github.workspace}}/build
         run: |
           cmake . -DAUI_APP_PACKAGING=INNOSETUP
-          cmake --build . --config ${{matrix.debug_or_release}}
-          cpack -C ${{ matrix.debug_or_release }} . -B artifacts
+          cmake --build . --config ${{matrix.build_type}}
+          cpack -C ${{ matrix.build_type }} . -B artifacts
 
       - name: Print logs
         if: failure()
@@ -394,18 +399,18 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/artifacts/*.*
-          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
 
   # run a small AUI-based test app on various platforms
   deployment-tests-run-minimal-app:
-    name: Run test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    name: Run test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     needs: [deployment-tests-build-minimal-app]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, windows-latest]
-        debug_or_release: [Debug, Release]
+        build_type: [Debug, Release]
         shared_or_static: [shared, static]
 
     steps:
@@ -426,7 +431,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
 
       - name: Unpack test app
         shell: bash
@@ -460,14 +465,14 @@ jobs:
 
   # validate the contents of minimal app packages
   deployment-tests-validate-minimal-app:
-    name: Validate contents test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    name: Validate contents test app ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     needs: [deployment-tests-build-minimal-app]
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        debug_or_release: [Debug, Release]
+        build_type: [Debug, Release]
         shared_or_static: [shared, static]
     steps:
       - uses: actions/checkout@v5
@@ -477,7 +482,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+          name: Test app ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
 
       - name: Unpack test app
         shell: bash
