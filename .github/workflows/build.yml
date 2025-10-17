@@ -269,11 +269,11 @@ jobs:
           echo "CC=$(brew --prefix llvm@18)/bin/clang " >> $GITHUB_ENV
           echo "CXX=$(brew --prefix llvm@18)/bin/clang++ " >> $GITHUB_ENV
 
-      - name: Add MSVC to PATH for Windows
+      - name: Setup MSVC
         if: matrix.compiler == 'MSVC' && runner.os == 'Windows'
-        run: |
-          echo "CC=cl.exe " >> $GITHUB_ENV
-          echo "CXX=cl.exe " >> $GITHUB_ENV
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: x64
 
       - name: Setup MinGW for Windows
         if: matrix.compiler == 'MinGW' && runner.os == 'Windows'
