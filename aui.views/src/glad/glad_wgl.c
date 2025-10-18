@@ -24,6 +24,8 @@
         https://glad.dav1d.de/#language=c&specification=wgl&loader=on&api=wgl%3D1.0&extensions=WGL_ARB_create_context&extensions=WGL_ARB_create_context_profile&extensions=WGL_ARB_extensions_string&extensions=WGL_ARB_pixel_format&extensions=WGL_EXT_extensions_string&extensions=WGL_EXT_swap_control
 */
 
+#if AUI_PLATFORM_WIN
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -275,3 +277,4 @@ int gladLoadWGLLoader(GLADloadproc load, HDC hdc) {
 	return 1;
 }
 
+#endif
