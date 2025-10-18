@@ -134,13 +134,13 @@ bool APathView::isDirectoryExists() const {
 APathView APathView::removeFile() const {
 #if AUI_PLATFORM_WIN
     if (isRegularFileExists()) {
-        AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-        if (!DeleteFile(reinterpret_cast<const wchar_t*>(pathU16.data()))) {
-            aui::impl::lastErrorToException("could not remove file " + *this);
+        auto pathU16 = aui::win32::toWchar(string());
+        if (!DeleteFile(pathU16.c_str())) {
+            aui::impl::lastErrorToException("could not remove file " + string());
         }
     } else if (isDirectoryExists()) {
-        AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-        if (!RemoveDirectory(reinterpret_cast<const wchar_t*>(pathU16.data()))) {
+        auto pathU16 = aui::win32::toWchar(string());
+        if (!RemoveDirectory(pathU16.c_str())) {
             aui::impl::lastErrorToException("could not remove directory " + string());
         }
     } else {
@@ -199,8 +199,18 @@ ADeque<APath> APathView::listDir(AFileListFlags f) const {
 #else
     for (dirent* i = nullptr; (i = readdir(dir));) {
         const auto* filename = i->d_name;
-        bool isFile = i->d_type & DT_REG;
-        bool isDirectory = i->d_type & DT_DIR;
+        bool isFile = false;
+        bool isDirectory = false;
+        if (i->d_type == DT_UNKNOWN) {
+            struct stat st;
+            if (lstat(file(i->d_name).c_str(), &st) == 0) {
+                isFile = S_ISREG(st.st_mode);
+                isDirectory = S_ISDIR(st.st_mode);
+            }
+        } else {
+            bool isFile = i->d_type & DT_REG;
+            bool isDirectory = i->d_type & DT_DIR;
+        }
 #endif
 
         if (!(f & AFileListFlags::DONT_IGNORE_DOTS)) {
@@ -245,10 +255,10 @@ APath APathView::absolute() const {
         throw AFileNotFoundException("could not find absolute file " + string());
     }
 #ifdef WIN32
-    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
+    auto pathU16 = aui::win32::toWchar(string());
     AByteBuffer bufU16;
     bufU16.resize(0x1000 * sizeof(char16_t));
-    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), reinterpret_cast<const wchar_t*>(pathU16.data()), bufU16.size() / sizeof(char16_t)) == nullptr) {
+    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), pathU16.c_str(), bufU16.size()) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + string() + "\"");
     }
     APath buf(reinterpret_cast<const char16_t*>(bufU16.data()));
@@ -266,8 +276,8 @@ APath APathView::absolute() const {
 
 APathView APathView::makeDir() const {
 #ifdef WIN32
-    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-    if (CreateDirectory(reinterpret_cast<const wchar_t*>(pathU16.data()), nullptr)) return *this;
+    auto pathU16 = aui::win32::toWchar(string());
+    if (CreateDirectory(pathU16.c_str(), nullptr)) return *this;
     if (GetLastError() == ERROR_ALREADY_EXISTS) {
         // race condition issue.
         return *this;
@@ -329,7 +339,7 @@ time_t APathView::fileModifyTime() const {
 
 AString APathView::systemSlashDirection() const {
 #if AUI_PLATFORM_WIN
-    AString selfCopy = *this;
+    AString selfCopy = string();
     selfCopy.replaceAll('/', '\\');
     return selfCopy;
 #else
@@ -349,8 +359,8 @@ const APathView& APathView::touch() const {
 
 APathView APathView::chmod(int newMode) const {
 #if AUI_PLATFORM_WIN
-    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-    if (::_wchmod(reinterpret_cast<const wchar_t*>(pathU16.data()), newMode) != 0)
+    auto pathU16 = aui::win32::toWchar(string());
+    if (::_wchmod(pathU16.c_str(), newMode) != 0)
 #else
     if (::chmod(toStdString().c_str(), newMode) != 0)
 #endif
@@ -380,8 +390,8 @@ bool APathView::isEffectivelyAccessible(AFileAccess flags) const noexcept {
     if (wflags == 0) {
         return true;
     }
-    AByteBuffer pathU16 = encode(AStringEncoding::UTF16);
-    return _waccess(reinterpret_cast<const wchar_t*>(pathU16.data()), wflags) == 0;
+    auto pathU16 = aui::win32::toWchar(string());
+    return _waccess(pathU16.c_str(), wflags) == 0;
 #elif AUI_PLATFORM_LINUX
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_ANDROID
