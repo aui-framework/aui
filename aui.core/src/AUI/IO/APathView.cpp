@@ -258,7 +258,7 @@ APath APathView::absolute() const {
     auto pathU16 = aui::win32::toWchar(string());
     AByteBuffer bufU16;
     bufU16.resize(0x1000 * sizeof(char16_t));
-    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), pathU16.c_str(), bufU16.size()) == nullptr) {
+    if (_wfullpath(reinterpret_cast<wchar_t*>(bufU16.data()), pathU16.c_str(), bufU16.size() / sizeof(char16_t)) == nullptr) {
         aui::impl::lastErrorToException("could not find absolute file \"" + string() + "\"");
     }
     APath buf(reinterpret_cast<const char16_t*>(bufU16.data()));
