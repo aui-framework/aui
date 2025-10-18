@@ -12,22 +12,3 @@
 #pragma once
 
 #include <glad/glad.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-#if AUI_PLATFORM_ANDROID
-#include <GLES3/gl3.h>
-#include <GLES3/gl31.h>
-#include <GLES3/gl32.h>
-#include <GLES3/gl3ext.h>
-#include <EGL/egl.h>
-#elif AUI_PLATFORM_MACOS
-#include <OpenGL/OpenGL.h>
-#elif AUI_PLATFORM_IOS
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
-#endif
-#ifdef __cplusplus
-}
-#endif
