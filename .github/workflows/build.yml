@@ -249,9 +249,11 @@ jobs:
           echo "CC=clang-20" >> $GITHUB_ENV
           echo "CXX=clang++-20" >> $GITHUB_ENV
 
-      - name: Add MSBuild to PATH
+      - name: Add MSVC to PATH
         if: matrix.compiler == 'Default' && runner.os == 'Windows'
-        uses: microsoft/setup-msbuild@v2
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
