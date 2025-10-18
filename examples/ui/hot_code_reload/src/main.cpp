@@ -11,12 +11,16 @@
 
 // [hardcoded_path]
 #include <AUI/Platform/Entry.h>
+#if __has_include(<AUI/Remote/AHotCodeReload.h>)
+#include <AUI/Remote/AHotCodeReload.h>
+#endif
 #include "MyWindow.h"
-#include "AUI/Remote/AHotCodeReload.h"
 
 AUI_ENTRY {
+#if __has_include(<AUI/Remote/AHotCodeReload.h>)
     // hardcoded path
     AHotCodeReload::inst().addFile("/home/projects/aui/cmake-build-debug/CMakeFiles/aui.example.hot_code_reload.dir/src/MyWindow.cpp.o");
+#endif
 
     _new<MyWindow>()->show();
     return 0;
