@@ -251,7 +251,7 @@ jobs:
 
       - name: Add MSBuild to PATH
         if: matrix.compiler == 'Default' && runner.os == 'Windows'
-        uses: microsoft/setup-msbuild@v1.0.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
