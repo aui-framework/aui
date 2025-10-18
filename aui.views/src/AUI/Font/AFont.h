@@ -16,7 +16,6 @@
 #include <AUI/Url/AUrl.h>
 
 #include "AUI/Render/FontRendering.h"
-#include "AUI/GL/Texture2D.h"
 
 #include "AUI/Render/SimpleTexturePacker.h"
 

@@ -25,7 +25,7 @@
 #include <AUI/Enum/AScreenOrientation.h>
 
 #if AUI_PLATFORM_WIN
-#include <windows.h>
+#include <Windows.h>
 
 #elif AUI_PLATFORM_ANDROID
 #include <jni.h>
