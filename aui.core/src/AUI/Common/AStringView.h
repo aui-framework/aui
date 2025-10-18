@@ -85,6 +85,7 @@ public:
     constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
+    constexpr explicit AStringView(const std::string& str) noexcept : super(str) {}
 
     bool startsWith(AStringView prefix) const noexcept {
         if (prefix.size() > size()) {
@@ -98,6 +99,11 @@ public:
             return false;
         }
         return substr(size() - suffix.size()) == suffix;
+    }
+
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return super::empty();
     }
 
     bool contains(char c) const noexcept;
@@ -371,6 +377,23 @@ struct std::hash<AStringView>
 inline void PrintTo(AStringView s, std::ostream* stream) {
     *stream << s.bytes();
 }
+
+inline std::ostream& operator<<(std::ostream& o, const AStringView& s)
+{
+    o << s.bytes();
+    return o;
+}
+
+
+#if defined(FMT_VERSION) && (FMT_VERSION < 100000)
+template <> struct fmt::detail::is_string<AStringView>: std::false_type {};
+#endif
+
+template <> struct fmt::formatter<AStringView>: fmt::formatter<std::string_view> {
+    auto format(const AStringView& s, fmt::format_context& ctx) const {
+        return fmt::formatter<std::string_view>::format(s.bytes(), ctx);
+    }
+};
 
 #if AUI_PLATFORM_WIN
 namespace aui::win32 {

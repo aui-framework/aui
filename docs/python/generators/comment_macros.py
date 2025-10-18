@@ -21,6 +21,10 @@ log = logging.getLogger('mkdocs')
 def handle_comment_macros(markdown: str, file: File):
     def replace_comment(match: re.Match):
         indentation, type, args = match.groups()
+
+        def fix_indentation(text: str):
+            return "\n".join([f'{indentation}{i}' for i in text.splitlines()])
+
         args = args.strip()
         if type == "example-file-count":
             return _badge_for_file_count(args)
@@ -31,9 +35,9 @@ def handle_comment_macros(markdown: str, file: File):
         if type == "icon":
             return _badge_for_icon(args)
         if type == "include":
-            return "\n".join([f'{indentation}{i}' for i in _include(args).splitlines()])
+            return fix_indentation(_include(args))
         if type == "snippet":
-            return _snippet(args)
+            return fix_indentation(_snippet(args))
         if type == "steal_documentation":
             return _steal_documentation(args)
         if type == "parse_tests":

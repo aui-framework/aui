@@ -158,29 +158,30 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 | Feature or module | Windows Vista+ | Windows XP | Linux | Android | MacOS | iOS |
 |-------------------|----------------|------------|-------|---------|-------|-----|
-| aui.core          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.crypt         | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.curl          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.image         | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.json          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.network       | #              |     #      |   #   |    #    |   +   |  +  |
-| aui.toolbox       | #              |     #      |   #   |         |   #   |     |
-| aui.views         | #              |     ?      |   +   |    +    |   +   |  +  |
-| aui.xml           | #              |     #      |   #   |    #    |   #   |  #  |
-| Assets            | #              |     #      |   #   |    #    |   #   |  #  |
-| App packaging     | #              |     #      |   #   |    #    |   #   |  #  |
-| HiDPI             | #              |     #      |   #   |    #    |   #   |  #  |
-| Filesystem        | #              |     #      |   #   |    #    |   +   |  +  |
-| Prebuilt binaries | #              |     -      |   #   |    ?    |   ?   |  ?  |
-| Process creation  | #              |     #      |   #   |         |   ?   |     |
-| AUI Devtools      | #              |     #      |   #   |    -    |   #   |  -  |
-| Custom window     | #              |     #      |   #   |    ?    |   ?   |  ?  |
-| IME               | -              |     -      |   +   |    -    |   +   |  -  |
-| Touch             | -              |     -      |   -   |    #    |   -   |  #  |
-| Drag n drop       | +              |     -      |   -   |         |   -   |  -  |
+| aui.core          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.crypt         | #              | #          |   #   |    #    |   #   |  #  |
+| aui.curl          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.image         | #              | #          |   #   |    #    |   #   |  #  |
+| aui.json          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.network       | #              | #          |   #   |    #    |   +   |  +  |
+| aui.toolbox       | #              | #          |   #   |         |   #   |     |
+| aui.views         | #              | ?          |   +   |    +    |   +   |  +  |
+| aui.xml           | #              | #          |   #   |    #    |   #   |  #  |
+| Assets            | #              | #          |   #   |    #    |   #   |  #  |
+| App packaging     | #              | #          |   #   |    #    |   #   |  #  |
+| HiDPI             | #              | #          |   #   |    #    |   #   |  #  |
+| Filesystem        | #              | #          |   #   |    #    |   +   |  +  |
+| Prebuilt binaries | #              | -          |   #   |    ?    |   ?   |  ?  |
+| Process creation  | #              | #          |   #   |         |   ?   |     |
+| AUI Devtools      | #              | #          |   #   |    -    |   #   |  -  |
+| Custom window     | #              | #          |   #   |    ?    |   ?   |  ?  |
+| IME               | -              | -          |   +   |    -    |   +   |  -  |
+| Touch             | -              | -          |   -   |    #    |   -   |  #  |
+| Drag n drop       | +              | -          |   -   |         |   -   |  -  |
 | Global menu       |                |            |   ?   |         |   ?   |     |
-| OpenGL renderer   | #              |     #      |   #   |    #    |   #   |  #  |
-| Software renderer | #              |     #      |   #   |         |   ?   |     |
+| OpenGL renderer   | #              | #          |   #   |    #    |   #   |  #  |
+| Software renderer | #              | #          |   #   |         |   ?   |     |
+| Hot Code Reload   | -              | -          |   #   |    -    |   -   |  -  |
 
 | Compiler                     | Support       |
 |------------------------------|---------------|

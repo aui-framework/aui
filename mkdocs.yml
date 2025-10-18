@@ -125,6 +125,7 @@ nav:
     - code-style.md
     - troubleshoot-list.md
     - crosscompiling.md
+    - 'Hot Code Reload': ahotcodereload.md
 
   - 'UI Architecture':
     - ui-building-overview.md

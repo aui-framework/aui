@@ -1290,6 +1290,19 @@ function(aui_get_package_name_and_arch _out)
     set(${_out} ${_tmp} PARENT_SCOPE)
 endfunction()
 
+function(aui_enable_hotswap AUI_MODULE_NAME)
+    if (NOT AUI_PLATFORM_LINUX)
+        message(FATAL_ERROR "Hot code reload (hotswap) is supported on the following platforms only: Linux")
+    endif ()
+    string(SHA1 hash ${AUI_MODULE_NAME})
+    set(hash "HotswapEnabler${hash}")
+    file(GENERATE
+            OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/hotswap_enable.cpp"
+            CONTENT "#include <AUI/Remote/AHotCodeReload.h>\nstruct ${hash} { ${hash}() { AHotCodeReload::inst().addFiles(\"$<TARGET_OBJECTS:${AUI_MODULE_NAME}>\"); } } hotswapenabler${hash};"
+    )
+    target_sources(${AUI_MODULE_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/hotswap_enable.cpp)
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 
