@@ -83,10 +83,8 @@ public:
 
     void set(const gl::Program::Uniform& uniform, int value) const;
     void set(const gl::Program::Uniform& uniform, float value) const;
-    void set(const gl::Program::Uniform& uniform, double value) const;
     void set(const gl::Program::Uniform& uniform, glm::mat4 value) const;
     void set(const gl::Program::Uniform& uniform, glm::mat3 value) const;
-    void set(const gl::Program::Uniform& uniform, glm::dmat4 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec2 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;

@@ -11,9 +11,7 @@
 
 #pragma once
 
-#if AUI_PLATFORM_MACOS
-#include <GL/glew.h>
-#endif
+#include <glad/glad.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +28,8 @@ extern "C" {
 #include <OpenGLES/ES3/gl.h>
 #include <OpenGLES/ES3/glext.h>
 #else
-#include <GL/glew.h>
-#include <GL/gl.h>
+//#include <glad/glad_glx.h>
+#include <GL/glx.h>
 #endif
 #ifdef __cplusplus
 }

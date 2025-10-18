@@ -51,8 +51,8 @@ void AGLEmbedAuiWrap::resetGLState() {
 
 AGLEmbedAuiWrap::AGLEmbedAuiWrap() {
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
-    glewExperimental = true;
-    auto r = glewInit();
-    AUI_ASSERT(r == 0);
+    //glewExperimental = true;
+    //auto r = glewInit();
+    //AUI_ASSERT(r == 0);
 #endif
 }

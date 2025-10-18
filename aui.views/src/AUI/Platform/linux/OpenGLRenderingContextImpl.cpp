@@ -22,7 +22,7 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-#include <GL/glx.h>
+//#include <GL/glx.h>
 
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {}

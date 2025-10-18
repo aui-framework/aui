@@ -14,13 +14,30 @@
 //
 
 #include "OpenGLRenderingContextGtk.h"
-#include "AUI/Platform/linux/IPlatformAbstraction.h"
+
+#include <dlfcn.h>
+#include <AUI/Platform/linux/IPlatformAbstraction.h>
+#include <AUI/Platform/linux/gtk/epoxy_map.hpp>
 #include "PlatformAbstractionGtk.h"
 #include "gtk_functions.h"
 
 using namespace aui::gtk4_fake;
 
+namespace aui::gtk4_fake {
+extern void* handle;
+}
+
 GdkGLContext* OpenGLRenderingContextGtk::ourContext = nullptr;
+
+namespace aui::epoxy_fake {
+void* get_proc_address(const char* name) {
+    auto it = AUI_EPOXY_MAP.find(name);
+    if (it == AUI_EPOXY_MAP.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+}
 
 OpenGLRenderingContextGtk::Texture::~Texture() {
     if (gl_texture) {
@@ -50,23 +67,20 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     realCreateContext(widget);
     mNeedsResize = true;
 
-    auto acquired = contextScope();
-    if (!glewExperimental) {
-        glewExperimental = true;
-        switch (auto s = glewInit()) {
-            default:
-                glewExperimental = false;
-                throw AException("glewInit failed");
-                break;
-
-            case GLEW_ERROR_NO_GLX_DISPLAY:
-                // we can safely ignore that; see https://github.com/nigels-com/glew/issues/172
-                [[fallthrough]];
-            case GLEW_OK:
-                break;
-        }
-        ALogger::info("OpenGL context is ready");
+    auto* is_desktop_gl_fn = reinterpret_cast<bool(*)()>(dlsym(aui::gtk4_fake::handle, "epoxy_is_desktop_gl"));
+    if (!is_desktop_gl_fn) {
+        throw AException("epoxy_is_desktop_gl is not found libepoxy.so");
     }
+    bool is_desktop_gl = is_desktop_gl_fn();
+
+    if (is_desktop_gl) {
+        gladLoadGLLoader(aui::epoxy_fake::get_proc_address);
+    } else {
+        gladLoadGLES2Loader(aui::epoxy_fake::get_proc_address);
+    }
+
+    auto acquired = contextScope();
+
     mRenderer = ourRenderer();
 }
 

@@ -136,20 +136,6 @@ void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat3 value) cons
         glUniformMatrix3fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
-void gl::Program::set(const gl::Program::Uniform& uniform, glm::dmat4 value) const {
-    if (sameAsCache(uniform, value))
-        return;
-    auto loc = getLocation(uniform);
-    if (loc >= 0) {
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-        glm::mat4 fvalue = value;
-        glUniformMatrix4fv(loc, 1, GL_FALSE, &(fvalue[0][0]));
-#else
-        glUniformMatrix4dv(loc, 1, GL_FALSE, &(value[0][0]));
-#endif
-    }
-}
-
 void gl::Program::set(const gl::Program::Uniform& uniform, float value) const {
     if (sameAsCache(uniform, value))
         return;
@@ -188,19 +174,6 @@ void gl::Program::set(const gl::Program::Uniform& uniform, int value) const {
     auto loc = getLocation(uniform);
     if (loc >= 0)
         glUniform1i(loc, value);
-}
-
-void gl::Program::set(const gl::Program::Uniform& uniform, double value) const {
-    if (sameAsCache(uniform, value))
-        return;
-    auto loc = getLocation(uniform);
-    if (loc >= 0) {
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-        glUniform1f(loc, value);
-#else
-        glUniform1d(loc, value);
-#endif
-    }
 }
 
 int32_t gl::Program::getLocation(const gl::Program::Uniform& uniform) const {
