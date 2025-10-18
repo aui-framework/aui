@@ -19,8 +19,8 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
+#include <glad/glad_wgl.h>
 
-#include <GL/wglew.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
 #include "AUI/Util/kAUI.h"
@@ -84,11 +84,18 @@ void OpenGLRenderingContext::init(const Init& init) {
         DescribePixelFormat(fakeWindow.mDC, iPixelFormat, sizeof(pfd), &pfd);
         SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
 
+        gladLoadWGL(fakeWindow.mDC);
+
         // context initialization
         ourHrc = wglCreateContext(fakeWindow.mDC);
         makeCurrent(fakeWindow.mDC);
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
+
+        if (!gladLoadGL()) {
+            AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
+            throw AException("glad load failed");
+        }
 
         using namespace std::string_view_literals;
 
@@ -113,7 +120,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             std::make_tuple("Microsoft"sv, "GDI Generic"sv),
         };
 
-        for (const auto&[blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
+        for (const auto& [blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
             if (vendor.find(blacklistedVendor) != std::string_view::npos && renderer.find(blacklistedRenderer) != std::string_view::npos) {
                 throw AException("Blacklisted OpenGL driver: {} / {}"_format(vendor, renderer));
             }
@@ -139,13 +146,6 @@ void OpenGLRenderingContext::init(const Init& init) {
             ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
 
 
-        if (!glewExperimental) {
-            glewExperimental = true;
-            if (glewInit() != GLEW_OK) {
-                AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
-                throw AException("glewInit failed");
-            }
-        }
         bool k;
 
         auto makeContext = [&](unsigned i) {
