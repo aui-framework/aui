@@ -27,9 +27,6 @@ extern "C" {
 #elif AUI_PLATFORM_IOS
 #include <OpenGLES/ES3/gl.h>
 #include <OpenGLES/ES3/glext.h>
-#else
-//#include <glad/glad_glx.h>
-#include <GL/glx.h>
 #endif
 #ifdef __cplusplus
 }
