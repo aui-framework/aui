@@ -86,21 +86,28 @@
  *
  * ### Setup
  *
- * Link to remote_tools module: `aui_link(my_target PUBLIC aui::remote_tools)`
+ * **Link to remote_tools module**: `aui_link(my_target PUBLIC aui::remote_tools)`
  *
- * Add object files to track:
+ * **Add object files to track**:
  *
  * === ":simple-cmake: CMake"
  *     <!-- aui:snippet examples/ui/hot_code_reload/CMakeLists.txt aui_enable_hotswap -->
  * === ":material-language-cpp: Manually"
  *     <!-- aui:snippet examples/ui/hot_code_reload/src/main.cpp hardcoded_path -->
  *
+ * **Observe** `AHotCodeReload::inst().patchEnd` to re-call patched functions to see the effect. For UI, extract
+ * `setContents` call to a member function and call it in constructor. Also, connect to
+ * `AHotCodeReload::inst().patchEnd` to re-initialize UI components after the patch. Use `__has_include` to check if
+ * `aui::remote_tools` was added in your `CMakeLists.txt`.
+ *
+ * <!-- aui:snippet examples/ui/hot_code_reload/src/MyWindow.cpp AHotCodeReload_example -->
  *
  * ### Usage
  *
  * 1. Launch your application.
  * 2. Edit your source code.
- * 3. Compile. (You may skip the linking step.). In IDEs, it can be accomplished by shortcuts.
+ * 3. Compile. (You may skip the linking step.). In IDEs, it can be accomplished by shortcuts. :simple-clion: CLion:
+ *    ++ctrl+9++.
  * 4. Wait for patching to complete.
  * 5. Repeat steps 2–4 as needed.
  *
@@ -109,7 +116,7 @@
  * 1. `AHotCodeReload` performs some safety checks, but a patch could still break your application.
  * 2. Only functions are hooked. New function versions will reflect changes to certain variables (see below)
  * 3. For changes to become effective, the patched functions need to be called (e.g. by re-triggering relevant UI
- *    actions or re-calling UI inflate routines `setContents`).
+ *    actions or re-calling UI inflate routines `setContents`). See [setup](#setup).
  * 4. Do not modify struct or class layouts, function signatures; the system cannot reliably detect or adjust for such
  *    changes.
  *
