@@ -183,6 +183,7 @@ jobs:
             build_type: RelWithDebInfo
             shared_or_static: shared
             arch: x86_64
+            compiler: "Default"
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
@@ -190,6 +191,7 @@ jobs:
             build_type: RelWithDebInfo
             shared_or_static: static
             arch: x86_64
+            compiler: "Default"
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
