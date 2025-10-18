@@ -21,6 +21,8 @@
         https://glad.dav1d.de/#language=c&specification=glx&loader=on&api=glx%3D1.4&extensions=GLX_ARB_create_context&extensions=GLX_ARB_create_context_profile&extensions=GLX_EXT_swap_control
 */
 
+#if AUI_PLATFORM_LINUX
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -357,3 +359,4 @@ int gladLoadGLXLoader(GLADloadproc load, Display *dpy, int screen) {
 	return 1;
 }
 
+#endif
