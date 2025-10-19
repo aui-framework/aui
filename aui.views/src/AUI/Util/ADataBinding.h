@@ -67,7 +67,7 @@ public:
 };
 
 template<aui::derived_from<AViewContainer> Container>
-struct ADataBindingDefault<Container, _<AView>> {
+struct [[deprecated("test")]] ADataBindingDefault<Container, _<AView>> {
     static void setup(const _<AViewContainer>& container) {}
     static auto property(const _<AViewContainer>& container) {
         return ASlotDef {
