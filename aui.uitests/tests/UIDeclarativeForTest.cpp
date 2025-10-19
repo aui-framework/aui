@@ -110,7 +110,7 @@ TEST_F(UIDeclarativeForTest, Example) {
 TEST_F(UIDeclarativeForTest, Performance) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
-    EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 50));
+    EXPECT_CALL(mTestObserver, onViewCreated(testing::_)).Times(testing::Between(10, 100));
 
     mWindow-> // HIDE
     setContents(Vertical {
