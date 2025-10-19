@@ -194,6 +194,7 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
+            Padding { 3_dp, 6_dp },
             TextColor { 0_rgb },
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },

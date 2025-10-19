@@ -162,24 +162,15 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                             (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, &status);
 
                         if (count > 0) {
-                            if (count == 1) {
-                                switch (buf[0]) {
-                                    case 27:
-                                        break; // esc
-                                    case 127:
-                                        break; // del
-                                    default:
-                                        if (buf[0] >= 32) { // ASCII
-                                            window->onCharEntered(AChar(buf[0]));
-                                        }
-                                }
-                            } else {
-                                AString s(buf);
-                                if (!s.empty()) { // Valid UTF-8
-                                    for (AChar c : s) {
-                                        window->onCharEntered(c);
-                                    }
-                                }
+                            switch (buf[0]) {
+                                case 27:
+                                    break;   // esc
+                                case 127:
+                                    break;   // del
+                                default:
+                                    AString s(buf);
+                                    AUI_ASSERT(!s.empty());
+                                    window->onCharEntered(s[0]);
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));

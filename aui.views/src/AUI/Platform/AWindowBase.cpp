@@ -397,6 +397,7 @@ void AWindowBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 }
 
 void AWindowBase::onKeyDown(AInput::Key key) {
+    currentWindowStorage() = this;
     AViewContainer::onKeyDown(key);
     emit keyDown(key);
 
@@ -405,6 +406,16 @@ void AWindowBase::onKeyDown(AInput::Key key) {
         createDevtoolsWindow();
     }
 #endif
+}
+
+void AWindowBase::onKeyRepeat(AInput::Key key) {
+    currentWindowStorage() = this;
+    AViewContainerBase::onKeyRepeat(key);
+}
+
+void AWindowBase::onKeyUp(AInput::Key key) {
+    currentWindowStorage() = this;
+    AViewContainerBase::onKeyUp(key);
 }
 
 void AWindowBase::createDevtoolsWindow() {
