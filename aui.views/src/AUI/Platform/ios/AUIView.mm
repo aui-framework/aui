@@ -9,10 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#import "AUIView.h"
-
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/AWindow.h>
+#import "AUIView.h"
 #include <string>
 #include <OpenGLES/EAGLDrawable.h>
 
