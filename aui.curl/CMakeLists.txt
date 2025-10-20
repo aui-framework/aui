@@ -6,10 +6,12 @@ else()
     if(MSVC AND AUI_BUILD_FOR STREQUAL "winxp")
         auib_import(CURL https://github.com/curl/curl
                     VERSION curl-7_84_0
-                    CMAKE_ARGS -DCURL_TARGET_WINDOWS_VERSION=0x0501)
+                    CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DCURL_TARGET_WINDOWS_VERSION=0x0501)
     else()
-        auib_import(CURL https://github.com/aui-framework/curl/archive/b8c004e47705bb45c8e3408835302f5c44ce60c7.zip
-                    ARCHIVE)
+        auib_import(CURL https://github.com/aui-framework/curl/archive/b29a88ef1ac5d0b5a41c116f7713204dc377e9e7.zip
+                    ARCHIVE
+                    CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DBUILD_CURL_EXE=OFF -DCURL_DISABLE_LDAP=ON -DCURL_DISABLE_LDAPS=ON
+        )
     endif()
 endif()
 aui_module(aui.curl EXPORT aui WHOLEARCHIVE)

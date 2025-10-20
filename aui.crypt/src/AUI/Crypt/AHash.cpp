@@ -13,26 +13,35 @@
 // Created by alex2 on 23.09.2020.
 //
 
-#include <cassert>
 #include "AHash.h"
-#include <openssl/sha.h>
-#include <openssl/md5.h>
-#include <openssl/hmac.h>
+
+#include <cassert>
+#include <mbedtls/sha512.h>
+#include <mbedtls/sha256.h>
+#include <mbedtls/sha1.h>
+#include <mbedtls/md5.h>
+#include <mbedtls/md.h>
 #include <AUI/IO/IInputStream.h>
 
-
-template<typename Functor>
-inline AByteBuffer sha_impl(Functor f, size_t s, AByteBufferView in) {
+template<typename CTX, typename FInit, typename FStarts, typename FUpdate, typename FFinish, typename FFree>
+static AByteBuffer hash_impl(FInit init, FStarts starts, FUpdate update, FFinish finish, FFree free, size_t s, AByteBufferView in) {
     AByteBuffer out;
     out.reserve(s);
     out.setSize(s);
-    f((const unsigned char*)in.data(), in.size(), (unsigned char*)out.data());
+
+    CTX ctx;
+    init(&ctx);
+    starts(&ctx);
+    update(&ctx, reinterpret_cast<const unsigned char*>(in.data()), in.size());
+    finish(&ctx, reinterpret_cast<unsigned char*>(out.data()));
+    free(&ctx);
+
     return out;
 }
 
 
-template<typename CTX, typename FInit, typename FUpdate, typename FFinal>
-inline AByteBuffer sha_impl(FInit init, FUpdate update, FFinal final, size_t s, aui::no_escape<IInputStream> in) {
+template<typename CTX, typename FInit, typename FStarts, typename FUpdate, typename FFinish, typename FFree>
+static AByteBuffer hash_impl(FInit init, FStarts starts, FUpdate update, FFinish finish, FFree free, size_t s, aui::no_escape<IInputStream> in) {
     AByteBuffer result;
     result.reserve(s);
     result.setSize(s);
@@ -41,89 +50,125 @@ inline AByteBuffer sha_impl(FInit init, FUpdate update, FFinal final, size_t s, 
 
     CTX ctx;
     init(&ctx);
+    starts(&ctx);
     for (size_t r; (r = in->read(tmp, sizeof(tmp))) > 0;) {
-        update(&ctx, tmp, r);
+        update(&ctx, reinterpret_cast<const unsigned char*>(tmp), r);
     }
-    final((unsigned char*) result.data(), &ctx);
+    finish(&ctx, reinterpret_cast<unsigned char*>(result.data()));
+    free(&ctx);
     return result;
 }
 
-
-
 AByteBuffer AHash::sha512(AByteBufferView in) {
-    return sha_impl(SHA512, 64, in);
+    return hash_impl<mbedtls_sha512_context>(
+        mbedtls_sha512_init,
+        [](mbedtls_sha512_context* ctx) { mbedtls_sha512_starts(ctx, 0); },
+        mbedtls_sha512_update,
+        mbedtls_sha512_finish,
+        mbedtls_sha512_free,
+        64,
+        in
+    );
 }
 
 AByteBuffer AHash::sha512(aui::no_escape<IInputStream> in) {
-    return sha_impl<SHA512_CTX>(SHA512_Init, SHA512_Update, SHA512_Final, 64, in);
+    return hash_impl<mbedtls_sha512_context>(
+        mbedtls_sha512_init,
+        [](mbedtls_sha512_context* ctx) { mbedtls_sha512_starts(ctx, 0); },
+        mbedtls_sha512_update,
+        mbedtls_sha512_finish,
+        mbedtls_sha512_free,
+        64,
+        in
+    );
 }
 
 AByteBuffer AHash::sha256(AByteBufferView in) {
-    return sha_impl(SHA256, 32, in);
+    return hash_impl<mbedtls_sha256_context>(
+        mbedtls_sha256_init,
+        [](mbedtls_sha256_context* ctx) { mbedtls_sha256_starts(ctx, 0); },
+        mbedtls_sha256_update,
+        mbedtls_sha256_finish,
+        mbedtls_sha256_free,
+        32,
+        in
+    );
 }
 
 AByteBuffer AHash::sha256(aui::no_escape<IInputStream> in) {
-    return sha_impl<SHA256_CTX>(SHA256_Init, SHA256_Update, SHA256_Final, 32, in);
+    return hash_impl<mbedtls_sha256_context>(
+        mbedtls_sha256_init,
+        [](mbedtls_sha256_context* ctx) { mbedtls_sha256_starts(ctx, 0); },
+        mbedtls_sha256_update,
+        mbedtls_sha256_finish,
+        mbedtls_sha256_free,
+        32,
+        in
+    );
 }
 
-
 AByteBuffer AHash::sha1(AByteBufferView in) {
-    return sha_impl(SHA1, 20, in);
+    return hash_impl<mbedtls_sha1_context>(
+        mbedtls_sha1_init,
+        mbedtls_sha1_starts,
+        mbedtls_sha1_update,
+        mbedtls_sha1_finish,
+        mbedtls_sha1_free,
+        20,
+        in
+    );
 }
 
 AByteBuffer AHash::sha1(aui::no_escape<IInputStream> in) {
-    return sha_impl<SHA_CTX>(SHA1_Init, SHA1_Update, SHA1_Final, 20, in);
+    return hash_impl<mbedtls_sha1_context>(
+        mbedtls_sha1_init,
+        mbedtls_sha1_starts,
+        mbedtls_sha1_update,
+        mbedtls_sha1_finish,
+        mbedtls_sha1_free,
+        20,
+        in
+    );
 }
 
 AByteBuffer AHash::md5(AByteBufferView in) {
-    return sha_impl(MD5, 16, in);
+    return hash_impl<mbedtls_md5_context>(
+        mbedtls_md5_init,
+        mbedtls_md5_starts,
+        mbedtls_md5_update,
+        mbedtls_md5_finish,
+        mbedtls_md5_free,
+        16,
+        in
+    );
 }
 
 AByteBuffer AHash::md5(aui::no_escape<IInputStream> in) {
-    return sha_impl<MD5_CTX>(MD5_Init, MD5_Update, MD5_Final, 16, in);
-}
-
-
-
-template<typename Functor>
-inline AByteBuffer hmac_impl(Functor f, size_t s, AByteBufferView in) {
-    AByteBuffer out;
-    out.reserve(s);
-    out.setSize(s);
-    f((const unsigned char*)in.data(), in.size(), (unsigned char*)out.data());
-    return out;
-}
-
-
-template<typename CTX, typename FInit, typename FUpdate, typename FFinal>
-inline AByteBuffer hmac_impl(FInit init, FUpdate update, FFinal final, size_t s, aui::no_escape<IInputStream> in) {
-    AByteBuffer result;
-    result.reserve(s);
-    result.setSize(s);
-
-    char tmp[0x10000];
-
-    CTX ctx;
-    init(&ctx);
-    for (size_t r; (r = in->read(tmp, sizeof(tmp))) > 0;) {
-        update(&ctx, tmp, r);
-    }
-    final((unsigned char*) result.data(), &ctx);
-    return result;
+    return hash_impl<mbedtls_md5_context>(
+        mbedtls_md5_init,
+        mbedtls_md5_starts,
+        mbedtls_md5_update,
+        mbedtls_md5_finish,
+        mbedtls_md5_free,
+        16,
+        in
+    );
 }
 
 AByteBuffer AHash::sha256hmac(AByteBufferView in, AByteBufferView key) {
     AByteBuffer result;
-    result.resize(EVP_MAX_MD_SIZE);
+    result.resize(32);
 
-    unsigned int size;
-    HMAC(EVP_sha256(),
-         key.data(),
-         key.size(),
-         reinterpret_cast<const unsigned char*>(in.data()),
-         in.size(),
-         reinterpret_cast<unsigned char*>(result.data()),
-         &size);
-    result.setSize(size);
+    const mbedtls_md_info_t* md_info = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+
+    mbedtls_md_hmac(
+        md_info,
+        reinterpret_cast<const unsigned char*>(key.data()),
+        key.size(),
+        reinterpret_cast<const unsigned char*>(in.data()),
+        in.size(),
+        reinterpret_cast<unsigned char*>(result.data())
+    );
+
     return result;
 }
