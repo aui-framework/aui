@@ -17,7 +17,10 @@ SoftwareRenderingContext::SoftwareRenderingContext() {
 }
 
 SoftwareRenderingContext::~SoftwareRenderingContext() {
-
+    if (mBitmapBlob) {
+        free(mBitmapBlob);
+        mBitmapBlob = nullptr;
+    }
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
@@ -49,11 +52,16 @@ AImage SoftwareRenderingContext::makeScreenshot() {
 
 void SoftwareRenderingContext::reallocate(const AWindowBase& window) {
     mBitmapSize = window.getSize();
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
+    reallocate();
 }
 
 void SoftwareRenderingContext::reallocate() {
+    if (mBitmapBlob) {
+        free(mBitmapBlob);
+    }
+    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
 
+    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }
 
 IRenderer& SoftwareRenderingContext::renderer() {
