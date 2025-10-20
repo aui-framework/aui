@@ -4,7 +4,9 @@ if(AUIB_DISABLE)
     find_package(MbedTLS REQUIRED)
 else()
     auib_import(MbedTLS https://github.com/Mbed-TLS/mbedtls
-                VERSION mbedtls-3.6.5)
+                VERSION mbedtls-3.6.5
+                CMAKE_ARGS -DENABLE_PROGRAMS=OFF
+    )
 endif()
 
 aui_module(aui.crypt EXPORT aui)
