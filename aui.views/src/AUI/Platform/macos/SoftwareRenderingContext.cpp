@@ -49,6 +49,7 @@ AImage SoftwareRenderingContext::makeScreenshot() {
 
 void SoftwareRenderingContext::reallocate(const AWindowBase& window) {
     mBitmapSize = window.getSize();
+    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }
 
 void SoftwareRenderingContext::reallocate() {
