@@ -281,16 +281,17 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    static bool GTK_PLATFORM = std::string_view(std::getenv("AUI_PA")) == std::string_view("gtk4");
+#if AUI_PLATFORM_LINUX
+    static bool GTK_PLATFORM = std::getenv("AUI_PA") && std::string_view(std::getenv("AUI_PA")) == std::string_view("gtk4");
     if (GTK_PLATFORM) {
         return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
                           0.0f, static_cast<float>(mWindow->getHeight()),
                           -1.f, 1.f);
-    } else {
-        return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
-                          static_cast<float>(mWindow->getHeight()), 0.0f,
-                          -1.f, 1.f);
-    }
+    } else
+#endif
+    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
+                      static_cast<float>(mWindow->getHeight()), 0.0f,
+                      -1.f, 1.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
