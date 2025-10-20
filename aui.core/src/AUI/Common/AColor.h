@@ -192,7 +192,13 @@ struct API_AUI_CORE AColorHSV {
 
 template<>
 struct std::hash<AColor> {
-    auto operator()(const AColor& c) {
-        return std::hash<std::string_view>{}({ reinterpret_cast<const char*>(&c), sizeof(c) });
+    size_t operator()(const AColor& c) const noexcept {
+        constexpr size_t prime = 31;
+        size_t result = 17;
+        result = result * prime + std::hash<float>{}(c.r);
+        result = result * prime + std::hash<float>{}(c.g);
+        result = result * prime + std::hash<float>{}(c.b);
+        result = result * prime + std::hash<float>{}(c.a);
+        return result;
     }
 };

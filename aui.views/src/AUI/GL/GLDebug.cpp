@@ -59,7 +59,11 @@ static void GLAPIENTRY debugProc(GLenum source,
                                  const void* userParam)
 {
     // filter out repeated messages; they are spamming and annoying
+#if defined(__APPLE__)
+    const auto h = std::hash<std::string>{}(std::string(message));
+#else
     const auto h = std::hash<std::string_view>{}(std::string_view(message));
+#endif
     static ASet<size_t> messages;
     if (messages.contains(h)) {
         return;
