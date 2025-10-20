@@ -20,7 +20,7 @@ if(AUIB_DISABLE)
 else ()
     auib_import(ixwebsocket https://github.com/machinezone/IXWebSocket
                 VERSION v11.4.6
-                CMAKE_ARGS -DUSE_TLS=ON -DUSE_OPEN_SSL=OFF
+                CMAKE_ARGS -DUSE_TLS=ON -DUSE_OPEN_SSL=OFF -DUSE_MBED_TLS=ON
     )
 endif ()
 
