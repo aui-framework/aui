@@ -76,12 +76,13 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 
-    GLint stencilBits = 0;
-    glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-
     if (!gladLoadGL()) {
         throw AException("glad load failed");
     }
+
+    GLint stencilBits = 0;
+    glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
+
     mRenderer = ourRenderer();
     ALogger::info("OpenGL context is ready");
 }
