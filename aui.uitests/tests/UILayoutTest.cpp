@@ -69,18 +69,18 @@ TEST_F(UILayoutTest, SmallCorner1) {
         Margin(0),
         BackgroundSolid(0xff00ff_rgb),
     };
-    _<AView> box = Horizontal {
-        SpacerExpanding() AUI_WITH_STYLE { MinSize(0) }, Vertical {
+    _<AView> box =
+        Horizontal {
             SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
-            cornerLabel,
-        } AUI_WITH_STYLE {
-            MinSize(0)
+            Vertical {
+              SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
+              cornerLabel,
+            } AUI_WITH_STYLE { MinSize(0) }
         }
-    } << "Box"
-    AUI_WITH_STYLE {
-        FixedSize(22_dp),
-        BackgroundSolid(0xffffff_rgb),
-    };
+        << "Box" AUI_WITH_STYLE {
+               FixedSize(22_dp),
+               BackgroundSolid(0xffffff_rgb),
+           };
 
     inflate(Centered::Expanding { box });
 

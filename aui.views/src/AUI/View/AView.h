@@ -1071,7 +1071,7 @@ protected:
     /**
      * @brief Maximal size.
      */
-    glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
+    glm::ivec2 mMaxSize = {0x7fffff, 0x7fffff};
 
     /**
      * @brief Fixed size.
