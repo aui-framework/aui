@@ -8,7 +8,7 @@ else()
                     VERSION curl-7_84_0
                     CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DCURL_TARGET_WINDOWS_VERSION=0x0501)
     else()
-        auib_import(CURL https://github.com/aui-framework/curl/archive/b29a88ef1ac5d0b5a41c116f7713204dc377e9e7.zip
+        auib_import(CURL https://github.com/aui-framework/curl/archive/75a1d9954a4184b42a9365c7d4225b802530634c.zip
                     ARCHIVE
                     CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DBUILD_CURL_EXE=OFF -DUSE_NGHTTP2=OFF -DCURL_DISABLE_LDAP=ON -DCURL_DISABLE_LDAPS=ON -DUSE_LIBIDN2=OFF -DCURL_USE_LIBPSL=OFF -DCURL_BROTLI=OFF -DCURL_ZSTD=OFF -DCURL_USE_LIBSSH2=OFF
         )
