@@ -61,7 +61,9 @@ void AWindow::createDevtoolsWindow() {
 
     protected:
         void createDevtoolsWindow() override {
-            // stub
+            // you can comment out this to forbid issuing devtools on a devtools window, but who I am to disable such a
+            // meme thing?
+            AWindow::createDevtoolsWindow();
         }
     };
     auto window = _new<DevtoolsWindow>();

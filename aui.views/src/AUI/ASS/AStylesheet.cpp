@@ -64,7 +64,7 @@ AStylesheet::AStylesheet() {
             FontSize {10_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
-            MaxSize {99999999_dp, 99999999_dp },
+            MaxSize { 9999999_dp, 9999999_dp },
         },
 
         // AWindow
@@ -194,6 +194,7 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
+            Padding { 3_dp, 6_dp },
             TextColor { 0_rgb },
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },

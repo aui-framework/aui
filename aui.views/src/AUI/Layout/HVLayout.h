@@ -62,6 +62,8 @@ struct HVLayout {
     }
 
     static void onResize(glm::ivec2 paddedPosition, glm::ivec2 paddedSize, ranges::range auto&& views, int spacing) {
+        static constexpr auto FIXED_POINT_DENOMINATOR = 2 << 4;
+
         if (views.empty())
             return;
 
@@ -108,7 +110,7 @@ struct HVLayout {
         }
 
         // third phase: apply layout to views
-        int posOurAxis = getAxisValue(paddedPosition);
+        long long posOurAxis = getAxisValue(paddedPosition) * FIXED_POINT_DENOMINATOR;
         const auto& last = views.back();
         for (const auto& view : views) {
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
@@ -116,7 +118,7 @@ struct HVLayout {
             auto margins = view->getMargin();
             auto viewMaxSize = view->getMaxSize();
 
-            int viewPosOurAxis = posOurAxis + getAxisValue(margins.leftTop());
+            int viewPosOurAxis = posOurAxis / FIXED_POINT_DENOMINATOR + getAxisValue(margins.leftTop());
             int viewPosPerpAxis = getPerpAxisValue(paddedPosition + margins.leftTop());
 
             if (containsExpandingItems && view == last) {
@@ -134,8 +136,13 @@ struct HVLayout {
             } else {
                 int expanding = getAxisValue(view->getExpanding());
                 int viewMinSize = getAxisValue(view->getMinimumSize());
-                int viewSizeOurAxis =
-                    glm::clamp(availableSpaceForExpandingViews * expanding / sum, viewMinSize, getAxisValue(viewMaxSize));
+                long long viewEndPos =
+                    posOurAxis +
+                    glm::clamp(
+                        FIXED_POINT_DENOMINATOR * availableSpaceForExpandingViews * expanding / sum,
+                        FIXED_POINT_DENOMINATOR * viewMinSize, FIXED_POINT_DENOMINATOR * getAxisValue(viewMaxSize));
+
+                int viewSizeOurAxis = viewEndPos / FIXED_POINT_DENOMINATOR - posOurAxis / FIXED_POINT_DENOMINATOR;
                 int viewSizePerpAxis =
                     glm::min(getPerpAxisValue(paddedSize - margins.occupiedSize()), getPerpAxisValue(viewMaxSize));
 
@@ -145,7 +152,13 @@ struct HVLayout {
                     getAxisValue(glm::ivec2 { viewSizeOurAxis, viewSizePerpAxis }),
                     getAxisValue(glm::ivec2 { viewSizePerpAxis, viewSizeOurAxis }));
 
-                posOurAxis += getAxisValue(view->getSize() + margins.occupiedSize()) + spacing;
+                if (getAxisValue(view->getSize()) == viewSizeOurAxis) {
+                    posOurAxis = viewEndPos + (spacing + getAxisValue(margins.rightBottom())) * FIXED_POINT_DENOMINATOR;
+                } else {
+                    // view has rejected the size we have provided, and we should adopt.
+                    // unfortunately, we lose the fractional part of the size.
+                    posOurAxis += (spacing + getAxisValue(view->getSize() + margins.occupiedSize())) * FIXED_POINT_DENOMINATOR;
+                }
                 availableSpaceForExpandingViews += viewSizeOurAxis - getAxisValue(view->getSize());
             }
         }

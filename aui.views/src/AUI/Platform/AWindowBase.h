@@ -387,6 +387,8 @@ public:
     }
 
     void markMinContentSizeInvalid() override;
+    void onKeyRepeat(AInput::Key key) override;
+    void onKeyUp(AInput::Key key) override;
 
 signals:
     emits<>            dpiChanged;

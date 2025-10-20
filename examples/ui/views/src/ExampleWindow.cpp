@@ -215,11 +215,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   Vertical {
                     Button {
                       Label { "Common button" },
-                      [this] { AMessageBox::show(this, "Title", "Message"); },
+                      [this] {},
                     },
                     Button {
                       Label { "Default button" },
-                      [this] { AMessageBox::show(this, "Title", "Message"); },
+                      [this] {},
                       true,
                     },
                     Button { Label { "Disabled button" } } AUI_LET { it->setDisabled(); },
