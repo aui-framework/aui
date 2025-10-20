@@ -14,8 +14,18 @@ else()
         )
     endif()
 endif()
+
+if(AUIB_DISABLE)
+    find_package(ixwebsocket REQUIRED)
+else ()
+    auib_import(ixwebsocket https://github.com/machinezone/IXWebSocket
+                VERSION v11.4.6
+                CMAKE_ARGS -DUSE_TLS=ON -DUSE_OPEN_SSL=OFF
+    )
+endif ()
+
 aui_module(aui.curl EXPORT aui WHOLEARCHIVE)
 aui_enable_tests(aui.curl)
 aui_link(aui.curl PUBLIC aui::core aui::json)
 
-aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt)
+aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt ixwebsocket::ixwebsocket)
