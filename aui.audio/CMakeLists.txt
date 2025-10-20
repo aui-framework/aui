@@ -34,7 +34,7 @@ endif()
 if(AUIB_DISABLE)
     find_package(Opus REQUIRED CONFIG)
 else()
-    auib_import(Opus https://github.com/xiph/opus.git VERSION v1.5.2)
+    auib_import(Opus https://github.com/aui-framework/opus VERSION df980346de0b5e14dbdb922951fae21f4ea6c1c0)
 endif()
 aui_link(aui.audio PRIVATE Opus::opus)
 
